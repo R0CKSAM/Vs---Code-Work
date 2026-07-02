@@ -1179,15 +1179,27 @@
     "stream/2026-07-01": {
       "source": "stream",
       "date": "2026-07-01",
-      "file_count": 1,
-      "bytes": 66409337,
-      "max_mtime_ns": 1782877851700800000,
+      "file_count": 2,
+      "bytes": 829604105,
+      "max_mtime_ns": 1782964465357203600,
       "output_counts": {
-        "identity_device_daily": 487,
-        "identity_session_daily": 507,
-        "identity_ipua_daily": 525
+        "identity_device_daily": 12513,
+        "identity_session_daily": 15843,
+        "identity_ipua_daily": 14555
+      }
+    },
+    "stream/2026-07-02": {
+      "source": "stream",
+      "date": "2026-07-02",
+      "file_count": 1,
+      "bytes": 52362254,
+      "max_mtime_ns": 1782964465413885900,
+      "output_counts": {
+        "identity_device_daily": 432,
+        "identity_session_daily": 442,
+        "identity_ipua_daily": 459
       }
     }
   },
-  "updated_at_utc": "2026-07-01T05:05:06.778712+00:00"
+  "updated_at_utc": "2026-07-02T05:25:49.344783+00:00"
 }
