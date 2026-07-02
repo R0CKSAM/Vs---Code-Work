@@ -167,6 +167,7 @@ td:first-child{position:static}
       <h3>Day-by-Day Breakdown (Full Schema)</h3>
       <div class="table-tools">
         <span class="table-summary" id="tablePreviewText"></span>
+        <button class="expand-btn" onclick="exportDayTableExcel()">Export Excel</button>
         <button class="expand-btn" id="tableToggleBtn" onclick="toggleDayTable()">Expand</button>
       </div>
     </div>
@@ -629,6 +630,182 @@ function fmtChg(n) {
   if (n == null || isNaN(n)) return '—';
   const cls = n > 0 ? 'chg-pos' : n < 0 ? 'chg-neg' : 'chg-flat';
   return `<span class="${cls}">${n > 0 ? '+' : ''}${(n * 100).toFixed(2)}%</span>`;
+}
+
+function excelEscape(value) {
+  const text = value == null ? '' : String(value);
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function excelText(value) {
+  const text = value == null ? '' : String(value);
+  return /^[=+\-@]/.test(text) ? `'${text}` : text;
+}
+
+function excelNumber(value, digits = null) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return '';
+  return digits == null ? String(n) : n.toFixed(digits);
+}
+
+function selectedTableRangeText() {
+  if (!viewRows.length) return 'No selected dates';
+  const sorted = [...viewRows].sort((a, b) => a.ts - b.ts);
+  const first = fmtDateShort(sorted[0].date);
+  const last = fmtDateShort(sorted[sorted.length - 1].date);
+  return first === last ? first : `${first} to ${last}`;
+}
+
+function dayTableTotals() {
+  const tKeys = ['bytes','rows','ip_rows','dist_ip','dist_ipua','dist_dev','dist_sess','dist_ip_r2','dist_ipua_r2','sess_avail','sess_na','sess_none'];
+  const totals = {};
+  tKeys.forEach(k => totals[k] = viewRows.reduce((sum, r) => sum + Number(r[k] || 0), 0));
+  totals.pct_ip = totals.ip_rows > 0 ? totals.dist_ip / totals.ip_rows : 0;
+  totals.pct_ipua = totals.ip_rows > 0 ? totals.dist_ipua / totals.ip_rows : 0;
+  totals.pct_sess = totals.ip_rows > 0 ? totals.sess_avail / totals.ip_rows : 0;
+  totals.pct_sessna = totals.ip_rows > 0 ? totals.sess_na / totals.ip_rows : 0;
+  totals.pct_none = totals.ip_rows > 0 ? totals.sess_none / totals.ip_rows : 0;
+  return totals;
+}
+
+function xmlCell(value, type = 'String', style = 'sText', formula = '', mergeAcross = 0) {
+  const attrs = [
+    style ? `ss:StyleID="${style}"` : '',
+    formula ? `ss:Formula="${formula}"` : '',
+    mergeAcross ? `ss:MergeAcross="${mergeAcross}"` : '',
+  ].filter(Boolean).join(' ');
+  const dataType = type === 'Number' ? 'Number' : 'String';
+  return `<Cell ${attrs}><Data ss:Type="${dataType}">${excelEscape(value)}</Data></Cell>`;
+}
+
+function xmlRow(cells, attrs = '') {
+  return `<Row${attrs ? ` ${attrs}` : ''}>${cells.join('')}</Row>`;
+}
+
+function excelRawValue(row, field) {
+  if (field === 'date') return fmtDateShort(row.date);
+  if (field === 'bytes') return Number(row.bytes || 0);
+  if (field.startsWith('pct_')) return Number(row[field] || 0);
+  return Number(row[field] || 0);
+}
+
+function exportDayTableExcel() {
+  if (!viewRows.length) {
+    alert('No rows available for the selected filters.');
+    return;
+  }
+
+  const exportHeaders = subH.map((h, i) => fields[i].startsWith('pct_') ? `${h} %` : h);
+  exportHeaders[1] = 'Data GiB';
+  const rangeText = selectedTableRangeText();
+  const sourceText = sourceLabel(sourceFilter);
+  const generatedText = new Date()
+    .toLocaleString('en-IN', {timeZone: 'Asia/Kolkata', hour12: true})
+    .replace(',', '') + ' IST';
+
+  const dataStartRow = 8;
+  const dataEndRow = dataStartRow + viewRows.length - 1;
+  const totalRowIndex = dataEndRow + 1;
+  const totalFormula = col => `=SUM(R${dataStartRow}C${col}:R${dataEndRow}C${col})`;
+  const pctFormula = (numeratorCol, denominatorCol = 4) => `=IF(RC${denominatorCol}=0,0,RC${numeratorCol}/RC${denominatorCol})`;
+
+  const workbookRows = [
+    xmlRow([xmlCell('Overview Dashboard Veto - Day-by-Day Breakdown', 'String', 'sTitle', '', fields.length - 1)], 'ss:Height="26"'),
+    xmlRow([xmlCell(`Source: ${sourceText}`, 'String', 'sMeta', '', fields.length - 1)]),
+    xmlRow([xmlCell(`Selected range: ${rangeText}`, 'String', 'sMeta', '', fields.length - 1)]),
+    xmlRow([xmlCell(`Exported: ${generatedText}`, 'String', 'sMeta', '', fields.length - 1)]),
+    xmlRow([xmlCell('', 'String', 'sText', '', fields.length - 1)]),
+    xmlRow([
+      xmlCell('Date', 'String', 'sGroupBlue'),
+      xmlCell('General Volumes', 'String', 'sGroupBlue', '', 2),
+      xmlCell('Absolute Counts', 'String', 'sGroupGreen', '', 3),
+      xmlCell('Unique Subsets', 'String', 'sGroupPurple', '', 1),
+      xmlCell('Session Identifiers', 'String', 'sGroupAmber', '', 2),
+      xmlCell('% Data of TOTAL Segment', 'String', 'sGroupIndigo', '', 4),
+    ]),
+    xmlRow(exportHeaders.map(h => xmlCell(h, 'String', 'sHeader'))),
+  ];
+
+  viewRows.forEach(row => {
+    workbookRows.push(xmlRow(fields.map(field => {
+      if (field === 'date') return xmlCell(excelText(excelRawValue(row, field)), 'String', 'sDate');
+      const style = field === 'bytes' ? 'sDecimal' : field.startsWith('pct_') ? 'sPercent' : 'sNumber';
+      return xmlCell(excelRawValue(row, field), 'Number', style);
+    })));
+  });
+
+  const totalCells = fields.map((field, idx) => {
+    const col = idx + 1;
+    if (field === 'date') return xmlCell('TOTAL', 'String', 'sTotalLabel');
+    if (field === 'pct_ip') return xmlCell(dayTableTotals().pct_ip, 'Number', 'sTotalPercent', pctFormula(5));
+    if (field === 'pct_ipua') return xmlCell(dayTableTotals().pct_ipua, 'Number', 'sTotalPercent', pctFormula(6));
+    if (field === 'pct_sess') return xmlCell(dayTableTotals().pct_sess, 'Number', 'sTotalPercent', pctFormula(11));
+    if (field === 'pct_sessna') return xmlCell(dayTableTotals().pct_sessna, 'Number', 'sTotalPercent', pctFormula(12));
+    if (field === 'pct_none') return xmlCell(dayTableTotals().pct_none, 'Number', 'sTotalPercent', pctFormula(13));
+    return xmlCell(dayTableTotals()[field] || 0, 'Number', field === 'bytes' ? 'sTotalDecimal' : 'sTotalNumber', totalFormula(col));
+  });
+  workbookRows.push(xmlRow(totalCells));
+
+  const columnWidths = [82,82,96,96,82,86,82,86,82,86,96,96,104,78,82,82,86,82]
+    .map(w => `<Column ss:Width="${w}"/>`).join('');
+  const workbook = `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Title>Overview Day-by-Day Breakdown</Title>
+  <Author>Veto ETL</Author>
+  <Created>${new Date().toISOString()}</Created>
+ </DocumentProperties>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal"><Alignment ss:Vertical="Center"/><Font ss:FontName="Calibri" ss:Size="11"/></Style>
+  <Style ss:ID="sTitle"><Alignment ss:Horizontal="Center" ss:Vertical="Center"/><Font ss:Bold="1" ss:Size="16" ss:Color="#FFFFFF"/><Interior ss:Color="#173B5C" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sMeta"><Alignment ss:Horizontal="Left"/><Font ss:Bold="1" ss:Color="#334155"/><Interior ss:Color="#EEF3F8" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sText"><Alignment ss:Horizontal="Left"/></Style>
+  <Style ss:ID="sDate"><Alignment ss:Horizontal="Left"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D8E1EE"/></Borders></Style>
+  <Style ss:ID="sHeader"><Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/><Font ss:Bold="1" ss:Color="#24324A"/><Interior ss:Color="#F8FAFC" ss:Pattern="Solid"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#B8C4D4"/></Borders></Style>
+  <Style ss:ID="sGroupBlue"><Alignment ss:Horizontal="Center"/><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1F3864" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sGroupGreen"><Alignment ss:Horizontal="Center"/><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#2E6B10" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sGroupPurple"><Alignment ss:Horizontal="Center"/><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#7C3AED" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sGroupAmber"><Alignment ss:Horizontal="Center"/><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#9A6000" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sGroupIndigo"><Alignment ss:Horizontal="Center"/><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#4A41A8" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sNumber"><Alignment ss:Horizontal="Right"/><NumberFormat ss:Format="#,##0"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E2E8F0"/></Borders></Style>
+  <Style ss:ID="sDecimal"><Alignment ss:Horizontal="Right"/><NumberFormat ss:Format="#,##0.00"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E2E8F0"/></Borders></Style>
+  <Style ss:ID="sPercent"><Alignment ss:Horizontal="Right"/><NumberFormat ss:Format="0.00%"/><Borders><Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E2E8F0"/></Borders></Style>
+  <Style ss:ID="sTotalLabel"><Alignment ss:Horizontal="Left"/><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1F3864" ss:Pattern="Solid"/></Style>
+  <Style ss:ID="sTotalNumber"><Alignment ss:Horizontal="Right"/><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1F3864" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0"/></Style>
+  <Style ss:ID="sTotalDecimal"><Alignment ss:Horizontal="Right"/><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1F3864" ss:Pattern="Solid"/><NumberFormat ss:Format="#,##0.00"/></Style>
+  <Style ss:ID="sTotalPercent"><Alignment ss:Horizontal="Right"/><Font ss:Bold="1" ss:Color="#FFFFFF"/><Interior ss:Color="#1F3864" ss:Pattern="Solid"/><NumberFormat ss:Format="0.00%"/></Style>
+ </Styles>
+ <Worksheet ss:Name="Day by Day">
+  <Table ss:ExpandedColumnCount="${fields.length}" ss:ExpandedRowCount="${workbookRows.length}">
+   ${columnWidths}
+   ${workbookRows.join('')}
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <FreezePanes/><FrozenNoSplit/><SplitHorizontal>7</SplitHorizontal><TopRowBottomPane>7</TopRowBottomPane><ActivePane>2</ActivePane>
+  </WorksheetOptions>
+ </Worksheet>
+</Workbook>`;
+
+  const blob = new Blob([workbook], {type: 'application/vnd.ms-excel;charset=utf-8;'});
+  const safeRange = rangeText.replace(/[^0-9A-Za-z]+/g, '_').replace(/^_+|_+$/g, '');
+  const filename = `overview_day_by_day_${sourceText.toLowerCase()}_${safeRange || 'selected_range'}.xls`;
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 function getDropGain() {

@@ -36,6 +36,7 @@ superset/
 *.xls
 
 # Large generated banner archives
+ETL/Banner Maker/
 ETL/Banner Maker/*.zip
 
 # Generated dashboard HTML can exceed GitHub's file-size limit.
@@ -44,6 +45,7 @@ ETL/output/watch_hours/*.html
 ETL/output/watch_hours/**/*.html
 ETL/output/overview/*.html
 ETL/output/exports/**/*.html
+ETL/output/**/*.json
 
 # DuckDB cache/database files
 *.duckdb

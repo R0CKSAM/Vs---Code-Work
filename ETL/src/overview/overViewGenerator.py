@@ -60,6 +60,15 @@ def latest_completed_ist_date() -> str:
     return (ist_today - timedelta(days=1)).isoformat()
 
 
+def recent_completed_ist_dates(days: int = 7) -> set[str]:
+    """Dates that are cheap and important enough to keep exact in daily dashboards."""
+    ist_today = (datetime.now(timezone.utc) + IST_OFFSET).date()
+    return {
+        (ist_today - timedelta(days=offset)).isoformat()
+        for offset in range(1, max(1, days) + 1)
+    }
+
+
 def keep_completed_ist_dates(df: pd.DataFrame, date_col: str = "log_date") -> pd.DataFrame:
     if df.empty or date_col not in df.columns:
         return df
@@ -513,6 +522,7 @@ def query_new_dates(
 
     new_rows: list[dict] = []
     allowed_dates = set(day_counts)
+    force_exact_dates = recent_completed_ist_dates()
     for _, row in df.iterrows():
         ist_str = partition_date_to_ist_str(row["partition_date"])
         date_key = pd.to_datetime(row["partition_date"]).strftime("%Y-%m-%d")
@@ -521,9 +531,14 @@ def query_new_dates(
             continue
         pa_count = day_counts[date_key] if date_key in day_counts else int(row["total_rows"])
         existing_count = existing_row_counts.get(ist_str)
-        if existing_count == pa_count:
+        if existing_count == pa_count and date_key not in force_exact_dates:
             log.info(f"  Skipping {ist_str} (already loaded, {pa_count:,} rows unchanged)")
             continue
+        if existing_count == pa_count:
+            log.info(
+                f"  Refreshing {ist_str} (recent-day exact-count guard, "
+                f"{pa_count:,} rows unchanged)"
+            )
         if existing_count is not None:
             log.info(f"  Refreshing {ist_str} (row count changed {existing_count:,} -> {pa_count:,})")
         bytes_gib = (
@@ -968,6 +983,43 @@ def write_source_daily_csv(
 ) -> None:
     _, mart_source_rows = build_overview_from_marts(output_path.parent, year, month)
     if mart_source_rows:
+        refresh_dates = {
+            date_key
+            for date_key in recent_completed_ist_dates()
+            if (not year or date_key[:4] == str(year))
+            and (not month or date_key[5:7] == f"{int(month):02d}")
+        }
+        if refresh_dates:
+            try:
+                con = get_conn()
+                try:
+                    exact_source_rows = query_source_split_rows(
+                        con,
+                        lake_root,
+                        year,
+                        month,
+                        cols,
+                        refresh_dates,
+                    )
+                finally:
+                    con.close()
+            except Exception as exc:
+                log.warning(
+                    "Could not overlay exact recent-day source rows; "
+                    f"using compact mart source rows. {exc}"
+                )
+                exact_source_rows = []
+
+            if exact_source_rows:
+                exact_dates = {row["date"] for row in exact_source_rows}
+                mart_source_rows = [
+                    row for row in mart_source_rows if row.get("date") not in exact_dates
+                ] + exact_source_rows
+                mart_source_rows.sort(key=lambda row: (row.get("date", ""), row.get("source", "")))
+                log.info(
+                    "Overlayed exact recent-day source rows for: "
+                    + ", ".join(sorted(exact_dates))
+                )
         # Source-aware dashboard filtering must come from the full processed mart.
         # The active lake may only contain recent days when historical lake
         # partitions are archived to another drive, so lake-only source splitting
