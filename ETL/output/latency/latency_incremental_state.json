@@ -1946,64 +1946,74 @@
     },
     "fast|2026-07-04": {
       "date": "2026-07-04",
-      "duration_seconds": 3.315,
-      "processed_at": "2026-07-04T10:10:11",
+      "duration_seconds": 184.615,
+      "processed_at": "2026-07-06T16:29:58",
       "result": {
-        "base_rows": 1737440,
+        "base_rows": 47755278,
         "rows": {
-          "cache_daily": 11,
-          "channel_daily": 13,
-          "daily": 7,
-          "geo_daily": 159,
-          "host_daily": 17,
-          "hourly": 24,
-          "status_daily": 12,
+          "cache_daily": 35,
+          "channel_daily": 30,
+          "daily": 23,
+          "geo_daily": 277,
+          "host_daily": 42,
+          "hourly": 99,
+          "status_daily": 29,
           "summary": 1
         }
       },
       "signature": {
-        "file_count": 1,
+        "file_count": 2,
         "files": [
           {
             "bytes": 106622675,
             "mtime_ns": 1783136671071585400,
             "name": "part_fast_2026_07_03_0.parquet"
+          },
+          {
+            "bytes": 5637247598,
+            "mtime_ns": 1783330902231975300,
+            "name": "part_fast_2026_07_04_0.parquet"
           }
         ],
-        "max_mtime_ns": 1783136671071585400,
-        "total_bytes": 106622675
+        "max_mtime_ns": 1783330902231975300,
+        "total_bytes": 5743870273
       },
       "source": "fast",
       "status": "done"
     },
     "fast|2026-07-05": {
       "date": "2026-07-05",
-      "duration_seconds": 75.202,
-      "processed_at": "2026-07-06T10:54:12",
+      "duration_seconds": 175.068,
+      "processed_at": "2026-07-06T16:32:53",
       "result": {
-        "base_rows": 46314697,
+        "base_rows": 48023428,
         "rows": {
           "cache_daily": 16,
           "channel_daily": 16,
           "daily": 9,
-          "geo_daily": 232,
+          "geo_daily": 261,
           "host_daily": 23,
-          "hourly": 67,
+          "hourly": 84,
           "status_daily": 13,
           "summary": 1
         }
       },
       "signature": {
-        "file_count": 1,
+        "file_count": 2,
         "files": [
+          {
+            "bytes": 105788022,
+            "mtime_ns": 1783330902386836300,
+            "name": "part_fast_2026_07_04_0.parquet"
+          },
           {
             "bytes": 5691664428,
             "mtime_ns": 1783309493672054800,
             "name": "part_fast_2026_07_05_0.parquet"
           }
         ],
-        "max_mtime_ns": 1783309493672054800,
-        "total_bytes": 5691664428
+        "max_mtime_ns": 1783330902386836300,
+        "total_bytes": 5797452450
       },
       "source": "fast",
       "status": "done"
@@ -5819,32 +5829,37 @@
     },
     "stream|2026-07-04": {
       "date": "2026-07-04",
-      "duration_seconds": 3.324,
-      "processed_at": "2026-07-04T10:11:13",
+      "duration_seconds": 68.723,
+      "processed_at": "2026-07-06T16:34:39",
       "result": {
-        "base_rows": 1659356,
+        "base_rows": 17944739,
         "rows": {
-          "cache_daily": 8,
-          "channel_daily": 76,
-          "daily": 6,
-          "geo_daily": 182,
-          "host_daily": 65,
-          "hourly": 19,
-          "status_daily": 18,
+          "cache_daily": 15,
+          "channel_daily": 105,
+          "daily": 12,
+          "geo_daily": 314,
+          "host_daily": 92,
+          "hourly": 70,
+          "status_daily": 30,
           "summary": 1
         }
       },
       "signature": {
-        "file_count": 1,
+        "file_count": 2,
         "files": [
           {
             "bytes": 58609842,
             "mtime_ns": 1783136688787482000,
             "name": "part_stream_2026_07_03_0.parquet"
+          },
+          {
+            "bytes": 632220424,
+            "mtime_ns": 1783222895440153200,
+            "name": "part_stream_2026_07_04_0.parquet"
           }
         ],
-        "max_mtime_ns": 1783136688787482000,
-        "total_bytes": 58609842
+        "max_mtime_ns": 1783222895440153200,
+        "total_bytes": 690830266
       },
       "source": "stream",
       "status": "done"

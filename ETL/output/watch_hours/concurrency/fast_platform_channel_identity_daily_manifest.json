@@ -1,11 +1,11 @@
 {
-  "generated_at_utc": "2026-07-06T05:19:13.608358+00:00",
+  "generated_at_utc": "2026-07-06T10:46:03.020021+00:00",
   "source": "fast",
   "lake": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
   "output": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\output\\watch_hours\\concurrency\\fast_platform_channel_identity_daily.parquet",
   "date_range_replaced": {
-    "start": "2026-07-05",
-    "end": "2026-07-06"
+    "start": "2026-07-04",
+    "end": "2026-07-05"
   },
   "metric_notes": {
     "distinct_cliips": "Exact daily distinct cliIP for each FAST platform/channel on .ts rows.",

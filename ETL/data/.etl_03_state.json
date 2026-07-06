@@ -1204,16 +1204,18 @@
     "processed_at_utc": "2026-07-04T03:44:48.832756+00:00"
   },
   "fast_2026_07_04_final_clean.parquet": {
-    "status": "error",
+    "status": "ok",
     "partition_version": 3,
     "partition_timezone": "Asia/Kolkata",
     "source_key": "fast",
     "file_prefix": "part_fast_2026_07_04",
     "signature": "2a2f8e7ec7f39f328a24e080d4e3cd15",
     "src_prefix": "part_fast_2026_07_04",
-    "error": "Out of Memory Error: Allocation failure",
-    "elapsed_sec": 20.24,
-    "processed_at_utc": "2026-07-05T03:41:20.004352+00:00"
+    "rows": 47727446,
+    "removed_previous_files": 0,
+    "promoted_files": 2,
+    "elapsed_sec": 125.99,
+    "processed_at_utc": "2026-07-06T09:41:42.411033+00:00"
   },
   "stream_2026_07_04_final_clean.parquet": {
     "status": "ok",

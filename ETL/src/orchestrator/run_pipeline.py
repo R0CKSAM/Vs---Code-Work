@@ -16,6 +16,8 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
 
+import pyarrow.parquet as pq
+
 
 def _resolve_default_base(project_root: Path) -> Path:
     env_base = os.getenv("VG_ETL_BASE")
@@ -167,6 +169,152 @@ def _safe_write_json(path: Path, payload: dict[str, Any]) -> None:
     tmp.replace(path)
 
 
+def _parse_memory_limit_gb(value: str) -> Optional[int]:
+    match = re.match(r"^\s*(\d+(?:\.\d+)?)\s*GB\s*$", str(value), flags=re.IGNORECASE)
+    if not match:
+        return None
+    return max(1, int(float(match.group(1))))
+
+
+def _lower_partition_env(env: dict[str, str]) -> tuple[Optional[dict[str, str]], list[str]]:
+    retry_env = dict(env)
+    changes: list[str] = []
+
+    current_threads = int(retry_env.get("VG_ETL_THREADS", "12") or "12")
+    lowered_threads = max(1, current_threads // 2)
+    if lowered_threads < current_threads:
+        retry_env["VG_ETL_THREADS"] = str(lowered_threads)
+        changes.append(f"VG_ETL_THREADS {current_threads}->{lowered_threads}")
+
+    current_memory = _parse_memory_limit_gb(retry_env.get("VG_ETL_MEMORY", "28GB"))
+    if current_memory:
+        lowered_memory = max(8, current_memory // 2)
+        if lowered_memory < current_memory:
+            retry_env["VG_ETL_MEMORY"] = f"{lowered_memory}GB"
+            changes.append(f"VG_ETL_MEMORY {current_memory}GB->{lowered_memory}GB")
+
+    return (retry_env, changes) if changes else (None, [])
+
+
+def _safe_source_slug(source_id: str) -> str:
+    slug = re.sub(r"[^A-Za-z0-9]+", "_", source_id).strip("_").lower()
+    return slug or "source"
+
+
+def _source_key_from_source_id(source_id: str) -> str:
+    return "fast" if source_id.lower().startswith("fast_") else "stream"
+
+
+def _lake_source_prefix(source_id: str) -> str:
+    if re.fullmatch(r"\d+", source_id):
+        return f"src{source_id}"
+    return f"src_{_safe_source_slug(source_id)}"
+
+
+def _lake_file_prefix(source_id: str, source_key: str) -> str:
+    source_slug = _safe_source_slug(source_key)
+    source_id_slug = _safe_source_slug(source_id)
+    source_prefix = f"{source_slug}_"
+    if re.fullmatch(r"\d+", source_id):
+        batch_slug = f"legacy_{source_id}"
+    elif source_id_slug.startswith(source_prefix):
+        batch_slug = source_id_slug[len(source_prefix):]
+    else:
+        batch_slug = source_id_slug
+    return f"part_{source_slug}_{batch_slug}"
+
+
+def _parquet_rows(path: Path) -> int:
+    if not path.exists() or path.stat().st_size <= 0:
+        return 0
+    return int(pq.ParquetFile(path).metadata.num_rows or 0)
+
+
+def _lake_rows_for_source(lake_root: Path, source_id: str, source_key: str) -> int:
+    prefixes = {_lake_file_prefix(source_id, source_key), _lake_source_prefix(source_id)}
+    files: set[Path] = set()
+    for prefix in prefixes:
+        files.update(lake_root.rglob(f"{prefix}_*.parquet"))
+    return sum(_parquet_rows(path) for path in files)
+
+
+def _final_clean_file(base_root: Path, source_key: str, day_value: date) -> Path:
+    source_id = f"{source_key}_{day_value:%Y_%m_%d}"
+    return (
+        base_root
+        / "stage"
+        / "final_clean"
+        / f"source={source_key}"
+        / f"year={day_value:%Y}"
+        / f"month={day_value:%m}"
+        / f"day={day_value:%d}"
+        / f"{source_id}_final_clean.parquet"
+    )
+
+
+def _append_recent_lake_repair_jobs(
+    base_root: Path,
+    lake_root: Path,
+    stage_jobs: list[dict[str, str]],
+    active_source_ids: list[str],
+    source_keys: list[str],
+    target_date: date,
+    lookback_days: int,
+) -> list[str]:
+    if lookback_days <= 0:
+        return []
+
+    existing_ids = {job["source_id"] for job in stage_jobs}
+    repair_notes: list[str] = []
+    first_day = target_date - timedelta(days=max(0, lookback_days - 1))
+    current = first_day
+    while current <= target_date:
+        for source_key in source_keys:
+            source_id = f"{source_key}_{current:%Y_%m_%d}"
+            if source_id in existing_ids:
+                continue
+            final_clean = _final_clean_file(base_root, source_key, current)
+            if not final_clean.exists():
+                continue
+            final_rows = _parquet_rows(final_clean)
+            lake_rows = _lake_rows_for_source(lake_root, source_id, source_key)
+            if final_rows == lake_rows:
+                continue
+            stage_jobs.append(
+                {
+                    "source_id": source_id,
+                    "source_key": source_key,
+                    "final_clean_file": str(final_clean),
+                }
+            )
+            active_source_ids.append(source_id)
+            existing_ids.add(source_id)
+            repair_notes.append(
+                f"{source_id}: final_clean={final_rows:,}, lake={lake_rows:,}"
+            )
+        current += timedelta(days=1)
+    return repair_notes
+
+
+def _validate_stage_lake_rows(lake_root: Path, stage_jobs: list[dict[str, str]]) -> None:
+    mismatches = []
+    for job in stage_jobs:
+        source_id = job["source_id"]
+        source_key = job.get("source_key") or _source_key_from_source_id(source_id)
+        final_clean = Path(job["final_clean_file"])
+        final_rows = _parquet_rows(final_clean)
+        lake_rows = _lake_rows_for_source(lake_root, source_id, source_key)
+        if final_rows != lake_rows:
+            mismatches.append(
+                f"{source_id}: final_clean={final_rows:,}, lake={lake_rows:,}"
+            )
+    if mismatches:
+        raise SystemExit(
+            "Lake row-count validation failed after 03.py; dashboards were not refreshed. "
+            + "; ".join(mismatches)
+        )
+
+
 def _lower_parallelism(command: list[str]) -> tuple[Optional[list[str]], list[str]]:
     retry = list(command)
     changes: list[str] = []
@@ -310,6 +458,7 @@ def run(
 ) -> bool:
     attempt = 1
     current_command = list(command)
+    current_env = dict(env)
     while True:
         nice = " ".join(f'"{c}"' if " " in c else c for c in current_command)
         print(f"\n[run] {nice}")
@@ -320,7 +469,7 @@ def run(
                 current_command,
                 check=False,
                 cwd=str(cwd) if cwd else None,
-                env=env,
+                env=current_env,
             )
             finished = datetime.now()
             entry = {
@@ -363,7 +512,7 @@ def run(
             process = subprocess.Popen(
                 current_command,
                 cwd=str(cwd) if cwd else None,
-                env=env,
+                env=current_env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
@@ -396,12 +545,17 @@ def run(
             tail = _tail_file(log_path)
             entry.update(_classify_failure(tail))
             entry["log_tail"] = tail
-            retry_command, retry_changes = _lower_parallelism(current_command)
+            retry_command, command_changes = _lower_parallelism(current_command)
+            retry_env = None
+            env_changes: list[str] = []
+            if any(Path(part).name.lower() == "03.py" for part in current_command):
+                retry_env, env_changes = _lower_partition_env(current_env)
+            retry_changes = command_changes + env_changes
             if (
                 retry_on_memory
                 and attempt == 1
                 and entry.get("error_class") == "memory_or_temp_spill"
-                and retry_command is not None
+                and retry_changes
             ):
                 entry["status"] = "retrying"
                 entry["retry_reason"] = "memory_or_temp_spill"
@@ -412,7 +566,10 @@ def run(
                     f"[retry] {step_name} hit memory/temp pressure. "
                     f"Retrying once with: {', '.join(retry_changes)}"
                 )
-                current_command = retry_command
+                if retry_command is not None:
+                    current_command = retry_command
+                if retry_env is not None:
+                    current_env = retry_env
                 attempt += 1
                 continue
 
@@ -625,6 +782,12 @@ def main() -> None:
         choices=["both", "stream", "fast"],
         default="both",
         help="Daily source folders to process when --etl1-daily-date is set.",
+    )
+    parser.add_argument(
+        "--lake-repair-lookback-days",
+        type=int,
+        default=4,
+        help="When running a daily ETL, also recheck this many recent final_clean days for incomplete lake partitions.",
     )
 
     # Deep profile controls
@@ -1196,7 +1359,37 @@ def main() -> None:
         else:
             run([python, "001.py"], cwd=pipeline_dir, env=env, step_name="etl_001_raw_to_parquet", log_dir=log_dir)
         run([python, "02.py"], cwd=pipeline_dir, env=env, step_name="etl_02_dedupe_final_clean", log_dir=log_dir)
-        run([python, "03.py"], cwd=pipeline_dir, env=env, step_name="etl_03_partition_lake", log_dir=log_dir)
+        if args.etl1_daily_date:
+            repair_notes = _append_recent_lake_repair_jobs(
+                base_root=base_root,
+                lake_root=lake_root,
+                stage_jobs=stage_jobs,
+                active_source_ids=active_source_ids,
+                source_keys=[source_key for source_key, _ in daily_sources],
+                target_date=target_date,
+                lookback_days=max(0, int(args.lake_repair_lookback_days)),
+            )
+            if repair_notes:
+                print("\n[repair-scope] Incomplete recent lake partitions will be repaired before dashboards:")
+                for note in repair_notes:
+                    print(f"  - {note}")
+            env["VG_ETL_PROCESS_SOURCES"] = ",".join(active_source_ids)
+            env["VG_ETL_STAGE_JOBS"] = json.dumps(stage_jobs)
+            env["VG_ETL_REPLACE_DATES"] = target_date.isoformat()
+            print(f"\n[scope] ETL lake source IDs: {env['VG_ETL_PROCESS_SOURCES']}")
+        partition_env = env.copy()
+        partition_env.setdefault("VG_ETL_THREADS", "4")
+        partition_env.setdefault("VG_ETL_MEMORY", "16GB")
+        run(
+            [python, "03.py"],
+            cwd=pipeline_dir,
+            env=partition_env,
+            step_name="etl_03_partition_lake",
+            log_dir=log_dir,
+            retry_on_memory=True,
+        )
+        if args.etl1_daily_date:
+            _validate_stage_lake_rows(lake_root, stage_jobs)
     else:
         print("\n[skip] ETL stages skipped.")
 

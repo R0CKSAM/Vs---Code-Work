@@ -98,6 +98,13 @@ def parquet_row_count(con: duckdb.DuckDBPyConnection, path: Path) -> int:
     return int(row[0] or 0)
 
 
+def source_partition_row_count(con: duckdb.DuckDBPyConnection, file_prefix: str) -> int:
+    total = 0
+    for path in LAKE_FOLDER.rglob(f"{file_prefix}_*.parquet"):
+        total += parquet_row_count(con, path)
+    return total
+
+
 def parquet_columns(con: duckdb.DuckDBPyConnection, path: Path) -> list[str]:
     rows = con.execute(f"DESCRIBE SELECT * FROM read_parquet('{sql_path(path)}')").fetchall()
     return [str(row[0]) for row in rows]
@@ -379,6 +386,7 @@ def main() -> None:
         legacy_backup_prefix = f"backup_legacy_{file_prefix}_{int(time.time() * 1000)}"
         backed_up = 0
         legacy_backed_up = 0
+        promoted = 0
 
         try:
             remove_previous_partitions(temp_prefix)
@@ -419,6 +427,13 @@ def main() -> None:
             promoted = promote_temp_partitions(temp_prefix, file_prefix)
             if rows > 0 and promoted == 0:
                 raise RuntimeError("DuckDB COPY completed but no temp lake partitions were promoted.")
+            promoted_rows = source_partition_row_count(con, file_prefix)
+            if promoted_rows != rows:
+                raise RuntimeError(
+                    "Lake row-count validation failed after partitioning "
+                    f"{path.name}: expected {rows:,}, got {promoted_rows:,} "
+                    f"for prefix {file_prefix}."
+                )
             removed = remove_previous_partitions(backup_prefix)
             removed += remove_previous_partitions(legacy_backup_prefix)
             backed_up = 0
@@ -446,8 +461,9 @@ def main() -> None:
         except Exception as e:
             had_errors = True
             remove_previous_partitions(temp_prefix)
-            if backed_up:
+            if promoted:
                 remove_previous_partitions(file_prefix)
+            if backed_up:
                 restored = move_partitions(backup_prefix, file_prefix)
                 print(f"[recover] Restored {restored} previous lake partition file(s) for {file_prefix}.")
             if legacy_backed_up:
