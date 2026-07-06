@@ -39,6 +39,12 @@ HOST_MAP = {
 }
 
 
+HOST_CANDIDATE_MAP = {
+    # Host-specific approval: do not map staging vetostreams indiatv.
+    ("vetostreams.akamaized.net", "indiatv"): "India TV",
+}
+
+
 PATH_MAP = {
     # User-approved VgLive stream IDs.
     "vglive-sk-238731": "NDTV Marathi",
@@ -51,6 +57,16 @@ PATH_MAP = {
     "vglive-sk-699286": "India TV Yoga",
     "speednews": "India TV SpeedNews",
     "rimo": "India TV SpeedNews",
+
+    # User-approved YRF and Epic live channel path IDs.
+    "yrfmusic": "YRF Music",
+    "sagamusic": "SAGA Music",
+    "sagaharyanvi": "Saga Music Haryanvi",
+    "epic_tv": "Epic TV",
+    "epic_bharat": "Epic Bharat",
+    "epic_bhojpuri": "Epic Bhojpuri",
+    "epic_kids": "Epic Kids",
+    "epic_music": "Epic Music",
 
     # High-confidence path IDs observed in the lake.
     "national": "NewsNation",
@@ -215,6 +231,8 @@ def resolve_channel(req_host: object, candidate_id: object) -> str:
     host = normalize_token(req_host)
     candidate = normalize_token(candidate_id)
 
+    if (host, candidate) in HOST_CANDIDATE_MAP:
+        return HOST_CANDIDATE_MAP[(host, candidate)]
     if host in HOST_MAP:
         return HOST_MAP[host]
     if candidate in PATH_MAP:
@@ -270,11 +288,19 @@ def _register_mapping_tables(con: duckdb.DuckDBPyConnection) -> None:
     path_df = pd.DataFrame(
         [{"candidate_id": candidate, "path_channel_name": name} for candidate, name in PATH_MAP.items()]
     )
+    host_candidate_df = pd.DataFrame(
+        [
+            {"reqHost": host, "candidate_id": candidate, "host_candidate_channel_name": name}
+            for (host, candidate), name in HOST_CANDIDATE_MAP.items()
+        ]
+    )
 
     con.register("host_map_df", host_df)
     con.register("path_map_df", path_df)
+    con.register("host_candidate_map_df", host_candidate_df)
     con.execute("CREATE OR REPLACE TEMP TABLE host_map AS SELECT * FROM host_map_df")
     con.execute("CREATE OR REPLACE TEMP TABLE path_map AS SELECT * FROM path_map_df")
+    con.execute("CREATE OR REPLACE TEMP TABLE host_candidate_map AS SELECT * FROM host_candidate_map_df")
 
 
 def get_available_dates(lake_path: str | Path):
@@ -387,8 +413,9 @@ def _create_resolved_table(con: duckdb.DuckDBPyConnection, glob: str, start_date
             b.candidate_id,
             b.reqPath,
             b.reqTimeSec,
-            COALESCE(h.host_channel_name, p.path_channel_name, 'Other') AS channel_name
+            COALESCE(hc.host_candidate_channel_name, h.host_channel_name, p.path_channel_name, 'Other') AS channel_name
         FROM base_tmp b
+        LEFT JOIN host_candidate_map hc ON b.reqHost = hc.reqHost AND b.candidate_id = hc.candidate_id
         LEFT JOIN host_map h ON b.reqHost = h.reqHost
         LEFT JOIN path_map p ON b.candidate_id = p.candidate_id
     """)

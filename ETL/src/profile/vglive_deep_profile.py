@@ -14,6 +14,7 @@ from vglive_core import (
     CHUNK_DURATION_HOURS,
     DEFAULT_LAKE_FOLDER,
     HOST_MAP,
+    HOST_CANDIDATE_MAP,
     PATH_MAP,
     build_partition_filter,
     channel_candidate_sql,
@@ -159,10 +160,18 @@ def register_maps(con: duckdb.DuckDBPyConnection) -> None:
     path_df = pd.DataFrame(
         [{"candidate_id": candidate, "path_channel_name": name} for candidate, name in PATH_MAP.items()]
     )
+    host_candidate_df = pd.DataFrame(
+        [
+            {"reqHost": host, "candidate_id": candidate, "host_candidate_channel_name": name}
+            for (host, candidate), name in HOST_CANDIDATE_MAP.items()
+        ]
+    )
     con.register("host_map_df", host_df)
     con.register("path_map_df", path_df)
+    con.register("host_candidate_map_df", host_candidate_df)
     con.execute("CREATE OR REPLACE TEMP TABLE host_map AS SELECT * FROM host_map_df")
     con.execute("CREATE OR REPLACE TEMP TABLE path_map AS SELECT * FROM path_map_df")
+    con.execute("CREATE OR REPLACE TEMP TABLE host_candidate_map AS SELECT * FROM host_candidate_map_df")
 
 
 def write_schema(con: duckdb.DuckDBPyConnection, glob: str, out: Path) -> None:
@@ -278,8 +287,9 @@ WITH base AS (
 resolved AS (
     SELECT
         b.*,
-        COALESCE(h.host_channel_name, p.path_channel_name, 'Other') AS channel_name
+        COALESCE(hc.host_candidate_channel_name, h.host_channel_name, p.path_channel_name, 'Other') AS channel_name
     FROM base b
+    LEFT JOIN host_candidate_map hc ON b.reqHost = hc.reqHost AND b.candidate_id = hc.candidate_id
     LEFT JOIN host_map h ON b.reqHost = h.reqHost
     LEFT JOIN path_map p ON b.candidate_id = p.candidate_id
 )
@@ -529,8 +539,9 @@ def write_daily_tables(
             resolved AS (
                 SELECT
                     m.*,
-                    COALESCE(h.host_channel_name, p.path_channel_name, 'Other') AS channel_name
+                    COALESCE(hc.host_candidate_channel_name, h.host_channel_name, p.path_channel_name, 'Other') AS channel_name
                 FROM m_rows m
+                LEFT JOIN host_candidate_map hc ON m.reqHost = hc.reqHost AND m.candidate_id = hc.candidate_id
                 LEFT JOIN host_map h ON m.reqHost = h.reqHost
                 LEFT JOIN path_map p ON m.candidate_id = p.candidate_id
             )
@@ -565,8 +576,9 @@ def write_daily_tables(
             ts_resolved AS (
                 SELECT
                     b.*,
-                    COALESCE(h.host_channel_name, p.path_channel_name, 'Other') AS channel_name
+                    COALESCE(hc.host_candidate_channel_name, h.host_channel_name, p.path_channel_name, 'Other') AS channel_name
                 FROM ts_base b
+                LEFT JOIN host_candidate_map hc ON b.reqHost = hc.reqHost AND b.candidate_id = hc.candidate_id
                 LEFT JOIN host_map h ON b.reqHost = h.reqHost
                 LEFT JOIN path_map p ON b.candidate_id = p.candidate_id
             ),
@@ -599,8 +611,9 @@ def write_daily_tables(
             audience_resolved AS (
                 SELECT
                     b.*,
-                    COALESCE(h.host_channel_name, p.path_channel_name, 'Other') AS channel_name
+                    COALESCE(hc.host_candidate_channel_name, h.host_channel_name, p.path_channel_name, 'Other') AS channel_name
                 FROM audience_base b
+                LEFT JOIN host_candidate_map hc ON b.reqHost = hc.reqHost AND b.candidate_id = hc.candidate_id
                 LEFT JOIN host_map h ON b.reqHost = h.reqHost
                 LEFT JOIN path_map p ON b.candidate_id = p.candidate_id
             ),
@@ -649,8 +662,9 @@ def write_daily_tables(
             ts_resolved AS (
                 SELECT
                     b.*,
-                    COALESCE(h.host_channel_name, p.path_channel_name, 'Other') AS channel_name
+                    COALESCE(hc.host_candidate_channel_name, h.host_channel_name, p.path_channel_name, 'Other') AS channel_name
                 FROM ts_base b
+                LEFT JOIN host_candidate_map hc ON b.reqHost = hc.reqHost AND b.candidate_id = hc.candidate_id
                 LEFT JOIN host_map h ON b.reqHost = h.reqHost
                 LEFT JOIN path_map p ON b.candidate_id = p.candidate_id
             ),
@@ -687,8 +701,9 @@ def write_daily_tables(
             audience_resolved AS (
                 SELECT
                     b.*,
-                    COALESCE(h.host_channel_name, p.path_channel_name, 'Other') AS channel_name
+                    COALESCE(hc.host_candidate_channel_name, h.host_channel_name, p.path_channel_name, 'Other') AS channel_name
                 FROM audience_base b
+                LEFT JOIN host_candidate_map hc ON b.reqHost = hc.reqHost AND b.candidate_id = hc.candidate_id
                 LEFT JOIN host_map h ON b.reqHost = h.reqHost
                 LEFT JOIN path_map p ON b.candidate_id = p.candidate_id
             ),
