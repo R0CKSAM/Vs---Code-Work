@@ -69,9 +69,14 @@ END
 
 
 def ua_norm_sql(column_expr: str) -> str:
+    decoded_expr = f"CAST({column_expr} AS VARCHAR)"
+    for _ in range(5):
+        # Match decode_distinct_ua_lookup.normalize_ua(): some FAST UA values are
+        # double URL-encoded, so one url_decode leaves %2F/%20 tokens behind.
+        decoded_expr = f"COALESCE(try(url_decode({decoded_expr})), {decoded_expr})"
     return (
         "NULLIF(trim(regexp_replace(regexp_replace("
-        f"COALESCE(try(url_decode(CAST({column_expr} AS VARCHAR))), CAST({column_expr} AS VARCHAR)), "
+        f"{decoded_expr}, "
         "'\\+', ' ', 'g'), '\\s+', ' ', 'g')), '')"
     )
 

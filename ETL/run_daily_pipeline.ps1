@@ -4,6 +4,8 @@ param(
     [string]$FastRemoteRoot = "veto:veto-stream-logs/veto-fast-logs",
     [string]$LocalRoot = "",
     [string]$RawRoot = "",
+    [string]$OverviewLakeRoot = "",
+    [string]$OverviewSources = "fast,stream",
     [string]$StreamLocalName = "Veto Stream Backup",
     [string]$FastLocalName = "Veto fast Backup",
     [string]$PrefsFile = "",
@@ -62,6 +64,15 @@ $DefaultVenvPython = if ($VenvPython) {
     "python"
 }
 $env:VG_ETL_BASE = $DefaultLocalRoot
+$DefaultOverviewLakeRoot = if ($OverviewLakeRoot) {
+    $OverviewLakeRoot
+} elseif ($env:VG_OVERVIEW_LAKE_ROOT) {
+    $env:VG_OVERVIEW_LAKE_ROOT
+} else {
+    Join-Path $DefaultLocalRoot "lake"
+}
+$env:VG_OVERVIEW_LAKE_ROOT = $DefaultOverviewLakeRoot
+$env:VG_OVERVIEW_SOURCES = $OverviewSources
 $DefaultDeepProfileTempDir = if ($DeepProfileTempDir) {
     $DeepProfileTempDir
 } elseif ($env:LOCALAPPDATA) {
@@ -315,6 +326,8 @@ try {
     }
 
     $env:VG_ETL_BASE = $DefaultLocalRoot
+    $env:VG_OVERVIEW_LAKE_ROOT = $DefaultOverviewLakeRoot
+    $env:VG_OVERVIEW_SOURCES = $OverviewSources
     $pipeline = Join-Path $PSScriptRoot "src\orchestrator\run_pipeline.py"
     $watchArgs = @()
     if ($SkipWatch) { $watchArgs += "--skip-watch" }
@@ -327,7 +340,11 @@ try {
         Write-Host "[$(Get-Date -Format o)] Smart pipeline mode enabled: recoverable dashboard/enrichment failures continue and are written to output\state."
     }
 
-    $pipelineArgs = @("--base", $DefaultLocalRoot)
+    $pipelineArgs = @(
+        "--base", $DefaultLocalRoot,
+        "--overview-lake-root", $DefaultOverviewLakeRoot,
+        "--overview-sources", $OverviewSources
+    )
     if (-not $SingleSourceMode) {
         $pipelineArgs += @(
             "--etl1-daily-date", $TargetDate.ToString("yyyy-MM-dd"),

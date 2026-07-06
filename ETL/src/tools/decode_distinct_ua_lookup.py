@@ -831,7 +831,8 @@ def main() -> None:
         if DEFAULT_ALL_DISTINCT_API_CACHE.resolve() != args.api_cache.resolve()
         else pd.DataFrame(columns=API_COLUMNS)
     )
-    combined_api_cache = combine_api_caches(api_cache, crosscheck_cache, all_distinct_cache)
+    # Newer local crosschecks must win over older all-distinct rate-limit/error rows.
+    combined_api_cache = combine_api_caches(api_cache, all_distinct_cache, crosscheck_cache)
     decoded = apply_api_to_local(local, combined_api_cache)
 
     for column in OUTPUT_COLUMNS:

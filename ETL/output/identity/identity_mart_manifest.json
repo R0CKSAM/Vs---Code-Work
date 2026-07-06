@@ -1,53 +1,53 @@
 {
-  "generated_at_utc": "2026-07-02T05:25:53.013508+00:00",
+  "generated_at_utc": "2026-07-06T05:25:33.704454+00:00",
   "lake": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
   "out_dir": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\output\\identity",
   "source": "stream",
-  "start": "2026-07-01",
-  "end": "2026-07-02",
+  "start": "2026-07-05",
+  "end": "2026-07-06",
   "partitions_total": 2,
   "partitions_processed": 2,
   "tables": {
     "identity_device_daily": {
-      "rows": 1333129,
+      "rows": 1373228,
       "min_date": "2026-03-26",
-      "max_date": "2026-07-02",
+      "max_date": "2026-07-06",
       "sources": 1
     },
     "identity_session_daily": {
-      "rows": 1747834,
+      "rows": 1798676,
       "min_date": "2026-03-26",
-      "max_date": "2026-07-02",
+      "max_date": "2026-07-06",
       "sources": 1
     },
     "identity_ipua_daily": {
-      "rows": 1563004,
+      "rows": 1609364,
       "min_date": "2026-03-26",
-      "max_date": "2026-07-02",
+      "max_date": "2026-07-06",
       "sources": 1
     },
     "identity_daily": {
-      "rows": 99,
+      "rows": 103,
       "min_date": "2026-03-26",
-      "max_date": "2026-07-02",
+      "max_date": "2026-07-06",
       "sources": 1
     },
     "identity_channel_daily": {
-      "rows": 2487,
+      "rows": 2601,
       "min_date": "2026-03-26",
-      "max_date": "2026-07-02",
+      "max_date": "2026-07-06",
       "sources": 1
     },
     "identity_platform_daily": {
-      "rows": 935,
+      "rows": 971,
       "min_date": "2026-03-26",
-      "max_date": "2026-07-02",
+      "max_date": "2026-07-06",
       "sources": 1
     },
     "identity_platform_channel_daily": {
-      "rows": 15314,
+      "rows": 15969,
       "min_date": "2026-03-26",
-      "max_date": "2026-07-02",
+      "max_date": "2026-07-06",
       "sources": 1
     }
   },

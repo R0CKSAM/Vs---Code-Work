@@ -3,7 +3,7 @@
 
 This dashboard is a read-only snapshot over:
 - ETL/distinct_UA_Both_All.csv
-- ETL/data/cache/device_decode/whatmyuseragent_distinct_ua_cache.parquet
+- ETL/data/cache/device_decode/whatmyuseragent_all_distinct_ua_cache.parquet
 
 It writes a separate HTML preview and does not touch the long-running API
 decode process or its final lookup files.
@@ -27,7 +27,7 @@ import decode_distinct_ua_lookup as decoder
 ETL_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_INPUT = ETL_ROOT / "distinct_UA_Both_All.csv"
 DEFAULT_MAP = ETL_ROOT / "config" / "device_decode" / "amazon_fire_tv_models.csv"
-DEFAULT_API_CACHE = ETL_ROOT / "data" / "cache" / "device_decode" / "whatmyuseragent_distinct_ua_cache.parquet"
+DEFAULT_API_CACHE = ETL_ROOT / "data" / "cache" / "device_decode" / "whatmyuseragent_all_distinct_ua_cache.parquet"
 DEFAULT_OUT = ETL_ROOT / "output" / "device_decode" / "ua_decode_dashboard_preview.html"
 DEFAULT_LOG = ETL_ROOT / "output" / "logs" / "ua_decode" / "decode_distinct_ua_all_20260618_125918.out.log"
 
@@ -145,11 +145,17 @@ def build_decoded(input_csv: Path, map_path: Path, api_cache_path: Path) -> tupl
     fire_map = decoder.load_fire_tv_map(map_path)
     local = pd.DataFrame([decoder.local_decode_row(row, fire_map) for _, row in distinct.iterrows()])
     api_cache = read_api_cache_safely(api_cache_path)
-    decoded = decoder.apply_api_to_local(local, api_cache)
+    default_cache = read_api_cache_safely(decoder.DEFAULT_CACHE)
+    all_distinct_cache = read_api_cache_safely(decoder.DEFAULT_ALL_DISTINCT_API_CACHE)
+    crosscheck_cache = read_api_cache_safely(decoder.DEFAULT_LOCAL_VERIFIED_CROSSCHECK_CACHE)
+    # Match the production lookup precedence: crosschecks are newest, so they
+    # replace older all-distinct rate-limit/error rows for the same ua_hash.
+    combined_api_cache = decoder.combine_api_caches(default_cache, all_distinct_cache, api_cache, crosscheck_cache)
+    decoded = decoder.apply_api_to_local(local, combined_api_cache)
     for column in decoder.OUTPUT_COLUMNS:
         if column not in decoded.columns:
             decoded[column] = ""
-    return decoded[decoder.OUTPUT_COLUMNS], api_cache
+    return decoded[decoder.OUTPUT_COLUMNS], combined_api_cache
 
 
 def extract_app_name(ua: str) -> str:

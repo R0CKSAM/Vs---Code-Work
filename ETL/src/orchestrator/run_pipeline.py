@@ -727,6 +727,16 @@ def main() -> None:
         default=None,
         help="Optional month filter for overview_report.xlsx regeneration (01-12).",
     )
+    parser.add_argument(
+        "--overview-lake-root",
+        default=os.getenv("VG_OVERVIEW_LAKE_ROOT"),
+        help="Optional full archive lake root for Overview generation. Defaults to --base lake.",
+    )
+    parser.add_argument(
+        "--overview-sources",
+        default=os.getenv("VG_OVERVIEW_SOURCES", "fast,stream"),
+        help="Comma-separated source= folders allowed for Overview archive scans.",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Run dashboards in validation mode where supported.")
     parser.add_argument(
         "--state-name",
@@ -873,6 +883,11 @@ def main() -> None:
         else _default_duckdb_temp_dir()
     )
     lake_root = base_root / "lake"
+    overview_lake_root = (
+        Path(args.overview_lake_root).expanduser().resolve()
+        if args.overview_lake_root
+        else lake_root
+    )
     output_root.mkdir(parents=True, exist_ok=True)
     log_dir = output_root / "logs"
     global RUN_RECORDER
@@ -964,6 +979,8 @@ def main() -> None:
             "VG_LATENCY_PROFILE_DIR": str(latency_profile),
             "VG_AUDIENCE_HTML": str(audience_out),
             "VG_ETL_LAKE_ROOT": str(lake_root),
+            "VG_OVERVIEW_LAKE_ROOT": str(overview_lake_root),
+            "VG_OVERVIEW_SOURCES": args.overview_sources or "",
             "VG_DUCKDB_TEMP_DIR": str(deep_profile_temp_dir),
             "VG_DUCKDB_MAX_TEMP_SIZE": str(args.deep_profile_max_temp_size),
             "PYTHONIOENCODING": "utf-8",
@@ -1511,7 +1528,7 @@ def main() -> None:
             [
                 python,
                 str(overview_generator_script),
-                str(lake_root),
+                str(overview_lake_root),
                 "--out-dir",
                 str(overview_data_dir),
                 "--year",
@@ -2022,7 +2039,7 @@ def main() -> None:
             [
                 python,
                 str(overview_generator_script),
-                str(lake_root),
+                str(overview_lake_root),
                 "--out-dir",
                 str(overview_data_dir),
                 "--year",

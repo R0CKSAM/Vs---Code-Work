@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """
 overview_generator.py
 â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
@@ -52,6 +52,20 @@ IST_OFFSET_SECONDS = int(IST_OFFSET.total_seconds())
 OVERVIEW_FILENAME = "overview_report.xlsx"
 SOURCE_DAILY_FILENAME = "overview_source_daily.csv"
 OVERVIEW_SHEET    = "Overview"
+
+
+def parse_source_filter(raw_value: str | None) -> set[str] | None:
+    if not raw_value:
+        return None
+    sources = {
+        item.strip().lower().removeprefix("source=")
+        for item in raw_value.split(",")
+        if item.strip()
+    }
+    return sources or None
+
+
+OVERVIEW_SOURCE_FILTER = parse_source_filter(os.getenv("VG_OVERVIEW_SOURCES"))
 
 
 def latest_completed_ist_date() -> str:
@@ -147,9 +161,29 @@ def sql_path(path: Path) -> str:
     return path.as_posix().replace("'", "''")
 
 
+def source_name_from_root(path: Path) -> str | None:
+    name = path.name.lower()
+    if name.startswith("source="):
+        return name.split("=", 1)[1]
+    return None
+
+
+def source_root_allowed(path: Path) -> bool:
+    source_name = source_name_from_root(path)
+    if OVERVIEW_SOURCE_FILTER is None or source_name is None:
+        return True
+    return source_name in OVERVIEW_SOURCE_FILTER
+
+
+def source_roots(lake_root: Path) -> list[Path]:
+    return sorted(root for root in lake_root.glob("source=*") if source_root_allowed(root))
+
+
 def scoped_roots(lake_root: Path, year: str | None, month: str | None) -> list[Path]:
     if not year:
-        return [lake_root]
+        # Historical archived roots can contain unrelated source=* folders; keep
+        # Overview scoped to the configured CDN sources when a filter is set.
+        return source_roots(lake_root) or [lake_root]
 
     suffix = [f"year={year}"]
     if month:
@@ -159,12 +193,11 @@ def scoped_roots(lake_root: Path, year: str | None, month: str | None) -> list[P
     legacy = lake_root.joinpath(*suffix)
     if legacy.exists():
         roots.append(legacy)
-    for source_root in sorted(lake_root.glob("source=*")):
+    for source_root in source_roots(lake_root):
         candidate = source_root.joinpath(*suffix)
         if candidate.exists():
             roots.append(candidate)
     return roots
-
 
 def scoped_parquet_globs(lake_root: Path, year: str | None, month: str | None) -> list[str]:
     roots = scoped_roots(lake_root, year, month)
@@ -981,7 +1014,10 @@ def write_source_daily_csv(
     month: str | None,
     cols: set[str],
 ) -> None:
-    _, mart_source_rows = build_overview_from_marts(output_path.parent, year, month)
+    # Source-aware dashboard filters must always see the full processed mart.
+    # Month-scoped Overview runs are used for faster repair/rerun work, but
+    # scoping this CSV would make older FAST/STREAM dates disappear from HTML.
+    _, mart_source_rows = build_overview_from_marts(output_path.parent, None, None)
     if mart_source_rows:
         refresh_dates = {
             date_key
