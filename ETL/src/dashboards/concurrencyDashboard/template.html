@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -208,6 +208,8 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
           <input type="date" id="dateEnd" onchange="setDateRange()"/></span>
         </div>
         <span class="filter-sep"></span>
+        <span class="filter-title">Source</span>
+        <select id="sourceSelect" onchange="setSourceScope(this.value)"></select>
         <span class="filter-title">Platform</span>
         <select id="platformSelect" onchange="setPlatform(this.value)"></select>
         <span class="filter-title">Channel</span>
@@ -419,6 +421,7 @@ const PLATFORM_CHANNEL_SCALES={
 let startDate='';
 let endDate='';
 let dateMode='single';
+let sourceScope='all';
 let platform='all';
 let channel='all';
 let identity='cliip';
@@ -554,10 +557,12 @@ function intervalMetricLabel(){
 
 function statusLookupKey(pair,minuteIst,code){return String(pair||'')+'\u001f'+String(minuteIst||'')+'\u001f'+String(code||'');}
 function pairKey(row){return String(row.pair_key||String(row.source||'fast')+'|'+String(row.platform_key||'')+'|'+String(row.candidate_id||'')+'|'+String(row.channel_name||''));}
+function sourceKey(row){return String(row.source||'fast').toLowerCase();}
+function rowInSource(row){return sourceScope==='all'||sourceKey(row)===sourceScope;}
 function platformKey(row){return String(row.platform_key||row.platform_name||'');}
 function channelLabel(row,withPlatform){
   const label=String(row.channel_name||'Other')+(row.candidate_id?' ('+row.candidate_id+')':'');
-  return withPlatform?String(row.platform_name||'Unknown FAST Platform')+' - '+label:label;
+  return withPlatform?String(row.platform_name||'Unknown Platform')+' - '+label:label;
 }
 function activeIdentity(){return VIEWER_IDENTITIES[identity]||VIEWER_IDENTITIES.cliip;}
 function statusMetricCode(key){key=String(key||metric);return key.startsWith('status:')?key.slice(7):'';}
@@ -628,11 +633,11 @@ function statusValues(row,code){
   return hit||{value:0,rows:0};
 }
 function allDates(){
-  return Array.from(new Set(minute.map(function(r){return String(r.log_date||'');}))).filter(Boolean).sort();
+  return Array.from(new Set(minute.filter(rowInSource).map(function(r){return String(r.log_date||'');}))).filter(Boolean).sort();
 }
 function selectedDates(){
   const dates=allDates();
-  const latestFull=String(D.stats?.latest_full_date||'');
+  const latestFull=String(currentLoadedSourceRange().latest_full_date||D.stats?.latest_full_date||'');
   const full=latestFull?dates.filter(function(d){return d<=latestFull;}):dates;
   return full.length?full:dates;
 }
@@ -648,9 +653,9 @@ function rowInCustomRange(row,start,end){
   return (!start||d>=start)&&(!end||d<=end);
 }
 function rangeRows(){
-  const key='range|'+(startDate||'')+'|'+(endDate||'');
+  const key='range|'+sourceScope+'|'+(startDate||'')+'|'+(endDate||'');
   if(rowFilterCache.has(key))return rowFilterCache.get(key);
-  const out=minute.filter(rowInRange);
+  const out=minute.filter(function(r){return rowInSource(r)&&rowInRange(r);});
   rowFilterCache.set(key,out);
   return out;
 }
@@ -658,15 +663,22 @@ function filteredRows(){
   return filteredRowsForRange(startDate,endDate);
 }
 function filteredRowsForRange(start,end){
-  const key=['filtered',start||'',end||'',platform||'all',channel||'all'].join('|');
+  const key=['filtered',sourceScope,start||'',end||'',platform||'all',channel||'all'].join('|');
   if(rowFilterCache.has(key))return rowFilterCache.get(key);
   const out=minute.filter(function(r){
-    return rowInCustomRange(r,start,end)
+    return rowInSource(r)
+      && rowInCustomRange(r,start,end)
       && (platform==='all'||platformKey(r)===platform)
       && (channel==='all'||pairKey(r)===channel);
   });
   rowFilterCache.set(key,out);
   return out;
+}
+function sourceOptions(){
+  const configured=(D.source_options||[]).filter(function(item){return item&&item.value;});
+  if(configured.length)return configured;
+  const seen=Array.from(new Set(minute.map(function(r){return sourceKey(r);}).filter(Boolean))).sort();
+  return [{value:'all',label:'ALL SOURCES'}].concat(seen.map(function(s){return {value:s,label:s.toUpperCase()};}));
 }
 function setOptions(id,items,value){
   const el=document.getElementById(id);
@@ -704,6 +716,7 @@ function setMainTab(tab){
   render();
 }
 function syncControls(){
+  sourceScope=setOptions('sourceSelect',sourceOptions(),sourceScope||'all');
   const days=selectedDates();
   const first=days[0]||'';
   const last=days[days.length-1]||'';
@@ -740,21 +753,23 @@ function syncControls(){
   compareMode=setOptions('compareSelect',compareItems,compareMode||'none');
   setOptions('compareSelectChart',compareItems,compareMode);
   const rRows=rangeRows();
-  const platforms=[{value:'all',label:'All Platforms'}].concat(Array.from(new Map(rRows.map(function(r){return [platformKey(r),{value:platformKey(r),label:String(r.platform_name||'Unknown FAST Platform')}];})).values()).sort(function(a,b){return a.label.localeCompare(b.label);}));
+  const platforms=[{value:'all',label:'All Platforms'}].concat(Array.from(new Map(rRows.map(function(r){return [platformKey(r),{value:platformKey(r),label:String(r.platform_name||'Unknown Platform')}];})).values()).sort(function(a,b){return a.label.localeCompare(b.label);}));
   platform=setOptions('platformSelect',platforms,platform||'all');
   const pRows=rRows.filter(function(r){return platform==='all'||platformKey(r)===platform;});
   const withPlatform=platform==='all';
   const channels=[{value:'all',label:'All Channels'}].concat(Array.from(new Map(pRows.map(function(r){return [pairKey(r),{value:pairKey(r),label:channelLabel(r,withPlatform)}];})).values()).sort(function(a,b){return a.label.localeCompare(b.label);}));
   channel=setOptions('channelSelect',channels,channel||'all');
   const selectedRows=filteredRowsForRange(startDate,endDate);
+  const sourceText=document.getElementById('sourceSelect').selectedOptions[0]?.textContent||'ALL SOURCES';
   const platformText=document.getElementById('platformSelect').selectedOptions[0]?.textContent||'All Platforms';
   const channelText=document.getElementById('channelSelect').selectedOptions[0]?.textContent||'All Channels';
-  document.getElementById('selectionText').textContent=(startDate&&endDate?formatDateRange(startDate,endDate):'No dates')+' | '+platformText+' | '+channelText+' | '+intervalLabel()+' interval | '+fmt(selectedRows.length)+' minute rows';
+  document.getElementById('selectionText').textContent=(startDate&&endDate?formatDateRange(startDate,endDate):'No dates')+' | '+sourceText+' | '+platformText+' | '+channelText+' | '+intervalLabel()+' interval | '+fmt(selectedRows.length)+' minute rows';
   updateHeaderMeta(selectedRows);
 }
 function setDateMode(mode){dateMode=mode==='range'?'range':'single';if(dateMode==='single')endDate=startDate;render();}
 function setDateRange(){startDate=document.getElementById('dateStart').value||startDate;endDate=dateMode==='single'?startDate:(document.getElementById('dateEnd').value||endDate);if(startDate>endDate){const t=startDate;startDate=endDate;endDate=t;}if(dateMode==='single')endDate=startDate;render();}
 function setPreset(mode){const days=selectedDates();if(!days.length)return;if(mode==='latest'){dateMode='single';startDate=days[days.length-1];endDate=days[days.length-1];}else if(mode==='all'){dateMode='range';startDate=days[0];endDate=days[days.length-1];}else{dateMode='range';const selected=days.slice(-Number(mode));startDate=selected[0]||days[0];endDate=selected[selected.length-1]||days[days.length-1];}render();}
+function setSourceScope(v){sourceScope=v||'all';render();}
 function setPlatform(v){platform=v||'all';render();}
 function setChannel(v){channel=v||'all';render();}
 function setIdentity(v){identity=v||'cliip';render();}
@@ -784,12 +799,12 @@ function lineGroups(rows){
   const maxMetric=function(items){return (items||[]).reduce(function(a,r){return Math.max(a,metricValue(r));},0);};
   if(lineMode==='platform'){
     const buckets=new Map();
-    (rows||[]).forEach(function(r){const key=platformKey(r);if(!buckets.has(key))buckets.set(key,{label:String(r.platform_name||'Unknown FAST Platform'),rows:[]});buckets.get(key).rows.push(r);});
+    (rows||[]).forEach(function(r){const key=platformKey(r);if(!buckets.has(key))buckets.set(key,{label:String(r.platform_name||'Unknown Platform'),rows:[]});buckets.get(key).rows.push(r);});
     return Array.from(buckets.values()).sort(function(a,b){return maxMetric(b.rows)-maxMetric(a.rows);});
   }
   if(lineMode!=='channel')return [{label:selectionLabel(),rows:rows||[]}];
   const buckets=new Map();
-  (rows||[]).forEach(function(r){const key=pairKey(r);if(!buckets.has(key))buckets.set(key,{label:String(r.platform_name||'Unknown FAST Platform')+' - '+channelLabel(r,false),rows:[]});buckets.get(key).rows.push(r);});
+  (rows||[]).forEach(function(r){const key=pairKey(r);if(!buckets.has(key))buckets.set(key,{label:String(r.platform_name||'Unknown Platform')+' - '+channelLabel(r,false),rows:[]});buckets.get(key).rows.push(r);});
   return Array.from(buckets.values()).sort(function(a,b){return maxMetric(b.rows)-maxMetric(a.rows);});
 }
 function selectionLabel(){
@@ -869,7 +884,7 @@ function platformChannelGroups(rows){
   const buckets=new Map();
   (rows||[]).forEach(function(r){
     const key=pairKey(r);
-    if(!buckets.has(key))buckets.set(key,{label:String(r.platform_name||'Unknown FAST Platform')+' - '+channelLabel(r,false),rows:[],sum:0,peak:0});
+    if(!buckets.has(key))buckets.set(key,{label:String(r.platform_name||'Unknown Platform')+' - '+channelLabel(r,false),rows:[],sum:0,peak:0});
     const item=buckets.get(key);
     const value=metricValue(r);
     item.rows.push(r);
@@ -1136,7 +1151,7 @@ function renderPlatformMix(rows){
   const target=document.getElementById('platformMixChart');
   if(!target||typeof Chart==='undefined')return;
   if(platformMixChart){platformMixChart.destroy();platformMixChart=null;}
-  const data=groupedMetric(rows,platformKey,function(r){return String(r.platform_name||'Unknown FAST Platform');});
+  const data=groupedMetric(rows,platformKey,function(r){return String(r.platform_name||'Unknown Platform');});
   renderPlatformMixDetails(data);
   platformMixChart=new Chart(target,{
     type:'doughnut',
@@ -1364,35 +1379,48 @@ function selectedWindowLabel(rows){
   }
   return formatDateTime(first)+' to '+formatDateTime(last);
 }
-function dashboardSourceLabel(){
-  const sources=Array.from(new Set((D.minute||[]).map(function(r){return String(r.source||'fast').toUpperCase();}).filter(Boolean))).sort();
-  return sources.length>1?'ALL SOURCES':(sources[0]||'FAST');
+function sourceDisplayLabel(){
+  const ranges=D.stats?.source_ranges||{};
+  const range=ranges[sourceScope]||ranges.all||{};
+  if(range.label)return String(range.label);
+  return sourceScope==='all'?'ALL SOURCES':sourceScope.toUpperCase();
+}
+function dashboardSourceLabel(){return sourceDisplayLabel();}
+function currentFullSourceRange(){
+  const ranges=D.stats?.full_source_ranges||{};
+  return ranges[sourceScope]||ranges.all||{};
+}
+function currentLoadedSourceRange(){
+  const ranges=D.stats?.source_ranges||{};
+  return ranges[sourceScope]||ranges.all||{};
+}
+function rangeDateText(range){
+  if(!range||!range.first_date)return 'No data';
+  return formatDateRange(range.first_date,range.latest_full_date||range.last_date);
+}
+function rangeTimeText(range){
+  if(!range||!range.first_date)return 'No data';
+  const start=range.first_ist||((range.first_date||'')+' 00:00:00');
+  const end=range.last_ist||((range.last_date||'')+' 23:59:59');
+  return formatDateTime(start)+' to '+formatDateTime(end);
 }
 function fastStatusHistoryNote(){
-  const hasFast=(D.minute||[]).some(function(r){return String(r.source||'').toLowerCase()==='fast';});
-  if(hasFast&&statusMetricCode(metric)&&String(startDate||'')<'2026-06-19'){
-    return 'Note: FAST HTTP status-code minute history is currently available from 19/06/26 onward. Earlier FAST status-code lines will be completed after historical FAST lake partitions are processed.';
+  const selectedHasFast=sourceScope==='all'||sourceScope==='fast';
+  if(selectedHasFast&&statusMetricCode(metric)&&String(startDate||'')<'2026-06-19'){
+    return 'Note: FAST HTTP status-code minute history is currently available from 19/06/26 onward.';
   }
   return '';
 }
 function updateHeaderMeta(selectedRows){
-  const trueStart=D.stats?.first_ist||((D.stats?.first_date||'')+' 00:00:00');
-  const trueEnd=D.stats?.last_ist||((D.stats?.last_date||'')+' 23:59:59');
-  document.getElementById('rangeMeta').textContent='Source: '+dashboardSourceLabel()+' | True data range: '+formatDateTime(trueStart)+' → '+formatDateTime(trueEnd)+' | '+fmt(D.stats?.minute_rows||0)+' minute rows';
-  const used=selectedRows&&selectedRows.length?selectedWindowLabel(selectedRows):(startDate&&endDate?formatDateTime(startDate+' 00:00:00')+' to '+formatDateTime(endDate+' 23:59:59'):'No selected range');
-  document.getElementById('fullDateMeta').textContent='Used range: '+used+' | Full-day filter range: '+formatDateRange(D.stats?.first_date,D.stats?.latest_full_date||D.stats?.last_date);
-}
-function updateHeaderMeta(selectedRows){
-  const fullStart=(D.stats?.full_first_date||D.stats?.first_date||'')+' 00:00:00';
-  const fullEnd=D.stats?.last_ist||((D.stats?.full_last_date||D.stats?.last_date||'')+' 23:59:59');
-  const embedStart=D.stats?.first_ist||((D.stats?.first_date||'')+' 00:00:00');
-  const embedEnd=D.stats?.last_ist||((D.stats?.last_date||'')+' 23:59:59');
+  const fullRange=currentFullSourceRange();
+  const loadedRange=currentLoadedSourceRange();
   const embeddedWindow=Number(D.stats?.embed_window_days||0)>0;
-  const embeddedText=embeddedWindow?' | Embedded filter range: '+formatDateTime(embedStart)+' to '+formatDateTime(embedEnd):'';
-  document.getElementById('rangeMeta').textContent='Source: '+dashboardSourceLabel()+' | Full source range: '+formatDateTime(fullStart)+' to '+formatDateTime(fullEnd)+embeddedText+' | '+fmt(D.stats?.minute_rows||0)+' minute rows loaded';
+  const trueRangeText=rangeTimeText(fullRange);
+  const loadedText=embeddedWindow?' | Loaded filter range: '+rangeTimeText(loadedRange):'';
+  document.getElementById('rangeMeta').textContent='Source: '+sourceDisplayLabel()+' | True data range: '+trueRangeText+loadedText+' | '+fmt(loadedRange.rows||0)+' minute rows loaded';
   const used=selectedRows&&selectedRows.length?selectedWindowLabel(selectedRows):(startDate&&endDate?formatDateTime(startDate+' 00:00:00')+' to '+formatDateTime(endDate+' 23:59:59'):'No selected range');
   const note=fastStatusHistoryNote();
-  document.getElementById('fullDateMeta').textContent='Used range: '+used+' | Full-day filter range: '+formatDateRange(D.stats?.first_date,D.stats?.latest_full_date||D.stats?.last_date)+(embeddedWindow?' | All uses the embedded filter range':'')+(note?' | '+note:'');
+  document.getElementById('fullDateMeta').textContent='Used range: '+used+' | Available dates: '+rangeDateText(fullRange)+(embeddedWindow?' | All uses loaded filter range':'')+(note?' | '+note:'');
 }
 function flashGroupRows(rows,keyFn,labelFn,metaFn){
   const buckets=new Map();
@@ -1406,7 +1434,7 @@ function flashGroupRows(rows,keyFn,labelFn,metaFn){
     const minute=String(row.minute_ist||'');
     const value=metricValue(row);
     if(minute)item.minuteTotals.set(minute,(item.minuteTotals.get(minute)||0)+Number(value||0));
-    item.platforms.add(String(row.platform_name||'Unknown FAST Platform'));
+    item.platforms.add(String(row.platform_name||'Unknown Platform'));
   });
   return Array.from(buckets.values())
     .map(function(item){
@@ -1488,7 +1516,7 @@ function renderFlashcards(rows){
   const platforms=new Map();
   (rows||[]).forEach(function(r){
     const key=platformKey(r)||'unknown';
-    if(!platforms.has(key))platforms.set(key,{label:String(r.platform_name||'Unknown FAST Platform'),rows:[]});
+    if(!platforms.has(key))platforms.set(key,{label:String(r.platform_name||'Unknown Platform'),rows:[]});
     platforms.get(key).rows.push(r);
   });
   const platformCards=Array.from(platforms.values()).map(function(platformItem){
@@ -1518,7 +1546,8 @@ function rowsForDateList(days){
   const wanted=new Set((days||[]).filter(Boolean));
   if(!wanted.size)return [];
   return minute.filter(function(r){
-    return wanted.has(String(r.log_date||''))
+    return rowInSource(r)
+      && wanted.has(String(r.log_date||''))
       && (platform==='all'||platformKey(r)===platform)
       && (channel==='all'||pairKey(r)===channel);
   });
@@ -1713,14 +1742,14 @@ function renderInsights(rows){
     latestRows,
     previousRows,
     function(r){return platformKey(r)||'unknown';},
-    function(r){return String(r.platform_name||'Unknown FAST Platform');},
+    function(r){return String(r.platform_name||'Unknown Platform');},
     20
   );
   const platformChannelRows=compareEntityRows(
     latestRows,
     previousRows,
     function(r){return platformKey(r)+'|'+String(r.channel_name||'Other');},
-    function(r){return platform==='all'?String(r.platform_name||'Unknown FAST Platform')+' - '+String(r.channel_name||'Other'):String(r.channel_name||'Other');},
+    function(r){return platform==='all'?String(r.platform_name||'Unknown Platform')+' - '+String(r.channel_name||'Other'):String(r.channel_name||'Other');},
     30
   );
   const weeklyChannelRows=compareEntityRows(
@@ -1734,7 +1763,7 @@ function renderInsights(rows){
     weekRows,
     prevWeekRows,
     function(r){return platformKey(r)||'unknown';},
-    function(r){return String(r.platform_name||'Unknown FAST Platform');},
+    function(r){return String(r.platform_name||'Unknown Platform');},
     20
   );
   const rangeAvgChannelRows=compareEntityRowsToDailyAverage(
@@ -1763,7 +1792,7 @@ function groupRows(rows,keys,sumKeys,maxKeys,firstKeys){
   return Array.from(buckets.values());
 }
 function filteredSummary(){
-  return summary.filter(function(r){return rowInRange(r)&&(platform==='all'||platformKey(r)===platform)&&(channel==='all'||pairKey(r)===channel);});
+  return summary.filter(function(r){return rowInSource(r)&&rowInRange(r)&&(platform==='all'||platformKey(r)===platform)&&(channel==='all'||pairKey(r)===channel);});
 }
 function selectedMetricStatsByPair(rows){
   const buckets=new Map();

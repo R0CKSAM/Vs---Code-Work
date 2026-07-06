@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
-"""Generate a standalone dark-mode FAST concurrency dashboard."""
+﻿#!/usr/bin/env python3
+"""Generate a standalone source-aware concurrency dashboard."""
 
 from __future__ import annotations
 
@@ -433,6 +433,54 @@ def _numeric_column(df: pd.DataFrame, column: str) -> pd.Series:
     return pd.to_numeric(df[column], errors="coerce").fillna(0)
 
 
+def source_range_stats(df: pd.DataFrame) -> dict[str, dict[str, object]]:
+    """Build source-aware range metadata for the static HTML filters/header."""
+    current_ist_date = datetime.now(IST).date().isoformat()
+
+    def one_range(frame: pd.DataFrame, label: str) -> dict[str, object]:
+        if frame.empty or "log_date" not in frame.columns:
+            return {
+                "label": label,
+                "rows": 0,
+                "first_date": "",
+                "last_date": "",
+                "first_ist": "",
+                "last_ist": "",
+                "latest_full_date": "",
+                "dates": 0,
+                "platforms": 0,
+                "channels": 0,
+            }
+        dates = sorted(str(day) for day in frame["log_date"].dropna().unique())
+        minute_times = (
+            sorted(str(value) for value in frame["minute_ist"].dropna().unique())
+            if "minute_ist" in frame.columns
+            else []
+        )
+        full_dates = [day for day in dates if day < current_ist_date]
+        return {
+            "label": label,
+            "rows": int(len(frame)),
+            "first_date": dates[0] if dates else "",
+            "last_date": dates[-1] if dates else "",
+            "first_ist": minute_times[0] if minute_times else "",
+            "last_ist": minute_times[-1] if minute_times else "",
+            "latest_full_date": full_dates[-1] if full_dates else (dates[-1] if dates else ""),
+            "dates": len(dates),
+            "platforms": int(frame["platform_name"].nunique()) if "platform_name" in frame.columns else 0,
+            "channels": int(frame["channel_name"].nunique()) if "channel_name" in frame.columns else 0,
+        }
+
+    ranges = {"all": one_range(df, "ALL SOURCES")}
+    if not df.empty and "source" in df.columns:
+        source_values = df["source"].fillna("stream").astype(str).str.lower()
+        for source, source_frame in df.groupby(source_values):
+            source_key = str(source or "").lower()
+            if source_key:
+                ranges[source_key] = one_range(source_frame, source_key.upper())
+    return ranges
+
+
 def build_data(data_dir: Path, title: str, embed_window_days: int = 30) -> tuple[dict, pd.DataFrame]:
     minute_path = data_dir / "concurrency_minute.parquet"
     status_minute_path = data_dir / "concurrency_status_minute.parquet"
@@ -459,6 +507,7 @@ def build_data(data_dir: Path, title: str, embed_window_days: int = 30) -> tuple
         if not minute.empty and "log_date" in minute.columns
         else []
     )
+    full_source_ranges = source_range_stats(minute)
     if embed_window_days and embed_window_days > 0 and len(full_source_dates) > embed_window_days:
         embedded_dates = set(full_source_dates[-embed_window_days:])
         minute = minute[minute["log_date"].astype(str).isin(embedded_dates)]
@@ -466,6 +515,7 @@ def build_data(data_dir: Path, title: str, embed_window_days: int = 30) -> tuple
             status_minute = status_minute[status_minute["log_date"].astype(str).isin(embedded_dates)]
         if not summary.empty and "log_date" in summary.columns:
             summary = summary[summary["log_date"].astype(str).isin(embedded_dates)]
+    source_ranges = source_range_stats(minute)
     status_code_options, status_extra_dictionaries, status_extra = build_status_payload(status_minute)
 
     integrity_checks = []
@@ -534,6 +584,8 @@ def build_data(data_dir: Path, title: str, embed_window_days: int = 30) -> tuple
         "manifest_read_error": manifest_error,
         "full_first_date": full_source_dates[0] if full_source_dates else "",
         "full_last_date": full_source_dates[-1] if full_source_dates else "",
+        "full_source_ranges": full_source_ranges,
+        "source_ranges": source_ranges,
         "embed_window_days": int(embed_window_days or 0),
         "peak_unique_viewers": int(_numeric_column(minute, "unique_viewers").max() or 0)
         if not minute.empty
@@ -577,6 +629,11 @@ def build_data(data_dir: Path, title: str, embed_window_days: int = 30) -> tuple
         },
         "stats": stats,
         "manifest": manifest,
+        "source_options": [
+            {"value": key, "label": value.get("label", key.upper())}
+            for key, value in source_ranges.items()
+            if key == "all" or int(value.get("rows", 0) or 0) > 0
+        ],
         "status_meanings": STATUS_CODE_MEANINGS,
         "status_code_options": status_code_options,
         "status_extra_schema": ["k", "m", "c", "r", "v"],
@@ -620,7 +677,7 @@ def build_data(data_dir: Path, title: str, embed_window_days: int = 30) -> tuple
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate standalone FAST concurrency HTML dashboard.")
+    parser = argparse.ArgumentParser(description="Generate standalone source-aware concurrency HTML dashboard.")
     parser.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--title", default="Veto Concurrency")
