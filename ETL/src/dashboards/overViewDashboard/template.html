@@ -136,6 +136,7 @@ td:first-child{position:static}
        <button class="btn-preset" id="btnAll" onclick="setPreset('all')">ALL</button>
        <button class="btn-preset" id="btn30" onclick="setPreset(30)">30D</button>
        <button class="btn-preset active" id="btn7" onclick="setPreset(7)">7D</button>
+       <button class="btn-preset" id="btnYesterday" onclick="setPreset(1)">Yesterday</button>
        <span class="filter-sep"></span>
        <span>Date Mode</span>
        <button class="btn-preset" id="dateModeSingle" onclick="setDateMode('single')">Single Date</button>
@@ -183,6 +184,7 @@ td:first-child{position:static}
     <div class="modal-body">
       <div class="modal-controls">
         <button class="btn-preset" onclick="setModalPreset('dashboard')">Dashboard range</button>
+        <button class="btn-preset" onclick="setModalPreset(1)">Yesterday</button>
         <button class="btn-preset" onclick="setModalPreset(7)">7D</button>
         <button class="btn-preset" onclick="setModalPreset(30)">30D</button>
         <button class="btn-preset" onclick="setModalPreset('all')">ALL</button>
@@ -962,10 +964,11 @@ function executeSortLogic() {
 
 // ── Preset / custom date filter ───────────────────────────────────────────────
 function syncUIState(presetMode) {
-  ['btnAll','btn30','btn7'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('active'); });
+  ['btnAll','btn30','btn7','btnYesterday'].forEach(id => { const el = document.getElementById(id); if (el) el.classList.remove('active'); });
   if (presetMode === 'all') document.getElementById('btnAll').classList.add('active');
   else if (presetMode === 30) document.getElementById('btn30').classList.add('active');
   else if (presetMode === 7)  document.getElementById('btn7').classList.add('active');
+  else if (presetMode === 1)  document.getElementById('btnYesterday').classList.add('active');
 }
 
 function syncPresetFromDateInputs() {
@@ -977,6 +980,7 @@ function syncPresetFromDateInputs() {
   if (start === first && end === last) { syncUIState('all'); return; }
   const last7 = completeRows.slice(-7);
   const last30 = completeRows.slice(-30);
+  if (last && start === last && end === last) { syncUIState(1); return; }
   if (last7.length && start === tsToDateStr(last7[0].ts) && end === tsToDateStr(last7[last7.length - 1].ts)) { syncUIState(7); return; }
   if (last30.length && start === tsToDateStr(last30[0].ts) && end === tsToDateStr(last30[last30.length - 1].ts)) { syncUIState(30); return; }
   syncUIState(null);
