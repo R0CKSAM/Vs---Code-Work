@@ -47,6 +47,26 @@ def print_step(step: dict, show_tail: bool) -> None:
         print("  tail  : " + shorten(str(step["log_tail"]).replace("\n", " | "), width=800))
 
 
+def latest_step_entries(steps: list[dict]) -> list[dict]:
+    """Return the final recorded entry for each step name.
+
+    Pipeline retries are stored as multiple entries with the same ``step``.
+    Health output should judge the final outcome, otherwise a successful retry
+    still leaves the first failed attempt showing as an active issue.
+    """
+
+    latest_by_step: dict[str, tuple[int, dict]] = {}
+    unnamed: list[tuple[int, dict]] = []
+    for index, step in enumerate(steps):
+        name = str(step.get("step", ""))
+        if not name:
+            unnamed.append((index, step))
+            continue
+        latest_by_step[name] = (index, step)
+    ordered = list(latest_by_step.values()) + unnamed
+    return [step for _, step in sorted(ordered, key=lambda item: item[0])]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Show latest ETL pipeline health summary.")
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT)
@@ -64,9 +84,10 @@ def main() -> None:
     summary_path = args.summary or args.output_root / "state" / default_name
     data = load_summary(summary_path.expanduser().resolve())
     steps = data.get("steps", [])
+    latest_steps = latest_step_entries(steps)
     issues = [
         step
-        for step in steps
+        for step in latest_steps
         if step.get("status") in {"failed", "retrying"}
         or (step.get("status") == "skipped" and "failed" in str(step.get("reason", "")).lower())
     ]
@@ -83,7 +104,7 @@ def main() -> None:
 
     if args.all:
         print("Steps:")
-        for step in steps:
+        for step in latest_steps:
             print_step(step, args.tail)
         return
 

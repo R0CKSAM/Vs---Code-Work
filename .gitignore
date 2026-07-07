@@ -46,6 +46,7 @@ ETL/output/watch_hours/**/*.html
 ETL/output/overview/*.html
 ETL/output/exports/**/*.html
 ETL/output/**/*.json
+ETL/extras/repair_artifacts/
 
 # DuckDB cache/database files
 *.duckdb

@@ -407,6 +407,7 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
         <button class="filter-btn" id="modalTrendViewAllBtn" onclick="setTrendFocus('all')">View All</button>
         <button class="filter-btn" id="modalTrendSingleBtn" onclick="setTrendFocus('single')">Single Channel</button>
         <button class="filter-btn" id="modalTrendCompareBtn" onclick="setTrendFocus('compare')">Compare Channels</button>
+
         <select class="channel-select" id="modalTrendFastPlatform" onchange="setTrendFastPlatform(this.value)"></select>
         <select class="channel-select" id="modalTrendSingleChannel" onchange="setTrendSingleChannel(this.value)"></select>
         <input class="rank-count-input compare-count" type="number" id="modalCompareCount" min="2" max="5" step="1" value="2" onchange="setCompareCount(this.value)"/>
@@ -499,6 +500,21 @@ function dailyVolumeSourceRows() {
   return (D.daily || []).map(r => ({...r, source: 'stream'}));
 }
 
+function isoDatePart(value) {
+  const m = String(value || '').trim().match(/^(\d{4}-\d{2}-\d{2})/);
+  return m ? m[1] : '';
+}
+
+function shouldDropLastDailyDate(src, lastDate) {
+  const trueRange = sourceTrueRangeForHeader(src);
+  const trueLastDate = isoDatePart(trueRange.last);
+  if (!lastDate || !trueLastDate) return false;
+  if (lastDate > trueLastDate) return true;
+  // Keep the latest date when the profile confirms the day is complete.
+  if (lastDate === trueLastDate && !/\b23:59:59\b/.test(String(trueRange.last || ''))) return true;
+  return false;
+}
+
 function buildDailyForSource(src = sourceFilter) {
   const grouped = aggregateRows(
     sourceRows(dailyVolumeSourceRows(), src),
@@ -511,7 +527,11 @@ function buildDailyForSource(src = sourceFilter) {
     if (r.status_200_watch_hours == null) r.status_200_watch_hours = Number(r.status_200_ts_rows || r.ts_rows || 0) * CHUNK_HOURS;
     r.source = src;
   });
-  return grouped.length > 2 ? grouped.slice(1, -1) : grouped;
+  if (grouped.length <= 2) return grouped;
+  let usable = grouped.slice(1);
+  const last = usable[usable.length - 1]?.log_date || '';
+  if (shouldDropLastDailyDate(src, String(last))) usable = usable.slice(0, -1);
+  return usable;
 }
 
 function rebuildSourceViews(src = sourceFilter) {
