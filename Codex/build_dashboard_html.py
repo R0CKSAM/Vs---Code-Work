@@ -4,10 +4,10 @@ from datetime import datetime
 from pathlib import Path
 
 
-CSV_PATH = Path(r"D:\Raj\CTV FCT.csv")
-OUTPUT_PATH = Path(r"D:\Raj\Codex\CTV FCT Dashboard.html")
-STANDALONE_OUTPUT_PATH = Path(r"D:\Raj\Codex\CTV FCT Dashboard Standalone.html")
-MOBILE_OUTPUT_PATH = Path(r"D:\Raj\Codex\CTV FCT Dashboard Mobile.html")
+CSV_PATH = Path(r"D:\Vs - Code Work\Codex\CTV FCT.csv")
+OUTPUT_PATH = Path(r"D:\Vs - Code Work\Codex\CTV FCT Dashboard.html")
+STANDALONE_OUTPUT_PATH = Path(r"D:\Vs - Code Work\Codex\CTV FCT Dashboard Standalone.html")
+MOBILE_OUTPUT_PATH = Path(r"D:\Vs - Code Work\Codex\CTV FCT Dashboard Mobile.html")
 
 EXCLUDED = [
     "ASTROLOGERS",
@@ -84,7 +84,7 @@ html = """<!DOCTYPE html>
       --text: #f4f8ff;
       --muted: #c0cde0;
       --shadow: 0 22px 56px rgba(0, 0, 0, 0.45);
-      --font: "Aptos", "Segoe UI", Calibri, sans-serif;
+      --font: "Roboto", "Segoe UI", Arial, sans-serif;
       --accent-1: #6bb5ff;
       --accent-2: #57e0cf;
       --accent-3: #ffcf70;
@@ -274,6 +274,83 @@ html = """<!DOCTYPE html>
       margin-bottom: 18px;
       align-items: end;
     }
+    .graph1-scope,
+    .graph1-scope .label,
+    .graph1-scope .legend,
+    .graph1-scope .legend *,
+    .graph1-scope button,
+    .graph1-scope input,
+    .graph1-scope select {
+      font-family: "Montserrat", "Roboto", "Segoe UI", Arial, sans-serif;
+    }
+    .multi-dropdown {
+      position: relative;
+      display: grid;
+      gap: 8px;
+    }
+    .multi-dropdown-trigger {
+      min-height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      text-align: left;
+    }
+    .multi-dropdown-value {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .multi-dropdown-panel {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      z-index: 30;
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(210, 225, 244, 0.18);
+      background: #08111d;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.38);
+      display: none;
+    }
+    .multi-dropdown.open .multi-dropdown-panel {
+      display: block;
+    }
+    .multi-dropdown-search {
+      margin-bottom: 10px;
+    }
+    .multi-dropdown-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .multi-dropdown-actions button {
+      min-width: 0;
+      padding: 8px 10px;
+      font-size: 11px;
+    }
+    .multi-dropdown-options {
+      max-height: 220px;
+      overflow: auto;
+      display: grid;
+      gap: 6px;
+      padding-right: 4px;
+    }
+    .multi-dropdown-option {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .multi-dropdown-option input {
+      width: auto;
+      margin: 0;
+    }
     .chart-head {
       display: flex;
       align-items: center;
@@ -366,6 +443,43 @@ html = """<!DOCTYPE html>
       font-size: 13px;
       font-weight: 700;
     }
+    .total-panel {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(210, 225, 244, 0.12);
+      background: linear-gradient(180deg, rgba(17, 29, 48, 0.96), rgba(13, 24, 40, 0.96));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+    .total-title {
+      color: #f4f8ff;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      margin-bottom: 10px;
+    }
+    .total-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px 12px;
+    }
+    .total-chip {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(8, 17, 29, 0.86);
+      border: 1px solid rgba(216,227,241,0.12);
+    }
+    .total-chip-label {
+      color: #bcd1ea;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .total-chip-value {
+      color: #f8fbff;
+      font-size: 15px;
+      font-weight: 800;
+    }
     .legend-gradient {
       flex: 1;
       height: 12px;
@@ -390,19 +504,18 @@ html = """<!DOCTYPE html>
       display: block;
       overflow: visible;
     }
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+    .excluded-inline {
+      color: #ffd98e;
+      font-size: 14px;
+      line-height: 1.7;
+      letter-spacing: 0.2px;
     }
-    .chip {
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(107, 181, 255, 0.16);
-      color: #e3f1ff;
-      font-size: 12px;
+    .excluded-inline strong {
+      color: #fff2cc;
+    }
+    .excluded-items {
+      color: #ffb86b;
       font-weight: 700;
-      border: 1px solid rgba(107, 181, 255, 0.14);
     }
     .empty {
       height: 100%;
@@ -512,6 +625,22 @@ html = """<!DOCTYPE html>
     </section>
 
     <section class="section">
+      <div class="excluded-inline">
+        <strong>Excluded Categories:</strong>
+        <span class="excluded-items" id="excludedChips"></span>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="panel section-card">
+        <div class="section-head">
+          <h2>Dashboard Summary</h2>
+        </div>
+        <div class="summary-lines" id="summaryLines"></div>
+      </div>
+    </section>
+
+    <section class="section graph1-scope">
       <div class="section-head">
         <h2>Top Advertiser (FCT in Seconds)</h2>
       </div>
@@ -521,7 +650,22 @@ html = """<!DOCTYPE html>
           <div><label class="label" for="g1Start">Start Date</label><input id="g1Start" type="date"></div>
           <div><label class="label" for="g1End">End Date</label><input id="g1End" type="date"></div>
           <div><label class="label" for="g1Channel">Channel</label><select id="g1Channel"></select></div>
-          <div><label class="label" for="g1Category">Category</label><select id="g1Category"></select></div>
+          <div class="multi-dropdown" id="g1CategoryDropdown">
+            <label class="label" for="g1CategoryTrigger">Category</label>
+            <button class="multi-dropdown-trigger" id="g1CategoryTrigger" type="button">
+              <span class="multi-dropdown-value" id="g1CategoryValue">All Categories</span>
+              <span>▾</span>
+            </button>
+            <div class="multi-dropdown-panel">
+              <input class="multi-dropdown-search" id="g1CategorySearch" type="text" placeholder="Search categories">
+              <div class="multi-dropdown-actions">
+                <button id="g1CategoryAll" type="button">Select All</button>
+                <button id="g1CategoryClear" type="button">Clear All</button>
+              </div>
+              <div class="multi-dropdown-options" id="g1CategoryOptions"></div>
+            </div>
+            <select id="g1Category" multiple hidden></select>
+          </div>
           <div><label class="label">&nbsp;</label><button id="g1Reset" type="button">Reset</button></div>
         </div>
         <div class="chart-head">
@@ -544,7 +688,22 @@ html = """<!DOCTYPE html>
           <div><label class="label" for="g2Start">Start Date</label><input id="g2Start" type="date"></div>
           <div><label class="label" for="g2End">End Date</label><input id="g2End" type="date"></div>
           <div><label class="label" for="g2Channel">Channel</label><select id="g2Channel"></select></div>
-          <div><label class="label" for="g2Category">Category</label><select id="g2Category"></select></div>
+          <div class="multi-dropdown" id="g2CategoryDropdown">
+            <label class="label" for="g2CategoryTrigger">Category</label>
+            <button class="multi-dropdown-trigger" id="g2CategoryTrigger" type="button">
+              <span class="multi-dropdown-value" id="g2CategoryValue">All Categories</span>
+              <span>&#9660;</span>
+            </button>
+            <div class="multi-dropdown-panel">
+              <input class="multi-dropdown-search" id="g2CategorySearch" type="text" placeholder="Search categories">
+              <div class="multi-dropdown-actions">
+                <button id="g2CategoryAll" type="button">Select All</button>
+                <button id="g2CategoryClear" type="button">Clear All</button>
+              </div>
+              <div class="multi-dropdown-options" id="g2CategoryOptions"></div>
+            </div>
+            <select id="g2Category" multiple hidden></select>
+          </div>
           <div><label class="label">&nbsp;</label><button id="g2Reset" type="button">Reset</button></div>
         </div>
         <div class="chart-head">
@@ -571,7 +730,22 @@ html = """<!DOCTYPE html>
           <div><label class="label" for="g3Start">Start Date</label><input id="g3Start" type="date"></div>
           <div><label class="label" for="g3End">End Date</label><input id="g3End" type="date"></div>
           <div><label class="label" for="g3Channel">Channel</label><select id="g3Channel"></select></div>
-          <div><label class="label" for="g3Category">Category</label><select id="g3Category"></select></div>
+          <div class="multi-dropdown" id="g3CategoryDropdown">
+            <label class="label" for="g3CategoryTrigger">Category</label>
+            <button class="multi-dropdown-trigger" id="g3CategoryTrigger" type="button">
+              <span class="multi-dropdown-value" id="g3CategoryValue">All Categories</span>
+              <span>&#9660;</span>
+            </button>
+            <div class="multi-dropdown-panel">
+              <input class="multi-dropdown-search" id="g3CategorySearch" type="text" placeholder="Search categories">
+              <div class="multi-dropdown-actions">
+                <button id="g3CategoryAll" type="button">Select All</button>
+                <button id="g3CategoryClear" type="button">Clear All</button>
+              </div>
+              <div class="multi-dropdown-options" id="g3CategoryOptions"></div>
+            </div>
+            <select id="g3Category" multiple hidden></select>
+          </div>
           <div><label class="label">&nbsp;</label><button id="g3Reset" type="button">Reset</button></div>
         </div>
         <div class="chart-head">
@@ -594,7 +768,6 @@ html = """<!DOCTYPE html>
           <div><label class="label" for="g4Start">Start Date</label><input id="g4Start" type="date"></div>
           <div><label class="label" for="g4End">End Date</label><input id="g4End" type="date"></div>
           <div><label class="label" for="g4Channel">Channel</label><select id="g4Channel"></select></div>
-          <div><label class="label" for="g4Category">Category</label><select id="g4Category"></select></div>
           <div><label class="label">&nbsp;</label><button id="g4Reset" type="button">Reset</button></div>
         </div>
         <div class="chart-head">
@@ -615,8 +788,24 @@ html = """<!DOCTYPE html>
           <div><label class="label" for="g5Start">Start Date</label><input id="g5Start" type="date"></div>
           <div><label class="label" for="g5End">End Date</label><input id="g5End" type="date"></div>
           <div><label class="label" for="g5Channel">Channel</label><select id="g5Channel"></select></div>
+          <div class="multi-dropdown" id="g5CategoryDropdown">
+            <label class="label" for="g5CategoryTrigger">Category</label>
+            <button class="multi-dropdown-trigger" id="g5CategoryTrigger" type="button">
+              <span class="multi-dropdown-value" id="g5CategoryValue">All Categories</span>
+              <span>&#9660;</span>
+            </button>
+            <div class="multi-dropdown-panel">
+              <input class="multi-dropdown-search" id="g5CategorySearch" type="text" placeholder="Search categories">
+              <div class="multi-dropdown-actions">
+                <button id="g5CategoryAll" type="button">Select All</button>
+                <button id="g5CategoryClear" type="button">Clear All</button>
+              </div>
+              <div class="multi-dropdown-options" id="g5CategoryOptions"></div>
+            </div>
+            <select id="g5Category" multiple hidden></select>
+          </div>
           <div><label class="label" for="g5Advertisor">Advertiser</label><select id="g5Advertisor"></select></div>
-          <div><label class="label" for="g5Time">Time</label><select id="g5Time"><option value="seconds">Seconds</option><option value="minutes">Minutes</option></select></div>
+          <div><label class="label" for="g5Time">Time</label><select id="g5Time"><option value="minutes">Minutes</option><option value="seconds">Seconds</option></select></div>
           <div><label class="label">&nbsp;</label><button id="g5Reset" type="button">Reset</button></div>
         </div>
         <div class="chart-head">
@@ -630,27 +819,13 @@ html = """<!DOCTYPE html>
           <span>High AD Duration</span>
         </div>
         <div class="chart-box" id="g5Chart"></div>
+        <div class="total-panel">
+          <div class="total-title">Total</div>
+          <div class="total-grid" id="g5TotalGrid"></div>
+        </div>
       </div>
     </section>
 
-    <section class="section">
-      <div class="panel section-card">
-        <div class="section-head">
-          <h2>Excluded Categories</h2>
-        </div>
-        <div class="chips" id="excludedChips"></div>
-        <div class="info-note">These categories are excluded from every chart, ranking, and summary to keep the dashboard focused on paid advertising activity.</div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="panel section-card">
-        <div class="section-head">
-          <h2>Dashboard Summary</h2>
-        </div>
-        <div class="summary-lines" id="summaryLines"></div>
-      </div>
-    </section>
   </div>
 
   <script>
@@ -669,7 +844,7 @@ html = """<!DOCTYPE html>
     const chartPalettes = {
       g1: ['#3b82f6', '#22c55e', '#ef4444', '#a855f7'],
       g2: ['#3b82f6', '#22c55e', '#ef4444', '#a855f7'],
-      g3: ['#8ad4ff', '#ffb26b', '#7ef0cb', '#ff98b8', '#b8a0ff', '#ffe082', '#8be4ff', '#a7f08a'],
+      g3: ['#1d4ed8', '#0f766e', '#b45309', '#7c3aed', '#be123c', '#0369a1', '#166534', '#7f1d1d'],
       heat: ['#1a2434', '#23496f', '#2d73a9', '#3996d9', '#73c5ff']
     };
 
@@ -678,11 +853,11 @@ html = """<!DOCTYPE html>
       cleanedRows: [],
       initialized: false,
       sections: {
-        g1: { topN: '10', start: '', end: '', channel: '', category: '', view: 'bar' },
-        g2: { topN: '10', start: '', end: '', channel: '', category: '', view: 'bar' },
-        g3: { topN: '10', start: '', end: '', channel: '', category: '', view: 'bar' },
+        g1: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },
+        g2: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },
+        g3: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },
         g4: { topN: '10', start: '', end: '', channel: '', category: '', view: 'heat' },
-        g5: { start: '', end: '', channel: '', advertisor: '', time: 'seconds', view: 'heat' }
+        g5: { start: '', end: '', channel: '', category: [], advertisor: '', time: 'minutes', view: 'heat' }
       }
     };
 
@@ -699,6 +874,13 @@ html = """<!DOCTYPE html>
           end: document.getElementById('g1End'),
           channel: document.getElementById('g1Channel'),
           category: document.getElementById('g1Category'),
+          categoryDropdown: document.getElementById('g1CategoryDropdown'),
+          categoryTrigger: document.getElementById('g1CategoryTrigger'),
+          categoryValue: document.getElementById('g1CategoryValue'),
+          categorySearch: document.getElementById('g1CategorySearch'),
+          categoryOptions: document.getElementById('g1CategoryOptions'),
+          categoryAll: document.getElementById('g1CategoryAll'),
+          categoryClear: document.getElementById('g1CategoryClear'),
           reset: document.getElementById('g1Reset'),
           legend: document.getElementById('g1Legend'),
           chart: document.getElementById('g1Chart'),
@@ -711,6 +893,13 @@ html = """<!DOCTYPE html>
           end: document.getElementById('g2End'),
           channel: document.getElementById('g2Channel'),
           category: document.getElementById('g2Category'),
+          categoryDropdown: document.getElementById('g2CategoryDropdown'),
+          categoryTrigger: document.getElementById('g2CategoryTrigger'),
+          categoryValue: document.getElementById('g2CategoryValue'),
+          categorySearch: document.getElementById('g2CategorySearch'),
+          categoryOptions: document.getElementById('g2CategoryOptions'),
+          categoryAll: document.getElementById('g2CategoryAll'),
+          categoryClear: document.getElementById('g2CategoryClear'),
           reset: document.getElementById('g2Reset'),
           legend: document.getElementById('g2Legend'),
           chart: document.getElementById('g2Chart'),
@@ -725,6 +914,13 @@ html = """<!DOCTYPE html>
           end: document.getElementById('g3End'),
           channel: document.getElementById('g3Channel'),
           category: document.getElementById('g3Category'),
+          categoryDropdown: document.getElementById('g3CategoryDropdown'),
+          categoryTrigger: document.getElementById('g3CategoryTrigger'),
+          categoryValue: document.getElementById('g3CategoryValue'),
+          categorySearch: document.getElementById('g3CategorySearch'),
+          categoryOptions: document.getElementById('g3CategoryOptions'),
+          categoryAll: document.getElementById('g3CategoryAll'),
+          categoryClear: document.getElementById('g3CategoryClear'),
           reset: document.getElementById('g3Reset'),
           legend: document.getElementById('g3Legend'),
           chart: document.getElementById('g3Chart'),
@@ -736,7 +932,6 @@ html = """<!DOCTYPE html>
           start: document.getElementById('g4Start'),
           end: document.getElementById('g4End'),
           channel: document.getElementById('g4Channel'),
-          category: document.getElementById('g4Category'),
           reset: document.getElementById('g4Reset'),
           chart: document.getElementById('g4Chart'),
           panel: document.getElementById('g4Chart').closest('.panel'),
@@ -746,11 +941,20 @@ html = """<!DOCTYPE html>
           start: document.getElementById('g5Start'),
           end: document.getElementById('g5End'),
           channel: document.getElementById('g5Channel'),
+          category: document.getElementById('g5Category'),
+          categoryDropdown: document.getElementById('g5CategoryDropdown'),
+          categoryTrigger: document.getElementById('g5CategoryTrigger'),
+          categoryValue: document.getElementById('g5CategoryValue'),
+          categorySearch: document.getElementById('g5CategorySearch'),
+          categoryOptions: document.getElementById('g5CategoryOptions'),
+          categoryAll: document.getElementById('g5CategoryAll'),
+          categoryClear: document.getElementById('g5CategoryClear'),
           advertisor: document.getElementById('g5Advertisor'),
           time: document.getElementById('g5Time'),
           reset: document.getElementById('g5Reset'),
           legend: document.getElementById('g5Legend'),
           chart: document.getElementById('g5Chart'),
+          totalGrid: document.getElementById('g5TotalGrid'),
           panel: document.getElementById('g5Chart').closest('.panel'),
           fullBtn: document.getElementById('g5FullBtn')
         }
@@ -969,7 +1173,11 @@ html = """<!DOCTYPE html>
     }
 
     function populateSelect(select, values, placeholder) {
-      select.innerHTML = `<option value="">${placeholder}</option>`;
+      if (select.multiple) {
+        select.innerHTML = '';
+      } else {
+        select.innerHTML = `<option value="">${placeholder}</option>`;
+      }
       values.forEach(value => {
         const option = document.createElement('option');
         option.value = value;
@@ -978,19 +1186,88 @@ html = """<!DOCTYPE html>
       });
     }
 
+    function sharedCategorySections() {
+      return ['g1', 'g2', 'g3', 'g5'];
+    }
+
+    function updateCategoryDropdownValue(sectionKey) {
+      const controls = dom.sections[sectionKey];
+      const selected = state.sections[sectionKey].category || [];
+      if (!controls.categoryValue) return;
+      if (!selected.length) {
+        controls.categoryValue.textContent = 'All Categories';
+        return;
+      }
+      controls.categoryValue.textContent = selected.length <= 2
+        ? selected.join(', ')
+        : `${selected.length} Categories Selected`;
+    }
+
+    function syncSharedCategorySelection(selectedValues, sourceSectionKey = 'g1', options = {}) {
+      const nextValues = uniqueSorted(selectedValues || []);
+      sharedCategorySections().forEach(sectionKey => {
+        state.sections[sectionKey].category = [...nextValues];
+        const controls = dom.sections[sectionKey];
+        if (controls.categorySearch && sectionKey !== sourceSectionKey && !options.preserveSearchText) {
+          controls.categorySearch.value = '';
+        }
+      });
+      sharedCategorySections().forEach(sectionKey => {
+        populateCategoryDropdown(sectionKey, dom.sections[sectionKey].categorySearch ? dom.sections[sectionKey].categorySearch.value : '');
+      });
+    }
+
+    function populateCategoryDropdown(sectionKey, filterText = '') {
+      const controls = dom.sections[sectionKey];
+      const select = controls.category;
+      const selected = new Set(state.sections[sectionKey].category || []);
+      const values = uniqueSorted(state.cleanedRows.map(row => row.category));
+      const query = String(filterText || '').trim().toLowerCase();
+      const filtered = values.filter(value => !query || value.toLowerCase().includes(query));
+      select.innerHTML = '';
+      values.forEach(value => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        option.selected = selected.has(value);
+        select.appendChild(option);
+      });
+      controls.categoryOptions.innerHTML = filtered.map(value => `
+        <label class="multi-dropdown-option">
+          <input type="checkbox" value="${value.replace(/"/g, '&quot;')}" ${selected.has(value) ? 'checked' : ''}>
+          <span>${value}</span>
+        </label>
+      `).join('');
+      controls.categoryOptions.querySelectorAll('input[type="checkbox"]').forEach(input => {
+        input.addEventListener('change', () => {
+          const next = new Set(state.sections[sectionKey].category || []);
+          if (input.checked) next.add(input.value);
+          else next.delete(input.value);
+          syncSharedCategorySelection([...next], sectionKey, { preserveSearchText: true });
+          sharedCategorySections().forEach(key => syncSectionState(key));
+          sharedCategorySections().forEach(key => renderSection(key));
+          renderSummary();
+        });
+      });
+      updateCategoryDropdownValue(sectionKey);
+    }
+
     function initializeSectionControls(sectionKey) {
       const rows = state.cleanedRows;
       const dates = uniqueSorted(rows.map(row => row.date));
       const channels = uniqueSorted(rows.map(row => row.channel));
-      const categories = uniqueSorted(rows.map(row => row.category));
       const section = dom.sections[sectionKey];
 
       populateSelect(section.channel, channels, 'All Channels');
-      if (section.category) populateSelect(section.category, categories, 'All Categories');
+      if (sharedCategorySections().includes(sectionKey)) {
+        populateCategoryDropdown(sectionKey);
+      } else if (section.category) {
+        populateSelect(section.category, uniqueSorted(rows.map(row => row.category)), 'All Categories');
+      }
       if (sectionKey === 'g5') {
         const advertisors = uniqueSorted(rows.map(row => row.product));
         populateSelect(section.advertisor, advertisors, 'All Advertisers');
-        section.time.value = 'seconds';
+        section.time.value = 'minutes';
       }
 
       section.start.value = dates[0] || '';
@@ -1005,7 +1282,8 @@ html = """<!DOCTYPE html>
       const sectionState = state.sections[sectionKey];
       let rows = state.cleanedRows.filter(row => {
         if (sectionState.channel && row.channel !== sectionState.channel) return false;
-        if (sectionState.category && row.category !== sectionState.category) return false;
+        if (Array.isArray(sectionState.category) && sectionState.category.length && !sectionState.category.includes(row.category)) return false;
+        if (!Array.isArray(sectionState.category) && sectionState.category && row.category !== sectionState.category) return false;
         if (sectionState.start && row.date && row.date < sectionState.start) return false;
         if (sectionState.end && row.date && row.date > sectionState.end) return false;
         if (sectionKey === 'g5') {
@@ -1119,6 +1397,16 @@ html = """<!DOCTYPE html>
         .sort((a, b) => a.date.localeCompare(b.date));
     }
 
+    function buildChannelTotals(rows) {
+      const map = new Map();
+      rows.forEach(row => {
+        map.set(row.channel, (map.get(row.channel) || 0) + row.aaddur);
+      });
+      return [...map.entries()]
+        .map(([channel, total]) => ({ channel, total }))
+        .sort((a, b) => b.total - a.total || a.channel.localeCompare(b.channel));
+    }
+
     function buildChannelHourlyMatrix(rows) {
       const totals = new Map();
       rows.forEach(row => {
@@ -1181,80 +1469,41 @@ html = """<!DOCTYPE html>
     }
 
     function drawGraph1(rows) {
-      const topAdvertisors = aggregateAdvertisors(rows).slice(0, Number.parseInt(state.sections.g1.topN, 10));
-      const matrix = buildAdvertisorChannelMatrix(rows, topAdvertisors);
-      if (!matrix.rows.length) {
+      const topAdvertisers = aggregateAdvertisors(rows).slice(0, Number.parseInt(state.sections.g1.topN, 10));
+      if (!topAdvertisers.length) {
         drawEmpty(dom.sections.g1.chart, 'No data available for selected filters');
         dom.sections.g1.legend.innerHTML = '';
         return;
       }
       const { svg, width, height } = makeSvg(dom.sections.g1.chart);
-      const margin = { top: 18, right: 88, bottom: 46, left: 260 };
+      svg.style.fontFamily = '"Montserrat", "Roboto", "Segoe UI", Arial, sans-serif';
+      const margin = { top: 18, right: 24, bottom: 118, left: 70 };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
-      const gap = 10;
-      const barH = Math.max((plotH / matrix.rows.length) - gap, 12);
-      const maxValue = Math.max(...matrix.rows.map(item => item.total), 1);
-
-      for (let i = 0; i <= 4; i++) {
-        const x = margin.left + (plotW * i / 4);
-        svg.appendChild(svgEl('line', { x1: x, y1: margin.top, x2: x, y2: margin.top + plotH, stroke: 'rgba(216,227,241,0.18)', 'stroke-width': 1 }));
-        const tick = svgEl('text', { x, y: height - 24, fill: '#d8e3f1', 'font-size': 13, 'text-anchor': 'middle' });
-        tick.textContent = formatNumber(Math.round(maxValue * i / 4));
-        svg.appendChild(tick);
-      }
-
-      const xAxisLabel = svgEl('text', {
-        x: margin.left + plotW / 2, y: height - 6, fill: '#f4f8ff',
-        'font-size': 14, 'font-weight': 700, 'text-anchor': 'middle'
-      });
-      xAxisLabel.textContent = metricLabel();
-      svg.appendChild(xAxisLabel);
-
-      const yAxisLabel = svgEl('text', {
-        x: 22, y: margin.top + plotH / 2, fill: '#f4f8ff',
-        'font-size': 14, 'font-weight': 700, 'text-anchor': 'middle',
-        transform: `rotate(-90 22 ${margin.top + plotH / 2})`
-      });
-      yAxisLabel.textContent = advertisorLabel();
-      svg.appendChild(yAxisLabel);
-
-      matrix.rows.forEach((item, index) => {
-        const y = margin.top + index * (barH + gap);
-        let xCursor = margin.left;
-        matrix.channels.forEach(channel => {
-          const value = item.values[channel] || 0;
-          if (!value) return;
-          const w = (value / maxValue) * plotW;
-          svg.appendChild(svgEl('rect', { x: xCursor, y, width: w, height: barH, rx: 4, fill: channelColor(channel, 'g1') }));
-          if (w > 36) {
-            const dataLabel = svgEl('text', {
-              x: xCursor + w / 2, y: y + barH * 0.67, fill: '#f8fbff',
-              'font-size': 11, 'font-weight': 800, 'text-anchor': 'middle'
-            });
-            dataLabel.textContent = formatNumber(value);
-            svg.appendChild(dataLabel);
-          }
-          xCursor += w;
-        });
-
-        addWrappedText(svg, item.advertisor, margin.left - 12, y + barH * 0.42, 22, '#f4f8ff', 10.5, 'end', 700);
-
-        const totalLabel = svgEl('text', {
-          x: margin.left + (item.total / maxValue) * plotW + 8,
-          y: y + barH * 0.68,
+      const maxValue = Math.max(...topAdvertisers.map(item => item.total), 1);
+      drawAxes(svg, margin, plotW, plotH, 'Top Advertisers', 'Total Advertisement Duration', width, height, maxValue);
+      const slotCount = Math.max(Number.parseInt(state.sections.g1.topN, 10) || topAdvertisers.length, 1);
+      const groupW = plotW / slotCount;
+      const barW = Math.max(groupW - 18, 18);
+      topAdvertisers.forEach((item, index) => {
+        const x = margin.left + index * groupW + (groupW - barW) / 2;
+        const h = (item.total / maxValue) * plotH;
+        const y = margin.top + plotH - h;
+        svg.appendChild(svgEl('rect', { x, y, width: barW, height: h, rx: 5, fill: chartPalettes.g1[0] }));
+        const dataLabel = svgEl('text', {
+          x: x + barW / 2,
+          y: Math.max(y - 6, margin.top + 10),
           fill: '#e0f0ff',
-          'font-size': 13,
-          'font-weight': 800
+          'font-size': 11,
+          'font-weight': 800,
+          'text-anchor': 'middle'
         });
-        totalLabel.textContent = formatNumber(item.total);
-        svg.appendChild(totalLabel);
+        dataLabel.textContent = formatNumber(item.total);
+        svg.appendChild(dataLabel);
+        addWrappedText(svg, item.advertisor, x + barW / 2, margin.top + plotH + 18, 12, '#f4f8ff', 10, 'middle', 700);
       });
 
-      renderLegend(dom.sections.g1.legend, matrix.channels.map(channel => ({
-        label: channel,
-        color: channelColor(channel, 'g1')
-      })));
+      renderLegend(dom.sections.g1.legend, [{ label: 'Total AD Duration', color: chartPalettes.g1[0] }]);
     }
 
     function drawGraph2Bar(rows) {
@@ -1413,7 +1662,12 @@ html = """<!DOCTYPE html>
           const h = (value / maxValue) * plotH;
           const x = startX + pi * (barW + 2);
           const y = margin.top + plotH - h;
-          svg.appendChild(svgEl('rect', { x, y, width: barW, height: h, rx: 2, fill: chartPalettes.g3[pi % chartPalettes.g3.length] }));
+          svg.appendChild(svgEl('rect', {
+            x, y, width: barW, height: h, rx: 2,
+            fill: chartPalettes.g3[pi % chartPalettes.g3.length],
+            stroke: 'rgba(255,255,255,0.18)',
+            'stroke-width': 0.8
+          }));
           const dataLabel = svgEl('text', {
             x: x + barW / 2, y: Math.max(y - 6, margin.top + 10),
             fill: '#ffffff', 'font-size': 11.5, 'font-weight': 700, 'text-anchor': 'middle'
@@ -1431,81 +1685,87 @@ html = """<!DOCTYPE html>
     }
 
     function drawGraph4(rows) {
-      const topN = Number.parseInt(state.sections.g4.topN, 10) || 10;
-      const matrix = buildHeatmapMatrix(rows, topN);
+      const matrix = buildHeatmapMatrix(rows, Number.parseInt(state.sections.g4.topN, 10));
       if (!matrix.channels.length || !matrix.categories.length) {
         drawEmpty(dom.sections.g4.chart, 'No data available for selected filters');
         return;
       }
       const { svg, width, height } = makeSvg(dom.sections.g4.chart);
-      const margin = { top: 26, right: 18, bottom: 96, left: 190 };
+      const margin = { top: 24, right: 28, bottom: 92, left: 156 };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
       const cellW = plotW / Math.max(matrix.channels.length, 1);
       const cellH = plotH / Math.max(matrix.categories.length, 1);
+      const backgroundFill = '#08111d';
 
-      const xAxisLabel = svgEl('text', { x: margin.left + plotW / 2, y: height - 8, fill: '#f4f8ff', 'font-size': 14, 'font-weight': 700, 'text-anchor': 'middle' });
+      svg.appendChild(svgEl('rect', {
+        x: margin.left, y: margin.top, width: plotW, height: plotH, rx: 12,
+        fill: 'rgba(255,255,255,0.02)', stroke: 'rgba(255,255,255,0.08)'
+      }));
+
+      const xAxisLabel = svgEl('text', {
+        x: margin.left + plotW / 2, y: height - 10, fill: '#f4f8ff',
+        'font-size': 17, 'font-weight': 800, 'text-anchor': 'middle'
+      });
       xAxisLabel.textContent = 'Channel';
       svg.appendChild(xAxisLabel);
 
       const yAxisLabel = svgEl('text', {
-        x: 24, y: margin.top + plotH / 2, fill: '#f4f8ff',
-        'font-size': 14, 'font-weight': 700, 'text-anchor': 'middle',
-        transform: `rotate(-90 24 ${margin.top + plotH / 2})`
+        x: 28, y: margin.top + plotH / 2, fill: '#f4f8ff',
+        'font-size': 17, 'font-weight': 800, 'text-anchor': 'middle',
+        transform: `rotate(-90 28 ${margin.top + plotH / 2})`
       });
       yAxisLabel.textContent = 'Category';
       svg.appendChild(yAxisLabel);
 
-      matrix.channels.forEach((channel, ci) => {
-        addWrappedText(svg, channel, margin.left + ci * cellW + cellW / 2, margin.top + plotH + 20, 12, '#d8e3f1', 10, 'middle', 700);
-      });
-      matrix.categories.forEach((category, ri) => {
-        addWrappedText(svg, category, margin.left - 10, margin.top + ri * cellH + cellH * 0.48, 18, '#d8e3f1', 10, 'end', 700);
-      });
-
       for (let ci = 0; ci <= matrix.channels.length; ci++) {
         const x = margin.left + ci * cellW;
         svg.appendChild(svgEl('line', {
-          x1: x,
-          y1: margin.top,
-          x2: x,
-          y2: margin.top + plotH,
-          stroke: 'rgba(216,227,241,0.24)',
-          'stroke-width': 1
+          x1: x, y1: margin.top, x2: x, y2: margin.top + plotH,
+          stroke: 'rgba(216,227,241,0.18)', 'stroke-width': 1
         }));
       }
       for (let ri = 0; ri <= matrix.categories.length; ri++) {
         const y = margin.top + ri * cellH;
         svg.appendChild(svgEl('line', {
-          x1: margin.left,
-          y1: y,
-          x2: margin.left + plotW,
-          y2: y,
-          stroke: 'rgba(216,227,241,0.24)',
-          'stroke-width': 1
+          x1: margin.left, y1: y, x2: margin.left + plotW, y2: y,
+          stroke: 'rgba(216,227,241,0.18)', 'stroke-width': 1
         }));
       }
+
+      matrix.channels.forEach((channel, ci) => {
+        addWrappedText(svg, channel, margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, 10, '#eef5ff', 11.5, 'middle', 700);
+      });
+      matrix.categories.forEach((category, ri) => {
+        addWrappedText(svg, category, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, 18, '#eef5ff', 11.5, 'end', 700);
+      });
 
       matrix.categories.forEach((category, ri) => {
         matrix.channels.forEach((channel, ci) => {
           const x = margin.left + ci * cellW;
           const y = margin.top + ri * cellH;
-          const value = matrix.map.get(`${channel}|||${category}`) || 0;
-          const fill = channelHeatColor(channel, value, matrix.maxValue);
-          svg.appendChild(svgEl('rect', {
-            x: x + 2,
-            y: y + 2,
-            width: Math.max(cellW - 4, 2),
-            height: Math.max(cellH - 4, 2),
-            rx: 4,
-            fill,
-            stroke: 'rgba(216,227,241,0.22)',
-            'stroke-width': 1.1
-          }));
-          if (value) {
+          const value = matrix.map.get(`${channel}|||${category}`);
+          const hasValue = typeof value === 'number' && value > 0;
+          const rect = svgEl('rect', {
+            x: x + 1.5,
+            y: y + 1.5,
+            width: Math.max(cellW - 3, 2),
+            height: Math.max(cellH - 3, 2),
+            rx: 3,
+            fill: hasValue ? colorForValue(value, matrix.maxValue) : backgroundFill,
+            stroke: hasValue ? 'rgba(216,227,241,0.16)' : 'rgba(8,17,29,0.96)',
+            'stroke-width': 1
+          });
+          const title = svgEl('title');
+          title.textContent = hasValue
+            ? `Channel: ${channel}\nCategory: ${category}\nAD Duration: ${formatNumber(value)} sec`
+            : `Channel: ${channel}\nCategory: ${category}\nNo data available`;
+          rect.appendChild(title);
+          svg.appendChild(rect);
+          if (hasValue && cellW >= 52 && cellH >= 28) {
             const label = svgEl('text', {
               x: x + cellW / 2, y: y + cellH * 0.58,
-              fill: '#f4f8ff', 'font-size': 11, 'font-weight': 800, 'text-anchor': 'middle'
+              fill: '#f8fbff', 'font-size': 12, 'font-weight': 800, 'text-anchor': 'middle'
             });
             label.textContent = formatNumber(value);
             svg.appendChild(label);
@@ -1522,29 +1782,29 @@ html = """<!DOCTYPE html>
         return;
       }
       const { svg, width, height } = makeSvg(dom.sections.g5.chart);
-      const margin = { top: 28, right: 18, bottom: 80, left: 140 };
+      const margin = { top: 28, right: 28, bottom: 78, left: 140 };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
       const cellW = plotW / Math.max(matrix.hours.length, 1);
       const cellH = plotH / Math.max(matrix.channels.length, 1);
 
-      const xAxisLabel = svgEl('text', { x: margin.left + plotW / 2, y: height - 8, fill: '#f4f8ff', 'font-size': 14, 'font-weight': 700, 'text-anchor': 'middle' });
+      const xAxisLabel = svgEl('text', { x: margin.left + plotW / 2, y: height - 8, fill: '#f4f8ff', 'font-size': 15, 'font-weight': 700, 'text-anchor': 'middle' });
       xAxisLabel.textContent = 'Hour of Day';
       svg.appendChild(xAxisLabel);
 
       const yAxisLabel = svgEl('text', {
         x: 24, y: margin.top + plotH / 2, fill: '#f4f8ff',
-        'font-size': 14, 'font-weight': 700, 'text-anchor': 'middle',
+        'font-size': 15, 'font-weight': 700, 'text-anchor': 'middle',
         transform: `rotate(-90 24 ${margin.top + plotH / 2})`
       });
       yAxisLabel.textContent = 'Channel';
       svg.appendChild(yAxisLabel);
 
       matrix.hours.forEach((hour, ci) => {
-        addWrappedText(svg, hourLabel(hour), margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, 5, '#d8e3f1', 9.5, 'middle', 700);
+        addWrappedText(svg, hourLabel(hour), margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, 5, '#d8e3f1', 10.5, 'middle', 700);
       });
       matrix.channels.forEach((channel, ri) => {
-        addWrappedText(svg, channel, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, 14, '#d8e3f1', 10, 'end', 700);
+        addWrappedText(svg, channel, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, 14, '#d8e3f1', 11, 'end', 700);
       });
 
       for (let ci = 0; ci <= matrix.hours.length; ci++) {
@@ -1585,7 +1845,7 @@ html = """<!DOCTYPE html>
           if (value && cellW >= 28 && cellH >= 22) {
             const label = svgEl('text', {
               x: x + cellW / 2, y: y + cellH * 0.58,
-              fill: '#f4f8ff', 'font-size': 10.5, 'font-weight': 800, 'text-anchor': 'middle'
+              fill: '#f4f8ff', 'font-size': 11.5, 'font-weight': 800, 'text-anchor': 'middle'
             });
             label.textContent = unitMeta.unit === 'minutes'
               ? displayValue.toFixed(2)
@@ -1594,10 +1854,25 @@ html = """<!DOCTYPE html>
           }
         });
       });
+
+      const channelTotals = matrix.channels.map(channel => {
+        let total = 0;
+        matrix.hours.forEach(hour => {
+          total += matrix.map.get(`${channel}|||${hour}`) || 0;
+        });
+        const displayValue = unitMeta.convert(total);
+        return { channel, displayValue };
+      });
+      dom.sections.g5.totalGrid.innerHTML = channelTotals.map(item => `
+        <div class="total-chip">
+          <div class="total-chip-label">${item.channel}</div>
+          <div class="total-chip-value">${unitMeta.unit === 'minutes' ? item.displayValue.toFixed(2) + ' min' : formatNumber(Math.round(item.displayValue)) + ' sec'}</div>
+        </div>
+      `).join('');
     }
 
     function renderExcluded() {
-      dom.excludedChips.innerHTML = PAYLOAD.excluded.map(item => `<span class="chip">${item}</span>`).join('');
+      dom.excludedChips.textContent = PAYLOAD.excluded.join(' • ');
     }
 
     function formatPercent(value) {
@@ -1624,6 +1899,12 @@ html = """<!DOCTYPE html>
       const values = [];
       keys.forEach(sectionKey => {
         const value = state.sections[sectionKey] && state.sections[sectionKey][field];
+        if (Array.isArray(value)) {
+          value.forEach(item => {
+            if (item) values.push(item);
+          });
+          return;
+        }
         if (value) values.push(value);
       });
       return [...new Set(values)];
@@ -1631,7 +1912,7 @@ html = """<!DOCTYPE html>
 
     function getDashboardSummaryRows() {
       const channelValues = collectSelectedValues(['g1', 'g2', 'g3', 'g4', 'g5'], 'channel');
-      const categoryValues = collectSelectedValues(['g1', 'g2', 'g3', 'g4'], 'category');
+      const categoryValues = collectSelectedValues(['g1', 'g2', 'g3', 'g5'], 'category');
       const advertisorValues = collectSelectedValues(['g5'], 'advertisor');
       const dateRanges = ['g1', 'g2', 'g3', 'g4', 'g5']
         .map(sectionKey => ({
@@ -1660,27 +1941,32 @@ html = """<!DOCTYPE html>
       const rows = getDashboardSummaryRows();
       if (!rows.length) {
         dom.summaryLines.innerHTML = [
-          'Total AD Duration across the selected data is 0 seconds.',
-          'Top Advertiser is not available for the current selection.',
-          'Highest performing Channel is not available for the current selection.',
-          'Highest contributing Category is not available for the current selection.',
-          'The selected data indicates that no advertiser is driving activity during the selected period.'
+          'Total records analyzed: 0.',
+          'Overall advertisement duration: 0 seconds.',
+          'Top advertisers are not available for the current selection.',
+          'Category performance cannot be determined for the current selection.',
+          'No significant trend is available because the filtered dataset is empty.'
         ].map(line => `<div class="summary-line">${line}</div>`).join('');
         return;
       }
+      const totalRecords = rows.length;
       const total = rows.reduce((sum, row) => sum + row.aaddur, 0);
-      const topAdvertisor = aggregateAdvertisors(rows)[0];
+      const advertisers = aggregateAdvertisors(rows);
+      const topAdvertisor = advertisers[0];
       const topChannel = buildChannelDistribution(rows)[0];
-      const topCategory = buildCategoryDistribution(rows)[0];
+      const categories = buildCategoryDistribution(rows);
+      const topCategory = categories[0];
+      const lowestCategory = categories[categories.length - 1];
+      const topThreeAdvertisers = advertisers.slice(0, 3).map(item => item.advertisor).join(', ');
       const topAdvertisorPct = total ? (topAdvertisor.total / total) * 100 : 0;
       const topChannelPct = total ? (topChannel.total / total) * 100 : 0;
       const topCategoryPct = total ? (topCategory.total / total) * 100 : 0;
       const lines = [
-        `Total AD Duration across the selected data is ${formatNumber(total)} seconds.`,
-        `Top Advertiser is ${topAdvertisor.advertisor} with ${formatNumber(topAdvertisor.total)} seconds, contributing ${formatPercent(topAdvertisorPct)} of the total AD Duration.`,
-        `Highest performing Channel is ${topChannel.channel} with ${formatNumber(topChannel.total)} seconds, contributing ${formatPercent(topChannelPct)} of the total AD Duration.`,
-        `Highest contributing Category is ${topCategory.category} with ${formatNumber(topCategory.total)} seconds, contributing ${formatPercent(topCategoryPct)} of the total AD Duration.`,
-        `The selected data indicates that ${topAdvertisor.advertisor} is driving the highest advertising activity, contributing ${formatPercent(topAdvertisorPct)} of the total AD Duration during the selected period.`
+        `Total records analyzed: ${formatNumber(totalRecords)}.`,
+        `Overall advertisement duration across the filtered dataset is ${formatNumber(total)} seconds.`,
+        `Top advertisers: ${topThreeAdvertisers || topAdvertisor.advertisor}. The leading advertiser is ${topAdvertisor.advertisor} with ${formatNumber(topAdvertisor.total)} seconds, contributing ${formatPercent(topAdvertisorPct)} of total AD Duration.`,
+        `Highest performing category is ${topCategory.category} with ${formatNumber(topCategory.total)} seconds, while the lowest performing category is ${lowestCategory.category} with ${formatNumber(lowestCategory.total)} seconds.`,
+        `Key trend: ${topChannel.channel} is the strongest channel at ${formatNumber(topChannel.total)} seconds (${formatPercent(topChannelPct)}), and ${topCategory.category} remains the most dominant category with ${formatPercent(topCategoryPct)} of AD Duration.`
       ];
       dom.summaryLines.innerHTML = lines.map(line => `<div class="summary-line">${line}</div>`).join('');
     }
@@ -1689,14 +1975,23 @@ html = """<!DOCTYPE html>
       const pieces = [];
       ['g1', 'g2', 'g3', 'g4', 'g5'].forEach(sectionKey => {
         const s = state.sections[sectionKey];
+        const categoryLabel = Array.isArray(s.category)
+          ? ((s.category || []).length ? s.category.join(', ') : 'all')
+          : (s.category || 'all');
         if (sectionKey === 'g5') {
           pieces.push(
-            `<div class="summary-line"><strong>${sectionKey.toUpperCase()}</strong> | Start: ${s.start || 'all'}, End: ${s.end || 'all'}, Channel: ${s.channel || 'all'}, Advertiser: ${s.advertisor || 'all'}, Time: ${s.time || 'seconds'}</div>`
+            `<div class="summary-line"><strong>${sectionKey.toUpperCase()}</strong> | Start: ${s.start || 'all'}, End: ${s.end || 'all'}, Channel: ${s.channel || 'all'}, Category: ${categoryLabel}, Advertiser: ${s.advertisor || 'all'}, Time: ${s.time || 'minutes'}</div>`
+          );
+          return;
+        }
+        if (sectionKey === 'g4') {
+          pieces.push(
+            `<div class="summary-line"><strong>${sectionKey.toUpperCase()}</strong> | Top N: ${s.topN || 'all'}, Start: ${s.start || 'all'}, End: ${s.end || 'all'}, Channel: ${s.channel || 'all'}</div>`
           );
           return;
         }
         pieces.push(
-          `<div class="summary-line"><strong>${sectionKey.toUpperCase()}</strong> | Top N: ${s.topN || 'all'}, Start: ${s.start || 'all'}, End: ${s.end || 'all'}, Channel: ${s.channel || 'all'}, Category: ${s.category || 'all'}</div>`
+          `<div class="summary-line"><strong>${sectionKey.toUpperCase()}</strong> | Top N: ${s.topN || 'all'}, Start: ${s.start || 'all'}, End: ${s.end || 'all'}, Channel: ${s.channel || 'all'}, Category: ${categoryLabel}</div>`
         );
       });
       return pieces.join('');
@@ -1723,20 +2018,31 @@ html = """<!DOCTYPE html>
       const cards = [];
       ['g1', 'g2', 'g3', 'g4', 'g5'].forEach(sectionKey => {
         const s = state.sections[sectionKey];
+        const categoryLabel = Array.isArray(s.category)
+          ? ((s.category || []).length ? s.category.join(', ') : 'All')
+          : (s.category || 'All');
         const lines = sectionKey === 'g5'
           ? [
               `Start Date: ${s.start ? formatDate(s.start) : 'All'}`,
               `End Date: ${s.end ? formatDate(s.end) : 'All'}`,
               `Channel: ${s.channel || 'All'}`,
+              `Category: ${categoryLabel}`,
               `Advertiser: ${s.advertisor || 'All'}`,
-              `Time: ${s.time || 'seconds'}`
+              `Time: ${s.time || 'minutes'}`
+            ]
+          : sectionKey === 'g4'
+          ? [
+              `Top N: ${s.topN || 'All'}`,
+              `Start Date: ${s.start ? formatDate(s.start) : 'All'}`,
+              `End Date: ${s.end ? formatDate(s.end) : 'All'}`,
+              `Channel: ${s.channel || 'All'}`
             ]
           : [
               `Top N: ${s.topN || 'All'}`,
               `Start Date: ${s.start ? formatDate(s.start) : 'All'}`,
               `End Date: ${s.end ? formatDate(s.end) : 'All'}`,
               `Channel: ${s.channel || 'All'}`,
-              `Category: ${s.category || 'All'}`
+              `Category: ${categoryLabel}`
             ];
         cards.push(`
           <div class="pdf-filter-card">
@@ -1754,7 +2060,9 @@ html = """<!DOCTYPE html>
       const title = 'CTV FCT Dashboard';
       const generatedAt = new Date().toLocaleString();
       const summaryHtml = document.getElementById('summaryLines').innerHTML;
-      const graphSections = Array.from(document.querySelectorAll('.section')).slice(0, 5);
+      const graphSections = ['g1Chart', 'g2Chart', 'g3Chart', 'g4Chart', 'g5Chart']
+        .map(id => document.getElementById(id)?.closest('.section'))
+        .filter(Boolean);
       const graphPages = graphSections.map((section, index) => {
         const heading = section.querySelector('.section-head h2')?.textContent || `Graph ${index + 1}`;
         const panelHtml = section.querySelector('.panel')?.outerHTML || '';
@@ -1853,7 +2161,11 @@ html = """<!DOCTYPE html>
       target.start = controls.start.value;
       target.end = controls.end.value;
       target.channel = controls.channel.value;
-      if (controls.category) target.category = controls.category.value;
+      if (sharedCategorySections().includes(sectionKey)) {
+        target.category = Array.from(controls.category.selectedOptions).map(option => option.value);
+      } else if (controls.category) {
+        target.category = controls.category.value;
+      }
       if (sectionKey === 'g5') {
         target.advertisor = controls.advertisor.value;
         target.time = controls.time.value;
@@ -1863,19 +2175,51 @@ html = """<!DOCTYPE html>
     function bindSection(sectionKey) {
       const controls = dom.sections[sectionKey];
       const controlKeys = sectionKey === 'g5'
-        ? ['start', 'end', 'channel', 'advertisor', 'time']
+        ? ['start', 'end', 'channel', 'advertisor', 'time', 'category']
         : ['topN', 'start', 'end', 'channel', 'category'];
       controlKeys.forEach(key => {
+        if (!controls[key]) return;
         controls[key].addEventListener('change', () => {
           syncSectionState(sectionKey);
           renderSection(sectionKey);
           renderSummary();
         });
       });
+      if (sharedCategorySections().includes(sectionKey)) {
+        controls.categoryTrigger.addEventListener('click', event => {
+          event.preventDefault();
+          controls.categoryDropdown.classList.toggle('open');
+          if (controls.categoryDropdown.classList.contains('open')) {
+            controls.categorySearch.focus();
+          }
+        });
+        controls.categorySearch.addEventListener('input', () => {
+          populateCategoryDropdown(sectionKey, controls.categorySearch.value);
+        });
+        controls.categoryAll.addEventListener('click', () => {
+          controls.categoryDropdown.classList.add('open');
+          syncSharedCategorySelection(uniqueSorted(state.cleanedRows.map(row => row.category)), sectionKey, { preserveSearchText: true });
+          sharedCategorySections().forEach(key => syncSectionState(key));
+          sharedCategorySections().forEach(key => renderSection(key));
+          renderSummary();
+        });
+        controls.categoryClear.addEventListener('click', () => {
+          controls.categoryDropdown.classList.add('open');
+          syncSharedCategorySelection([], sectionKey, { preserveSearchText: true });
+          sharedCategorySections().forEach(key => syncSectionState(key));
+          sharedCategorySections().forEach(key => renderSection(key));
+          renderSummary();
+        });
+      }
       controls.reset.addEventListener('click', () => {
         if (controls.topN) controls.topN.value = sectionKey === 'g4' ? '10' : '10';
         controls.channel.value = '';
-        if (controls.category) controls.category.value = '';
+        if (sharedCategorySections().includes(sectionKey)) {
+          controls.categorySearch.value = '';
+          syncSharedCategorySelection([], sectionKey);
+        } else if (controls.category) {
+          controls.category.value = '';
+        }
         const dates = uniqueSorted(state.cleanedRows.map(row => row.date));
         controls.start.value = dates[0] || '';
         controls.end.value = dates[dates.length - 1] || '';
@@ -1884,12 +2228,20 @@ html = """<!DOCTYPE html>
           dom.sections.g2.barBtn.classList.add('active');
           dom.sections.g2.pieBtn.classList.remove('active');
         }
+        if (sectionKey === 'g3') {
+          state.sections.g3.view = 'bar';
+        }
         if (sectionKey === 'g5') {
           controls.advertisor.value = '';
-          controls.time.value = 'seconds';
+          controls.time.value = 'minutes';
         }
-        syncSectionState(sectionKey);
-        renderSection(sectionKey);
+        if (sharedCategorySections().includes(sectionKey)) {
+          sharedCategorySections().forEach(key => syncSectionState(key));
+          sharedCategorySections().forEach(key => renderSection(key));
+        } else {
+          syncSectionState(sectionKey);
+          renderSection(sectionKey);
+        }
         renderSummary();
       });
     }
@@ -1939,6 +2291,14 @@ html = """<!DOCTYPE html>
         document.addEventListener('fullscreenchange', () => {
           updateFullButtons();
           renderAll();
+        });
+        document.addEventListener('click', event => {
+          sharedCategorySections().forEach(sectionKey => {
+            const dropdown = dom.sections[sectionKey].categoryDropdown;
+            if (dropdown && !dropdown.contains(event.target)) {
+              dropdown.classList.remove('open');
+            }
+          });
         });
       }
       state.initialized = true;
