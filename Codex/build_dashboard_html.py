@@ -2,13 +2,10 @@ import csv
 import json
 from datetime import datetime
 from pathlib import Path
-
-
 CSV_PATH = Path(r"D:\Vs - Code Work\Codex\CTV FCT.csv")
 OUTPUT_PATH = Path(r"D:\Vs - Code Work\Codex\CTV FCT Dashboard.html")
 STANDALONE_OUTPUT_PATH = Path(r"D:\Vs - Code Work\Codex\CTV FCT Dashboard Standalone.html")
 MOBILE_OUTPUT_PATH = Path(r"D:\Vs - Code Work\Codex\CTV FCT Dashboard Mobile.html")
-
 EXCLUDED = [
     "ASTROLOGERS",
     "CHANNEL IMAGERY",
@@ -19,8 +16,6 @@ EXCLUDED = [
     "SHORT PROGRAM",
     "TELEVISIONS",
 ]
-
-
 def parse_date(value: str) -> str:
     value = (value or "").strip()
     if not value:
@@ -29,15 +24,11 @@ def parse_date(value: str) -> str:
         return datetime.strptime(value, "%d-%m-%y").strftime("%Y-%m-%d")
     except ValueError:
         return value
-
-
 def parse_int(value: str) -> int:
     try:
         return int(float((value or "0").replace(",", "").strip()))
     except ValueError:
         return 0
-
-
 rows = []
 with CSV_PATH.open("r", encoding="utf-8-sig", newline="") as fh:
     reader = csv.DictReader(fh)
@@ -53,7 +44,6 @@ with CSV_PATH.open("r", encoding="utf-8-sig", newline="") as fh:
                 "category": (record.get("Category") or "").strip(),
             }
         )
-
 generated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 report_date = datetime.now().strftime("%d %b %Y")
 payload = {
@@ -66,7 +56,84 @@ embedded_payload = {
     "excluded": EXCLUDED,
     "generatedAt": generated_at,
 }
-
+def select_control(control_id: str, label: str, options: str = "", extra: str = "") -> str:
+    return f'<div><label class="label" for="{control_id}">{label}</label><select id="{control_id}"{extra}>{options}</select></div>'
+def date_control(control_id: str, label: str) -> str:
+    return f'<div><label class="label" for="{control_id}">{label}</label><input id="{control_id}" type="date"></div>'
+def reset_control(control_id: str) -> str:
+    return f'<div><label class="label">&nbsp;</label><button id="{control_id}" type="button">Reset</button></div>'
+def category_dropdown(section_key: str) -> str:
+    arrow = "â–¾" if section_key == "g1" else "&#9660;"
+    return f"""          <div class="multi-dropdown" id="{section_key}CategoryDropdown">
+            <label class="label" for="{section_key}CategoryTrigger">Category</label>
+            <button class="multi-dropdown-trigger" id="{section_key}CategoryTrigger" type="button">
+              <span class="multi-dropdown-value" id="{section_key}CategoryValue">All Categories</span>
+              <span>{arrow}</span>
+            </button>
+            <div class="multi-dropdown-panel">
+              <input class="multi-dropdown-search" id="{section_key}CategorySearch" type="text" placeholder="Search categories">
+              <div class="multi-dropdown-actions">
+                <button id="{section_key}CategoryAll" type="button">Select All</button>
+                <button id="{section_key}CategoryClear" type="button">Clear All</button>
+              </div>
+              <div class="multi-dropdown-options" id="{section_key}CategoryOptions"></div>
+            </div>
+            <select id="{section_key}Category" multiple hidden></select>
+          </div>"""
+def section_block(section_class: str, title: str, controls: list[str], chart_id: str, extras: str = "", head_actions: str = "") -> str:
+    return f"""    <section class="{section_class}">
+      <div class="section-head">
+        <h2>{title}</h2>
+      </div>
+      <div class="panel section-card">
+        <div class="section-controls">
+{chr(10).join(controls)}
+        </div>
+        <div class="chart-head">
+          <div class="chart-actions">
+{head_actions}
+            <button class="full-btn" id="{chart_id[:2]}FullBtn" type="button">Full Screen</button>
+          </div>
+        </div>
+{extras}
+        <div class="chart-box" id="{chart_id}"></div>
+      </div>
+    </section>"""
+def build_sections_html() -> str:
+    top_n = '<option value="10">Top 10</option><option value="20">Top 20</option>'
+    return "\n\n".join([
+        section_block("section graph1-scope", "Top Advertiser (FCT in Seconds)", [select_control("g1TopN", "Top N", top_n), date_control("g1Start", "Start Date"), date_control("g1End", "End Date"), select_control("g1Channel", "Channel"), category_dropdown("g1"), reset_control("g1Reset")], "g1Chart", '        <div class="legend" id="g1Legend"></div>'),
+        section_block("section", "Top Advertiser by Channels (FCT in Seconds)", [select_control("g2TopN", "Top N", top_n), date_control("g2Start", "Start Date"), date_control("g2End", "End Date"), select_control("g2Channel", "Channel"), category_dropdown("g2"), reset_control("g2Reset")], "g2Chart", '        <div class="legend" id="g2Legend"></div>', '            <div class="toggle-group">\n              <button class="toggle-btn active" id="g2BarBtn" type="button">Bar Chart</button>\n              <button class="toggle-btn" id="g2PieBtn" type="button">Pie Chart</button>\n            </div>\n'),
+        section_block("section", "Top Advertiser by Date (FCT in Seconds)", [select_control("g3TopN", "Top N", top_n), date_control("g3Start", "Start Date"), date_control("g3End", "End Date"), select_control("g3Channel", "Channel"), category_dropdown("g3"), reset_control("g3Reset")], "g3Chart", '        <div class="legend" id="g3Legend"></div>'),
+        section_block("section", "Channel Category Overview", [select_control("g4TopN", "Category View", top_n), date_control("g4Start", "Start Date"), date_control("g4End", "End Date"), select_control("g4Channel", "Channel"), reset_control("g4Reset")], "g4Chart"),
+        section_block("section", "FCT Hourly Analysis", [date_control("g5Start", "Start Date"), date_control("g5End", "End Date"), select_control("g5Channel", "Channel"), category_dropdown("g5"), select_control("g5Advertisor", "Advertiser"), select_control("g5Time", "Time", '<option value="minutes">Minutes</option><option value="seconds">Seconds</option>'), reset_control("g5Reset")], "g5Chart", '        <div class="legend-scale" id="g5Legend">\n          <span>Low AD Duration</span>\n          <div class="legend-gradient"></div>\n          <span>High AD Duration</span>\n        </div>\n        <div class="total-panel">\n          <div class="total-title">Total</div>\n          <div class="total-grid" id="g5TotalGrid"></div>\n        </div>'),
+    ])
+def build_state_sections_js() -> str:
+    return "\n".join([
+        "        g1: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },",
+        "        g2: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },",
+        "        g3: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },",
+        "        g4: { topN: '10', start: '', end: '', channel: '', category: '', view: 'heat' },",
+        "        g5: { start: '', end: '', channel: '', category: [], advertisor: '', time: 'minutes', view: 'heat' }",
+    ])
+def build_dom_sections_js() -> str:
+    section_fields = {
+        "g1": ["topN", "start", "end", "channel", "category", "categoryDropdown", "categoryTrigger", "categoryValue", "categorySearch", "categoryOptions", "categoryAll", "categoryClear", "reset", "legend", "chart", "panel", "fullBtn"],
+        "g2": ["topN", "start", "end", "channel", "category", "categoryDropdown", "categoryTrigger", "categoryValue", "categorySearch", "categoryOptions", "categoryAll", "categoryClear", "reset", "legend", "chart", "panel", "fullBtn", "barBtn", "pieBtn"],
+        "g3": ["topN", "start", "end", "channel", "category", "categoryDropdown", "categoryTrigger", "categoryValue", "categorySearch", "categoryOptions", "categoryAll", "categoryClear", "reset", "legend", "chart", "panel", "fullBtn"],
+        "g4": ["topN", "start", "end", "channel", "reset", "chart", "panel", "fullBtn"],
+        "g5": ["start", "end", "channel", "category", "categoryDropdown", "categoryTrigger", "categoryValue", "categorySearch", "categoryOptions", "categoryAll", "categoryClear", "advertisor", "time", "reset", "legend", "chart", "totalGrid", "panel", "fullBtn"],
+    }
+    suffix = {"topN": "TopN", "start": "Start", "end": "End", "channel": "Channel", "category": "Category", "categoryDropdown": "CategoryDropdown", "categoryTrigger": "CategoryTrigger", "categoryValue": "CategoryValue", "categorySearch": "CategorySearch", "categoryOptions": "CategoryOptions", "categoryAll": "CategoryAll", "categoryClear": "CategoryClear", "reset": "Reset", "legend": "Legend", "chart": "Chart", "fullBtn": "FullBtn", "barBtn": "BarBtn", "pieBtn": "PieBtn", "advertisor": "Advertisor", "time": "Time", "totalGrid": "TotalGrid"}
+    blocks = []
+    for key, fields in section_fields.items():
+        lines = [f"        {key}: {{"]
+        for field in fields:
+            lines.append(f"          panel: document.getElementById('{key}Chart').closest('.panel')," if field == "panel" else f"          {field}: document.getElementById('{key}{suffix[field]}'),")
+        lines[-1] = lines[-1].rstrip(",")
+        lines.append("        }")
+        blocks.append("\n".join(lines))
+    return ",\n".join(blocks)
 html = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -623,14 +690,12 @@ html = """<!DOCTYPE html>
         <button class="pdf-btn" id="pdfBtn" type="button">Download Dashboard PDF</button>
       </div>
     </section>
-
     <section class="section">
       <div class="excluded-inline">
         <strong>Excluded Categories:</strong>
         <span class="excluded-items" id="excludedChips"></span>
       </div>
     </section>
-
     <section class="section">
       <div class="panel section-card">
         <div class="section-head">
@@ -639,228 +704,32 @@ html = """<!DOCTYPE html>
         <div class="summary-lines" id="summaryLines"></div>
       </div>
     </section>
-
-    <section class="section graph1-scope">
-      <div class="section-head">
-        <h2>Top Advertiser (FCT in Seconds)</h2>
-      </div>
-      <div class="panel section-card">
-        <div class="section-controls">
-          <div><label class="label" for="g1TopN">Top N</label><select id="g1TopN"><option value="10">Top 10</option><option value="20">Top 20</option></select></div>
-          <div><label class="label" for="g1Start">Start Date</label><input id="g1Start" type="date"></div>
-          <div><label class="label" for="g1End">End Date</label><input id="g1End" type="date"></div>
-          <div><label class="label" for="g1Channel">Channel</label><select id="g1Channel"></select></div>
-          <div class="multi-dropdown" id="g1CategoryDropdown">
-            <label class="label" for="g1CategoryTrigger">Category</label>
-            <button class="multi-dropdown-trigger" id="g1CategoryTrigger" type="button">
-              <span class="multi-dropdown-value" id="g1CategoryValue">All Categories</span>
-              <span>▾</span>
-            </button>
-            <div class="multi-dropdown-panel">
-              <input class="multi-dropdown-search" id="g1CategorySearch" type="text" placeholder="Search categories">
-              <div class="multi-dropdown-actions">
-                <button id="g1CategoryAll" type="button">Select All</button>
-                <button id="g1CategoryClear" type="button">Clear All</button>
-              </div>
-              <div class="multi-dropdown-options" id="g1CategoryOptions"></div>
-            </div>
-            <select id="g1Category" multiple hidden></select>
-          </div>
-          <div><label class="label">&nbsp;</label><button id="g1Reset" type="button">Reset</button></div>
-        </div>
-        <div class="chart-head">
-          <div class="chart-actions">
-            <button class="full-btn" id="g1FullBtn" type="button">Full Screen</button>
-          </div>
-        </div>
-        <div class="legend" id="g1Legend"></div>
-        <div class="chart-box" id="g1Chart"></div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-head">
-        <h2>Top Advertiser by Channels (FCT in Seconds)</h2>
-      </div>
-      <div class="panel section-card">
-        <div class="section-controls">
-          <div><label class="label" for="g2TopN">Top N</label><select id="g2TopN"><option value="10">Top 10</option><option value="20">Top 20</option></select></div>
-          <div><label class="label" for="g2Start">Start Date</label><input id="g2Start" type="date"></div>
-          <div><label class="label" for="g2End">End Date</label><input id="g2End" type="date"></div>
-          <div><label class="label" for="g2Channel">Channel</label><select id="g2Channel"></select></div>
-          <div class="multi-dropdown" id="g2CategoryDropdown">
-            <label class="label" for="g2CategoryTrigger">Category</label>
-            <button class="multi-dropdown-trigger" id="g2CategoryTrigger" type="button">
-              <span class="multi-dropdown-value" id="g2CategoryValue">All Categories</span>
-              <span>&#9660;</span>
-            </button>
-            <div class="multi-dropdown-panel">
-              <input class="multi-dropdown-search" id="g2CategorySearch" type="text" placeholder="Search categories">
-              <div class="multi-dropdown-actions">
-                <button id="g2CategoryAll" type="button">Select All</button>
-                <button id="g2CategoryClear" type="button">Clear All</button>
-              </div>
-              <div class="multi-dropdown-options" id="g2CategoryOptions"></div>
-            </div>
-            <select id="g2Category" multiple hidden></select>
-          </div>
-          <div><label class="label">&nbsp;</label><button id="g2Reset" type="button">Reset</button></div>
-        </div>
-        <div class="chart-head">
-          <div class="chart-actions">
-            <div class="toggle-group">
-              <button class="toggle-btn active" id="g2BarBtn" type="button">Bar Chart</button>
-              <button class="toggle-btn" id="g2PieBtn" type="button">Pie Chart</button>
-            </div>
-            <button class="full-btn" id="g2FullBtn" type="button">Full Screen</button>
-          </div>
-        </div>
-        <div class="legend" id="g2Legend"></div>
-        <div class="chart-box" id="g2Chart"></div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-head">
-        <h2>Top Advertiser by Date (FCT in Seconds)</h2>
-      </div>
-      <div class="panel section-card">
-        <div class="section-controls">
-          <div><label class="label" for="g3TopN">Top N</label><select id="g3TopN"><option value="10">Top 10</option><option value="20">Top 20</option></select></div>
-          <div><label class="label" for="g3Start">Start Date</label><input id="g3Start" type="date"></div>
-          <div><label class="label" for="g3End">End Date</label><input id="g3End" type="date"></div>
-          <div><label class="label" for="g3Channel">Channel</label><select id="g3Channel"></select></div>
-          <div class="multi-dropdown" id="g3CategoryDropdown">
-            <label class="label" for="g3CategoryTrigger">Category</label>
-            <button class="multi-dropdown-trigger" id="g3CategoryTrigger" type="button">
-              <span class="multi-dropdown-value" id="g3CategoryValue">All Categories</span>
-              <span>&#9660;</span>
-            </button>
-            <div class="multi-dropdown-panel">
-              <input class="multi-dropdown-search" id="g3CategorySearch" type="text" placeholder="Search categories">
-              <div class="multi-dropdown-actions">
-                <button id="g3CategoryAll" type="button">Select All</button>
-                <button id="g3CategoryClear" type="button">Clear All</button>
-              </div>
-              <div class="multi-dropdown-options" id="g3CategoryOptions"></div>
-            </div>
-            <select id="g3Category" multiple hidden></select>
-          </div>
-          <div><label class="label">&nbsp;</label><button id="g3Reset" type="button">Reset</button></div>
-        </div>
-        <div class="chart-head">
-          <div class="chart-actions">
-            <button class="full-btn" id="g3FullBtn" type="button">Full Screen</button>
-          </div>
-        </div>
-        <div class="legend" id="g3Legend"></div>
-        <div class="chart-box" id="g3Chart"></div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-head">
-        <h2>Channel Category Overview</h2>
-      </div>
-      <div class="panel section-card">
-        <div class="section-controls">
-          <div><label class="label" for="g4TopN">Category View</label><select id="g4TopN"><option value="10">Top 10</option><option value="20">Top 20</option></select></div>
-          <div><label class="label" for="g4Start">Start Date</label><input id="g4Start" type="date"></div>
-          <div><label class="label" for="g4End">End Date</label><input id="g4End" type="date"></div>
-          <div><label class="label" for="g4Channel">Channel</label><select id="g4Channel"></select></div>
-          <div><label class="label">&nbsp;</label><button id="g4Reset" type="button">Reset</button></div>
-        </div>
-        <div class="chart-head">
-          <div class="chart-actions">
-            <button class="full-btn" id="g4FullBtn" type="button">Full Screen</button>
-          </div>
-        </div>
-        <div class="chart-box" id="g4Chart"></div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-head">
-        <h2>FCT Hourly Analysis</h2>
-      </div>
-      <div class="panel section-card">
-        <div class="section-controls">
-          <div><label class="label" for="g5Start">Start Date</label><input id="g5Start" type="date"></div>
-          <div><label class="label" for="g5End">End Date</label><input id="g5End" type="date"></div>
-          <div><label class="label" for="g5Channel">Channel</label><select id="g5Channel"></select></div>
-          <div class="multi-dropdown" id="g5CategoryDropdown">
-            <label class="label" for="g5CategoryTrigger">Category</label>
-            <button class="multi-dropdown-trigger" id="g5CategoryTrigger" type="button">
-              <span class="multi-dropdown-value" id="g5CategoryValue">All Categories</span>
-              <span>&#9660;</span>
-            </button>
-            <div class="multi-dropdown-panel">
-              <input class="multi-dropdown-search" id="g5CategorySearch" type="text" placeholder="Search categories">
-              <div class="multi-dropdown-actions">
-                <button id="g5CategoryAll" type="button">Select All</button>
-                <button id="g5CategoryClear" type="button">Clear All</button>
-              </div>
-              <div class="multi-dropdown-options" id="g5CategoryOptions"></div>
-            </div>
-            <select id="g5Category" multiple hidden></select>
-          </div>
-          <div><label class="label" for="g5Advertisor">Advertiser</label><select id="g5Advertisor"></select></div>
-          <div><label class="label" for="g5Time">Time</label><select id="g5Time"><option value="minutes">Minutes</option><option value="seconds">Seconds</option></select></div>
-          <div><label class="label">&nbsp;</label><button id="g5Reset" type="button">Reset</button></div>
-        </div>
-        <div class="chart-head">
-          <div class="chart-actions">
-            <button class="full-btn" id="g5FullBtn" type="button">Full Screen</button>
-          </div>
-        </div>
-        <div class="legend-scale" id="g5Legend">
-          <span>Low AD Duration</span>
-          <div class="legend-gradient"></div>
-          <span>High AD Duration</span>
-        </div>
-        <div class="chart-box" id="g5Chart"></div>
-        <div class="total-panel">
-          <div class="total-title">Total</div>
-          <div class="total-grid" id="g5TotalGrid"></div>
-        </div>
-      </div>
-    </section>
-
-  </div>
-
+__SECTIONS_HTML__
   <script>
     const PAYLOAD = __PAYLOAD_JSON__;
     const EXCLUDED = new Set(PAYLOAD.excluded);
     const numberFormat = new Intl.NumberFormat('en-US');
     const longDate = new Intl.DateTimeFormat('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
-
     const CHANNEL_COLORS = {
       'AAJ TAK': '#22c55e',
       'ABP NEWS': '#3b82f6',
       'INDIA TV': '#ef4444',
       'NEWS18 INDIA': '#a855f7'
     };
-
     const chartPalettes = {
       g1: ['#3b82f6', '#22c55e', '#ef4444', '#a855f7'],
       g2: ['#3b82f6', '#22c55e', '#ef4444', '#a855f7'],
       g3: ['#1d4ed8', '#0f766e', '#b45309', '#7c3aed', '#be123c', '#0369a1', '#166534', '#7f1d1d'],
       heat: ['#1a2434', '#23496f', '#2d73a9', '#3996d9', '#73c5ff']
     };
-
     const state = {
       rawRows: [],
       cleanedRows: [],
       initialized: false,
       sections: {
-        g1: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },
-        g2: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },
-        g3: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },
-        g4: { topN: '10', start: '', end: '', channel: '', category: '', view: 'heat' },
-        g5: { start: '', end: '', channel: '', category: [], advertisor: '', time: 'minutes', view: 'heat' }
+__STATE_SECTIONS_JS__
       }
     };
-
     const dom = {
       fileUpload: document.getElementById('fileUpload'),
       pdfBtn: document.getElementById('pdfBtn'),
@@ -868,99 +737,11 @@ html = """<!DOCTYPE html>
       excludedChips: document.getElementById('excludedChips'),
       summaryLines: document.getElementById('summaryLines'),
       sections: {
-        g1: {
-          topN: document.getElementById('g1TopN'),
-          start: document.getElementById('g1Start'),
-          end: document.getElementById('g1End'),
-          channel: document.getElementById('g1Channel'),
-          category: document.getElementById('g1Category'),
-          categoryDropdown: document.getElementById('g1CategoryDropdown'),
-          categoryTrigger: document.getElementById('g1CategoryTrigger'),
-          categoryValue: document.getElementById('g1CategoryValue'),
-          categorySearch: document.getElementById('g1CategorySearch'),
-          categoryOptions: document.getElementById('g1CategoryOptions'),
-          categoryAll: document.getElementById('g1CategoryAll'),
-          categoryClear: document.getElementById('g1CategoryClear'),
-          reset: document.getElementById('g1Reset'),
-          legend: document.getElementById('g1Legend'),
-          chart: document.getElementById('g1Chart'),
-          panel: document.getElementById('g1Chart').closest('.panel'),
-          fullBtn: document.getElementById('g1FullBtn')
-        },
-        g2: {
-          topN: document.getElementById('g2TopN'),
-          start: document.getElementById('g2Start'),
-          end: document.getElementById('g2End'),
-          channel: document.getElementById('g2Channel'),
-          category: document.getElementById('g2Category'),
-          categoryDropdown: document.getElementById('g2CategoryDropdown'),
-          categoryTrigger: document.getElementById('g2CategoryTrigger'),
-          categoryValue: document.getElementById('g2CategoryValue'),
-          categorySearch: document.getElementById('g2CategorySearch'),
-          categoryOptions: document.getElementById('g2CategoryOptions'),
-          categoryAll: document.getElementById('g2CategoryAll'),
-          categoryClear: document.getElementById('g2CategoryClear'),
-          reset: document.getElementById('g2Reset'),
-          legend: document.getElementById('g2Legend'),
-          chart: document.getElementById('g2Chart'),
-          panel: document.getElementById('g2Chart').closest('.panel'),
-          fullBtn: document.getElementById('g2FullBtn'),
-          barBtn: document.getElementById('g2BarBtn'),
-          pieBtn: document.getElementById('g2PieBtn')
-        },
-        g3: {
-          topN: document.getElementById('g3TopN'),
-          start: document.getElementById('g3Start'),
-          end: document.getElementById('g3End'),
-          channel: document.getElementById('g3Channel'),
-          category: document.getElementById('g3Category'),
-          categoryDropdown: document.getElementById('g3CategoryDropdown'),
-          categoryTrigger: document.getElementById('g3CategoryTrigger'),
-          categoryValue: document.getElementById('g3CategoryValue'),
-          categorySearch: document.getElementById('g3CategorySearch'),
-          categoryOptions: document.getElementById('g3CategoryOptions'),
-          categoryAll: document.getElementById('g3CategoryAll'),
-          categoryClear: document.getElementById('g3CategoryClear'),
-          reset: document.getElementById('g3Reset'),
-          legend: document.getElementById('g3Legend'),
-          chart: document.getElementById('g3Chart'),
-          panel: document.getElementById('g3Chart').closest('.panel'),
-          fullBtn: document.getElementById('g3FullBtn')
-        },
-        g4: {
-          topN: document.getElementById('g4TopN'),
-          start: document.getElementById('g4Start'),
-          end: document.getElementById('g4End'),
-          channel: document.getElementById('g4Channel'),
-          reset: document.getElementById('g4Reset'),
-          chart: document.getElementById('g4Chart'),
-          panel: document.getElementById('g4Chart').closest('.panel'),
-          fullBtn: document.getElementById('g4FullBtn')
-        },
-        g5: {
-          start: document.getElementById('g5Start'),
-          end: document.getElementById('g5End'),
-          channel: document.getElementById('g5Channel'),
-          category: document.getElementById('g5Category'),
-          categoryDropdown: document.getElementById('g5CategoryDropdown'),
-          categoryTrigger: document.getElementById('g5CategoryTrigger'),
-          categoryValue: document.getElementById('g5CategoryValue'),
-          categorySearch: document.getElementById('g5CategorySearch'),
-          categoryOptions: document.getElementById('g5CategoryOptions'),
-          categoryAll: document.getElementById('g5CategoryAll'),
-          categoryClear: document.getElementById('g5CategoryClear'),
-          advertisor: document.getElementById('g5Advertisor'),
-          time: document.getElementById('g5Time'),
-          reset: document.getElementById('g5Reset'),
-          legend: document.getElementById('g5Legend'),
-          chart: document.getElementById('g5Chart'),
-          totalGrid: document.getElementById('g5TotalGrid'),
-          panel: document.getElementById('g5Chart').closest('.panel'),
-          fullBtn: document.getElementById('g5FullBtn')
-        }
+__DOM_SECTIONS_JS__
       }
     };
-
+    const SECTION_KEYS = ['g1', 'g2', 'g3', 'g4', 'g5'];
+    const CATEGORY_SECTION_KEYS = ['g1', 'g2', 'g3', 'g5'];
     function formatNumber(value) { return numberFormat.format(value || 0); }
     function metricLabel() { return 'AD Duration'; }
     function advertisorLabel() { return 'Advertiser'; }
@@ -972,7 +753,6 @@ html = """<!DOCTYPE html>
     function uniqueSorted(values) {
       return [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b));
     }
-
     function normalizeDate(value) {
       const raw = String(value || '').trim();
       if (!raw) return '';
@@ -985,7 +765,6 @@ html = """<!DOCTYPE html>
       }
       return raw;
     }
-
     function normalizeRow(record) {
       const aaddur = Number.parseInt(String(record['Aaddur'] || '0').replace(/,/g, ''), 10);
       return {
@@ -998,7 +777,6 @@ html = """<!DOCTYPE html>
         category: String(record['Category'] || '').trim()
       };
     }
-
     function parseCsv(text) {
       const rows = [];
       const lines = [];
@@ -1033,14 +811,12 @@ html = """<!DOCTYPE html>
         lines.push(row);
       }
       if (!lines.length) return rows;
-
       const headers = lines[0].map(v => (v || '').trim());
       const index = Object.fromEntries(headers.map((value, idx) => [value, idx]));
       const required = ['Channel Name', 'Pdate', 'Brand Name', 'Company', 'Aaddur', 'Category'];
       for (const key of required) {
         if (!(key in index)) throw new Error('Missing required column: ' + key);
       }
-
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i];
         rows.push(normalizeRow({
@@ -1055,11 +831,9 @@ html = """<!DOCTYPE html>
       }
       return rows;
     }
-
     function cleanRows(rows) {
       return rows.filter(row => !EXCLUDED.has(row.category));
     }
-
     function hexToRgb(hex) {
       const clean = String(hex || '').replace('#', '');
       const full = clean.length === 3 ? clean.split('').map(ch => ch + ch).join('') : clean;
@@ -1070,7 +844,6 @@ html = """<!DOCTYPE html>
         b: value & 255
       };
     }
-
     function colorForValue(value, maxValue) {
       const scale = Math.max(0, Math.min(1, value / Math.max(maxValue, 1)));
       const palette = chartPalettes.heat;
@@ -1080,7 +853,6 @@ html = """<!DOCTYPE html>
       if (scale < 0.75) return palette[3];
       return palette[4];
     }
-
     function channelColor(channel, paletteKey) {
       const fixed = CHANNEL_COLORS[String(channel || '').trim().toUpperCase()];
       if (fixed) return fixed;
@@ -1089,14 +861,12 @@ html = """<!DOCTYPE html>
       for (let i = 0; i < channel.length; i++) hash = channel.charCodeAt(i) + ((hash << 5) - hash);
       return palette[Math.abs(hash) % palette.length];
     }
-
     function channelHeatColor(channel, value, maxValue) {
       const scale = Math.max(0.18, Math.min(1, value / Math.max(maxValue, 1)));
       const rgb = hexToRgb(channelColor(channel, 'g2'));
       const alpha = 0.16 + scale * 0.78;
       return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha.toFixed(3)})`;
     }
-
     function parseHourValue(value) {
       const raw = String(value || '').trim();
       if (!raw) return null;
@@ -1106,7 +876,6 @@ html = """<!DOCTYPE html>
       if (!Number.isFinite(hour) || hour < 0 || hour > 23) return null;
       return hour;
     }
-
     function normalizeTimeValue(value) {
       const raw = String(value || '').trim();
       if (!raw) return '';
@@ -1117,15 +886,12 @@ html = """<!DOCTYPE html>
       const second = (match[3] || '00').padStart(2, '0');
       return `${hour}:${minute}:${second}`;
     }
-
     function hourLabel(hour) {
       return `${String(hour).padStart(2, '0')}:00`;
     }
-
     function hourSlotLabel(hour) {
       return `${hourLabel(hour)} - ${hourLabel((hour + 1) % 24)}`;
     }
-
     function makeSvg(box) {
       const width = Math.max(box.clientWidth || 900, 320);
       const height = Math.max(box.clientHeight || 500, 260);
@@ -1136,13 +902,11 @@ html = """<!DOCTYPE html>
       box.appendChild(svg);
       return { svg, width, height };
     }
-
     function svgEl(name, attrs = {}) {
       const el = document.createElementNS('http://www.w3.org/2000/svg', name);
       Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
       return el;
     }
-
     function addWrappedText(svg, text, x, y, maxChars, fill, size, anchor, weight) {
       const parts = [];
       let remaining = text || '';
@@ -1167,11 +931,9 @@ html = """<!DOCTYPE html>
       });
       svg.appendChild(textEl);
     }
-
     function drawEmpty(box, message) {
       box.innerHTML = `<div class="empty">${message}</div>`;
     }
-
     function populateSelect(select, values, placeholder) {
       if (select.multiple) {
         select.innerHTML = '';
@@ -1185,11 +947,14 @@ html = """<!DOCTYPE html>
         select.appendChild(option);
       });
     }
-
-    function sharedCategorySections() {
-      return ['g1', 'g2', 'g3', 'g5'];
+    function sharedCategorySections() { return CATEGORY_SECTION_KEYS; }
+    function rerenderSections(sectionKeys) {
+      sectionKeys.forEach(renderSection);
     }
-
+    function syncAndRenderSections(sectionKeys) {
+      sectionKeys.forEach(syncSectionState);
+      rerenderSections(sectionKeys);
+    }
     function updateCategoryDropdownValue(sectionKey) {
       const controls = dom.sections[sectionKey];
       const selected = state.sections[sectionKey].category || [];
@@ -1202,7 +967,6 @@ html = """<!DOCTYPE html>
         ? selected.join(', ')
         : `${selected.length} Categories Selected`;
     }
-
     function syncSharedCategorySelection(selectedValues, sourceSectionKey = 'g1', options = {}) {
       const nextValues = uniqueSorted(selectedValues || []);
       sharedCategorySections().forEach(sectionKey => {
@@ -1216,7 +980,6 @@ html = """<!DOCTYPE html>
         populateCategoryDropdown(sectionKey, dom.sections[sectionKey].categorySearch ? dom.sections[sectionKey].categorySearch.value : '');
       });
     }
-
     function populateCategoryDropdown(sectionKey, filterText = '') {
       const controls = dom.sections[sectionKey];
       const select = controls.category;
@@ -1244,20 +1007,17 @@ html = """<!DOCTYPE html>
           if (input.checked) next.add(input.value);
           else next.delete(input.value);
           syncSharedCategorySelection([...next], sectionKey, { preserveSearchText: true });
-          sharedCategorySections().forEach(key => syncSectionState(key));
-          sharedCategorySections().forEach(key => renderSection(key));
+          syncAndRenderSections(sharedCategorySections());
           renderSummary();
         });
       });
       updateCategoryDropdownValue(sectionKey);
     }
-
     function initializeSectionControls(sectionKey) {
       const rows = state.cleanedRows;
       const dates = uniqueSorted(rows.map(row => row.date));
       const channels = uniqueSorted(rows.map(row => row.channel));
       const section = dom.sections[sectionKey];
-
       populateSelect(section.channel, channels, 'All Channels');
       if (sharedCategorySections().includes(sectionKey)) {
         populateCategoryDropdown(sectionKey);
@@ -1269,7 +1029,6 @@ html = """<!DOCTYPE html>
         populateSelect(section.advertisor, advertisors, 'All Advertisers');
         section.time.value = 'minutes';
       }
-
       section.start.value = dates[0] || '';
       section.end.value = dates[dates.length - 1] || '';
       section.start.min = dates[0] || '';
@@ -1277,7 +1036,6 @@ html = """<!DOCTYPE html>
       section.end.min = dates[0] || '';
       section.end.max = dates[dates.length - 1] || '';
     }
-
     function getSectionRows(sectionKey) {
       const sectionState = state.sections[sectionKey];
       let rows = state.cleanedRows.filter(row => {
@@ -1295,7 +1053,6 @@ html = """<!DOCTYPE html>
       });
       return rows;
     }
-
     function aggregateAdvertisors(rows) {
       const map = new Map();
       rows.forEach(row => {
@@ -1306,7 +1063,6 @@ html = """<!DOCTYPE html>
       });
       return [...map.values()].sort((a, b) => b.total - a.total || a.advertisor.localeCompare(b.advertisor));
     }
-
     function buildAdvertisorChannelMatrix(rows, topAdvertisors) {
       const advertisorSet = new Set(topAdvertisors.map(item => item.advertisor));
       const channels = uniqueSorted(rows.filter(r => advertisorSet.has(r.company)).map(r => r.channel));
@@ -1326,7 +1082,6 @@ html = """<!DOCTYPE html>
         }))
       };
     }
-
     function buildAdvertisorDateMatrix(rows, topAdvertisors) {
       const advertisorSet = new Set(topAdvertisors.map(item => item.advertisor));
       const dates = uniqueSorted(rows.filter(r => advertisorSet.has(r.company)).map(r => r.date));
@@ -1345,7 +1100,6 @@ html = """<!DOCTYPE html>
         }))
       };
     }
-
     function buildChannelDistribution(rows) {
       const map = new Map();
       rows.forEach(row => {
@@ -1355,7 +1109,6 @@ html = """<!DOCTYPE html>
         .map(([channel, total]) => ({ channel, total }))
         .sort((a, b) => b.total - a.total || a.channel.localeCompare(b.channel));
     }
-
     function buildHeatmapMatrix(rows, topN) {
       const categoryTotals = new Map();
       rows.forEach(row => {
@@ -1376,7 +1129,6 @@ html = """<!DOCTYPE html>
       map.forEach(value => { maxValue = Math.max(maxValue, value); });
       return { channels, categories, map, maxValue: Math.max(maxValue, 1) };
     }
-
     function buildCategoryDistribution(rows) {
       const map = new Map();
       rows.forEach(row => {
@@ -1386,7 +1138,6 @@ html = """<!DOCTYPE html>
         .map(([category, total]) => ({ category, total }))
         .sort((a, b) => b.total - a.total || a.category.localeCompare(b.category));
     }
-
     function buildDateTotals(rows) {
       const map = new Map();
       rows.forEach(row => {
@@ -1396,7 +1147,6 @@ html = """<!DOCTYPE html>
         .map(([date, total]) => ({ date, total }))
         .sort((a, b) => a.date.localeCompare(b.date));
     }
-
     function buildChannelTotals(rows) {
       const map = new Map();
       rows.forEach(row => {
@@ -1406,7 +1156,6 @@ html = """<!DOCTYPE html>
         .map(([channel, total]) => ({ channel, total }))
         .sort((a, b) => b.total - a.total || a.channel.localeCompare(b.channel));
     }
-
     function buildChannelHourlyMatrix(rows) {
       const totals = new Map();
       rows.forEach(row => {
@@ -1430,7 +1179,6 @@ html = """<!DOCTYPE html>
       map.forEach(value => { maxValue = Math.max(maxValue, value); });
       return { channels, hours: visibleHours, map, maxValue: Math.max(maxValue, 1) };
     }
-
     function drawAxes(svg, margin, plotW, plotH, xTitle, yTitle, width, height, maxValue) {
       for (let i = 0; i <= 4; i++) {
         const y = margin.top + plotH - (plotH * i / 4);
@@ -1461,13 +1209,11 @@ html = """<!DOCTYPE html>
       yAxisLabel.textContent = yTitle;
       svg.appendChild(yAxisLabel);
     }
-
     function renderLegend(container, items) {
       container.innerHTML = items.map(item =>
         `<span class="legend-item"><i class="legend-swatch" style="background:${item.color}"></i>${item.label}</span>`
       ).join('');
     }
-
     function drawGraph1(rows) {
       const topAdvertisers = aggregateAdvertisors(rows).slice(0, Number.parseInt(state.sections.g1.topN, 10));
       if (!topAdvertisers.length) {
@@ -1502,10 +1248,8 @@ html = """<!DOCTYPE html>
         svg.appendChild(dataLabel);
         addWrappedText(svg, item.advertisor, x + barW / 2, margin.top + plotH + 18, 12, '#f4f8ff', 10, 'middle', 700);
       });
-
       renderLegend(dom.sections.g1.legend, [{ label: 'Total AD Duration', color: chartPalettes.g1[0] }]);
     }
-
     function drawGraph2Bar(rows) {
       const topAdvertisors = aggregateAdvertisors(rows).slice(0, Number.parseInt(state.sections.g2.topN, 10));
       const matrix = buildAdvertisorChannelMatrix(rows, topAdvertisors);
@@ -1520,7 +1264,6 @@ html = """<!DOCTYPE html>
       const plotH = height - margin.top - margin.bottom;
       const maxValue = Math.max(...matrix.rows.flatMap(row => matrix.channels.map(channel => row.values[channel] || 0)), 1);
       drawAxes(svg, margin, plotW, plotH, advertisorLabel(), metricLabel(), width, height, maxValue);
-
       const groupW = plotW / Math.max(matrix.rows.length, 1);
       const barW = Math.max((groupW - 14) / Math.max(matrix.channels.length, 1) - 2, 4);
       matrix.rows.forEach((row, gi) => {
@@ -1561,13 +1304,11 @@ html = """<!DOCTYPE html>
           700
         );
       });
-
       renderLegend(dom.sections.g2.legend, matrix.channels.map(channel => ({
         label: channel,
         color: channelColor(channel, 'g2')
       })));
     }
-
     function drawGraph2Pie(rows) {
       const distribution = buildChannelDistribution(rows);
       if (!distribution.length) {
@@ -1582,11 +1323,9 @@ html = """<!DOCTYPE html>
       const innerRadius = radius * 0.42;
       const total = distribution.reduce((sum, item) => sum + item.total, 0) || 1;
       let startAngle = -Math.PI / 2;
-
       function polar(r, angle) {
         return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
       }
-
       distribution.forEach(item => {
         const fraction = item.total / total;
         const endAngle = startAngle + fraction * Math.PI * 2;
@@ -1607,26 +1346,22 @@ html = """<!DOCTYPE html>
         const title = svgEl('title');
         title.textContent = `Channel: ${item.channel}\nAD Duration: ${formatNumber(item.total)} sec\nShare: ${(fraction * 100).toFixed(0)}%`;
         svg.lastChild.appendChild(title);
-
         const mid = startAngle + (endAngle - startAngle) / 2;
         const label = polar(radius + 38, mid);
         addWrappedText(svg, `${item.channel} ${formatNumber(item.total)} sec ${(fraction * 100).toFixed(0)}% AD`, label.x, label.y, 16, '#f4f8ff', 10, mid > Math.PI / 2 || mid < -Math.PI / 2 ? 'end' : 'start', 700);
         startAngle = endAngle;
       });
-
       const centerTop = svgEl('text', { x: cx, y: cy - 8, fill: '#f4f8ff', 'font-size': 17, 'font-weight': 800, 'text-anchor': 'middle' });
       centerTop.textContent = 'AD Duration';
       svg.appendChild(centerTop);
       const centerValue = svgEl('text', { x: cx, y: cy + 16, fill: '#dcecff', 'font-size': 15, 'font-weight': 700, 'text-anchor': 'middle' });
       centerValue.textContent = `${formatNumber(total)} sec`;
       svg.appendChild(centerValue);
-
       renderLegend(dom.sections.g2.legend, distribution.map(item => ({
         label: item.channel,
         color: channelColor(item.channel, 'g2')
       })));
     }
-
     function drawGraph3(rows) {
       const topAdvertisors = aggregateAdvertisors(rows).slice(0, Number.parseInt(state.sections.g3.topN, 10));
       const matrix = buildAdvertisorDateMatrix(rows, topAdvertisors);
@@ -1641,7 +1376,6 @@ html = """<!DOCTYPE html>
       const plotH = height - margin.top - margin.bottom;
       const maxValue = Math.max(...matrix.rows.flatMap(row => topAdvertisors.map(item => row.values[item.advertisor] || 0)), 1);
       drawAxes(svg, margin, plotW, plotH, 'Date', metricLabel(), width, height, maxValue);
-
       const groupW = plotW / Math.max(matrix.rows.length, 1);
       const barW = Math.max((groupW - 14) / Math.max(topAdvertisors.length, 1) - 2, 3);
       for (let gi = 0; gi <= matrix.rows.length; gi++) {
@@ -1677,13 +1411,11 @@ html = """<!DOCTYPE html>
         });
         addWrappedText(svg, formatDate(row.date), startX + ((topAdvertisors.length * (barW + 2)) - 2) / 2, margin.top + plotH + 16, 10, '#eef5ff', 10.5, 'middle', 700);
       });
-
       renderLegend(dom.sections.g3.legend, topAdvertisors.map((item, idx) => ({
         label: item.advertisor,
         color: chartPalettes.g3[idx % chartPalettes.g3.length]
       })));
     }
-
     function drawGraph4(rows) {
       const matrix = buildHeatmapMatrix(rows, Number.parseInt(state.sections.g4.topN, 10));
       if (!matrix.channels.length || !matrix.categories.length) {
@@ -1697,19 +1429,16 @@ html = """<!DOCTYPE html>
       const cellW = plotW / Math.max(matrix.channels.length, 1);
       const cellH = plotH / Math.max(matrix.categories.length, 1);
       const backgroundFill = '#08111d';
-
       svg.appendChild(svgEl('rect', {
         x: margin.left, y: margin.top, width: plotW, height: plotH, rx: 12,
         fill: 'rgba(255,255,255,0.02)', stroke: 'rgba(255,255,255,0.08)'
       }));
-
       const xAxisLabel = svgEl('text', {
         x: margin.left + plotW / 2, y: height - 10, fill: '#f4f8ff',
         'font-size': 17, 'font-weight': 800, 'text-anchor': 'middle'
       });
       xAxisLabel.textContent = 'Channel';
       svg.appendChild(xAxisLabel);
-
       const yAxisLabel = svgEl('text', {
         x: 28, y: margin.top + plotH / 2, fill: '#f4f8ff',
         'font-size': 17, 'font-weight': 800, 'text-anchor': 'middle',
@@ -1717,7 +1446,6 @@ html = """<!DOCTYPE html>
       });
       yAxisLabel.textContent = 'Category';
       svg.appendChild(yAxisLabel);
-
       for (let ci = 0; ci <= matrix.channels.length; ci++) {
         const x = margin.left + ci * cellW;
         svg.appendChild(svgEl('line', {
@@ -1732,14 +1460,12 @@ html = """<!DOCTYPE html>
           stroke: 'rgba(216,227,241,0.18)', 'stroke-width': 1
         }));
       }
-
       matrix.channels.forEach((channel, ci) => {
         addWrappedText(svg, channel, margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, 10, '#eef5ff', 11.5, 'middle', 700);
       });
       matrix.categories.forEach((category, ri) => {
         addWrappedText(svg, category, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, 18, '#eef5ff', 11.5, 'end', 700);
       });
-
       matrix.categories.forEach((category, ri) => {
         matrix.channels.forEach((channel, ci) => {
           const x = margin.left + ci * cellW;
@@ -1773,7 +1499,6 @@ html = """<!DOCTYPE html>
         });
       });
     }
-
     function drawGraph5(rows) {
       const matrix = buildChannelHourlyMatrix(rows);
       const unitMeta = graph5UnitMeta();
@@ -1787,11 +1512,9 @@ html = """<!DOCTYPE html>
       const plotH = height - margin.top - margin.bottom;
       const cellW = plotW / Math.max(matrix.hours.length, 1);
       const cellH = plotH / Math.max(matrix.channels.length, 1);
-
       const xAxisLabel = svgEl('text', { x: margin.left + plotW / 2, y: height - 8, fill: '#f4f8ff', 'font-size': 15, 'font-weight': 700, 'text-anchor': 'middle' });
       xAxisLabel.textContent = 'Hour of Day';
       svg.appendChild(xAxisLabel);
-
       const yAxisLabel = svgEl('text', {
         x: 24, y: margin.top + plotH / 2, fill: '#f4f8ff',
         'font-size': 15, 'font-weight': 700, 'text-anchor': 'middle',
@@ -1799,14 +1522,12 @@ html = """<!DOCTYPE html>
       });
       yAxisLabel.textContent = 'Channel';
       svg.appendChild(yAxisLabel);
-
       matrix.hours.forEach((hour, ci) => {
         addWrappedText(svg, hourLabel(hour), margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, 5, '#d8e3f1', 10.5, 'middle', 700);
       });
       matrix.channels.forEach((channel, ri) => {
         addWrappedText(svg, channel, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, 14, '#d8e3f1', 11, 'end', 700);
       });
-
       for (let ci = 0; ci <= matrix.hours.length; ci++) {
         const x = margin.left + ci * cellW;
         svg.appendChild(svgEl('line', {
@@ -1821,7 +1542,6 @@ html = """<!DOCTYPE html>
           stroke: 'rgba(216,227,241,0.20)', 'stroke-width': 1
         }));
       }
-
       matrix.channels.forEach((channel, ri) => {
         matrix.hours.forEach((hour, ci) => {
           const x = margin.left + ci * cellW;
@@ -1854,7 +1574,6 @@ html = """<!DOCTYPE html>
           }
         });
       });
-
       const channelTotals = matrix.channels.map(channel => {
         let total = 0;
         matrix.hours.forEach(hour => {
@@ -1870,15 +1589,12 @@ html = """<!DOCTYPE html>
         </div>
       `).join('');
     }
-
     function renderExcluded() {
       dom.excludedChips.textContent = PAYLOAD.excluded.join(' • ');
     }
-
     function formatPercent(value) {
       return `${(value || 0).toFixed(2)}%`;
     }
-
     function graph5UnitMeta() {
       const unit = state.sections.g5.time || 'seconds';
       if (unit === 'minutes') {
@@ -1894,7 +1610,6 @@ html = """<!DOCTYPE html>
         format: value => `${formatNumber(Math.round(value))} sec`
       };
     }
-
     function collectSelectedValues(keys, field) {
       const values = [];
       keys.forEach(sectionKey => {
@@ -1909,18 +1624,16 @@ html = """<!DOCTYPE html>
       });
       return [...new Set(values)];
     }
-
     function getDashboardSummaryRows() {
-      const channelValues = collectSelectedValues(['g1', 'g2', 'g3', 'g4', 'g5'], 'channel');
-      const categoryValues = collectSelectedValues(['g1', 'g2', 'g3', 'g5'], 'category');
+      const channelValues = collectSelectedValues(SECTION_KEYS, 'channel');
+      const categoryValues = collectSelectedValues(CATEGORY_SECTION_KEYS, 'category');
       const advertisorValues = collectSelectedValues(['g5'], 'advertisor');
-      const dateRanges = ['g1', 'g2', 'g3', 'g4', 'g5']
+      const dateRanges = SECTION_KEYS
         .map(sectionKey => ({
           start: state.sections[sectionKey].start || '',
           end: state.sections[sectionKey].end || ''
         }))
         .filter(range => range.start || range.end);
-
       return state.cleanedRows.filter(row => {
         if (channelValues.length && !channelValues.includes(row.channel)) return false;
         if (categoryValues.length && !categoryValues.includes(row.category)) return false;
@@ -1936,7 +1649,6 @@ html = """<!DOCTYPE html>
         return true;
       });
     }
-
     function renderSummary() {
       const rows = getDashboardSummaryRows();
       if (!rows.length) {
@@ -1970,35 +1682,52 @@ html = """<!DOCTYPE html>
       ];
       dom.summaryLines.innerHTML = lines.map(line => `<div class="summary-line">${line}</div>`).join('');
     }
-
-    function getActiveFiltersMarkup() {
-      const pieces = [];
-      ['g1', 'g2', 'g3', 'g4', 'g5'].forEach(sectionKey => {
-        const s = state.sections[sectionKey];
-        const categoryLabel = Array.isArray(s.category)
-          ? ((s.category || []).length ? s.category.join(', ') : 'all')
-          : (s.category || 'all');
-        if (sectionKey === 'g5') {
-          pieces.push(
-            `<div class="summary-line"><strong>${sectionKey.toUpperCase()}</strong> | Start: ${s.start || 'all'}, End: ${s.end || 'all'}, Channel: ${s.channel || 'all'}, Category: ${categoryLabel}, Advertiser: ${s.advertisor || 'all'}, Time: ${s.time || 'minutes'}</div>`
-          );
-          return;
-        }
-        if (sectionKey === 'g4') {
-          pieces.push(
-            `<div class="summary-line"><strong>${sectionKey.toUpperCase()}</strong> | Top N: ${s.topN || 'all'}, Start: ${s.start || 'all'}, End: ${s.end || 'all'}, Channel: ${s.channel || 'all'}</div>`
-          );
-          return;
-        }
-        pieces.push(
-          `<div class="summary-line"><strong>${sectionKey.toUpperCase()}</strong> | Top N: ${s.topN || 'all'}, Start: ${s.start || 'all'}, End: ${s.end || 'all'}, Channel: ${s.channel || 'all'}, Category: ${categoryLabel}</div>`
-        );
-      });
-      return pieces.join('');
+    function categoryFilterLabel(sectionState, emptyLabel) {
+      return Array.isArray(sectionState.category)
+        ? ((sectionState.category || []).length ? sectionState.category.join(', ') : emptyLabel)
+        : (sectionState.category || emptyLabel);
     }
-
+    function filterSummaryLines(sectionKey, sectionState, forPage = false) {
+      const categoryLabel = categoryFilterLabel(sectionState, forPage ? 'All' : 'all');
+      if (sectionKey === 'g5') {
+        return forPage
+          ? [
+              `Start Date: ${sectionState.start ? formatDate(sectionState.start) : 'All'}`,
+              `End Date: ${sectionState.end ? formatDate(sectionState.end) : 'All'}`,
+              `Channel: ${sectionState.channel || 'All'}`,
+              `Category: ${categoryLabel}`,
+              `Advertiser: ${sectionState.advertisor || 'All'}`,
+              `Time: ${sectionState.time || 'minutes'}`
+            ]
+          : [`<strong>${sectionKey.toUpperCase()}</strong> | Start: ${sectionState.start || 'all'}, End: ${sectionState.end || 'all'}, Channel: ${sectionState.channel || 'all'}, Category: ${categoryLabel}, Advertiser: ${sectionState.advertisor || 'all'}, Time: ${sectionState.time || 'minutes'}`];
+      }
+      if (sectionKey === 'g4') {
+        return forPage
+          ? [
+              `Top N: ${sectionState.topN || 'All'}`,
+              `Start Date: ${sectionState.start ? formatDate(sectionState.start) : 'All'}`,
+              `End Date: ${sectionState.end ? formatDate(sectionState.end) : 'All'}`,
+              `Channel: ${sectionState.channel || 'All'}`
+            ]
+          : [`<strong>${sectionKey.toUpperCase()}</strong> | Top N: ${sectionState.topN || 'all'}, Start: ${sectionState.start || 'all'}, End: ${sectionState.end || 'all'}, Channel: ${sectionState.channel || 'all'}`];
+      }
+      return forPage
+        ? [
+            `Top N: ${sectionState.topN || 'All'}`,
+            `Start Date: ${sectionState.start ? formatDate(sectionState.start) : 'All'}`,
+            `End Date: ${sectionState.end ? formatDate(sectionState.end) : 'All'}`,
+            `Channel: ${sectionState.channel || 'All'}`,
+            `Category: ${categoryLabel}`
+          ]
+        : [`<strong>${sectionKey.toUpperCase()}</strong> | Top N: ${sectionState.topN || 'all'}, Start: ${sectionState.start || 'all'}, End: ${sectionState.end || 'all'}, Channel: ${sectionState.channel || 'all'}, Category: ${categoryLabel}`];
+    }
+    function getActiveFiltersMarkup() {
+      return SECTION_KEYS
+        .map(sectionKey => `<div class="summary-line">${filterSummaryLines(sectionKey, state.sections[sectionKey])[0]}</div>`)
+        .join('');
+    }
     function getSelectedDateRangeText() {
-      const ranges = ['g1', 'g2', 'g3', 'g4', 'g5']
+      const ranges = SECTION_KEYS
         .map(sectionKey => ({
           start: state.sections[sectionKey].start || '',
           end: state.sections[sectionKey].end || ''
@@ -2013,47 +1742,14 @@ html = """<!DOCTYPE html>
       if (start && end) return `${formatDate(start)} to ${formatDate(end)}`;
       return formatDate(start || end);
     }
-
     function getActiveFiltersPageMarkup() {
-      const cards = [];
-      ['g1', 'g2', 'g3', 'g4', 'g5'].forEach(sectionKey => {
-        const s = state.sections[sectionKey];
-        const categoryLabel = Array.isArray(s.category)
-          ? ((s.category || []).length ? s.category.join(', ') : 'All')
-          : (s.category || 'All');
-        const lines = sectionKey === 'g5'
-          ? [
-              `Start Date: ${s.start ? formatDate(s.start) : 'All'}`,
-              `End Date: ${s.end ? formatDate(s.end) : 'All'}`,
-              `Channel: ${s.channel || 'All'}`,
-              `Category: ${categoryLabel}`,
-              `Advertiser: ${s.advertisor || 'All'}`,
-              `Time: ${s.time || 'minutes'}`
-            ]
-          : sectionKey === 'g4'
-          ? [
-              `Top N: ${s.topN || 'All'}`,
-              `Start Date: ${s.start ? formatDate(s.start) : 'All'}`,
-              `End Date: ${s.end ? formatDate(s.end) : 'All'}`,
-              `Channel: ${s.channel || 'All'}`
-            ]
-          : [
-              `Top N: ${s.topN || 'All'}`,
-              `Start Date: ${s.start ? formatDate(s.start) : 'All'}`,
-              `End Date: ${s.end ? formatDate(s.end) : 'All'}`,
-              `Channel: ${s.channel || 'All'}`,
-              `Category: ${categoryLabel}`
-            ];
-        cards.push(`
+      return SECTION_KEYS.map(sectionKey => `
           <div class="pdf-filter-card">
             <h3>${sectionKey.toUpperCase()}</h3>
-            ${lines.map(line => `<div class="summary-line">${line}</div>`).join('')}
+            ${filterSummaryLines(sectionKey, state.sections[sectionKey], true).map(line => `<div class="summary-line">${line}</div>`).join('')}
           </div>
-        `);
-      });
-      return cards.join('');
+        `).join('');
     }
-
     function exportDashboardPdf() {
       const printWindow = window.open('', '_blank', 'width=1280,height=900');
       if (!printWindow) return;
@@ -2129,7 +1825,6 @@ html = """<!DOCTYPE html>
       printWindow.focus();
       setTimeout(() => printWindow.print(), 300);
     }
-
     function renderSection(sectionKey) {
       const rows = getSectionRows(sectionKey);
       if (sectionKey === 'g1') drawGraph1(rows);
@@ -2144,16 +1839,10 @@ html = """<!DOCTYPE html>
       if (sectionKey === 'g4') drawGraph4(rows);
       if (sectionKey === 'g5') drawGraph5(rows);
     }
-
     function renderAll() {
-      renderSection('g1');
-      renderSection('g2');
-      renderSection('g3');
-      renderSection('g4');
-      renderSection('g5');
+      rerenderSections(SECTION_KEYS);
       renderSummary();
     }
-
     function syncSectionState(sectionKey) {
       const controls = dom.sections[sectionKey];
       const target = state.sections[sectionKey];
@@ -2171,7 +1860,6 @@ html = """<!DOCTYPE html>
         target.time = controls.time.value;
       }
     }
-
     function bindSection(sectionKey) {
       const controls = dom.sections[sectionKey];
       const controlKeys = sectionKey === 'g5'
@@ -2199,20 +1887,18 @@ html = """<!DOCTYPE html>
         controls.categoryAll.addEventListener('click', () => {
           controls.categoryDropdown.classList.add('open');
           syncSharedCategorySelection(uniqueSorted(state.cleanedRows.map(row => row.category)), sectionKey, { preserveSearchText: true });
-          sharedCategorySections().forEach(key => syncSectionState(key));
-          sharedCategorySections().forEach(key => renderSection(key));
+          syncAndRenderSections(sharedCategorySections());
           renderSummary();
         });
         controls.categoryClear.addEventListener('click', () => {
           controls.categoryDropdown.classList.add('open');
           syncSharedCategorySelection([], sectionKey, { preserveSearchText: true });
-          sharedCategorySections().forEach(key => syncSectionState(key));
-          sharedCategorySections().forEach(key => renderSection(key));
+          syncAndRenderSections(sharedCategorySections());
           renderSummary();
         });
       }
       controls.reset.addEventListener('click', () => {
-        if (controls.topN) controls.topN.value = sectionKey === 'g4' ? '10' : '10';
+        if (controls.topN) controls.topN.value = '10';
         controls.channel.value = '';
         if (sharedCategorySections().includes(sectionKey)) {
           controls.categorySearch.value = '';
@@ -2236,8 +1922,7 @@ html = """<!DOCTYPE html>
           controls.time.value = 'minutes';
         }
         if (sharedCategorySections().includes(sectionKey)) {
-          sharedCategorySections().forEach(key => syncSectionState(key));
-          sharedCategorySections().forEach(key => renderSection(key));
+          syncAndRenderSections(sharedCategorySections());
         } else {
           syncSectionState(sectionKey);
           renderSection(sectionKey);
@@ -2245,7 +1930,6 @@ html = """<!DOCTYPE html>
         renderSummary();
       });
     }
-
     function toggleFullScreen(sectionKey) {
       const panel = dom.sections[sectionKey].panel;
       if (!document.fullscreenElement) {
@@ -2254,17 +1938,15 @@ html = """<!DOCTYPE html>
         if (document.exitFullscreen) document.exitFullscreen();
       }
     }
-
     function updateFullButtons() {
-      ['g1', 'g2', 'g3', 'g4', 'g5'].forEach(sectionKey => {
+      SECTION_KEYS.forEach(sectionKey => {
         const panel = dom.sections[sectionKey].panel;
         const isActive = document.fullscreenElement === panel;
         dom.sections[sectionKey].fullBtn.textContent = isActive ? 'Exit Full Screen' : 'Full Screen';
       });
     }
-
     function initializeSections() {
-      ['g1', 'g2', 'g3', 'g4', 'g5'].forEach(sectionKey => {
+      SECTION_KEYS.forEach(sectionKey => {
         initializeSectionControls(sectionKey);
         if (!state.initialized) bindSection(sectionKey);
         syncSectionState(sectionKey);
@@ -2304,7 +1986,6 @@ html = """<!DOCTYPE html>
       state.initialized = true;
       updateFullButtons();
     }
-
     function loadRows(rows, status) {
       state.rawRows = rows;
       state.cleanedRows = cleanRows(rows);
@@ -2313,7 +1994,6 @@ html = """<!DOCTYPE html>
       dom.statusText.textContent = status;
       renderAll();
     }
-
     if (dom.fileUpload) {
       dom.fileUpload.addEventListener('change', async event => {
         const file = event.target.files && event.target.files[0];
@@ -2326,7 +2006,6 @@ html = """<!DOCTYPE html>
         }
       });
     }
-
     renderExcluded();
     initializeSections();
     renderAll();
@@ -2334,12 +2013,12 @@ html = """<!DOCTYPE html>
 </body>
 </html>
 """
-
 html = html.replace("__GENERATED_AT__", payload["generatedAt"])
 html = html.replace("__REPORT_DATE__", report_date)
 html = html.replace("__PAYLOAD_JSON__", json.dumps(payload, ensure_ascii=True))
-
-
+html = html.replace("__SECTIONS_HTML__", build_sections_html())
+html = html.replace("__STATE_SECTIONS_JS__", build_state_sections_js())
+html = html.replace("__DOM_SECTIONS_JS__", build_dom_sections_js())
 def build_standalone_html(source_html: str) -> str:
     standalone_markup = """      <div class="upload-box">
         <label class="label">Embedded Dataset</label>
@@ -2368,8 +2047,6 @@ def build_standalone_html(source_html: str) -> str:
         1,
     )
     return standalone
-
-
 def build_mobile_html(source_html: str) -> str:
     mobile_css = """
     @media (max-width: 768px) {
@@ -2442,11 +2119,8 @@ def build_mobile_html(source_html: str) -> str:
     }
 """
     return source_html.replace("  </style>", mobile_css + "\n  </style>", 1)
-
-
 standalone_html = build_standalone_html(html)
 mobile_html = build_mobile_html(standalone_html)
-
 OUTPUT_PATH.write_text(html, encoding="utf-8")
 STANDALONE_OUTPUT_PATH.write_text(standalone_html, encoding="utf-8")
 MOBILE_OUTPUT_PATH.write_text(mobile_html, encoding="utf-8")
