@@ -5,8 +5,6 @@ from pathlib import Path
 CSV_PATH = Path(r"D:\Vs - Code Work\Codex\CTV FCT.csv")
 OUTPUT_PATH = Path(r"D:\Vs - Code Work\Codex\CTV FCT Dashboard.html")
 STANDALONE_OUTPUT_PATH = Path(r"D:\Vs - Code Work\Codex\CTV FCT Dashboard Standalone.html")
-MOBILE_OUTPUT_PATH = Path(r"D:\Vs - Code Work\Codex\CTV FCT Dashboard Mobile.html")
-WHITE_OUTPUT_PATH = Path(r"D:\Vs - Code Work\Codex\CTV FCT Dashboard White.html")
 EXCLUDED = [
     "ASTROLOGERS",
     "CHANNEL IMAGERY",
@@ -598,6 +596,108 @@ html = """<!DOCTYPE html>
       padding: 0;
       cursor: pointer;
     }
+    .share-fab {
+      position: fixed;
+      right: 28px;
+      bottom: 28px;
+      width: 46px;
+      height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      border: 1px solid rgba(37, 99, 235, 0.18);
+      background: #2563eb;
+      color: #ffffff;
+      box-shadow: 0 12px 26px rgba(37, 99, 235, 0.25);
+      cursor: pointer;
+      z-index: 90;
+    }
+    .share-fab:hover,
+    .share-fab:focus {
+      color: #ffffff;
+      border-color: rgba(147, 197, 253, 0.5);
+      background: #1d4ed8;
+      box-shadow: 0 14px 30px rgba(29, 78, 216, 0.28);
+    }
+    .share-fab svg {
+      width: 19px;
+      height: 19px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      pointer-events: none;
+    }
+    .share-modal[hidden] {
+      display: none !important;
+    }
+    .share-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 140;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(6px);
+    }
+    .share-modal-card {
+      width: min(420px, 100%);
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      background: #ffffff;
+      box-shadow: 0 28px 60px rgba(15, 23, 42, 0.24);
+      padding: 22px;
+    }
+    .share-modal-title {
+      margin: 0 0 8px;
+      color: var(--text);
+      font-size: 20px;
+      font-weight: 800;
+    }
+    .share-modal-copy {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .share-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .share-modal-btn {
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      border-radius: 12px;
+      background: #ffffff;
+      color: var(--text);
+      min-height: 40px;
+      padding: 0 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+    }
+    .share-modal-btn:hover,
+    .share-modal-btn:focus {
+      border-color: #93c5fd;
+      box-shadow: 0 10px 18px rgba(37, 99, 235, 0.12);
+      outline: none;
+    }
+    .share-modal-btn.primary {
+      border-color: #2563eb;
+      background: #2563eb;
+      color: #ffffff;
+    }
+    .share-modal-btn.primary:hover,
+    .share-modal-btn.primary:focus {
+      border-color: #1d4ed8;
+      background: #1d4ed8;
+      color: #ffffff;
+    }
     .icon-btn svg {
       width: 14px;
       height: 14px;
@@ -926,6 +1026,24 @@ __GLOBAL_FILTER_HTML__
       </div>
     </section>
 __SECTIONS_HTML__
+    <button class="share-fab" id="shareBtn" type="button" title="Share Dashboard" aria-label="Share Dashboard">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 16V5"></path>
+        <path d="M8 9l4-4 4 4"></path>
+        <path d="M5 19h14"></path>
+      </svg>
+      <span class="sr-only">Share Dashboard</span>
+    </button>
+    <div class="share-modal" id="shareModal" hidden>
+      <div class="share-modal-card" role="dialog" aria-modal="true" aria-labelledby="shareModalTitle">
+        <h3 class="share-modal-title" id="shareModalTitle">Share Dashboard</h3>
+        <p class="share-modal-copy">Download a read-only HTML snapshot of the current dashboard with the embedded dataset, active filters, charts, heatmaps, tables, and full-screen viewing preserved.</p>
+        <div class="share-modal-actions">
+          <button class="share-modal-btn" id="shareCancelBtn" type="button">Cancel</button>
+          <button class="share-modal-btn primary" id="shareDownloadBtn" type="button">Download Shareable Dashboard</button>
+        </div>
+      </div>
+    </div>
   <script>
     const PAYLOAD = __PAYLOAD_JSON__;
     const EXCLUDED = new Set(PAYLOAD.excluded);
@@ -964,6 +1082,10 @@ __STATE_SECTIONS_JS__
     const dom = {
       fileUpload: document.getElementById('fileUpload'),
       pdfBtn: document.getElementById('pdfBtn'),
+      shareBtn: document.getElementById('shareBtn'),
+      shareModal: document.getElementById('shareModal'),
+      shareCancelBtn: document.getElementById('shareCancelBtn'),
+      shareDownloadBtn: document.getElementById('shareDownloadBtn'),
       statusText: document.getElementById('statusText'),
       reportDateText: document.getElementById('reportDateText'),
       reportTimeText: document.getElementById('reportTimeText'),
@@ -1248,7 +1370,7 @@ __DOM_SECTIONS_JS__
     }
     function renderHeaderStats() {
       const rows = getDashboardSummaryRows();
-      const now = new Date();
+      const now = state.reportClock ? new Date(state.reportClock) : new Date();
       if (dom.totalRecordsText) dom.totalRecordsText.textContent = formatNumber(rows.length);
       if (dom.reportDateText) dom.reportDateText.textContent = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
       if (dom.reportTimeText) dom.reportTimeText.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -2379,6 +2501,136 @@ __DOM_SECTIONS_JS__
       printWindow.focus();
       setTimeout(() => printWindow.print(), 300);
     }
+    function cloneSectionState(source) {
+      if (!source) return null;
+      return {
+        ...source,
+        category: Array.isArray(source.category) ? [...source.category] : source.category
+      };
+    }
+    function getDatasetNameForExport() {
+      const status = String(dom.statusText?.textContent || '').trim();
+      const loaded = status.match(/Loaded file:\\s*(.+)$/i);
+      if (loaded && loaded[1]) return loaded[1].replace(/\\.[^.]+$/, '');
+      return 'Dashboard';
+    }
+    function sanitizeFilenamePart(value) {
+      return String(value || 'Dashboard')
+        .replace(/[\\/:*?"<>|]+/g, ' ')
+        .replace(/\\s+/g, '_')
+        .replace(/^_+|_+$/g, '')
+        .slice(0, 60) || 'Dashboard';
+    }
+    function buildShareFilename() {
+      const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\\.\\d+Z$/, '').replace('T', '_');
+      return `CTV FCT_${sanitizeFilenamePart(getDatasetNameForExport())}_${stamp}.html`;
+    }
+    function serializeDashboardState() {
+      return {
+        reportClock: new Date().toISOString(),
+        statusText: dom.statusText?.textContent || 'Loaded shared dashboard snapshot.',
+        global: {
+          ...state.global,
+          category: [...(state.global.category || [])]
+        },
+        sections: SECTION_KEYS.reduce((acc, sectionKey) => {
+          acc[sectionKey] = cloneSectionState(state.sections[sectionKey]);
+          return acc;
+        }, {})
+      };
+    }
+    function applyExportedState(snapshot) {
+      if (!snapshot) return;
+      if (snapshot.reportClock) state.reportClock = snapshot.reportClock;
+      if (snapshot.global) {
+        state.global = {
+          ...state.global,
+          ...snapshot.global,
+          category: [...(snapshot.global.category || [])]
+        };
+      }
+      if (snapshot.sections) {
+        SECTION_KEYS.forEach(sectionKey => {
+          if (!snapshot.sections[sectionKey]) return;
+          const next = snapshot.sections[sectionKey];
+          state.sections[sectionKey] = {
+            ...state.sections[sectionKey],
+            ...next,
+            category: Array.isArray(next.category) ? [...next.category] : next.category
+          };
+        });
+      }
+      dom.global.topN.value = state.global.topN || '10';
+      dom.global.start.value = state.global.start || '';
+      dom.global.end.value = state.global.end || '';
+      dom.global.channel.value = state.global.channel || '';
+      dom.global.advertisor.value = state.global.advertisor || '';
+      dom.global.time.value = state.global.time || 'minutes';
+      setMultiSelectValues(dom.global.category, state.global.category || []);
+      updateCategoryDropdownValue(dom.global, state.global.category || []);
+      populateGlobalCategoryDropdown('');
+      if (dom.statusText && snapshot.statusText) {
+        dom.statusText.textContent = snapshot.statusText;
+      }
+      applyGlobalStateToSections();
+      if (dom.sections.g2.barBtn && dom.sections.g2.pieBtn) {
+        dom.sections.g2.barBtn.classList.toggle('active', state.sections.g2.view !== 'pie');
+        dom.sections.g2.pieBtn.classList.toggle('active', state.sections.g2.view === 'pie');
+      }
+      if (dom.sections.g3.heatmapBtn && dom.sections.g3.barBtn) {
+        dom.sections.g3.heatmapBtn.classList.toggle('active', state.sections.g3.view !== 'bar');
+        dom.sections.g3.barBtn.classList.toggle('active', state.sections.g3.view === 'bar');
+      }
+      renderAll();
+    }
+    function exportDashboardShare() {
+      const exportPayload = {
+        rows: state.cleanedRows,
+        excluded: [...EXCLUDED],
+        generatedAt: new Date().toISOString()
+      };
+      const exportState = serializeDashboardState();
+      const bootstrapScript = `<script>(function(){const snapshot=${JSON.stringify(exportState)};document.getElementById('shareBtn')?.remove();document.getElementById('fileUpload')?.remove();document.querySelector('label[for="fileUpload"]')?.remove();loadRows(PAYLOAD.rows,'Loaded shared dashboard snapshot.');applyExportedState(snapshot);})();<\\/script>`;
+      let exportedHtml = '<!DOCTYPE html>\\n' + document.documentElement.outerHTML;
+      exportedHtml = exportedHtml.replace(/<button class="share-fab"[\\s\\S]*?<\\/button>\\s*/m, '');
+      exportedHtml = exportedHtml.replace(/<div class="share-modal" id="shareModal"[\\s\\S]*?<\\/div>\\s*<\\/div>\\s*/m, '');
+      exportedHtml = exportedHtml.replace(/<input class="upload-input-hidden" id="fileUpload"[\\s\\S]*?<label class="pdf-btn icon-btn" for="fileUpload"[\\s\\S]*?<\\/label>\\s*/m, '');
+      exportedHtml = exportedHtml.replace(/const PAYLOAD = [\\s\\S]*?;\\n\\s*const EXCLUDED = new Set\\(PAYLOAD\\.excluded\\);/, `const PAYLOAD = ${JSON.stringify(exportPayload)};\\n    const EXCLUDED = new Set(PAYLOAD.excluded);`);
+      exportedHtml = exportedHtml.replace(/const dom = \\{\\n\\s*fileUpload: document\\.getElementById\\('fileUpload'\\),/, "const dom = {\\n      fileUpload: document.getElementById('fileUpload'),");
+      exportedHtml = exportedHtml.replace(/\\s*shareBtn: document\\.getElementById\\('shareBtn'\\),\\n/, '\\n');
+      exportedHtml = exportedHtml.replace(/\\s*shareModal: document\\.getElementById\\('shareModal'\\),\\n/, '\\n');
+      exportedHtml = exportedHtml.replace(/\\s*shareCancelBtn: document\\.getElementById\\('shareCancelBtn'\\),\\n/, '\\n');
+      exportedHtml = exportedHtml.replace(/\\s*shareDownloadBtn: document\\.getElementById\\('shareDownloadBtn'\\),\\n/, '\\n');
+      exportedHtml = exportedHtml.replace(/if \\(dom\\.fileUpload\\) \\{[\\s\\S]*?\\n    \\}/, '');
+      exportedHtml = exportedHtml.replace(/if \\(dom\\.shareBtn\\) \\{[\\s\\S]*?\\n        \\}/, '');
+      exportedHtml = exportedHtml.replace(/<div class="status" id="statusText">[\\s\\S]*?<\\/div>/, '<div class="status" id="statusText">Loaded shared dashboard snapshot.</div>');
+      exportedHtml = exportedHtml.replace('</body>', `${bootstrapScript}\\n</body>`);
+      const blob = new Blob([exportedHtml], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = buildShareFilename();
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    function openShareModal() {
+      if (!dom.shareModal) return;
+      dom.shareModal.hidden = false;
+      document.body.style.overflow = 'hidden';
+      if (dom.shareDownloadBtn) dom.shareDownloadBtn.focus();
+    }
+    function closeShareModal() {
+      if (!dom.shareModal) return;
+      dom.shareModal.hidden = true;
+      document.body.style.overflow = '';
+      if (dom.shareBtn) dom.shareBtn.focus();
+    }
+    function handleShareDownload() {
+      exportDashboardShare();
+      closeShareModal();
+    }
     function renderSection(sectionKey) {
       const rows = getSectionRows(sectionKey);
       if (sectionKey === 'g1') drawGraph1(rows);
@@ -2562,6 +2814,22 @@ __DOM_SECTIONS_JS__
         if (dom.pdfBtn) {
           dom.pdfBtn.addEventListener('click', exportDashboardPdf);
         }
+        if (dom.shareBtn) {
+          dom.shareBtn.addEventListener('click', openShareModal);
+        }
+        if (dom.shareCancelBtn) {
+          dom.shareCancelBtn.addEventListener('click', closeShareModal);
+        }
+        if (dom.shareDownloadBtn) {
+          dom.shareDownloadBtn.addEventListener('click', handleShareDownload);
+        }
+        if (dom.shareModal) {
+          dom.shareModal.addEventListener('click', event => {
+            if (event.target === dom.shareModal) {
+              closeShareModal();
+            }
+          });
+        }
         dom.sections.g2.barBtn.addEventListener('click', () => {
           state.sections.g2.view = 'bar';
           dom.sections.g2.barBtn.classList.add('active');
@@ -2596,7 +2864,12 @@ __DOM_SECTIONS_JS__
           renderAll();
         });
         window.addEventListener('scroll', updateStickyFilterPosition, { passive: true });
-        window.addEventListener('resize', updateStickyFilterPosition);
+      window.addEventListener('resize', updateStickyFilterPosition);
+      window.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && dom.shareModal && !dom.shareModal.hidden) {
+          closeShareModal();
+        }
+      });
         document.addEventListener('click', event => {
           if (dom.global.categoryDropdown && !dom.global.categoryDropdown.contains(event.target)) {
             dom.global.categoryDropdown.classList.remove('open');
@@ -2704,109 +2977,8 @@ def build_standalone_html(source_html: str) -> str:
         1,
     )
     return standalone
-def build_mobile_html(source_html: str) -> str:
-    mobile_css = """
-    @media (max-width: 768px) {
-      .page {
-        padding: 14px 12px 24px;
-      }
-      .topbar {
-        flex-direction: column;
-        gap: 12px;
-      }
-      .top-actions,
-      .top-meta {
-        width: 100%;
-        align-items: stretch;
-      }
-      .action-row {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .header-icon-group {
-        justify-content: flex-end;
-      }
-      .hero {
-        padding: 22px 18px;
-        gap: 16px;
-      }
-      .hero h1 {
-        font-size: 34px;
-        letter-spacing: 0.6px;
-      }
-      .hero-subtitle {
-        font-size: 14px;
-      }
-      .meta-pill {
-        width: 100%;
-        justify-content: center;
-      }
-      .section {
-        margin-top: 22px;
-      }
-      .section-head h2 {
-        font-size: 21px;
-      }
-      .section-card {
-        padding: 16px;
-      }
-      .section-controls {
-        grid-template-columns: 1fr;
-        gap: 10px;
-      }
-      .sticky-filter-shell {
-        top: 8px;
-      }
-      .panel:fullscreen .section-controls,
-      .panel:-webkit-full-screen .section-controls {
-        top: 0;
-        padding: 10px;
-      }
-      .chart-head {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      .chart-actions {
-        width: 100%;
-        flex-wrap: wrap;
-        margin-left: 0;
-      }
-      .toggle-group {
-        width: 100%;
-        justify-content: space-between;
-      }
-      .toggle-btn,
-      .full-btn {
-        min-width: 0;
-        flex: 1 1 auto;
-      }
-      .chart-box {
-        height: 360px;
-        padding: 10px;
-      }
-      .legend,
-      .legend-scale {
-        gap: 8px;
-        font-size: 11px;
-      }
-      .panel:fullscreen .chart-box,
-      .panel:-webkit-full-screen .chart-box {
-        height: calc(100vh - 340px);
-        min-height: 420px;
-      }
-    }
-"""
-    return source_html.replace("  </style>", mobile_css + "\n  </style>", 1)
-def build_white_html(source_html: str) -> str:
-    return source_html
 standalone_html = build_standalone_html(html)
-mobile_html = build_mobile_html(standalone_html)
-white_html = build_white_html(html)
 OUTPUT_PATH.write_text(html, encoding="utf-8")
 STANDALONE_OUTPUT_PATH.write_text(standalone_html, encoding="utf-8")
-MOBILE_OUTPUT_PATH.write_text(mobile_html, encoding="utf-8")
-WHITE_OUTPUT_PATH.write_text(white_html, encoding="utf-8")
 print(OUTPUT_PATH)
 print(STANDALONE_OUTPUT_PATH)
-print(MOBILE_OUTPUT_PATH)
-print(WHITE_OUTPUT_PATH)

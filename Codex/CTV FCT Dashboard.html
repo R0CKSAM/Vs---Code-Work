@@ -446,6 +446,108 @@
       padding: 0;
       cursor: pointer;
     }
+    .share-fab {
+      position: fixed;
+      right: 28px;
+      bottom: 28px;
+      width: 46px;
+      height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      border: 1px solid rgba(37, 99, 235, 0.18);
+      background: #2563eb;
+      color: #ffffff;
+      box-shadow: 0 12px 26px rgba(37, 99, 235, 0.25);
+      cursor: pointer;
+      z-index: 90;
+    }
+    .share-fab:hover,
+    .share-fab:focus {
+      color: #ffffff;
+      border-color: rgba(147, 197, 253, 0.5);
+      background: #1d4ed8;
+      box-shadow: 0 14px 30px rgba(29, 78, 216, 0.28);
+    }
+    .share-fab svg {
+      width: 19px;
+      height: 19px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      pointer-events: none;
+    }
+    .share-modal[hidden] {
+      display: none !important;
+    }
+    .share-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 140;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(6px);
+    }
+    .share-modal-card {
+      width: min(420px, 100%);
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      background: #ffffff;
+      box-shadow: 0 28px 60px rgba(15, 23, 42, 0.24);
+      padding: 22px;
+    }
+    .share-modal-title {
+      margin: 0 0 8px;
+      color: var(--text);
+      font-size: 20px;
+      font-weight: 800;
+    }
+    .share-modal-copy {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .share-modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .share-modal-btn {
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      border-radius: 12px;
+      background: #ffffff;
+      color: var(--text);
+      min-height: 40px;
+      padding: 0 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+    }
+    .share-modal-btn:hover,
+    .share-modal-btn:focus {
+      border-color: #93c5fd;
+      box-shadow: 0 10px 18px rgba(37, 99, 235, 0.12);
+      outline: none;
+    }
+    .share-modal-btn.primary {
+      border-color: #2563eb;
+      background: #2563eb;
+      color: #ffffff;
+    }
+    .share-modal-btn.primary:hover,
+    .share-modal-btn.primary:focus {
+      border-color: #1d4ed8;
+      background: #1d4ed8;
+      color: #ffffff;
+    }
     .icon-btn svg {
       width: 14px;
       height: 14px;
@@ -733,7 +835,7 @@
       </div>
       <div class="top-actions">
         <div class="top-meta">
-          <div class="meta-pill">📅 <span id="reportDateText">09 Jul 2026</span>  🕒 <span id="reportTimeText">2026-07-09 15:32:55</span></div>
+          <div class="meta-pill">📅 <span id="reportDateText">09 Jul 2026</span>  🕒 <span id="reportTimeText">2026-07-09 16:20:57</span></div>
         </div>
         <div class="action-row" id="headerActionRow">
           <div class="header-icon-group">
@@ -997,8 +1099,26 @@
         <div class="chart-box" id="g5Chart"></div>
       </div>
     </section>
+    <button class="share-fab" id="shareBtn" type="button" title="Share Dashboard" aria-label="Share Dashboard">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 16V5"></path>
+        <path d="M8 9l4-4 4 4"></path>
+        <path d="M5 19h14"></path>
+      </svg>
+      <span class="sr-only">Share Dashboard</span>
+    </button>
+    <div class="share-modal" id="shareModal" hidden>
+      <div class="share-modal-card" role="dialog" aria-modal="true" aria-labelledby="shareModalTitle">
+        <h3 class="share-modal-title" id="shareModalTitle">Share Dashboard</h3>
+        <p class="share-modal-copy">Download a read-only HTML snapshot of the current dashboard with the embedded dataset, active filters, charts, heatmaps, tables, and full-screen viewing preserved.</p>
+        <div class="share-modal-actions">
+          <button class="share-modal-btn" id="shareCancelBtn" type="button">Cancel</button>
+          <button class="share-modal-btn primary" id="shareDownloadBtn" type="button">Download Shareable Dashboard</button>
+        </div>
+      </div>
+    </div>
   <script>
-    const PAYLOAD = {"rows": [], "excluded": ["ASTROLOGERS", "CHANNEL IMAGERY", "PROMO CHANNEL PROPERTIES", "PROMO CHANNEL/BRAND", "PROMO PROGRAM", "PROMO TAG", "SHORT PROGRAM", "TELEVISIONS"], "generatedAt": "2026-07-09 15:32:55"};
+    const PAYLOAD = {"rows": [], "excluded": ["ASTROLOGERS", "CHANNEL IMAGERY", "PROMO CHANNEL PROPERTIES", "PROMO CHANNEL/BRAND", "PROMO PROGRAM", "PROMO TAG", "SHORT PROGRAM", "TELEVISIONS"], "generatedAt": "2026-07-09 16:20:57"};
     const EXCLUDED = new Set(PAYLOAD.excluded);
     const numberFormat = new Intl.NumberFormat('en-US');
     const longDate = new Intl.DateTimeFormat('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -1039,6 +1159,10 @@
     const dom = {
       fileUpload: document.getElementById('fileUpload'),
       pdfBtn: document.getElementById('pdfBtn'),
+      shareBtn: document.getElementById('shareBtn'),
+      shareModal: document.getElementById('shareModal'),
+      shareCancelBtn: document.getElementById('shareCancelBtn'),
+      shareDownloadBtn: document.getElementById('shareDownloadBtn'),
       statusText: document.getElementById('statusText'),
       reportDateText: document.getElementById('reportDateText'),
       reportTimeText: document.getElementById('reportTimeText'),
@@ -1415,7 +1539,7 @@
     }
     function renderHeaderStats() {
       const rows = getDashboardSummaryRows();
-      const now = new Date();
+      const now = state.reportClock ? new Date(state.reportClock) : new Date();
       if (dom.totalRecordsText) dom.totalRecordsText.textContent = formatNumber(rows.length);
       if (dom.reportDateText) dom.reportDateText.textContent = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
       if (dom.reportTimeText) dom.reportTimeText.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -2558,6 +2682,136 @@ AD Duration: ${unitMeta.format(displayValue)}`;
       printWindow.focus();
       setTimeout(() => printWindow.print(), 300);
     }
+    function cloneSectionState(source) {
+      if (!source) return null;
+      return {
+        ...source,
+        category: Array.isArray(source.category) ? [...source.category] : source.category
+      };
+    }
+    function getDatasetNameForExport() {
+      const status = String(dom.statusText?.textContent || '').trim();
+      const loaded = status.match(/Loaded file:\s*(.+)$/i);
+      if (loaded && loaded[1]) return loaded[1].replace(/\.[^.]+$/, '');
+      return 'Dashboard';
+    }
+    function sanitizeFilenamePart(value) {
+      return String(value || 'Dashboard')
+        .replace(/[\/:*?"<>|]+/g, ' ')
+        .replace(/\s+/g, '_')
+        .replace(/^_+|_+$/g, '')
+        .slice(0, 60) || 'Dashboard';
+    }
+    function buildShareFilename() {
+      const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, '').replace('T', '_');
+      return `CTV FCT_${sanitizeFilenamePart(getDatasetNameForExport())}_${stamp}.html`;
+    }
+    function serializeDashboardState() {
+      return {
+        reportClock: new Date().toISOString(),
+        statusText: dom.statusText?.textContent || 'Loaded shared dashboard snapshot.',
+        global: {
+          ...state.global,
+          category: [...(state.global.category || [])]
+        },
+        sections: SECTION_KEYS.reduce((acc, sectionKey) => {
+          acc[sectionKey] = cloneSectionState(state.sections[sectionKey]);
+          return acc;
+        }, {})
+      };
+    }
+    function applyExportedState(snapshot) {
+      if (!snapshot) return;
+      if (snapshot.reportClock) state.reportClock = snapshot.reportClock;
+      if (snapshot.global) {
+        state.global = {
+          ...state.global,
+          ...snapshot.global,
+          category: [...(snapshot.global.category || [])]
+        };
+      }
+      if (snapshot.sections) {
+        SECTION_KEYS.forEach(sectionKey => {
+          if (!snapshot.sections[sectionKey]) return;
+          const next = snapshot.sections[sectionKey];
+          state.sections[sectionKey] = {
+            ...state.sections[sectionKey],
+            ...next,
+            category: Array.isArray(next.category) ? [...next.category] : next.category
+          };
+        });
+      }
+      dom.global.topN.value = state.global.topN || '10';
+      dom.global.start.value = state.global.start || '';
+      dom.global.end.value = state.global.end || '';
+      dom.global.channel.value = state.global.channel || '';
+      dom.global.advertisor.value = state.global.advertisor || '';
+      dom.global.time.value = state.global.time || 'minutes';
+      setMultiSelectValues(dom.global.category, state.global.category || []);
+      updateCategoryDropdownValue(dom.global, state.global.category || []);
+      populateGlobalCategoryDropdown('');
+      if (dom.statusText && snapshot.statusText) {
+        dom.statusText.textContent = snapshot.statusText;
+      }
+      applyGlobalStateToSections();
+      if (dom.sections.g2.barBtn && dom.sections.g2.pieBtn) {
+        dom.sections.g2.barBtn.classList.toggle('active', state.sections.g2.view !== 'pie');
+        dom.sections.g2.pieBtn.classList.toggle('active', state.sections.g2.view === 'pie');
+      }
+      if (dom.sections.g3.heatmapBtn && dom.sections.g3.barBtn) {
+        dom.sections.g3.heatmapBtn.classList.toggle('active', state.sections.g3.view !== 'bar');
+        dom.sections.g3.barBtn.classList.toggle('active', state.sections.g3.view === 'bar');
+      }
+      renderAll();
+    }
+    function exportDashboardShare() {
+      const exportPayload = {
+        rows: state.cleanedRows,
+        excluded: [...EXCLUDED],
+        generatedAt: new Date().toISOString()
+      };
+      const exportState = serializeDashboardState();
+      const bootstrapScript = `<script>(function(){const snapshot=${JSON.stringify(exportState)};document.getElementById('shareBtn')?.remove();document.getElementById('fileUpload')?.remove();document.querySelector('label[for="fileUpload"]')?.remove();loadRows(PAYLOAD.rows,'Loaded shared dashboard snapshot.');applyExportedState(snapshot);})();<\/script>`;
+      let exportedHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      exportedHtml = exportedHtml.replace(/<button class="share-fab"[\s\S]*?<\/button>\s*/m, '');
+      exportedHtml = exportedHtml.replace(/<div class="share-modal" id="shareModal"[\s\S]*?<\/div>\s*<\/div>\s*/m, '');
+      exportedHtml = exportedHtml.replace(/<input class="upload-input-hidden" id="fileUpload"[\s\S]*?<label class="pdf-btn icon-btn" for="fileUpload"[\s\S]*?<\/label>\s*/m, '');
+      exportedHtml = exportedHtml.replace(/const PAYLOAD = [\s\S]*?;\n\s*const EXCLUDED = new Set\(PAYLOAD\.excluded\);/, `const PAYLOAD = ${JSON.stringify(exportPayload)};\n    const EXCLUDED = new Set(PAYLOAD.excluded);`);
+      exportedHtml = exportedHtml.replace(/const dom = \{\n\s*fileUpload: document\.getElementById\('fileUpload'\),/, "const dom = {\n      fileUpload: document.getElementById('fileUpload'),");
+      exportedHtml = exportedHtml.replace(/\s*shareBtn: document\.getElementById\('shareBtn'\),\n/, '\n');
+      exportedHtml = exportedHtml.replace(/\s*shareModal: document\.getElementById\('shareModal'\),\n/, '\n');
+      exportedHtml = exportedHtml.replace(/\s*shareCancelBtn: document\.getElementById\('shareCancelBtn'\),\n/, '\n');
+      exportedHtml = exportedHtml.replace(/\s*shareDownloadBtn: document\.getElementById\('shareDownloadBtn'\),\n/, '\n');
+      exportedHtml = exportedHtml.replace(/if \(dom\.fileUpload\) \{[\s\S]*?\n    \}/, '');
+      exportedHtml = exportedHtml.replace(/if \(dom\.shareBtn\) \{[\s\S]*?\n        \}/, '');
+      exportedHtml = exportedHtml.replace(/<div class="status" id="statusText">[\s\S]*?<\/div>/, '<div class="status" id="statusText">Loaded shared dashboard snapshot.</div>');
+      exportedHtml = exportedHtml.replace('</body>', `${bootstrapScript}\n</body>`);
+      const blob = new Blob([exportedHtml], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = buildShareFilename();
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    function openShareModal() {
+      if (!dom.shareModal) return;
+      dom.shareModal.hidden = false;
+      document.body.style.overflow = 'hidden';
+      if (dom.shareDownloadBtn) dom.shareDownloadBtn.focus();
+    }
+    function closeShareModal() {
+      if (!dom.shareModal) return;
+      dom.shareModal.hidden = true;
+      document.body.style.overflow = '';
+      if (dom.shareBtn) dom.shareBtn.focus();
+    }
+    function handleShareDownload() {
+      exportDashboardShare();
+      closeShareModal();
+    }
     function renderSection(sectionKey) {
       const rows = getSectionRows(sectionKey);
       if (sectionKey === 'g1') drawGraph1(rows);
@@ -2741,6 +2995,22 @@ AD Duration: ${unitMeta.format(displayValue)}`;
         if (dom.pdfBtn) {
           dom.pdfBtn.addEventListener('click', exportDashboardPdf);
         }
+        if (dom.shareBtn) {
+          dom.shareBtn.addEventListener('click', openShareModal);
+        }
+        if (dom.shareCancelBtn) {
+          dom.shareCancelBtn.addEventListener('click', closeShareModal);
+        }
+        if (dom.shareDownloadBtn) {
+          dom.shareDownloadBtn.addEventListener('click', handleShareDownload);
+        }
+        if (dom.shareModal) {
+          dom.shareModal.addEventListener('click', event => {
+            if (event.target === dom.shareModal) {
+              closeShareModal();
+            }
+          });
+        }
         dom.sections.g2.barBtn.addEventListener('click', () => {
           state.sections.g2.view = 'bar';
           dom.sections.g2.barBtn.classList.add('active');
@@ -2775,7 +3045,12 @@ AD Duration: ${unitMeta.format(displayValue)}`;
           renderAll();
         });
         window.addEventListener('scroll', updateStickyFilterPosition, { passive: true });
-        window.addEventListener('resize', updateStickyFilterPosition);
+      window.addEventListener('resize', updateStickyFilterPosition);
+      window.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && dom.shareModal && !dom.shareModal.hidden) {
+          closeShareModal();
+        }
+      });
         document.addEventListener('click', event => {
           if (dom.global.categoryDropdown && !dom.global.categoryDropdown.contains(event.target)) {
             dom.global.categoryDropdown.classList.remove('open');
@@ -2821,6 +3096,130 @@ AD Duration: ${unitMeta.format(displayValue)}`;
     renderExcluded();
     initializeSections();
     renderAll();
+    document.addEventListener('DOMContentLoaded', () => {
+    const shareModal = document.getElementById('shareModal');
+    const shareBtn = document.getElementById('shareDashboardBtn');
+    const closeBtn = document.getElementById('closeShareModalBtn');
+    const downloadBtn = document.getElementById('downloadShareableBtn');
+
+    // 1. Modal Toggle Interactions
+    shareBtn.addEventListener('click', () => shareModal.removeAttribute('hidden'));
+    closeBtn.addEventListener('click', () => shareModal.setAttribute('hidden', 'true'));
+    
+    // Close modal if user clicks out side the card container
+    shareModal.addEventListener('click', (e) => {
+        if (e.target === shareModal) shareModal.setAttribute('hidden', 'true');
+    });
+
+    // 2. Standalone HTML Snapshot Generator
+    downloadBtn.addEventListener('click', () => {
+        // Synchronize live UI component states (inputs, selects) to actual HTML DOM attributes
+        const liveInputs = document.querySelectorAll('input, select');
+        liveInputs.forEach(input => {
+            if (input.type === 'checkbox' || input.type === 'radio') {
+                if (input.checked) input.setAttribute('checked', 'checked');
+                else input.removeAttribute('checked');
+            } else if (input.tagName.toLowerCase() === 'select') {
+                const options = input.querySelectorAll('option');
+                options.forEach(opt => {
+                    if (opt.selected) opt.setAttribute('selected', 'selected');
+                    else opt.removeAttribute('selected');
+                });
+            } else {
+                input.setAttribute('value', input.value);
+            }
+        });
+
+        // Deep-clone the entire document frame
+        const clone = document.documentElement.cloneNode(true);
+
+        // Strip sharing UI controls out of the recipient's file copies
+        const clonedShareFab = clone.querySelector('.share-fab');
+        if (clonedShareFab) clonedShareFab.remove();
+        const clonedShareModal = clone.querySelector('.share-modal');
+        if (clonedShareModal) clonedShareModal.remove();
+
+        // Lock down and remove any upload inputs/buttons to enforce read-only data rules
+        const uploadControls = clone.querySelectorAll('input[type="file"], .upload-btn, #uploadBtn, .upload-input-hidden');
+        uploadControls.forEach(el => el.remove());
+
+        // Make the snapshot notification bar visible in the shared clone
+        const statusText = clone.querySelector('#statusText');
+        if (statusText) {
+            statusText.style.display = 'block';
+            statusText.style.color = 'var(--accent-1)';
+            statusText.style.fontWeight = '700';
+        }
+
+        /**
+         * IMPORTANT: Dataset Extraction
+         * Replace 'window.dashboardData' below with whatever global JavaScript array 
+         * variable name your current script uses to store your dataset rows.
+         */
+        const targetData = window.dashboardData || window.allRecords || window.rawData || [];
+
+        // Inject a dedicated override script execution block into the top of the clone's body
+        const stateInjectionScript = clone.createElement('script');
+        stateInjectionScript.textContent = `
+            // Injected dynamic data payload state
+            window.isSharedSnapshot = true;
+            window.dashboardData = ${JSON.stringify(targetData)};
+
+            // Disable or hide structural upload components post-load fallback
+            document.addEventListener("DOMContentLoaded", () => {
+                const legacyUploadArea = document.getElementById("uploadContainer");
+                if (legacyUploadArea) legacyUploadArea.style.display = "none";
+                const snapshotBanner = document.getElementById("statusText");
+                if (snapshotBanner) snapshotBanner.style.display = "block";
+            });
+        `;
+        clone.body.insertBefore(stateInjectionScript, clone.body.firstChild);
+
+        // Package cloned DOM into a downloadable browser text Blob
+        const finalHtmlString = '<!DOCTYPE html>\n' + clone.outerHTML;
+        const documentBlob = new Blob([finalHtmlString], { type: 'text/html;charset=utf-8' });
+        const temporaryBlobUrl = URL.createObjectURL(documentBlob);
+
+        // Execute file anchor save download pipeline
+        const fileLink = document.createElement('a');
+        fileLink.href = temporaryBlobUrl;
+        fileLink.download = `CTV_Dashboard_Shared_Snapshot_${new Date().toISOString().slice(0, 10)}.html`;
+        document.body.appendChild(fileLink);
+        fileLink.click();
+        
+        // Clean up allocation memory space
+        document.body.removeChild(fileLink);
+        URL.revokeObjectURL(temporaryBlobUrl);
+
+        // Dismiss modal view window panel
+        shareModal.setAttribute('hidden', 'true');
+    });
+});
   </script>
+  <!-- Floating Action Button for Share -->
+<button class="share-fab" id="shareDashboardBtn" title="Share Dashboard" aria-label="Share Dashboard">
+  <svg viewBox="0 0 24 24">
+    <circle cx="18" cy="5" r="3"></circle>
+    <circle cx="6" cy="12" r="3"></circle>
+    <circle cx="18" cy="19" r="3"></circle>
+    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+  </svg>
+</button>
+
+<!-- Share Modal Dialog -->
+<div class="share-modal" id="shareModal" hidden>
+  <div class="share-modal-card">
+    <h2 class="share-modal-title">Share Dashboard</h2>
+    <p class="share-modal-copy">
+      This will generate and download a standalone, read-only HTML file of the current dashboard. 
+      The recipient can fully interact with filters, charts, and full-screen modes, but will not be able to upload or replace the dataset.
+    </p>
+    <div class="share-modal-actions">
+      <button class="share-modal-btn" id="closeShareModalBtn" type="button">Cancel</button>
+      <button class="share-modal-btn primary" id="downloadShareableBtn" type="button">Download Shareable Dashboard</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
