@@ -294,7 +294,7 @@ html = """<!DOCTYPE html>
     .label {
       display: block;
       margin-bottom: 8px;
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.9px;
@@ -365,7 +365,7 @@ html = """<!DOCTYPE html>
     }
     .section-head h2 {
       margin: 0;
-      font-size: 24px;
+      font-size: 25px;
       font-weight: 900;
       letter-spacing: 0.2px;
       color: var(--text);
@@ -476,7 +476,7 @@ html = """<!DOCTYPE html>
     .multi-dropdown-actions button {
       min-width: 0;
       padding: 8px 10px;
-      font-size: 11px;
+      font-size: 12px;
     }
     .multi-dropdown-options {
       max-height: 220px;
@@ -492,7 +492,7 @@ html = """<!DOCTYPE html>
       padding: 8px 10px;
       border-radius: 8px;
       background: #ffffff;
-      font-size: 13px;
+      font-size: 14px;
       cursor: pointer;
       color: var(--text);
     }
@@ -525,7 +525,7 @@ html = """<!DOCTYPE html>
     .chart-metric {
       margin-bottom: 8px;
       color: #000000;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 600;
       line-height: 1.4;
     }
@@ -545,7 +545,7 @@ html = """<!DOCTYPE html>
       background: transparent;
       color: var(--muted);
       font: inherit;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 800;
       letter-spacing: 0.3px;
       cursor: pointer;
@@ -562,7 +562,7 @@ html = """<!DOCTYPE html>
       border-radius: 8px;
       background: #ffffff;
       color: var(--muted);
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 800;
       letter-spacing: 0.3px;
       cursor: pointer;
@@ -641,7 +641,7 @@ html = """<!DOCTYPE html>
       gap: 10px;
       margin-bottom: 14px;
       color: var(--text);
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 700;
     }
     .total-panel {
@@ -655,7 +655,7 @@ html = """<!DOCTYPE html>
     }
     .total-title {
       color: var(--text);
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 800;
       letter-spacing: 0.3px;
       margin-bottom: 10px;
@@ -673,13 +673,13 @@ html = """<!DOCTYPE html>
     }
     .total-chip-label {
       color: var(--muted);
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 700;
       margin-bottom: 4px;
     }
     .total-chip-value {
       color: var(--text);
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 800;
     }
     .legend-gradient {
@@ -733,13 +733,13 @@ html = """<!DOCTYPE html>
       display: grid;
       place-items: center;
       color: var(--muted);
-      font-size: 14px;
+      font-size: 15px;
     }
     .summary-lines {
       display: grid;
       gap: 8px;
       color: var(--text);
-      font-size: 14px;
+      font-size: 15px;
       line-height: 1.45;
       font-family: Calibri, "Segoe UI", Arial, sans-serif;
     }
@@ -787,9 +787,25 @@ html = """<!DOCTYPE html>
       overflow: auto;
       background: #f8fafc;
     }
+    .panel:fullscreen > .section-controls,
+    .panel:-webkit-full-screen > .section-controls {
+      display: none !important;
+    }
+    .panel:fullscreen .sticky-filter-shell .section-controls,
+    .panel:-webkit-full-screen .sticky-filter-shell .section-controls {
+      display: grid;
+    }
+    .panel:fullscreen .sticky-filter-shell,
+    .panel:-webkit-full-screen .sticky-filter-shell {
+      position: sticky;
+      top: 0;
+      left: auto !important;
+      width: auto !important;
+      margin-bottom: 18px;
+      z-index: 5;
+    }
     .panel:fullscreen .section-controls,
     .panel:-webkit-full-screen .section-controls {
-      display: grid;
       margin-bottom: 18px;
       position: sticky;
       top: 0;
@@ -925,7 +941,8 @@ __SECTIONS_HTML__
       g1: ['#3b82f6', '#22c55e', '#ef4444', '#a855f7'],
       g2: ['#3b82f6', '#22c55e', '#ef4444', '#a855f7'],
       g3: ['#1d4ed8', '#0f766e', '#b45309', '#7c3aed', '#be123c', '#0369a1', '#166534', '#7f1d1d'],
-      heat: ['#fff7cc', '#ffe699', '#ffd966', '#f4c542', '#e6a700']
+      heat: ['#fff7cc', '#ffe699', '#ffd966', '#f4c542', '#e6a700'],
+      g4heat: ['#fde7ef', '#f9bfd3', '#f48fb1', '#ec5f94', '#d6336c']
     };
     const state = {
       rawRows: [],
@@ -996,7 +1013,7 @@ __DOM_SECTIONS_JS__
       const unit = activeTimeUnit();
       if (unit === 'minutes') {
         const minutes = (value || 0) / 60;
-        const formatted = minutes.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        const formatted = minutes.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
         return withUnit ? `${formatted} min` : formatted;
       }
       const formatted = formatNumber(Math.round(value || 0));
@@ -1107,9 +1124,9 @@ __DOM_SECTIONS_JS__
         b: value & 255
       };
     }
-    function colorForValue(value, maxValue) {
+    function colorForValue(value, maxValue, paletteKey = 'heat') {
       const scale = Math.max(0, Math.min(1, value / Math.max(maxValue, 1)));
-      const palette = chartPalettes.heat;
+      const palette = chartPalettes[paletteKey] || chartPalettes.heat;
       if (scale === 0) return palette[0];
       if (scale < 0.25) return palette[1];
       if (scale < 0.5) return palette[2];
@@ -1211,7 +1228,21 @@ __DOM_SECTIONS_JS__
       });
     }
     function sharedCategorySections() { return CATEGORY_SECTION_KEYS; }
+    function getCategoryValues() {
+      return uniqueSorted(state.cleanedRows.map(row => row.category).filter(Boolean));
+    }
     function formatMinutes(value) { return formatDurationValue(value, false); }
+    function withAxisHeadroom(value) {
+      return value > 0 ? value * 1.08 : 1;
+    }
+    function setChartBoxHeight(box, height) {
+      if (!box) return;
+      box.style.height = `${Math.max(height, 500)}px`;
+    }
+    function resetChartBoxHeight(box) {
+      if (!box) return;
+      box.style.height = '';
+    }
     function rerenderSections(sectionKeys) {
       sectionKeys.forEach(renderSection);
     }
@@ -1227,6 +1258,14 @@ __DOM_SECTIONS_JS__
       const shell = dom.stickyFilterShell;
       const header = dom.headerSection;
       if (!wrap || !shell || !header) return;
+      if (document.fullscreenElement) {
+        wrap.classList.remove('is-stuck');
+        wrap.style.removeProperty('--sticky-filter-height');
+        shell.classList.remove('is-stuck');
+        shell.style.left = '';
+        shell.style.width = '';
+        return;
+      }
       const headerBottom = header.getBoundingClientRect().bottom;
       const shouldStick = headerBottom <= 10;
       if (shouldStick) {
@@ -1274,17 +1313,23 @@ __DOM_SECTIONS_JS__
       const controls = dom.sections[sectionKey];
       if (!controls || !controls.categoryOptions || !controls.category) return;
       const selected = new Set(state.global.category || []);
-      const values = uniqueSorted(state.cleanedRows.map(row => row.category));
+      const values = getCategoryValues();
       const query = String(filterText || '').trim().toLowerCase();
       const filtered = values.filter(value => !query || value.toLowerCase().includes(query));
       setMultiSelectValues(controls.category, state.global.category || []);
-      controls.categoryOptions.innerHTML = filtered.map(value => `
-        <label class="multi-dropdown-option">
-          <input type="checkbox" value="${value.replace(/"/g, '&quot;')}" ${selected.has(value) ? 'checked' : ''}>
-          <span>${value}</span>
-        </label>
-      `).join('');
-      controls.categoryOptions.querySelectorAll('input[type="checkbox"]').forEach(input => {
+      controls.categoryOptions.innerHTML = '';
+      filtered.forEach(value => {
+        const label = document.createElement('label');
+        label.className = 'multi-dropdown-option';
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.value = value;
+        input.checked = selected.has(value);
+        const span = document.createElement('span');
+        span.textContent = value;
+        label.appendChild(input);
+        label.appendChild(span);
+        controls.categoryOptions.appendChild(label);
         input.addEventListener('change', () => {
           const next = new Set(state.global.category || []);
           if (input.checked) next.add(input.value);
@@ -1315,7 +1360,7 @@ __DOM_SECTIONS_JS__
       const controls = dom.global;
       const select = controls.category;
       const selected = new Set(state.global.category || []);
-      const values = uniqueSorted(state.cleanedRows.map(row => row.category));
+      const values = getCategoryValues();
       const query = String(filterText || '').trim().toLowerCase();
       const filtered = values.filter(value => !query || value.toLowerCase().includes(query));
       select.innerHTML = '';
@@ -1326,13 +1371,19 @@ __DOM_SECTIONS_JS__
         option.selected = selected.has(value);
         select.appendChild(option);
       });
-      controls.categoryOptions.innerHTML = filtered.map(value => `
-        <label class="multi-dropdown-option">
-          <input type="checkbox" value="${value.replace(/"/g, '&quot;')}" ${selected.has(value) ? 'checked' : ''}>
-          <span>${value}</span>
-        </label>
-      `).join('');
-      controls.categoryOptions.querySelectorAll('input[type="checkbox"]').forEach(input => {
+      controls.categoryOptions.innerHTML = '';
+      filtered.forEach(value => {
+        const label = document.createElement('label');
+        label.className = 'multi-dropdown-option';
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.value = value;
+        input.checked = selected.has(value);
+        const span = document.createElement('span');
+        span.textContent = value;
+        label.appendChild(input);
+        label.appendChild(span);
+        controls.categoryOptions.appendChild(label);
         input.addEventListener('change', () => {
           const next = new Set(state.global.category || []);
           if (input.checked) next.add(input.value);
@@ -1420,7 +1471,7 @@ __DOM_SECTIONS_JS__
       });
       dom.global.categoryAll.addEventListener('click', () => {
         dom.global.categoryDropdown.classList.add('open');
-        syncGlobalCategorySelection(uniqueSorted(state.cleanedRows.map(row => row.category)), { preserveSearchText: true });
+        syncGlobalCategorySelection(getCategoryValues(), { preserveSearchText: true });
         syncAndRenderSections(SECTION_KEYS);
       });
       dom.global.categoryClear.addEventListener('click', () => {
@@ -1449,7 +1500,7 @@ __DOM_SECTIONS_JS__
       const channels = uniqueSorted(rows.map(row => row.channel));
       const section = dom.sections[sectionKey];
       populateSelect(section.channel, channels, 'All Channels');
-      if (section.category) populateSelect(section.category, uniqueSorted(rows.map(row => row.category)), 'All Categories');
+      if (section.category) populateSelect(section.category, getCategoryValues(), 'All Categories');
       if (sectionKey === 'g5') {
         const advertisors = uniqueSorted(rows.map(row => row.product));
         populateSelect(section.advertisor, advertisors, 'All Advertisers');
@@ -1648,12 +1699,13 @@ __DOM_SECTIONS_JS__
         dom.sections.g1.legend.innerHTML = '';
         return;
       }
+      resetChartBoxHeight(dom.sections.g1.chart);
       const { svg, width, height } = makeSvg(dom.sections.g1.chart);
       svg.style.fontFamily = '"Segoe UI", Arial, sans-serif';
       const margin = { top: 18, right: 24, bottom: 118, left: 70 };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
-      const maxValue = Math.max(...topAdvertisers.map(item => item.total), 1);
+      const maxValue = withAxisHeadroom(Math.max(...topAdvertisers.map(item => item.total), 1));
       drawAxes(svg, margin, plotW, plotH, 'Top Advertisers', metricLabel(), width, height, maxValue);
       const slotCount = Math.max(Number.parseInt(state.sections.g1.topN, 10) || topAdvertisers.length, 1);
       const groupW = plotW / slotCount;
@@ -1686,11 +1738,12 @@ __DOM_SECTIONS_JS__
         dom.sections.g2.legend.innerHTML = '';
         return;
       }
+      resetChartBoxHeight(dom.sections.g2.chart);
       const { svg, width, height } = makeSvg(dom.sections.g2.chart);
       const margin = { top: 18, right: 24, bottom: 118, left: 58 };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
-      const maxValue = Math.max(...matrix.rows.flatMap(row => matrix.channels.map(channel => row.values[channel] || 0)), 1);
+      const maxValue = withAxisHeadroom(Math.max(...matrix.rows.flatMap(row => matrix.channels.map(channel => row.values[channel] || 0)), 1));
       drawAxes(svg, margin, plotW, plotH, advertisorLabel(), metricLabel(), width, height, maxValue);
       const groupW = plotW / Math.max(matrix.rows.length, 1);
       const barW = Math.max((groupW - 14) / Math.max(matrix.channels.length, 1) - 2, 4);
@@ -1745,6 +1798,7 @@ __DOM_SECTIONS_JS__
         if (dom.sections.g2.metric) dom.sections.g2.metric.textContent = '';
         return;
       }
+      resetChartBoxHeight(dom.sections.g2.chart);
       const { svg, width, height } = makeSvg(dom.sections.g2.chart);
       const cx = width * 0.44;
       const cy = height * 0.53;
@@ -1796,11 +1850,12 @@ __DOM_SECTIONS_JS__
         dom.sections.g3.legend.innerHTML = '';
         return;
       }
+      resetChartBoxHeight(dom.sections.g3.chart);
       const { svg, width, height } = makeSvg(dom.sections.g3.chart);
       const margin = { top: 18, right: 24, bottom: 86, left: 58 };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
-      const maxValue = Math.max(...matrix.rows.flatMap(row => topAdvertisors.map(item => row.values[item.advertisor] || 0)), 1);
+      const maxValue = withAxisHeadroom(Math.max(...matrix.rows.flatMap(row => topAdvertisors.map(item => row.values[item.advertisor] || 0)), 1));
       drawAxes(svg, margin, plotW, plotH, 'Date', metricLabel(), width, height, maxValue);
       const groupW = plotW / Math.max(matrix.rows.length, 1);
       const barW = Math.max((groupW - 14) / Math.max(topAdvertisors.length, 1) - 2, 3);
@@ -1850,6 +1905,7 @@ __DOM_SECTIONS_JS__
         dom.sections.g3.legend.innerHTML = '';
         return;
       }
+      setChartBoxHeight(dom.sections.g3.chart, 220 + topAdvertisors.length * 24);
       const { svg, width, height } = makeSvg(dom.sections.g3.chart);
       const margin = { top: 24, right: 28, bottom: 92, left: 160 };
       const plotW = width - margin.left - margin.right;
@@ -1901,8 +1957,9 @@ __DOM_SECTIONS_JS__
           'stroke-width': 1
         }));
       }
+      const dateLabelSize = topAdvertisors.length >= 20 ? 9.5 : 10.5;
       matrix.rows.forEach((row, ci) => {
-        addWrappedText(svg, formatDate(row.date), margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, 10, '#1f2937', 10.5, 'middle', 700);
+        addWrappedText(svg, formatDate(row.date), margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, 10, '#1f2937', dateLabelSize, 'middle', 700);
       });
       topAdvertisors.forEach((item, ri) => {
         addWrappedText(svg, item.advertisor, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, 16, '#1f2937', 11, 'end', 700);
@@ -1951,6 +2008,7 @@ __DOM_SECTIONS_JS__
         drawEmpty(dom.sections.g4.chart, 'No data available for selected filters');
         return;
       }
+      setChartBoxHeight(dom.sections.g4.chart, 220 + matrix.categories.length * 24);
       const { svg, width, height } = makeSvg(dom.sections.g4.chart);
       const margin = { top: 24, right: 28, bottom: 92, left: 156 };
       const plotW = width - margin.left - margin.right;
@@ -2007,7 +2065,7 @@ __DOM_SECTIONS_JS__
             width: Math.max(cellW - 3, 2),
             height: Math.max(cellH - 3, 2),
             rx: 3,
-            fill: hasValue ? colorForValue(value, matrix.maxValue) : backgroundFill,
+            fill: hasValue ? colorForValue(value, matrix.maxValue, 'g4heat') : backgroundFill,
             stroke: hasValue ? '#e5e7eb' : '#ffffff',
             'stroke-width': 1
           });
@@ -2020,7 +2078,7 @@ __DOM_SECTIONS_JS__
           if (hasValue && cellW >= 52 && cellH >= 28) {
             const label = svgEl('text', {
               x: x + cellW / 2, y: y + cellH * 0.58,
-              fill: '#f8fbff', 'font-size': 12, 'font-weight': 800, 'text-anchor': 'middle'
+              fill: '#1f2937', 'font-size': 12, 'font-weight': 800, 'text-anchor': 'middle'
             });
             label.textContent = formatDurationValue(value);
             svg.appendChild(label);
@@ -2035,6 +2093,7 @@ __DOM_SECTIONS_JS__
         drawEmpty(dom.sections.g5.chart, 'No data available for the selected filters.');
         return;
       }
+      resetChartBoxHeight(dom.sections.g5.chart);
       const { svg, width, height } = makeSvg(dom.sections.g5.chart);
       const margin = { top: 28, right: 28, bottom: 78, left: 140 };
       const plotW = width - margin.left - margin.right;
@@ -2097,7 +2156,7 @@ __DOM_SECTIONS_JS__
               fill: '#000000', 'font-size': 11.5, 'font-weight': 800, 'text-anchor': 'middle'
             });
             label.textContent = unitMeta.unit === 'minutes'
-              ? displayValue.toFixed(2)
+              ? displayValue.toFixed(1)
               : formatNumber(displayValue);
             svg.appendChild(label);
           }
@@ -2114,7 +2173,7 @@ __DOM_SECTIONS_JS__
       dom.sections.g5.totalGrid.innerHTML = channelTotals.map(item => `
         <div class="total-chip">
           <div class="total-chip-label">${item.channel}</div>
-          <div class="total-chip-value">${unitMeta.unit === 'minutes' ? item.displayValue.toFixed(2) + ' min' : formatNumber(Math.round(item.displayValue)) + ' sec'}</div>
+          <div class="total-chip-value">${unitMeta.unit === 'minutes' ? item.displayValue.toFixed(1) + ' min' : formatNumber(Math.round(item.displayValue)) + ' sec'}</div>
         </div>
       `).join('');
     }
@@ -2130,7 +2189,7 @@ __DOM_SECTIONS_JS__
         return {
           unit,
           convert: value => value / 60,
-          format: value => `${value.toFixed(2)} min`
+          format: value => `${value.toFixed(1)} min`
         };
       }
       return {
@@ -2403,7 +2462,7 @@ __DOM_SECTIONS_JS__
         });
         controls.categoryAll.addEventListener('click', () => {
           controls.categoryDropdown.classList.add('open');
-          syncSharedCategorySelection(uniqueSorted(state.cleanedRows.map(row => row.category)), sectionKey, { preserveSearchText: true });
+          syncSharedCategorySelection(getCategoryValues(), sectionKey, { preserveSearchText: true });
           syncAndRenderSections(sharedCategorySections());
           renderSummary();
         });
@@ -2465,6 +2524,30 @@ __DOM_SECTIONS_JS__
         dom.sections[sectionKey].fullBtn.textContent = isActive ? 'Exit Full Screen' : 'Full Screen';
       });
     }
+    function moveGlobalFiltersToFullscreen(panel) {
+      const wrap = dom.stickyFilterWrap;
+      const shell = dom.stickyFilterShell;
+      if (!wrap || !shell || !panel) return;
+      if (panel.contains(shell)) return;
+      wrap.classList.add('is-stuck');
+      wrap.style.setProperty('--sticky-filter-height', `${shell.offsetHeight}px`);
+      shell.classList.remove('is-stuck');
+      shell.style.left = '';
+      shell.style.width = '';
+      panel.insertBefore(shell, panel.firstChild);
+    }
+    function restoreGlobalFiltersFromFullscreen() {
+      const wrap = dom.stickyFilterWrap;
+      const shell = dom.stickyFilterShell;
+      if (!wrap || !shell) return;
+      if (wrap.contains(shell)) return;
+      wrap.appendChild(shell);
+      wrap.classList.remove('is-stuck');
+      wrap.style.removeProperty('--sticky-filter-height');
+      shell.classList.remove('is-stuck');
+      shell.style.left = '';
+      shell.style.width = '';
+    }
     function initializeSections() {
       initializeGlobalControls();
       SECTION_KEYS.forEach(sectionKey => {
@@ -2504,6 +2587,11 @@ __DOM_SECTIONS_JS__
           renderSection('g3');
         });
         document.addEventListener('fullscreenchange', () => {
+          const fullPanel = document.fullscreenElement && document.fullscreenElement.classList && document.fullscreenElement.classList.contains('panel')
+            ? document.fullscreenElement
+            : null;
+          if (fullPanel) moveGlobalFiltersToFullscreen(fullPanel);
+          else restoreGlobalFiltersFromFullscreen();
           updateFullButtons();
           renderAll();
         });
