@@ -185,17 +185,17 @@ html = """<!DOCTYPE html>
       min-height: 100vh;
     }
     .page {
-      max-width: 1600px;
+      max-width: 1480px;
       margin: 0 auto;
-      padding: 34px 32px 48px;
+      padding: 24px 24px 34px;
       position: relative;
     }
     .topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 18px;
-      margin-bottom: 8px;
+      gap: 14px;
+      margin-bottom: 6px;
       padding: 0;
       background: transparent;
       border: 0;
@@ -220,14 +220,14 @@ html = """<!DOCTYPE html>
     .title-block h1 {
       margin: 0;
       color: var(--text);
-      font-size: 34px;
+      font-size: 30px;
       font-weight: 800;
       letter-spacing: 0.2px;
       line-height: 1.05;
     }
     .title-meta {
       color: var(--muted);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       line-height: 1.2;
     }
@@ -291,18 +291,29 @@ html = """<!DOCTYPE html>
     }
     .label {
       display: block;
-      margin-bottom: 8px;
-      font-size: 12px;
+      margin-bottom: 6px;
+      font-size: 11px;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.9px;
       color: var(--muted);
     }
+    .sticky-filter-shell .label {
+      color: #000000;
+    }
+    .sticky-filter-shell,
+    .sticky-filter-shell .meta-pill,
+    .sticky-filter-shell .multi-dropdown-value,
+    .sticky-filter-shell .multi-dropdown-trigger,
+    .sticky-filter-shell .multi-dropdown-option,
+    .sticky-filter-shell .multi-dropdown-option span {
+      color: #000000;
+    }
     input, select, button {
       width: 100%;
       border: 1px solid var(--line);
       border-radius: 8px;
-      padding: 10px 12px;
+      padding: 7px 9px;
       background: #ffffff;
       color: var(--text);
       font: inherit;
@@ -352,24 +363,24 @@ html = """<!DOCTYPE html>
       display: none;
     }
     .section {
-      margin-top: 18px;
+      margin-top: 14px;
     }
     .section-head {
       display: flex;
       align-items: baseline;
       justify-content: space-between;
       gap: 14px;
-      margin-bottom: 14px;
+      margin-bottom: 10px;
     }
     .section-head h2 {
       margin: 0;
-      font-size: 25px;
+      font-size: 22px;
       font-weight: 900;
       letter-spacing: 0.2px;
       color: var(--text);
     }
     .section-card {
-      padding: 20px;
+      padding: 16px;
     }
     .panel:hover {
       transform: none;
@@ -379,9 +390,9 @@ html = """<!DOCTYPE html>
     }
     .section-controls {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 14px;
-      margin-bottom: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
       align-items: end;
     }
     .global-controls {
@@ -392,16 +403,19 @@ html = """<!DOCTYPE html>
     }
     .sticky-filter-wrap {
       position: relative;
-      z-index: 15;
+      z-index: 40;
     }
     .sticky-filter-wrap.is-stuck {
       min-height: var(--sticky-filter-height, 0px);
     }
     .sticky-filter-shell {
       position: relative;
-      z-index: 15;
-      background: #f3f4f6;
-      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+      z-index: 40;
+      background: rgba(31, 56, 100, 0.75);
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.14);
+      padding: 10px 12px;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
     }
     .chart-box:hover,
     .total-panel:hover,
@@ -411,14 +425,21 @@ html = """<!DOCTYPE html>
       box-shadow: 0 0 0 1px rgba(251, 146, 60, 0.10), 0 0 20px rgba(251, 146, 60, 0.12);
     }
     .sticky-filter-shell:hover {
-      background: #eceff3;
+      background: rgba(31, 56, 100, 0.75);
       border-color: var(--line);
       box-shadow: 0 0 0 1px rgba(251, 146, 60, 0.08), 0 0 18px rgba(251, 146, 60, 0.10);
+    }
+    .sticky-filter-shell .section-controls > div,
+    .sticky-filter-shell .multi-dropdown {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      min-height: 58px;
     }
     .sticky-filter-shell.is-stuck {
       position: fixed;
       top: 10px;
-      z-index: 60;
+      z-index: 80;
     }
     .graph1-scope,
     .graph1-scope .label,
@@ -432,14 +453,14 @@ html = """<!DOCTYPE html>
     .multi-dropdown {
       position: relative;
       display: grid;
-      gap: 8px;
+      gap: 4px;
     }
     .multi-dropdown-trigger {
-      min-height: 46px;
+      min-height: 36px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
+      gap: 8px;
       text-align: left;
     }
     .multi-dropdown-value {
@@ -449,11 +470,11 @@ html = """<!DOCTYPE html>
     }
     .multi-dropdown-panel {
       position: absolute;
-      top: calc(100% + 8px);
+      top: calc(100% + 6px);
       left: 0;
       right: 0;
       z-index: 30;
-      padding: 12px;
+      padding: 8px;
       border-radius: 8px;
       border: 1px solid var(--line);
       background: #ffffff;
@@ -464,16 +485,16 @@ html = """<!DOCTYPE html>
       display: block;
     }
     .multi-dropdown-search {
-      margin-bottom: 10px;
+      margin-bottom: 6px;
     }
     .multi-dropdown-actions {
       display: flex;
       gap: 8px;
-      margin-bottom: 10px;
+      margin-bottom: 6px;
     }
     .multi-dropdown-actions button {
       min-width: 0;
-      padding: 8px 10px;
+      padding: 7px 9px;
       font-size: 12px;
     }
     .multi-dropdown-options {
@@ -720,11 +741,11 @@ html = """<!DOCTYPE html>
       border: 0;
     }
     .chart-box {
-      height: 500px;
+      height: 440px;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: #ffffff;
-      padding: 16px;
+      padding: 14px;
       transition: background 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
     }
     .legend {
@@ -745,8 +766,8 @@ html = """<!DOCTYPE html>
       font-weight: 700;
     }
     .total-panel {
-      margin-top: 14px;
-      padding: 14px 16px;
+      margin-top: 10px;
+      padding: 12px 14px;
       border-radius: 8px;
       border: 1px solid var(--line);
       background: #ffffff;
@@ -763,10 +784,10 @@ html = """<!DOCTYPE html>
     .total-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 10px 12px;
+      gap: 8px 10px;
     }
     .total-chip {
-      padding: 10px 12px;
+      padding: 8px 10px;
       border-radius: 6px;
       background: var(--surface-soft);
       border: 1px solid var(--line);
@@ -787,7 +808,7 @@ html = """<!DOCTYPE html>
       height: 12px;
       border-radius: 999px;
       border: 1px solid var(--line);
-      background: linear-gradient(90deg, #dbeafe 0%, #bfdbfe 35%, #93c5fd 68%, #60a5fa 100%);
+      background: linear-gradient(90deg, rgba(46, 107, 16, 0.080) 0%, rgba(46, 107, 16, 0.180) 35%, rgba(46, 107, 16, 0.280) 68%, rgba(46, 107, 16, 0.364) 100%);
     }
     .legend-item {
       display: inline-flex;
@@ -811,7 +832,7 @@ html = """<!DOCTYPE html>
       font-size: 14px;
       line-height: 1.5;
       letter-spacing: 0.2px;
-      padding: 12px 14px;
+      padding: 10px 12px;
       background: #fef2f2;
       border: 1px solid #fecaca;
       border-radius: 8px;
@@ -837,15 +858,15 @@ html = """<!DOCTYPE html>
     }
     .summary-lines {
       display: grid;
-      gap: 8px;
+      gap: 6px;
       color: var(--text);
-      font-size: 15px;
+      font-size: 14px;
       line-height: 1.45;
       font-family: Calibri, "Segoe UI", Arial, sans-serif;
     }
     .summary-line {
       position: relative;
-      padding: 12px 14px 12px 18px;
+      padding: 10px 12px 10px 16px;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: #ffffff;
@@ -882,7 +903,7 @@ html = """<!DOCTYPE html>
       width: 100vw;
       height: 100vh;
       margin: 0;
-      padding: 28px;
+      padding: 22px;
       border-radius: 0;
       overflow: auto;
       background: #f8fafc;
@@ -901,16 +922,16 @@ html = """<!DOCTYPE html>
       top: 0;
       left: auto !important;
       width: auto !important;
-      margin-bottom: 18px;
+      margin-bottom: 14px;
       z-index: 5;
     }
     .panel:fullscreen .section-controls,
     .panel:-webkit-full-screen .section-controls {
-      margin-bottom: 18px;
+      margin-bottom: 14px;
       position: sticky;
       top: 0;
       z-index: 4;
-      padding: 12px;
+      padding: 10px;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: #ffffff;
@@ -921,8 +942,8 @@ html = """<!DOCTYPE html>
       margin-top: 6px;
     }
     .panel:fullscreen .chart-box, .panel:-webkit-full-screen .chart-box {
-      height: calc(100vh - 310px);
-      min-height: 560px;
+      height: calc(100vh - 280px);
+      min-height: 520px;
     }
     .panel:fullscreen .section-head h2, .panel:-webkit-full-screen .section-head h2 {
       font-size: 32px;
@@ -1059,8 +1080,9 @@ __SECTIONS_HTML__
       g1: ['#3b82f6', '#22c55e', '#ef4444', '#a855f7'],
       g2: ['#3b82f6', '#22c55e', '#ef4444', '#a855f7'],
       g3: ['#1d4ed8', '#0f766e', '#b45309', '#7c3aed', '#be123c', '#0369a1', '#166534', '#7f1d1d'],
-      heat: ['#fff7cc', '#ffe699', '#ffd966', '#f4c542', '#e6a700'],
-      g4heat: ['#fde7ef', '#f9bfd3', '#f48fb1', '#ec5f94', '#d6336c']
+      heat: ['#eef4ff', '#dbeafe', '#93c5fd', '#60a5fa', '#2563eb'],
+      g4heat: ['#e0f2fe', '#7dd3fc', '#7dd3fc'],
+      g5heat: ['#f3f4f6', '#e5e7eb', '#d1d5db', '#9ca3af', '#9ca3af']
     };
     const state = {
       rawRows: [],
@@ -1255,6 +1277,31 @@ __DOM_SECTIONS_JS__
       if (scale < 0.75) return palette[3];
       return palette[4];
     }
+    function interpolateHexColor(startHex, endHex, factor) {
+      const start = hexToRgb(startHex);
+      const end = hexToRgb(endHex);
+      const mix = Math.max(0, Math.min(1, factor));
+      const r = Math.round(start.r + (end.r - start.r) * mix);
+      const g = Math.round(start.g + (end.g - start.g) * mix);
+      const b = Math.round(start.b + (end.b - start.b) * mix);
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+    function interpolateRgbaColor(start, end, factor) {
+      const mix = Math.max(0, Math.min(1, factor));
+      const r = Math.round(start.r + (end.r - start.r) * mix);
+      const g = Math.round(start.g + (end.g - start.g) * mix);
+      const b = Math.round(start.b + (end.b - start.b) * mix);
+      const a = start.a + (end.a - start.a) * mix;
+      return `rgba(${r}, ${g}, ${b}, ${a.toFixed(3)})`;
+    }
+    function graph4HeatColor(value, maxValue) {
+      const scale = Math.max(0, Math.min(1, value / Math.max(maxValue, 1)));
+      return interpolateRgbaColor(
+        { r: 74, g: 65, b: 168, a: 0.060 },
+        { r: 74, g: 65, b: 168, a: 0.313 },
+        scale
+      );
+    }
     function channelColor(channel, paletteKey) {
       const fixed = CHANNEL_COLORS[String(channel || '').trim().toUpperCase()];
       if (fixed) return fixed;
@@ -1264,10 +1311,12 @@ __DOM_SECTIONS_JS__
       return palette[Math.abs(hash) % palette.length];
     }
     function channelHeatColor(channel, value, maxValue) {
-      const scale = Math.max(0.18, Math.min(1, value / Math.max(maxValue, 1)));
-      const rgb = hexToRgb(channelColor(channel, 'g2'));
-      const alpha = 0.10 + scale * 0.42;
-      return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha.toFixed(3)})`;
+      const scale = Math.max(0, Math.min(1, value / Math.max(maxValue, 1)));
+      return interpolateRgbaColor(
+        { r: 46, g: 107, b: 16, a: 0.080 },
+        { r: 46, g: 107, b: 16, a: 0.364 },
+        scale
+      );
     }
     function parseHourValue(value) {
       const raw = String(value || '').trim();
@@ -2187,7 +2236,7 @@ __DOM_SECTIONS_JS__
             width: Math.max(cellW - 3, 2),
             height: Math.max(cellH - 3, 2),
             rx: 3,
-            fill: hasValue ? colorForValue(value, matrix.maxValue, 'g4heat') : backgroundFill,
+            fill: hasValue ? graph4HeatColor(value, matrix.maxValue) : backgroundFill,
             stroke: hasValue ? '#e5e7eb' : '#ffffff',
             'stroke-width': 1
           });
@@ -2585,12 +2634,13 @@ __DOM_SECTIONS_JS__
     }
     function exportDashboardShare() {
       const exportPayload = {
-        rows: state.cleanedRows,
+        rows: state.rawRows,
         excluded: [...EXCLUDED],
         generatedAt: new Date().toISOString()
       };
       const exportState = serializeDashboardState();
-      const bootstrapScript = `<script>(function(){const snapshot=${JSON.stringify(exportState)};document.getElementById('shareBtn')?.remove();document.getElementById('fileUpload')?.remove();document.querySelector('label[for="fileUpload"]')?.remove();loadRows(PAYLOAD.rows,'Loaded shared dashboard snapshot.');applyExportedState(snapshot);})();<\\/script>`;
+      const preloadScript = `\n<script>window.PRELOADED_DATASET = ${JSON.stringify(exportPayload.rows)};window.PRELOADED_DASHBOARD_STATE = ${JSON.stringify(exportState)};<\\/script>\n`;
+      const shareStylePatch = `\n<style>body{min-height:auto !important;overflow:auto !important;} .share-fab,.share-modal{display:none !important;}</style>\n`;
       let exportedHtml = '<!DOCTYPE html>\\n' + document.documentElement.outerHTML;
       exportedHtml = exportedHtml.replace(/<button class="share-fab"[\\s\\S]*?<\\/button>\\s*/m, '');
       exportedHtml = exportedHtml.replace(/<div class="share-modal" id="shareModal"[\\s\\S]*?<\\/div>\\s*<\\/div>\\s*/m, '');
@@ -2604,7 +2654,8 @@ __DOM_SECTIONS_JS__
       exportedHtml = exportedHtml.replace(/if \\(dom\\.fileUpload\\) \\{[\\s\\S]*?\\n    \\}/, '');
       exportedHtml = exportedHtml.replace(/if \\(dom\\.shareBtn\\) \\{[\\s\\S]*?\\n        \\}/, '');
       exportedHtml = exportedHtml.replace(/<div class="status" id="statusText">[\\s\\S]*?<\\/div>/, '<div class="status" id="statusText">Loaded shared dashboard snapshot.</div>');
-      exportedHtml = exportedHtml.replace('</body>', `${bootstrapScript}\\n</body>`);
+      exportedHtml = exportedHtml.replace(/<body([^>]*)style="[^"]*overflow:\\s*hidden;?[^"]*"([^>]*)>/i, '<body$1$2>');
+      exportedHtml = exportedHtml.replace('<head>', `<head>${preloadScript}${shareStylePatch}`);
       const blob = new Blob([exportedHtml], { type: 'text/html;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -2628,8 +2679,8 @@ __DOM_SECTIONS_JS__
       if (dom.shareBtn) dom.shareBtn.focus();
     }
     function handleShareDownload() {
-      exportDashboardShare();
       closeShareModal();
+      exportDashboardShare();
     }
     function renderSection(sectionKey) {
       const rows = getSectionRows(sectionKey);
@@ -2912,9 +2963,16 @@ __DOM_SECTIONS_JS__
         }
       });
     }
-    renderExcluded();
-    initializeSections();
-    renderAll();
+    if (Array.isArray(window.PRELOADED_DATASET)) {
+      loadRows(window.PRELOADED_DATASET, 'Loaded shared dashboard snapshot.');
+      if (window.PRELOADED_DASHBOARD_STATE) {
+        applyExportedState(window.PRELOADED_DASHBOARD_STATE);
+      }
+    } else {
+      renderExcluded();
+      initializeSections();
+      renderAll();
+    }
   </script>
 </body>
 </html>
@@ -2977,8 +3035,5 @@ def build_standalone_html(source_html: str) -> str:
         1,
     )
     return standalone
-standalone_html = build_standalone_html(html)
 OUTPUT_PATH.write_text(html, encoding="utf-8")
-STANDALONE_OUTPUT_PATH.write_text(standalone_html, encoding="utf-8")
 print(OUTPUT_PATH)
-print(STANDALONE_OUTPUT_PATH)
