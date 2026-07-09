@@ -64,12 +64,11 @@ def date_control(control_id: str, label: str) -> str:
 def reset_control(control_id: str) -> str:
     return f'<div><label class="label">&nbsp;</label><button id="{control_id}" type="button">Reset</button></div>'
 def category_dropdown(section_key: str) -> str:
-    arrow = "â–¾" if section_key == "g1" else "&#9660;"
     return f"""          <div class="multi-dropdown" id="{section_key}CategoryDropdown">
             <label class="label" for="{section_key}CategoryTrigger">Category</label>
             <button class="multi-dropdown-trigger" id="{section_key}CategoryTrigger" type="button">
               <span class="multi-dropdown-value" id="{section_key}CategoryValue">All Categories</span>
-              <span>{arrow}</span>
+              <span>&#9660;</span>
             </button>
             <div class="multi-dropdown-panel">
               <input class="multi-dropdown-search" id="{section_key}CategorySearch" type="text" placeholder="Search categories">
@@ -81,6 +80,25 @@ def category_dropdown(section_key: str) -> str:
             </div>
             <select id="{section_key}Category" multiple hidden></select>
           </div>"""
+def build_global_filter_html() -> str:
+    top_n = '<option value="10">Top 10</option><option value="20">Top 20</option>'
+    return f"""    <section class="section sticky-filter-wrap" id="stickyFilterWrap">
+      <div class="panel section-card sticky-filter-shell" id="stickyFilterShell">
+        <div class="section-head sticky-filter-head">
+          <h2>Global Filter Panel</h2>
+        </div>
+        <div class="section-controls global-controls">
+          {select_control("globalTopN", "Top N", top_n)}
+          {date_control("globalStart", "Start Date")}
+          {date_control("globalEnd", "End Date")}
+          {select_control("globalChannel", "Channel")}
+          {category_dropdown("global")}
+          {select_control("globalAdvertisor", "Advertiser")}
+          {select_control("globalTime", "Time", '<option value="minutes">Minutes</option><option value="seconds">Seconds</option>')}
+          {reset_control("globalReset")}
+        </div>
+      </div>
+    </section>"""
 def section_block(section_class: str, title: str, controls: list[str], chart_id: str, extras: str = "", head_actions: str = "") -> str:
     return f"""    <section class="{section_class}">
       <div class="section-head">
@@ -103,9 +121,9 @@ def section_block(section_class: str, title: str, controls: list[str], chart_id:
 def build_sections_html() -> str:
     top_n = '<option value="10">Top 10</option><option value="20">Top 20</option>'
     return "\n\n".join([
-        section_block("section graph1-scope", "Top Advertiser (FCT in Seconds)", [select_control("g1TopN", "Top N", top_n), date_control("g1Start", "Start Date"), date_control("g1End", "End Date"), select_control("g1Channel", "Channel"), category_dropdown("g1"), reset_control("g1Reset")], "g1Chart", '        <div class="legend" id="g1Legend"></div>'),
-        section_block("section", "Top Advertiser by Channels (FCT in Seconds)", [select_control("g2TopN", "Top N", top_n), date_control("g2Start", "Start Date"), date_control("g2End", "End Date"), select_control("g2Channel", "Channel"), category_dropdown("g2"), reset_control("g2Reset")], "g2Chart", '        <div class="legend" id="g2Legend"></div>', '            <div class="toggle-group">\n              <button class="toggle-btn active" id="g2BarBtn" type="button">Bar Chart</button>\n              <button class="toggle-btn" id="g2PieBtn" type="button">Pie Chart</button>\n            </div>\n'),
-        section_block("section", "Top Advertiser by Date (FCT in Seconds)", [select_control("g3TopN", "Top N", top_n), date_control("g3Start", "Start Date"), date_control("g3End", "End Date"), select_control("g3Channel", "Channel"), category_dropdown("g3"), reset_control("g3Reset")], "g3Chart", '        <div class="legend" id="g3Legend"></div>'),
+        section_block("section graph1-scope", "Top Advertiser (FCT)", [select_control("g1TopN", "Top N", top_n), date_control("g1Start", "Start Date"), date_control("g1End", "End Date"), select_control("g1Channel", "Channel"), category_dropdown("g1"), reset_control("g1Reset")], "g1Chart", '        <div class="legend" id="g1Legend"></div>'),
+        section_block("section", "Top Advertiser by Channels (FCT)", [select_control("g2TopN", "Top N", top_n), date_control("g2Start", "Start Date"), date_control("g2End", "End Date"), select_control("g2Channel", "Channel"), category_dropdown("g2"), reset_control("g2Reset")], "g2Chart", '        <div class="legend" id="g2Legend"></div>', '            <div class="toggle-group">\n              <button class="toggle-btn active" id="g2BarBtn" type="button">Bar Chart</button>\n              <button class="toggle-btn" id="g2PieBtn" type="button">Pie Chart</button>\n            </div>\n'),
+        section_block("section", "Top Advertiser by Date (FCT)", [select_control("g3TopN", "Top N", top_n), date_control("g3Start", "Start Date"), date_control("g3End", "End Date"), select_control("g3Channel", "Channel"), category_dropdown("g3"), reset_control("g3Reset")], "g3Chart", '        <div class="legend" id="g3Legend"></div>'),
         section_block("section", "Channel Category Overview", [select_control("g4TopN", "Category View", top_n), date_control("g4Start", "Start Date"), date_control("g4End", "End Date"), select_control("g4Channel", "Channel"), reset_control("g4Reset")], "g4Chart"),
         section_block("section", "FCT Hourly Analysis", [date_control("g5Start", "Start Date"), date_control("g5End", "End Date"), select_control("g5Channel", "Channel"), category_dropdown("g5"), select_control("g5Advertisor", "Advertiser"), select_control("g5Time", "Time", '<option value="minutes">Minutes</option><option value="seconds">Seconds</option>'), reset_control("g5Reset")], "g5Chart", '        <div class="legend-scale" id="g5Legend">\n          <span>Low AD Duration</span>\n          <div class="legend-gradient"></div>\n          <span>High AD Duration</span>\n        </div>\n        <div class="total-panel">\n          <div class="total-title">Total</div>\n          <div class="total-grid" id="g5TotalGrid"></div>\n        </div>'),
     ])
@@ -143,109 +161,150 @@ html = """<!DOCTYPE html>
   <title>CTV FCT Dashboard</title>
   <style>
     :root {
-      --bg: #050b14;
-      --bg-2: #0b1524;
-      --panel: #111d30;
-      --panel-2: #16253c;
-      --line: rgba(210, 225, 244, 0.16);
-      --line-strong: rgba(210, 225, 244, 0.26);
-      --text: #f4f8ff;
-      --muted: #c0cde0;
-      --shadow: 0 22px 56px rgba(0, 0, 0, 0.45);
-      --font: "Roboto", "Segoe UI", Arial, sans-serif;
-      --accent-1: #6bb5ff;
-      --accent-2: #57e0cf;
-      --accent-3: #ffcf70;
-      --accent-4: #ff8ca8;
+      --bg: #ffffff;
+      --bg-2: #f8fafc;
+      --panel: #ffffff;
+      --panel-2: #ffffff;
+      --line: #e5e7eb;
+      --line-strong: #d1d5db;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+      --font: "Segoe UI", Arial, sans-serif;
+      --accent-1: #2563eb;
+      --accent-2: #60a5fa;
+      --accent-3: #1d4ed8;
+      --accent-4: #93c5fd;
+      --surface-soft: #f8fafc;
+      --surface-muted: #f3f4f6;
+      --chart-text: #1f2937;
+      --chart-muted: #6b7280;
+      --chart-grid: #e5e7eb;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
       color: var(--text);
       font-family: var(--font);
-      background:
-        radial-gradient(circle at top right, rgba(107, 181, 255, 0.14), transparent 18%),
-        radial-gradient(circle at top left, rgba(87, 224, 207, 0.10), transparent 20%),
-        linear-gradient(180deg, #030812, var(--bg) 44%, var(--bg-2));
+      background: var(--bg-2);
+      min-height: 100vh;
     }
     .page {
       max-width: 1600px;
       margin: 0 auto;
       padding: 34px 32px 48px;
+      position: relative;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-bottom: 14px;
+      padding: 0;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+      position: relative;
+      z-index: 1;
+    }
+    .top-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .top-actions {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
+      min-width: auto;
+    }
+    .action-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+      width: auto;
+    }
+    .header-icon-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
     }
     .hero, .panel {
-      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      background: var(--panel);
       border: 1px solid var(--line);
       box-shadow: var(--shadow);
-      border-radius: 18px;
+      border-radius: 8px;
       transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
     }
     .hero {
       display: grid;
-      grid-template-columns: minmax(0, 1.8fr) minmax(320px, 0.95fr);
-      gap: 28px;
-      padding: 34px 36px;
-      align-items: center;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 18px;
+      padding: 28px 32px;
+      align-items: flex-start;
       position: relative;
       overflow: hidden;
-    }
-    .hero::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(circle at top right, rgba(107, 181, 255, 0.18), transparent 24%),
-        linear-gradient(135deg, rgba(255,255,255,0.03), transparent 55%);
-      pointer-events: none;
+      text-align: center;
+      z-index: 1;
     }
     .hero-copy,
-    .hero-actions {
+    .top-actions {
       position: relative;
       z-index: 1;
     }
     .hero h1 {
       margin: 0;
-      font-size: 52px;
+      font-size: 42px;
       font-weight: 900;
-      letter-spacing: 1.4px;
+      letter-spacing: 1.2px;
       line-height: 1;
+      color: var(--text);
     }
     .hero-subtitle {
-      margin: 10px 0 0;
-      color: #d7e6fb;
+      margin: 8px 0 0;
+      color: var(--muted);
       font-size: 16px;
       letter-spacing: 0.4px;
-    }
-    .hero-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 18px;
     }
     .meta-pill {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 10px 14px;
-      border-radius: 999px;
-      border: 1px solid rgba(210, 225, 244, 0.14);
-      background: rgba(255,255,255,0.04);
-      color: #e8f1ff;
+      padding: 0;
+      border-radius: 0;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
       font-size: 12px;
       font-weight: 700;
+      white-space: nowrap;
     }
-    .hero-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      align-items: stretch;
+    .hero-statline {
+      margin-top: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      justify-self: center;
     }
-    .upload-box {
-      border: 1px solid rgba(210, 225, 244, 0.14);
-      border-radius: 16px;
-      padding: 18px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02));
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+    .upload-input-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
     .label {
       display: block;
@@ -259,24 +318,24 @@ html = """<!DOCTYPE html>
     input, select, button {
       width: 100%;
       border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 12px 14px;
-      background: #000000;
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: #ffffff;
       color: var(--text);
       font: inherit;
       transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease, background 160ms ease;
     }
     input:hover, select:hover, button:hover,
     input:focus, select:focus, button:focus {
-      border-color: rgba(107, 181, 255, 0.44);
-      box-shadow: 0 0 0 3px rgba(107, 181, 255, 0.10);
+      border-color: #60a5fa;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.10);
       outline: none;
     }
     input[type="date"] {
-      background: #000000;
-      color: #ffffff;
-      color-scheme: dark;
-      caret-color: #ffffff;
+      background: #ffffff;
+      color: var(--text);
+      color-scheme: light;
+      caret-color: var(--text);
     }
     input[type="date"]::-webkit-datetime-edit,
     input[type="date"]::-webkit-datetime-edit-fields-wrapper,
@@ -284,32 +343,30 @@ html = """<!DOCTYPE html>
     input[type="date"]::-webkit-datetime-edit-month-field,
     input[type="date"]::-webkit-datetime-edit-day-field,
     input[type="date"]::-webkit-datetime-edit-year-field {
-      color: #ffffff;
+      color: var(--text);
     }
     input[type="date"]::placeholder {
-      color: #ffffff;
+      color: var(--muted);
       opacity: 1;
     }
     input[type="date"]::-webkit-calendar-picker-indicator {
-      filter: brightness(0) invert(1);
+      filter: none;
       opacity: 1;
       cursor: pointer;
     }
     input::file-selector-button {
       border: 0;
-      border-radius: 10px;
-      padding: 8px 10px;
-      margin-right: 10px;
+      border-radius: 8px;
+      padding: 5px 8px;
+      margin-right: 6px;
       background: rgba(107, 181, 255, 0.16);
       color: var(--text);
       cursor: pointer;
       font-weight: 700;
+      font-size: 11px;
     }
     .status {
-      margin-top: 12px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.6;
+      display: none;
     }
     .section {
       margin-top: 36px;
@@ -323,17 +380,19 @@ html = """<!DOCTYPE html>
     }
     .section-head h2 {
       margin: 0;
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 900;
       letter-spacing: 0.2px;
+      color: var(--text);
     }
     .section-card {
       padding: 24px;
     }
     .panel:hover {
       transform: translateY(-2px);
-      box-shadow: 0 28px 62px rgba(0, 0, 0, 0.48);
-      border-color: rgba(210, 225, 244, 0.22);
+      box-shadow: 0 10px 20px rgba(251, 146, 60, 0.16);
+      border-color: #fdba74;
+      background: #fff7ed;
     }
     .section-controls {
       display: grid;
@@ -342,6 +401,41 @@ html = """<!DOCTYPE html>
       margin-bottom: 18px;
       align-items: end;
     }
+    .global-controls {
+      margin-bottom: 0;
+    }
+    .section:not(.sticky-filter-wrap) .section-controls {
+      display: none;
+    }
+    .sticky-filter-wrap {
+      position: relative;
+      z-index: 15;
+    }
+    .sticky-filter-wrap.is-stuck {
+      min-height: var(--sticky-filter-height, 0px);
+    }
+    .sticky-filter-shell {
+      position: relative;
+      z-index: 15;
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    }
+    .sticky-filter-shell:hover,
+    .chart-box:hover,
+    .total-panel:hover,
+    .summary-line:hover {
+      background: #fff7ed;
+      border-color: #fdba74;
+      box-shadow: 0 10px 20px rgba(251, 146, 60, 0.14);
+    }
+    .sticky-filter-shell.is-stuck {
+      position: fixed;
+      top: 10px;
+      z-index: 60;
+    }
+    .sticky-filter-head {
+      margin-bottom: 18px;
+    }
     .graph1-scope,
     .graph1-scope .label,
     .graph1-scope .legend,
@@ -349,7 +443,7 @@ html = """<!DOCTYPE html>
     .graph1-scope button,
     .graph1-scope input,
     .graph1-scope select {
-      font-family: "Montserrat", "Roboto", "Segoe UI", Arial, sans-serif;
+      font-family: "Segoe UI", Arial, sans-serif;
     }
     .multi-dropdown {
       position: relative;
@@ -376,10 +470,10 @@ html = """<!DOCTYPE html>
       right: 0;
       z-index: 30;
       padding: 12px;
-      border-radius: 16px;
-      border: 1px solid rgba(210, 225, 244, 0.18);
-      background: #08111d;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.38);
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #ffffff;
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.10);
       display: none;
     }
     .multi-dropdown.open .multi-dropdown-panel {
@@ -410,10 +504,14 @@ html = """<!DOCTYPE html>
       align-items: center;
       gap: 10px;
       padding: 8px 10px;
-      border-radius: 10px;
-      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+      background: #ffffff;
       font-size: 13px;
       cursor: pointer;
+      color: var(--text);
+    }
+    .multi-dropdown-option:hover {
+      background: #eff6ff;
     }
     .multi-dropdown-option input {
       width: auto;
@@ -442,7 +540,7 @@ html = """<!DOCTYPE html>
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(255,255,255,0.04);
+      background: var(--surface-soft);
       border: 1px solid var(--line);
       border-radius: 999px;
       padding: 4px;
@@ -460,46 +558,88 @@ html = """<!DOCTYPE html>
       cursor: pointer;
     }
     .toggle-btn.active {
-      background: linear-gradient(135deg, #4289f2, #2867cf);
+      background: #2563eb;
       color: #ffffff;
-      box-shadow: 0 8px 18px rgba(40, 103, 207, 0.28);
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.20);
     }
     .full-btn {
       width: auto;
-      min-width: 126px;
-      padding: 10px 16px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--text);
+      min-width: 96px;
+      padding: 6px 9px;
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--muted);
       font-size: 12px;
       font-weight: 800;
       letter-spacing: 0.3px;
       cursor: pointer;
     }
     .pdf-btn {
-      width: 100%;
-      border-radius: 16px;
-      padding: 13px 16px;
-      background: linear-gradient(135deg, #2f74ff, #5aa8ff);
-      color: #ffffff;
-      font-size: 13px;
+      width: auto;
+      min-width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      padding: 0;
+      background: #ffffff;
+      color: var(--muted);
+      font-size: 11px;
       font-weight: 800;
       letter-spacing: 0.3px;
-      box-shadow: 0 10px 24px rgba(47, 116, 255, 0.28);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    }
+    .pdf-btn:hover,
+    .icon-btn:hover,
+    .full-btn:hover {
+      color: #2563eb;
+      border-color: #93c5fd;
+      background: #ffffff;
+    }
+    .icon-btn {
+      width: 36px;
+      min-width: 36px;
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      padding: 0;
+      cursor: pointer;
+    }
+    .icon-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      pointer-events: none;
+    }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
     }
     .chart-box {
       height: 500px;
       border: 1px solid var(--line);
-      border-radius: 18px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      border-radius: 8px;
+      background: #ffffff;
       padding: 16px;
+      transition: background 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
     }
     .legend {
       margin-bottom: 14px;
       display: flex;
       flex-wrap: wrap;
       gap: 10px 14px;
-      color: var(--muted);
+      color: var(--text);
       font-size: 13px;
     }
     .legend-scale {
@@ -507,20 +647,21 @@ html = """<!DOCTYPE html>
       align-items: center;
       gap: 10px;
       margin-bottom: 14px;
-      color: var(--muted);
+      color: var(--text);
       font-size: 13px;
       font-weight: 700;
     }
     .total-panel {
       margin-top: 14px;
       padding: 14px 16px;
-      border-radius: 14px;
-      border: 1px solid rgba(210, 225, 244, 0.12);
-      background: linear-gradient(180deg, rgba(17, 29, 48, 0.96), rgba(13, 24, 40, 0.96));
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+      transition: background 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
     }
     .total-title {
-      color: #f4f8ff;
+      color: var(--text);
       font-size: 14px;
       font-weight: 800;
       letter-spacing: 0.3px;
@@ -533,18 +674,18 @@ html = """<!DOCTYPE html>
     }
     .total-chip {
       padding: 10px 12px;
-      border-radius: 12px;
-      background: rgba(8, 17, 29, 0.86);
-      border: 1px solid rgba(216,227,241,0.12);
+      border-radius: 6px;
+      background: var(--surface-soft);
+      border: 1px solid var(--line);
     }
     .total-chip-label {
-      color: #bcd1ea;
+      color: var(--muted);
       font-size: 12px;
       font-weight: 700;
       margin-bottom: 4px;
     }
     .total-chip-value {
-      color: #f8fbff;
+      color: var(--text);
       font-size: 15px;
       font-weight: 800;
     }
@@ -552,7 +693,7 @@ html = """<!DOCTYPE html>
       flex: 1;
       height: 12px;
       border-radius: 999px;
-      border: 1px solid rgba(210, 225, 244, 0.18);
+      border: 1px solid var(--line);
       background: linear-gradient(90deg, #1a2434 0%, #23496f 25%, #2d73a9 50%, #3996d9 75%, #73c5ff 100%);
     }
     .legend-item {
@@ -573,17 +714,24 @@ html = """<!DOCTYPE html>
       overflow: visible;
     }
     .excluded-inline {
-      color: #ffd98e;
+      color: var(--text);
       font-size: 14px;
       line-height: 1.7;
       letter-spacing: 0.2px;
     }
     .excluded-inline strong {
-      color: #fff2cc;
+      color: var(--text);
     }
     .excluded-items {
-      color: #ffb86b;
+      color: var(--muted);
       font-weight: 700;
+    }
+    .excluded-inline,
+    .summary-line,
+    .total-chip,
+    .multi-dropdown-option,
+    .meta-pill {
+      box-shadow: none;
     }
     .empty {
       height: 100%;
@@ -595,17 +743,26 @@ html = """<!DOCTYPE html>
     }
     .summary-lines {
       display: grid;
-      gap: 12px;
-      color: #e8f1ff;
-      font-size: 15px;
-      line-height: 1.7;
+      gap: 10px;
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.45;
     }
     .summary-line {
       position: relative;
-      padding: 14px 16px 14px 20px;
-      border: 1px solid rgba(210, 225, 244, 0.10);
-      border-radius: 14px;
-      background: rgba(255, 255, 255, 0.03);
+      padding: 12px 14px 12px 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      font-weight: 700;
+      white-space: normal;
+      overflow: hidden;
+      text-overflow: initial;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      transition: background 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
     }
     .summary-line::before {
       content: "";
@@ -615,11 +772,11 @@ html = """<!DOCTYPE html>
       bottom: 10px;
       width: 4px;
       border-radius: 999px;
-      background: linear-gradient(180deg, var(--accent-1), var(--accent-2));
+      background: #2563eb;
     }
     .info-note {
       margin-top: 14px;
-      color: #bfd0e7;
+      color: var(--muted);
       font-size: 13px;
       line-height: 1.6;
     }
@@ -630,10 +787,27 @@ html = """<!DOCTYPE html>
       padding: 28px;
       border-radius: 0;
       overflow: auto;
-      background: linear-gradient(180deg, #0f1a2d, #111d30);
+      background: #f8fafc;
+    }
+    .panel:fullscreen .section-controls,
+    .panel:-webkit-full-screen .section-controls {
+      display: grid;
+      margin-bottom: 18px;
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    }
+    .panel:fullscreen .chart-head,
+    .panel:-webkit-full-screen .chart-head {
+      margin-top: 6px;
     }
     .panel:fullscreen .chart-box, .panel:-webkit-full-screen .chart-box {
-      height: calc(100vh - 190px);
+      height: calc(100vh - 310px);
       min-height: 560px;
     }
     .panel:fullscreen .section-head h2, .panel:-webkit-full-screen .section-head h2 {
@@ -647,7 +821,7 @@ html = """<!DOCTYPE html>
     }
     @media print {
       body {
-        background: #08111d !important;
+        background: #ffffff !important;
       }
       .page {
         max-width: none;
@@ -662,8 +836,23 @@ html = """<!DOCTYPE html>
       }
     }
     @media (max-width: 1280px) {
-      .hero, .section-controls {
+      .global-controls {
         grid-template-columns: 1fr;
+      }
+      .topbar {
+        flex-direction: column;
+        align-items: flex-end;
+      }
+      .top-actions {
+        align-items: flex-end;
+      }
+      .action-row {
+        justify-content: flex-end;
+        flex-wrap: wrap;
+      }
+      .header-icon-group {
+        width: auto;
+        justify-content: flex-end;
       }
       .hero {
         padding: 28px 24px;
@@ -673,22 +862,43 @@ html = """<!DOCTYPE html>
 </head>
 <body>
   <div class="page">
+    <section class="topbar">
+      <div class="top-meta">
+        <div class="meta-pill">📅 <span id="reportDateText">__REPORT_DATE__</span>  🕒 <span id="reportTimeText">__GENERATED_AT__</span></div>
+      </div>
+      <div class="top-actions">
+        <div class="action-row" id="headerActionRow">
+          <div class="header-icon-group">
+            <input class="upload-input-hidden" id="fileUpload" type="file" accept=".csv">
+            <label class="pdf-btn icon-btn" for="fileUpload" title="Upload File" aria-label="Upload File">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 16V4"></path>
+                <path d="M7 9l5-5 5 5"></path>
+                <path d="M4 20h16"></path>
+              </svg>
+              <span class="sr-only">Upload File</span>
+            </label>
+            <button class="pdf-btn icon-btn" id="pdfBtn" type="button" title="Download Report" aria-label="Download Report">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 4v12"></path>
+                <path d="M7 11l5 5 5-5"></path>
+                <path d="M4 20h16"></path>
+              </svg>
+              <span class="sr-only">Download Report</span>
+            </button>
+          </div>
+        </div>
+        <div class="status" id="statusText">Choose a CSV file to generate the dashboard.</div>
+      </div>
+    </section>
     <section class="hero">
       <div class="hero-copy">
         <h1>CTV FCT Dashboard</h1>
         <p class="hero-subtitle">Advertising Analytics Dashboard</p>
-        <div class="hero-meta">
-          <div class="meta-pill">Report Date: __REPORT_DATE__</div>
-          <div class="meta-pill">Last Updated: __GENERATED_AT__</div>
+        <div class="hero-statline">
+          <span>Total Records:</span>
+          <strong id="totalRecordsText">0</strong>
         </div>
-      </div>
-      <div class="hero-actions">
-        <div class="upload-box">
-          <label class="label" for="fileUpload">Upload CSV</label>
-          <input id="fileUpload" type="file" accept=".csv">
-          <div class="status" id="statusText">Choose a CSV file to generate the dashboard.</div>
-        </div>
-        <button class="pdf-btn" id="pdfBtn" type="button">Download Dashboard PDF</button>
       </div>
     </section>
     <section class="section">
@@ -697,7 +907,7 @@ html = """<!DOCTYPE html>
         <span class="excluded-items" id="excludedChips"></span>
       </div>
     </section>
-    <section class="section">
+    <section class="section" id="dashboardSummarySection">
       <div class="panel section-card">
         <div class="section-head">
           <h2>Dashboard Summary</h2>
@@ -705,6 +915,7 @@ html = """<!DOCTYPE html>
         <div class="summary-lines" id="summaryLines"></div>
       </div>
     </section>
+__GLOBAL_FILTER_HTML__
 __SECTIONS_HTML__
   <script>
     const PAYLOAD = __PAYLOAD_JSON__;
@@ -727,6 +938,15 @@ __SECTIONS_HTML__
       rawRows: [],
       cleanedRows: [],
       initialized: false,
+      global: {
+        topN: '10',
+        start: '',
+        end: '',
+        channel: '',
+        category: [],
+        advertisor: '',
+        time: 'minutes'
+      },
       sections: {
 __STATE_SECTIONS_JS__
       }
@@ -735,8 +955,31 @@ __STATE_SECTIONS_JS__
       fileUpload: document.getElementById('fileUpload'),
       pdfBtn: document.getElementById('pdfBtn'),
       statusText: document.getElementById('statusText'),
+      reportDateText: document.getElementById('reportDateText'),
+      reportTimeText: document.getElementById('reportTimeText'),
+      totalRecordsText: document.getElementById('totalRecordsText'),
       excludedChips: document.getElementById('excludedChips'),
       summaryLines: document.getElementById('summaryLines'),
+      summarySection: document.getElementById('dashboardSummarySection'),
+      stickyFilterWrap: document.getElementById('stickyFilterWrap'),
+      stickyFilterShell: document.getElementById('stickyFilterShell'),
+      global: {
+        topN: document.getElementById('globalTopN'),
+        start: document.getElementById('globalStart'),
+        end: document.getElementById('globalEnd'),
+        channel: document.getElementById('globalChannel'),
+        category: document.getElementById('globalCategory'),
+        categoryDropdown: document.getElementById('globalCategoryDropdown'),
+        categoryTrigger: document.getElementById('globalCategoryTrigger'),
+        categoryValue: document.getElementById('globalCategoryValue'),
+        categorySearch: document.getElementById('globalCategorySearch'),
+        categoryOptions: document.getElementById('globalCategoryOptions'),
+        categoryAll: document.getElementById('globalCategoryAll'),
+        categoryClear: document.getElementById('globalCategoryClear'),
+        advertisor: document.getElementById('globalAdvertisor'),
+        time: document.getElementById('globalTime'),
+        reset: document.getElementById('globalReset')
+      },
       sections: {
 __DOM_SECTIONS_JS__
       }
@@ -744,7 +987,22 @@ __DOM_SECTIONS_JS__
     const SECTION_KEYS = ['g1', 'g2', 'g3', 'g4', 'g5'];
     const CATEGORY_SECTION_KEYS = ['g1', 'g2', 'g3', 'g5'];
     function formatNumber(value) { return numberFormat.format(value || 0); }
-    function metricLabel() { return 'AD Duration'; }
+    function activeTimeUnit() { return state.global.time || 'minutes'; }
+    function formatDurationValue(value, withUnit = false) {
+      const unit = activeTimeUnit();
+      if (unit === 'minutes') {
+        const minutes = (value || 0) / 60;
+        const formatted = minutes.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+        return withUnit ? `${formatted} min` : formatted;
+      }
+      const formatted = formatNumber(Math.round(value || 0));
+      return withUnit ? `${formatted} sec` : formatted;
+    }
+    function metricLabel() {
+      return activeTimeUnit() === 'minutes'
+        ? 'Advertisement Duration (Min)'
+        : 'Advertisement Duration (Sec)';
+    }
     function advertisorLabel() { return 'Advertiser'; }
     function formatDate(value) {
       if (!value) return '';
@@ -949,16 +1207,48 @@ __DOM_SECTIONS_JS__
       });
     }
     function sharedCategorySections() { return CATEGORY_SECTION_KEYS; }
+    function formatMinutes(value) { return formatDurationValue(value, false); }
     function rerenderSections(sectionKeys) {
       sectionKeys.forEach(renderSection);
     }
-    function syncAndRenderSections(sectionKeys) {
-      sectionKeys.forEach(syncSectionState);
-      rerenderSections(sectionKeys);
+    function renderHeaderStats() {
+      const rows = getDashboardSummaryRows();
+      const now = new Date();
+      if (dom.totalRecordsText) dom.totalRecordsText.textContent = formatNumber(rows.length);
+      if (dom.reportDateText) dom.reportDateText.textContent = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      if (dom.reportTimeText) dom.reportTimeText.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
-    function updateCategoryDropdownValue(sectionKey) {
-      const controls = dom.sections[sectionKey];
-      const selected = state.sections[sectionKey].category || [];
+    function updateStickyFilterPosition() {
+      const wrap = dom.stickyFilterWrap;
+      const shell = dom.stickyFilterShell;
+      const summary = dom.summarySection;
+      if (!wrap || !shell || !summary) return;
+      const summaryBottom = summary.getBoundingClientRect().bottom;
+      const shouldStick = summaryBottom <= 10;
+      if (shouldStick) {
+        const rect = wrap.getBoundingClientRect();
+        wrap.classList.add('is-stuck');
+        wrap.style.setProperty('--sticky-filter-height', `${shell.offsetHeight}px`);
+        shell.classList.add('is-stuck');
+        shell.style.left = `${rect.left}px`;
+        shell.style.width = `${rect.width}px`;
+      } else {
+        wrap.classList.remove('is-stuck');
+        wrap.style.removeProperty('--sticky-filter-height');
+        shell.classList.remove('is-stuck');
+        shell.style.left = '';
+        shell.style.width = '';
+      }
+    }
+    function syncAndRenderSections(sectionKeys) {
+      applyGlobalStateToSections();
+      rerenderSections(sectionKeys);
+      renderSummary();
+      renderHeaderStats();
+      updateStickyFilterPosition();
+    }
+    function updateCategoryDropdownValue(controls, selectedValues) {
+      const selected = selectedValues || [];
       if (!controls.categoryValue) return;
       if (!selected.length) {
         controls.categoryValue.textContent = 'All Categories';
@@ -968,23 +1258,59 @@ __DOM_SECTIONS_JS__
         ? selected.join(', ')
         : `${selected.length} Categories Selected`;
     }
-    function syncSharedCategorySelection(selectedValues, sourceSectionKey = 'g1', options = {}) {
-      const nextValues = uniqueSorted(selectedValues || []);
-      sharedCategorySections().forEach(sectionKey => {
-        state.sections[sectionKey].category = [...nextValues];
-        const controls = dom.sections[sectionKey];
-        if (controls.categorySearch && sectionKey !== sourceSectionKey && !options.preserveSearchText) {
-          controls.categorySearch.value = '';
-        }
-      });
-      sharedCategorySections().forEach(sectionKey => {
-        populateCategoryDropdown(sectionKey, dom.sections[sectionKey].categorySearch ? dom.sections[sectionKey].categorySearch.value : '');
-      });
+    function syncGlobalCategorySelection(selectedValues, options = {}) {
+      const controls = dom.global;
+      state.global.category = uniqueSorted(selectedValues || []);
+      if (controls.categorySearch && !options.preserveSearchText) {
+        controls.categorySearch.value = '';
+      }
+      populateGlobalCategoryDropdown(controls.categorySearch ? controls.categorySearch.value : '');
     }
     function populateCategoryDropdown(sectionKey, filterText = '') {
       const controls = dom.sections[sectionKey];
+      if (!controls || !controls.categoryOptions || !controls.category) return;
+      const selected = new Set(state.global.category || []);
+      const values = uniqueSorted(state.cleanedRows.map(row => row.category));
+      const query = String(filterText || '').trim().toLowerCase();
+      const filtered = values.filter(value => !query || value.toLowerCase().includes(query));
+      setMultiSelectValues(controls.category, state.global.category || []);
+      controls.categoryOptions.innerHTML = filtered.map(value => `
+        <label class="multi-dropdown-option">
+          <input type="checkbox" value="${value.replace(/"/g, '&quot;')}" ${selected.has(value) ? 'checked' : ''}>
+          <span>${value}</span>
+        </label>
+      `).join('');
+      controls.categoryOptions.querySelectorAll('input[type="checkbox"]').forEach(input => {
+        input.addEventListener('change', () => {
+          const next = new Set(state.global.category || []);
+          if (input.checked) next.add(input.value);
+          else next.delete(input.value);
+          syncSharedCategorySelection([...next], sectionKey, { preserveSearchText: true });
+          syncAndRenderSections(sharedCategorySections());
+        });
+      });
+      updateCategoryDropdownValue(controls, state.global.category || []);
+    }
+    function syncSharedCategorySelection(selectedValues, sourceSectionKey, options = {}) {
+      state.global.category = uniqueSorted(selectedValues || []);
+      setMultiSelectValues(dom.global.category, state.global.category);
+      updateCategoryDropdownValue(dom.global, state.global.category);
+      populateGlobalCategoryDropdown(dom.global.categorySearch ? dom.global.categorySearch.value : '');
+      sharedCategorySections().forEach(sectionKey => {
+        const controls = dom.sections[sectionKey];
+        if (!controls.category) return;
+        if (controls.categorySearch && !options.preserveSearchText && sectionKey === sourceSectionKey) {
+          controls.categorySearch.value = '';
+        }
+        setMultiSelectValues(controls.category, state.global.category);
+        populateCategoryDropdown(sectionKey, controls.categorySearch ? controls.categorySearch.value : '');
+      });
+      applyGlobalStateToSections();
+    }
+    function populateGlobalCategoryDropdown(filterText = '') {
+      const controls = dom.global;
       const select = controls.category;
-      const selected = new Set(state.sections[sectionKey].category || []);
+      const selected = new Set(state.global.category || []);
       const values = uniqueSorted(state.cleanedRows.map(row => row.category));
       const query = String(filterText || '').trim().toLowerCase();
       const filtered = values.filter(value => !query || value.toLowerCase().includes(query));
@@ -1004,15 +1330,114 @@ __DOM_SECTIONS_JS__
       `).join('');
       controls.categoryOptions.querySelectorAll('input[type="checkbox"]').forEach(input => {
         input.addEventListener('change', () => {
-          const next = new Set(state.sections[sectionKey].category || []);
+          const next = new Set(state.global.category || []);
           if (input.checked) next.add(input.value);
           else next.delete(input.value);
-          syncSharedCategorySelection([...next], sectionKey, { preserveSearchText: true });
-          syncAndRenderSections(sharedCategorySections());
-          renderSummary();
+          syncGlobalCategorySelection([...next], { preserveSearchText: true });
+          syncAndRenderSections(SECTION_KEYS);
         });
       });
-      updateCategoryDropdownValue(sectionKey);
+      updateCategoryDropdownValue(controls, state.global.category || []);
+    }
+    function initializeGlobalControls() {
+      const rows = state.cleanedRows;
+      const dates = uniqueSorted(rows.map(row => row.date));
+      populateSelect(dom.global.channel, uniqueSorted(rows.map(row => row.channel)), 'All Channels');
+      populateSelect(dom.global.advertisor, uniqueSorted(rows.map(row => row.product)), 'All Advertisers');
+      dom.global.topN.value = state.global.topN || '10';
+      dom.global.time.value = state.global.time || 'minutes';
+      dom.global.start.value = dates[0] || '';
+      dom.global.end.value = dates[dates.length - 1] || '';
+      dom.global.start.min = dates[0] || '';
+      dom.global.start.max = dates[dates.length - 1] || '';
+      dom.global.end.min = dates[0] || '';
+      dom.global.end.max = dates[dates.length - 1] || '';
+      state.global.start = dom.global.start.value;
+      state.global.end = dom.global.end.value;
+      populateGlobalCategoryDropdown();
+    }
+    function syncGlobalState() {
+      state.global.topN = dom.global.topN.value;
+      state.global.start = dom.global.start.value;
+      state.global.end = dom.global.end.value;
+      state.global.channel = dom.global.channel.value;
+      state.global.category = Array.from(dom.global.category.selectedOptions).map(option => option.value);
+      state.global.advertisor = dom.global.advertisor.value;
+      state.global.time = dom.global.time.value;
+    }
+    function setMultiSelectValues(select, values) {
+      const selected = new Set(values || []);
+      Array.from(select.options).forEach(option => {
+        option.selected = selected.has(option.value);
+      });
+    }
+    function applyGlobalStateToSections() {
+      SECTION_KEYS.forEach(sectionKey => {
+        const controls = dom.sections[sectionKey];
+        const target = state.sections[sectionKey];
+        if (controls.topN) controls.topN.value = state.global.topN;
+        if (controls.start) controls.start.value = state.global.start;
+        if (controls.end) controls.end.value = state.global.end;
+        if (controls.channel) controls.channel.value = state.global.channel;
+        if (controls.category) setMultiSelectValues(controls.category, state.global.category);
+        if (controls.advertisor) controls.advertisor.value = state.global.advertisor;
+        if (controls.time) controls.time.value = state.global.time;
+        if (controls.categoryValue) updateCategoryDropdownValue(controls, state.global.category);
+        if (sharedCategorySections().includes(sectionKey)) {
+          populateCategoryDropdown(sectionKey, controls.categorySearch ? controls.categorySearch.value : '');
+        }
+        if (controls.topN) target.topN = state.global.topN;
+        target.start = state.global.start;
+        target.end = state.global.end;
+        target.channel = state.global.channel;
+        target.category = [...state.global.category];
+        if (sectionKey === 'g5') {
+          target.advertisor = state.global.advertisor;
+          target.time = state.global.time;
+        }
+      });
+    }
+    function bindGlobalControls() {
+      ['topN', 'start', 'end', 'channel', 'advertisor', 'time'].forEach(key => {
+        dom.global[key].addEventListener('change', () => {
+          syncGlobalState();
+          syncAndRenderSections(SECTION_KEYS);
+        });
+      });
+      dom.global.categoryTrigger.addEventListener('click', event => {
+        event.preventDefault();
+        dom.global.categoryDropdown.classList.toggle('open');
+        if (dom.global.categoryDropdown.classList.contains('open')) {
+          dom.global.categorySearch.focus();
+        }
+      });
+      dom.global.categorySearch.addEventListener('input', () => {
+        populateGlobalCategoryDropdown(dom.global.categorySearch.value);
+      });
+      dom.global.categoryAll.addEventListener('click', () => {
+        dom.global.categoryDropdown.classList.add('open');
+        syncGlobalCategorySelection(uniqueSorted(state.cleanedRows.map(row => row.category)), { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
+      });
+      dom.global.categoryClear.addEventListener('click', () => {
+        dom.global.categoryDropdown.classList.add('open');
+        syncGlobalCategorySelection([], { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
+      });
+      dom.global.reset.addEventListener('click', () => {
+        state.global.topN = '10';
+        state.global.channel = '';
+        state.global.category = [];
+        state.global.advertisor = '';
+        state.global.time = 'minutes';
+        initializeGlobalControls();
+        dom.global.channel.value = '';
+        dom.global.advertisor.value = '';
+        dom.global.time.value = 'minutes';
+        syncGlobalCategorySelection([]);
+        syncGlobalState();
+        syncAndRenderSections(SECTION_KEYS);
+      });
     }
     function initializeSectionControls(sectionKey) {
       const rows = state.cleanedRows;
@@ -1020,11 +1445,7 @@ __DOM_SECTIONS_JS__
       const channels = uniqueSorted(rows.map(row => row.channel));
       const section = dom.sections[sectionKey];
       populateSelect(section.channel, channels, 'All Channels');
-      if (sharedCategorySections().includes(sectionKey)) {
-        populateCategoryDropdown(sectionKey);
-      } else if (section.category) {
-        populateSelect(section.category, uniqueSorted(rows.map(row => row.category)), 'All Categories');
-      }
+      if (section.category) populateSelect(section.category, uniqueSorted(rows.map(row => row.category)), 'All Categories');
       if (sectionKey === 'g5') {
         const advertisors = uniqueSorted(rows.map(row => row.product));
         populateSelect(section.advertisor, advertisors, 'All Advertisers');
@@ -1045,6 +1466,7 @@ __DOM_SECTIONS_JS__
         if (!Array.isArray(sectionState.category) && sectionState.category && row.category !== sectionState.category) return false;
         if (sectionState.start && row.date && row.date < sectionState.start) return false;
         if (sectionState.end && row.date && row.date > sectionState.end) return false;
+        if (state.global.advertisor && row.product !== state.global.advertisor) return false;
         if (sectionKey === 'g5') {
           const hour = parseHourValue(row.adtime);
           if (hour === null || hour < 6) return false;
@@ -1183,15 +1605,15 @@ __DOM_SECTIONS_JS__
     function drawAxes(svg, margin, plotW, plotH, xTitle, yTitle, width, height, maxValue) {
       for (let i = 0; i <= 4; i++) {
         const y = margin.top + plotH - (plotH * i / 4);
-        svg.appendChild(svgEl('line', { x1: margin.left, y1: y, x2: margin.left + plotW, y2: y, stroke: 'rgba(216,227,241,0.18)', 'stroke-width': 1 }));
-        const tick = svgEl('text', { x: margin.left - 8, y: y + 5, fill: '#d8e3f1', 'font-size': 12, 'text-anchor': 'end' });
-        tick.textContent = formatNumber(Math.round(maxValue * i / 4));
+        svg.appendChild(svgEl('line', { x1: margin.left, y1: y, x2: margin.left + plotW, y2: y, stroke: '#e5e7eb', 'stroke-width': 1 }));
+        const tick = svgEl('text', { x: margin.left - 8, y: y + 5, fill: '#6b7280', 'font-size': 12, 'text-anchor': 'end' });
+        tick.textContent = formatDurationValue(maxValue * i / 4);
         svg.appendChild(tick);
       }
       const xAxisLabel = svgEl('text', {
         x: margin.left + plotW / 2,
         y: height - 6,
-        fill: '#f4f8ff',
+        fill: '#1f2937',
         'font-size': 15,
         'font-weight': 700,
         'text-anchor': 'middle'
@@ -1201,7 +1623,7 @@ __DOM_SECTIONS_JS__
       const yAxisLabel = svgEl('text', {
         x: 20,
         y: margin.top + plotH / 2,
-        fill: '#f4f8ff',
+        fill: '#1f2937',
         'font-size': 15,
         'font-weight': 700,
         'text-anchor': 'middle',
@@ -1223,12 +1645,12 @@ __DOM_SECTIONS_JS__
         return;
       }
       const { svg, width, height } = makeSvg(dom.sections.g1.chart);
-      svg.style.fontFamily = '"Montserrat", "Roboto", "Segoe UI", Arial, sans-serif';
+      svg.style.fontFamily = '"Segoe UI", Arial, sans-serif';
       const margin = { top: 18, right: 24, bottom: 118, left: 70 };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
       const maxValue = Math.max(...topAdvertisers.map(item => item.total), 1);
-      drawAxes(svg, margin, plotW, plotH, 'Top Advertisers', 'Total Advertisement Duration', width, height, maxValue);
+      drawAxes(svg, margin, plotW, plotH, 'Top Advertisers', metricLabel(), width, height, maxValue);
       const slotCount = Math.max(Number.parseInt(state.sections.g1.topN, 10) || topAdvertisers.length, 1);
       const groupW = plotW / slotCount;
       const barW = Math.max(groupW - 18, 18);
@@ -1240,16 +1662,16 @@ __DOM_SECTIONS_JS__
         const dataLabel = svgEl('text', {
           x: x + barW / 2,
           y: Math.max(y - 6, margin.top + 10),
-          fill: '#e0f0ff',
+          fill: '#1f2937',
           'font-size': 11,
           'font-weight': 800,
           'text-anchor': 'middle'
         });
-        dataLabel.textContent = formatNumber(item.total);
+        dataLabel.textContent = formatDurationValue(item.total);
         svg.appendChild(dataLabel);
-        addWrappedText(svg, item.advertisor, x + barW / 2, margin.top + plotH + 18, 12, '#f4f8ff', 10, 'middle', 700);
+        addWrappedText(svg, item.advertisor, x + barW / 2, margin.top + plotH + 18, 12, '#1f2937', 10, 'middle', 700);
       });
-      renderLegend(dom.sections.g1.legend, [{ label: 'Total AD Duration', color: chartPalettes.g1[0] }]);
+      renderLegend(dom.sections.g1.legend, [{ label: metricLabel(), color: chartPalettes.g1[0] }]);
     }
     function drawGraph2Bar(rows) {
       const topAdvertisors = aggregateAdvertisors(rows).slice(0, Number.parseInt(state.sections.g2.topN, 10));
@@ -1276,7 +1698,7 @@ __DOM_SECTIONS_JS__
             y1: margin.top + 2,
             x2: dividerX,
             y2: margin.top + plotH + 28,
-            stroke: 'rgba(216,227,241,0.20)',
+            stroke: '#e5e7eb',
             'stroke-width': 1
           }));
         }
@@ -1288,9 +1710,9 @@ __DOM_SECTIONS_JS__
           svg.appendChild(svgEl('rect', { x, y, width: barW, height: h, rx: 2, fill: channelColor(channel, 'g2') }));
           const dataLabel = svgEl('text', {
             x: x + barW / 2, y: Math.max(y - 6, margin.top + 10),
-            fill: '#ffffff', 'font-size': 11.5, 'font-weight': 700, 'text-anchor': 'middle'
+            fill: '#000000', 'font-size': 11.5, 'font-weight': 700, 'text-anchor': 'middle'
           });
-          dataLabel.textContent = value ? formatNumber(value) : '';
+          dataLabel.textContent = value ? formatDurationValue(value) : '';
           svg.appendChild(dataLabel);
         });
         addWrappedText(
@@ -1299,7 +1721,7 @@ __DOM_SECTIONS_JS__
           startX + ((matrix.channels.length * (barW + 2)) - 2) / 2,
           margin.top + plotH + 18,
           12,
-          '#eef5ff',
+          '#1f2937',
           10.5,
           'middle',
           700
@@ -1343,20 +1765,20 @@ __DOM_SECTIONS_JS__
           'Z'
         ].join(' ');
         const fill = channelColor(item.channel, 'g2');
-        svg.appendChild(svgEl('path', { d: path, fill, stroke: '#08111d', 'stroke-width': 1.2 }));
+        svg.appendChild(svgEl('path', { d: path, fill, stroke: '#ffffff', 'stroke-width': 1.2 }));
         const title = svgEl('title');
-        title.textContent = `Channel: ${item.channel}\nAD Duration: ${formatNumber(item.total)} sec\nShare: ${(fraction * 100).toFixed(0)}%`;
+        title.textContent = `Channel: ${item.channel}\n${metricLabel()}: ${formatDurationValue(item.total, true)}\nShare: ${(fraction * 100).toFixed(0)}%`;
         svg.lastChild.appendChild(title);
         const mid = startAngle + (endAngle - startAngle) / 2;
         const label = polar(radius + 38, mid);
-        addWrappedText(svg, `${item.channel} ${formatNumber(item.total)} sec ${(fraction * 100).toFixed(0)}% AD`, label.x, label.y, 16, '#f4f8ff', 10, mid > Math.PI / 2 || mid < -Math.PI / 2 ? 'end' : 'start', 700);
+        addWrappedText(svg, `${item.channel} ${formatDurationValue(item.total, true)} ${(fraction * 100).toFixed(0)}%`, label.x, label.y, 16, '#1f2937', 10, mid > Math.PI / 2 || mid < -Math.PI / 2 ? 'end' : 'start', 700);
         startAngle = endAngle;
       });
-      const centerTop = svgEl('text', { x: cx, y: cy - 8, fill: '#f4f8ff', 'font-size': 17, 'font-weight': 800, 'text-anchor': 'middle' });
-      centerTop.textContent = 'AD Duration';
+      const centerTop = svgEl('text', { x: cx, y: cy - 8, fill: '#1f2937', 'font-size': 17, 'font-weight': 800, 'text-anchor': 'middle' });
+      centerTop.textContent = metricLabel();
       svg.appendChild(centerTop);
-      const centerValue = svgEl('text', { x: cx, y: cy + 16, fill: '#dcecff', 'font-size': 15, 'font-weight': 700, 'text-anchor': 'middle' });
-      centerValue.textContent = `${formatNumber(total)} sec`;
+      const centerValue = svgEl('text', { x: cx, y: cy + 16, fill: '#6b7280', 'font-size': 15, 'font-weight': 700, 'text-anchor': 'middle' });
+      centerValue.textContent = formatDurationValue(total, true);
       svg.appendChild(centerValue);
       renderLegend(dom.sections.g2.legend, distribution.map(item => ({
         label: item.channel,
@@ -1386,7 +1808,7 @@ __DOM_SECTIONS_JS__
           y1: margin.top,
           x2: x,
           y2: margin.top + plotH,
-          stroke: 'rgba(216,227,241,0.18)',
+          stroke: '#e5e7eb',
           'stroke-width': 1
         }));
       }
@@ -1405,12 +1827,12 @@ __DOM_SECTIONS_JS__
           }));
           const dataLabel = svgEl('text', {
             x: x + barW / 2, y: Math.max(y - 6, margin.top + 10),
-            fill: '#ffffff', 'font-size': 11.5, 'font-weight': 700, 'text-anchor': 'middle'
+            fill: '#000000', 'font-size': 11.5, 'font-weight': 700, 'text-anchor': 'middle'
           });
-          dataLabel.textContent = value ? formatNumber(value) : '';
+          dataLabel.textContent = value ? formatDurationValue(value) : '';
           svg.appendChild(dataLabel);
         });
-        addWrappedText(svg, formatDate(row.date), startX + ((topAdvertisors.length * (barW + 2)) - 2) / 2, margin.top + plotH + 16, 10, '#eef5ff', 10.5, 'middle', 700);
+        addWrappedText(svg, formatDate(row.date), startX + ((topAdvertisors.length * (barW + 2)) - 2) / 2, margin.top + plotH + 16, 10, '#1f2937', 10.5, 'middle', 700);
       });
       renderLegend(dom.sections.g3.legend, topAdvertisors.map((item, idx) => ({
         label: item.advertisor,
@@ -1429,19 +1851,19 @@ __DOM_SECTIONS_JS__
       const plotH = height - margin.top - margin.bottom;
       const cellW = plotW / Math.max(matrix.channels.length, 1);
       const cellH = plotH / Math.max(matrix.categories.length, 1);
-      const backgroundFill = '#08111d';
+      const backgroundFill = '#ffffff';
       svg.appendChild(svgEl('rect', {
         x: margin.left, y: margin.top, width: plotW, height: plotH, rx: 12,
         fill: 'rgba(255,255,255,0.02)', stroke: 'rgba(255,255,255,0.08)'
       }));
       const xAxisLabel = svgEl('text', {
-        x: margin.left + plotW / 2, y: height - 10, fill: '#f4f8ff',
+        x: margin.left + plotW / 2, y: height - 10, fill: '#1f2937',
         'font-size': 17, 'font-weight': 800, 'text-anchor': 'middle'
       });
       xAxisLabel.textContent = 'Channel';
       svg.appendChild(xAxisLabel);
       const yAxisLabel = svgEl('text', {
-        x: 28, y: margin.top + plotH / 2, fill: '#f4f8ff',
+        x: 28, y: margin.top + plotH / 2, fill: '#1f2937',
         'font-size': 17, 'font-weight': 800, 'text-anchor': 'middle',
         transform: `rotate(-90 28 ${margin.top + plotH / 2})`
       });
@@ -1451,21 +1873,21 @@ __DOM_SECTIONS_JS__
         const x = margin.left + ci * cellW;
         svg.appendChild(svgEl('line', {
           x1: x, y1: margin.top, x2: x, y2: margin.top + plotH,
-          stroke: 'rgba(216,227,241,0.18)', 'stroke-width': 1
+          stroke: '#e5e7eb', 'stroke-width': 1
         }));
       }
       for (let ri = 0; ri <= matrix.categories.length; ri++) {
         const y = margin.top + ri * cellH;
         svg.appendChild(svgEl('line', {
           x1: margin.left, y1: y, x2: margin.left + plotW, y2: y,
-          stroke: 'rgba(216,227,241,0.18)', 'stroke-width': 1
+          stroke: '#e5e7eb', 'stroke-width': 1
         }));
       }
       matrix.channels.forEach((channel, ci) => {
-        addWrappedText(svg, channel, margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, 10, '#eef5ff', 11.5, 'middle', 700);
+        addWrappedText(svg, channel, margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, 10, '#1f2937', 11.5, 'middle', 700);
       });
       matrix.categories.forEach((category, ri) => {
-        addWrappedText(svg, category, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, 18, '#eef5ff', 11.5, 'end', 700);
+        addWrappedText(svg, category, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, 18, '#1f2937', 11.5, 'end', 700);
       });
       matrix.categories.forEach((category, ri) => {
         matrix.channels.forEach((channel, ci) => {
@@ -1480,12 +1902,12 @@ __DOM_SECTIONS_JS__
             height: Math.max(cellH - 3, 2),
             rx: 3,
             fill: hasValue ? colorForValue(value, matrix.maxValue) : backgroundFill,
-            stroke: hasValue ? 'rgba(216,227,241,0.16)' : 'rgba(8,17,29,0.96)',
+            stroke: hasValue ? '#e5e7eb' : '#ffffff',
             'stroke-width': 1
           });
           const title = svgEl('title');
           title.textContent = hasValue
-            ? `Channel: ${channel}\nCategory: ${category}\nAD Duration: ${formatNumber(value)} sec`
+            ? `Channel: ${channel}\nCategory: ${category}\n${metricLabel()}: ${formatDurationValue(value, true)}`
             : `Channel: ${channel}\nCategory: ${category}\nNo data available`;
           rect.appendChild(title);
           svg.appendChild(rect);
@@ -1494,7 +1916,7 @@ __DOM_SECTIONS_JS__
               x: x + cellW / 2, y: y + cellH * 0.58,
               fill: '#f8fbff', 'font-size': 12, 'font-weight': 800, 'text-anchor': 'middle'
             });
-            label.textContent = formatNumber(value);
+            label.textContent = formatDurationValue(value);
             svg.appendChild(label);
           }
         });
@@ -1513,34 +1935,34 @@ __DOM_SECTIONS_JS__
       const plotH = height - margin.top - margin.bottom;
       const cellW = plotW / Math.max(matrix.hours.length, 1);
       const cellH = plotH / Math.max(matrix.channels.length, 1);
-      const xAxisLabel = svgEl('text', { x: margin.left + plotW / 2, y: height - 8, fill: '#f4f8ff', 'font-size': 15, 'font-weight': 700, 'text-anchor': 'middle' });
+      const xAxisLabel = svgEl('text', { x: margin.left + plotW / 2, y: height - 8, fill: '#1f2937', 'font-size': 15, 'font-weight': 700, 'text-anchor': 'middle' });
       xAxisLabel.textContent = 'Hour of Day';
       svg.appendChild(xAxisLabel);
       const yAxisLabel = svgEl('text', {
-        x: 24, y: margin.top + plotH / 2, fill: '#f4f8ff',
+        x: 24, y: margin.top + plotH / 2, fill: '#1f2937',
         'font-size': 15, 'font-weight': 700, 'text-anchor': 'middle',
         transform: `rotate(-90 24 ${margin.top + plotH / 2})`
       });
       yAxisLabel.textContent = 'Channel';
       svg.appendChild(yAxisLabel);
       matrix.hours.forEach((hour, ci) => {
-        addWrappedText(svg, hourLabel(hour), margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, 5, '#d8e3f1', 10.5, 'middle', 700);
+        addWrappedText(svg, hourLabel(hour), margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, 5, '#6b7280', 10.5, 'middle', 700);
       });
       matrix.channels.forEach((channel, ri) => {
-        addWrappedText(svg, channel, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, 14, '#d8e3f1', 11, 'end', 700);
+        addWrappedText(svg, channel, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, 14, '#1f2937', 11, 'end', 700);
       });
       for (let ci = 0; ci <= matrix.hours.length; ci++) {
         const x = margin.left + ci * cellW;
         svg.appendChild(svgEl('line', {
           x1: x, y1: margin.top, x2: x, y2: margin.top + plotH,
-          stroke: 'rgba(216,227,241,0.20)', 'stroke-width': 1
+          stroke: '#e5e7eb', 'stroke-width': 1
         }));
       }
       for (let ri = 0; ri <= matrix.channels.length; ri++) {
         const y = margin.top + ri * cellH;
         svg.appendChild(svgEl('line', {
           x1: margin.left, y1: y, x2: margin.left + plotW, y2: y,
-          stroke: 'rgba(216,227,241,0.20)', 'stroke-width': 1
+          stroke: '#e5e7eb', 'stroke-width': 1
         }));
       }
       matrix.channels.forEach((channel, ri) => {
@@ -1556,7 +1978,7 @@ __DOM_SECTIONS_JS__
             height: Math.max(cellH - 3, 2),
             rx: 3,
             fill: channelHeatColor(channel, value, matrix.maxValue),
-            stroke: 'rgba(216,227,241,0.18)',
+            stroke: '#e5e7eb',
             'stroke-width': 1
           });
           const title = svgEl('title');
@@ -1566,7 +1988,7 @@ __DOM_SECTIONS_JS__
           if (value && cellW >= 28 && cellH >= 22) {
             const label = svgEl('text', {
               x: x + cellW / 2, y: y + cellH * 0.58,
-              fill: '#f4f8ff', 'font-size': 11.5, 'font-weight': 800, 'text-anchor': 'middle'
+              fill: '#000000', 'font-size': 11.5, 'font-weight': 800, 'text-anchor': 'middle'
             });
             label.textContent = unitMeta.unit === 'minutes'
               ? displayValue.toFixed(2)
@@ -1597,7 +2019,7 @@ __DOM_SECTIONS_JS__
       return `${(value || 0).toFixed(2)}%`;
     }
     function graph5UnitMeta() {
-      const unit = state.sections.g5.time || 'seconds';
+      const unit = state.global.time || state.sections.g5.time || 'minutes';
       if (unit === 'minutes') {
         return {
           unit,
@@ -1626,62 +2048,64 @@ __DOM_SECTIONS_JS__
       return [...new Set(values)];
     }
     function getDashboardSummaryRows() {
-      const channelValues = collectSelectedValues(SECTION_KEYS, 'channel');
-      const categoryValues = collectSelectedValues(CATEGORY_SECTION_KEYS, 'category');
-      const advertisorValues = collectSelectedValues(['g5'], 'advertisor');
-      const dateRanges = SECTION_KEYS
-        .map(sectionKey => ({
-          start: state.sections[sectionKey].start || '',
-          end: state.sections[sectionKey].end || ''
-        }))
-        .filter(range => range.start || range.end);
       return state.cleanedRows.filter(row => {
-        if (channelValues.length && !channelValues.includes(row.channel)) return false;
-        if (categoryValues.length && !categoryValues.includes(row.category)) return false;
-        if (advertisorValues.length && !advertisorValues.includes(row.product)) return false;
-        if (dateRanges.length) {
-          const inAnyRange = dateRanges.some(range => {
-            if (range.start && row.date && row.date < range.start) return false;
-            if (range.end && row.date && row.date > range.end) return false;
-            return true;
-          });
-          if (!inAnyRange) return false;
-        }
+        if (state.global.channel && row.channel !== state.global.channel) return false;
+        if (state.global.category.length && !state.global.category.includes(row.category)) return false;
+        if (state.global.advertisor && row.product !== state.global.advertisor) return false;
+        if (state.global.start && row.date && row.date < state.global.start) return false;
+        if (state.global.end && row.date && row.date > state.global.end) return false;
         return true;
       });
     }
     function renderSummary() {
       const rows = getDashboardSummaryRows();
+      const unitWord = activeTimeUnit() === 'minutes' ? 'minutes' : 'seconds';
       if (!rows.length) {
         dom.summaryLines.innerHTML = [
-          'Total records analyzed: 0.',
-          'Overall advertisement duration: 0 seconds.',
-          'Top advertisers are not available for the current selection.',
-          'Category performance cannot be determined for the current selection.',
-          'No significant trend is available because the filtered dataset is empty.'
+          `<strong>Total advertisement duration:</strong> 0 ${unitWord} distributed across the filtered dataset.`,
+          '<strong>Top 5 highest performing categories:</strong> No category data is available for the current selection.',
+          '<strong>Top 5 advertisers:</strong> No advertiser data is available for the current selection.',
+          '<strong>Key trend:</strong> No trend is available because the filtered dataset is empty.',
+          '<strong>Additional insight:</strong> Apply a broader date range or remove filters to restore comparable dashboard insights.'
         ].map(line => `<div class="summary-line">${line}</div>`).join('');
+        renderHeaderStats();
         return;
       }
-      const totalRecords = rows.length;
       const total = rows.reduce((sum, row) => sum + row.aaddur, 0);
-      const advertisers = aggregateAdvertisors(rows);
-      const topAdvertisor = advertisers[0];
-      const topChannel = buildChannelDistribution(rows)[0];
+      const channelDistribution = buildChannelDistribution(rows);
       const categories = buildCategoryDistribution(rows);
+      const advertisers = aggregateAdvertisors(rows);
+      const topAdvertisor = advertisers[0] || { advertisor: 'N/A', total: 0 };
+      const topChannel = channelDistribution[0] || { channel: 'N/A', total: 0 };
       const topCategory = categories[0];
-      const lowestCategory = categories[categories.length - 1];
-      const topThreeAdvertisers = advertisers.slice(0, 3).map(item => item.advertisor).join(', ');
-      const topAdvertisorPct = total ? (topAdvertisor.total / total) * 100 : 0;
-      const topChannelPct = total ? (topChannel.total / total) * 100 : 0;
+      const lowestChannel = channelDistribution[channelDistribution.length - 1] || { channel: 'N/A', total: 0 };
       const topCategoryPct = total ? (topCategory.total / total) * 100 : 0;
+      const topChannelPct = total ? (topChannel.total / total) * 100 : 0;
+      const topFiveCategories = categories
+        .slice(0, 5)
+        .map(item => `${item.category} (<strong>${formatDurationValue(item.total, true)}</strong>)`)
+        .join(', ');
+      const topFiveAdvertisers = advertisers
+        .slice(0, 5)
+        .map(item => `${item.advertisor} (<strong>${formatDurationValue(item.total, true)}</strong>)`)
+        .join(', ');
+      const channelDistributionInline = channelDistribution
+        .map(item => `${item.channel} (${formatDurationValue(item.total, true)})`)
+        .join(', ');
+      const topFiveAdvertiserTotal = advertisers.slice(0, 5).reduce((sum, item) => sum + item.total, 0);
+      const topFiveCategoryTotal = categories.slice(0, 5).reduce((sum, item) => sum + item.total, 0);
+      const advertiserShare = total ? (topFiveAdvertiserTotal / total) * 100 : 0;
+      const categoryShare = total ? (topFiveCategoryTotal / total) * 100 : 0;
+      const channelLeadMultiple = lowestChannel.total ? topChannel.total / lowestChannel.total : 0;
       const lines = [
-        `Total records analyzed: ${formatNumber(totalRecords)}.`,
-        `Overall advertisement duration across the filtered dataset is ${formatNumber(total)} seconds.`,
-        `Top advertisers: ${topThreeAdvertisers || topAdvertisor.advertisor}. The leading advertiser is ${topAdvertisor.advertisor} with ${formatNumber(topAdvertisor.total)} seconds, contributing ${formatPercent(topAdvertisorPct)} of total AD Duration.`,
-        `Highest performing category is ${topCategory.category} with ${formatNumber(topCategory.total)} seconds, while the lowest performing category is ${lowestCategory.category} with ${formatNumber(lowestCategory.total)} seconds.`,
-        `Key trend: ${topChannel.channel} is the strongest channel at ${formatNumber(topChannel.total)} seconds (${formatPercent(topChannelPct)}), and ${topCategory.category} remains the most dominant category with ${formatPercent(topCategoryPct)} of AD Duration.`
+        `<strong>Total advertisement duration:</strong> ${formatDurationValue(total, true)} distributed across ${channelDistributionInline}.`,
+        `<strong>Top 5 highest performing categories:</strong> ${topFiveCategories}.`,
+        `<strong>Top 5 advertisers:</strong> ${topFiveAdvertisers}.`,
+        `<strong>Key trend:</strong> ${topChannel.channel} is the strongest performing channel with <strong>${formatDurationValue(topChannel.total, true)} (${formatPercent(topChannelPct)})</strong> of total advertisement duration, while <strong>${topCategory.category}</strong> remains the leading category contributing <strong>${formatPercent(topCategoryPct)}</strong> of the overall advertisement duration.`,
+        `<strong>Additional insight:</strong> The top five advertisers contribute <strong>${formatPercent(advertiserShare)}</strong> of total duration, the top five categories contribute <strong>${formatPercent(categoryShare)}</strong>, and ${lowestChannel.total ? `${topChannel.channel} airs ${channelLeadMultiple.toFixed(2)}x the ad time of ${lowestChannel.channel}` : 'channel concentration remains visible in the filtered data'}.`
       ];
       dom.summaryLines.innerHTML = lines.map(line => `<div class="summary-line">${line}</div>`).join('');
+      renderHeaderStats();
     }
     function categoryFilterLabel(sectionState, emptyLabel) {
       return Array.isArray(sectionState.category)
@@ -1689,67 +2113,36 @@ __DOM_SECTIONS_JS__
         : (sectionState.category || emptyLabel);
     }
     function filterSummaryLines(sectionKey, sectionState, forPage = false) {
-      const categoryLabel = categoryFilterLabel(sectionState, forPage ? 'All' : 'all');
-      if (sectionKey === 'g5') {
-        return forPage
-          ? [
-              `Start Date: ${sectionState.start ? formatDate(sectionState.start) : 'All'}`,
-              `End Date: ${sectionState.end ? formatDate(sectionState.end) : 'All'}`,
-              `Channel: ${sectionState.channel || 'All'}`,
-              `Category: ${categoryLabel}`,
-              `Advertiser: ${sectionState.advertisor || 'All'}`,
-              `Time: ${sectionState.time || 'minutes'}`
-            ]
-          : [`<strong>${sectionKey.toUpperCase()}</strong> | Start: ${sectionState.start || 'all'}, End: ${sectionState.end || 'all'}, Channel: ${sectionState.channel || 'all'}, Category: ${categoryLabel}, Advertiser: ${sectionState.advertisor || 'all'}, Time: ${sectionState.time || 'minutes'}`];
-      }
-      if (sectionKey === 'g4') {
-        return forPage
-          ? [
-              `Top N: ${sectionState.topN || 'All'}`,
-              `Start Date: ${sectionState.start ? formatDate(sectionState.start) : 'All'}`,
-              `End Date: ${sectionState.end ? formatDate(sectionState.end) : 'All'}`,
-              `Channel: ${sectionState.channel || 'All'}`
-            ]
-          : [`<strong>${sectionKey.toUpperCase()}</strong> | Top N: ${sectionState.topN || 'all'}, Start: ${sectionState.start || 'all'}, End: ${sectionState.end || 'all'}, Channel: ${sectionState.channel || 'all'}`];
-      }
+      const categoryLabel = categoryFilterLabel(state.global, forPage ? 'All' : 'all');
       return forPage
         ? [
-            `Top N: ${sectionState.topN || 'All'}`,
-            `Start Date: ${sectionState.start ? formatDate(sectionState.start) : 'All'}`,
-            `End Date: ${sectionState.end ? formatDate(sectionState.end) : 'All'}`,
-            `Channel: ${sectionState.channel || 'All'}`,
-            `Category: ${categoryLabel}`
+            `Top N: ${state.global.topN || 'All'}`,
+            `Start Date: ${state.global.start ? formatDate(state.global.start) : 'All'}`,
+            `End Date: ${state.global.end ? formatDate(state.global.end) : 'All'}`,
+            `Channel: ${state.global.channel || 'All'}`,
+            `Category: ${categoryLabel}`,
+            `Advertiser: ${state.global.advertisor || 'All'}`,
+            `Time: ${state.global.time || 'minutes'}`
           ]
-        : [`<strong>${sectionKey.toUpperCase()}</strong> | Top N: ${sectionState.topN || 'all'}, Start: ${sectionState.start || 'all'}, End: ${sectionState.end || 'all'}, Channel: ${sectionState.channel || 'all'}, Category: ${categoryLabel}`];
+        : [`<strong>Global</strong> | Top N: ${state.global.topN || 'all'}, Start: ${state.global.start || 'all'}, End: ${state.global.end || 'all'}, Channel: ${state.global.channel || 'all'}, Category: ${categoryLabel}, Advertiser: ${state.global.advertisor || 'all'}, Time: ${state.global.time || 'minutes'}`];
     }
     function getActiveFiltersMarkup() {
-      return SECTION_KEYS
-        .map(sectionKey => `<div class="summary-line">${filterSummaryLines(sectionKey, state.sections[sectionKey])[0]}</div>`)
-        .join('');
+      return `<div class="summary-line">${filterSummaryLines('global', state.global)[0]}</div>`;
     }
     function getSelectedDateRangeText() {
-      const ranges = SECTION_KEYS
-        .map(sectionKey => ({
-          start: state.sections[sectionKey].start || '',
-          end: state.sections[sectionKey].end || ''
-        }))
-        .filter(range => range.start || range.end);
-      if (!ranges.length) return 'All Dates';
-      const starts = ranges.map(range => range.start).filter(Boolean).sort((a, b) => a.localeCompare(b));
-      const ends = ranges.map(range => range.end).filter(Boolean).sort((a, b) => a.localeCompare(b));
-      const start = starts[0] || '';
-      const end = ends[ends.length - 1] || '';
+      const start = state.global.start || '';
+      const end = state.global.end || '';
       if (!start && !end) return 'All Dates';
       if (start && end) return `${formatDate(start)} to ${formatDate(end)}`;
       return formatDate(start || end);
     }
     function getActiveFiltersPageMarkup() {
-      return SECTION_KEYS.map(sectionKey => `
+      return `
           <div class="pdf-filter-card">
-            <h3>${sectionKey.toUpperCase()}</h3>
-            ${filterSummaryLines(sectionKey, state.sections[sectionKey], true).map(line => `<div class="summary-line">${line}</div>`).join('')}
+            <h3>Global Filters</h3>
+            ${filterSummaryLines('global', state.global, true).map(line => `<div class="summary-line">${line}</div>`).join('')}
           </div>
-        `).join('');
+        `;
     }
     function exportDashboardPdf() {
       const printWindow = window.open('', '_blank', 'width=1280,height=900');
@@ -1775,7 +2168,7 @@ __DOM_SECTIONS_JS__
       }).join('');
       const styles = document.querySelector('style').outerHTML;
       printWindow.document.write(`<!DOCTYPE html><html><head><title>${title}</title>${styles}<style>
-        body { background: #08111d !important; }
+        body { background: #ffffff !important; }
         .page.pdf-export { max-width: none; padding: 0; }
         .pdf-page { min-height: 100vh; padding: 32px; page-break-after: always; break-after: page; display: flex; flex-direction: column; gap: 18px; }
         .pdf-page:last-child { page-break-after: auto; break-after: auto; }
@@ -1784,7 +2177,7 @@ __DOM_SECTIONS_JS__
         .pdf-page-head h2 { margin: 6px 0 0; font-size: 30px; font-weight: 900; }
         .pdf-kicker { color: #9fc2f2; font-size: 12px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
         .pdf-filter-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
-        .pdf-filter-card { background: linear-gradient(180deg, #111d30, #16253c); border: 1px solid rgba(210, 225, 244, 0.14); border-radius: 18px; padding: 18px; }
+        .pdf-filter-card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 18px; box-shadow: 0 2px 8px rgba(15,23,42,0.08); }
         .pdf-filter-card h3 { margin: 0 0 12px; font-size: 18px; }
         .pdf-page .panel { margin: 0; box-shadow: none; }
         .pdf-page .chart-box { height: calc(100vh - 260px); min-height: 620px; }
@@ -1841,8 +2234,11 @@ __DOM_SECTIONS_JS__
       if (sectionKey === 'g5') drawGraph5(rows);
     }
     function renderAll() {
+      applyGlobalStateToSections();
       rerenderSections(SECTION_KEYS);
       renderSummary();
+      renderHeaderStats();
+      updateStickyFilterPosition();
     }
     function syncSectionState(sectionKey) {
       const controls = dom.sections[sectionKey];
@@ -1861,6 +2257,19 @@ __DOM_SECTIONS_JS__
         target.time = controls.time.value;
       }
     }
+    function syncGlobalFromSection(sectionKey) {
+      const controls = dom.sections[sectionKey];
+      if (controls.topN && dom.global.topN) dom.global.topN.value = controls.topN.value;
+      if (controls.start && dom.global.start) dom.global.start.value = controls.start.value;
+      if (controls.end && dom.global.end) dom.global.end.value = controls.end.value;
+      if (controls.channel && dom.global.channel) dom.global.channel.value = controls.channel.value;
+      if (controls.advertisor && dom.global.advertisor) dom.global.advertisor.value = controls.advertisor.value;
+      if (controls.time && dom.global.time) dom.global.time.value = controls.time.value;
+      if (sharedCategorySections().includes(sectionKey) && controls.category) {
+        syncGlobalCategorySelection(Array.from(controls.category.selectedOptions).map(option => option.value), { preserveSearchText: true });
+      }
+      syncGlobalState();
+    }
     function bindSection(sectionKey) {
       const controls = dom.sections[sectionKey];
       const controlKeys = sectionKey === 'g5'
@@ -1870,8 +2279,8 @@ __DOM_SECTIONS_JS__
         if (!controls[key]) return;
         controls[key].addEventListener('change', () => {
           syncSectionState(sectionKey);
-          renderSection(sectionKey);
-          renderSummary();
+          syncGlobalFromSection(sectionKey);
+          syncAndRenderSections(SECTION_KEYS);
         });
       });
       if (sharedCategorySections().includes(sectionKey)) {
@@ -1923,12 +2332,13 @@ __DOM_SECTIONS_JS__
           controls.time.value = 'minutes';
         }
         if (sharedCategorySections().includes(sectionKey)) {
-          syncAndRenderSections(sharedCategorySections());
+          syncGlobalFromSection(sectionKey);
+          syncAndRenderSections(SECTION_KEYS);
         } else {
           syncSectionState(sectionKey);
-          renderSection(sectionKey);
+          syncGlobalFromSection(sectionKey);
+          syncAndRenderSections(SECTION_KEYS);
         }
-        renderSummary();
       });
     }
     function toggleFullScreen(sectionKey) {
@@ -1947,15 +2357,16 @@ __DOM_SECTIONS_JS__
       });
     }
     function initializeSections() {
+      initializeGlobalControls();
       SECTION_KEYS.forEach(sectionKey => {
         initializeSectionControls(sectionKey);
         if (!state.initialized) bindSection(sectionKey);
-        syncSectionState(sectionKey);
         if (!state.initialized) {
           dom.sections[sectionKey].fullBtn.addEventListener('click', () => toggleFullScreen(sectionKey));
         }
       });
       if (!state.initialized) {
+        bindGlobalControls();
         if (dom.pdfBtn) {
           dom.pdfBtn.addEventListener('click', exportDashboardPdf);
         }
@@ -1975,7 +2386,12 @@ __DOM_SECTIONS_JS__
           updateFullButtons();
           renderAll();
         });
+        window.addEventListener('scroll', updateStickyFilterPosition, { passive: true });
+        window.addEventListener('resize', updateStickyFilterPosition);
         document.addEventListener('click', event => {
+          if (dom.global.categoryDropdown && !dom.global.categoryDropdown.contains(event.target)) {
+            dom.global.categoryDropdown.classList.remove('open');
+          }
           sharedCategorySections().forEach(sectionKey => {
             const dropdown = dom.sections[sectionKey].categoryDropdown;
             if (dropdown && !dropdown.contains(event.target)) {
@@ -1984,8 +2400,11 @@ __DOM_SECTIONS_JS__
           });
         });
       }
+      syncGlobalState();
+      applyGlobalStateToSections();
       state.initialized = true;
       updateFullButtons();
+      updateStickyFilterPosition();
     }
     function loadRows(rows, status) {
       state.rawRows = rows;
@@ -2017,26 +2436,45 @@ __DOM_SECTIONS_JS__
 html = html.replace("__GENERATED_AT__", payload["generatedAt"])
 html = html.replace("__REPORT_DATE__", report_date)
 html = html.replace("__PAYLOAD_JSON__", json.dumps(payload, ensure_ascii=True))
+html = html.replace("__GLOBAL_FILTER_HTML__", build_global_filter_html())
 html = html.replace("__SECTIONS_HTML__", build_sections_html())
 html = html.replace("__STATE_SECTIONS_JS__", build_state_sections_js())
 html = html.replace("__DOM_SECTIONS_JS__", build_dom_sections_js())
 def build_standalone_html(source_html: str) -> str:
-    standalone_markup = """      <div class="upload-box">
-        <label class="label">Embedded Dataset</label>
-        <div class="status" id="statusText">Loaded embedded dataset and ready for interactive use.</div>
-      </div>"""
-    start_marker = '      <div class="upload-box">'
-    end_marker = "      </div>"
-    start = source_html.find(start_marker)
-    if start != -1:
-        end = source_html.find(end_marker, start)
-        if end != -1:
-            end += len(end_marker)
-            standalone = source_html[:start] + standalone_markup + source_html[end:]
-        else:
-            standalone = source_html
-    else:
-        standalone = source_html
+    source_actions = """        <div class="action-row" id="headerActionRow">
+          <div class="header-icon-group">
+            <input class="upload-input-hidden" id="fileUpload" type="file" accept=".csv">
+            <label class="pdf-btn icon-btn" for="fileUpload" title="Upload File" aria-label="Upload File">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 16V4"></path>
+                <path d="M7 9l5-5 5 5"></path>
+                <path d="M4 20h16"></path>
+              </svg>
+              <span class="sr-only">Upload File</span>
+            </label>
+            <button class="pdf-btn icon-btn" id="pdfBtn" type="button" title="Download Report" aria-label="Download Report">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 4v12"></path>
+                <path d="M7 11l5 5 5-5"></path>
+                <path d="M4 20h16"></path>
+              </svg>
+              <span class="sr-only">Download Report</span>
+            </button>
+          </div>
+        </div>"""
+    standalone_actions = """        <div class="action-row" id="headerActionRow">
+          <div class="header-icon-group">
+            <button class="pdf-btn icon-btn" id="pdfBtn" type="button" title="Download Report" aria-label="Download Report">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 4v12"></path>
+                <path d="M7 11l5 5 5-5"></path>
+                <path d="M4 20h16"></path>
+              </svg>
+              <span class="sr-only">Download Report</span>
+            </button>
+          </div>
+        </div>"""
+    standalone = source_html.replace(source_actions, standalone_actions, 1)
     standalone = standalone.replace(
         json.dumps(payload, ensure_ascii=True),
         json.dumps(embedded_payload, ensure_ascii=True),
@@ -2047,12 +2485,33 @@ def build_standalone_html(source_html: str) -> str:
         "    loadRows(PAYLOAD.rows, 'Loaded embedded dataset');",
         1,
     )
+    standalone = standalone.replace(
+        "        <div class=\"status\" id=\"statusText\">Choose a CSV file to generate the dashboard.</div>",
+        "        <div class=\"status\" id=\"statusText\">Loaded embedded dataset and ready for interactive use.</div>",
+        1,
+    )
     return standalone
 def build_mobile_html(source_html: str) -> str:
     mobile_css = """
     @media (max-width: 768px) {
       .page {
         padding: 14px 12px 24px;
+      }
+      .topbar {
+        flex-direction: column;
+        gap: 12px;
+      }
+      .top-actions,
+      .top-meta {
+        width: 100%;
+        align-items: stretch;
+      }
+      .action-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .header-icon-group {
+        justify-content: flex-end;
       }
       .hero {
         padding: 22px 18px;
@@ -2064,9 +2523,6 @@ def build_mobile_html(source_html: str) -> str:
       }
       .hero-subtitle {
         font-size: 14px;
-      }
-      .hero-meta {
-        gap: 10px;
       }
       .meta-pill {
         width: 100%;
@@ -2084,6 +2540,14 @@ def build_mobile_html(source_html: str) -> str:
       .section-controls {
         grid-template-columns: 1fr;
         gap: 10px;
+      }
+      .sticky-filter-shell {
+        top: 8px;
+      }
+      .panel:fullscreen .section-controls,
+      .panel:-webkit-full-screen .section-controls {
+        top: 0;
+        padding: 10px;
       }
       .chart-head {
         flex-direction: column;
@@ -2114,229 +2578,14 @@ def build_mobile_html(source_html: str) -> str:
       }
       .panel:fullscreen .chart-box,
       .panel:-webkit-full-screen .chart-box {
-        height: calc(100vh - 220px);
+        height: calc(100vh - 340px);
         min-height: 420px;
       }
     }
 """
     return source_html.replace("  </style>", mobile_css + "\n  </style>", 1)
 def build_white_html(source_html: str) -> str:
-    replacements = [
-        ('--bg: #050b14;', '--bg: #f3f6fb;'),
-        ('--bg-2: #0b1524;', '--bg-2: #e8eef7;'),
-        ('--panel: #111d30;', '--panel: #ffffff;'),
-        ('--panel-2: #16253c;', '--panel-2: #f8fbff;'),
-        ('--line: rgba(210, 225, 244, 0.16);', '--line: rgba(15, 23, 42, 0.12);'),
-        ('--line-strong: rgba(210, 225, 244, 0.26);', '--line-strong: rgba(15, 23, 42, 0.18);'),
-        ('--text: #f4f8ff;', '--text: #0f172a;'),
-        ('--muted: #c0cde0;', '--muted: #475569;'),
-        ('--shadow: 0 22px 56px rgba(0, 0, 0, 0.45);', '--shadow: 0 18px 42px rgba(15, 23, 42, 0.08);'),
-        ('        radial-gradient(circle at top right, rgba(107, 181, 255, 0.14), transparent 18%),', '        radial-gradient(circle at top right, rgba(66, 137, 242, 0.10), transparent 18%),'),
-        ('        radial-gradient(circle at top left, rgba(87, 224, 207, 0.10), transparent 20%),', '        radial-gradient(circle at top left, rgba(87, 224, 207, 0.08), transparent 20%),'),
-        ('        linear-gradient(180deg, #030812, var(--bg) 44%, var(--bg-2));', '        linear-gradient(180deg, #ffffff, var(--bg) 44%, var(--bg-2));'),
-        ('      color: #d7e6fb;', '      color: #475569;'),
-        ('      background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02));', '      background: linear-gradient(180deg, rgba(15, 23, 42, 0.02), rgba(15, 23, 42, 0.01));'),
-        ('      background: #000000;', '      background: #ffffff;'),
-        ('      color: #ffffff;', '      color: #0f172a;'),
-        ('      border: 1px solid rgba(255,255,255,0.16);', '      border: 1px solid rgba(15,23,42,0.14);'),
-        ('      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);', '      box-shadow: inset 0 0 0 1px rgba(15,23,42,0.02);'),
-        ('      filter: invert(1);', '      filter: none;'),
-        ('      background: #08111d;', '      background: #ffffff;'),
-        ('      color: #f4f8ff;', '      color: #0f172a;'),
-        ('      color: #d8e3f1;', '      color: #475569;'),
-        ('      background: linear-gradient(180deg, rgba(17, 29, 48, 0.96), rgba(13, 24, 40, 0.96));', '      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.98));'),
-        ('      background: linear-gradient(180deg, #0f1a2d, #111d30);', '      background: linear-gradient(180deg, #ffffff, #f8fbff);'),
-        ('        background: #08111d !important;', '        background: #ffffff !important;'),
-        ("fill: '#d8e3f1'", "fill: '#334155'"),
-        ("fill: '#f4f8ff'", "fill: '#0f172a'"),
-        ("'#eef5ff'", "'#1e293b'"),
-        ("stroke: '#08111d'", "stroke: '#e2e8f0'"),
-        ("const backgroundFill = '#08111d';", "const backgroundFill = '#f8fbff';"),
-        ("fill: '#eef5ff'", "fill: '#1e293b'"),
-        ("fill: '#d8e3f1'", "fill: '#475569'"),
-        ('        body { background: #08111d !important; }', '        body { background: #ffffff !important; }'),
-        ('.pdf-filter-card { background: linear-gradient(180deg, #111d30, #16253c); border: 1px solid rgba(210, 225, 244, 0.14); border-radius: 18px; padding: 18px; }', '.pdf-filter-card { background: linear-gradient(180deg, #ffffff, #f8fbff); border: 1px solid rgba(15, 23, 42, 0.12); border-radius: 18px; padding: 18px; }'),
-        ("addWrappedText(svg, item.advertisor, x + barW / 2, margin.top + plotH + 18, 12, '#f4f8ff', 10, 'middle', 700);", "addWrappedText(svg, item.advertisor, x + barW / 2, margin.top + plotH + 18, 12, '#0f172a', 10, 'middle', 700);"),
-        ("addWrappedText(svg, `${item.channel} ${formatNumber(item.total)} sec ${(fraction * 100).toFixed(0)}% AD`, label.x, label.y, 16, '#f4f8ff', 10, mid > Math.PI / 2 || mid < -Math.PI / 2 ? 'end' : 'start', 700);", "addWrappedText(svg, `${item.channel} ${formatNumber(item.total)} sec ${(fraction * 100).toFixed(0)}% AD`, label.x, label.y, 16, '#0f172a', 10, mid > Math.PI / 2 || mid < -Math.PI / 2 ? 'end' : 'start', 700);"),
-        ("addWrappedText(svg, hourLabel(hour), margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, 5, '#d8e3f1', 10.5, 'middle', 700);", "addWrappedText(svg, hourLabel(hour), margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, 5, '#475569', 10.5, 'middle', 700);"),
-        ("addWrappedText(svg, channel, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, 14, '#d8e3f1', 11, 'end', 700);", "addWrappedText(svg, channel, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, 14, '#475569', 11, 'end', 700);"),
-        ("fill: '#e0f0ff',", "fill: '#0f172a',"),
-        ("fill: '#ffffff', 'font-size': 11.5, 'font-weight': 700, 'text-anchor': 'middle'", "fill: '#0f172a', 'font-size': 11.5, 'font-weight': 700, 'text-anchor': 'middle'"),
-        ("const centerValue = svgEl('text', { x: cx, y: cy + 16, fill: '#dcecff', 'font-size': 15, 'font-weight': 700, 'text-anchor': 'middle' });", "const centerValue = svgEl('text', { x: cx, y: cy + 16, fill: '#334155', 'font-size': 15, 'font-weight': 700, 'text-anchor': 'middle' });"),
-        ("fill: '#f8fbff', 'font-size': 12, 'font-weight': 800, 'text-anchor': 'middle'", "fill: '#0f172a', 'font-size': 12, 'font-weight': 800, 'text-anchor': 'middle'"),
-        ("fill: '#f4f8ff', 'font-size': 11.5, 'font-weight': 800, 'text-anchor': 'middle'", "fill: '#0f172a', 'font-size': 11.5, 'font-weight': 800, 'text-anchor': 'middle'"),
-    ]
-    white_html = source_html
-    for old, new in replacements:
-        white_html = white_html.replace(old, new)
-    post_replacements = [
-        ("fill: '#e0f0ff',", "fill: '#0f172a',"),
-        ("fill: '#ffffff', 'font-size': 11.5, 'font-weight': 700, 'text-anchor': 'middle'", "fill: '#0f172a', 'font-size': 11.5, 'font-weight': 700, 'text-anchor': 'middle'"),
-        ("fill: '#f8fbff', 'font-size': 12, 'font-weight': 800, 'text-anchor': 'middle'", "fill: '#0f172a', 'font-size': 12, 'font-weight': 800, 'text-anchor': 'middle'"),
-        ("fill: '#dcecff', 'font-size': 15, 'font-weight': 700, 'text-anchor': 'middle'", "fill: '#334155', 'font-size': 15, 'font-weight': 700, 'text-anchor': 'middle'"),
-        ("addWrappedText(svg, item.advertisor, x + barW / 2, margin.top + plotH + 18, 12, '#f4f8ff', 10, 'middle', 700);", "addWrappedText(svg, item.advertisor, x + barW / 2, margin.top + plotH + 18, 12, '#0f172a', 10, 'middle', 700);"),
-        ("addWrappedText(svg, `${item.channel} ${formatNumber(item.total)} sec ${(fraction * 100).toFixed(0)}% AD`, label.x, label.y, 16, '#f4f8ff', 10, mid > Math.PI / 2 || mid < -Math.PI / 2 ? 'end' : 'start', 700);", "addWrappedText(svg, `${item.channel} ${formatNumber(item.total)} sec ${(fraction * 100).toFixed(0)}% AD`, label.x, label.y, 16, '#0f172a', 10, mid > Math.PI / 2 || mid < -Math.PI / 2 ? 'end' : 'start', 700);"),
-        ("addWrappedText(svg, hourLabel(hour), margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, 5, '#d8e3f1', 10.5, 'middle', 700);", "addWrappedText(svg, hourLabel(hour), margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, 5, '#475569', 10.5, 'middle', 700);"),
-        ("addWrappedText(svg, channel, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, 14, '#d8e3f1', 11, 'end', 700);", "addWrappedText(svg, channel, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, 14, '#475569', 11, 'end', 700);"),
-    ]
-    for old, new in post_replacements:
-        white_html = white_html.replace(old, new)
-    white_css = """
-    body {
-      color: #0f172a;
-      background:
-        radial-gradient(circle at top right, rgba(66, 137, 242, 0.10), transparent 18%),
-        radial-gradient(circle at top left, rgba(87, 224, 207, 0.08), transparent 20%),
-        linear-gradient(180deg, #ffffff, #f3f6fb 44%, #e8eef7);
-    }
-    .hero,
-    .panel {
-      background: linear-gradient(180deg, #ffffff, #f8fbff);
-      border-color: rgba(15, 23, 42, 0.10);
-      box-shadow: 0 18px 42px rgba(15, 23, 42, 0.08);
-    }
-    .hero::after {
-      background:
-        radial-gradient(circle at top right, rgba(66, 137, 242, 0.12), transparent 24%),
-        linear-gradient(135deg, rgba(15, 23, 42, 0.03), transparent 55%);
-    }
-    .hero h1,
-    .section-head h2,
-    .chart-title,
-    .total-title {
-      color: #0f172a;
-    }
-    .hero-subtitle,
-    .status,
-    .legend,
-    .legend-scale,
-    .label,
-    .info-note {
-      color: #475569;
-    }
-    .meta-pill,
-    .upload-box,
-    .summary-line,
-    .chart-box,
-    .total-panel,
-    .total-chip,
-    .toggle-group,
-    .multi-dropdown-option {
-      border-color: rgba(15, 23, 42, 0.10);
-    }
-    .meta-pill {
-      background: rgba(255, 255, 255, 0.92);
-      color: #1e293b;
-    }
-    .upload-box,
-    .chart-box,
-    .summary-line {
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 251, 255, 0.94));
-    }
-    input,
-    select,
-    button,
-    .multi-dropdown-trigger,
-    .multi-dropdown-search {
-      background: #ffffff;
-      color: #0f172a;
-      border-color: rgba(15, 23, 42, 0.12);
-      box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.02);
-    }
-    input:hover, select:hover, button:hover,
-    input:focus, select:focus, button:focus,
-    .multi-dropdown-trigger:hover,
-    .multi-dropdown-trigger:focus,
-    .multi-dropdown-search:hover,
-    .multi-dropdown-search:focus {
-      border-color: rgba(47, 116, 255, 0.42);
-      box-shadow: 0 0 0 3px rgba(47, 116, 255, 0.10);
-    }
-    input[type="date"] {
-      background: #ffffff;
-      color: #0f172a;
-      color-scheme: light;
-      caret-color: #0f172a;
-    }
-    input[type="date"]::-webkit-datetime-edit,
-    input[type="date"]::-webkit-datetime-edit-fields-wrapper,
-    input[type="date"]::-webkit-datetime-edit-text,
-    input[type="date"]::-webkit-datetime-edit-month-field,
-    input[type="date"]::-webkit-datetime-edit-day-field,
-    input[type="date"]::-webkit-datetime-edit-year-field,
-    input[type="date"]::placeholder {
-      color: #0f172a;
-    }
-    input[type="date"]::-webkit-calendar-picker-indicator {
-      filter: none;
-      opacity: 0.8;
-    }
-    input::file-selector-button {
-      background: rgba(47, 116, 255, 0.12);
-      color: #1d4ed8;
-    }
-    .multi-dropdown-panel {
-      background: #ffffff;
-      border-color: rgba(15, 23, 42, 0.12);
-      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
-    }
-    .multi-dropdown-option {
-      background: #f8fbff;
-      color: #0f172a;
-    }
-    .toggle-group,
-    .full-btn {
-      background: rgba(15, 23, 42, 0.03);
-    }
-    .full-btn {
-      color: #0f172a;
-    }
-    .total-panel {
-      background: linear-gradient(180deg, #ffffff, #f8fbff);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
-    }
-    .total-chip {
-      background: #f8fbff;
-    }
-    .total-chip-label {
-      color: #475569;
-    }
-    .total-chip-value,
-    .summary-lines,
-    .summary-line,
-    .excluded-inline {
-      color: #0f172a;
-    }
-    .excluded-inline strong {
-      color: #7c2d12;
-    }
-    .excluded-items {
-      color: #b45309;
-    }
-    .legend-gradient {
-      border-color: rgba(15, 23, 42, 0.12);
-      background: linear-gradient(90deg, #dbeafe 0%, #93c5fd 25%, #60a5fa 50%, #3b82f6 75%, #1d4ed8 100%);
-    }
-    .panel:hover {
-      box-shadow: 0 22px 48px rgba(15, 23, 42, 0.10);
-      border-color: rgba(15, 23, 42, 0.16);
-    }
-    .panel:fullscreen, .panel:-webkit-full-screen {
-      background: linear-gradient(180deg, #ffffff, #f8fbff);
-    }
-    @media print {
-      body {
-        background: #ffffff !important;
-      }
-      .hero, .panel, .chart-box, .upload-box, .summary-line, .total-panel, .total-chip {
-        background: #ffffff !important;
-        color: #0f172a !important;
-        border-color: rgba(15, 23, 42, 0.12) !important;
-      }
-    }
-"""
-    white_html = white_html.replace("  </style>", white_css + "\n  </style>", 1)
-    return white_html
+    return source_html
 standalone_html = build_standalone_html(html)
 mobile_html = build_mobile_html(standalone_html)
 white_html = build_white_html(html)
