@@ -84,9 +84,6 @@ def build_global_filter_html() -> str:
     top_n = '<option value="10">Top 10</option><option value="20">Top 20</option>'
     return f"""    <section class="section sticky-filter-wrap" id="stickyFilterWrap">
       <div class="panel section-card sticky-filter-shell" id="stickyFilterShell">
-        <div class="section-head sticky-filter-head">
-          <h2>Global Filter Panel</h2>
-        </div>
         <div class="section-controls global-controls">
           {select_control("globalTopN", "Top N", top_n)}
           {date_control("globalStart", "Start Date")}
@@ -122,8 +119,8 @@ def build_sections_html() -> str:
     top_n = '<option value="10">Top 10</option><option value="20">Top 20</option>'
     return "\n\n".join([
         section_block("section graph1-scope", "Top Advertiser (FCT)", [select_control("g1TopN", "Top N", top_n), date_control("g1Start", "Start Date"), date_control("g1End", "End Date"), select_control("g1Channel", "Channel"), category_dropdown("g1"), reset_control("g1Reset")], "g1Chart", '        <div class="legend" id="g1Legend"></div>'),
-        section_block("section", "Top Advertiser by Channels (FCT)", [select_control("g2TopN", "Top N", top_n), date_control("g2Start", "Start Date"), date_control("g2End", "End Date"), select_control("g2Channel", "Channel"), category_dropdown("g2"), reset_control("g2Reset")], "g2Chart", '        <div class="legend" id="g2Legend"></div>', '            <div class="toggle-group">\n              <button class="toggle-btn active" id="g2BarBtn" type="button">Bar Chart</button>\n              <button class="toggle-btn" id="g2PieBtn" type="button">Pie Chart</button>\n            </div>\n'),
-        section_block("section", "Top Advertiser by Date (FCT)", [select_control("g3TopN", "Top N", top_n), date_control("g3Start", "Start Date"), date_control("g3End", "End Date"), select_control("g3Channel", "Channel"), category_dropdown("g3"), reset_control("g3Reset")], "g3Chart", '        <div class="legend" id="g3Legend"></div>'),
+        section_block("section", "Top Advertiser by Channels (FCT)", [select_control("g2TopN", "Top N", top_n), date_control("g2Start", "Start Date"), date_control("g2End", "End Date"), select_control("g2Channel", "Channel"), category_dropdown("g2"), reset_control("g2Reset")], "g2Chart", '        <div class="legend" id="g2Legend"></div>\n        <div class="chart-metric" id="g2Metric"></div>', '            <div class="toggle-group">\n              <button class="toggle-btn active" id="g2BarBtn" type="button">Bar Chart</button>\n              <button class="toggle-btn" id="g2PieBtn" type="button">Pie Chart</button>\n            </div>\n'),
+        section_block("section", "Top Advertiser by Date (FCT)", [select_control("g3TopN", "Top N", top_n), date_control("g3Start", "Start Date"), date_control("g3End", "End Date"), select_control("g3Channel", "Channel"), category_dropdown("g3"), reset_control("g3Reset")], "g3Chart", '        <div class="legend" id="g3Legend"></div>', '            <div class="toggle-group">\n              <button class="toggle-btn active" id="g3HeatmapBtn" type="button">Heatmap</button>\n              <button class="toggle-btn" id="g3BarBtn" type="button">Bar Chart</button>\n            </div>\n'),
         section_block("section", "Channel Category Overview", [select_control("g4TopN", "Category View", top_n), date_control("g4Start", "Start Date"), date_control("g4End", "End Date"), select_control("g4Channel", "Channel"), reset_control("g4Reset")], "g4Chart"),
         section_block("section", "FCT Hourly Analysis", [date_control("g5Start", "Start Date"), date_control("g5End", "End Date"), select_control("g5Channel", "Channel"), category_dropdown("g5"), select_control("g5Advertisor", "Advertiser"), select_control("g5Time", "Time", '<option value="minutes">Minutes</option><option value="seconds">Seconds</option>'), reset_control("g5Reset")], "g5Chart", '        <div class="legend-scale" id="g5Legend">\n          <span>Low AD Duration</span>\n          <div class="legend-gradient"></div>\n          <span>High AD Duration</span>\n        </div>\n        <div class="total-panel">\n          <div class="total-title">Total</div>\n          <div class="total-grid" id="g5TotalGrid"></div>\n        </div>'),
     ])
@@ -131,19 +128,19 @@ def build_state_sections_js() -> str:
     return "\n".join([
         "        g1: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },",
         "        g2: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },",
-        "        g3: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },",
+        "        g3: { topN: '10', start: '', end: '', channel: '', category: [], view: 'heat' },",
         "        g4: { topN: '10', start: '', end: '', channel: '', category: '', view: 'heat' },",
         "        g5: { start: '', end: '', channel: '', category: [], advertisor: '', time: 'minutes', view: 'heat' }",
     ])
 def build_dom_sections_js() -> str:
     section_fields = {
         "g1": ["topN", "start", "end", "channel", "category", "categoryDropdown", "categoryTrigger", "categoryValue", "categorySearch", "categoryOptions", "categoryAll", "categoryClear", "reset", "legend", "chart", "panel", "fullBtn"],
-        "g2": ["topN", "start", "end", "channel", "category", "categoryDropdown", "categoryTrigger", "categoryValue", "categorySearch", "categoryOptions", "categoryAll", "categoryClear", "reset", "legend", "chart", "panel", "fullBtn", "barBtn", "pieBtn"],
-        "g3": ["topN", "start", "end", "channel", "category", "categoryDropdown", "categoryTrigger", "categoryValue", "categorySearch", "categoryOptions", "categoryAll", "categoryClear", "reset", "legend", "chart", "panel", "fullBtn"],
+        "g2": ["topN", "start", "end", "channel", "category", "categoryDropdown", "categoryTrigger", "categoryValue", "categorySearch", "categoryOptions", "categoryAll", "categoryClear", "reset", "legend", "chart", "metric", "panel", "fullBtn", "barBtn", "pieBtn"],
+        "g3": ["topN", "start", "end", "channel", "category", "categoryDropdown", "categoryTrigger", "categoryValue", "categorySearch", "categoryOptions", "categoryAll", "categoryClear", "reset", "legend", "chart", "panel", "fullBtn", "heatmapBtn", "barBtn"],
         "g4": ["topN", "start", "end", "channel", "reset", "chart", "panel", "fullBtn"],
         "g5": ["start", "end", "channel", "category", "categoryDropdown", "categoryTrigger", "categoryValue", "categorySearch", "categoryOptions", "categoryAll", "categoryClear", "advertisor", "time", "reset", "legend", "chart", "totalGrid", "panel", "fullBtn"],
     }
-    suffix = {"topN": "TopN", "start": "Start", "end": "End", "channel": "Channel", "category": "Category", "categoryDropdown": "CategoryDropdown", "categoryTrigger": "CategoryTrigger", "categoryValue": "CategoryValue", "categorySearch": "CategorySearch", "categoryOptions": "CategoryOptions", "categoryAll": "CategoryAll", "categoryClear": "CategoryClear", "reset": "Reset", "legend": "Legend", "chart": "Chart", "fullBtn": "FullBtn", "barBtn": "BarBtn", "pieBtn": "PieBtn", "advertisor": "Advertisor", "time": "Time", "totalGrid": "TotalGrid"}
+    suffix = {"topN": "TopN", "start": "Start", "end": "End", "channel": "Channel", "category": "Category", "categoryDropdown": "CategoryDropdown", "categoryTrigger": "CategoryTrigger", "categoryValue": "CategoryValue", "categorySearch": "CategorySearch", "categoryOptions": "CategoryOptions", "categoryAll": "CategoryAll", "categoryClear": "CategoryClear", "reset": "Reset", "legend": "Legend", "chart": "Chart", "metric": "Metric", "fullBtn": "FullBtn", "barBtn": "BarBtn", "heatmapBtn": "HeatmapBtn", "pieBtn": "PieBtn", "advertisor": "Advertisor", "time": "Time", "totalGrid": "TotalGrid"}
     blocks = []
     for key, fields in section_fields.items():
         lines = [f"        {key}: {{"]
@@ -198,9 +195,9 @@ html = """<!DOCTYPE html>
     .topbar {
       display: flex;
       align-items: center;
-      justify-content: flex-end;
-      gap: 12px;
-      margin-bottom: 14px;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 8px;
       padding: 0;
       background: transparent;
       border: 0;
@@ -214,6 +211,31 @@ html = """<!DOCTYPE html>
       flex-wrap: wrap;
       gap: 8px;
       align-items: center;
+    }
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+      min-width: 0;
+    }
+    .title-block h1 {
+      margin: 0;
+      color: var(--text);
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      line-height: 1.05;
+    }
+    .title-meta {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+    .title-meta strong {
+      color: var(--text);
+      font-weight: 700;
     }
     .top-actions {
       display: flex;
@@ -241,35 +263,9 @@ html = """<!DOCTYPE html>
       border-radius: 8px;
       transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
     }
-    .hero {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr);
-      gap: 18px;
-      padding: 28px 32px;
-      align-items: flex-start;
-      position: relative;
-      overflow: hidden;
-      text-align: center;
-      z-index: 1;
-    }
-    .hero-copy,
     .top-actions {
       position: relative;
       z-index: 1;
-    }
-    .hero h1 {
-      margin: 0;
-      font-size: 42px;
-      font-weight: 900;
-      letter-spacing: 1.2px;
-      line-height: 1;
-      color: var(--text);
-    }
-    .hero-subtitle {
-      margin: 8px 0 0;
-      color: var(--muted);
-      font-size: 16px;
-      letter-spacing: 0.4px;
     }
     .meta-pill {
       display: inline-flex;
@@ -283,17 +279,6 @@ html = """<!DOCTYPE html>
       font-size: 12px;
       font-weight: 700;
       white-space: nowrap;
-    }
-    .hero-statline {
-      margin-top: 14px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      color: var(--text);
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.2px;
-      justify-self: center;
     }
     .upload-input-hidden {
       position: absolute;
@@ -369,7 +354,7 @@ html = """<!DOCTYPE html>
       display: none;
     }
     .section {
-      margin-top: 36px;
+      margin-top: 18px;
     }
     .section-head {
       display: flex;
@@ -386,13 +371,13 @@ html = """<!DOCTYPE html>
       color: var(--text);
     }
     .section-card {
-      padding: 24px;
+      padding: 20px;
     }
     .panel:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba(251, 146, 60, 0.16);
-      border-color: #fdba74;
-      background: #fff7ed;
+      transform: none;
+      box-shadow: 0 0 0 1px rgba(251, 146, 60, 0.12), 0 0 22px rgba(251, 146, 60, 0.14);
+      border-color: var(--line);
+      background: var(--panel);
     }
     .section-controls {
       display: grid;
@@ -417,24 +402,25 @@ html = """<!DOCTYPE html>
     .sticky-filter-shell {
       position: relative;
       z-index: 15;
-      background: #ffffff;
+      background: #f3f4f6;
       box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
     }
-    .sticky-filter-shell:hover,
     .chart-box:hover,
     .total-panel:hover,
     .summary-line:hover {
-      background: #fff7ed;
-      border-color: #fdba74;
-      box-shadow: 0 10px 20px rgba(251, 146, 60, 0.14);
+      background: inherit;
+      border-color: inherit;
+      box-shadow: 0 0 0 1px rgba(251, 146, 60, 0.10), 0 0 20px rgba(251, 146, 60, 0.12);
+    }
+    .sticky-filter-shell:hover {
+      background: #eceff3;
+      border-color: var(--line);
+      box-shadow: 0 0 0 1px rgba(251, 146, 60, 0.08), 0 0 18px rgba(251, 146, 60, 0.10);
     }
     .sticky-filter-shell.is-stuck {
       position: fixed;
       top: 10px;
       z-index: 60;
-    }
-    .sticky-filter-head {
-      margin-bottom: 18px;
     }
     .graph1-scope,
     .graph1-scope .label,
@@ -522,7 +508,7 @@ html = """<!DOCTYPE html>
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     .chart-actions {
       display: inline-flex;
@@ -535,6 +521,13 @@ html = """<!DOCTYPE html>
       color: var(--text);
       font-size: 18px;
       font-weight: 800;
+    }
+    .chart-metric {
+      margin-bottom: 8px;
+      color: #000000;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.4;
     }
     .toggle-group {
       display: inline-flex;
@@ -576,8 +569,8 @@ html = """<!DOCTYPE html>
     }
     .pdf-btn {
       width: auto;
-      min-width: 36px;
-      height: 36px;
+      min-width: 28px;
+      height: 28px;
       border-radius: 8px;
       padding: 0;
       background: #ffffff;
@@ -595,9 +588,9 @@ html = """<!DOCTYPE html>
       background: #ffffff;
     }
     .icon-btn {
-      width: 36px;
-      min-width: 36px;
-      height: 36px;
+      width: 28px;
+      min-width: 28px;
+      height: 28px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -606,8 +599,8 @@ html = """<!DOCTYPE html>
       cursor: pointer;
     }
     .icon-btn svg {
-      width: 18px;
-      height: 18px;
+      width: 14px;
+      height: 14px;
       fill: none;
       stroke: currentColor;
       stroke-width: 1.9;
@@ -694,7 +687,7 @@ html = """<!DOCTYPE html>
       height: 12px;
       border-radius: 999px;
       border: 1px solid var(--line);
-      background: linear-gradient(90deg, #1a2434 0%, #23496f 25%, #2d73a9 50%, #3996d9 75%, #73c5ff 100%);
+      background: linear-gradient(90deg, #dbeafe 0%, #bfdbfe 35%, #93c5fd 68%, #60a5fa 100%);
     }
     .legend-item {
       display: inline-flex;
@@ -714,17 +707,18 @@ html = """<!DOCTYPE html>
       overflow: visible;
     }
     .excluded-inline {
-      color: var(--text);
+      color: #7f1d1d;
       font-size: 14px;
-      line-height: 1.7;
+      line-height: 1.5;
       letter-spacing: 0.2px;
-    }
-    .excluded-inline strong {
-      color: var(--text);
+      padding: 12px 14px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
     }
     .excluded-items {
-      color: var(--muted);
-      font-weight: 700;
+      color: #374151;
+      font-weight: 400;
     }
     .excluded-inline,
     .summary-line,
@@ -743,10 +737,11 @@ html = """<!DOCTYPE html>
     }
     .summary-lines {
       display: grid;
-      gap: 10px;
+      gap: 8px;
       color: var(--text);
       font-size: 14px;
       line-height: 1.45;
+      font-family: Calibri, "Segoe UI", Arial, sans-serif;
     }
     .summary-line {
       position: relative;
@@ -754,7 +749,7 @@ html = """<!DOCTYPE html>
       border: 1px solid var(--line);
       border-radius: 8px;
       background: #ffffff;
-      font-weight: 700;
+      font-weight: 400;
       white-space: normal;
       overflow: hidden;
       text-overflow: initial;
@@ -774,8 +769,11 @@ html = """<!DOCTYPE html>
       border-radius: 999px;
       background: #2563eb;
     }
+    .summary-line strong {
+      font-weight: 400;
+    }
     .info-note {
-      margin-top: 14px;
+      margin-top: 10px;
       color: var(--muted);
       font-size: 13px;
       line-height: 1.6;
@@ -841,10 +839,15 @@ html = """<!DOCTYPE html>
       }
       .topbar {
         flex-direction: column;
-        align-items: flex-end;
+        align-items: stretch;
+      }
+      .title-block {
+        align-items: flex-start;
       }
       .top-actions {
         align-items: flex-end;
+        justify-content: space-between;
+        flex-wrap: wrap;
       }
       .action-row {
         justify-content: flex-end;
@@ -854,19 +857,20 @@ html = """<!DOCTYPE html>
         width: auto;
         justify-content: flex-end;
       }
-      .hero {
-        padding: 28px 24px;
-      }
     }
   </style>
 </head>
 <body>
   <div class="page">
-    <section class="topbar">
-      <div class="top-meta">
-        <div class="meta-pill">📅 <span id="reportDateText">__REPORT_DATE__</span>  🕒 <span id="reportTimeText">__GENERATED_AT__</span></div>
+    <section class="topbar" id="dashboardHeaderSection">
+      <div class="title-block">
+        <h1>CTV FCT Dashboard</h1>
+        <div class="title-meta">Total Records: <strong id="totalRecordsText">0</strong></div>
       </div>
       <div class="top-actions">
+        <div class="top-meta">
+          <div class="meta-pill">📅 <span id="reportDateText">__REPORT_DATE__</span>  🕒 <span id="reportTimeText">__GENERATED_AT__</span></div>
+        </div>
         <div class="action-row" id="headerActionRow">
           <div class="header-icon-group">
             <input class="upload-input-hidden" id="fileUpload" type="file" accept=".csv">
@@ -891,22 +895,12 @@ html = """<!DOCTYPE html>
         <div class="status" id="statusText">Choose a CSV file to generate the dashboard.</div>
       </div>
     </section>
-    <section class="hero">
-      <div class="hero-copy">
-        <h1>CTV FCT Dashboard</h1>
-        <p class="hero-subtitle">Advertising Analytics Dashboard</p>
-        <div class="hero-statline">
-          <span>Total Records:</span>
-          <strong id="totalRecordsText">0</strong>
-        </div>
-      </div>
-    </section>
     <section class="section">
       <div class="excluded-inline">
-        <strong>Excluded Categories:</strong>
         <span class="excluded-items" id="excludedChips"></span>
       </div>
     </section>
+__GLOBAL_FILTER_HTML__
     <section class="section" id="dashboardSummarySection">
       <div class="panel section-card">
         <div class="section-head">
@@ -915,7 +909,6 @@ html = """<!DOCTYPE html>
         <div class="summary-lines" id="summaryLines"></div>
       </div>
     </section>
-__GLOBAL_FILTER_HTML__
 __SECTIONS_HTML__
   <script>
     const PAYLOAD = __PAYLOAD_JSON__;
@@ -932,7 +925,7 @@ __SECTIONS_HTML__
       g1: ['#3b82f6', '#22c55e', '#ef4444', '#a855f7'],
       g2: ['#3b82f6', '#22c55e', '#ef4444', '#a855f7'],
       g3: ['#1d4ed8', '#0f766e', '#b45309', '#7c3aed', '#be123c', '#0369a1', '#166534', '#7f1d1d'],
-      heat: ['#1a2434', '#23496f', '#2d73a9', '#3996d9', '#73c5ff']
+      heat: ['#fff7cc', '#ffe699', '#ffd966', '#f4c542', '#e6a700']
     };
     const state = {
       rawRows: [],
@@ -960,6 +953,7 @@ __STATE_SECTIONS_JS__
       totalRecordsText: document.getElementById('totalRecordsText'),
       excludedChips: document.getElementById('excludedChips'),
       summaryLines: document.getElementById('summaryLines'),
+      headerSection: document.getElementById('dashboardHeaderSection'),
       summarySection: document.getElementById('dashboardSummarySection'),
       stickyFilterWrap: document.getElementById('stickyFilterWrap'),
       stickyFilterShell: document.getElementById('stickyFilterShell'),
@@ -987,6 +981,16 @@ __DOM_SECTIONS_JS__
     const SECTION_KEYS = ['g1', 'g2', 'g3', 'g4', 'g5'];
     const CATEGORY_SECTION_KEYS = ['g1', 'g2', 'g3', 'g5'];
     function formatNumber(value) { return numberFormat.format(value || 0); }
+    function sentenceCaseName(value) {
+      const raw = String(value || '').trim().toLowerCase();
+      return raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : '';
+    }
+    function titleCaseName(value) {
+      return String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/\b([a-z])/g, letter => letter.toUpperCase());
+    }
     function activeTimeUnit() { return state.global.time || 'minutes'; }
     function formatDurationValue(value, withUnit = false) {
       const unit = activeTimeUnit();
@@ -1123,7 +1127,7 @@ __DOM_SECTIONS_JS__
     function channelHeatColor(channel, value, maxValue) {
       const scale = Math.max(0.18, Math.min(1, value / Math.max(maxValue, 1)));
       const rgb = hexToRgb(channelColor(channel, 'g2'));
-      const alpha = 0.16 + scale * 0.78;
+      const alpha = 0.10 + scale * 0.42;
       return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha.toFixed(3)})`;
     }
     function parseHourValue(value) {
@@ -1221,10 +1225,10 @@ __DOM_SECTIONS_JS__
     function updateStickyFilterPosition() {
       const wrap = dom.stickyFilterWrap;
       const shell = dom.stickyFilterShell;
-      const summary = dom.summarySection;
-      if (!wrap || !shell || !summary) return;
-      const summaryBottom = summary.getBoundingClientRect().bottom;
-      const shouldStick = summaryBottom <= 10;
+      const header = dom.headerSection;
+      if (!wrap || !shell || !header) return;
+      const headerBottom = header.getBoundingClientRect().bottom;
+      const shouldStick = headerBottom <= 10;
       if (shouldStick) {
         const rect = wrap.getBoundingClientRect();
         wrap.classList.add('is-stuck');
@@ -1674,6 +1678,7 @@ __DOM_SECTIONS_JS__
       renderLegend(dom.sections.g1.legend, [{ label: metricLabel(), color: chartPalettes.g1[0] }]);
     }
     function drawGraph2Bar(rows) {
+      if (dom.sections.g2.metric) dom.sections.g2.metric.textContent = '';
       const topAdvertisors = aggregateAdvertisors(rows).slice(0, Number.parseInt(state.sections.g2.topN, 10));
       const matrix = buildAdvertisorChannelMatrix(rows, topAdvertisors);
       if (!matrix.rows.length || !matrix.channels.length) {
@@ -1737,6 +1742,7 @@ __DOM_SECTIONS_JS__
       if (!distribution.length) {
         drawEmpty(dom.sections.g2.chart, 'No data available for selected filters');
         dom.sections.g2.legend.innerHTML = '';
+        if (dom.sections.g2.metric) dom.sections.g2.metric.textContent = '';
         return;
       }
       const { svg, width, height } = makeSvg(dom.sections.g2.chart);
@@ -1745,6 +1751,9 @@ __DOM_SECTIONS_JS__
       const radius = Math.min(width, height) * 0.31;
       const innerRadius = radius * 0.42;
       const total = distribution.reduce((sum, item) => sum + item.total, 0) || 1;
+      if (dom.sections.g2.metric) {
+        dom.sections.g2.metric.textContent = `Total advertisement duration: ${formatDurationValue(total, true)}`;
+      }
       let startAngle = -Math.PI / 2;
       function polar(r, angle) {
         return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
@@ -1774,18 +1783,12 @@ __DOM_SECTIONS_JS__
         addWrappedText(svg, `${item.channel} ${formatDurationValue(item.total, true)} ${(fraction * 100).toFixed(0)}%`, label.x, label.y, 16, '#1f2937', 10, mid > Math.PI / 2 || mid < -Math.PI / 2 ? 'end' : 'start', 700);
         startAngle = endAngle;
       });
-      const centerTop = svgEl('text', { x: cx, y: cy - 8, fill: '#1f2937', 'font-size': 17, 'font-weight': 800, 'text-anchor': 'middle' });
-      centerTop.textContent = metricLabel();
-      svg.appendChild(centerTop);
-      const centerValue = svgEl('text', { x: cx, y: cy + 16, fill: '#6b7280', 'font-size': 15, 'font-weight': 700, 'text-anchor': 'middle' });
-      centerValue.textContent = formatDurationValue(total, true);
-      svg.appendChild(centerValue);
       renderLegend(dom.sections.g2.legend, distribution.map(item => ({
         label: item.channel,
         color: channelColor(item.channel, 'g2')
       })));
     }
-    function drawGraph3(rows) {
+    function drawGraph3Bar(rows) {
       const topAdvertisors = aggregateAdvertisors(rows).slice(0, Number.parseInt(state.sections.g3.topN, 10));
       const matrix = buildAdvertisorDateMatrix(rows, topAdvertisors);
       if (!matrix.rows.length || !topAdvertisors.length) {
@@ -1838,6 +1841,109 @@ __DOM_SECTIONS_JS__
         label: item.advertisor,
         color: chartPalettes.g3[idx % chartPalettes.g3.length]
       })));
+    }
+    function drawGraph3Heatmap(rows) {
+      const topAdvertisors = aggregateAdvertisors(rows).slice(0, Number.parseInt(state.sections.g3.topN, 10));
+      const matrix = buildAdvertisorDateMatrix(rows, topAdvertisors);
+      if (!matrix.rows.length || !topAdvertisors.length) {
+        drawEmpty(dom.sections.g3.chart, 'No data available for selected filters');
+        dom.sections.g3.legend.innerHTML = '';
+        return;
+      }
+      const { svg, width, height } = makeSvg(dom.sections.g3.chart);
+      const margin = { top: 24, right: 28, bottom: 92, left: 160 };
+      const plotW = width - margin.left - margin.right;
+      const plotH = height - margin.top - margin.bottom;
+      const maxValue = Math.max(...matrix.rows.flatMap(row => topAdvertisors.map(item => row.values[item.advertisor] || 0)), 1);
+      const cellW = plotW / Math.max(matrix.rows.length, 1);
+      const cellH = plotH / Math.max(topAdvertisors.length, 1);
+      const backgroundFill = '#ffffff';
+      const xAxisLabel = svgEl('text', {
+        x: margin.left + plotW / 2,
+        y: height - 10,
+        fill: '#1f2937',
+        'font-size': 17,
+        'font-weight': 800,
+        'text-anchor': 'middle'
+      });
+      xAxisLabel.textContent = 'Date';
+      svg.appendChild(xAxisLabel);
+      const yAxisLabel = svgEl('text', {
+        x: 28,
+        y: margin.top + plotH / 2,
+        fill: '#1f2937',
+        'font-size': 17,
+        'font-weight': 800,
+        'text-anchor': 'middle',
+        transform: `rotate(-90 28 ${margin.top + plotH / 2})`
+      });
+      yAxisLabel.textContent = 'Advertiser';
+      svg.appendChild(yAxisLabel);
+      for (let gi = 0; gi <= matrix.rows.length; gi++) {
+        const x = margin.left + gi * cellW;
+        svg.appendChild(svgEl('line', {
+          x1: x,
+          y1: margin.top,
+          x2: x,
+          y2: margin.top + plotH,
+          stroke: '#e5e7eb',
+          'stroke-width': 1
+        }));
+      }
+      for (let ri = 0; ri <= topAdvertisors.length; ri++) {
+        const y = margin.top + ri * cellH;
+        svg.appendChild(svgEl('line', {
+          x1: margin.left,
+          y1: y,
+          x2: margin.left + plotW,
+          y2: y,
+          stroke: '#e5e7eb',
+          'stroke-width': 1
+        }));
+      }
+      matrix.rows.forEach((row, ci) => {
+        addWrappedText(svg, formatDate(row.date), margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, 10, '#1f2937', 10.5, 'middle', 700);
+      });
+      topAdvertisors.forEach((item, ri) => {
+        addWrappedText(svg, item.advertisor, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, 16, '#1f2937', 11, 'end', 700);
+      });
+      topAdvertisors.forEach((item, ri) => {
+        matrix.rows.forEach((row, ci) => {
+          const value = row.values[item.advertisor] || 0;
+          const x = margin.left + ci * cellW;
+          const y = margin.top + ri * cellH;
+          const rect = svgEl('rect', {
+            x: x + 1.5,
+            y: y + 1.5,
+            width: Math.max(cellW - 3, 2),
+            height: Math.max(cellH - 3, 2),
+            rx: 3,
+            fill: value ? colorForValue(value, maxValue) : backgroundFill,
+            stroke: value ? '#e5e7eb' : '#ffffff',
+            'stroke-width': 1
+          });
+          const title = svgEl('title');
+          title.textContent = `Advertiser: ${item.advertisor}\nDate: ${formatDate(row.date)}\n${metricLabel()}: ${formatDurationValue(value, true)}\nChannel: ${state.global.channel || 'All'}\nCategory: ${(state.global.category || []).length ? state.global.category.join(', ') : 'All'}`;
+          rect.appendChild(title);
+          svg.appendChild(rect);
+          if (value && cellW >= 52 && cellH >= 28) {
+            const label = svgEl('text', {
+              x: x + cellW / 2,
+              y: y + cellH * 0.58,
+              fill: '#000000',
+              'font-size': 11,
+              'font-weight': 700,
+              'text-anchor': 'middle'
+            });
+            label.textContent = formatDurationValue(value);
+            svg.appendChild(label);
+          }
+        });
+      });
+      renderLegend(dom.sections.g3.legend, [
+        { label: 'Low Duration', color: chartPalettes.heat[1] },
+        { label: 'High Duration', color: chartPalettes.heat[4] }
+      ]);
     }
     function drawGraph4(rows) {
       const matrix = buildHeatmapMatrix(rows, Number.parseInt(state.sections.g4.topN, 10));
@@ -2013,7 +2119,7 @@ __DOM_SECTIONS_JS__
       `).join('');
     }
     function renderExcluded() {
-      dom.excludedChips.textContent = PAYLOAD.excluded.join(' • ');
+      dom.excludedChips.textContent = `Excluded categories: ${PAYLOAD.excluded.map(sentenceCaseName).join(' • ')}`;
     }
     function formatPercent(value) {
       return `${(value || 0).toFixed(2)}%`;
@@ -2048,25 +2154,18 @@ __DOM_SECTIONS_JS__
       return [...new Set(values)];
     }
     function getDashboardSummaryRows() {
-      return state.cleanedRows.filter(row => {
-        if (state.global.channel && row.channel !== state.global.channel) return false;
-        if (state.global.category.length && !state.global.category.includes(row.category)) return false;
-        if (state.global.advertisor && row.product !== state.global.advertisor) return false;
-        if (state.global.start && row.date && row.date < state.global.start) return false;
-        if (state.global.end && row.date && row.date > state.global.end) return false;
-        return true;
-      });
+      return state.cleanedRows;
     }
     function renderSummary() {
       const rows = getDashboardSummaryRows();
       const unitWord = activeTimeUnit() === 'minutes' ? 'minutes' : 'seconds';
       if (!rows.length) {
         dom.summaryLines.innerHTML = [
-          `<strong>Total advertisement duration:</strong> 0 ${unitWord} distributed across the filtered dataset.`,
-          '<strong>Top 5 highest performing categories:</strong> No category data is available for the current selection.',
-          '<strong>Top 5 advertisers:</strong> No advertiser data is available for the current selection.',
-          '<strong>Key trend:</strong> No trend is available because the filtered dataset is empty.',
-          '<strong>Additional insight:</strong> Apply a broader date range or remove filters to restore comparable dashboard insights.'
+          `Total advertisement duration: 0 ${unitWord} distributed across the filtered dataset.`,
+          'Top 5 highest performing categories: No category data is available for the current selection.',
+          'Top 5 advertisers: No advertiser data is available for the current selection.',
+          'Key trend: No trend is available because the filtered dataset is empty.',
+          'Additional insight: Apply a broader date range or remove filters to restore comparable dashboard insights.'
         ].map(line => `<div class="summary-line">${line}</div>`).join('');
         renderHeaderStats();
         return;
@@ -2083,14 +2182,14 @@ __DOM_SECTIONS_JS__
       const topChannelPct = total ? (topChannel.total / total) * 100 : 0;
       const topFiveCategories = categories
         .slice(0, 5)
-        .map(item => `${item.category} (<strong>${formatDurationValue(item.total, true)}</strong>)`)
+        .map(item => `${sentenceCaseName(item.category)} (${formatDurationValue(item.total, true)})`)
         .join(', ');
       const topFiveAdvertisers = advertisers
         .slice(0, 5)
-        .map(item => `${item.advertisor} (<strong>${formatDurationValue(item.total, true)}</strong>)`)
+        .map(item => `${titleCaseName(item.advertisor)} (${formatDurationValue(item.total, true)})`)
         .join(', ');
       const channelDistributionInline = channelDistribution
-        .map(item => `${item.channel} (${formatDurationValue(item.total, true)})`)
+        .map(item => `${titleCaseName(item.channel)} (${formatDurationValue(item.total, true)})`)
         .join(', ');
       const topFiveAdvertiserTotal = advertisers.slice(0, 5).reduce((sum, item) => sum + item.total, 0);
       const topFiveCategoryTotal = categories.slice(0, 5).reduce((sum, item) => sum + item.total, 0);
@@ -2098,11 +2197,11 @@ __DOM_SECTIONS_JS__
       const categoryShare = total ? (topFiveCategoryTotal / total) * 100 : 0;
       const channelLeadMultiple = lowestChannel.total ? topChannel.total / lowestChannel.total : 0;
       const lines = [
-        `<strong>Total advertisement duration:</strong> ${formatDurationValue(total, true)} distributed across ${channelDistributionInline}.`,
-        `<strong>Top 5 highest performing categories:</strong> ${topFiveCategories}.`,
-        `<strong>Top 5 advertisers:</strong> ${topFiveAdvertisers}.`,
-        `<strong>Key trend:</strong> ${topChannel.channel} is the strongest performing channel with <strong>${formatDurationValue(topChannel.total, true)} (${formatPercent(topChannelPct)})</strong> of total advertisement duration, while <strong>${topCategory.category}</strong> remains the leading category contributing <strong>${formatPercent(topCategoryPct)}</strong> of the overall advertisement duration.`,
-        `<strong>Additional insight:</strong> The top five advertisers contribute <strong>${formatPercent(advertiserShare)}</strong> of total duration, the top five categories contribute <strong>${formatPercent(categoryShare)}</strong>, and ${lowestChannel.total ? `${topChannel.channel} airs ${channelLeadMultiple.toFixed(2)}x the ad time of ${lowestChannel.channel}` : 'channel concentration remains visible in the filtered data'}.`
+        `Total advertisement duration: ${formatDurationValue(total, true)} distributed across ${channelDistributionInline}.`,
+        `Top 5 highest performing categories: ${topFiveCategories}.`,
+        `Top 5 advertisers: ${topFiveAdvertisers}.`,
+        `Key trend: ${titleCaseName(topChannel.channel)} is the strongest performing channel with ${formatDurationValue(topChannel.total, true)} (${formatPercent(topChannelPct)}) of total advertisement duration, while ${sentenceCaseName(topCategory.category)} remains the leading category contributing ${formatPercent(topCategoryPct)} of the overall advertisement duration.`,
+        `Additional insight: The top five advertisers contribute ${formatPercent(advertiserShare)} of total duration, the top five categories contribute ${formatPercent(categoryShare)}, and ${lowestChannel.total ? `${titleCaseName(topChannel.channel)} airs ${channelLeadMultiple.toFixed(2)}x the ad time of ${titleCaseName(lowestChannel.channel)}` : 'channel concentration remains visible in the filtered data'}.`
       ];
       dom.summaryLines.innerHTML = lines.map(line => `<div class="summary-line">${line}</div>`).join('');
       renderHeaderStats();
@@ -2168,7 +2267,9 @@ __DOM_SECTIONS_JS__
       }).join('');
       const styles = document.querySelector('style').outerHTML;
       printWindow.document.write(`<!DOCTYPE html><html><head><title>${title}</title>${styles}<style>
+        @page { size: A5 portrait; margin: 8mm; }
         body { background: #ffffff !important; }
+        .pdf-scale { transform: scale(0.42); transform-origin: top left; width: 238.095%; }
         .page.pdf-export { max-width: none; padding: 0; }
         .pdf-page { min-height: 100vh; padding: 32px; page-break-after: always; break-after: page; display: flex; flex-direction: column; gap: 18px; }
         .pdf-page:last-child { page-break-after: auto; break-after: auto; }
@@ -2185,7 +2286,7 @@ __DOM_SECTIONS_JS__
           .pdf-page { min-height: auto; }
           .pdf-page .chart-box { height: 620px !important; min-height: 620px !important; }
         }
-      </style></head><body><div class="page pdf-export">
+      </style></head><body><div class="pdf-scale"><div class="page pdf-export">
       <section class="pdf-page pdf-cover">
         <section class="hero">
           <div class="hero-copy">
@@ -2214,7 +2315,7 @@ __DOM_SECTIONS_JS__
         <div class="pdf-filter-grid">${getActiveFiltersPageMarkup()}</div>
       </section>
       ${graphPages}
-      </div></body></html>`);
+      </div></div></body></html>`);
       printWindow.document.close();
       printWindow.focus();
       setTimeout(() => printWindow.print(), 300);
@@ -2229,7 +2330,13 @@ __DOM_SECTIONS_JS__
           drawGraph2Bar(rows);
         }
       }
-      if (sectionKey === 'g3') drawGraph3(rows);
+      if (sectionKey === 'g3') {
+        if (state.sections.g3.view === 'bar') {
+          drawGraph3Bar(rows);
+        } else {
+          drawGraph3Heatmap(rows);
+        }
+      }
       if (sectionKey === 'g4') drawGraph4(rows);
       if (sectionKey === 'g5') drawGraph5(rows);
     }
@@ -2325,7 +2432,9 @@ __DOM_SECTIONS_JS__
           dom.sections.g2.pieBtn.classList.remove('active');
         }
         if (sectionKey === 'g3') {
-          state.sections.g3.view = 'bar';
+          state.sections.g3.view = 'heat';
+          dom.sections.g3.heatmapBtn.classList.add('active');
+          dom.sections.g3.barBtn.classList.remove('active');
         }
         if (sectionKey === 'g5') {
           controls.advertisor.value = '';
@@ -2382,6 +2491,18 @@ __DOM_SECTIONS_JS__
           dom.sections.g2.barBtn.classList.remove('active');
           renderSection('g2');
         });
+        dom.sections.g3.heatmapBtn.addEventListener('click', () => {
+          state.sections.g3.view = 'heat';
+          dom.sections.g3.heatmapBtn.classList.add('active');
+          dom.sections.g3.barBtn.classList.remove('active');
+          renderSection('g3');
+        });
+        dom.sections.g3.barBtn.addEventListener('click', () => {
+          state.sections.g3.view = 'bar';
+          dom.sections.g3.barBtn.classList.add('active');
+          dom.sections.g3.heatmapBtn.classList.remove('active');
+          renderSection('g3');
+        });
         document.addEventListener('fullscreenchange', () => {
           updateFullButtons();
           renderAll();
@@ -2403,6 +2524,10 @@ __DOM_SECTIONS_JS__
       syncGlobalState();
       applyGlobalStateToSections();
       state.initialized = true;
+      if (dom.sections.g3.heatmapBtn && dom.sections.g3.barBtn) {
+        dom.sections.g3.heatmapBtn.classList.toggle('active', state.sections.g3.view === 'heat');
+        dom.sections.g3.barBtn.classList.toggle('active', state.sections.g3.view === 'bar');
+      }
       updateFullButtons();
       updateStickyFilterPosition();
     }
