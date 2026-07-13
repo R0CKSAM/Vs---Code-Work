@@ -9,12 +9,18 @@ $CHARTJS_TAG
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--ink:#172033;--muted:#64748b;--panel:#fff;--line:#d8e1ee;--brand:#173b5c;--brand2:#1f6f8b;--accent:#c9a227;--bg:#eef3f8}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;-webkit-text-size-adjust:100%}
+body.modal-open{position:fixed;width:100%;left:0;right:0;overflow:hidden;overscroll-behavior:none}
 .topbar{background:var(--brand);color:#fff;padding:18px 30px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;border-bottom:4px solid var(--accent);box-shadow:0 8px 22px rgba(15,23,42,.16)}
 .title-block{display:flex;flex-direction:column;gap:3px}
 .topbar h1{font-size:20px;font-weight:700;letter-spacing:0}.topbar .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#cbd5e1;font-weight:700}.header-meta{display:flex;flex-direction:column;align-items:flex-end;gap:3px;text-align:right;max-width:min(980px,72vw);line-height:1.35}.topbar .sub{font-size:12px;color:#dbe7f2}.range-pill{font-size:12px;font-weight:700;color:#fff}
 #main{padding:22px 28px;max-width:1760px;margin:0 auto}
-.sticky-controls{position:sticky;top:0;z-index:45;background:rgba(238,243,248,.96);backdrop-filter:blur(8px);padding:10px 0 2px;margin:-10px 0 16px}
-.sticky-controls .meta-strip,.sticky-controls .filter-group{margin-bottom:8px}
+.sticky-controls{position:relative;z-index:45;background:#eef3f8;padding:8px 0;margin:0 0 16px;border-bottom:1px solid rgba(216,225,238,.9);transition:box-shadow .18s ease,background-color .18s ease,padding .18s ease}
+.sticky-controls.is-fixed{position:fixed;top:0;left:0;right:0;width:100%;margin:0;padding:10px 28px;background:#eef3f8;border-bottom:1px solid #d8e1ee;box-shadow:0 10px 26px rgba(15,23,42,.16);animation:stickyHeaderIn .16s ease-out}
+.sticky-spacer{display:none;height:0}
+.sticky-spacer.active{display:block}
+.sticky-controls .filter-group{margin:0 auto;max-width:1760px;transition:box-shadow .18s ease,border-color .18s ease}
+.sticky-controls.is-fixed .filter-group{box-shadow:0 2px 8px rgba(15,23,42,.08);border-color:#cbd5e1}
+@keyframes stickyHeaderIn{from{opacity:.92;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 .meta-strip{background:var(--panel);border-radius:8px;border:1px solid var(--line);padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px 18px;font-size:12px;color:#475569;box-shadow:0 1px 2px rgba(15,23,42,.05)}
 .meta-items{display:flex;flex-wrap:wrap;gap:8px 26px;align-items:center}
 .meta-strip b{color:var(--ink);font-weight:700}
@@ -39,13 +45,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .chart-days{color:#94a3b8;font-weight:500;font-size:11px}
 .expand-btn{border:1px solid #cbd5e1;background:#fff;color:#1F3864;border-radius:5px;padding:3px 8px;font-size:10px;font-weight:800;cursor:pointer}
 .expand-btn:hover{background:#edf2f7;border-color:#94a3b8}
-.modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:50;display:none;align-items:center;justify-content:center;padding:22px}
+.modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:50;display:none;align-items:center;justify-content:center;padding:22px;overscroll-behavior:contain}
 .modal-backdrop.open{display:flex}
 .chart-modal{width:min(1180px,96vw);height:min(760px,92vh);background:#fff;border-radius:10px;border:1px solid #d8e1ee;box-shadow:0 24px 80px rgba(15,23,42,.28);display:flex;flex-direction:column;overflow:hidden}
 .modal-top{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:14px;background:#f8fafc}
 .modal-title{font-size:16px;font-weight:800;color:#1F3864}
 .modal-close{border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:6px;padding:5px 10px;font-weight:800;cursor:pointer}
-.modal-body{padding:14px 18px 18px;display:flex;flex-direction:column;gap:12px;min-height:0;flex:1}
+.modal-body{padding:14px 18px 18px;display:flex;flex-direction:column;gap:12px;min-height:0;flex:1;overflow:auto;overscroll-behavior:contain}
 .modal-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .modal-controls input[type="date"]{border:1px solid #cbd5e1;padding:5px 7px;border-radius:5px;font-size:11px;font-family:inherit;color:#1F3864;font-weight:600}
 .modal-range{font-size:11px;color:#64748b;font-weight:700;margin-left:auto}
@@ -99,12 +105,13 @@ th.b{background:#1F3864} th.g{background:#2e6b10} th.m{background:#7c3aed} th.a{
 @media (min-width:1500px){.cbox{flex-basis:calc((100% - 32px)/3)}.tbl-c{max-height:720px}}
 @media (min-width:1900px){#main{max-width:1880px}.cbox{flex-basis:calc((100% - 64px)/5);min-width:0}.cbox canvas{height:clamp(190px,23vh,270px)!important}.tbl-c{max-height:760px}body{font-size:14px}}
 @media (min-width:2200px){#main{max-width:2200px}.cbox canvas{height:clamp(220px,24vh,310px)!important}.tbl-c{max-height:880px}.chart-modal{width:min(1500px,94vw);height:min(900px,92vh)}}
-@media (max-width:1050px){#main{padding:16px}.sticky-controls{max-height:58vh;overflow:auto;margin:-8px 0 14px}.kpi-grid{grid-template-columns:repeat(auto-fit,minmax(155px,1fr))}.cbox{flex-basis:100%;min-width:0}.topbar{padding:16px 18px}.topbar h1{font-size:18px}.header-meta{align-items:flex-start;max-width:100%;text-align:left}.meta-strip{align-items:flex-start}.filter-group{width:100%;overflow-x:visible;white-space:normal;flex-wrap:wrap}.control-row{align-items:stretch}}
+@media (max-width:1050px){#main{padding:16px}.sticky-controls{max-height:none;overflow:visible;margin:0 0 14px}.sticky-controls.is-fixed{left:0;right:0;width:100%;padding:8px 16px}.kpi-grid{grid-template-columns:repeat(auto-fit,minmax(155px,1fr))}.cbox{flex-basis:100%;min-width:0}.topbar{padding:16px 18px}.topbar h1{font-size:18px}.header-meta{align-items:flex-start;max-width:100%;text-align:left}.meta-strip{align-items:flex-start}.filter-group{width:100%;overflow-x:visible;white-space:normal;flex-wrap:wrap}.control-row{align-items:stretch}}
 @media (max-width:760px){.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi-section-head{align-items:flex-start;flex-direction:column}.kpi-section-head span{text-align:left}.cval{font-size:20px}.modal-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.modal-range{width:100%;margin-left:0}.chart-modal{height:94vh}.modal-backdrop{padding:10px}}
 @media (max-width:420px){.card{padding:9px 7px}.clbl{font-size:8.8px}.cval{font-size:18px}.csub{font-size:8.8px}}
 @media print{body{background:#fff}.topbar,.meta-strip,.card,.cbox,.table-wrap{box-shadow:none}.filter-group{display:none}.tbl-c{max-height:none;overflow:visible}}
 html,body{max-width:100%;overflow-x:hidden}
 #main,.topbar,.sticky-controls,.meta-strip,.filter-group,.cards,.cbox,.table-wrap,.tbl-c,.chart-modal,.modal-body,.modal-chart-wrap{max-width:100%;min-width:0}
+.sticky-controls.is-fixed{max-width:none}
 .filter-group{overflow-x:visible!important;white-space:normal!important;flex-wrap:wrap!important}
 .tbl-c,.table-wrap{overflow-x:hidden!important;overflow-y:auto}
 table{min-width:0!important;max-width:100%;table-layout:fixed}
@@ -123,10 +130,10 @@ td:first-child{position:static}
   </div>
 </div>
 <div id="main">
+  <div class="meta-strip" id="metaWrap">
+    <div class="meta-items" id="metaStrip"></div>
+  </div>
   <div class="sticky-controls">
-    <div class="meta-strip" id="metaWrap">
-      <div class="meta-items" id="metaStrip"></div>
-    </div>
     <div class="filter-group">
        <span>Source</span>
        <button class="btn-preset" id="srcAll" onclick="setSourceFilter('all')">ALL</button>
@@ -151,6 +158,7 @@ td:first-child{position:static}
        <button class="btn-preset" id="activeEndSyncBtn" onclick="syncActiveEndToRange()">Range End</button>
     </div>
   </div>
+  <div id="stickySpacer" class="sticky-spacer"></div>
   <div class="control-row">
     <div class="cards" id="cards"></div>
   </div>
@@ -429,6 +437,43 @@ if (visibleMeta.length > 0) {
 } else {
   document.getElementById('metaWrap').style.display = 'none';
 }
+
+const stickyControls = document.querySelector('.sticky-controls');
+const stickySpacer = document.getElementById('stickySpacer');
+let stickyTriggerY = 0;
+
+function measureStickyHeader() {
+  if (!stickyControls || !stickySpacer) return;
+  const wasFixed = stickyControls.classList.contains('is-fixed');
+  if (wasFixed) {
+    stickyControls.classList.remove('is-fixed');
+    stickySpacer.classList.remove('active');
+    stickySpacer.style.height = '0px';
+  }
+  stickyTriggerY = stickyControls.getBoundingClientRect().top + window.scrollY;
+  updateStickyHeader();
+}
+
+function updateStickyHeader() {
+  if (!stickyControls || !stickySpacer) return;
+  const shouldFix = window.scrollY >= stickyTriggerY;
+  if (shouldFix) {
+    if (!stickyControls.classList.contains('is-fixed')) {
+      stickySpacer.style.height = `${stickyControls.offsetHeight + 16}px`;
+      stickySpacer.classList.add('active');
+      stickyControls.classList.add('is-fixed');
+    }
+  } else {
+    stickyControls.classList.remove('is-fixed');
+    stickySpacer.classList.remove('active');
+    stickySpacer.style.height = '0px';
+  }
+}
+
+window.addEventListener('scroll', updateStickyHeader, {passive: true});
+window.addEventListener('resize', measureStickyHeader);
+window.addEventListener('load', measureStickyHeader);
+setTimeout(measureStickyHeader, 250);
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let viewRows = [...completeRows];
@@ -1111,6 +1156,7 @@ function _applyCustomDate() {
 let modalChart = null;
 let modalChartId = null;
 let modalRows = [];
+let modalScrollY = 0;
 
 function formatMetric(k, v) {
   if (k === 'bytes')        return fmtData(v);
@@ -1118,25 +1164,50 @@ function formatMetric(k, v) {
   return fmt(Math.round(v));
 }
 
+function lockPageScroll() {
+  if (document.body.classList.contains('modal-open')) return;
+  modalScrollY = window.scrollY || document.documentElement.scrollTop || 0;
+  document.body.style.top = '-' + modalScrollY + 'px';
+  document.body.classList.add('modal-open');
+}
+
+function unlockPageScroll() {
+  const restoreY = modalScrollY || 0;
+  document.body.classList.remove('modal-open');
+  document.body.style.top = '';
+  window.scrollTo(0, restoreY);
+}
+
 function openChartModal(id) {
   if (typeof Chart === 'undefined') return;
   modalChartId = id;
   const def = chartDefs[id];
   document.getElementById('modalTitle').textContent = def.title;
+  lockPageScroll();
   document.getElementById('chartModal').classList.add('open');
-  if (modalChart) modalChart.destroy();
-  modalChart = new Chart(document.getElementById('modalChart'), {
-    type: 'line',
-    data: {labels: [], datasets: def.datasets.map(d => ({...d, data: []}))},
-    options: mkOpt(def.yfmt, true),
-  });
-  setModalPreset('dashboard');
+  try {
+    if (modalChart) modalChart.destroy();
+    modalChart = new Chart(document.getElementById('modalChart'), {
+      type: 'line',
+      data: {labels: [], datasets: def.datasets.map(d => ({...d, data: []}))},
+      options: mkOpt(def.yfmt, true),
+    });
+    setModalPreset('dashboard');
+  } catch (err) {
+    closeChartModal();
+    throw err;
+  }
 }
 
 function closeChartModal() {
-  document.getElementById('chartModal').classList.remove('open');
-  if (modalChart) { modalChart.destroy(); modalChart = null; }
-  modalChartId = null;
+  const modal = document.getElementById('chartModal');
+  if (modal) modal.classList.remove('open');
+  try {
+    if (modalChart) { modalChart.destroy(); modalChart = null; }
+    modalChartId = null;
+  } finally {
+    unlockPageScroll();
+  }
 }
 
 document.getElementById('chartModal').addEventListener('click', e => {

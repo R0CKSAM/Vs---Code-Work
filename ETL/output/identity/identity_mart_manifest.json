@@ -1,53 +1,58 @@
 {
-  "generated_at_utc": "2026-07-07T06:01:32.287747+00:00",
+  "generated_at_utc": "2026-07-13T05:15:29.790171+00:00",
   "lake": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
+  "lake_roots": [
+    "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
+    "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE"
+  ],
+  "partition_policy": "first existing source/date wins; current lake is checked before archive lakes",
   "out_dir": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\output\\identity",
   "source": "stream",
-  "start": "2026-07-06",
-  "end": "2026-07-07",
+  "start": "2026-07-12",
+  "end": "2026-07-13",
   "partitions_total": 2,
   "partitions_processed": 2,
   "tables": {
     "identity_device_daily": {
-      "rows": 1387429,
+      "rows": 1453233,
       "min_date": "2026-03-26",
-      "max_date": "2026-07-07",
+      "max_date": "2026-07-13",
       "sources": 1
     },
     "identity_session_daily": {
-      "rows": 1816924,
+      "rows": 1898976,
       "min_date": "2026-03-26",
-      "max_date": "2026-07-07",
+      "max_date": "2026-07-13",
       "sources": 1
     },
     "identity_ipua_daily": {
-      "rows": 1625980,
+      "rows": 1701506,
       "min_date": "2026-03-26",
-      "max_date": "2026-07-07",
+      "max_date": "2026-07-13",
       "sources": 1
     },
     "identity_daily": {
-      "rows": 104,
+      "rows": 109,
       "min_date": "2026-03-26",
-      "max_date": "2026-07-07",
+      "max_date": "2026-07-13",
       "sources": 1
     },
     "identity_channel_daily": {
-      "rows": 2645,
+      "rows": 2834,
       "min_date": "2026-03-26",
-      "max_date": "2026-07-07",
+      "max_date": "2026-07-13",
       "sources": 1
     },
     "identity_platform_daily": {
-      "rows": 982,
+      "rows": 1030,
       "min_date": "2026-03-26",
-      "max_date": "2026-07-07",
+      "max_date": "2026-07-13",
       "sources": 1
     },
     "identity_platform_channel_daily": {
-      "rows": 16218,
+      "rows": 17443,
       "min_date": "2026-03-26",
-      "max_date": "2026-07-07",
+      "max_date": "2026-07-13",
       "sources": 1
     }
   },

@@ -73,6 +73,13 @@ def _safe_state_name(name: str) -> str:
     return cleaned
 
 
+def _split_path_list(value: str | None) -> list[Path]:
+    if not value:
+        return []
+    parts = [part.strip().strip('"') for part in re.split(r"[;,]", value) if part.strip()]
+    return [Path(part).expanduser().resolve() for part in parts]
+
+
 def _print_subprocess_line(line: str) -> None:
     """Echo child-process output without failing on legacy Windows consoles."""
     try:
@@ -687,6 +694,12 @@ def main() -> None:
         default=str(default_output_root),
         help="Reusable output root for dashboard artifacts.",
     )
+    parser.add_argument(
+        "--archive-lake",
+        action="append",
+        default=[],
+        help="Optional archive lake root(s). Can be repeated or semicolon/comma separated. Current --base lake wins on duplicate source/date.",
+    )
 
     parser.add_argument("--skip-etl", action="store_true", help="Skip 001/02/03.")
     parser.add_argument("--skip-watch", action="store_true", help="Skip watch-hours dashboard.")
@@ -1046,6 +1059,14 @@ def main() -> None:
         else _default_duckdb_temp_dir()
     )
     lake_root = base_root / "lake"
+    archive_lake_roots: list[Path] = []
+    for raw_archive in args.archive_lake:
+        archive_lake_roots.extend(_split_path_list(raw_archive))
+    default_archive_lake = Path(r"Z:\Veto Logs Backup\DO NOT DELETE")
+    if default_archive_lake.exists():
+        archive_lake_roots.append(default_archive_lake.resolve())
+    archive_lake_roots = list(dict.fromkeys(root for root in archive_lake_roots if root.exists() and root != lake_root))
+    archive_lake_env = ";".join(str(root) for root in archive_lake_roots)
     overview_lake_root = (
         Path(args.overview_lake_root).expanduser().resolve()
         if args.overview_lake_root
@@ -1142,6 +1163,7 @@ def main() -> None:
             "VG_LATENCY_PROFILE_DIR": str(latency_profile),
             "VG_AUDIENCE_HTML": str(audience_out),
             "VG_ETL_LAKE_ROOT": str(lake_root),
+            "VG_ETL_ARCHIVE_LAKE_ROOTS": archive_lake_env,
             "VG_OVERVIEW_LAKE_ROOT": str(overview_lake_root),
             "VG_OVERVIEW_SOURCES": args.overview_sources or "",
             "VG_DUCKDB_TEMP_DIR": str(deep_profile_temp_dir),
@@ -1193,6 +1215,10 @@ def main() -> None:
     overview_generator_script = _local_script(
         etl_root,
         str(Path("src") / "overview" / "overViewGenerator.py"),
+    )
+    overview_repair_script = _local_script(
+        etl_root,
+        str(Path("src") / "tools" / "repair_overview_true_source.py"),
     )
     snapshot_generator_script = _local_script(
         etl_root,
@@ -1715,22 +1741,44 @@ def main() -> None:
     else:
         print("\n[skip] UA model-code device decode profile step skipped.")
 
-    overview_report_ok = False
-    if not args.skip_overview:
-        overview_report_ok = run(
-            [
+    def overview_report_command() -> list[str]:
+        if args.etl1_daily_date and not (args.overview_year or args.overview_month):
+            target_date = date.fromisoformat(args.etl1_daily_date)
+            repair_candidates = _daily_profile_dates(lake_root, target_date) or [target_date]
+            completed_cutoff = date.today() - timedelta(days=1)
+            repair_dates = [day for day in repair_candidates if day <= completed_cutoff]
+            if not repair_dates and target_date <= completed_cutoff:
+                repair_dates = [target_date]
+            repair_date_text = ",".join(day.isoformat() for day in sorted(repair_dates))
+            return [
                 python,
-                str(overview_generator_script),
+                str(overview_repair_script),
+                "--lake-root",
                 str(overview_lake_root),
                 "--out-dir",
                 str(overview_data_dir),
-                "--year",
-                args.overview_year or "",
-                "--month",
-                args.overview_month or "",
-                "--yes",
-                "--auto",
-            ],
+                "--sources",
+                args.overview_sources or "fast,stream",
+                "--dates",
+                repair_date_text,
+            ]
+        return [
+            python,
+            str(overview_generator_script),
+            str(overview_lake_root),
+            "--out-dir",
+            str(overview_data_dir),
+            "--year",
+            args.overview_year or "",
+            "--month",
+            args.overview_month or "",
+            "--yes",
+            "--auto",
+        ]
+    overview_report_ok = False
+    if not args.skip_overview:
+        overview_report_ok = run(
+            overview_report_command(),
             cwd=etl_root,
             env=env,
             step_name="overview_report_xlsx",
@@ -2229,19 +2277,7 @@ def main() -> None:
 
     if identity_ok and not args.skip_overview:
         overview_report_after_ok = run(
-            [
-                python,
-                str(overview_generator_script),
-                str(overview_lake_root),
-                "--out-dir",
-                str(overview_data_dir),
-                "--year",
-                args.overview_year or "",
-                "--month",
-                args.overview_month or "",
-                "--yes",
-                "--auto",
-            ],
+            overview_report_command(),
             cwd=etl_root,
             env=env,
             step_name="overview_report_xlsx_after_latency_identity",

@@ -6,7 +6,22 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 
+import importlib.util
+import sys
 import pandas as pd
+
+try:
+    from lake_partitions import partition_for_date, resolve_lake_roots
+except ModuleNotFoundError:
+    _lake_partitions_path = Path(__file__).resolve().with_name("lake_partitions.py")
+    _spec = importlib.util.spec_from_file_location("veto_common_lake_partitions", _lake_partitions_path)
+    if _spec is None or _spec.loader is None:
+        raise
+    _lake_partitions = importlib.util.module_from_spec(_spec)
+    sys.modules[_spec.name] = _lake_partitions
+    _spec.loader.exec_module(_lake_partitions)
+    partition_for_date = _lake_partitions.partition_for_date
+    resolve_lake_roots = _lake_partitions.resolve_lake_roots
 
 
 IST_OFFSET_SECONDS = 19_800
@@ -107,14 +122,10 @@ def _min_max_req_epoch(files: list[Path]) -> tuple[float | None, float | None]:
 
 
 def lake_partition_files(lake_root: Path, source: str, date_text: str) -> list[Path]:
-    try:
-        year, month, day = date_text.split("-", 2)
-    except ValueError:
+    partition = partition_for_date(resolve_lake_roots(lake_root), source, date_text)
+    if partition is None:
         return []
-    root = lake_root / f"source={source}" / f"year={int(year):04d}" / f"month={int(month):02d}" / f"day={int(day):02d}"
-    if not root.exists():
-        return []
-    return sorted(root.glob("*.parquet"))
+    return list(partition.files)
 
 
 def true_source_ranges_from_lake(

@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -19,8 +18,17 @@ ETL_ROOT = Path(__file__).resolve().parents[2]
 PROFILE_ROOT = ETL_ROOT / "src" / "profile"
 if str(PROFILE_ROOT) not in sys.path:
     sys.path.insert(0, str(PROFILE_ROOT))
+COMMON_ROOT = ETL_ROOT / "src" / "common"
+if str(COMMON_ROOT) not in sys.path:
+    sys.path.insert(0, str(COMMON_ROOT))
 
 from vglive_core import DEFAULT_LAKE_FOLDER, HOST_MAP, PATH_MAP, channel_candidate_sql  # noqa: E402
+from lake_partitions import (  # noqa: E402
+    LakePartition as Partition,
+    discover_partitions as discover_lake_partitions,
+    resolve_lake_roots,
+    split_path_list,
+)
 
 
 DEFAULT_OUT_DIR = ETL_ROOT / "output" / "identity"
@@ -35,24 +43,6 @@ AGG_TABLES = [
     "identity_platform_daily",
     "identity_platform_channel_daily",
 ]
-
-
-@dataclass(frozen=True)
-class Partition:
-    source: str
-    year: int
-    month: int
-    day: int
-    path: Path
-    files: tuple[Path, ...]
-
-    @property
-    def date_text(self) -> str:
-        return f"{self.year:04d}-{self.month:02d}-{self.day:02d}"
-
-    @property
-    def key(self) -> str:
-        return f"{self.source}/{self.date_text}"
 
 
 def sql_text(value: object) -> str:
@@ -115,36 +105,19 @@ def connect(args: argparse.Namespace) -> duckdb.DuckDBPyConnection:
     return con
 
 
-def discover_partitions(lake: Path, source: str | None, start: str | None, end: str | None) -> list[Partition]:
+def discover_partitions(
+    lake: Path,
+    source: str | None,
+    start: str | None,
+    end: str | None,
+    archive_roots: list[Path] | None = None,
+) -> list[Partition]:
     start_date = parse_date(start)
     end_date = parse_date(end)
     if start_date and end_date and start_date > end_date:
         raise SystemExit("--start cannot be after --end")
-
-    partitions: list[Partition] = []
-    source_dirs = sorted(lake.glob("source=*"))
-    for source_dir in source_dirs:
-        if not source_dir.is_dir():
-            continue
-        source_name = source_dir.name.split("=", 1)[-1].lower()
-        if source and source_name != source.lower():
-            continue
-        for day_dir in sorted(source_dir.rglob("day=*")):
-            try:
-                year = int(day_dir.parent.parent.name.split("=", 1)[-1])
-                month = int(day_dir.parent.name.split("=", 1)[-1])
-                day = int(day_dir.name.split("=", 1)[-1])
-            except (IndexError, ValueError):
-                continue
-            date_value = datetime(year, month, day).date()
-            if start_date and date_value < start_date:
-                continue
-            if end_date and date_value > end_date:
-                continue
-            files = tuple(sorted(day_dir.glob("*.parquet")))
-            if files:
-                partitions.append(Partition(source_name, year, month, day, day_dir, files))
-    return partitions
+    lake_roots = resolve_lake_roots(lake, archive_roots)
+    return discover_lake_partitions(lake_roots, source=source, start=start, end=end)
 
 
 def partition_signature(partition: Partition) -> dict[str, Any]:
@@ -160,6 +133,8 @@ def partition_signature(partition: Partition) -> dict[str, Any]:
     return {
         "source": partition.source,
         "date": partition.date_text,
+        "lake_root": str(partition.root),
+        "partition_path": str(partition.day_dir),
         "file_count": len(sizes),
         "bytes": int(sum(sizes)),
         "max_mtime_ns": int(max(mtimes) if mtimes else 0),
@@ -459,6 +434,12 @@ def build_stats(con: duckdb.DuckDBPyConnection, out_dir: Path) -> dict[str, Any]
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build reusable CDN queryStr identity marts.")
     parser.add_argument("--lake", type=Path, default=DEFAULT_LAKE_FOLDER)
+    parser.add_argument(
+        "--archive-lake",
+        action="append",
+        default=[],
+        help="Optional archive lake root(s). Can be repeated or semicolon/comma separated. Current --lake wins on duplicate source/date.",
+    )
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
     parser.add_argument("--source", choices=["stream", "fast"], default=None)
     parser.add_argument("--start", help="Start date YYYY-MM-DD. Omit with --end for all available dates.")
@@ -472,12 +453,16 @@ def main() -> None:
     args = parser.parse_args()
 
     args.lake = args.lake.expanduser().resolve()
+    archive_roots: list[Path] = []
+    for value in args.archive_lake:
+        archive_roots.extend(split_path_list(value))
     args.out_dir = args.out_dir.expanduser().resolve()
     args.state = args.state.expanduser().resolve()
     if not args.lake.exists():
         raise SystemExit(f"Lake folder not found: {args.lake}")
 
-    partitions = discover_partitions(args.lake, args.source, args.start, args.end)
+    lake_roots = resolve_lake_roots(args.lake, archive_roots)
+    partitions = discover_partitions(args.lake, args.source, args.start, args.end, archive_roots)
     if not partitions:
         raise SystemExit("No lake parquet partitions found for selected filters.")
 
@@ -493,6 +478,11 @@ def main() -> None:
             to_process.append(partition)
 
     print(f"Lake      : {args.lake}")
+    if len(lake_roots) > 1:
+        print("Lake roots:")
+        for idx, root in enumerate(lake_roots, start=1):
+            role = "current" if idx == 1 else "archive"
+            print(f"  {idx}. {role}: {root}")
     print(f"Out dir   : {args.out_dir}")
     print(f"Partitions: {len(partitions)} total, {len(to_process)} to process")
     if args.dry_run:
@@ -520,6 +510,8 @@ def main() -> None:
     manifest = {
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "lake": str(args.lake),
+        "lake_roots": [str(root) for root in lake_roots],
+        "partition_policy": "first existing source/date wins; current lake is checked before archive lakes",
         "out_dir": str(args.out_dir),
         "source": args.source or "all",
         "start": args.start or "",

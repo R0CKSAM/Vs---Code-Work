@@ -59,12 +59,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;ba
 .state-pill.down{background:#fef2f2;border-color:#fecaca;color:#991b1b}
 .state-pill.up{background:#ecfdf3;border-color:#bbf7d0;color:#166534}
 .state-pill.flat{background:#f1f5f9;border-color:#d8e1ee;color:#475569}
-.sticky-controls{position:sticky;top:0;z-index:45;background:rgba(238,243,248,.96);backdrop-filter:blur(8px);padding:10px 0 2px;margin:-10px 0 16px}
-.sticky-controls .filter-bar{margin-bottom:8px}
+.sticky-controls{position:relative;z-index:45;background:var(--surface);padding:10px 0 2px;margin:-10px 0 16px;border-bottom:1px solid rgba(216,225,238,.9);transition:box-shadow .18s ease,background-color .18s ease,padding .18s ease}
+.sticky-controls.is-fixed{position:fixed;top:0;left:0;right:0;width:100%;margin:0;padding:10px 28px 8px;background:rgba(238,243,248,.98);border-bottom:1px solid #d8e1ee;box-shadow:0 10px 26px rgba(15,23,42,.16);animation:stickyHeaderIn .16s ease-out}
+.sticky-controls.is-fixed::after{content:"";position:absolute;left:0;right:0;bottom:-18px;height:18px;background:linear-gradient(to bottom,rgba(15,23,42,.10),rgba(238,243,248,0));pointer-events:none}
+.sticky-spacer{display:none;height:0}
+.sticky-spacer.active{display:block}
+.sticky-controls .filter-bar{margin:0 auto 8px;max-width:1760px;transition:box-shadow .18s ease,border-color .18s ease}
+.sticky-controls .tabs{max-width:1760px;margin-left:auto;margin-right:auto;transition:box-shadow .18s ease,border-color .18s ease}
+.sticky-controls.is-fixed .filter-bar,.sticky-controls.is-fixed .tabs{box-shadow:0 2px 8px rgba(15,23,42,.08);border-color:#cbd5e1}
+@keyframes stickyHeaderIn{from{opacity:.92;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 .tabs{display:flex;gap:6px;flex-wrap:nowrap;margin:0 0 8px;background:#fff;border:1px solid var(--line);border-radius:8px;padding:8px;box-shadow:0 1px 2px rgba(15,23,42,.05);overflow-x:auto}
 .tab-btn{border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:7px;padding:8px 12px;font-size:12px;font-weight:750;cursor:pointer}
 .tab-btn.active{background:var(--brand);color:#fff;border-color:var(--brand)}
-.tab{display:block;scroll-margin-top:220px;margin-bottom:16px}.tab.active{display:block}
+.tab{display:block;scroll-margin-top:var(--sticky-offset,220px);margin-bottom:16px}.tab.active{display:block}
 .grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:16px;margin-bottom:16px}
 .grid-3{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:16px}
 .grid-max-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:16px}
@@ -142,11 +149,11 @@ tr:hover td{background:#f6f9ff}
 @media(max-width:1180px){.card{flex-basis:calc((100% - 24px)/4)}.topbar .sub{max-width:100%;text-align:left}}
 @media(min-width:1900px){.wrap{max-width:1880px}.chart-box{height:clamp(300px,31vh,390px)}.chart-box.channel-trend{height:clamp(340px,38vh,480px)}.chart-box.tall{height:clamp(380px,44vh,540px)}.chart-box.channel-rank{height:clamp(560px,62vh,780px)}.chart-box.channel-rank-wide{height:clamp(720px,72vh,940px)}.table-wrap{max-height:620px}}
 @media(min-width:2200px){.wrap{max-width:2200px}.chart-box{height:clamp(330px,32vh,440px)}.chart-box.channel-trend{height:clamp(390px,40vh,540px)}.chart-box.tall{height:clamp(430px,46vh,610px)}.chart-box.channel-rank{height:clamp(640px,64vh,860px)}.chart-modal{width:min(1500px,94vw);height:min(900px,92vh)}}
-@media(max-width:900px){.wrap{padding:16px}.sticky-controls{max-height:58vh;overflow:auto;margin:-8px 0 14px}.tab{scroll-margin-top:58vh}.tabs{padding:7px}.tab-btn{padding:7px 10px;font-size:11px}.card{flex-basis:calc((100% - 16px)/3)}.grid-2,.grid-3,.grid-max-2,.grid-stack{grid-template-columns:1fr}.metric-strip,.modal-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.topbar .sub{text-align:left;max-width:100%}.filter-range{margin-left:0;width:100%}.date-filter{width:100%;overflow-x:visible;white-space:normal;flex-wrap:wrap}.chart-box{height:240px}.chart-box.concurrency{height:440px}.chart-box.channel-rank{height:520px}.chart-box.channel-rank-wide{height:640px}.chart-actions{gap:6px}.modal-chart-wrap.rank-modal-wrap{min-height:560px}}
+@media(max-width:900px){.wrap{padding:16px}.sticky-controls{margin:-8px 0 14px}.sticky-controls.is-fixed{padding:8px 14px;max-height:58vh;overflow:auto}.tab{scroll-margin-top:var(--sticky-offset,58vh)}.tabs{padding:7px}.tab-btn{padding:7px 10px;font-size:11px}.card{flex-basis:calc((100% - 16px)/3)}.grid-2,.grid-3,.grid-max-2,.grid-stack{grid-template-columns:1fr}.metric-strip,.modal-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.topbar .sub{text-align:left;max-width:100%}.filter-range{margin-left:0;width:100%}.date-filter{width:100%;overflow-x:visible;white-space:normal;flex-wrap:wrap}.chart-box{height:240px}.chart-box.concurrency{height:440px}.chart-box.channel-rank{height:520px}.chart-box.channel-rank-wide{height:640px}.chart-actions{gap:6px}.modal-chart-wrap.rank-modal-wrap{min-height:560px}}
 @media(max-width:680px){.card{flex-basis:calc((100% - 8px)/2)}}
 @media print{.tabs,.tab-btn{display:none}.tab{display:block}body{background:#fff}.panel,.card,.note{box-shadow:none}.table-wrap{max-height:none;overflow:visible}}
 html,body{max-width:100%;overflow-x:hidden}
-.wrap,.topbar,.sticky-controls,.filter-bar,.tabs,.panel,.card,.chart-box,.table-wrap,.modal-body,.modal-chart-wrap{max-width:100%;min-width:0}
+.wrap,.topbar,.sticky-controls,.sticky-spacer,.filter-bar,.tabs,.panel,.card,.chart-box,.table-wrap,.modal-body,.modal-chart-wrap{max-width:100%;min-width:0}
 .date-filter,.tabs{overflow-x:visible!important;white-space:normal!important;flex-wrap:wrap!important}
 .table-wrap{overflow-x:hidden!important;overflow-y:auto}
 table{min-width:0!important;max-width:100%;table-layout:fixed}
@@ -160,7 +167,8 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
   <div class="sub"><span id="rangeText"></span><span id="genText"></span></div>
 </div>
 <div class="wrap">
-  <div class="sticky-controls">
+  <div class="sticky-spacer" id="stickySpacer"></div>
+  <div class="sticky-controls" id="stickyControls">
     <div class="filter-bar date-filter global-filter">
       <span class="filter-title">Source</span>
       <button class="filter-btn" id="sourceAll" onclick="setSourceFilter('all')">ALL</button>
@@ -1998,6 +2006,7 @@ function setSourceFilter(value){
   setActiveSource();
   rebuildSourceViews(sourceFilter);
   syncDateInputBounds();
+  refreshStickyHeader();
   const first=ALL_DAILY[0]?.log_date||'';
   const last=ALL_DAILY[ALL_DAILY.length-1]?.log_date||'';
   if(previousStart||previousEnd){
@@ -2147,6 +2156,7 @@ function applyDateView(updateInputs=true){
 
 function setDatePreset(mode){
   syncDateInputBounds();
+  refreshStickyHeader();
   dateFilterMode=mode==='yesterday'?'single':'range';
   if(mode==='all')viewDaily=ALL_DAILY.slice();
   else if(mode==='yesterday')viewDaily=ALL_DAILY.slice(-1);
@@ -3603,6 +3613,47 @@ function initSectionObserver(){
   ids.forEach(id=>{const el=document.getElementById(id);if(el)observer.observe(el);});
 }
 
+let stickyStartY = 0;
+let stickyHeight = 0;
+
+function measureStickyHeader(){
+  const controls=document.getElementById('stickyControls');
+  const spacer=document.getElementById('stickySpacer');
+  if(!controls||!spacer)return;
+  const wasFixed=controls.classList.contains('is-fixed');
+  if(wasFixed){
+    controls.classList.remove('is-fixed');
+    spacer.classList.remove('active');
+    spacer.style.height='0px';
+  }
+  const rect=controls.getBoundingClientRect();
+  stickyStartY=rect.top+window.scrollY;
+  stickyHeight=controls.offsetHeight;
+  document.documentElement.style.setProperty('--sticky-offset',`${Math.ceil(stickyHeight+14)}px`);
+  if(wasFixed){
+    controls.classList.add('is-fixed');
+    spacer.classList.add('active');
+    spacer.style.height=`${stickyHeight}px`;
+  }
+}
+
+function updateStickyHeader(){
+  const controls=document.getElementById('stickyControls');
+  const spacer=document.getElementById('stickySpacer');
+  if(!controls||!spacer)return;
+  const shouldFix=window.scrollY>stickyStartY;
+  controls.classList.toggle('is-fixed',shouldFix);
+  spacer.classList.toggle('active',shouldFix);
+  spacer.style.height=shouldFix?`${stickyHeight}px`:'0px';
+}
+
+function refreshStickyHeader(){
+  requestAnimationFrame(()=>{measureStickyHeader();updateStickyHeader();});
+}
+
+window.addEventListener('scroll',updateStickyHeader,{passive:true});
+window.addEventListener('resize',refreshStickyHeader);
+window.addEventListener('load',refreshStickyHeader);
 function sourceTrueRangeForHeader(source){
   if(source==='all')return D.true_data_range||{};
   const ranges=D.source_true_ranges||[];
@@ -3622,6 +3673,7 @@ function renderHeader(){
   document.getElementById('genText').textContent=`Last updated ${fmtDateTime12(D.generated_at)}`;
   document.getElementById('definitionNote').innerHTML=D.definitions.map(x=>`<div>${escapeHtml(x)}</div>`).join('');
   syncDateInputBounds();
+  refreshStickyHeader();
 }
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
@@ -3630,6 +3682,7 @@ rebuildSourceViews(sourceFilter);
 setActiveSource();
 renderHeader();
 setDatePreset(7);
+refreshStickyHeader();
 initSectionObserver();
 </script>
 </body>

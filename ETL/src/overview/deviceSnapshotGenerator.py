@@ -11,8 +11,11 @@ from __future__ import annotations
 
 import logging
 import argparse
+import importlib.util
 import json
 import os
+import sys
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 try:
@@ -30,6 +33,23 @@ DEFAULT_LAKE_ROOT = Path(os.getenv("VG_ETL_LAKE_ROOT", str(ETL_ROOT / "data" / "
 DEFAULT_CSV_OUT = Path(os.getenv("VG_DEVICE_SNAPSHOT_OUT", str(ETL_ROOT / "output" / "overview" / "device_snapshot.csv")))
 DEFAULT_DAILY_CSV_OUT = Path(os.getenv("VG_DEVICE_DAILY_OUT", str(ETL_ROOT / "output" / "overview" / "device_daily.csv")))
 IST_OFFSET_SECONDS = 19_800
+
+
+def load_lake_partitions_module():
+    module_path = ETL_ROOT / "src" / "common" / "lake_partitions.py"
+    spec = importlib.util.spec_from_file_location("veto_device_lake_partitions", module_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Cannot load lake partition helpers: {module_path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+_lake_partitions = load_lake_partitions_module()
+discover_lake_partitions = _lake_partitions.discover_partitions
+parquet_globs = _lake_partitions.parquet_globs
+resolve_lake_roots = _lake_partitions.resolve_lake_roots
 DAILY_COLUMNS = [
     "source",
     "device_id",
@@ -60,12 +80,15 @@ def get_conn() -> duckdb.DuckDBPyConnection:
     return con
 
 
-def lake_reader(lake_root: Path) -> str:
-    safe_root = sql_path(lake_root)
-    return (
-        f"read_parquet('{safe_root}/**/*.parquet', "
-        f"hive_partitioning=true, union_by_name=true)"
-    )
+def lake_reader_from_partitions(partitions: list) -> str:
+    globs = parquet_globs(partitions)
+    if not globs:
+        raise SystemExit("No parquet partitions found for device snapshot refresh.")
+    if len(globs) == 1:
+        target = f"'{globs[0]}'"
+    else:
+        target = "[" + ", ".join(f"'{glob}'" for glob in globs) + "]"
+    return f"read_parquet({target}, hive_partitioning=true, union_by_name=true)"
 
 
 def sql_path(path: Path) -> str:
@@ -73,7 +96,8 @@ def sql_path(path: Path) -> str:
 
 
 def qs_extract(qs_col: str, param: str) -> str:
-    return f"NULLIF(regexp_extract({qs_col}, '(?:^|&){param}=([^&]+)', 1), '')"
+    extracted = f"NULLIF(regexp_extract(COALESCE({qs_col}, ''), '(?:^|[?&]){param}=([^&]*)', 1), '')"
+    return f"CASE WHEN lower(trim({extracted})) IN ('null', 'nan', 'none', 'na') THEN NULL ELSE {extracted} END"
 
 
 def ist_date_sql(epoch_expr: str) -> str:
@@ -82,6 +106,11 @@ def ist_date_sql(epoch_expr: str) -> str:
         f"TRY_CAST({epoch_expr} AS DOUBLE) + {IST_OFFSET_SECONDS}"
         ") * 1000) AS BIGINT)) AS DATE)"
     )
+
+
+def latest_completed_ist_date() -> str:
+    now_ist = datetime.now(timezone.utc) + timedelta(seconds=IST_OFFSET_SECONDS)
+    return (now_ist.date() - timedelta(days=1)).isoformat()
 
 
 def log_step(step: int, total: int, message: str) -> None:
@@ -98,18 +127,19 @@ def csv_data_lines(path: Path) -> int:
         return max(0, sum(1 for _ in f) - 1)
 
 
-def pa_schema(lake_root: Path) -> set[str]:
+def pa_schema_from_partitions(partitions: list) -> set[str]:
     cols: set[str] = set()
     skip = {"year", "month", "day"}
-    preferred = {"queryStr", "reqTimeSec", "cliIP", "UA"}
-    for pf in lake_root.rglob("*.parquet"):
-        try:
-            schema = pq.read_schema(pf)
-            cols.update(name for name in schema.names if name not in skip)
-        except Exception as exc:
-            log.warning(f"Could not read parquet schema for {pf}: {exc}")
-        if preferred <= cols:
-            break
+    preferred = {"queryStr", "cliIP", "UA"}
+    for partition in partitions:
+        for pf in partition.files:
+            try:
+                schema = pq.read_schema(pf)
+                cols.update(name for name in schema.names if name not in skip)
+            except Exception as exc:
+                log.warning(f"Could not read parquet schema for {pf}: {exc}")
+            if preferred <= cols:
+                return cols
     return cols
 
 
@@ -160,29 +190,39 @@ def partition_date_for_file(path: Path) -> str | None:
     return None
 
 
-def lake_day_signatures(lake_root: Path) -> dict[str, dict]:
+def lake_day_signatures(partitions: list) -> dict[str, dict]:
     signatures: dict[str, dict] = {}
-    for parquet_file in lake_root.rglob("*.parquet"):
-        day = partition_date_for_file(parquet_file)
-        if not day:
-            continue
-        try:
-            stat = parquet_file.stat()
-        except FileNotFoundError:
-            continue
+    for partition in partitions:
         rec = signatures.setdefault(
-            day,
+            partition.date_text,
             {
                 "files": 0,
                 "bytes": 0,
+                "rows": 0,
                 "mtime_ns_sum": 0,
                 "mtime_ns_max": 0,
+                "roots": [],
+                "sources": [],
             },
         )
-        rec["files"] += 1
-        rec["bytes"] += int(stat.st_size)
-        rec["mtime_ns_sum"] += int(stat.st_mtime_ns)
-        rec["mtime_ns_max"] = max(int(rec["mtime_ns_max"]), int(stat.st_mtime_ns))
+        rec["roots"].append(str(partition.root))
+        rec["sources"].append(partition.source)
+        for parquet_file in partition.files:
+            try:
+                stat = parquet_file.stat()
+                rec["files"] += 1
+                rec["bytes"] += int(stat.st_size)
+                rec["mtime_ns_sum"] += int(stat.st_mtime_ns)
+                rec["mtime_ns_max"] = max(int(rec["mtime_ns_max"]), int(stat.st_mtime_ns))
+                try:
+                    rec["rows"] += int(pq.read_metadata(parquet_file).num_rows or 0)
+                except Exception:
+                    pass
+            except FileNotFoundError:
+                continue
+    for rec in signatures.values():
+        rec["roots"] = sorted(set(rec["roots"]))
+        rec["sources"] = sorted(set(rec["sources"]))
     return dict(sorted(signatures.items()))
 
 
@@ -276,17 +316,23 @@ def run_snapshot(
     if not lake_root.is_dir():
         raise SystemExit(f"Lake folder not found: {lake_root}")
 
-    cols = pa_schema(lake_root)
-    required = {"queryStr", "reqTimeSec"}
+    lake_roots = resolve_lake_roots(lake_root)
+    partitions = discover_lake_partitions(lake_roots, sources=["fast", "stream"])
+    cutoff_date = latest_completed_ist_date()
+    partitions = [partition for partition in partitions if partition.date_text <= cutoff_date]
+    if not partitions:
+        raise SystemExit(f"No completed winning lake partitions found from: {', '.join(str(root) for root in lake_roots)}")
+
+    cols = pa_schema_from_partitions(partitions)
+    required = {"queryStr"}
     missing = required - cols
     if missing:
         raise SystemExit(f"Missing required column(s): {', '.join(sorted(missing))}")
 
     has_ip = "cliIP" in cols
     has_ua = "UA" in cols
-    has_source = "source" in cols
+    has_source = True
 
-    reader = lake_reader(lake_root)
     device_expr = qs_extract("queryStr", "device_id")
     session_expr = qs_extract("queryStr", "session_id")
     source_select = "LOWER(COALESCE(NULLIF(CAST(source AS VARCHAR), ''), 'stream')) AS source" if has_source else "'stream' AS source"
@@ -294,7 +340,9 @@ def run_snapshot(
     ua_select = "UA" if has_ua else "NULL AS UA"
     ip_expr = "COUNT(DISTINCT cliIP)" if has_ip else "0"
     ipua_expr = "COUNT(DISTINCT (cliIP, UA))" if has_ip and has_ua else "0"
-    ist_date_expr = ist_date_sql("reqTimeSec")
+    # The lake is IST-partitioned. Use partition date for daily rollups so
+    # device counts reconcile with Overview source rows exactly.
+    ist_date_expr = "make_date(CAST(year AS INT), CAST(month AS INT), CAST(day AS INT))"
 
     daily_sql_template = """
         COPY (
@@ -344,13 +392,15 @@ def run_snapshot(
     """
 
     log.info(f"Lake folder: {lake_root}")
+    log.info("Resolved lake roots: " + " | ".join(str(root) for root in lake_roots))
+    log.info(f"Latest completed IST date included: {cutoff_date}")
     log.info(f"Snapshot CSV: {snapshot_csv}")
     log.info(f"Daily CSV   : {daily_csv}")
     log.info(f"Manifest    : {manifest_path}")
     snapshot_csv.parent.mkdir(parents=True, exist_ok=True)
     daily_csv.parent.mkdir(parents=True, exist_ok=True)
 
-    day_signatures = lake_day_signatures(lake_root)
+    day_signatures = lake_day_signatures(partitions)
     current_dates = set(day_signatures)
 
     log_step(1, 5, "Schema checked and lake day signatures prepared")
@@ -409,13 +459,18 @@ def run_snapshot(
 
         if daily_needs_refresh:
             if refresh_query_dates or not day_signatures:
+                query_partitions = [
+                    partition for partition in partitions
+                    if not refresh_query_dates or partition.date_text in refresh_query_dates
+                ]
+                query_reader = lake_reader_from_partitions(query_partitions)
                 daily_sql = daily_sql_template.format(
                     source_select=source_select,
                     device_expr=device_expr,
                     session_expr=session_expr,
                     ip_select=ip_select,
                     ua_select=ua_select,
-                    reader=reader,
+                    reader=query_reader,
                     date_filter=date_filter,
                     ist_date_expr=ist_date_expr,
                     ip_expr=ip_expr,

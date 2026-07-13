@@ -173,7 +173,7 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
         <label>Source</label>
         <select id="sourceSelect" onchange="setSource(this.value)"></select>
       </div>
-      <div class="field platform">
+      <div class="field platform" id="platformField">
         <label>Platform</label>
         <select id="platformSelect" onchange="setPlatform(this.value)"></select>
       </div>
@@ -547,6 +547,7 @@ function betweenDate(row,key){const d=String(row[key||"log_date"]||"").slice(0,1
 function sourceOk(row){return state.source==="all"||String(row.source||"").toLowerCase()===state.source}
 function platformOk(row){return state.platform==="all"||String(row.platform_name||"")===state.platform}
 function channelOk(row){return state.channel==="all"||String(row.channel_name||"")===state.channel}
+function hasPlatformFilter(){return state.source==="fast"}
 function resetFilterCache(){filterCache=new WeakMap()}
 function filterRows(rows,opt){
   rows=rows||[];
@@ -700,7 +701,7 @@ function modalBaseControlsHtml(){
     +"<div class='mini-field date'><label id='modalStartDateLabel'>Date From</label><input id='modalStartDate' type='date' onchange='setModalDateInputs()'/></div>"
     +"<div class='mini-field date' id='modalEndDateField'><label>Date To</label><input id='modalEndDate' type='date' onchange='setModalDateInputs()'/></div>"
     +"<div class='mini-field'><label>Source</label><select id='modalSourceSelect' onchange='setSource(this.value)'></select></div>"
-    +"<div class='mini-field wide'><label>Platform</label><select id='modalPlatformSelect' onchange='setPlatform(this.value)'></select></div>"
+    +"<div class='mini-field wide' id='modalPlatformField'><label>Platform</label><select id='modalPlatformSelect' onchange='setPlatform(this.value)'></select></div>"
     +"<div class='mini-field wide'><label>Channel</label><select id='modalChannelSelect' onchange='setChannel(this.value)'></select></div>"
     +"<button class='btn' id='modalPresetYesterday' onclick=\"setPreset('yesterday')\">Yesterday</button>"
     +"<button class='btn' id='modalPreset7' onclick='setPreset(7)'>7D</button>"
@@ -1080,13 +1081,11 @@ function rebuildPlatformOptions(){
   let platforms=["all"];
   if(state.source==="fast"){
     platforms=platforms.concat(uniq((DATA.concurrency_summary||[]).filter(function(r){return sourceOk(r)}),"platform_name"));
-  }else if(state.source==="stream"){
-    const rows=(DATA.identity_platform_channel_daily||[]).concat(DATA.content_daily||[]).filter(function(r){return sourceOk(r)});
-    platforms=platforms.concat(uniq(rows,"platform_name"));
   }
   el("platformSelect").innerHTML=platforms.map(function(p){return "<option value='"+esc(p)+"'>"+(p==="all"?"All Platforms":esc(p))+"</option>"}).join("");
   if(platforms.indexOf(state.platform)<0)state.platform="all";
-  el("platformSelect").disabled=platforms.length<=1;
+  if(!hasPlatformFilter())state.platform="all";
+  el("platformSelect").disabled=!hasPlatformFilter()||platforms.length<=1;
 }
 function rebuildChannelOptions(){
   let rows=[];
@@ -1105,6 +1104,8 @@ function syncFilters(){
   syncDateBounds();
   clampDateRange();
   el("startDate").value=state.start;el("endDate").value=state.end;el("sourceSelect").value=state.source;el("platformSelect").value=state.platform;el("channelSelect").value=state.channel;
+  const platformField=el("platformField");
+  if(platformField)platformField.style.display=hasPlatformFilter()?"":"none";
   el("startDateLabel").textContent=state.dateMode==="single"?"Date":"Date From";
   el("endDateField").style.display=state.dateMode==="single"?"none":"";
   el("dateModeSingle").classList.toggle("active",state.dateMode==="single");
@@ -1133,6 +1134,8 @@ function syncModalFilterControls(){
   const channel=el("modalChannelSelect");
   if(source){source.innerHTML=el("sourceSelect").innerHTML;source.value=state.source}
   if(platform){platform.innerHTML=el("platformSelect").innerHTML;platform.value=state.platform;platform.disabled=el("platformSelect").disabled}
+  const modalPlatformField=el("modalPlatformField");
+  if(modalPlatformField)modalPlatformField.style.display=hasPlatformFilter()?"":"none";
   if(channel){channel.innerHTML=el("channelSelect").innerHTML;channel.value=state.channel}
   ["modalPresetYesterday","modalPreset7","modalPreset15","modalPreset30","modalPresetAll"].forEach(function(id){const b=el(id);if(b)b.classList.remove("active")});
   if(state.preset==="yesterday"&&el("modalPresetYesterday"))el("modalPresetYesterday").classList.add("active");
@@ -1993,9 +1996,11 @@ function renderTable(id,headers,rows,numCols){
 function renderHeader(){
   const trueRange=sourceTrueRange();
   el("rangeText").textContent="Source: "+sourceLabel()+" | True data range: "+fmtDateTime(trueRange.first)+" \u2192 "+fmtDateTime(trueRange.last)+" | Used range: "+fmtDayStart(state.start)+" to "+fmtDayEnd(state.end);
-  el("sourceText").textContent="Platform: "+(state.platform==="all"?"All Platforms":state.platform)+" | Channel: "+(state.channel==="all"?"All Channels":state.channel);
+  const platformText=hasPlatformFilter()?("Platform: "+(state.platform==="all"?"All Platforms":state.platform)+" | "):"";
+  el("sourceText").textContent=platformText+"Channel: "+(state.channel==="all"?"All Channels":state.channel);
   el("updatedText").textContent="Last updated "+fmtDateTime(D.meta.generated);
-  el("selectionContext").innerHTML="<span class='pill'><b>Used Range</b> "+fmtDayStart(state.start)+" to "+fmtDayEnd(state.end)+"</span><span class='pill'><b>Source</b> "+sourceLabel()+"</span><span class='pill'><b>Platform</b> "+esc(state.platform==="all"?"All Platforms":state.platform)+"</span><span class='pill'><b>Channel</b> "+esc(state.channel==="all"?"All Channels":state.channel)+"</span>";
+  const platformPill=hasPlatformFilter()?"<span class='pill'><b>Platform</b> "+esc(state.platform==="all"?"All Platforms":state.platform)+"</span>":"";
+  el("selectionContext").innerHTML="<span class='pill'><b>Used Range</b> "+fmtDayStart(state.start)+" to "+fmtDayEnd(state.end)+"</span><span class='pill'><b>Source</b> "+sourceLabel()+"</span>"+platformPill+"<span class='pill'><b>Channel</b> "+esc(state.channel==="all"?"All Channels":state.channel)+"</span>";
 }
 
 const SECTION_RENDERERS={

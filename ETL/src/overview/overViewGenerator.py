@@ -35,6 +35,18 @@ from openpyxl import Workbook, load_workbook
 from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
+SRC_ROOT = Path(__file__).resolve().parents[1]
+COMMON_ROOT = SRC_ROOT / "common"
+if str(COMMON_ROOT) not in sys.path:
+    sys.path.insert(0, str(COMMON_ROOT))
+
+from lake_partitions import (  # noqa: E402
+    discover_partitions as discover_lake_partitions,
+    parquet_globs,
+    resolve_lake_roots,
+    split_path_list,
+)
+
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # LOGGING
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -176,38 +188,31 @@ def source_root_allowed(path: Path) -> bool:
 
 
 def source_roots(lake_root: Path) -> list[Path]:
-    return sorted(root for root in lake_root.glob("source=*") if source_root_allowed(root))
+    roots: list[Path] = []
+    for root in resolve_lake_roots(lake_root):
+        roots.extend(sorted(path for path in root.glob("source=*") if source_root_allowed(path)))
+    return roots
+
+
+def scoped_partitions(lake_root: Path, year: str | None, month: str | None):
+    return discover_lake_partitions(
+        resolve_lake_roots(lake_root),
+        sources=OVERVIEW_SOURCE_FILTER,
+        year=year,
+        month=month,
+    )
 
 
 def scoped_roots(lake_root: Path, year: str | None, month: str | None) -> list[Path]:
-    if not year:
-        # Historical archived roots can contain unrelated source=* folders; keep
-        # Overview scoped to the configured CDN sources when a filter is set.
-        return source_roots(lake_root) or [lake_root]
+    return [partition.day_dir for partition in scoped_partitions(lake_root, year, month)]
 
-    suffix = [f"year={year}"]
-    if month:
-        suffix.append(f"month={month}")
-
-    roots: list[Path] = []
-    legacy = lake_root.joinpath(*suffix)
-    if legacy.exists():
-        roots.append(legacy)
-    for source_root in source_roots(lake_root):
-        candidate = source_root.joinpath(*suffix)
-        if candidate.exists():
-            roots.append(candidate)
-    return roots
 
 def scoped_parquet_globs(lake_root: Path, year: str | None, month: str | None) -> list[str]:
-    roots = scoped_roots(lake_root, year, month)
-    if not roots:
-        return []
-    return [f"{sql_path(root)}/**/*.parquet" for root in roots]
+    return parquet_globs(scoped_partitions(lake_root, year, month))
 
 
 def scoped_partition_exists(lake_root: Path, year: str | None, month: str | None) -> bool:
-    return any(root.exists() and any(root.rglob("*.parquet")) for root in scoped_roots(lake_root, year, month))
+    return bool(scoped_partitions(lake_root, year, month))
 
 
 def ist_timestamp_sql(epoch_expr: str) -> str:
@@ -238,15 +243,18 @@ def lake_reader(lake_root: Path, year: str | None, month: str | None) -> str:
 
 
 def qs_extract(qs_col: str, param: str) -> str:
-    return f"NULLIF(regexp_extract({qs_col}, '(?:^|&){param}=([^&]+)', 1), '')"
-
+    # Accept both raw query strings (a=1&b=2) and URL-style strings (?a=1&b=2).
+    extracted = f"NULLIF(regexp_extract(COALESCE({qs_col}, ''), '(?:^|[?&]){param}=([^&]*)', 1), '')"
+    # Literal placeholders are not real identities. Counting device_id=null as
+    # one device caused Overview to disagree with rebuilt device_daily files.
+    return f"CASE WHEN lower(trim({extracted})) IN ('null', 'nan', 'none', 'na') THEN NULL ELSE {extracted} END"
 
 def pa_schema(lake_root: Path, year: str | None, month: str | None) -> set[str]:
     cols: set[str] = set()
     skip = {"year", "month", "day"}
     preferred = {"reqTimeSec", "queryStr", "cliIP", "UA"}
-    for scan_root in scoped_roots(lake_root, year, month) or [lake_root]:
-        for pf in scan_root.rglob("*.parquet"):
+    for partition in scoped_partitions(lake_root, year, month):
+        for pf in partition.files:
             try:
                 s = pq.read_schema(pf)
                 cols.update(n for n in s.names if n not in skip)
@@ -261,17 +269,32 @@ def pa_schema(lake_root: Path, year: str | None, month: str | None) -> set[str]:
 
 def pa_row_counts_by_day(lake_root: Path, year: str | None, month: str | None) -> dict[str, int]:
     counts: dict[str, int] = {}
-    for scan_root in scoped_roots(lake_root, year, month) or [lake_root]:
-        for day_dir in sorted(scan_root.rglob("day=*")):
-            if not day_dir.is_dir():
-                continue
-            try:
-                parts = {p.split("=")[0]: p.split("=")[1] for p in day_dir.parts if "=" in p}
-                key = f"{parts.get('year','0')}-{parts.get('month','0')}-{parts.get('day','0')}"
-                total = sum(pq.read_metadata(pf).num_rows for pf in day_dir.glob("*.parquet"))
-                counts[key] = counts.get(key, 0) + total
-            except Exception:
-                pass
+    for partition in scoped_partitions(lake_root, year, month):
+        try:
+            total = sum(pq.read_metadata(pf).num_rows for pf in partition.files)
+            counts[partition.date_text] = counts.get(partition.date_text, 0) + total
+        except Exception:
+            pass
+    return counts
+
+
+def pa_row_counts_by_source_day(lake_root: Path, year: str | None, month: str | None) -> dict[tuple[str, str], int]:
+    """Return exact parquet metadata row counts by source/date.
+
+    This is the guardrail that keeps compact marts from silently replacing
+    true lake counts when an archived partition is fuller than the current one.
+    """
+    cutoff = latest_completed_ist_date()
+    counts: dict[tuple[str, str], int] = {}
+    for partition in scoped_partitions(lake_root, year, month):
+        if partition.date_text > cutoff:
+            continue
+        try:
+            total = sum(int(pq.read_metadata(pf).num_rows or 0) for pf in partition.files)
+        except Exception:
+            continue
+        key = (partition.source, partition.date_text)
+        counts[key] = counts.get(key, 0) + total
     return counts
 
 
@@ -280,7 +303,7 @@ def pa_total_file_count(root: Path) -> int:
 
 
 def pa_total_file_count_scoped(lake_root: Path, year: str | None, month: str | None) -> int:
-    return sum(pa_total_file_count(root) for root in scoped_roots(lake_root, year, month) or [lake_root])
+    return sum(len(partition.files) for partition in scoped_partitions(lake_root, year, month))
 
 
 def safe_query(
@@ -351,12 +374,7 @@ def prompt_year_month(
     try:
         if input().strip().lower() != "y":
             return None, None
-        available = sorted(
-            d.name.replace("year=", "")
-            for d in lake_root.glob("**/year=*")
-            if d.is_dir()
-        )
-        available = sorted(set(available))
+        available = sorted({str(partition.year) for partition in scoped_partitions(lake_root, None, None)})
         if available:
             print(f"  Available years: {', '.join(available)}")
         while True:
@@ -596,20 +614,8 @@ def query_new_dates(
 
 def source_dates_from_lake(lake_root: Path, year: str | None, month: str | None) -> dict[str, set[str]]:
     source_dates: dict[str, set[str]] = {}
-    roots = scoped_roots(lake_root, year, month) or [lake_root]
-    for root in roots:
-        for day_dir in root.rglob("day=*"):
-            if not day_dir.is_dir() or not any(day_dir.glob("*.parquet")):
-                continue
-            parts = {p.split("=", 1)[0]: p.split("=", 1)[1] for p in day_dir.parts if "=" in p}
-            if {"year", "month", "day"} - set(parts):
-                continue
-            source = parts.get("source", "stream").lower()
-            try:
-                date_key = f"{int(parts['year']):04d}-{int(parts['month']):02d}-{int(parts['day']):02d}"
-            except ValueError:
-                continue
-            source_dates.setdefault(date_key, set()).add(source)
+    for partition in scoped_partitions(lake_root, year, month):
+        source_dates.setdefault(partition.date_text, set()).add(partition.source)
     return source_dates
 
 
@@ -883,6 +889,35 @@ def _source_byte_lookup(latency_daily: pd.DataFrame) -> dict[tuple[str, str], fl
     }
 
 
+def _existing_source_session_lookup(
+    out_dir: Path,
+    year: str | None,
+    month: str | None,
+) -> dict[tuple[str, str], dict[str, int]]:
+    # Preserve direct-scan session buckets when compact marts do not store them.
+    path = out_dir / SOURCE_DAILY_FILENAME
+    if not path.exists():
+        return {}
+    try:
+        existing = pd.read_csv(path)
+    except (OSError, ValueError):
+        return {}
+    if existing.empty or {"date", "source"} - set(existing.columns):
+        return {}
+    existing = _filter_mart_dates(existing, "date", year, month)
+    lookup: dict[tuple[str, str], dict[str, int]] = {}
+    for _, row in existing.iterrows():
+        date_key = str(row.get("date", "")).strip()[:10]
+        source = str(row.get("source", "")).strip().lower()
+        if not date_key or not source:
+            continue
+        lookup[(date_key, source)] = {
+            "sess_avail": _int_value(row.get("sess_avail")),
+            "sess_na": _int_value(row.get("sess_na")),
+            "sess_none": _int_value(row.get("sess_none")),
+        }
+    return lookup
+
 def build_overview_from_marts(
     out_dir: Path,
     year: str | None,
@@ -923,9 +958,13 @@ def build_overview_from_marts(
     latency_daily = keep_completed_ist_dates(latency_daily, "log_date")
     identity_by_source, identity_by_date = _identity_lookup(identity)
     bytes_by_source = _source_byte_lookup(latency_daily)
+    existing_sessions = _existing_source_session_lookup(out_dir, year, month)
 
     overview_rows: list[dict] = []
     daily = daily.sort_values("log_date")
+    sess_na_by_date: dict[str, int] = {}
+    for (date_key, _source), values in existing_sessions.items():
+        sess_na_by_date[date_key] = sess_na_by_date.get(date_key, 0) + int(values.get("sess_na", 0))
     for _, row in daily.iterrows():
         date_key = str(row["log_date"])
         total_rows = _int_value(row.get("rows"))
@@ -935,7 +974,8 @@ def build_overview_from_marts(
         dist_dev = _int_value(identity_row.get("total_devices"))
         dist_sess = _int_value(identity_row.get("total_sessions"))
         sess_avail = min(total_rows, _int_value(identity_row.get("session_identity_rows")))
-        sess_none = max(0, total_rows - sess_avail)
+        sess_na = min(max(0, total_rows - sess_avail), sess_na_by_date.get(date_key, 0))
+        sess_none = max(0, total_rows - sess_avail - sess_na)
         overview_rows.append({
             "ist_date": datetime.strptime(date_key, "%Y-%m-%d").strftime("%d/%m/%y"),
             "bytes_gib": round(_float_value(row.get("total_bytes")) / (1024 ** 3), 2),
@@ -946,7 +986,7 @@ def build_overview_from_marts(
             "dist_dev": dist_dev,
             "dist_sess": dist_sess,
             "sess_avail": sess_avail,
-            "sess_na": 0,
+            "sess_na": sess_na,
             "sess_none": sess_none,
         })
 
@@ -962,7 +1002,9 @@ def build_overview_from_marts(
         dist_dev = _int_value(identity_row.get("total_devices"))
         dist_sess = _int_value(identity_row.get("total_sessions"))
         sess_avail = min(total_rows, _int_value(identity_row.get("session_identity_rows")))
-        sess_none = max(0, total_rows - sess_avail)
+        existing_session = existing_sessions.get((date_key, source), {})
+        sess_na = min(max(0, total_rows - sess_avail), int(existing_session.get("sess_na", 0) or 0))
+        sess_none = max(0, total_rows - sess_avail - sess_na)
         source_rows.append({
             "source": source,
             "date": date_key,
@@ -976,12 +1018,12 @@ def build_overview_from_marts(
             "dist_ip_r2": dist_ip,
             "dist_ipua_r2": dist_ipua,
             "sess_avail": sess_avail,
-            "sess_na": 0,
+            "sess_na": sess_na,
             "sess_none": sess_none,
             "pct_ip": _pct(dist_ip, total_rows),
             "pct_ipua": _pct(dist_ipua, total_rows),
             "pct_sess": _pct(sess_avail, total_rows),
-            "pct_sessna": 0.0,
+            "pct_sessna": _pct(sess_na, total_rows),
             "pct_none": _pct(sess_none, total_rows),
         })
 
@@ -1019,12 +1061,30 @@ def write_source_daily_csv(
     # scoping this CSV would make older FAST/STREAM dates disappear from HTML.
     _, mart_source_rows = build_overview_from_marts(output_path.parent, None, None)
     if mart_source_rows:
+        truth_counts = pa_row_counts_by_source_day(lake_root, year, month)
+        mart_counts: dict[tuple[str, str], int] = {}
+        for row in mart_source_rows:
+            source_key = str(row.get("source", "stream") or "stream").lower()
+            date_key = str(row.get("date", ""))[:10]
+            if date_key:
+                mart_counts[(source_key, date_key)] = int(row.get("rows", 0) or 0)
+
+        mismatch_dates = {
+            date_key
+            for (source_key, date_key), truth_rows in truth_counts.items()
+            if mart_counts.get((source_key, date_key)) != int(truth_rows)
+        }
         refresh_dates = {
             date_key
             for date_key in recent_completed_ist_dates()
             if (not year or date_key[:4] == str(year))
             and (not month or date_key[5:7] == f"{int(month):02d}")
-        }
+        } | mismatch_dates
+        if mismatch_dates:
+            log.info(
+                "True-source metadata mismatch detected for source rows; "
+                "overlaying exact lake rows for: " + ", ".join(sorted(mismatch_dates))
+            )
         if refresh_dates:
             try:
                 con = get_conn()
@@ -1458,76 +1518,26 @@ def run(
         con.close()
 
     if query_failed:
-        fallback_rows, fallback_source_rows = build_overview_from_marts(
-            out_dir,
-            year_filter,
-            month_filter,
+        raise SystemExit(
+            "Overview exact day breakdown failed. Compact mart fallback is disabled "
+            "because it can publish row counts that do not match the true lake source. "
+            "Run ETL/src/tools/repair_overview_true_source.py for targeted source repair."
         )
-        if not fallback_rows:
-            raise SystemExit(
-                "Overview day breakdown failed and mart fallback was unavailable. "
-                "The pipeline stopped so stale Overview output is not mistaken for fresh output."
-            )
-
-        date_range_ist, time_range_ist = mart_date_ranges(fallback_rows)
-
-        log.info(f"Writing {len(fallback_rows)} Overview rows from compact marts ...")
-        write_source_rows_csv(out_dir / SOURCE_DAILY_FILENAME, fallback_source_rows)
-        write_overview_excel(
-            output_path    = output_file,
-            data_rows      = fallback_rows,
-            lake_root      = lake_root,
-            year_filter    = year_filter,
-            month_filter   = month_filter,
-            total_rows_pa  = total_rows,
-            total_files    = total_files,
-            date_range_ist = date_range_ist,
-            time_range_ist = time_range_ist,
-        )
-
-        print(f"\n{'=' * 60}")
-        print(f"  Overview saved from compact marts: {output_file}")
-        print(f"{'=' * 60}\n")
-        return
 
     if not new_rows:
         source_csv = out_dir / SOURCE_DAILY_FILENAME
-        mart_rows, mart_source_rows = build_overview_from_marts(
-            out_dir,
-            year_filter,
-            month_filter,
-        )
-        if mart_rows:
-            date_range_ist, time_range_ist = mart_date_ranges(mart_rows)
-            log.info(
-                "No parquet row-count changes, but refreshing Overview from compact marts "
-                "so late-built latency/identity values are current."
-            )
-            write_source_rows_csv(source_csv, mart_source_rows)
-            write_overview_excel(
-                output_path    = output_file,
-                data_rows      = mart_rows,
-                lake_root      = lake_root,
-                year_filter    = year_filter,
-                month_filter   = month_filter,
-                total_rows_pa  = total_rows,
-                total_files    = total_files,
-                date_range_ist = date_range_ist,
-                time_range_ist = time_range_ist,
-            )
-            print("\n  Overview refreshed from compact marts.")
+        current_rows = load_existing_rows(output_file)
+        current_rows = [
+            row
+            for row in current_rows
+            if datetime.strptime(row["ist_date"], "%d/%m/%y").strftime("%Y-%m-%d")
+            <= latest_completed_ist_date()
+        ]
+        if current_rows:
+            source_rows_for_csv = overview_rows_to_source_seed(current_rows)
+            write_source_daily_csv(source_csv, source_rows_for_csv, lake_root, year_filter, month_filter, cols)
+            print("\n  Nothing new to add - Overview Excel kept on true-source rows; source CSV validated.")
         else:
-            if not source_csv.exists():
-                log.info("Source daily CSV missing; creating it from current Overview rows.")
-                current_rows = load_existing_rows(output_file)
-                current_rows = [
-                    row
-                    for row in current_rows
-                    if datetime.strptime(row["ist_date"], "%d/%m/%y").strftime("%Y-%m-%d")
-                    <= latest_completed_ist_date()
-                ]
-                source_rows_for_csv = overview_rows_to_source_seed(current_rows)
-                write_source_daily_csv(source_csv, source_rows_for_csv, lake_root, year_filter, month_filter, cols)
             print("\n  Nothing new to add - your file is already up to date.")
         return
 
@@ -1581,6 +1591,12 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Overview report generator")
     parser.add_argument("lake_root", nargs="?", default=None, help="Lake folder path (year=/month=/day=/... partitions)")
     parser.add_argument("--lake-root", dest="lake_root_opt", default=None)
+    parser.add_argument(
+        "--archive-lake",
+        action="append",
+        default=[],
+        help="Optional archive lake root(s). Can be repeated or semicolon/comma separated. Current lake wins on duplicate source/date.",
+    )
     parser.add_argument("--out-dir", default=None, help="Folder to write overview_report.xlsx")
     parser.add_argument("--year", default=None, help="Filter YYYY (e.g. 2026)")
     parser.add_argument("--month", default=None, help="Filter MM (01-12)")
@@ -1592,6 +1608,11 @@ def main() -> None:
     )
 
     args = parser.parse_args()
+    if args.archive_lake:
+        archive_roots = []
+        for value in args.archive_lake:
+            archive_roots.extend(split_path_list(value))
+        os.environ["VG_ETL_ARCHIVE_LAKE_ROOTS"] = ";".join(str(path) for path in archive_roots)
     lake_root = Path(args.lake_root_opt or args.lake_root or "").expanduser() if (args.lake_root_opt or args.lake_root) else None
 
     if lake_root is None or not lake_root.is_dir():

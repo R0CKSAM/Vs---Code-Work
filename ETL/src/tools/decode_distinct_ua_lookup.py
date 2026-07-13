@@ -525,14 +525,24 @@ def load_api_cache(path: Path) -> pd.DataFrame:
 
 
 def combine_api_caches(*frames: pd.DataFrame) -> pd.DataFrame:
-    non_empty = [frame for frame in frames if frame is not None and not frame.empty]
+    non_empty = []
+    for priority, frame in enumerate(frames):
+        if frame is None or frame.empty:
+            continue
+        tagged = frame.copy()
+        tagged["_cache_priority"] = priority
+        non_empty.append(tagged)
     if not non_empty:
         return pd.DataFrame(columns=API_COLUMNS)
     combined = pd.concat(non_empty, ignore_index=True)
     for column in API_COLUMNS:
         if column not in combined.columns:
             combined[column] = ""
-    # Later frames are more recent/specific evidence, so keep the last row.
+    # A later cache can contain a retry/rate-limit error for a UA that was
+    # decoded successfully in an older cache. Prefer successful API evidence;
+    # only use cache recency as the tie-breaker for equal status quality.
+    combined["_api_quality"] = combined["api_status"].fillna("").eq("decoded_api").astype(int)
+    combined = combined.sort_values(["ua_hash", "_api_quality", "_cache_priority"])
     return combined[API_COLUMNS].drop_duplicates("ua_hash", keep="last")
 
 
