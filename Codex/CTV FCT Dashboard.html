@@ -33,17 +33,20 @@
       font-family: var(--font);
       background: var(--bg-2);
       min-height: 100vh;
+      overflow-x: hidden;
     }
     .page {
-      max-width: 1480px;
+      width: min(100%, 1800px);
+      max-width: none;
       margin: 0 auto;
-      padding: 24px 24px 34px;
+      padding: clamp(14px, 2vw, 24px) clamp(14px, 2.4vw, 28px) clamp(22px, 3vw, 34px);
       position: relative;
     }
     .topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      flex-wrap: wrap;
       gap: 14px;
       margin-bottom: 6px;
       padding: 0;
@@ -96,6 +99,8 @@
       display: flex;
       flex-direction: row;
       align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
       gap: 8px;
       min-width: auto;
     }
@@ -107,6 +112,7 @@
       width: auto;
     }
     .header-icon-group {
+      position: relative;
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -259,7 +265,7 @@
     }
     .section-controls {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
       gap: 8px;
       margin-bottom: 10px;
       align-items: end;
@@ -458,11 +464,12 @@
     .pdf-btn {
       width: auto;
       min-width: 34px;
-      height: 15px;
+      height: 34px;
       border-radius: 999px;
+      padding: 0 12px;
       background: #ffffff;
       color: var(--muted);
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 800;
       letter-spacing: 0.35px;
       box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
@@ -487,35 +494,85 @@
       cursor: pointer;
     }
     .upload-btn {
-      min-width: 110px;
-      width: auto;
+      min-width: 34px;
+      width: 34px;
       justify-content: center;
-      padding: 0 12px;
+      padding: 0;
     }
-    .sheet-select-compact {
-      width: auto;
-      min-width: 118px;
-      max-width: 148px;
-      padding: 0 28px 0 12px;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      background: #ffffff;
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: 0.35px;
-      text-transform: uppercase;
-      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
-      text-align: left;
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
+    .sheet-btn {
+      min-width: 34px;
+      width: 34px;
+      justify-content: center;
+      padding: 0;
     }
     .upload-btn.success,
-    .sheet-select-compact.success {
+    .sheet-btn.success {
       border-color: #22c55e;
       color: #15803d;
       box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+    }
+    .sheet-btn[hidden] {
+      display: none !important;
+    }
+    .sheet-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .sheet-menu {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      min-width: 220px;
+      max-width: min(640px, calc(100vw - 32px));
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #ffffff;
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.14);
+      z-index: 120;
+      display: none;
+    }
+    .sheet-menu.open {
+      display: block;
+    }
+    .sheet-menu-title {
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .sheet-menu-list {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 6px;
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding-bottom: 2px;
+      scrollbar-width: thin;
+    }
+    .sheet-menu-item {
+      width: auto;
+      min-width: 0;
+      border-radius: 8px;
+      justify-content: center;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--text);
+      background: #ffffff;
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+    .sheet-menu-item.active {
+      border-color: #22c55e;
+      background: #f0fdf4;
+      color: #166534;
     }
     .control-check {
       width: 18px;
@@ -657,15 +714,16 @@
       border: 0;
     }
     .chart-box {
-      height: 440px;
+      height: clamp(360px, 48vw, 520px);
       border: 1px solid var(--line);
       border-radius: 8px;
       background: #ffffff;
       padding: 14px;
       transition: background 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+      overflow: hidden;
     }
     .chart-box.top20-mode {
-      height: 620px;
+      height: clamp(520px, 64vw, 760px);
     }
     .legend {
       margin-bottom: 14px;
@@ -702,7 +760,7 @@
     }
     .total-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
       gap: 8px 10px;
     }
     .total-chip {
@@ -913,9 +971,32 @@
         width: auto;
         justify-content: flex-end;
       }
-      .sheet-select-compact {
-        min-width: 110px;
-        max-width: 138px;
+    }
+    @media (max-width: 900px) {
+      .page {
+        width: 100%;
+      }
+      .section-card {
+        padding: 14px;
+      }
+      .section-head {
+        flex-wrap: wrap;
+      }
+      .chart-head {
+        flex-wrap: wrap;
+        align-items: flex-start;
+      }
+      .chart-actions {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+      .chart-box {
+        height: clamp(320px, 64vw, 460px);
+        padding: 10px;
+      }
+      .chart-box.top20-mode {
+        height: clamp(460px, 88vw, 700px);
       }
     }
   </style>
@@ -932,20 +1013,36 @@
         <div class="action-row" id="headerActionRow">
           <div class="header-icon-group">
             <input class="upload-input-hidden" id="fileUpload" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
-            <label class="pdf-btn upload-btn" for="fileUpload" title="Upload File" aria-label="Upload File">
-              <span id="uploadControlText">Upload File</span>
-            </label>
+            <button class="upload-btn icon-btn" id="uploadBtn" type="button" title="Upload File" aria-label="Upload File">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 20V8"></path>
+                <path d="M7 13l5-5 5 5"></path>
+                <path d="M4 4h16"></path>
+              </svg>
+              <span class="sr-only">Upload File</span>
+            </button>
             <span class="control-check" id="uploadCheck" hidden>&#10003;</span>
-            <select class="sheet-select-compact" id="sheetSelect" hidden aria-label="Select worksheet"></select>
+            <button class="sheet-btn icon-btn" id="sheetBtn" type="button" title="Select Sheet" aria-label="Select Sheet" hidden disabled>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 3h9l3 3v15H6z"></path>
+                <path d="M9 13h6"></path>
+                <path d="M9 17h6"></path>
+              </svg>
+              <span class="sr-only">Select Sheet</span>
+            </button>
             <span class="control-check" id="sheetCheck" hidden>&#10003;</span>
-            <button class="pdf-btn icon-btn" id="pdfBtn" type="button" title="Download Report" aria-label="Download Report">
+            <button class="pdf-btn icon-btn" id="pdfBtn" type="button" title="Download Dashboard" aria-label="Download Dashboard">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 4v12"></path>
                 <path d="M7 11l5 5 5-5"></path>
                 <path d="M4 20h16"></path>
               </svg>
-              <span class="sr-only">Download Report</span>
+              <span class="sr-only">Download Dashboard</span>
             </button>
+            <div class="sheet-menu" id="sheetMenu" hidden>
+              <div class="sheet-menu-title">Select Sheet</div>
+              <div class="sheet-menu-list" id="sheetMenuList"></div>
+            </div>
           </div>
         </div>
         <div class="status" id="statusText">Choose a CSV or Excel file to generate the dashboard.</div>
@@ -1233,7 +1330,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
   </script>
   <script>
-    const PAYLOAD = {"rows": [], "excluded": ["ASTROLOGERS", "CHANNEL IMAGERY", "PROMO CHANNEL PROPERTIES", "PROMO CHANNEL/BRAND", "PROMO PROGRAM", "PROMO TAG", "SHORT PROGRAM", "TELEVISIONS"], "generatedAt": "2026-07-13 13:21:40"};
+    const PAYLOAD = {"rows": [], "excluded": ["ASTROLOGERS", "CHANNEL IMAGERY", "PROMO CHANNEL PROPERTIES", "PROMO CHANNEL/BRAND", "PROMO PROGRAM", "PROMO TAG", "SHORT PROGRAM", "TELEVISIONS"], "generatedAt": "2026-07-13 15:43:51"};
     const COLUMN_MAPPING_CONFIG = {"standard_columns": {"feed_name": ["feed name", "feed_name", "feed", "network", "station", "source"], "channel_name": ["channel", "channel name"], "report_date": ["pdate", "date", "report date", "air date", "event date", "broadcast date"], "time_slot": ["adst", "time", "ad time", "slot", "time slot", "hour"], "brand_name": ["brand name", "brand", "product", "advertiser", "campaign", "item", "title", "name"], "company_name": ["company", "client", "customer", "account", "owner", "group"], "metric_value": ["aaddur", "ad duration", "ad duration sec", "duration", "amount", "value", "metric", "total", "count", "qty", "quantity", "revenue", "sales"], "category_name": ["category", "segment", "type", "class", "genre", "vertical"]}};
     const VALUE_MAPPING_CONFIG = {"feed_name": {"CN AAJ TAK": "AAJ TAK", "CN INDIA TV": "INDIA TV", "YT ABP NEWS": "ABP NEWS", "YT CN NEWS18 INDIA ": "NEWS18 INDIA"}};
     const EXCLUDED = new Set(PAYLOAD.excluded);
@@ -1261,6 +1358,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       initialized: false,
       pendingWorkbook: null,
       pendingWorkbookFileName: '',
+      pendingWorkbookSelectedSheet: '',
       global: {
         topN: '10',
         start: '',
@@ -1280,10 +1378,12 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     };
     const dom = {
       fileUpload: document.getElementById('fileUpload'),
-      uploadControlText: document.getElementById('uploadControlText'),
+      uploadBtn: document.getElementById('uploadBtn'),
       uploadCheck: document.getElementById('uploadCheck'),
-      sheetSelect: document.getElementById('sheetSelect'),
+      sheetBtn: document.getElementById('sheetBtn'),
       sheetCheck: document.getElementById('sheetCheck'),
+      sheetMenu: document.getElementById('sheetMenu'),
+      sheetMenuList: document.getElementById('sheetMenuList'),
       pdfBtn: document.getElementById('pdfBtn'),
       shareBtn: document.getElementById('shareBtn'),
       shareModal: document.getElementById('shareModal'),
@@ -1824,14 +1924,58 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       });
     }
     function setUploadSuccessState(isSuccess) {
-      if (dom.uploadControlText) dom.uploadControlText.textContent = isSuccess ? 'Upload File' : 'Upload File';
       if (dom.uploadCheck) dom.uploadCheck.hidden = !isSuccess;
-      const uploadLabel = dom.uploadControlText && dom.uploadControlText.closest('.upload-btn');
-      if (uploadLabel) uploadLabel.classList.toggle('success', isSuccess);
+      if (dom.uploadBtn) dom.uploadBtn.classList.toggle('success', isSuccess);
     }
     function setSheetSuccessState(isSuccess) {
       if (dom.sheetCheck) dom.sheetCheck.hidden = !isSuccess;
-      if (dom.sheetSelect) dom.sheetSelect.classList.toggle('success', isSuccess);
+      if (dom.sheetBtn) dom.sheetBtn.classList.toggle('success', isSuccess);
+    }
+    function hideSheetMenu() {
+      if (!dom.sheetMenu) return;
+      dom.sheetMenu.hidden = true;
+      dom.sheetMenu.classList.remove('open');
+    }
+    function populateSheetMenu(sheetNames) {
+      if (!dom.sheetMenuList) return;
+      dom.sheetMenuList.innerHTML = '';
+      sheetNames.forEach((name, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'sheet-menu-item';
+        if (name === state.pendingWorkbookSelectedSheet) {
+          button.classList.add('active');
+        }
+        button.textContent = `${index + 1}. ${name}`;
+        button.title = name;
+        button.addEventListener('click', () => {
+          try {
+            const result = parseSelectedWorksheet(String(index));
+            setSheetSuccessState(true);
+            hideSheetMenu();
+            loadRows(
+              result.rows,
+              `Loaded workbook: ${state.pendingWorkbookFileName || 'Excel file'} | Sheet: ${result.sheetName}`,
+              result.metadata,
+              { preserveSheetSuccessState: true, preserveWorkbookSelection: true }
+            );
+            populateSheetMenu(state.pendingWorkbook.SheetNames || []);
+          } catch (error) {
+            setSheetSuccessState(false);
+            setStatus(error.message || 'Could not load worksheet', true);
+          }
+        });
+        dom.sheetMenuList.appendChild(button);
+      });
+    }
+    function toggleSheetMenu() {
+      if (!dom.sheetMenu || !dom.sheetBtn || dom.sheetBtn.disabled) return;
+      const willOpen = dom.sheetMenu.hidden;
+      if (willOpen && state.pendingWorkbook && Array.isArray(state.pendingWorkbook.SheetNames)) {
+        populateSheetMenu(state.pendingWorkbook.SheetNames);
+      }
+      dom.sheetMenu.hidden = !willOpen;
+      dom.sheetMenu.classList.toggle('open', willOpen);
     }
     async function parseUploadedCsvFile(file) {
       const encodings = ['UTF-8', 'windows-1252', 'iso-8859-1'];
@@ -1863,31 +2007,37 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       }
       state.pendingWorkbook = workbook;
       state.pendingWorkbookFileName = file.name;
-      if (!dom.sheetSelect) return;
-      dom.sheetSelect.innerHTML = '<option value="">Select Sheet</option>' + workbook.SheetNames.map((name, index) => `<option value="${String(index)}" title="${name}">${index + 1}. ${name}</option>`).join('');
-      dom.sheetSelect.hidden = false;
-      dom.sheetSelect.value = '';
+      state.pendingWorkbookSelectedSheet = '';
+      if (dom.sheetBtn) {
+        dom.sheetBtn.hidden = false;
+        dom.sheetBtn.disabled = false;
+      }
+      populateSheetMenu(workbook.SheetNames);
       setUploadSuccessState(true);
       setSheetSuccessState(false);
       setStatus(`Workbook ready: ${file.name}. Choose a worksheet before importing.`, false);
     }
     function clearWorkbookSelection(options = {}) {
-      state.pendingWorkbook = null;
-      state.pendingWorkbookFileName = '';
-      if (dom.sheetSelect) {
-        dom.sheetSelect.hidden = true;
-        dom.sheetSelect.innerHTML = '';
+      if (!options.preserveWorkbook) {
+        state.pendingWorkbook = null;
+        state.pendingWorkbookFileName = '';
+        state.pendingWorkbookSelectedSheet = '';
       }
+      if (dom.sheetBtn) {
+        dom.sheetBtn.hidden = !!(!options.preserveWorkbook);
+        dom.sheetBtn.disabled = !!(!options.preserveWorkbook);
+      }
+      if (dom.sheetMenuList && !options.preserveWorkbook) dom.sheetMenuList.innerHTML = '';
+      hideSheetMenu();
       if (!options.preserveSuccessState) {
         setSheetSuccessState(false);
       }
     }
-    function parseSelectedWorksheet() {
+    function parseSelectedWorksheet(selectedIndex) {
       if (!state.pendingWorkbook) {
         throw new Error('Select an Excel file first.');
       }
-      const selectedIndex = dom.sheetSelect ? dom.sheetSelect.value : '';
-      if (selectedIndex === '') {
+      if (selectedIndex === '' || selectedIndex === undefined || selectedIndex === null) {
         throw new Error('Choose a worksheet before importing the Excel file.');
       }
       const sheetName = state.pendingWorkbook.SheetNames[Number.parseInt(selectedIndex, 10)];
@@ -1896,6 +2046,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       if (!matrix.length || !matrix.some(row => row.some(cell => String(cell || '').trim()))) {
         throw new Error(`The selected worksheet "${sheetName}" is empty.`);
       }
+      state.pendingWorkbookSelectedSheet = sheetName;
       const records = loadDatasetFromWorksheetMatrix(matrix);
       const preprocessed = preprocessDataset(records, `${state.pendingWorkbookFileName} / ${sheetName}`);
       return { rows: preprocessed.dashboardRows, sheetName, metadata: preprocessed.metadata };
@@ -2067,6 +2218,18 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       if (!box) return;
       box.style.height = '';
     }
+    let viewportSyncToken = null;
+    function handleViewportChange() {
+      updateStickyFilterPosition();
+      if (!state.initialized) return;
+      if (viewportSyncToken) {
+        window.cancelAnimationFrame(viewportSyncToken);
+      }
+      viewportSyncToken = window.requestAnimationFrame(() => {
+        viewportSyncToken = null;
+        renderAll();
+      });
+    }
     function rerenderSections(sectionKeys) {
       sectionKeys.forEach(renderSection);
     }
@@ -2078,6 +2241,88 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         : getSelectedDateRangeText();
       if (dom.totalRecordsText) dom.totalRecordsText.textContent = formatNumber(rows.length);
       if (dom.activeDateRangeText) dom.activeDateRangeText.textContent = activeRange;
+    }
+    function resetDashboardState() {
+      state.rawRows = [];
+      state.standardizedRows = [];
+      state.cleanedRows = [];
+      state.preprocessMetadata = null;
+      state.pendingWorkbook = null;
+      state.pendingWorkbookFileName = '';
+      state.pendingWorkbookSelectedSheet = '';
+      state.global = {
+        topN: '10',
+        start: '',
+        end: '',
+        channel: '',
+        category: [],
+        advertisor: '',
+        time: 'minutes'
+      };
+      state.sections = {
+        g1: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },
+        g2: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },
+        g3: { topN: '10', start: '', end: '', channel: '', category: [], view: 'heat' },
+        g4: { topN: '10', start: '', end: '', channel: '', category: '', view: 'heat' },
+        g5: { start: '', end: '', channel: '', category: [], advertisor: '', time: 'minutes', view: 'heat' }
+      };
+      if (dom.totalRecordsText) dom.totalRecordsText.textContent = '0';
+      if (dom.activeDateRangeText) dom.activeDateRangeText.textContent = 'All Dates';
+      if (dom.summaryLines) {
+        dom.summaryLines.innerHTML = '<div class="summary-line">Upload a CSV or XLSX file to generate dashboard insights.</div>';
+      }
+      SECTION_KEYS.forEach(sectionKey => {
+        const controls = dom.sections[sectionKey];
+        if (!controls) return;
+        if (controls.topN) controls.topN.value = '10';
+        if (controls.start) {
+          controls.start.value = '';
+          controls.start.min = '';
+          controls.start.max = '';
+        }
+        if (controls.end) {
+          controls.end.value = '';
+          controls.end.min = '';
+          controls.end.max = '';
+        }
+        if (controls.channel) controls.channel.innerHTML = '<option value="">All Channels</option>';
+        if (controls.advertisor) controls.advertisor.innerHTML = '<option value="">All Advertisers</option>';
+        if (controls.time) controls.time.value = 'minutes';
+        if (controls.category) {
+          controls.category.innerHTML = '';
+        }
+        if (controls.categoryValue) controls.categoryValue.textContent = 'All Categories';
+        if (controls.categoryOptions) controls.categoryOptions.innerHTML = '';
+        if (controls.categorySearch) controls.categorySearch.value = '';
+        if (controls.categoryDropdown) controls.categoryDropdown.classList.remove('open');
+        if (controls.legend) controls.legend.innerHTML = '';
+        if (controls.metric) controls.metric.textContent = '';
+        if (controls.totalGrid) controls.totalGrid.innerHTML = '';
+        if (controls.chart) drawEmpty(controls.chart, 'Upload a file to generate this visualization.');
+      });
+      if (dom.global.topN) dom.global.topN.value = '10';
+      if (dom.global.start) {
+        dom.global.start.value = '';
+        dom.global.start.min = '';
+        dom.global.start.max = '';
+      }
+      if (dom.global.end) {
+        dom.global.end.value = '';
+        dom.global.end.min = '';
+        dom.global.end.max = '';
+      }
+      if (dom.global.channel) dom.global.channel.innerHTML = '<option value="">All Channels</option>';
+      if (dom.global.advertisor) dom.global.advertisor.innerHTML = '<option value="">All Advertisers</option>';
+      if (dom.global.time) dom.global.time.value = 'minutes';
+      if (dom.global.category) dom.global.category.innerHTML = '';
+      if (dom.global.categoryValue) dom.global.categoryValue.textContent = 'All Categories';
+      if (dom.global.categoryOptions) dom.global.categoryOptions.innerHTML = '';
+      if (dom.global.categorySearch) dom.global.categorySearch.value = '';
+      if (dom.global.categoryDropdown) dom.global.categoryDropdown.classList.remove('open');
+      clearWorkbookSelection();
+      setUploadSuccessState(false);
+      setStatus('Choose a CSV or Excel file to generate the dashboard.', false);
+      updateFullButtons();
     }
     function updateStickyFilterPosition() {
       const wrap = dom.stickyFilterWrap;
@@ -2577,8 +2822,10 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           'font-weight': 800,
           'text-anchor': 'middle'
         });
-        dataLabel.textContent = formatDurationValue(item.total);
-        svg.appendChild(dataLabel);
+        if (!compact) {
+          dataLabel.textContent = formatDurationValue(item.total);
+          svg.appendChild(dataLabel);
+        }
         addWrappedText(svg, item.advertisor, x + barW / 2, margin.top + plotH + 18, compact ? 10 : 12, '#1f2937', compact ? 8.8 : 10, 'middle', 700);
       });
       renderLegend(dom.sections.g1.legend, [{ label: metricLabel(), color: chartPalettes.g1[0] }]);
@@ -2627,8 +2874,10 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
             x: x + barW / 2, y: Math.max(y - 6, margin.top + 10),
             fill: '#000000', 'font-size': compact ? 9.5 : 11.5, 'font-weight': 700, 'text-anchor': 'middle'
           });
-          dataLabel.textContent = value ? formatDurationValue(value) : '';
-          svg.appendChild(dataLabel);
+          if (!compact) {
+            dataLabel.textContent = value ? formatDurationValue(value) : '';
+            svg.appendChild(dataLabel);
+          }
         });
         addWrappedText(
           svg,
@@ -2712,16 +2961,24 @@ Share: ${(fraction * 100).toFixed(0)}%`;
         dom.sections.g3.legend.innerHTML = '';
         return;
       }
-      resetChartBoxHeight(dom.sections.g3.chart);
+      const compact = isTop20Mode('g3');
+      const dynamicHeight = compact
+        ? 620 + Math.max(0, topAdvertisors.length - 10) * 16 + Math.max(0, matrix.rows.length - 7) * 10
+        : 540;
+      setChartBoxHeight(dom.sections.g3.chart, dynamicHeight);
       const { svg, width, height } = makeSvg(dom.sections.g3.chart);
-      const margin = { top: 18, right: 24, bottom: 86, left: 58 };
+      const margin = {
+        top: 18,
+        right: compact ? 34 : 24,
+        bottom: compact ? 116 : 86,
+        left: compact ? 70 : 58
+      };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
-      const compact = isTop20Mode('g3');
       const maxValue = withAxisHeadroom(Math.max(...matrix.rows.flatMap(row => topAdvertisors.map(item => row.values[item.advertisor] || 0)), 1));
       drawAxes(svg, margin, plotW, plotH, 'Date', metricLabel(), width, height, maxValue);
       const groupW = plotW / Math.max(matrix.rows.length, 1);
-      const barW = Math.max((groupW - 14) / Math.max(topAdvertisors.length, 1) - 2, 3);
+      const barW = Math.max((groupW - 14) / Math.max(topAdvertisors.length, 1) - 2, compact ? 4 : 3);
       for (let gi = 0; gi <= matrix.rows.length; gi++) {
         const x = margin.left + gi * groupW;
         svg.appendChild(svgEl('line', {
@@ -2746,14 +3003,26 @@ Share: ${(fraction * 100).toFixed(0)}%`;
             stroke: 'rgba(255,255,255,0.18)',
             'stroke-width': 0.8
           }));
-          const dataLabel = svgEl('text', {
-            x: x + barW / 2, y: Math.max(y - 6, margin.top + 10),
-            fill: '#000000', 'font-size': compact ? 9.5 : 11.5, 'font-weight': 700, 'text-anchor': 'middle'
-          });
-          dataLabel.textContent = value ? formatDurationValue(value) : '';
-          svg.appendChild(dataLabel);
+          if (value && ((compact && barW >= 8 && h >= 18) || (!compact && barW >= 7 && h >= 14))) {
+            const dataLabel = svgEl('text', {
+              x: x + barW / 2, y: Math.max(y - 6, margin.top + 10),
+              fill: '#000000', 'font-size': compact ? 8.8 : 11.5, 'font-weight': 700, 'text-anchor': 'middle'
+            });
+            dataLabel.textContent = value ? formatDurationValue(value) : '';
+            svg.appendChild(dataLabel);
+          }
         });
-        addWrappedText(svg, formatDate(row.date), startX + ((topAdvertisors.length * (barW + 2)) - 2) / 2, margin.top + plotH + 16, compact ? 8 : 10, '#1f2937', compact ? 8.8 : 10.5, 'middle', 700);
+        addWrappedText(
+          svg,
+          formatDate(row.date),
+          startX + ((topAdvertisors.length * (barW + 2)) - 2) / 2,
+          margin.top + plotH + 18,
+          compact ? 7 : 10,
+          '#1f2937',
+          compact ? 8.2 : 10.5,
+          'middle',
+          700
+        );
       });
       renderLegend(dom.sections.g3.legend, topAdvertisors.map((item, idx) => ({
         label: item.advertisor,
@@ -2769,9 +3038,18 @@ Share: ${(fraction * 100).toFixed(0)}%`;
         dom.sections.g3.legend.innerHTML = '';
         return;
       }
-      setChartBoxHeight(dom.sections.g3.chart, 220 + topAdvertisors.length * 24);
+      const compact = isTop20Mode('g3');
+      const dynamicHeight = compact
+        ? 700 + Math.max(0, topAdvertisors.length - 10) * 18 + Math.max(0, matrix.rows.length - 7) * 12
+        : 220 + topAdvertisors.length * 24;
+      setChartBoxHeight(dom.sections.g3.chart, dynamicHeight);
       const { svg, width, height } = makeSvg(dom.sections.g3.chart);
-      const margin = { top: 24, right: 28, bottom: 92, left: 160 };
+      const margin = {
+        top: 24,
+        right: compact ? 36 : 28,
+        bottom: compact ? 118 : 92,
+        left: compact ? 196 : 160
+      };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
       const maxValue = Math.max(...matrix.rows.flatMap(row => topAdvertisors.map(item => row.values[item.advertisor] || 0)), 1);
@@ -2821,13 +3099,12 @@ Share: ${(fraction * 100).toFixed(0)}%`;
           'stroke-width': 1
         }));
       }
-      const compact = isTop20Mode('g3');
-      const dateLabelSize = topAdvertisors.length >= 20 || compact ? 8.8 : 10.5;
+      const dateLabelSize = compact ? 8.2 : (topAdvertisors.length >= 20 ? 8.8 : 10.5);
       matrix.rows.forEach((row, ci) => {
-        addWrappedText(svg, formatDate(row.date), margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, 10, '#1f2937', dateLabelSize, 'middle', 700);
+        addWrappedText(svg, formatDate(row.date), margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, compact ? 8 : 10, '#1f2937', dateLabelSize, 'middle', 700);
       });
       topAdvertisors.forEach((item, ri) => {
-        addWrappedText(svg, item.advertisor, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, compact ? 12 : 16, '#1f2937', compact ? 9.5 : 11, 'end', 700);
+        addWrappedText(svg, item.advertisor, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, compact ? 14 : 16, '#1f2937', compact ? 8.8 : 11, 'end', 700);
       });
       topAdvertisors.forEach((item, ri) => {
         matrix.rows.forEach((row, ci) => {
@@ -2852,12 +3129,12 @@ Channel: ${state.global.channel || 'All'}
 Category: ${(state.global.category || []).length ? state.global.category.join(', ') : 'All'}`;
           rect.appendChild(title);
           svg.appendChild(rect);
-          if (value && cellW >= 52 && cellH >= 28) {
+          if (value && ((compact && cellW >= 38 && cellH >= 22) || (!compact && cellW >= 52 && cellH >= 28))) {
             const label = svgEl('text', {
               x: x + cellW / 2,
               y: y + cellH * 0.58,
               fill: '#000000',
-              'font-size': 11,
+              'font-size': compact ? 8.5 : 11,
               'font-weight': 700,
               'text-anchor': 'middle'
             });
@@ -2878,14 +3155,33 @@ Category: ${(state.global.category || []).length ? state.global.category.join(',
         drawEmpty(dom.sections.g4.chart, 'No data available for selected filters');
         return;
       }
-      setChartBoxHeight(dom.sections.g4.chart, 220 + matrix.categories.length * 24);
-      const { svg, width, height } = makeSvg(dom.sections.g4.chart);
-      const margin = { top: 24, right: 28, bottom: 92, left: 156 };
+      const compact = isTop20Mode('g4');
+      const dynamicHeight = compact
+        ? 700 + Math.max(0, matrix.categories.length - 10) * 18 + Math.max(0, matrix.channels.length - 5) * 10
+        : 340 + matrix.categories.length * 28 + Math.max(0, matrix.channels.length - 5) * 8;
+      setChartBoxHeight(dom.sections.g4.chart, dynamicHeight);
+      dom.sections.g4.chart.style.overflowX = 'auto';
+      const box = dom.sections.g4.chart;
+      const clientWidth = Math.max(box.clientWidth || 900, 320);
+      const width = Math.max(clientWidth, (compact ? 280 : 240) + matrix.channels.length * (compact ? 112 : 96));
+      const height = Math.max(box.clientHeight || dynamicHeight, dynamicHeight);
+      box.innerHTML = '';
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      svg.setAttribute('width', String(width));
+      svg.setAttribute('height', String(height));
+      svg.setAttribute('class', 'chart');
+      box.appendChild(svg);
+      const margin = {
+        top: 24,
+        right: compact ? 36 : 28,
+        bottom: compact ? 122 : 96,
+        left: compact ? 196 : 168
+      };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
       const cellW = plotW / Math.max(matrix.channels.length, 1);
       const cellH = plotH / Math.max(matrix.categories.length, 1);
-      const compact = isTop20Mode('g4');
       const backgroundFill = '#ffffff';
       svg.appendChild(svgEl('rect', {
         x: margin.left, y: margin.top, width: plotW, height: plotH, rx: 12,
@@ -2919,10 +3215,30 @@ Category: ${(state.global.category || []).length ? state.global.category.join(',
         }));
       }
       matrix.channels.forEach((channel, ci) => {
-        addWrappedText(svg, channel, margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, compact ? 8 : 10, '#1f2937', compact ? 9.3 : 11.5, 'middle', 700);
+        addWrappedText(
+          svg,
+          channel,
+          margin.left + ci * cellW + cellW / 2,
+          margin.top + plotH + 18,
+          compact ? 8 : 10,
+          '#1f2937',
+          compact ? 8.6 : 10.8,
+          'middle',
+          700
+        );
       });
       matrix.categories.forEach((category, ri) => {
-        addWrappedText(svg, category, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, compact ? 14 : 18, '#1f2937', compact ? 9.3 : 11.5, 'end', 700);
+        addWrappedText(
+          svg,
+          category,
+          margin.left - 10,
+          margin.top + ri * cellH + cellH * 0.56,
+          compact ? 14 : 18,
+          '#1f2937',
+          compact ? 8.8 : 10.8,
+          'end',
+          700
+        );
       });
       matrix.categories.forEach((category, ri) => {
         matrix.channels.forEach((channel, ci) => {
@@ -2950,10 +3266,10 @@ Category: ${category}
 No data available`;
           rect.appendChild(title);
           svg.appendChild(rect);
-          if (hasValue && cellW >= 52 && cellH >= 28) {
+          if (hasValue && ((compact && cellW >= 44 && cellH >= 24) || (!compact && cellW >= 52 && cellH >= 28))) {
             const label = svgEl('text', {
               x: x + cellW / 2, y: y + cellH * 0.58,
-              fill: '#1f2937', 'font-size': 12, 'font-weight': 800, 'text-anchor': 'middle'
+              fill: '#1f2937', 'font-size': compact ? 8.8 : 11, 'font-weight': 800, 'text-anchor': 'middle'
             });
             label.textContent = formatDurationValue(value);
             svg.appendChild(label);
@@ -3347,11 +3663,26 @@ AD Duration: ${unitMeta.format(displayValue)}`;
       };
       const exportState = serializeDashboardState();
       const preloadScript = `
-<script>window.PRELOADED_DATASET = ${JSON.stringify(exportPayload.rows)};window.PRELOADED_DASHBOARD_STATE = ${JSON.stringify(exportState)};<\/script>
+<script>window.PRELOADED_DATASET = ${JSON.stringify(exportPayload.rows)};window.PRELOADED_DASHBOARD_STATE = ${JSON.stringify(exportState)};window.EXPORTED_DASHBOARD_MODE = true;<\/script>
+`;
+      const exportOnlyStyle = `
+<style>
+      #fileUpload,
+      #uploadBtn,
+      #uploadCheck,
+      #sheetBtn,
+      #sheetCheck,
+      #sheetMenu {
+        display: none !important;
+      }
+      .header-icon-group {
+        gap: 0 !important;
+      }
+      </style>
 `;
       let exportedHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
       exportedHtml = exportedHtml.replace(/<body([^>]*)style="[^"]*overflow:\s*hidden;?[^"]*"([^>]*)>/i, '<body$1$2>');
-      exportedHtml = exportedHtml.replace('<head>', `<head>${preloadScript}`);
+      exportedHtml = exportedHtml.replace('<head>', `<head>${preloadScript}${exportOnlyStyle}`);
       const blob = new Blob([exportedHtml], { type: 'text/html;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -3611,15 +3942,19 @@ AD Duration: ${unitMeta.format(displayValue)}`;
           renderAll();
         });
         window.addEventListener('scroll', updateStickyFilterPosition, { passive: true });
-      window.addEventListener('resize', updateStickyFilterPosition);
-      window.addEventListener('keydown', event => {
-        if (event.key === 'Escape' && dom.shareModal && !dom.shareModal.hidden) {
-          closeShareModal();
-        }
-      });
+        window.addEventListener('resize', handleViewportChange);
+        window.addEventListener('orientationchange', handleViewportChange);
+        window.addEventListener('keydown', event => {
+          if (event.key === 'Escape' && dom.shareModal && !dom.shareModal.hidden) {
+            closeShareModal();
+          }
+        });
         document.addEventListener('click', event => {
           if (dom.global.categoryDropdown && !dom.global.categoryDropdown.contains(event.target)) {
             dom.global.categoryDropdown.classList.remove('open');
+          }
+          if (dom.sheetMenu && dom.sheetBtn && !dom.sheetMenu.contains(event.target) && !dom.sheetBtn.contains(event.target)) {
+            hideSheetMenu();
           }
           sharedCategorySections().forEach(sectionKey => {
             const dropdown = dom.sections[sectionKey].categoryDropdown;
@@ -3637,7 +3972,7 @@ AD Duration: ${unitMeta.format(displayValue)}`;
         dom.sections.g3.barBtn.classList.toggle('active', state.sections.g3.view === 'bar');
       }
       updateFullButtons();
-      updateStickyFilterPosition();
+      handleViewportChange();
     }
     function loadRows(rows, status, preprocessMetadata = null, options = {}) {
       state.rawRows = rows;
@@ -3652,11 +3987,20 @@ AD Duration: ${unitMeta.format(displayValue)}`;
       }
       initializeSections();
       renderExcluded();
-      clearWorkbookSelection({ preserveSuccessState: !!options.preserveSheetSuccessState });
+      clearWorkbookSelection({
+        preserveSuccessState: !!options.preserveSheetSuccessState,
+        preserveWorkbook: !!options.preserveWorkbookSelection
+      });
       setStatus(status, false);
       renderAll();
     }
     if (dom.fileUpload) {
+      if (dom.uploadBtn) {
+        dom.uploadBtn.addEventListener('click', () => {
+          resetDashboardState();
+          dom.fileUpload.click();
+        });
+      }
       dom.fileUpload.addEventListener('change', async event => {
         const file = event.target.files && event.target.files[0];
         if (!file) return;
@@ -3682,17 +4026,9 @@ AD Duration: ${unitMeta.format(displayValue)}`;
         }
       });
     }
-    if (dom.sheetSelect) {
-      dom.sheetSelect.addEventListener('change', () => {
-        try {
-          if (!dom.sheetSelect.value) return;
-          const result = parseSelectedWorksheet();
-          setSheetSuccessState(true);
-          loadRows(result.rows, `Loaded workbook: ${state.pendingWorkbookFileName || 'Excel file'} | Sheet: ${result.sheetName}`, result.metadata, { preserveSheetSuccessState: true });
-        } catch (error) {
-          setSheetSuccessState(false);
-          setStatus(error.message || 'Could not load worksheet', true);
-        }
+    if (dom.sheetBtn) {
+      dom.sheetBtn.addEventListener('click', () => {
+        toggleSheetMenu();
       });
     }
     if (Array.isArray(window.PRELOADED_DATASET)) {
