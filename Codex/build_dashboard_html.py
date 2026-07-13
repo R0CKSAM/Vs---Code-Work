@@ -2,9 +2,12 @@ import csv
 import json
 from datetime import datetime
 from pathlib import Path
+
 CSV_PATH = Path(r"D:\Vs - Code Work\Codex\CTV FCT.csv")
 OUTPUT_PATH = Path(r"D:\Vs - Code Work\Codex\CTV FCT Dashboard.html")
-STANDALONE_OUTPUT_PATH = Path(r"D:\Vs - Code Work\Codex\CTV FCT Dashboard Standalone.html")
+COLUMN_MAPPINGS_PATH = Path(r"D:\Vs - Code Work\Codex\column_mappings.json")
+VALUE_MAPPINGS_PATH = Path(r"D:\Vs - Code Work\Codex\value_mappings.json")
+XLSX_BUNDLE_PATH = Path(r"D:\Vs - Code Work\Codex\xlsx.full.min.js")
 EXCLUDED = [
     "ASTROLOGERS",
     "CHANNEL IMAGERY",
@@ -28,21 +31,53 @@ def parse_int(value: str) -> int:
         return int(float((value or "0").replace(",", "").strip()))
     except ValueError:
         return 0
-rows = []
-with CSV_PATH.open("r", encoding="utf-8-sig", newline="") as fh:
-    reader = csv.DictReader(fh)
-    for record in reader:
-        rows.append(
-            {
-                "channel": (record.get("Channel Name") or "").strip(),
-                "date": parse_date(record.get("Pdate") or ""),
-                "adtime": (record.get("Adst") or "").strip(),
-                "product": (record.get("Brand Name") or "").strip(),
-                "company": (record.get("Company") or "").strip(),
-                "aaddur": parse_int(record.get("Aaddur") or "0"),
-                "category": (record.get("Category") or "").strip(),
-            }
-        )
+
+
+def load_json_config(path: Path) -> dict:
+    if not path.exists():
+        return {}
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_text_asset(path: Path) -> str:
+    if not path.exists():
+        return ""
+    return path.read_text(encoding="utf-8")
+
+
+def load_seed_rows() -> list[dict[str, object]]:
+    sample_paths = [
+        CSV_PATH,
+        Path(r"D:\Vs - Code Work\Codex\CTV FCT - Copy.csv"),
+        Path(r"D:\Vs - Code Work\Codex\Codex\CTV FCT.csv"),
+        Path(r"D:\Vs - Code Work\Codex\Codex\CTV FCT - Copy.csv"),
+    ]
+    source = next((path for path in sample_paths if path.exists()), None)
+    if source is None:
+        return []
+
+    rows: list[dict[str, object]] = []
+    with source.open("r", encoding="utf-8-sig", newline="") as fh:
+        reader = csv.DictReader(fh)
+        for record in reader:
+            rows.append(
+                {
+                    "channel": (record.get("Channel Name") or "").strip(),
+                    "date": parse_date(record.get("Pdate") or ""),
+                    "adtime": (record.get("Adst") or "").strip(),
+                    "product": (record.get("Brand Name") or "").strip(),
+                    "company": (record.get("Company") or "").strip(),
+                    "aaddur": parse_int(record.get("Aaddur") or "0"),
+                    "category": (record.get("Category") or "").strip(),
+                }
+            )
+    return rows
+
+
+rows = load_seed_rows()
+column_mapping_config = load_json_config(COLUMN_MAPPINGS_PATH)
+value_mapping_config = load_json_config(VALUE_MAPPINGS_PATH)
+xlsx_bundle = load_text_asset(XLSX_BUNDLE_PATH)
 generated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 report_date = datetime.now().strftime("%d %b %Y")
 payload = {
@@ -231,6 +266,13 @@ html = """<!DOCTYPE html>
       font-weight: 600;
       line-height: 1.2;
     }
+    .title-range {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-top: 2px;
+    }
     .title-meta strong {
       color: var(--text);
       font-weight: 700;
@@ -239,12 +281,12 @@ html = """<!DOCTYPE html>
       display: flex;
       flex-direction: row;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       min-width: auto;
     }
     .action-row {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       align-items: center;
       justify-content: flex-end;
       width: auto;
@@ -252,7 +294,8 @@ html = """<!DOCTYPE html>
     .header-icon-group {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
+      flex-wrap: wrap;
     }
     .hero, .panel {
       background: var(--panel);
@@ -291,12 +334,12 @@ html = """<!DOCTYPE html>
     }
     .label {
       display: block;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
       font-size: 11px;
       font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.9px;
-      color: var(--muted);
+      color: #000000;
     }
     .sticky-filter-shell .label {
       color: #000000;
@@ -308,6 +351,14 @@ html = """<!DOCTYPE html>
     .sticky-filter-shell .multi-dropdown-option,
     .sticky-filter-shell .multi-dropdown-option span {
       color: #000000;
+    }
+    label[for$="TopN"],
+    label[for$="Start"],
+    label[for$="End"],
+    label[for$="CategoryTrigger"],
+    label[for$="Advertisor"],
+    label[for$="Time"] {
+      color: #ffffff;
     }
     input, select, button {
       width: 100%;
@@ -361,6 +412,9 @@ html = """<!DOCTYPE html>
     }
     .status {
       display: none;
+      max-width: 260px;
+      font-size: 11px;
+      line-height: 1.3;
     }
     .section {
       margin-top: 14px;
@@ -413,7 +467,7 @@ html = """<!DOCTYPE html>
       z-index: 40;
       background: rgba(31, 56, 100, 0.75);
       box-shadow: 0 6px 18px rgba(15, 23, 42, 0.14);
-      padding: 10px 12px;
+      padding: 8px 10px;
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
     }
@@ -434,7 +488,7 @@ html = """<!DOCTYPE html>
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      min-height: 58px;
+      min-height: 52px;
     }
     .sticky-filter-shell.is-stuck {
       position: fixed;
@@ -456,7 +510,7 @@ html = """<!DOCTYPE html>
       gap: 4px;
     }
     .multi-dropdown-trigger {
-      min-height: 36px;
+      min-height: 34px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -588,16 +642,17 @@ html = """<!DOCTYPE html>
     }
     .pdf-btn {
       width: auto;
-      min-width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      padding: 0;
+      min-width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      padding: 0 12px;
       background: #ffffff;
       color: var(--muted);
       font-size: 11px;
       font-weight: 800;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.35px;
       box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+      white-space: nowrap;
     }
     .pdf-btn:hover,
     .icon-btn:hover,
@@ -607,15 +662,62 @@ html = """<!DOCTYPE html>
       background: #ffffff;
     }
     .icon-btn {
-      width: 28px;
-      min-width: 28px;
-      height: 28px;
+      width: 34px;
+      min-width: 34px;
+      height: 34px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      border-radius: 12px;
+      border-radius: 999px;
       padding: 0;
       cursor: pointer;
+    }
+    .upload-btn {
+      min-width: 110px;
+      width: auto;
+      justify-content: center;
+      padding: 0 12px;
+    }
+    .sheet-select-compact {
+      width: auto;
+      min-width: 118px;
+      max-width: 148px;
+      padding: 0 28px 0 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #ffffff;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.35px;
+      text-transform: uppercase;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+      text-align: left;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+    }
+    .upload-btn.success,
+    .sheet-select-compact.success {
+      border-color: #22c55e;
+      color: #15803d;
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+    }
+    .control-check {
+      width: 18px;
+      height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: #dcfce7;
+      color: #15803d;
+      font-size: 11px;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .control-check[hidden] {
+      display: none !important;
     }
     .share-fab {
       position: fixed;
@@ -747,6 +849,9 @@ html = """<!DOCTYPE html>
       background: #ffffff;
       padding: 14px;
       transition: background 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
+    }
+    .chart-box.top20-mode {
+      height: 620px;
     }
     .legend {
       margin-bottom: 14px;
@@ -994,6 +1099,10 @@ html = """<!DOCTYPE html>
         width: auto;
         justify-content: flex-end;
       }
+      .sheet-select-compact {
+        min-width: 110px;
+        max-width: 138px;
+      }
     }
   </style>
 </head>
@@ -1002,23 +1111,19 @@ html = """<!DOCTYPE html>
     <section class="topbar" id="dashboardHeaderSection">
       <div class="title-block">
         <h1>CTV FCT Dashboard</h1>
+        <div class="title-range">Date Range: <span id="activeDateRangeText">__REPORT_DATE__</span></div>
         <div class="title-meta">Total Records: <strong id="totalRecordsText">0</strong></div>
       </div>
       <div class="top-actions">
-        <div class="top-meta">
-          <div class="meta-pill">📅 <span id="reportDateText">__REPORT_DATE__</span>  🕒 <span id="reportTimeText">__GENERATED_AT__</span></div>
-        </div>
         <div class="action-row" id="headerActionRow">
           <div class="header-icon-group">
-            <input class="upload-input-hidden" id="fileUpload" type="file" accept=".csv,text/csv">
-            <label class="pdf-btn icon-btn" for="fileUpload" title="Upload File" aria-label="Upload File">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 16V4"></path>
-                <path d="M7 9l5-5 5 5"></path>
-                <path d="M4 20h16"></path>
-              </svg>
-              <span class="sr-only">Upload File</span>
+            <input class="upload-input-hidden" id="fileUpload" type="file" accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+            <label class="pdf-btn upload-btn" for="fileUpload" title="Upload File" aria-label="Upload File">
+              <span id="uploadControlText">Upload File</span>
             </label>
+            <span class="control-check" id="uploadCheck" hidden>&#10003;</span>
+            <select class="sheet-select-compact" id="sheetSelect" hidden aria-label="Select worksheet"></select>
+            <span class="control-check" id="sheetCheck" hidden>&#10003;</span>
             <button class="pdf-btn icon-btn" id="pdfBtn" type="button" title="Download Report" aria-label="Download Report">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 4v12"></path>
@@ -1029,7 +1134,7 @@ html = """<!DOCTYPE html>
             </button>
           </div>
         </div>
-        <div class="status" id="statusText">Choose a CSV file to generate the dashboard.</div>
+        <div class="status" id="statusText">Choose a CSV or Excel file to generate the dashboard.</div>
       </div>
     </section>
     <section class="section">
@@ -1066,7 +1171,12 @@ __SECTIONS_HTML__
       </div>
     </div>
   <script>
+__XLSX_BUNDLE__
+  </script>
+  <script>
     const PAYLOAD = __PAYLOAD_JSON__;
+    const COLUMN_MAPPING_CONFIG = __COLUMN_MAPPING_CONFIG_JSON__;
+    const VALUE_MAPPING_CONFIG = __VALUE_MAPPING_CONFIG_JSON__;
     const EXCLUDED = new Set(PAYLOAD.excluded);
     const numberFormat = new Intl.NumberFormat('en-US');
     const longDate = new Intl.DateTimeFormat('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -1086,8 +1196,12 @@ __SECTIONS_HTML__
     };
     const state = {
       rawRows: [],
+      standardizedRows: [],
       cleanedRows: [],
+      preprocessMetadata: null,
       initialized: false,
+      pendingWorkbook: null,
+      pendingWorkbookFileName: '',
       global: {
         topN: '10',
         start: '',
@@ -1103,14 +1217,17 @@ __STATE_SECTIONS_JS__
     };
     const dom = {
       fileUpload: document.getElementById('fileUpload'),
+      uploadControlText: document.getElementById('uploadControlText'),
+      uploadCheck: document.getElementById('uploadCheck'),
+      sheetSelect: document.getElementById('sheetSelect'),
+      sheetCheck: document.getElementById('sheetCheck'),
       pdfBtn: document.getElementById('pdfBtn'),
       shareBtn: document.getElementById('shareBtn'),
       shareModal: document.getElementById('shareModal'),
       shareCancelBtn: document.getElementById('shareCancelBtn'),
       shareDownloadBtn: document.getElementById('shareDownloadBtn'),
       statusText: document.getElementById('statusText'),
-      reportDateText: document.getElementById('reportDateText'),
-      reportTimeText: document.getElementById('reportTimeText'),
+      activeDateRangeText: document.getElementById('activeDateRangeText'),
       totalRecordsText: document.getElementById('totalRecordsText'),
       excludedChips: document.getElementById('excludedChips'),
       summaryLines: document.getElementById('summaryLines'),
@@ -1180,7 +1297,17 @@ __DOM_SECTIONS_JS__
     function normalizeDate(value) {
       const raw = String(value || '').trim();
       if (!raw) return '';
+      if (/^\\d{1,2}:\\d{2}(:\\d{2})?$/.test(raw)) return '';
       if (/^\\d{4}-\\d{2}-\\d{2}$/.test(raw)) return raw;
+      if (/^\\d{1,2}[\\/\\-]\\d{1,2}[\\/\\-]\\d{2,4}$/.test(raw)) {
+        const [left, middle, right] = raw.split(/[\\/\\-]/).map(part => part.trim());
+        const year = right.length === 2 ? `20${right}` : right;
+        return `${year.padStart(4, '0')}-${middle.padStart(2, '0')}-${left.padStart(2, '0')}`;
+      }
+      const parsed = new Date(raw);
+      if (!Number.isNaN(parsed.getTime())) {
+        return `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, '0')}-${String(parsed.getDate()).padStart(2, '0')}`;
+      }
       const parts = raw.split('-').map(p => p.trim());
       if (parts.length === 3) {
         let [day, month, year] = parts;
@@ -1189,8 +1316,41 @@ __DOM_SECTIONS_JS__
       }
       return raw;
     }
+    function normalizeHeader(value, fallbackIndex) {
+      const cleaned = String(value || '').replace(/^\\uFEFF/, '').trim();
+      return cleaned || `Column ${fallbackIndex + 1}`;
+    }
+    function normalizeColumnKey(value) {
+      return String(value || '').toLowerCase().replace(/[_-]+/g, ' ').replace(/\\s+/g, ' ').trim();
+    }
+    function parseNumericValue(value) {
+      if (value === null || value === undefined || value === '') return 0;
+      const normalized = String(value).replace(/,/g, '').trim();
+      const numeric = Number.parseFloat(normalized);
+      return Number.isFinite(numeric) ? numeric : 0;
+    }
+    function detectDelimiter(text) {
+      const sample = String(text || '').split(/\\r?\\n/).slice(0, 10).join('\\n');
+      const candidates = [',', '\\t', ';', '|'];
+      let best = ',';
+      let bestScore = -1;
+      candidates.forEach(delimiter => {
+        let score = 0;
+        let inQuotes = false;
+        for (let i = 0; i < sample.length; i++) {
+          const ch = sample[i];
+          if (ch === '"') inQuotes = !inQuotes;
+          else if (ch === delimiter && !inQuotes) score += 1;
+        }
+        if (score > bestScore) {
+          best = delimiter;
+          bestScore = score;
+        }
+      });
+      return best;
+    }
     function normalizeRow(record) {
-      const aaddur = Number.parseInt(String(record['Aaddur'] || '0').replace(/,/g, ''), 10);
+      const aaddur = parseNumericValue(record['Aaddur'] || '0');
       return {
         channel: String(record['Channel Name'] || '').trim(),
         date: normalizeDate(record['Pdate'] || ''),
@@ -1201,7 +1361,50 @@ __DOM_SECTIONS_JS__
         category: String(record['Category'] || '').trim()
       };
     }
-    function parseCsv(text) {
+    function logPreprocessInfo(message, details) {
+      if (details !== undefined) console.info(`[Preprocess] ${message}`, details);
+      else console.info(`[Preprocess] ${message}`);
+    }
+    function logPreprocessWarn(message, details) {
+      if (details !== undefined) console.warn(`[Preprocess] ${message}`, details);
+      else console.warn(`[Preprocess] ${message}`);
+    }
+    function getStandardColumnAliases() {
+      return (COLUMN_MAPPING_CONFIG && COLUMN_MAPPING_CONFIG.standard_columns) || {};
+    }
+    function buildColumnAliasLookup() {
+      const lookup = new Map();
+      Object.entries(getStandardColumnAliases()).forEach(([standardName, aliases]) => {
+        lookup.set(normalizeColumnKey(standardName), standardName);
+        (aliases || []).forEach(alias => lookup.set(normalizeColumnKey(alias), standardName));
+      });
+      return lookup;
+    }
+    function getStandardFieldLabels() {
+      return {
+        feed_name: 'Feed Name',
+        channel_name: 'Channel Name',
+        report_date: 'Pdate',
+        time_slot: 'Adst',
+        brand_name: 'Brand Name',
+        company_name: 'Company',
+        metric_value: 'Aaddur',
+        category_name: 'Category'
+      };
+    }
+    function loadDatasetFromCsvText(text) {
+      const delimiter = detectDelimiter(text);
+      const matrix = parseDelimitedText(text, delimiter);
+      if (!matrix.length) throw new Error('The selected CSV file is empty.');
+      return buildObjectsFromMatrix(matrix);
+    }
+    function loadDatasetFromWorksheetMatrix(matrix) {
+      if (!matrix.length || !matrix.some(row => row.some(cell => String(cell || '').trim()))) {
+        throw new Error('The selected worksheet is empty.');
+      }
+      return buildObjectsFromMatrix(matrix);
+    }
+    function parseDelimitedText(text, delimiter = ',') {
       const rows = [];
       const lines = [];
       let field = '';
@@ -1217,7 +1420,7 @@ __DOM_SECTIONS_JS__
           } else {
             inQuotes = !inQuotes;
           }
-        } else if (ch === ',' && !inQuotes) {
+        } else if (ch === delimiter && !inQuotes) {
           row.push(field);
           field = '';
         } else if ((ch === '\\n' || ch === '\\r') && !inQuotes) {
@@ -1234,46 +1437,206 @@ __DOM_SECTIONS_JS__
         row.push(field);
         lines.push(row);
       }
-      const normalizedLines = lines.filter(line => line.some(cell => String(cell || '').trim()));
-      if (!normalizedLines.length) throw new Error('The selected CSV file is empty.');
-      const headers = normalizedLines[0].map(v => String(v || '').replace(/^\uFEFF/, '').trim());
-      const normalizedHeaderMap = Object.fromEntries(headers.map((value, idx) => [
-        value.toLowerCase().replace(/\\s+/g, ' ').trim(),
-        idx
-      ]));
-      const required = {
-        'Channel Name': ['channel name', 'channel'],
-        'Pdate': ['pdate', 'date'],
-        'Brand Name': ['brand name', 'brandname'],
-        'Company': ['company'],
-        'Aaddur': ['aaddur', 'addur', 'ad duration', 'ad duration sec'],
-        'Category': ['category']
+      return lines.filter(line => line.some(cell => String(cell || '').trim()));
+    }
+    function buildObjectsFromMatrix(matrix) {
+      if (!matrix.length) return [];
+      const headers = matrix[0].map((value, index) => normalizeHeader(value, index));
+      const seen = new Map();
+      const uniqueHeaders = headers.map(header => {
+        const count = seen.get(header) || 0;
+        seen.set(header, count + 1);
+        return count ? `${header} (${count + 1})` : header;
+      });
+      return matrix.slice(1).map(line => Object.fromEntries(uniqueHeaders.map((header, index) => [header, line[index] || ''])));
+    }
+    function detectColumnProfiles(records) {
+      const headers = Object.keys(records[0] || {});
+      return headers.map(header => {
+        const values = records.map(record => record[header]).filter(value => String(value || '').trim());
+        const sample = values.slice(0, 200);
+        const numericCount = sample.filter(value => {
+          const normalized = String(value).replace(/,/g, '').trim();
+          return normalized && Number.isFinite(Number.parseFloat(normalized));
+        }).length;
+        const dateCount = sample.filter(value => !!normalizeDate(value)).length;
+        const timeCount = sample.filter(value => !!normalizeTimeValue(value)).length;
+        return {
+          header,
+          key: normalizeColumnKey(header),
+          values,
+          sampleCount: sample.length,
+          numericRatio: sample.length ? numericCount / sample.length : 0,
+          dateRatio: sample.length ? dateCount / sample.length : 0,
+          timeRatio: sample.length ? timeCount / sample.length : 0
+        };
+      });
+    }
+    function scoreProfile(profile, aliases) {
+      return aliases.reduce((score, alias) => score + (profile.key.includes(alias) ? 10 : 0), 0);
+    }
+    function inferGenericColumnMapping(records) {
+      if (!records.length) throw new Error('The selected dataset does not contain any data rows.');
+      const profiles = detectColumnProfiles(records);
+      const used = new Set();
+      function choose(aliases, predicate, fallback = false) {
+        const matches = profiles
+          .filter(profile => !used.has(profile.header) && (!predicate || predicate(profile)))
+          .map(profile => ({
+            profile,
+            score: scoreProfile(profile, aliases)
+          }))
+          .sort((a, b) => b.score - a.score || b.profile.values.length - a.profile.values.length);
+        const picked = matches.find(item => item.score > 0) || (fallback ? matches[0] : null);
+        if (picked) {
+          used.add(picked.profile.header);
+          return picked.profile.header;
+        }
+        return '';
+      }
+      const date = choose(['date', 'day', 'month', 'year', 'period'], profile => profile.dateRatio >= 0.5, true);
+      const adtime = choose(['time', 'slot', 'hour', 'adst'], profile => profile.timeRatio >= 0.5);
+      const aaddur = choose(['duration', 'amount', 'value', 'metric', 'total', 'count', 'qty', 'quantity', 'revenue', 'sales', 'aaddur'], profile => profile.numericRatio >= 0.7, true);
+      const textPredicate = profile => profile.numericRatio < 0.7;
+      const feed = choose(['feed', 'network', 'station', 'source'], textPredicate, true);
+      const channel = choose(['channel', 'channel name'], textPredicate);
+      const company = choose(['company', 'client', 'customer', 'account', 'owner', 'group'], textPredicate, true);
+      const product = choose(['brand', 'product', 'advertiser', 'campaign', 'item', 'title', 'name'], textPredicate, true);
+      const category = choose(['category', 'segment', 'type', 'class', 'genre', 'vertical'], textPredicate, true);
+      return {
+        report_date: date,
+        time_slot: adtime,
+        metric_value: aaddur,
+        feed_name: feed,
+        channel_name: channel,
+        company_name: company,
+        brand_name: product,
+        category_name: category
       };
-      const resolved = {};
-      for (const [label, aliases] of Object.entries(required)) {
-        const match = aliases.find(alias => alias in normalizedHeaderMap);
-        if (!match) throw new Error('Missing required column: ' + label);
-        resolved[label] = normalizedHeaderMap[match];
-      }
-      const adstIndex = ['adst', 'ad st', 'ad time'].find(alias => alias in normalizedHeaderMap);
-      let validRowCount = 0;
-      for (let i = 1; i < normalizedLines.length; i++) {
-        const line = normalizedLines[i];
-        const record = normalizeRow({
-          'Channel Name': line[resolved['Channel Name']] || '',
-          'Pdate': line[resolved['Pdate']] || '',
-          'Adst': adstIndex ? (line[normalizedHeaderMap[adstIndex]] || '') : '',
-          'Brand Name': line[resolved['Brand Name']] || '',
-          'Company': line[resolved['Company']] || '',
-          'Aaddur': line[resolved['Aaddur']] || '',
-          'Category': line[resolved['Category']] || ''
+    }
+    function standardizeColumns(records) {
+      if (!records.length) throw new Error('The selected dataset does not contain any data rows.');
+      const aliasLookup = buildColumnAliasLookup();
+      const appliedMappings = [];
+      const unknownColumns = new Set();
+      const standardizedRecords = records.map(record => {
+        const next = {};
+        Object.entries(record).forEach(([column, value]) => {
+          const normalizedKey = normalizeColumnKey(column);
+          const standardName = aliasLookup.get(normalizedKey);
+          const targetKey = standardName || column;
+          if (standardName) {
+            if (!appliedMappings.some(item => item.from === column && item.to === standardName)) {
+              appliedMappings.push({ from: column, to: standardName });
+            }
+          } else {
+            unknownColumns.add(column);
+          }
+          if (next[targetKey] === undefined || next[targetKey] === '') {
+            next[targetKey] = value;
+          }
         });
-        if (!record.channel && !record.company && !record.product && !record.category && !record.aaddur) continue;
-        rows.push(record);
-        validRowCount++;
+        return next;
+      });
+
+      const inferredMappings = inferGenericColumnMapping(standardizedRecords);
+      Object.entries(inferredMappings).forEach(([standardName, sourceColumn]) => {
+        if (!sourceColumn) return;
+        if (standardizedRecords.some(record => record[standardName] !== undefined && String(record[standardName]).trim() !== '')) return;
+        standardizedRecords.forEach(record => {
+          record[standardName] = record[sourceColumn];
+        });
+        appliedMappings.push({ from: sourceColumn, to: standardName, inferred: true });
+      });
+
+      logPreprocessInfo('Column mappings applied.', appliedMappings);
+      if (unknownColumns.size) {
+        logPreprocessWarn('Unknown columns encountered and preserved in memory.', Array.from(unknownColumns));
       }
-      if (!validRowCount) throw new Error('The selected CSV file does not contain any usable data rows.');
-      return rows;
+      return { records: standardizedRecords, appliedMappings, unknownColumns: Array.from(unknownColumns) };
+    }
+    function standardizeValues(records) {
+      const config = VALUE_MAPPING_CONFIG || {};
+      const normalizedConfigs = Object.fromEntries(Object.entries(config).map(([column, mappings]) => [
+        column,
+        Object.fromEntries(Object.entries(mappings || {}).map(([rawValue, standardValue]) => [normalizeColumnKey(rawValue), standardValue]))
+      ]));
+      const appliedColumns = [];
+      const unknownValues = {};
+      const standardizedRecords = records.map(record => {
+        const next = { ...record };
+        Object.entries(normalizedConfigs).forEach(([column, mapping]) => {
+          if (!(column in next)) return;
+          const rawValue = String(next[column] || '').trim();
+          if (!rawValue) return;
+          const normalizedValue = normalizeColumnKey(rawValue);
+          if (Object.prototype.hasOwnProperty.call(mapping, normalizedValue)) {
+            next[column] = mapping[normalizedValue];
+            if (!appliedColumns.includes(column)) appliedColumns.push(column);
+          } else {
+            if (!unknownValues[column]) unknownValues[column] = [];
+            if (!unknownValues[column].includes(rawValue) && unknownValues[column].length < 20) {
+              unknownValues[column].push(rawValue);
+            }
+          }
+        });
+        return next;
+      });
+      logPreprocessInfo('Value mappings applied.', appliedColumns);
+      Object.entries(unknownValues).forEach(([column, values]) => {
+        if (values.length) logPreprocessWarn(`Unknown values preserved for ${column}.`, values);
+      });
+      return { records: standardizedRecords, appliedColumns, unknownValues };
+    }
+    function deriveChannelName(records) {
+      const derivedRecords = records.map(record => {
+        const next = { ...record };
+        const feedValue = String(next.feed_name || '').trim();
+        const channelValue = String(next.channel_name || '').trim();
+        if (feedValue) {
+          next.channel_name = feedValue;
+        } else if (channelValue) {
+          next.channel_name = channelValue;
+        } else {
+          next.channel_name = '';
+        }
+        return next;
+      });
+      logPreprocessInfo('Derived channel_name from standardized feed_name values.');
+      return derivedRecords;
+    }
+    function transformStandardizedRecord(record) {
+      const labels = getStandardFieldLabels();
+      return normalizeRow({
+        [labels.channel_name]: record.channel_name || record.feed_name || '',
+        [labels.report_date]: record.report_date || '',
+        [labels.time_slot]: record.time_slot || '',
+        [labels.brand_name]: record.brand_name || '',
+        [labels.company_name]: record.company_name || '',
+        [labels.metric_value]: record.metric_value ?? '1',
+        [labels.category_name]: record.category_name || ''
+      });
+    }
+    function preprocessDataset(records, sourceLabel) {
+      logPreprocessInfo(`Dataset loaded successfully from ${sourceLabel}.`, { rows: records.length });
+      const standardizedColumns = standardizeColumns(records);
+      const standardizedValues = standardizeValues(standardizedColumns.records);
+      const channelStandardizedRecords = deriveChannelName(standardizedValues.records);
+      const rows = channelStandardizedRecords
+        .map(transformStandardizedRecord)
+        .filter(record => record.channel || record.company || record.product || record.category || record.aaddur);
+      if (!rows.length) throw new Error('The selected dataset does not contain any usable rows after preprocessing.');
+      logPreprocessInfo('Preprocessing completed successfully.', { rows: rows.length });
+      return {
+        dashboardRows: rows,
+        standardizedRecords: channelStandardizedRecords,
+        metadata: {
+          columnMappings: standardizedColumns.appliedMappings,
+          unknownColumns: standardizedColumns.unknownColumns,
+          valueMappedColumns: standardizedValues.appliedColumns,
+          unknownValues: standardizedValues.unknownValues
+        }
+      };
     }
     function setStatus(message, isError = false) {
       if (!dom.statusText) return;
@@ -1293,22 +1656,94 @@ __DOM_SECTIONS_JS__
         reader.readAsText(file, encoding);
       });
     }
+    function readUploadedArrayBuffer(file) {
+      return new Promise((resolve, reject) => {
+        if (!file) {
+          reject(new Error('No file selected'));
+          return;
+        }
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error('Could not read Excel file'));
+        reader.onload = event => resolve(event.target && event.target.result);
+        reader.readAsArrayBuffer(file);
+      });
+    }
+    function setUploadSuccessState(isSuccess) {
+      if (dom.uploadControlText) dom.uploadControlText.textContent = isSuccess ? 'Upload File' : 'Upload File';
+      if (dom.uploadCheck) dom.uploadCheck.hidden = !isSuccess;
+      const uploadLabel = dom.uploadControlText && dom.uploadControlText.closest('.upload-btn');
+      if (uploadLabel) uploadLabel.classList.toggle('success', isSuccess);
+    }
+    function setSheetSuccessState(isSuccess) {
+      if (dom.sheetCheck) dom.sheetCheck.hidden = !isSuccess;
+      if (dom.sheetSelect) dom.sheetSelect.classList.toggle('success', isSuccess);
+    }
     async function parseUploadedCsvFile(file) {
-      const fileName = String(file && file.name || '').toLowerCase();
-      if (!fileName.endsWith('.csv')) {
-        throw new Error('Invalid file format. Please select a CSV file.');
-      }
       const encodings = ['UTF-8', 'windows-1252', 'iso-8859-1'];
       let lastError = null;
       for (const encoding of encodings) {
         try {
           const text = await readUploadedFile(file, encoding);
-          return parseCsv(text);
+          const records = loadDatasetFromCsvText(text);
+          return preprocessDataset(records, file.name);
         } catch (error) {
           lastError = error;
         }
       }
       throw lastError || new Error('Could not read CSV file');
+    }
+    async function prepareWorkbookSelection(file) {
+      if (typeof XLSX === 'undefined') {
+        throw new Error('Excel import is unavailable because the workbook parser could not be loaded.');
+      }
+      const buffer = await readUploadedArrayBuffer(file);
+      let workbook;
+      try {
+        workbook = XLSX.read(buffer, { type: 'array', dense: true, cellDates: false });
+      } catch (error) {
+        throw new Error('The selected Excel file is corrupted or invalid.');
+      }
+      if (!workbook.SheetNames || !workbook.SheetNames.length) {
+        throw new Error('The selected Excel file does not contain any worksheets.');
+      }
+      state.pendingWorkbook = workbook;
+      state.pendingWorkbookFileName = file.name;
+      if (!dom.sheetSelect) return;
+      dom.sheetSelect.innerHTML = '<option value="">Select Sheet</option>' + workbook.SheetNames.map((name, index) => `<option value="${String(index)}" title="${name}">${index + 1}. ${name}</option>`).join('');
+      dom.sheetSelect.hidden = false;
+      dom.sheetSelect.value = '';
+      setUploadSuccessState(true);
+      setSheetSuccessState(false);
+      setStatus(`Workbook ready: ${file.name}. Choose a worksheet before importing.`, false);
+    }
+    function clearWorkbookSelection(options = {}) {
+      state.pendingWorkbook = null;
+      state.pendingWorkbookFileName = '';
+      if (dom.sheetSelect) {
+        dom.sheetSelect.hidden = true;
+        dom.sheetSelect.innerHTML = '';
+      }
+      if (!options.preserveSuccessState) {
+        setSheetSuccessState(false);
+      }
+    }
+    function parseSelectedWorksheet() {
+      if (!state.pendingWorkbook) {
+        throw new Error('Select an Excel file first.');
+      }
+      const selectedIndex = dom.sheetSelect ? dom.sheetSelect.value : '';
+      if (selectedIndex === '') {
+        throw new Error('Choose a worksheet before importing the Excel file.');
+      }
+      const sheetName = state.pendingWorkbook.SheetNames[Number.parseInt(selectedIndex, 10)];
+      const sheet = state.pendingWorkbook.Sheets[sheetName];
+      const matrix = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '', raw: false, blankrows: false });
+      if (!matrix.length || !matrix.some(row => row.some(cell => String(cell || '').trim()))) {
+        throw new Error(`The selected worksheet "${sheetName}" is empty.`);
+      }
+      const records = loadDatasetFromWorksheetMatrix(matrix);
+      const preprocessed = preprocessDataset(records, `${state.pendingWorkbookFileName} / ${sheetName}`);
+      return { rows: preprocessed.dashboardRows, sheetName, metadata: preprocessed.metadata };
     }
     function cleanRows(rows) {
       return rows.filter(row => !EXCLUDED.has(row.category));
@@ -1461,6 +1896,14 @@ __DOM_SECTIONS_JS__
     function withAxisHeadroom(value) {
       return value > 0 ? value * 1.08 : 1;
     }
+    function isTop20Mode(sectionKey) {
+      return String(state.sections[sectionKey] && state.sections[sectionKey].topN || '') === '20';
+    }
+    function applyChartDensity(sectionKey) {
+      const chart = dom.sections[sectionKey] && dom.sections[sectionKey].chart;
+      if (!chart) return;
+      chart.classList.toggle('top20-mode', isTop20Mode(sectionKey));
+    }
     function setChartBoxHeight(box, height) {
       if (!box) return;
       box.style.height = `${Math.max(height, 500)}px`;
@@ -1474,10 +1917,12 @@ __DOM_SECTIONS_JS__
     }
     function renderHeaderStats() {
       const rows = getDashboardSummaryRows();
-      const now = state.reportClock ? new Date(state.reportClock) : new Date();
+      const visibleDates = rows.map(row => row.date).filter(Boolean).sort((a, b) => a.localeCompare(b));
+      const activeRange = visibleDates.length
+        ? `${formatDate(visibleDates[0])} - ${formatDate(visibleDates[visibleDates.length - 1])}`
+        : getSelectedDateRangeText();
       if (dom.totalRecordsText) dom.totalRecordsText.textContent = formatNumber(rows.length);
-      if (dom.reportDateText) dom.reportDateText.textContent = now.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-      if (dom.reportTimeText) dom.reportTimeText.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      if (dom.activeDateRangeText) dom.activeDateRangeText.textContent = activeRange;
     }
     function updateStickyFilterPosition() {
       const wrap = dom.stickyFilterWrap;
@@ -1739,23 +2184,49 @@ __DOM_SECTIONS_JS__
       section.end.min = dates[0] || '';
       section.end.max = dates[dates.length - 1] || '';
     }
-    function getSectionRows(sectionKey) {
-      const sectionState = state.sections[sectionKey];
-      let rows = state.cleanedRows.filter(row => {
-        if (sectionState.channel && row.channel !== sectionState.channel) return false;
-        if (Array.isArray(sectionState.category) && sectionState.category.length && !sectionState.category.includes(row.category)) return false;
-        if (!Array.isArray(sectionState.category) && sectionState.category && row.category !== sectionState.category) return false;
-        if (sectionState.start && row.date && row.date < sectionState.start) return false;
-        if (sectionState.end && row.date && row.date > sectionState.end) return false;
-        if (state.global.advertisor && row.product !== state.global.advertisor) return false;
-        if (sectionKey === 'g5') {
+    function matchesCategoryFilter(row, categoryFilter) {
+      if (Array.isArray(categoryFilter) && categoryFilter.length) {
+        return categoryFilter.includes(row.category);
+      }
+      if (!Array.isArray(categoryFilter) && categoryFilter) {
+        return row.category === categoryFilter;
+      }
+      return true;
+    }
+    function filterRows(rows, filters = {}, options = {}) {
+      return rows.filter(row => {
+        if (filters.channel && row.channel !== filters.channel) return false;
+        if (!matchesCategoryFilter(row, filters.category)) return false;
+        if (filters.start && (!row.date || row.date < filters.start)) return false;
+        if (filters.end && (!row.date || row.date > filters.end)) return false;
+        if (filters.advertisor && row.product !== filters.advertisor) return false;
+        if (options.requireHourlySlot) {
           const hour = parseHourValue(row.adtime);
           if (hour === null || hour < 6) return false;
-          if (sectionState.advertisor && row.product !== sectionState.advertisor) return false;
         }
         return true;
       });
-      return rows;
+    }
+    function getGlobalFilteredRows() {
+      return filterRows(state.cleanedRows, {
+        start: state.global.start,
+        end: state.global.end,
+        channel: state.global.channel,
+        category: state.global.category,
+        advertisor: state.global.advertisor
+      });
+    }
+    function getSectionRows(sectionKey) {
+      const sectionState = state.sections[sectionKey];
+      return filterRows(state.cleanedRows, {
+        start: sectionState.start,
+        end: sectionState.end,
+        channel: sectionState.channel,
+        category: sectionState.category,
+        advertisor: sectionKey === 'g5' ? (sectionState.advertisor || state.global.advertisor) : state.global.advertisor
+      }, {
+        requireHourlySlot: sectionKey === 'g5'
+      });
     }
     function aggregateAdvertisors(rows) {
       const map = new Map();
@@ -1919,6 +2390,7 @@ __DOM_SECTIONS_JS__
       ).join('');
     }
     function drawGraph1(rows) {
+      applyChartDensity('g1');
       const topAdvertisers = aggregateAdvertisors(rows).slice(0, Number.parseInt(state.sections.g1.topN, 10));
       if (!topAdvertisers.length) {
         drawEmpty(dom.sections.g1.chart, 'No data available for selected filters');
@@ -1931,6 +2403,7 @@ __DOM_SECTIONS_JS__
       const margin = { top: 18, right: 24, bottom: 118, left: 70 };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
+      const compact = isTop20Mode('g1');
       const maxValue = withAxisHeadroom(Math.max(...topAdvertisers.map(item => item.total), 1));
       drawAxes(svg, margin, plotW, plotH, 'Top Advertisers', metricLabel(), width, height, maxValue);
       const slotCount = Math.max(Number.parseInt(state.sections.g1.topN, 10) || topAdvertisers.length, 1);
@@ -1945,23 +2418,25 @@ __DOM_SECTIONS_JS__
           x: x + barW / 2,
           y: Math.max(y - 6, margin.top + 10),
           fill: '#1f2937',
-          'font-size': 11,
+          'font-size': compact ? 9.5 : 11,
           'font-weight': 800,
           'text-anchor': 'middle'
         });
         dataLabel.textContent = formatDurationValue(item.total);
         svg.appendChild(dataLabel);
-        addWrappedText(svg, item.advertisor, x + barW / 2, margin.top + plotH + 18, 12, '#1f2937', 10, 'middle', 700);
+        addWrappedText(svg, item.advertisor, x + barW / 2, margin.top + plotH + 18, compact ? 10 : 12, '#1f2937', compact ? 8.8 : 10, 'middle', 700);
       });
       renderLegend(dom.sections.g1.legend, [{ label: metricLabel(), color: chartPalettes.g1[0] }]);
     }
     function drawGraph2Bar(rows) {
+      applyChartDensity('g2');
       if (dom.sections.g2.metric) dom.sections.g2.metric.textContent = '';
       const topAdvertisors = aggregateAdvertisors(rows).slice(0, Number.parseInt(state.sections.g2.topN, 10));
       const matrix = buildAdvertisorChannelMatrix(rows, topAdvertisors);
       if (!matrix.rows.length || !matrix.channels.length) {
         drawEmpty(dom.sections.g2.chart, 'No data available for selected filters');
         dom.sections.g2.legend.innerHTML = '';
+        if (dom.sections.g2.metric) dom.sections.g2.metric.textContent = 'No data available';
         return;
       }
       resetChartBoxHeight(dom.sections.g2.chart);
@@ -1969,6 +2444,7 @@ __DOM_SECTIONS_JS__
       const margin = { top: 18, right: 24, bottom: 118, left: 58 };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
+      const compact = isTop20Mode('g2');
       const maxValue = withAxisHeadroom(Math.max(...matrix.rows.flatMap(row => matrix.channels.map(channel => row.values[channel] || 0)), 1));
       drawAxes(svg, margin, plotW, plotH, advertisorLabel(), metricLabel(), width, height, maxValue);
       const groupW = plotW / Math.max(matrix.rows.length, 1);
@@ -1994,7 +2470,7 @@ __DOM_SECTIONS_JS__
           svg.appendChild(svgEl('rect', { x, y, width: barW, height: h, rx: 2, fill: channelColor(channel, 'g2') }));
           const dataLabel = svgEl('text', {
             x: x + barW / 2, y: Math.max(y - 6, margin.top + 10),
-            fill: '#000000', 'font-size': 11.5, 'font-weight': 700, 'text-anchor': 'middle'
+            fill: '#000000', 'font-size': compact ? 9.5 : 11.5, 'font-weight': 700, 'text-anchor': 'middle'
           });
           dataLabel.textContent = value ? formatDurationValue(value) : '';
           svg.appendChild(dataLabel);
@@ -2004,9 +2480,9 @@ __DOM_SECTIONS_JS__
           row.advertisor,
           startX + ((matrix.channels.length * (barW + 2)) - 2) / 2,
           margin.top + plotH + 18,
-          12,
+          compact ? 10 : 12,
           '#1f2937',
-          10.5,
+          compact ? 8.8 : 10.5,
           'middle',
           700
         );
@@ -2017,6 +2493,7 @@ __DOM_SECTIONS_JS__
       })));
     }
     function drawGraph2Pie(rows) {
+      applyChartDensity('g2');
       const distribution = buildChannelDistribution(rows);
       if (!distribution.length) {
         drawEmpty(dom.sections.g2.chart, 'No data available for selected filters');
@@ -2031,6 +2508,7 @@ __DOM_SECTIONS_JS__
       const radius = Math.min(width, height) * 0.31;
       const innerRadius = radius * 0.42;
       const total = distribution.reduce((sum, item) => sum + item.total, 0) || 1;
+      const compact = isTop20Mode('g2');
       if (dom.sections.g2.metric) {
         dom.sections.g2.metric.textContent = `Total advertisement duration: ${formatDurationValue(total, true)}`;
       }
@@ -2060,7 +2538,7 @@ __DOM_SECTIONS_JS__
         svg.lastChild.appendChild(title);
         const mid = startAngle + (endAngle - startAngle) / 2;
         const label = polar(radius + 38, mid);
-        addWrappedText(svg, `${item.channel} ${formatDurationValue(item.total, true)} ${(fraction * 100).toFixed(0)}%`, label.x, label.y, 16, '#1f2937', 10, mid > Math.PI / 2 || mid < -Math.PI / 2 ? 'end' : 'start', 700);
+        addWrappedText(svg, `${item.channel} ${formatDurationValue(item.total, true)} ${(fraction * 100).toFixed(0)}%`, label.x, label.y, compact ? 13 : 16, '#1f2937', compact ? 8.6 : 10, mid > Math.PI / 2 || mid < -Math.PI / 2 ? 'end' : 'start', 700);
         startAngle = endAngle;
       });
       renderLegend(dom.sections.g2.legend, distribution.map(item => ({
@@ -2069,6 +2547,7 @@ __DOM_SECTIONS_JS__
       })));
     }
     function drawGraph3Bar(rows) {
+      applyChartDensity('g3');
       const topAdvertisors = aggregateAdvertisors(rows).slice(0, Number.parseInt(state.sections.g3.topN, 10));
       const matrix = buildAdvertisorDateMatrix(rows, topAdvertisors);
       if (!matrix.rows.length || !topAdvertisors.length) {
@@ -2081,6 +2560,7 @@ __DOM_SECTIONS_JS__
       const margin = { top: 18, right: 24, bottom: 86, left: 58 };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
+      const compact = isTop20Mode('g3');
       const maxValue = withAxisHeadroom(Math.max(...matrix.rows.flatMap(row => topAdvertisors.map(item => row.values[item.advertisor] || 0)), 1));
       drawAxes(svg, margin, plotW, plotH, 'Date', metricLabel(), width, height, maxValue);
       const groupW = plotW / Math.max(matrix.rows.length, 1);
@@ -2111,12 +2591,12 @@ __DOM_SECTIONS_JS__
           }));
           const dataLabel = svgEl('text', {
             x: x + barW / 2, y: Math.max(y - 6, margin.top + 10),
-            fill: '#000000', 'font-size': 11.5, 'font-weight': 700, 'text-anchor': 'middle'
+            fill: '#000000', 'font-size': compact ? 9.5 : 11.5, 'font-weight': 700, 'text-anchor': 'middle'
           });
           dataLabel.textContent = value ? formatDurationValue(value) : '';
           svg.appendChild(dataLabel);
         });
-        addWrappedText(svg, formatDate(row.date), startX + ((topAdvertisors.length * (barW + 2)) - 2) / 2, margin.top + plotH + 16, 10, '#1f2937', 10.5, 'middle', 700);
+        addWrappedText(svg, formatDate(row.date), startX + ((topAdvertisors.length * (barW + 2)) - 2) / 2, margin.top + plotH + 16, compact ? 8 : 10, '#1f2937', compact ? 8.8 : 10.5, 'middle', 700);
       });
       renderLegend(dom.sections.g3.legend, topAdvertisors.map((item, idx) => ({
         label: item.advertisor,
@@ -2124,6 +2604,7 @@ __DOM_SECTIONS_JS__
       })));
     }
     function drawGraph3Heatmap(rows) {
+      applyChartDensity('g3');
       const topAdvertisors = aggregateAdvertisors(rows).slice(0, Number.parseInt(state.sections.g3.topN, 10));
       const matrix = buildAdvertisorDateMatrix(rows, topAdvertisors);
       if (!matrix.rows.length || !topAdvertisors.length) {
@@ -2183,12 +2664,13 @@ __DOM_SECTIONS_JS__
           'stroke-width': 1
         }));
       }
-      const dateLabelSize = topAdvertisors.length >= 20 ? 9.5 : 10.5;
+      const compact = isTop20Mode('g3');
+      const dateLabelSize = topAdvertisors.length >= 20 || compact ? 8.8 : 10.5;
       matrix.rows.forEach((row, ci) => {
         addWrappedText(svg, formatDate(row.date), margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, 10, '#1f2937', dateLabelSize, 'middle', 700);
       });
       topAdvertisors.forEach((item, ri) => {
-        addWrappedText(svg, item.advertisor, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, 16, '#1f2937', 11, 'end', 700);
+        addWrappedText(svg, item.advertisor, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, compact ? 12 : 16, '#1f2937', compact ? 9.5 : 11, 'end', 700);
       });
       topAdvertisors.forEach((item, ri) => {
         matrix.rows.forEach((row, ci) => {
@@ -2229,6 +2711,7 @@ __DOM_SECTIONS_JS__
       ]);
     }
     function drawGraph4(rows) {
+      applyChartDensity('g4');
       const matrix = buildHeatmapMatrix(rows, Number.parseInt(state.sections.g4.topN, 10));
       if (!matrix.channels.length || !matrix.categories.length) {
         drawEmpty(dom.sections.g4.chart, 'No data available for selected filters');
@@ -2241,6 +2724,7 @@ __DOM_SECTIONS_JS__
       const plotH = height - margin.top - margin.bottom;
       const cellW = plotW / Math.max(matrix.channels.length, 1);
       const cellH = plotH / Math.max(matrix.categories.length, 1);
+      const compact = isTop20Mode('g4');
       const backgroundFill = '#ffffff';
       svg.appendChild(svgEl('rect', {
         x: margin.left, y: margin.top, width: plotW, height: plotH, rx: 12,
@@ -2274,10 +2758,10 @@ __DOM_SECTIONS_JS__
         }));
       }
       matrix.channels.forEach((channel, ci) => {
-        addWrappedText(svg, channel, margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, 10, '#1f2937', 11.5, 'middle', 700);
+        addWrappedText(svg, channel, margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, compact ? 8 : 10, '#1f2937', compact ? 9.3 : 11.5, 'middle', 700);
       });
       matrix.categories.forEach((category, ri) => {
-        addWrappedText(svg, category, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, 18, '#1f2937', 11.5, 'end', 700);
+        addWrappedText(svg, category, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, compact ? 14 : 18, '#1f2937', compact ? 9.3 : 11.5, 'end', 700);
       });
       matrix.categories.forEach((category, ri) => {
         matrix.channels.forEach((channel, ci) => {
@@ -2317,6 +2801,7 @@ __DOM_SECTIONS_JS__
       const unitMeta = graph5UnitMeta();
       if (!matrix.channels.length) {
         drawEmpty(dom.sections.g5.chart, 'No data available for the selected filters.');
+        if (dom.sections.g5.totalGrid) dom.sections.g5.totalGrid.innerHTML = '<div class="empty">No data available</div>';
         return;
       }
       resetChartBoxHeight(dom.sections.g5.chart);
@@ -2439,7 +2924,7 @@ __DOM_SECTIONS_JS__
       return [...new Set(values)];
     }
     function getDashboardSummaryRows() {
-      return state.cleanedRows;
+      return getGlobalFilteredRows();
     }
     function renderSummary() {
       const rows = getDashboardSummaryRows();
@@ -2459,23 +2944,22 @@ __DOM_SECTIONS_JS__
       const channelDistribution = buildChannelDistribution(rows);
       const categories = buildCategoryDistribution(rows);
       const advertisers = aggregateAdvertisors(rows);
-      const topAdvertisor = advertisers[0] || { advertisor: 'N/A', total: 0 };
       const topChannel = channelDistribution[0] || { channel: 'N/A', total: 0 };
-      const topCategory = categories[0];
+      const topCategory = categories[0] || { category: 'N/A', total: 0 };
       const lowestChannel = channelDistribution[channelDistribution.length - 1] || { channel: 'N/A', total: 0 };
       const topCategoryPct = total ? (topCategory.total / total) * 100 : 0;
       const topChannelPct = total ? (topChannel.total / total) * 100 : 0;
       const topFiveCategories = categories
         .slice(0, 5)
         .map(item => `${sentenceCaseName(item.category)} (${formatDurationValue(item.total, true)})`)
-        .join(', ');
+        .join(', ') || 'No category data is available for the current selection';
       const topFiveAdvertisers = advertisers
         .slice(0, 5)
         .map(item => `${titleCaseName(item.advertisor)} (${formatDurationValue(item.total, true)})`)
-        .join(', ');
+        .join(', ') || 'No advertiser data is available for the current selection';
       const channelDistributionInline = channelDistribution
         .map(item => `${titleCaseName(item.channel)} (${formatDurationValue(item.total, true)})`)
-        .join(', ');
+        .join(', ') || 'no channels are available for the current selection';
       const topFiveAdvertiserTotal = advertisers.slice(0, 5).reduce((sum, item) => sum + item.total, 0);
       const topFiveCategoryTotal = categories.slice(0, 5).reduce((sum, item) => sum + item.total, 0);
       const advertiserShare = total ? (topFiveAdvertiserTotal / total) * 100 : 0;
@@ -2579,7 +3063,6 @@ __DOM_SECTIONS_JS__
             <p class="hero-subtitle">Advertising Analytics Dashboard</p>
             <div class="hero-meta">
               <div class="meta-pill">Date Range: ${getSelectedDateRangeText()}</div>
-              <div class="meta-pill">Last Updated: ${generatedAt}</div>
             </div>
           </div>
         </section>
@@ -2614,7 +3097,9 @@ __DOM_SECTIONS_JS__
     }
     function getDatasetNameForExport() {
       const status = String(dom.statusText?.textContent || '').trim();
-      const loaded = status.match(/Loaded file:\\s*(.+)$/i);
+      const loaded = status.match(/Loaded(?:\\s+CSV|\\s+workbook|\\s+shared dashboard snapshot\\.|\\s+embedded dataset)?\\s*file:\\s*(.+)$/i)
+        || status.match(/Loaded\\s+CSV\\s+file:\\s*(.+)$/i)
+        || status.match(/Loaded\\s+workbook:\\s*(.+)$/i);
       if (loaded && loaded[1]) return loaded[1].replace(/\\.[^.]+$/, '');
       return 'Dashboard';
     }
@@ -2695,22 +3180,9 @@ __DOM_SECTIONS_JS__
       };
       const exportState = serializeDashboardState();
       const preloadScript = `\n<script>window.PRELOADED_DATASET = ${JSON.stringify(exportPayload.rows)};window.PRELOADED_DASHBOARD_STATE = ${JSON.stringify(exportState)};<\\/script>\n`;
-      const shareStylePatch = `\n<style>body{min-height:auto !important;overflow:auto !important;} .share-fab,.share-modal{display:none !important;}</style>\n`;
       let exportedHtml = '<!DOCTYPE html>\\n' + document.documentElement.outerHTML;
-      exportedHtml = exportedHtml.replace(/<button class="share-fab"[\\s\\S]*?<\\/button>\\s*/m, '');
-      exportedHtml = exportedHtml.replace(/<div class="share-modal" id="shareModal"[\\s\\S]*?<\\/div>\\s*<\\/div>\\s*/m, '');
-      exportedHtml = exportedHtml.replace(/<input class="upload-input-hidden" id="fileUpload"[\\s\\S]*?<label class="pdf-btn icon-btn" for="fileUpload"[\\s\\S]*?<\\/label>\\s*/m, '');
-      exportedHtml = exportedHtml.replace(/const PAYLOAD = [\\s\\S]*?;\\n\\s*const EXCLUDED = new Set\\(PAYLOAD\\.excluded\\);/, `const PAYLOAD = ${JSON.stringify(exportPayload)};\\n    const EXCLUDED = new Set(PAYLOAD.excluded);`);
-      exportedHtml = exportedHtml.replace(/const dom = \\{\\n\\s*fileUpload: document\\.getElementById\\('fileUpload'\\),/, "const dom = {\\n      fileUpload: document.getElementById('fileUpload'),");
-      exportedHtml = exportedHtml.replace(/\\s*shareBtn: document\\.getElementById\\('shareBtn'\\),\\n/, '\\n');
-      exportedHtml = exportedHtml.replace(/\\s*shareModal: document\\.getElementById\\('shareModal'\\),\\n/, '\\n');
-      exportedHtml = exportedHtml.replace(/\\s*shareCancelBtn: document\\.getElementById\\('shareCancelBtn'\\),\\n/, '\\n');
-      exportedHtml = exportedHtml.replace(/\\s*shareDownloadBtn: document\\.getElementById\\('shareDownloadBtn'\\),\\n/, '\\n');
-      exportedHtml = exportedHtml.replace(/if \\(dom\\.fileUpload\\) \\{[\\s\\S]*?\\n    \\}/, '');
-      exportedHtml = exportedHtml.replace(/if \\(dom\\.shareBtn\\) \\{[\\s\\S]*?\\n        \\}/, '');
-      exportedHtml = exportedHtml.replace(/<div class="status" id="statusText">[\\s\\S]*?<\\/div>/, '<div class="status" id="statusText">Loaded shared dashboard snapshot.</div>');
       exportedHtml = exportedHtml.replace(/<body([^>]*)style="[^"]*overflow:\\s*hidden;?[^"]*"([^>]*)>/i, '<body$1$2>');
-      exportedHtml = exportedHtml.replace('<head>', `<head>${preloadScript}${shareStylePatch}`);
+      exportedHtml = exportedHtml.replace('<head>', `<head>${preloadScript}`);
       const blob = new Blob([exportedHtml], { type: 'text/html;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -2998,8 +3470,10 @@ __DOM_SECTIONS_JS__
       updateFullButtons();
       updateStickyFilterPosition();
     }
-    function loadRows(rows, status) {
+    function loadRows(rows, status, preprocessMetadata = null, options = {}) {
       state.rawRows = rows;
+      state.standardizedRows = rows;
+      state.preprocessMetadata = preprocessMetadata;
       state.cleanedRows = cleanRows(rows);
       if (!state.rawRows.length) {
         throw new Error('The selected CSV file is empty.');
@@ -3009,6 +3483,7 @@ __DOM_SECTIONS_JS__
       }
       initializeSections();
       renderExcluded();
+      clearWorkbookSelection({ preserveSuccessState: !!options.preserveSheetSuccessState });
       setStatus(status, false);
       renderAll();
     }
@@ -3018,12 +3493,36 @@ __DOM_SECTIONS_JS__
         if (!file) return;
         try {
           setStatus(`Reading file: ${file.name}`, false);
-          const rows = await parseUploadedCsvFile(file);
-          loadRows(rows, `Loaded file: ${file.name}`);
+          const fileName = String(file.name || '').toLowerCase();
+          if (fileName.endsWith('.csv')) {
+            const preprocessed = await parseUploadedCsvFile(file);
+            setUploadSuccessState(true);
+            clearWorkbookSelection();
+            loadRows(preprocessed.dashboardRows, `Loaded CSV file: ${file.name}`, preprocessed.metadata);
+          } else if (fileName.endsWith('.xlsx')) {
+            await prepareWorkbookSelection(file);
+          } else {
+            throw new Error('Unsupported file format. Please select a .csv or .xlsx file.');
+          }
         } catch (error) {
-          setStatus(error.message || 'Could not read CSV file', true);
+          setUploadSuccessState(false);
+          clearWorkbookSelection();
+          setStatus(error.message || 'Could not read the selected file', true);
         } finally {
           event.target.value = '';
+        }
+      });
+    }
+    if (dom.sheetSelect) {
+      dom.sheetSelect.addEventListener('change', () => {
+        try {
+          if (!dom.sheetSelect.value) return;
+          const result = parseSelectedWorksheet();
+          setSheetSuccessState(true);
+          loadRows(result.rows, `Loaded workbook: ${state.pendingWorkbookFileName || 'Excel file'} | Sheet: ${result.sheetName}`, result.metadata, { preserveSheetSuccessState: true });
+        } catch (error) {
+          setSheetSuccessState(false);
+          setStatus(error.message || 'Could not load worksheet', true);
         }
       });
     }
@@ -3045,60 +3544,12 @@ __DOM_SECTIONS_JS__
 html = html.replace("__GENERATED_AT__", payload["generatedAt"])
 html = html.replace("__REPORT_DATE__", report_date)
 html = html.replace("__PAYLOAD_JSON__", json.dumps(payload, ensure_ascii=True))
+html = html.replace("__COLUMN_MAPPING_CONFIG_JSON__", json.dumps(column_mapping_config, ensure_ascii=True))
+html = html.replace("__VALUE_MAPPING_CONFIG_JSON__", json.dumps(value_mapping_config, ensure_ascii=True))
+html = html.replace("__XLSX_BUNDLE__", xlsx_bundle)
 html = html.replace("__GLOBAL_FILTER_HTML__", build_global_filter_html())
 html = html.replace("__SECTIONS_HTML__", build_sections_html())
 html = html.replace("__STATE_SECTIONS_JS__", build_state_sections_js())
 html = html.replace("__DOM_SECTIONS_JS__", build_dom_sections_js())
-def build_standalone_html(source_html: str) -> str:
-    source_actions = """        <div class="action-row" id="headerActionRow">
-          <div class="header-icon-group">
-            <input class="upload-input-hidden" id="fileUpload" type="file" accept=".csv">
-            <label class="pdf-btn icon-btn" for="fileUpload" title="Upload File" aria-label="Upload File">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 16V4"></path>
-                <path d="M7 9l5-5 5 5"></path>
-                <path d="M4 20h16"></path>
-              </svg>
-              <span class="sr-only">Upload File</span>
-            </label>
-            <button class="pdf-btn icon-btn" id="pdfBtn" type="button" title="Download Report" aria-label="Download Report">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 4v12"></path>
-                <path d="M7 11l5 5 5-5"></path>
-                <path d="M4 20h16"></path>
-              </svg>
-              <span class="sr-only">Download Report</span>
-            </button>
-          </div>
-        </div>"""
-    standalone_actions = """        <div class="action-row" id="headerActionRow">
-          <div class="header-icon-group">
-            <button class="pdf-btn icon-btn" id="pdfBtn" type="button" title="Download Report" aria-label="Download Report">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 4v12"></path>
-                <path d="M7 11l5 5 5-5"></path>
-                <path d="M4 20h16"></path>
-              </svg>
-              <span class="sr-only">Download Report</span>
-            </button>
-          </div>
-        </div>"""
-    standalone = source_html.replace(source_actions, standalone_actions, 1)
-    standalone = standalone.replace(
-        json.dumps(payload, ensure_ascii=True),
-        json.dumps(embedded_payload, ensure_ascii=True),
-        1,
-    )
-    standalone = standalone.replace(
-        "    renderExcluded();\n    initializeSections();\n    renderAll();",
-        "    loadRows(PAYLOAD.rows, 'Loaded embedded dataset');",
-        1,
-    )
-    standalone = standalone.replace(
-        "        <div class=\"status\" id=\"statusText\">Choose a CSV file to generate the dashboard.</div>",
-        "        <div class=\"status\" id=\"statusText\">Loaded embedded dataset and ready for interactive use.</div>",
-        1,
-    )
-    return standalone
 OUTPUT_PATH.write_text(html, encoding="utf-8")
 print(OUTPUT_PATH)
