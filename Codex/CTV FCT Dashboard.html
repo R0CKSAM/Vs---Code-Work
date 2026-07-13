@@ -103,6 +103,8 @@
       justify-content: flex-end;
       gap: 8px;
       min-width: auto;
+      position: relative;
+      z-index: 1;
     }
     .action-row {
       display: flex;
@@ -124,10 +126,6 @@
       box-shadow: var(--shadow);
       border-radius: 8px;
       transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
-    }
-    .top-actions {
-      position: relative;
-      z-index: 1;
     }
     .meta-pill {
       display: inline-flex;
@@ -155,11 +153,12 @@
     }
     .label {
       display: block;
-      margin-bottom: 5px;
-      font-size: 11px;
+      margin-bottom: 3px;
+      font-size: 9.5px;
       font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.9px;
+      text-transform: none;
+      letter-spacing: 0.2px;
+      line-height: 1.15;
       color: #000000;
     }
     .sticky-filter-shell .label {
@@ -184,11 +183,13 @@
     input, select, button {
       width: 100%;
       border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 7px 9px;
+      border-radius: 7px;
+      padding: 5px 8px;
       background: #ffffff;
       color: var(--text);
       font: inherit;
+      font-size: 12px;
+      line-height: 1.2;
       transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease, background 160ms ease;
     }
     input:hover, select:hover, button:hover,
@@ -237,6 +238,16 @@
       font-size: 11px;
       line-height: 1.3;
     }
+    .filter-error {
+      margin-top: 4px;
+      color: #b91c1c;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+    .filter-error[hidden] {
+      display: none !important;
+    }
     .section {
       margin-top: 14px;
     }
@@ -265,9 +276,9 @@
     }
     .section-controls {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
-      gap: 8px;
-      margin-bottom: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 120px), 1fr));
+      gap: 6px;
+      margin-bottom: 6px;
       align-items: end;
     }
     .global-controls {
@@ -286,9 +297,9 @@
     .sticky-filter-shell {
       position: relative;
       z-index: 40;
-      background: rgba(31, 56, 100, 0.75);
+      background: rgb(184, 127, 123);
       box-shadow: 0 6px 18px rgba(15, 23, 42, 0.14);
-      padding: 8px 10px;
+      padding: 6px 8px;
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
     }
@@ -300,7 +311,7 @@
       box-shadow: 0 0 0 1px rgba(251, 146, 60, 0.10), 0 0 20px rgba(251, 146, 60, 0.12);
     }
     .sticky-filter-shell:hover {
-      background: rgba(31, 56, 100, 0.75);
+      background: rgb(184, 127, 123);
       border-color: var(--line);
       box-shadow: 0 0 0 1px rgba(251, 146, 60, 0.08), 0 0 18px rgba(251, 146, 60, 0.10);
     }
@@ -309,7 +320,7 @@
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      min-height: 52px;
+      min-height: 40px;
     }
     .sticky-filter-shell.is-stuck {
       position: fixed;
@@ -328,20 +339,26 @@
     .multi-dropdown {
       position: relative;
       display: grid;
-      gap: 4px;
+      gap: 2px;
+      animation: none !important;
+      transition: none !important;
     }
     .multi-dropdown-trigger {
-      min-height: 34px;
+      min-height: 30px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
+      gap: 6px;
       text-align: left;
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
     }
     .multi-dropdown-value {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      font-size: 12px;
     }
     .multi-dropdown-panel {
       position: absolute;
@@ -349,46 +366,58 @@
       left: 0;
       right: 0;
       z-index: 30;
-      padding: 8px;
-      border-radius: 8px;
+      padding: 6px;
+      border-radius: 7px;
       border: 1px solid var(--line);
       background: #ffffff;
       box-shadow: 0 8px 18px rgba(15, 23, 42, 0.10);
       display: none;
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
     }
     .multi-dropdown.open .multi-dropdown-panel {
       display: block;
     }
     .multi-dropdown-search {
-      margin-bottom: 6px;
+      margin-bottom: 4px;
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
     }
     .multi-dropdown-actions {
       display: flex;
-      gap: 8px;
-      margin-bottom: 6px;
+      gap: 6px;
+      margin-bottom: 4px;
     }
     .multi-dropdown-actions button {
       min-width: 0;
-      padding: 7px 9px;
-      font-size: 12px;
+      padding: 5px 7px;
+      font-size: 11px;
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
     }
     .multi-dropdown-options {
-      max-height: 220px;
+      max-height: 180px;
       overflow: auto;
       display: grid;
-      gap: 6px;
-      padding-right: 4px;
+      gap: 4px;
+      padding-right: 2px;
     }
     .multi-dropdown-option {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px 10px;
-      border-radius: 8px;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 7px;
       background: #ffffff;
-      font-size: 14px;
+      font-size: 12px;
       cursor: pointer;
       color: var(--text);
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
     }
     .multi-dropdown-option:hover {
       background: #eff6ff;
@@ -396,6 +425,9 @@
     .multi-dropdown-option input {
       width: auto;
       margin: 0;
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
     }
     .chart-head {
       display: flex;
@@ -1059,7 +1091,22 @@
           <div><label class="label" for="globalTopN">Top N</label><select id="globalTopN"><option value="10">Top 10</option><option value="20">Top 20</option></select></div>
           <div><label class="label" for="globalStart">Start Date</label><input id="globalStart" type="date"></div>
           <div><label class="label" for="globalEnd">End Date</label><input id="globalEnd" type="date"></div>
-          <div><label class="label" for="globalChannel">Channel</label><select id="globalChannel"></select></div>
+                    <div class="multi-dropdown" id="globalChannelDropdown">
+            <label class="label" for="globalChannelTrigger">Channel</label>
+            <button class="multi-dropdown-trigger" id="globalChannelTrigger" type="button">
+              <span class="multi-dropdown-value" id="globalChannelValue">All Channels</span>
+              <span>&#9660;</span>
+            </button>
+            <div class="multi-dropdown-panel">
+              <input class="multi-dropdown-search" id="globalChannelSearch" type="text" placeholder="Search channels">
+              <div class="multi-dropdown-actions">
+                <button id="globalChannelAll" type="button">Select All</button>
+                <button id="globalChannelClear" type="button">Clear All</button>
+              </div>
+              <div class="multi-dropdown-options" id="globalChannelOptions"></div>
+            </div>
+            <select id="globalChannel" multiple hidden></select>
+          </div>
                     <div class="multi-dropdown" id="globalCategoryDropdown">
             <label class="label" for="globalCategoryTrigger">Category</label>
             <button class="multi-dropdown-trigger" id="globalCategoryTrigger" type="button">
@@ -1076,10 +1123,26 @@
             </div>
             <select id="globalCategory" multiple hidden></select>
           </div>
-          <div><label class="label" for="globalAdvertisor">Advertiser</label><select id="globalAdvertisor"></select></div>
+                    <div class="multi-dropdown" id="globalAdvertisorDropdown">
+            <label class="label" for="globalAdvertisorTrigger">Advertiser</label>
+            <button class="multi-dropdown-trigger" id="globalAdvertisorTrigger" type="button">
+              <span class="multi-dropdown-value" id="globalAdvertisorValue">All Advertisers</span>
+              <span>&#9660;</span>
+            </button>
+            <div class="multi-dropdown-panel">
+              <input class="multi-dropdown-search" id="globalAdvertisorSearch" type="text" placeholder="Search advertisers">
+              <div class="multi-dropdown-actions">
+                <button id="globalAdvertisorAll" type="button">Select All</button>
+                <button id="globalAdvertisorClear" type="button">Clear All</button>
+              </div>
+              <div class="multi-dropdown-options" id="globalAdvertisorOptions"></div>
+            </div>
+            <select id="globalAdvertisor" multiple hidden></select>
+          </div>
           <div><label class="label" for="globalTime">Time</label><select id="globalTime"><option value="minutes">Minutes</option><option value="seconds">Seconds</option></select></div>
           <div><label class="label">&nbsp;</label><button id="globalReset" type="button">Reset</button></div>
         </div>
+        <div class="filter-error" id="filterErrorText" hidden></div>
       </div>
     </section>
     <section class="section" id="dashboardSummarySection">
@@ -1099,7 +1162,22 @@
 <div><label class="label" for="g1TopN">Top N</label><select id="g1TopN"><option value="10">Top 10</option><option value="20">Top 20</option></select></div>
 <div><label class="label" for="g1Start">Start Date</label><input id="g1Start" type="date"></div>
 <div><label class="label" for="g1End">End Date</label><input id="g1End" type="date"></div>
-<div><label class="label" for="g1Channel">Channel</label><select id="g1Channel"></select></div>
+          <div class="multi-dropdown" id="g1ChannelDropdown">
+            <label class="label" for="g1ChannelTrigger">Channel</label>
+            <button class="multi-dropdown-trigger" id="g1ChannelTrigger" type="button">
+              <span class="multi-dropdown-value" id="g1ChannelValue">All Channels</span>
+              <span>&#9660;</span>
+            </button>
+            <div class="multi-dropdown-panel">
+              <input class="multi-dropdown-search" id="g1ChannelSearch" type="text" placeholder="Search channels">
+              <div class="multi-dropdown-actions">
+                <button id="g1ChannelAll" type="button">Select All</button>
+                <button id="g1ChannelClear" type="button">Clear All</button>
+              </div>
+              <div class="multi-dropdown-options" id="g1ChannelOptions"></div>
+            </div>
+            <select id="g1Channel" multiple hidden></select>
+          </div>
           <div class="multi-dropdown" id="g1CategoryDropdown">
             <label class="label" for="g1CategoryTrigger">Category</label>
             <button class="multi-dropdown-trigger" id="g1CategoryTrigger" type="button">
@@ -1138,7 +1216,22 @@
 <div><label class="label" for="g2TopN">Top N</label><select id="g2TopN"><option value="10">Top 10</option><option value="20">Top 20</option></select></div>
 <div><label class="label" for="g2Start">Start Date</label><input id="g2Start" type="date"></div>
 <div><label class="label" for="g2End">End Date</label><input id="g2End" type="date"></div>
-<div><label class="label" for="g2Channel">Channel</label><select id="g2Channel"></select></div>
+          <div class="multi-dropdown" id="g2ChannelDropdown">
+            <label class="label" for="g2ChannelTrigger">Channel</label>
+            <button class="multi-dropdown-trigger" id="g2ChannelTrigger" type="button">
+              <span class="multi-dropdown-value" id="g2ChannelValue">All Channels</span>
+              <span>&#9660;</span>
+            </button>
+            <div class="multi-dropdown-panel">
+              <input class="multi-dropdown-search" id="g2ChannelSearch" type="text" placeholder="Search channels">
+              <div class="multi-dropdown-actions">
+                <button id="g2ChannelAll" type="button">Select All</button>
+                <button id="g2ChannelClear" type="button">Clear All</button>
+              </div>
+              <div class="multi-dropdown-options" id="g2ChannelOptions"></div>
+            </div>
+            <select id="g2Channel" multiple hidden></select>
+          </div>
           <div class="multi-dropdown" id="g2CategoryDropdown">
             <label class="label" for="g2CategoryTrigger">Category</label>
             <button class="multi-dropdown-trigger" id="g2CategoryTrigger" type="button">
@@ -1182,7 +1275,22 @@
 <div><label class="label" for="g3TopN">Top N</label><select id="g3TopN"><option value="10">Top 10</option><option value="20">Top 20</option></select></div>
 <div><label class="label" for="g3Start">Start Date</label><input id="g3Start" type="date"></div>
 <div><label class="label" for="g3End">End Date</label><input id="g3End" type="date"></div>
-<div><label class="label" for="g3Channel">Channel</label><select id="g3Channel"></select></div>
+          <div class="multi-dropdown" id="g3ChannelDropdown">
+            <label class="label" for="g3ChannelTrigger">Channel</label>
+            <button class="multi-dropdown-trigger" id="g3ChannelTrigger" type="button">
+              <span class="multi-dropdown-value" id="g3ChannelValue">All Channels</span>
+              <span>&#9660;</span>
+            </button>
+            <div class="multi-dropdown-panel">
+              <input class="multi-dropdown-search" id="g3ChannelSearch" type="text" placeholder="Search channels">
+              <div class="multi-dropdown-actions">
+                <button id="g3ChannelAll" type="button">Select All</button>
+                <button id="g3ChannelClear" type="button">Clear All</button>
+              </div>
+              <div class="multi-dropdown-options" id="g3ChannelOptions"></div>
+            </div>
+            <select id="g3Channel" multiple hidden></select>
+          </div>
           <div class="multi-dropdown" id="g3CategoryDropdown">
             <label class="label" for="g3CategoryTrigger">Category</label>
             <button class="multi-dropdown-trigger" id="g3CategoryTrigger" type="button">
@@ -1225,7 +1333,22 @@
 <div><label class="label" for="g4TopN">Category View</label><select id="g4TopN"><option value="10">Top 10</option><option value="20">Top 20</option></select></div>
 <div><label class="label" for="g4Start">Start Date</label><input id="g4Start" type="date"></div>
 <div><label class="label" for="g4End">End Date</label><input id="g4End" type="date"></div>
-<div><label class="label" for="g4Channel">Channel</label><select id="g4Channel"></select></div>
+          <div class="multi-dropdown" id="g4ChannelDropdown">
+            <label class="label" for="g4ChannelTrigger">Channel</label>
+            <button class="multi-dropdown-trigger" id="g4ChannelTrigger" type="button">
+              <span class="multi-dropdown-value" id="g4ChannelValue">All Channels</span>
+              <span>&#9660;</span>
+            </button>
+            <div class="multi-dropdown-panel">
+              <input class="multi-dropdown-search" id="g4ChannelSearch" type="text" placeholder="Search channels">
+              <div class="multi-dropdown-actions">
+                <button id="g4ChannelAll" type="button">Select All</button>
+                <button id="g4ChannelClear" type="button">Clear All</button>
+              </div>
+              <div class="multi-dropdown-options" id="g4ChannelOptions"></div>
+            </div>
+            <select id="g4Channel" multiple hidden></select>
+          </div>
 <div><label class="label">&nbsp;</label><button id="g4Reset" type="button">Reset</button></div>
         </div>
         <div class="chart-head">
@@ -1247,7 +1370,22 @@
         <div class="section-controls">
 <div><label class="label" for="g5Start">Start Date</label><input id="g5Start" type="date"></div>
 <div><label class="label" for="g5End">End Date</label><input id="g5End" type="date"></div>
-<div><label class="label" for="g5Channel">Channel</label><select id="g5Channel"></select></div>
+          <div class="multi-dropdown" id="g5ChannelDropdown">
+            <label class="label" for="g5ChannelTrigger">Channel</label>
+            <button class="multi-dropdown-trigger" id="g5ChannelTrigger" type="button">
+              <span class="multi-dropdown-value" id="g5ChannelValue">All Channels</span>
+              <span>&#9660;</span>
+            </button>
+            <div class="multi-dropdown-panel">
+              <input class="multi-dropdown-search" id="g5ChannelSearch" type="text" placeholder="Search channels">
+              <div class="multi-dropdown-actions">
+                <button id="g5ChannelAll" type="button">Select All</button>
+                <button id="g5ChannelClear" type="button">Clear All</button>
+              </div>
+              <div class="multi-dropdown-options" id="g5ChannelOptions"></div>
+            </div>
+            <select id="g5Channel" multiple hidden></select>
+          </div>
           <div class="multi-dropdown" id="g5CategoryDropdown">
             <label class="label" for="g5CategoryTrigger">Category</label>
             <button class="multi-dropdown-trigger" id="g5CategoryTrigger" type="button">
@@ -1264,7 +1402,22 @@
             </div>
             <select id="g5Category" multiple hidden></select>
           </div>
-<div><label class="label" for="g5Advertisor">Advertiser</label><select id="g5Advertisor"></select></div>
+          <div class="multi-dropdown" id="g5AdvertisorDropdown">
+            <label class="label" for="g5AdvertisorTrigger">Advertiser</label>
+            <button class="multi-dropdown-trigger" id="g5AdvertisorTrigger" type="button">
+              <span class="multi-dropdown-value" id="g5AdvertisorValue">All Advertisers</span>
+              <span>&#9660;</span>
+            </button>
+            <div class="multi-dropdown-panel">
+              <input class="multi-dropdown-search" id="g5AdvertisorSearch" type="text" placeholder="Search advertisers">
+              <div class="multi-dropdown-actions">
+                <button id="g5AdvertisorAll" type="button">Select All</button>
+                <button id="g5AdvertisorClear" type="button">Clear All</button>
+              </div>
+              <div class="multi-dropdown-options" id="g5AdvertisorOptions"></div>
+            </div>
+            <select id="g5Advertisor" multiple hidden></select>
+          </div>
 <div><label class="label" for="g5Time">Time</label><select id="g5Time"><option value="minutes">Minutes</option><option value="seconds">Seconds</option></select></div>
 <div><label class="label">&nbsp;</label><button id="g5Reset" type="button">Reset</button></div>
         </div>
@@ -1330,7 +1483,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
   </script>
   <script>
-    const PAYLOAD = {"rows": [], "excluded": ["ASTROLOGERS", "CHANNEL IMAGERY", "PROMO CHANNEL PROPERTIES", "PROMO CHANNEL/BRAND", "PROMO PROGRAM", "PROMO TAG", "SHORT PROGRAM", "TELEVISIONS"], "generatedAt": "2026-07-13 15:43:51"};
+    const PAYLOAD = {"rows": [], "excluded": ["ASTROLOGERS", "CHANNEL IMAGERY", "PROMO CHANNEL PROPERTIES", "PROMO CHANNEL/BRAND", "PROMO PROGRAM", "PROMO TAG", "SHORT PROGRAM", "TELEVISIONS"], "generatedAt": "2026-07-13 17:15:19"};
     const COLUMN_MAPPING_CONFIG = {"standard_columns": {"feed_name": ["feed name", "feed_name", "feed", "network", "station", "source"], "channel_name": ["channel", "channel name"], "report_date": ["pdate", "date", "report date", "air date", "event date", "broadcast date"], "time_slot": ["adst", "time", "ad time", "slot", "time slot", "hour"], "brand_name": ["brand name", "brand", "product", "advertiser", "campaign", "item", "title", "name"], "company_name": ["company", "client", "customer", "account", "owner", "group"], "metric_value": ["aaddur", "ad duration", "ad duration sec", "duration", "amount", "value", "metric", "total", "count", "qty", "quantity", "revenue", "sales"], "category_name": ["category", "segment", "type", "class", "genre", "vertical"]}};
     const VALUE_MAPPING_CONFIG = {"feed_name": {"CN AAJ TAK": "AAJ TAK", "CN INDIA TV": "INDIA TV", "YT ABP NEWS": "ABP NEWS", "YT CN NEWS18 INDIA ": "NEWS18 INDIA"}};
     const EXCLUDED = new Set(PAYLOAD.excluded);
@@ -1363,17 +1516,17 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         topN: '10',
         start: '',
         end: '',
-        channel: '',
+        channel: [],
         category: [],
-        advertisor: '',
+        advertisor: [],
         time: 'minutes'
       },
       sections: {
-        g1: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },
-        g2: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },
-        g3: { topN: '10', start: '', end: '', channel: '', category: [], view: 'heat' },
-        g4: { topN: '10', start: '', end: '', channel: '', category: '', view: 'heat' },
-        g5: { start: '', end: '', channel: '', category: [], advertisor: '', time: 'minutes', view: 'heat' }
+        g1: { topN: '10', start: '', end: '', channel: [], category: [], view: 'bar' },
+        g2: { topN: '10', start: '', end: '', channel: [], category: [], view: 'bar' },
+        g3: { topN: '10', start: '', end: '', channel: [], category: [], view: 'heat' },
+        g4: { topN: '10', start: '', end: '', channel: [], category: '', view: 'heat' },
+        g5: { start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'heat' }
       }
     };
     const dom = {
@@ -1390,6 +1543,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       shareCancelBtn: document.getElementById('shareCancelBtn'),
       shareDownloadBtn: document.getElementById('shareDownloadBtn'),
       statusText: document.getElementById('statusText'),
+      filterErrorText: document.getElementById('filterErrorText'),
       activeDateRangeText: document.getElementById('activeDateRangeText'),
       totalRecordsText: document.getElementById('totalRecordsText'),
       excludedChips: document.getElementById('excludedChips'),
@@ -1403,6 +1557,13 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         start: document.getElementById('globalStart'),
         end: document.getElementById('globalEnd'),
         channel: document.getElementById('globalChannel'),
+        channelDropdown: document.getElementById('globalChannelDropdown'),
+        channelTrigger: document.getElementById('globalChannelTrigger'),
+        channelValue: document.getElementById('globalChannelValue'),
+        channelSearch: document.getElementById('globalChannelSearch'),
+        channelOptions: document.getElementById('globalChannelOptions'),
+        channelAll: document.getElementById('globalChannelAll'),
+        channelClear: document.getElementById('globalChannelClear'),
         category: document.getElementById('globalCategory'),
         categoryDropdown: document.getElementById('globalCategoryDropdown'),
         categoryTrigger: document.getElementById('globalCategoryTrigger'),
@@ -1412,6 +1573,13 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         categoryAll: document.getElementById('globalCategoryAll'),
         categoryClear: document.getElementById('globalCategoryClear'),
         advertisor: document.getElementById('globalAdvertisor'),
+        advertisorDropdown: document.getElementById('globalAdvertisorDropdown'),
+        advertisorTrigger: document.getElementById('globalAdvertisorTrigger'),
+        advertisorValue: document.getElementById('globalAdvertisorValue'),
+        advertisorSearch: document.getElementById('globalAdvertisorSearch'),
+        advertisorOptions: document.getElementById('globalAdvertisorOptions'),
+        advertisorAll: document.getElementById('globalAdvertisorAll'),
+        advertisorClear: document.getElementById('globalAdvertisorClear'),
         time: document.getElementById('globalTime'),
         reset: document.getElementById('globalReset')
       },
@@ -1421,6 +1589,13 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           start: document.getElementById('g1Start'),
           end: document.getElementById('g1End'),
           channel: document.getElementById('g1Channel'),
+          channelDropdown: document.getElementById('g1ChannelDropdown'),
+          channelTrigger: document.getElementById('g1ChannelTrigger'),
+          channelValue: document.getElementById('g1ChannelValue'),
+          channelSearch: document.getElementById('g1ChannelSearch'),
+          channelOptions: document.getElementById('g1ChannelOptions'),
+          channelAll: document.getElementById('g1ChannelAll'),
+          channelClear: document.getElementById('g1ChannelClear'),
           category: document.getElementById('g1Category'),
           categoryDropdown: document.getElementById('g1CategoryDropdown'),
           categoryTrigger: document.getElementById('g1CategoryTrigger'),
@@ -1440,6 +1615,13 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           start: document.getElementById('g2Start'),
           end: document.getElementById('g2End'),
           channel: document.getElementById('g2Channel'),
+          channelDropdown: document.getElementById('g2ChannelDropdown'),
+          channelTrigger: document.getElementById('g2ChannelTrigger'),
+          channelValue: document.getElementById('g2ChannelValue'),
+          channelSearch: document.getElementById('g2ChannelSearch'),
+          channelOptions: document.getElementById('g2ChannelOptions'),
+          channelAll: document.getElementById('g2ChannelAll'),
+          channelClear: document.getElementById('g2ChannelClear'),
           category: document.getElementById('g2Category'),
           categoryDropdown: document.getElementById('g2CategoryDropdown'),
           categoryTrigger: document.getElementById('g2CategoryTrigger'),
@@ -1462,6 +1644,13 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           start: document.getElementById('g3Start'),
           end: document.getElementById('g3End'),
           channel: document.getElementById('g3Channel'),
+          channelDropdown: document.getElementById('g3ChannelDropdown'),
+          channelTrigger: document.getElementById('g3ChannelTrigger'),
+          channelValue: document.getElementById('g3ChannelValue'),
+          channelSearch: document.getElementById('g3ChannelSearch'),
+          channelOptions: document.getElementById('g3ChannelOptions'),
+          channelAll: document.getElementById('g3ChannelAll'),
+          channelClear: document.getElementById('g3ChannelClear'),
           category: document.getElementById('g3Category'),
           categoryDropdown: document.getElementById('g3CategoryDropdown'),
           categoryTrigger: document.getElementById('g3CategoryTrigger'),
@@ -1483,6 +1672,13 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           start: document.getElementById('g4Start'),
           end: document.getElementById('g4End'),
           channel: document.getElementById('g4Channel'),
+          channelDropdown: document.getElementById('g4ChannelDropdown'),
+          channelTrigger: document.getElementById('g4ChannelTrigger'),
+          channelValue: document.getElementById('g4ChannelValue'),
+          channelSearch: document.getElementById('g4ChannelSearch'),
+          channelOptions: document.getElementById('g4ChannelOptions'),
+          channelAll: document.getElementById('g4ChannelAll'),
+          channelClear: document.getElementById('g4ChannelClear'),
           reset: document.getElementById('g4Reset'),
           chart: document.getElementById('g4Chart'),
           panel: document.getElementById('g4Chart').closest('.panel'),
@@ -1492,6 +1688,13 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           start: document.getElementById('g5Start'),
           end: document.getElementById('g5End'),
           channel: document.getElementById('g5Channel'),
+          channelDropdown: document.getElementById('g5ChannelDropdown'),
+          channelTrigger: document.getElementById('g5ChannelTrigger'),
+          channelValue: document.getElementById('g5ChannelValue'),
+          channelSearch: document.getElementById('g5ChannelSearch'),
+          channelOptions: document.getElementById('g5ChannelOptions'),
+          channelAll: document.getElementById('g5ChannelAll'),
+          channelClear: document.getElementById('g5ChannelClear'),
           category: document.getElementById('g5Category'),
           categoryDropdown: document.getElementById('g5CategoryDropdown'),
           categoryTrigger: document.getElementById('g5CategoryTrigger'),
@@ -1501,6 +1704,13 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           categoryAll: document.getElementById('g5CategoryAll'),
           categoryClear: document.getElementById('g5CategoryClear'),
           advertisor: document.getElementById('g5Advertisor'),
+          advertisorDropdown: document.getElementById('g5AdvertisorDropdown'),
+          advertisorTrigger: document.getElementById('g5AdvertisorTrigger'),
+          advertisorValue: document.getElementById('g5AdvertisorValue'),
+          advertisorSearch: document.getElementById('g5AdvertisorSearch'),
+          advertisorOptions: document.getElementById('g5AdvertisorOptions'),
+          advertisorAll: document.getElementById('g5AdvertisorAll'),
+          advertisorClear: document.getElementById('g5AdvertisorClear'),
           time: document.getElementById('g5Time'),
           reset: document.getElementById('g5Reset'),
           legend: document.getElementById('g5Legend'),
@@ -2254,17 +2464,17 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         topN: '10',
         start: '',
         end: '',
-        channel: '',
+        channel: [],
         category: [],
-        advertisor: '',
+        advertisor: [],
         time: 'minutes'
       };
       state.sections = {
-        g1: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },
-        g2: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },
-        g3: { topN: '10', start: '', end: '', channel: '', category: [], view: 'heat' },
-        g4: { topN: '10', start: '', end: '', channel: '', category: '', view: 'heat' },
-        g5: { start: '', end: '', channel: '', category: [], advertisor: '', time: 'minutes', view: 'heat' }
+        g1: { topN: '10', start: '', end: '', channel: [], category: [], view: 'bar' },
+        g2: { topN: '10', start: '', end: '', channel: [], category: [], view: 'bar' },
+        g3: { topN: '10', start: '', end: '', channel: [], category: [], view: 'heat' },
+        g4: { topN: '10', start: '', end: '', channel: [], category: '', view: 'heat' },
+        g5: { start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'heat' }
       };
       if (dom.totalRecordsText) dom.totalRecordsText.textContent = '0';
       if (dom.activeDateRangeText) dom.activeDateRangeText.textContent = 'All Dates';
@@ -2285,8 +2495,16 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           controls.end.min = '';
           controls.end.max = '';
         }
-        if (controls.channel) controls.channel.innerHTML = '<option value="">All Channels</option>';
-        if (controls.advertisor) controls.advertisor.innerHTML = '<option value="">All Advertisers</option>';
+        if (controls.channel) controls.channel.innerHTML = '';
+        if (controls.channelValue) controls.channelValue.textContent = 'All Channels';
+        if (controls.channelOptions) controls.channelOptions.innerHTML = '';
+        if (controls.channelSearch) controls.channelSearch.value = '';
+        if (controls.channelDropdown) controls.channelDropdown.classList.remove('open');
+        if (controls.advertisor) controls.advertisor.innerHTML = '';
+        if (controls.advertisorValue) controls.advertisorValue.textContent = 'All Advertisers';
+        if (controls.advertisorOptions) controls.advertisorOptions.innerHTML = '';
+        if (controls.advertisorSearch) controls.advertisorSearch.value = '';
+        if (controls.advertisorDropdown) controls.advertisorDropdown.classList.remove('open');
         if (controls.time) controls.time.value = 'minutes';
         if (controls.category) {
           controls.category.innerHTML = '';
@@ -2311,14 +2529,23 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         dom.global.end.min = '';
         dom.global.end.max = '';
       }
-      if (dom.global.channel) dom.global.channel.innerHTML = '<option value="">All Channels</option>';
-      if (dom.global.advertisor) dom.global.advertisor.innerHTML = '<option value="">All Advertisers</option>';
+      if (dom.global.channel) dom.global.channel.innerHTML = '';
+      if (dom.global.channelValue) dom.global.channelValue.textContent = 'All Channels';
+      if (dom.global.channelOptions) dom.global.channelOptions.innerHTML = '';
+      if (dom.global.channelSearch) dom.global.channelSearch.value = '';
+      if (dom.global.channelDropdown) dom.global.channelDropdown.classList.remove('open');
+      if (dom.global.advertisor) dom.global.advertisor.innerHTML = '';
+      if (dom.global.advertisorValue) dom.global.advertisorValue.textContent = 'All Advertisers';
+      if (dom.global.advertisorOptions) dom.global.advertisorOptions.innerHTML = '';
+      if (dom.global.advertisorSearch) dom.global.advertisorSearch.value = '';
+      if (dom.global.advertisorDropdown) dom.global.advertisorDropdown.classList.remove('open');
       if (dom.global.time) dom.global.time.value = 'minutes';
       if (dom.global.category) dom.global.category.innerHTML = '';
       if (dom.global.categoryValue) dom.global.categoryValue.textContent = 'All Categories';
       if (dom.global.categoryOptions) dom.global.categoryOptions.innerHTML = '';
       if (dom.global.categorySearch) dom.global.categorySearch.value = '';
       if (dom.global.categoryDropdown) dom.global.categoryDropdown.classList.remove('open');
+      setDateValidationError('');
       clearWorkbookSelection();
       setUploadSuccessState(false);
       setStatus('Choose a CSV or Excel file to generate the dashboard.', false);
@@ -2361,16 +2588,124 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       renderHeaderStats();
       updateStickyFilterPosition();
     }
-    function updateCategoryDropdownValue(controls, selectedValues) {
+    const DATE_VALIDATION_MESSAGE = 'Start Date cannot be later than End Date.';
+    function setDateValidationError(message = '') {
+      if (!dom.filterErrorText) return;
+      dom.filterErrorText.textContent = message;
+      dom.filterErrorText.hidden = !message;
+    }
+    function refreshDateBounds(controls) {
+      if (!controls || !controls.start || !controls.end) return;
+      const min = controls.start.dataset.boundMin || '';
+      const max = controls.end.dataset.boundMax || '';
+      controls.start.min = min;
+      controls.end.max = max;
+      controls.start.max = controls.end.value || max;
+      controls.end.min = controls.start.value || min;
+    }
+    function rememberValidDateValues(controls) {
+      if (!controls || !controls.start || !controls.end) return;
+      controls.start.dataset.prevValue = controls.start.value || '';
+      controls.end.dataset.prevValue = controls.end.value || '';
+    }
+    function handleDateRangeChange(controls, changedField) {
+      if (!controls || !controls.start || !controls.end) return true;
+      refreshDateBounds(controls);
+      if (controls.start.value && controls.end.value && controls.start.value > controls.end.value) {
+        const input = controls[changedField];
+        if (input) input.value = input.dataset.prevValue || '';
+        refreshDateBounds(controls);
+        setDateValidationError(DATE_VALIDATION_MESSAGE);
+        return false;
+      }
+      rememberValidDateValues(controls);
+      setDateValidationError('');
+      return true;
+    }
+    function validateDateRange(startValue, endValue) {
+      if (startValue && endValue && startValue > endValue) {
+        setDateValidationError(DATE_VALIDATION_MESSAGE);
+        return false;
+      }
+      setDateValidationError('');
+      return true;
+    }
+    function updateMultiDropdownValue(controls, field, selectedValues, allLabel, noun) {
       const selected = selectedValues || [];
-      if (!controls.categoryValue) return;
+      const valueNode = controls && controls[`${field}Value`];
+      if (!valueNode) return;
       if (!selected.length) {
-        controls.categoryValue.textContent = 'All Categories';
+        valueNode.textContent = allLabel;
         return;
       }
-      controls.categoryValue.textContent = selected.length <= 2
+      valueNode.textContent = selected.length <= 2
         ? selected.join(', ')
-        : `${selected.length} Categories Selected`;
+        : `${selected.length} ${noun} Selected`;
+    }
+    function getChannelValues() {
+      return uniqueSorted(state.cleanedRows.map(row => row.channel));
+    }
+    function matchesMultiFilter(value, filterValues) {
+      if (Array.isArray(filterValues) && filterValues.length) return filterValues.includes(value);
+      if (!Array.isArray(filterValues) && filterValues) return value === filterValues;
+      return true;
+    }
+    function getAdvertisorValues(channelFilter = state.global.channel) {
+      return uniqueSorted(
+        state.cleanedRows
+          .filter(row => matchesMultiFilter(row.channel, channelFilter))
+          .map(row => row.product)
+      );
+    }
+    function sanitizeAdvertisorSelection() {
+      const valid = new Set(getAdvertisorValues(state.global.channel));
+      state.global.advertisor = uniqueSorted((state.global.advertisor || []).filter(value => valid.has(value)));
+    }
+    function populateMultiSelect(select, values, selectedValues) {
+      if (!select) return;
+      const selected = new Set(selectedValues || []);
+      select.innerHTML = '';
+      values.forEach(value => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        option.selected = selected.has(value);
+        select.appendChild(option);
+      });
+    }
+    function populateMultiDropdownOptions(controls, field, values, selectedValues, filterText, onChange, isValid = () => true) {
+      const optionsNode = controls && controls[`${field}Options`];
+      if (!optionsNode) return;
+      const selected = new Set(selectedValues || []);
+      const query = String(filterText || '').trim().toLowerCase();
+      const filtered = values.filter(value => !query || value.toLowerCase().includes(query));
+      optionsNode.innerHTML = '';
+      filtered.forEach(value => {
+        const label = document.createElement('label');
+        label.className = 'multi-dropdown-option';
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.value = value;
+        input.checked = selected.has(value);
+        const span = document.createElement('span');
+        span.textContent = value;
+        label.appendChild(input);
+        label.appendChild(span);
+        optionsNode.appendChild(label);
+        input.addEventListener('change', () => {
+          if (!isValid()) {
+            input.checked = selected.has(value);
+            return;
+          }
+          const next = new Set(selectedValues || []);
+          if (input.checked) next.add(value);
+          else next.delete(value);
+          onChange([...next]);
+        });
+      });
+    }
+    function updateCategoryDropdownValue(controls, selectedValues) {
+      updateMultiDropdownValue(controls, 'category', selectedValues, 'All Categories', 'Categories');
     }
     function syncGlobalCategorySelection(selectedValues, options = {}) {
       const controls = dom.global;
@@ -2402,6 +2737,10 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         label.appendChild(span);
         controls.categoryOptions.appendChild(label);
         input.addEventListener('change', () => {
+          if (!validateDateRange(controls.start.value, controls.end.value)) {
+            input.checked = selected.has(value);
+            return;
+          }
           const next = new Set(state.global.category || []);
           if (input.checked) next.add(input.value);
           else next.delete(input.value);
@@ -2456,6 +2795,10 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         label.appendChild(span);
         controls.categoryOptions.appendChild(label);
         input.addEventListener('change', () => {
+          if (!validateDateRange(dom.global.start.value, dom.global.end.value)) {
+            input.checked = selected.has(value);
+            return;
+          }
           const next = new Set(state.global.category || []);
           if (input.checked) next.add(input.value);
           else next.delete(input.value);
@@ -2465,30 +2808,116 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       });
       updateCategoryDropdownValue(controls, state.global.category || []);
     }
+    function syncGlobalChannelSelection(selectedValues, options = {}) {
+      state.global.channel = uniqueSorted(selectedValues || []);
+      sanitizeAdvertisorSelection();
+      if (dom.global.channelSearch && !options.preserveSearchText) dom.global.channelSearch.value = '';
+      populateGlobalChannelDropdown(dom.global.channelSearch ? dom.global.channelSearch.value : '');
+      populateGlobalAdvertisorDropdown(dom.global.advertisorSearch ? dom.global.advertisorSearch.value : '');
+    }
+    function syncSharedChannelSelection(selectedValues, sourceSectionKey, options = {}) {
+      syncGlobalChannelSelection(selectedValues, options);
+      SECTION_KEYS.forEach(sectionKey => {
+        const controls = dom.sections[sectionKey];
+        if (!controls.channel) return;
+        if (controls.channelSearch && !options.preserveSearchText && sectionKey === sourceSectionKey) {
+          controls.channelSearch.value = '';
+        }
+        setMultiSelectValues(controls.channel, state.global.channel);
+        populateChannelDropdown(sectionKey, controls.channelSearch ? controls.channelSearch.value : '');
+      });
+      if (dom.sections.g5.advertisor) {
+        setMultiSelectValues(dom.sections.g5.advertisor, state.global.advertisor);
+        populateAdvertisorDropdown('g5', dom.sections.g5.advertisorSearch ? dom.sections.g5.advertisorSearch.value : '');
+      }
+      applyGlobalStateToSections();
+    }
+    function populateChannelDropdown(sectionKey, filterText = '') {
+      const controls = dom.sections[sectionKey];
+      if (!controls || !controls.channel) return;
+      const values = getChannelValues();
+      populateMultiSelect(controls.channel, values, state.global.channel);
+      populateMultiDropdownOptions(controls, 'channel', values, state.global.channel, filterText, next => {
+        syncSharedChannelSelection(next, sectionKey, { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
+      }, () => validateDateRange(controls.start.value, controls.end.value));
+      updateMultiDropdownValue(controls, 'channel', state.global.channel, 'All Channels', 'Channels');
+    }
+    function populateGlobalChannelDropdown(filterText = '') {
+      const controls = dom.global;
+      const values = getChannelValues();
+      populateMultiSelect(controls.channel, values, state.global.channel);
+      populateMultiDropdownOptions(controls, 'channel', values, state.global.channel, filterText, next => {
+        syncGlobalChannelSelection(next, { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
+      }, () => validateDateRange(dom.global.start.value, dom.global.end.value));
+      updateMultiDropdownValue(controls, 'channel', state.global.channel, 'All Channels', 'Channels');
+    }
+    function syncGlobalAdvertisorSelection(selectedValues, options = {}) {
+      const valid = new Set(getAdvertisorValues(state.global.channel));
+      state.global.advertisor = uniqueSorted((selectedValues || []).filter(value => valid.has(value)));
+      if (dom.global.advertisorSearch && !options.preserveSearchText) dom.global.advertisorSearch.value = '';
+      populateGlobalAdvertisorDropdown(dom.global.advertisorSearch ? dom.global.advertisorSearch.value : '');
+    }
+    function syncSharedAdvertisorSelection(selectedValues, sourceSectionKey, options = {}) {
+      syncGlobalAdvertisorSelection(selectedValues, options);
+      if (dom.sections.g5.advertisor) {
+        if (dom.sections.g5.advertisorSearch && !options.preserveSearchText && sourceSectionKey === 'g5') {
+          dom.sections.g5.advertisorSearch.value = '';
+        }
+        setMultiSelectValues(dom.sections.g5.advertisor, state.global.advertisor);
+        populateAdvertisorDropdown('g5', dom.sections.g5.advertisorSearch ? dom.sections.g5.advertisorSearch.value : '');
+      }
+      applyGlobalStateToSections();
+    }
+    function populateAdvertisorDropdown(sectionKey, filterText = '') {
+      const controls = dom.sections[sectionKey];
+      if (!controls || !controls.advertisor) return;
+      const values = getAdvertisorValues(state.global.channel);
+      populateMultiSelect(controls.advertisor, values, state.global.advertisor);
+      populateMultiDropdownOptions(controls, 'advertisor', values, state.global.advertisor, filterText, next => {
+        syncSharedAdvertisorSelection(next, sectionKey, { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
+      }, () => validateDateRange(controls.start.value, controls.end.value));
+      updateMultiDropdownValue(controls, 'advertisor', state.global.advertisor, 'All Advertisers', 'Advertisers');
+    }
+    function populateGlobalAdvertisorDropdown(filterText = '') {
+      const controls = dom.global;
+      const values = getAdvertisorValues(state.global.channel);
+      populateMultiSelect(controls.advertisor, values, state.global.advertisor);
+      populateMultiDropdownOptions(controls, 'advertisor', values, state.global.advertisor, filterText, next => {
+        syncGlobalAdvertisorSelection(next, { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
+      }, () => validateDateRange(dom.global.start.value, dom.global.end.value));
+      updateMultiDropdownValue(controls, 'advertisor', state.global.advertisor, 'All Advertisers', 'Advertisers');
+    }
     function initializeGlobalControls() {
       const rows = state.cleanedRows;
       const dates = uniqueSorted(rows.map(row => row.date));
-      populateSelect(dom.global.channel, uniqueSorted(rows.map(row => row.channel)), 'All Channels');
-      populateSelect(dom.global.advertisor, uniqueSorted(rows.map(row => row.product)), 'All Advertisers');
       dom.global.topN.value = state.global.topN || '10';
       dom.global.time.value = state.global.time || 'minutes';
       dom.global.start.value = dates[0] || '';
       dom.global.end.value = dates[dates.length - 1] || '';
-      dom.global.start.min = dates[0] || '';
-      dom.global.start.max = dates[dates.length - 1] || '';
-      dom.global.end.min = dates[0] || '';
-      dom.global.end.max = dates[dates.length - 1] || '';
+      dom.global.start.dataset.boundMin = dates[0] || '';
+      dom.global.start.dataset.boundMax = dates[dates.length - 1] || '';
+      dom.global.end.dataset.boundMin = dates[0] || '';
+      dom.global.end.dataset.boundMax = dates[dates.length - 1] || '';
+      refreshDateBounds(dom.global);
+      rememberValidDateValues(dom.global);
       state.global.start = dom.global.start.value;
       state.global.end = dom.global.end.value;
+      sanitizeAdvertisorSelection();
+      populateGlobalChannelDropdown();
+      populateGlobalAdvertisorDropdown();
       populateGlobalCategoryDropdown();
     }
     function syncGlobalState() {
       state.global.topN = dom.global.topN.value;
       state.global.start = dom.global.start.value;
       state.global.end = dom.global.end.value;
-      state.global.channel = dom.global.channel.value;
+      state.global.channel = Array.from(dom.global.channel.selectedOptions).map(option => option.value);
       state.global.category = Array.from(dom.global.category.selectedOptions).map(option => option.value);
-      state.global.advertisor = dom.global.advertisor.value;
+      state.global.advertisor = Array.from(dom.global.advertisor.selectedOptions).map(option => option.value);
       state.global.time = dom.global.time.value;
     }
     function setMultiSelectValues(select, values) {
@@ -2504,31 +2933,67 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         if (controls.topN) controls.topN.value = state.global.topN;
         if (controls.start) controls.start.value = state.global.start;
         if (controls.end) controls.end.value = state.global.end;
-        if (controls.channel) controls.channel.value = state.global.channel;
+        if (controls.channel) setMultiSelectValues(controls.channel, state.global.channel);
         if (controls.category) setMultiSelectValues(controls.category, state.global.category);
-        if (controls.advertisor) controls.advertisor.value = state.global.advertisor;
+        if (controls.advertisor) setMultiSelectValues(controls.advertisor, state.global.advertisor);
         if (controls.time) controls.time.value = state.global.time;
+        if (controls.channelValue) updateMultiDropdownValue(controls, 'channel', state.global.channel, 'All Channels', 'Channels');
         if (controls.categoryValue) updateCategoryDropdownValue(controls, state.global.category);
+        if (controls.advertisorValue) updateMultiDropdownValue(controls, 'advertisor', state.global.advertisor, 'All Advertisers', 'Advertisers');
+        if (controls.channelOptions) {
+          populateChannelDropdown(sectionKey, controls.channelSearch ? controls.channelSearch.value : '');
+        }
         if (sharedCategorySections().includes(sectionKey)) {
           populateCategoryDropdown(sectionKey, controls.categorySearch ? controls.categorySearch.value : '');
+        }
+        if (controls.advertisorOptions) {
+          populateAdvertisorDropdown(sectionKey, controls.advertisorSearch ? controls.advertisorSearch.value : '');
         }
         if (controls.topN) target.topN = state.global.topN;
         target.start = state.global.start;
         target.end = state.global.end;
-        target.channel = state.global.channel;
+        target.channel = [...state.global.channel];
         target.category = [...state.global.category];
         if (sectionKey === 'g5') {
-          target.advertisor = state.global.advertisor;
+          target.advertisor = [...state.global.advertisor];
           target.time = state.global.time;
         }
       });
     }
     function bindGlobalControls() {
-      ['topN', 'start', 'end', 'channel', 'advertisor', 'time'].forEach(key => {
+      ['topN', 'time'].forEach(key => {
         dom.global[key].addEventListener('change', () => {
+          if (!validateDateRange(dom.global.start.value, dom.global.end.value)) return;
           syncGlobalState();
           syncAndRenderSections(SECTION_KEYS);
         });
+      });
+      ['start', 'end'].forEach(key => {
+        dom.global[key].addEventListener('change', () => {
+          if (!handleDateRangeChange(dom.global, key)) return;
+          syncGlobalState();
+          syncAndRenderSections(SECTION_KEYS);
+        });
+      });
+      dom.global.channelTrigger.addEventListener('click', event => {
+        event.preventDefault();
+        dom.global.channelDropdown.classList.toggle('open');
+        if (dom.global.channelDropdown.classList.contains('open')) dom.global.channelSearch.focus();
+      });
+      dom.global.channelSearch.addEventListener('input', () => {
+        populateGlobalChannelDropdown(dom.global.channelSearch.value);
+      });
+      dom.global.channelAll.addEventListener('click', () => {
+        if (!validateDateRange(dom.global.start.value, dom.global.end.value)) return;
+        dom.global.channelDropdown.classList.add('open');
+        syncGlobalChannelSelection(getChannelValues(), { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
+      });
+      dom.global.channelClear.addEventListener('click', () => {
+        if (!validateDateRange(dom.global.start.value, dom.global.end.value)) return;
+        dom.global.channelDropdown.classList.add('open');
+        syncGlobalChannelSelection([], { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
       });
       dom.global.categoryTrigger.addEventListener('click', event => {
         event.preventDefault();
@@ -2541,26 +3006,48 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         populateGlobalCategoryDropdown(dom.global.categorySearch.value);
       });
       dom.global.categoryAll.addEventListener('click', () => {
+        if (!validateDateRange(dom.global.start.value, dom.global.end.value)) return;
         dom.global.categoryDropdown.classList.add('open');
         syncGlobalCategorySelection(getCategoryValues(), { preserveSearchText: true });
         syncAndRenderSections(SECTION_KEYS);
       });
       dom.global.categoryClear.addEventListener('click', () => {
+        if (!validateDateRange(dom.global.start.value, dom.global.end.value)) return;
         dom.global.categoryDropdown.classList.add('open');
         syncGlobalCategorySelection([], { preserveSearchText: true });
         syncAndRenderSections(SECTION_KEYS);
       });
+      dom.global.advertisorTrigger.addEventListener('click', event => {
+        event.preventDefault();
+        dom.global.advertisorDropdown.classList.toggle('open');
+        if (dom.global.advertisorDropdown.classList.contains('open')) dom.global.advertisorSearch.focus();
+      });
+      dom.global.advertisorSearch.addEventListener('input', () => {
+        populateGlobalAdvertisorDropdown(dom.global.advertisorSearch.value);
+      });
+      dom.global.advertisorAll.addEventListener('click', () => {
+        if (!validateDateRange(dom.global.start.value, dom.global.end.value)) return;
+        dom.global.advertisorDropdown.classList.add('open');
+        syncGlobalAdvertisorSelection(getAdvertisorValues(state.global.channel), { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
+      });
+      dom.global.advertisorClear.addEventListener('click', () => {
+        if (!validateDateRange(dom.global.start.value, dom.global.end.value)) return;
+        dom.global.advertisorDropdown.classList.add('open');
+        syncGlobalAdvertisorSelection([], { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
+      });
       dom.global.reset.addEventListener('click', () => {
         state.global.topN = '10';
-        state.global.channel = '';
+        state.global.channel = [];
         state.global.category = [];
-        state.global.advertisor = '';
+        state.global.advertisor = [];
         state.global.time = 'minutes';
         initializeGlobalControls();
-        dom.global.channel.value = '';
-        dom.global.advertisor.value = '';
         dom.global.time.value = 'minutes';
         syncGlobalCategorySelection([]);
+        syncGlobalChannelSelection([]);
+        syncGlobalAdvertisorSelection([]);
         syncGlobalState();
         syncAndRenderSections(SECTION_KEYS);
       });
@@ -2568,38 +3055,29 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     function initializeSectionControls(sectionKey) {
       const rows = state.cleanedRows;
       const dates = uniqueSorted(rows.map(row => row.date));
-      const channels = uniqueSorted(rows.map(row => row.channel));
       const section = dom.sections[sectionKey];
-      populateSelect(section.channel, channels, 'All Channels');
+      populateMultiSelect(section.channel, getChannelValues(), state.global.channel);
       if (section.category) populateSelect(section.category, getCategoryValues(), 'All Categories');
       if (sectionKey === 'g5') {
-        const advertisors = uniqueSorted(rows.map(row => row.product));
-        populateSelect(section.advertisor, advertisors, 'All Advertisers');
+        populateMultiSelect(section.advertisor, getAdvertisorValues(state.global.channel), state.global.advertisor);
         section.time.value = 'minutes';
       }
       section.start.value = dates[0] || '';
       section.end.value = dates[dates.length - 1] || '';
-      section.start.min = dates[0] || '';
-      section.start.max = dates[dates.length - 1] || '';
-      section.end.min = dates[0] || '';
-      section.end.max = dates[dates.length - 1] || '';
-    }
-    function matchesCategoryFilter(row, categoryFilter) {
-      if (Array.isArray(categoryFilter) && categoryFilter.length) {
-        return categoryFilter.includes(row.category);
-      }
-      if (!Array.isArray(categoryFilter) && categoryFilter) {
-        return row.category === categoryFilter;
-      }
-      return true;
+      section.start.dataset.boundMin = dates[0] || '';
+      section.start.dataset.boundMax = dates[dates.length - 1] || '';
+      section.end.dataset.boundMin = dates[0] || '';
+      section.end.dataset.boundMax = dates[dates.length - 1] || '';
+      refreshDateBounds(section);
+      rememberValidDateValues(section);
     }
     function filterRows(rows, filters = {}, options = {}) {
       return rows.filter(row => {
-        if (filters.channel && row.channel !== filters.channel) return false;
-        if (!matchesCategoryFilter(row, filters.category)) return false;
+        if (!matchesMultiFilter(row.channel, filters.channel)) return false;
+        if (!matchesMultiFilter(row.category, filters.category)) return false;
         if (filters.start && (!row.date || row.date < filters.start)) return false;
         if (filters.end && (!row.date || row.date > filters.end)) return false;
-        if (filters.advertisor && row.product !== filters.advertisor) return false;
+        if (!matchesMultiFilter(row.product, filters.advertisor)) return false;
         if (options.requireHourlySlot) {
           const hour = parseHourValue(row.adtime);
           if (hour === null || hour < 6) return false;
@@ -3125,7 +3603,7 @@ Share: ${(fraction * 100).toFixed(0)}%`;
           title.textContent = `Advertiser: ${item.advertisor}
 Date: ${formatDate(row.date)}
 ${metricLabel()}: ${formatDurationValue(value, true)}
-Channel: ${state.global.channel || 'All'}
+Channel: ${multiFilterLabel(state.global.channel, 'All')}
 Category: ${(state.global.category || []).length ? state.global.category.join(', ') : 'All'}`;
           rect.appendChild(title);
           svg.appendChild(rect);
@@ -3463,19 +3941,26 @@ AD Duration: ${unitMeta.format(displayValue)}`;
         ? ((sectionState.category || []).length ? sectionState.category.join(', ') : emptyLabel)
         : (sectionState.category || emptyLabel);
     }
+    function multiFilterLabel(values, emptyLabel) {
+      return Array.isArray(values)
+        ? (values.length ? values.join(', ') : emptyLabel)
+        : (values || emptyLabel);
+    }
     function filterSummaryLines(sectionKey, sectionState, forPage = false) {
       const categoryLabel = categoryFilterLabel(state.global, forPage ? 'All' : 'all');
+      const channelLabel = multiFilterLabel(state.global.channel, forPage ? 'All' : 'all');
+      const advertiserLabel = multiFilterLabel(state.global.advertisor, forPage ? 'All' : 'all');
       return forPage
         ? [
             `Top N: ${state.global.topN || 'All'}`,
             `Start Date: ${state.global.start ? formatDate(state.global.start) : 'All'}`,
             `End Date: ${state.global.end ? formatDate(state.global.end) : 'All'}`,
-            `Channel: ${state.global.channel || 'All'}`,
+            `Channel: ${channelLabel}`,
             `Category: ${categoryLabel}`,
-            `Advertiser: ${state.global.advertisor || 'All'}`,
+            `Advertiser: ${advertiserLabel}`,
             `Time: ${state.global.time || 'minutes'}`
           ]
-        : [`<strong>Global</strong> | Top N: ${state.global.topN || 'all'}, Start: ${state.global.start || 'all'}, End: ${state.global.end || 'all'}, Channel: ${state.global.channel || 'all'}, Category: ${categoryLabel}, Advertiser: ${state.global.advertisor || 'all'}, Time: ${state.global.time || 'minutes'}`];
+        : [`<strong>Global</strong> | Top N: ${state.global.topN || 'all'}, Start: ${state.global.start || 'all'}, End: ${state.global.end || 'all'}, Channel: ${channelLabel}, Category: ${categoryLabel}, Advertiser: ${advertiserLabel}, Time: ${state.global.time || 'minutes'}`];
     }
     function getActiveFiltersMarkup() {
       return `<div class="summary-line">${filterSummaryLines('global', state.global)[0]}</div>`;
@@ -3575,7 +4060,9 @@ AD Duration: ${unitMeta.format(displayValue)}`;
       if (!source) return null;
       return {
         ...source,
-        category: Array.isArray(source.category) ? [...source.category] : source.category
+        channel: Array.isArray(source.channel) ? [...source.channel] : source.channel,
+        category: Array.isArray(source.category) ? [...source.category] : source.category,
+        advertisor: Array.isArray(source.advertisor) ? [...source.advertisor] : source.advertisor
       };
     }
     function getDatasetNameForExport() {
@@ -3603,7 +4090,9 @@ AD Duration: ${unitMeta.format(displayValue)}`;
         statusText: dom.statusText?.textContent || 'Loaded shared dashboard snapshot.',
         global: {
           ...state.global,
-          category: [...(state.global.category || [])]
+          channel: [...(state.global.channel || [])],
+          category: [...(state.global.category || [])],
+          advertisor: [...(state.global.advertisor || [])]
         },
         sections: SECTION_KEYS.reduce((acc, sectionKey) => {
           acc[sectionKey] = cloneSectionState(state.sections[sectionKey]);
@@ -3618,7 +4107,9 @@ AD Duration: ${unitMeta.format(displayValue)}`;
         state.global = {
           ...state.global,
           ...snapshot.global,
-          category: [...(snapshot.global.category || [])]
+          channel: [...(snapshot.global.channel || [])],
+          category: [...(snapshot.global.category || [])],
+          advertisor: [...(snapshot.global.advertisor || [])]
         };
       }
       if (snapshot.sections) {
@@ -3628,19 +4119,25 @@ AD Duration: ${unitMeta.format(displayValue)}`;
           state.sections[sectionKey] = {
             ...state.sections[sectionKey],
             ...next,
-            category: Array.isArray(next.category) ? [...next.category] : next.category
+            channel: Array.isArray(next.channel) ? [...next.channel] : next.channel,
+            category: Array.isArray(next.category) ? [...next.category] : next.category,
+            advertisor: Array.isArray(next.advertisor) ? [...next.advertisor] : next.advertisor
           };
         });
       }
       dom.global.topN.value = state.global.topN || '10';
       dom.global.start.value = state.global.start || '';
       dom.global.end.value = state.global.end || '';
-      dom.global.channel.value = state.global.channel || '';
-      dom.global.advertisor.value = state.global.advertisor || '';
       dom.global.time.value = state.global.time || 'minutes';
+      setMultiSelectValues(dom.global.channel, state.global.channel || []);
       setMultiSelectValues(dom.global.category, state.global.category || []);
+      setMultiSelectValues(dom.global.advertisor, state.global.advertisor || []);
+      updateMultiDropdownValue(dom.global, 'channel', state.global.channel || [], 'All Channels', 'Channels');
       updateCategoryDropdownValue(dom.global, state.global.category || []);
+      updateMultiDropdownValue(dom.global, 'advertisor', state.global.advertisor || [], 'All Advertisers', 'Advertisers');
+      populateGlobalChannelDropdown('');
       populateGlobalCategoryDropdown('');
+      populateGlobalAdvertisorDropdown('');
       if (dom.statusText && snapshot.statusText) {
         dom.statusText.textContent = snapshot.statusText;
       }
@@ -3742,14 +4239,14 @@ AD Duration: ${unitMeta.format(displayValue)}`;
       if (controls.topN) target.topN = controls.topN.value;
       target.start = controls.start.value;
       target.end = controls.end.value;
-      target.channel = controls.channel.value;
+      target.channel = Array.from(controls.channel.selectedOptions).map(option => option.value);
       if (sharedCategorySections().includes(sectionKey)) {
         target.category = Array.from(controls.category.selectedOptions).map(option => option.value);
       } else if (controls.category) {
         target.category = controls.category.value;
       }
       if (sectionKey === 'g5') {
-        target.advertisor = controls.advertisor.value;
+        target.advertisor = Array.from(controls.advertisor.selectedOptions).map(option => option.value);
         target.time = controls.time.value;
       }
     }
@@ -3758,26 +4255,59 @@ AD Duration: ${unitMeta.format(displayValue)}`;
       if (controls.topN && dom.global.topN) dom.global.topN.value = controls.topN.value;
       if (controls.start && dom.global.start) dom.global.start.value = controls.start.value;
       if (controls.end && dom.global.end) dom.global.end.value = controls.end.value;
-      if (controls.channel && dom.global.channel) dom.global.channel.value = controls.channel.value;
-      if (controls.advertisor && dom.global.advertisor) dom.global.advertisor.value = controls.advertisor.value;
+      if (controls.channel && dom.global.channel) setMultiSelectValues(dom.global.channel, Array.from(controls.channel.selectedOptions).map(option => option.value));
+      if (controls.advertisor && dom.global.advertisor) setMultiSelectValues(dom.global.advertisor, Array.from(controls.advertisor.selectedOptions).map(option => option.value));
       if (controls.time && dom.global.time) dom.global.time.value = controls.time.value;
+      syncGlobalChannelSelection(Array.from(controls.channel.selectedOptions).map(option => option.value), { preserveSearchText: true });
       if (sharedCategorySections().includes(sectionKey) && controls.category) {
         syncGlobalCategorySelection(Array.from(controls.category.selectedOptions).map(option => option.value), { preserveSearchText: true });
+      }
+      if (controls.advertisor) {
+        syncGlobalAdvertisorSelection(Array.from(controls.advertisor.selectedOptions).map(option => option.value), { preserveSearchText: true });
       }
       syncGlobalState();
     }
     function bindSection(sectionKey) {
       const controls = dom.sections[sectionKey];
       const controlKeys = sectionKey === 'g5'
-        ? ['start', 'end', 'channel', 'advertisor', 'time', 'category']
-        : ['topN', 'start', 'end', 'channel', 'category'];
+        ? ['time']
+        : ['topN'];
       controlKeys.forEach(key => {
         if (!controls[key]) return;
         controls[key].addEventListener('change', () => {
+          if (!validateDateRange(controls.start.value, controls.end.value)) return;
           syncSectionState(sectionKey);
           syncGlobalFromSection(sectionKey);
           syncAndRenderSections(SECTION_KEYS);
         });
+      });
+      ['start', 'end'].forEach(key => {
+        controls[key].addEventListener('change', () => {
+          if (!handleDateRangeChange(controls, key)) return;
+          syncSectionState(sectionKey);
+          syncGlobalFromSection(sectionKey);
+          syncAndRenderSections(SECTION_KEYS);
+        });
+      });
+      controls.channelTrigger.addEventListener('click', event => {
+        event.preventDefault();
+        controls.channelDropdown.classList.toggle('open');
+        if (controls.channelDropdown.classList.contains('open')) controls.channelSearch.focus();
+      });
+      controls.channelSearch.addEventListener('input', () => {
+        populateChannelDropdown(sectionKey, controls.channelSearch.value);
+      });
+      controls.channelAll.addEventListener('click', () => {
+        if (!validateDateRange(controls.start.value, controls.end.value)) return;
+        controls.channelDropdown.classList.add('open');
+        syncSharedChannelSelection(getChannelValues(), sectionKey, { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
+      });
+      controls.channelClear.addEventListener('click', () => {
+        if (!validateDateRange(controls.start.value, controls.end.value)) return;
+        controls.channelDropdown.classList.add('open');
+        syncSharedChannelSelection([], sectionKey, { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
       });
       if (sharedCategorySections().includes(sectionKey)) {
         controls.categoryTrigger.addEventListener('click', event => {
@@ -3791,21 +4321,45 @@ AD Duration: ${unitMeta.format(displayValue)}`;
           populateCategoryDropdown(sectionKey, controls.categorySearch.value);
         });
         controls.categoryAll.addEventListener('click', () => {
+          if (!validateDateRange(controls.start.value, controls.end.value)) return;
           controls.categoryDropdown.classList.add('open');
           syncSharedCategorySelection(getCategoryValues(), sectionKey, { preserveSearchText: true });
           syncAndRenderSections(sharedCategorySections());
           renderSummary();
         });
         controls.categoryClear.addEventListener('click', () => {
+          if (!validateDateRange(controls.start.value, controls.end.value)) return;
           controls.categoryDropdown.classList.add('open');
           syncSharedCategorySelection([], sectionKey, { preserveSearchText: true });
           syncAndRenderSections(sharedCategorySections());
           renderSummary();
         });
       }
+      if (controls.advertisorTrigger) {
+        controls.advertisorTrigger.addEventListener('click', event => {
+          event.preventDefault();
+          controls.advertisorDropdown.classList.toggle('open');
+          if (controls.advertisorDropdown.classList.contains('open')) controls.advertisorSearch.focus();
+        });
+        controls.advertisorSearch.addEventListener('input', () => {
+          populateAdvertisorDropdown(sectionKey, controls.advertisorSearch.value);
+        });
+        controls.advertisorAll.addEventListener('click', () => {
+          if (!validateDateRange(controls.start.value, controls.end.value)) return;
+          controls.advertisorDropdown.classList.add('open');
+          syncSharedAdvertisorSelection(getAdvertisorValues(state.global.channel), sectionKey, { preserveSearchText: true });
+          syncAndRenderSections(SECTION_KEYS);
+        });
+        controls.advertisorClear.addEventListener('click', () => {
+          if (!validateDateRange(controls.start.value, controls.end.value)) return;
+          controls.advertisorDropdown.classList.add('open');
+          syncSharedAdvertisorSelection([], sectionKey, { preserveSearchText: true });
+          syncAndRenderSections(SECTION_KEYS);
+        });
+      }
       controls.reset.addEventListener('click', () => {
         if (controls.topN) controls.topN.value = '10';
-        controls.channel.value = '';
+        setMultiSelectValues(controls.channel, []);
         if (sharedCategorySections().includes(sectionKey)) {
           controls.categorySearch.value = '';
           syncSharedCategorySelection([], sectionKey);
@@ -3826,9 +4380,11 @@ AD Duration: ${unitMeta.format(displayValue)}`;
           dom.sections.g3.barBtn.classList.remove('active');
         }
         if (sectionKey === 'g5') {
-          controls.advertisor.value = '';
+          setMultiSelectValues(controls.advertisor, []);
           controls.time.value = 'minutes';
         }
+        syncSharedChannelSelection([], sectionKey, { preserveSearchText: true });
+        if (controls.advertisor) syncSharedAdvertisorSelection([], sectionKey, { preserveSearchText: true });
         if (sharedCategorySections().includes(sectionKey)) {
           syncGlobalFromSection(sectionKey);
           syncAndRenderSections(SECTION_KEYS);
@@ -3950,17 +4506,25 @@ AD Duration: ${unitMeta.format(displayValue)}`;
           }
         });
         document.addEventListener('click', event => {
+          if (dom.global.channelDropdown && !dom.global.channelDropdown.contains(event.target)) {
+            dom.global.channelDropdown.classList.remove('open');
+          }
           if (dom.global.categoryDropdown && !dom.global.categoryDropdown.contains(event.target)) {
             dom.global.categoryDropdown.classList.remove('open');
+          }
+          if (dom.global.advertisorDropdown && !dom.global.advertisorDropdown.contains(event.target)) {
+            dom.global.advertisorDropdown.classList.remove('open');
           }
           if (dom.sheetMenu && dom.sheetBtn && !dom.sheetMenu.contains(event.target) && !dom.sheetBtn.contains(event.target)) {
             hideSheetMenu();
           }
-          sharedCategorySections().forEach(sectionKey => {
-            const dropdown = dom.sections[sectionKey].categoryDropdown;
-            if (dropdown && !dropdown.contains(event.target)) {
-              dropdown.classList.remove('open');
-            }
+          SECTION_KEYS.forEach(sectionKey => {
+            ['channelDropdown', 'categoryDropdown', 'advertisorDropdown'].forEach(field => {
+              const dropdown = dom.sections[sectionKey][field];
+              if (dropdown && !dropdown.contains(event.target)) {
+                dropdown.classList.remove('open');
+              }
+            });
           });
         });
       }

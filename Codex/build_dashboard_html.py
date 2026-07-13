@@ -18,6 +18,21 @@ EXCLUDED = [
     "SHORT PROGRAM",
     "TELEVISIONS",
 ]
+TOP_N_OPTIONS = '<option value="10">Top 10</option><option value="20">Top 20</option>'
+TIME_OPTIONS = '<option value="minutes">Minutes</option><option value="seconds">Seconds</option>'
+CATEGORY_FIELDS = ["category", "categoryDropdown", "categoryTrigger", "categoryValue", "categorySearch", "categoryOptions", "categoryAll", "categoryClear"]
+CHANNEL_FIELDS = ["channel", "channelDropdown", "channelTrigger", "channelValue", "channelSearch", "channelOptions", "channelAll", "channelClear"]
+ADVERTISOR_FIELDS = ["advertisor", "advertisorDropdown", "advertisorTrigger", "advertisorValue", "advertisorSearch", "advertisorOptions", "advertisorAll", "advertisorClear"]
+DOM_FIELD_SUFFIXES = {"topN": "TopN", "start": "Start", "end": "End", "channel": "Channel", "channelDropdown": "ChannelDropdown", "channelTrigger": "ChannelTrigger", "channelValue": "ChannelValue", "channelSearch": "ChannelSearch", "channelOptions": "ChannelOptions", "channelAll": "ChannelAll", "channelClear": "ChannelClear", "category": "Category", "categoryDropdown": "CategoryDropdown", "categoryTrigger": "CategoryTrigger", "categoryValue": "CategoryValue", "categorySearch": "CategorySearch", "categoryOptions": "CategoryOptions", "categoryAll": "CategoryAll", "categoryClear": "CategoryClear", "reset": "Reset", "legend": "Legend", "chart": "Chart", "metric": "Metric", "fullBtn": "FullBtn", "barBtn": "BarBtn", "heatmapBtn": "HeatmapBtn", "pieBtn": "PieBtn", "advertisor": "Advertisor", "advertisorDropdown": "AdvertisorDropdown", "advertisorTrigger": "AdvertisorTrigger", "advertisorValue": "AdvertisorValue", "advertisorSearch": "AdvertisorSearch", "advertisorOptions": "AdvertisorOptions", "advertisorAll": "AdvertisorAll", "advertisorClear": "AdvertisorClear", "time": "Time", "totalGrid": "TotalGrid"}
+def section_config(key: str, section_class: str, title: str, chart_id: str, controls: list[tuple], extras: str = "", head_actions: str = "", state: str = "", dom_fields: list[str] | None = None) -> dict:
+    return {"key": key, "section_class": section_class, "title": title, "chart_id": chart_id, "controls": controls, "extras": extras, "head_actions": head_actions, "state": state, "dom_fields": dom_fields or []}
+SECTION_CONFIGS = [
+    section_config("g1", "section graph1-scope", "Top Advertiser (FCT)", "g1Chart", [("select", "TopN", "Top N", TOP_N_OPTIONS), ("date", "Start", "Start Date"), ("date", "End", "End Date"), ("multi", "channel", "Channel", "All Channels", "Search channels"), ("category",), ("reset", "Reset")], extras='        <div class="legend" id="g1Legend"></div>', state="{ topN: '10', start: '', end: '', channel: [], category: [], view: 'bar' }", dom_fields=["topN", "start", "end", *CHANNEL_FIELDS, *CATEGORY_FIELDS, "reset", "legend", "chart", "panel", "fullBtn"]),
+    section_config("g2", "section", "Top Advertiser by Channels (FCT)", "g2Chart", [("select", "TopN", "Top N", TOP_N_OPTIONS), ("date", "Start", "Start Date"), ("date", "End", "End Date"), ("multi", "channel", "Channel", "All Channels", "Search channels"), ("category",), ("reset", "Reset")], extras='        <div class="legend" id="g2Legend"></div>\n        <div class="chart-metric" id="g2Metric"></div>', head_actions='            <div class="toggle-group">\n              <button class="toggle-btn active" id="g2BarBtn" type="button">Bar Chart</button>\n              <button class="toggle-btn" id="g2PieBtn" type="button">Pie Chart</button>\n            </div>\n', state="{ topN: '10', start: '', end: '', channel: [], category: [], view: 'bar' }", dom_fields=["topN", "start", "end", *CHANNEL_FIELDS, *CATEGORY_FIELDS, "reset", "legend", "chart", "metric", "panel", "fullBtn", "barBtn", "pieBtn"]),
+    section_config("g3", "section", "Top Advertiser by Date (FCT)", "g3Chart", [("select", "TopN", "Top N", TOP_N_OPTIONS), ("date", "Start", "Start Date"), ("date", "End", "End Date"), ("multi", "channel", "Channel", "All Channels", "Search channels"), ("category",), ("reset", "Reset")], extras='        <div class="legend" id="g3Legend"></div>', head_actions='            <div class="toggle-group">\n              <button class="toggle-btn active" id="g3HeatmapBtn" type="button">Heatmap</button>\n              <button class="toggle-btn" id="g3BarBtn" type="button">Bar Chart</button>\n            </div>\n', state="{ topN: '10', start: '', end: '', channel: [], category: [], view: 'heat' }", dom_fields=["topN", "start", "end", *CHANNEL_FIELDS, *CATEGORY_FIELDS, "reset", "legend", "chart", "panel", "fullBtn", "heatmapBtn", "barBtn"]),
+    section_config("g4", "section", "Channel Category Overview", "g4Chart", [("select", "TopN", "Category View", TOP_N_OPTIONS), ("date", "Start", "Start Date"), ("date", "End", "End Date"), ("multi", "channel", "Channel", "All Channels", "Search channels"), ("reset", "Reset")], state="{ topN: '10', start: '', end: '', channel: [], category: '', view: 'heat' }", dom_fields=["topN", "start", "end", *CHANNEL_FIELDS, "reset", "chart", "panel", "fullBtn"]),
+    section_config("g5", "section", "FCT Hourly Analysis", "g5Chart", [("date", "Start", "Start Date"), ("date", "End", "End Date"), ("multi", "channel", "Channel", "All Channels", "Search channels"), ("category",), ("multi", "advertisor", "Advertiser", "All Advertisers", "Search advertisers"), ("select", "Time", "Time", TIME_OPTIONS), ("reset", "Reset")], extras='        <div class="legend-scale" id="g5Legend">\n          <span>Low AD Duration</span>\n          <div class="legend-gradient"></div>\n          <span>High AD Duration</span>\n        </div>\n        <div class="total-panel">\n          <div class="total-title">Total</div>\n          <div class="total-grid" id="g5TotalGrid"></div>\n        </div>', state="{ start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'heat' }", dom_fields=["start", "end", *CHANNEL_FIELDS, *CATEGORY_FIELDS, *ADVERTISOR_FIELDS, "time", "reset", "legend", "chart", "totalGrid", "panel", "fullBtn"]),
+]
 def parse_date(value: str) -> str:
     value = (value or "").strip()
     if not value:
@@ -31,20 +46,10 @@ def parse_int(value: str) -> int:
         return int(float((value or "0").replace(",", "").strip()))
     except ValueError:
         return 0
-
-
 def load_json_config(path: Path) -> dict:
-    if not path.exists():
-        return {}
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
 def load_text_asset(path: Path) -> str:
-    if not path.exists():
-        return ""
-    return path.read_text(encoding="utf-8")
-
-
+    return path.read_text(encoding="utf-8") if path.exists() else ""
 def load_seed_rows() -> list[dict[str, object]]:
     sample_paths = [
         CSV_PATH,
@@ -55,78 +60,77 @@ def load_seed_rows() -> list[dict[str, object]]:
     source = next((path for path in sample_paths if path.exists()), None)
     if source is None:
         return []
-
     rows: list[dict[str, object]] = []
     with source.open("r", encoding="utf-8-sig", newline="") as fh:
         reader = csv.DictReader(fh)
         for record in reader:
-            rows.append(
-                {
-                    "channel": (record.get("Channel Name") or "").strip(),
-                    "date": parse_date(record.get("Pdate") or ""),
-                    "adtime": (record.get("Adst") or "").strip(),
-                    "product": (record.get("Brand Name") or "").strip(),
-                    "company": (record.get("Company") or "").strip(),
-                    "aaddur": parse_int(record.get("Aaddur") or "0"),
-                    "category": (record.get("Category") or "").strip(),
-                }
-            )
+            rows.append({"channel": (record.get("Channel Name") or "").strip(), "date": parse_date(record.get("Pdate") or ""), "adtime": (record.get("Adst") or "").strip(), "product": (record.get("Brand Name") or "").strip(), "company": (record.get("Company") or "").strip(), "aaddur": parse_int(record.get("Aaddur") or "0"), "category": (record.get("Category") or "").strip()})
     return rows
-
-
 rows = load_seed_rows()
 column_mapping_config = load_json_config(COLUMN_MAPPINGS_PATH)
 value_mapping_config = load_json_config(VALUE_MAPPINGS_PATH)
 xlsx_bundle = load_text_asset(XLSX_BUNDLE_PATH)
 generated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 report_date = datetime.now().strftime("%d %b %Y")
-payload = {
-    "rows": [],
-    "excluded": EXCLUDED,
-    "generatedAt": generated_at,
-}
-embedded_payload = {
-    "rows": rows,
-    "excluded": EXCLUDED,
-    "generatedAt": generated_at,
-}
+payload = {"rows": [], "excluded": EXCLUDED, "generatedAt": generated_at}
 def select_control(control_id: str, label: str, options: str = "", extra: str = "") -> str:
     return f'<div><label class="label" for="{control_id}">{label}</label><select id="{control_id}"{extra}>{options}</select></div>'
 def date_control(control_id: str, label: str) -> str:
     return f'<div><label class="label" for="{control_id}">{label}</label><input id="{control_id}" type="date"></div>'
 def reset_control(control_id: str) -> str:
     return f'<div><label class="label">&nbsp;</label><button id="{control_id}" type="button">Reset</button></div>'
-def category_dropdown(section_key: str) -> str:
-    return f"""          <div class="multi-dropdown" id="{section_key}CategoryDropdown">
-            <label class="label" for="{section_key}CategoryTrigger">Category</label>
-            <button class="multi-dropdown-trigger" id="{section_key}CategoryTrigger" type="button">
-              <span class="multi-dropdown-value" id="{section_key}CategoryValue">All Categories</span>
+def multi_dropdown(section_key: str, field_suffix: str, label: str, all_label: str, search_placeholder: str) -> str:
+    return f"""          <div class="multi-dropdown" id="{section_key}{field_suffix}Dropdown">
+            <label class="label" for="{section_key}{field_suffix}Trigger">{label}</label>
+            <button class="multi-dropdown-trigger" id="{section_key}{field_suffix}Trigger" type="button">
+              <span class="multi-dropdown-value" id="{section_key}{field_suffix}Value">{all_label}</span>
               <span>&#9660;</span>
             </button>
             <div class="multi-dropdown-panel">
-              <input class="multi-dropdown-search" id="{section_key}CategorySearch" type="text" placeholder="Search categories">
+              <input class="multi-dropdown-search" id="{section_key}{field_suffix}Search" type="text" placeholder="{search_placeholder}">
               <div class="multi-dropdown-actions">
-                <button id="{section_key}CategoryAll" type="button">Select All</button>
-                <button id="{section_key}CategoryClear" type="button">Clear All</button>
+                <button id="{section_key}{field_suffix}All" type="button">Select All</button>
+                <button id="{section_key}{field_suffix}Clear" type="button">Clear All</button>
               </div>
-              <div class="multi-dropdown-options" id="{section_key}CategoryOptions"></div>
+              <div class="multi-dropdown-options" id="{section_key}{field_suffix}Options"></div>
             </div>
-            <select id="{section_key}Category" multiple hidden></select>
+            <select id="{section_key}{field_suffix}" multiple hidden></select>
           </div>"""
+def category_dropdown(section_key: str) -> str:
+    return multi_dropdown(section_key, "Category", "Category", "All Categories", "Search categories")
+def build_controls(section_key: str, controls: list[tuple]) -> list[str]:
+    built = []
+    for control in controls:
+        kind = control[0]
+        if kind == "select":
+            _, suffix, label, options = control
+            built.append(select_control(f"{section_key}{suffix}", label, options))
+        elif kind == "date":
+            _, suffix, label = control
+            built.append(date_control(f"{section_key}{suffix}", label))
+        elif kind == "reset":
+            _, suffix = control
+            built.append(reset_control(f"{section_key}{suffix}"))
+        elif kind == "category":
+            built.append(category_dropdown(section_key))
+        elif kind == "multi":
+            _, suffix, label, all_label, search_placeholder = control
+            built.append(multi_dropdown(section_key, suffix.title(), label, all_label, search_placeholder))
+    return built
 def build_global_filter_html() -> str:
-    top_n = '<option value="10">Top 10</option><option value="20">Top 20</option>'
     return f"""    <section class="section sticky-filter-wrap" id="stickyFilterWrap">
       <div class="panel section-card sticky-filter-shell" id="stickyFilterShell">
         <div class="section-controls global-controls">
-          {select_control("globalTopN", "Top N", top_n)}
+          {select_control("globalTopN", "Top N", TOP_N_OPTIONS)}
           {date_control("globalStart", "Start Date")}
           {date_control("globalEnd", "End Date")}
-          {select_control("globalChannel", "Channel")}
+          {multi_dropdown("global", "Channel", "Channel", "All Channels", "Search channels")}
           {category_dropdown("global")}
-          {select_control("globalAdvertisor", "Advertiser")}
-          {select_control("globalTime", "Time", '<option value="minutes">Minutes</option><option value="seconds">Seconds</option>')}
+          {multi_dropdown("global", "Advertisor", "Advertiser", "All Advertisers", "Search advertisers")}
+          {select_control("globalTime", "Time", TIME_OPTIONS)}
           {reset_control("globalReset")}
         </div>
+        <div class="filter-error" id="filterErrorText" hidden></div>
       </div>
     </section>"""
 def section_block(section_class: str, title: str, controls: list[str], chart_id: str, extras: str = "", head_actions: str = "") -> str:
@@ -149,36 +153,21 @@ def section_block(section_class: str, title: str, controls: list[str], chart_id:
       </div>
     </section>"""
 def build_sections_html() -> str:
-    top_n = '<option value="10">Top 10</option><option value="20">Top 20</option>'
-    return "\n\n".join([
-        section_block("section graph1-scope", "Top Advertiser (FCT)", [select_control("g1TopN", "Top N", top_n), date_control("g1Start", "Start Date"), date_control("g1End", "End Date"), select_control("g1Channel", "Channel"), category_dropdown("g1"), reset_control("g1Reset")], "g1Chart", '        <div class="legend" id="g1Legend"></div>'),
-        section_block("section", "Top Advertiser by Channels (FCT)", [select_control("g2TopN", "Top N", top_n), date_control("g2Start", "Start Date"), date_control("g2End", "End Date"), select_control("g2Channel", "Channel"), category_dropdown("g2"), reset_control("g2Reset")], "g2Chart", '        <div class="legend" id="g2Legend"></div>\n        <div class="chart-metric" id="g2Metric"></div>', '            <div class="toggle-group">\n              <button class="toggle-btn active" id="g2BarBtn" type="button">Bar Chart</button>\n              <button class="toggle-btn" id="g2PieBtn" type="button">Pie Chart</button>\n            </div>\n'),
-        section_block("section", "Top Advertiser by Date (FCT)", [select_control("g3TopN", "Top N", top_n), date_control("g3Start", "Start Date"), date_control("g3End", "End Date"), select_control("g3Channel", "Channel"), category_dropdown("g3"), reset_control("g3Reset")], "g3Chart", '        <div class="legend" id="g3Legend"></div>', '            <div class="toggle-group">\n              <button class="toggle-btn active" id="g3HeatmapBtn" type="button">Heatmap</button>\n              <button class="toggle-btn" id="g3BarBtn" type="button">Bar Chart</button>\n            </div>\n'),
-        section_block("section", "Channel Category Overview", [select_control("g4TopN", "Category View", top_n), date_control("g4Start", "Start Date"), date_control("g4End", "End Date"), select_control("g4Channel", "Channel"), reset_control("g4Reset")], "g4Chart"),
-        section_block("section", "FCT Hourly Analysis", [date_control("g5Start", "Start Date"), date_control("g5End", "End Date"), select_control("g5Channel", "Channel"), category_dropdown("g5"), select_control("g5Advertisor", "Advertiser"), select_control("g5Time", "Time", '<option value="minutes">Minutes</option><option value="seconds">Seconds</option>'), reset_control("g5Reset")], "g5Chart", '        <div class="legend-scale" id="g5Legend">\n          <span>Low AD Duration</span>\n          <div class="legend-gradient"></div>\n          <span>High AD Duration</span>\n        </div>\n        <div class="total-panel">\n          <div class="total-title">Total</div>\n          <div class="total-grid" id="g5TotalGrid"></div>\n        </div>'),
-    ])
+    return "\n\n".join(section_block(config["section_class"], config["title"], build_controls(config["key"], config["controls"]), config["chart_id"], config["extras"], config["head_actions"]) for config in SECTION_CONFIGS)
 def build_state_sections_js() -> str:
-    return "\n".join([
-        "        g1: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },",
-        "        g2: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },",
-        "        g3: { topN: '10', start: '', end: '', channel: '', category: [], view: 'heat' },",
-        "        g4: { topN: '10', start: '', end: '', channel: '', category: '', view: 'heat' },",
-        "        g5: { start: '', end: '', channel: '', category: [], advertisor: '', time: 'minutes', view: 'heat' }",
-    ])
+    return "\n".join(f"        {config['key']}: {config['state']}{',' if index < len(SECTION_CONFIGS) - 1 else ''}" for index, config in enumerate(SECTION_CONFIGS))
 def build_dom_sections_js() -> str:
-    section_fields = {
-        "g1": ["topN", "start", "end", "channel", "category", "categoryDropdown", "categoryTrigger", "categoryValue", "categorySearch", "categoryOptions", "categoryAll", "categoryClear", "reset", "legend", "chart", "panel", "fullBtn"],
-        "g2": ["topN", "start", "end", "channel", "category", "categoryDropdown", "categoryTrigger", "categoryValue", "categorySearch", "categoryOptions", "categoryAll", "categoryClear", "reset", "legend", "chart", "metric", "panel", "fullBtn", "barBtn", "pieBtn"],
-        "g3": ["topN", "start", "end", "channel", "category", "categoryDropdown", "categoryTrigger", "categoryValue", "categorySearch", "categoryOptions", "categoryAll", "categoryClear", "reset", "legend", "chart", "panel", "fullBtn", "heatmapBtn", "barBtn"],
-        "g4": ["topN", "start", "end", "channel", "reset", "chart", "panel", "fullBtn"],
-        "g5": ["start", "end", "channel", "category", "categoryDropdown", "categoryTrigger", "categoryValue", "categorySearch", "categoryOptions", "categoryAll", "categoryClear", "advertisor", "time", "reset", "legend", "chart", "totalGrid", "panel", "fullBtn"],
-    }
-    suffix = {"topN": "TopN", "start": "Start", "end": "End", "channel": "Channel", "category": "Category", "categoryDropdown": "CategoryDropdown", "categoryTrigger": "CategoryTrigger", "categoryValue": "CategoryValue", "categorySearch": "CategorySearch", "categoryOptions": "CategoryOptions", "categoryAll": "CategoryAll", "categoryClear": "CategoryClear", "reset": "Reset", "legend": "Legend", "chart": "Chart", "metric": "Metric", "fullBtn": "FullBtn", "barBtn": "BarBtn", "heatmapBtn": "HeatmapBtn", "pieBtn": "PieBtn", "advertisor": "Advertisor", "time": "Time", "totalGrid": "TotalGrid"}
     blocks = []
-    for key, fields in section_fields.items():
+    for config in SECTION_CONFIGS:
+        key = config["key"]
+        fields = config["dom_fields"]
         lines = [f"        {key}: {{"]
         for field in fields:
-            lines.append(f"          panel: document.getElementById('{key}Chart').closest('.panel')," if field == "panel" else f"          {field}: document.getElementById('{key}{suffix[field]}'),")
+            lines.append(
+                f"          panel: document.getElementById('{key}Chart').closest('.panel'),"
+                if field == "panel"
+                else f"          {field}: document.getElementById('{key}{DOM_FIELD_SUFFIXES[field]}'),"
+            )
         lines[-1] = lines[-1].rstrip(",")
         lines.append("        }")
         blocks.append("\n".join(lines))
@@ -288,6 +277,8 @@ html = """<!DOCTYPE html>
       justify-content: flex-end;
       gap: 8px;
       min-width: auto;
+      position: relative;
+      z-index: 1;
     }
     .action-row {
       display: flex;
@@ -309,10 +300,6 @@ html = """<!DOCTYPE html>
       box-shadow: var(--shadow);
       border-radius: 8px;
       transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
-    }
-    .top-actions {
-      position: relative;
-      z-index: 1;
     }
     .meta-pill {
       display: inline-flex;
@@ -340,11 +327,12 @@ html = """<!DOCTYPE html>
     }
     .label {
       display: block;
-      margin-bottom: 5px;
-      font-size: 11px;
+      margin-bottom: 3px;
+      font-size: 9.5px;
       font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.9px;
+      text-transform: none;
+      letter-spacing: 0.2px;
+      line-height: 1.15;
       color: #000000;
     }
     .sticky-filter-shell .label {
@@ -369,11 +357,13 @@ html = """<!DOCTYPE html>
     input, select, button {
       width: 100%;
       border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 7px 9px;
+      border-radius: 7px;
+      padding: 5px 8px;
       background: #ffffff;
       color: var(--text);
       font: inherit;
+      font-size: 12px;
+      line-height: 1.2;
       transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease, background 160ms ease;
     }
     input:hover, select:hover, button:hover,
@@ -422,6 +412,16 @@ html = """<!DOCTYPE html>
       font-size: 11px;
       line-height: 1.3;
     }
+    .filter-error {
+      margin-top: 4px;
+      color: #b91c1c;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+    .filter-error[hidden] {
+      display: none !important;
+    }
     .section {
       margin-top: 14px;
     }
@@ -450,9 +450,9 @@ html = """<!DOCTYPE html>
     }
     .section-controls {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
-      gap: 8px;
-      margin-bottom: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 120px), 1fr));
+      gap: 6px;
+      margin-bottom: 6px;
       align-items: end;
     }
     .global-controls {
@@ -471,9 +471,9 @@ html = """<!DOCTYPE html>
     .sticky-filter-shell {
       position: relative;
       z-index: 40;
-      background: rgba(31, 56, 100, 0.75);
+      background: rgb(184, 127, 123);
       box-shadow: 0 6px 18px rgba(15, 23, 42, 0.14);
-      padding: 8px 10px;
+      padding: 6px 8px;
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
     }
@@ -485,7 +485,7 @@ html = """<!DOCTYPE html>
       box-shadow: 0 0 0 1px rgba(251, 146, 60, 0.10), 0 0 20px rgba(251, 146, 60, 0.12);
     }
     .sticky-filter-shell:hover {
-      background: rgba(31, 56, 100, 0.75);
+      background: rgb(184, 127, 123);
       border-color: var(--line);
       box-shadow: 0 0 0 1px rgba(251, 146, 60, 0.08), 0 0 18px rgba(251, 146, 60, 0.10);
     }
@@ -494,7 +494,7 @@ html = """<!DOCTYPE html>
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      min-height: 52px;
+      min-height: 40px;
     }
     .sticky-filter-shell.is-stuck {
       position: fixed;
@@ -513,20 +513,26 @@ html = """<!DOCTYPE html>
     .multi-dropdown {
       position: relative;
       display: grid;
-      gap: 4px;
+      gap: 2px;
+      animation: none !important;
+      transition: none !important;
     }
     .multi-dropdown-trigger {
-      min-height: 34px;
+      min-height: 30px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 8px;
+      gap: 6px;
       text-align: left;
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
     }
     .multi-dropdown-value {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      font-size: 12px;
     }
     .multi-dropdown-panel {
       position: absolute;
@@ -534,46 +540,58 @@ html = """<!DOCTYPE html>
       left: 0;
       right: 0;
       z-index: 30;
-      padding: 8px;
-      border-radius: 8px;
+      padding: 6px;
+      border-radius: 7px;
       border: 1px solid var(--line);
       background: #ffffff;
       box-shadow: 0 8px 18px rgba(15, 23, 42, 0.10);
       display: none;
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
     }
     .multi-dropdown.open .multi-dropdown-panel {
       display: block;
     }
     .multi-dropdown-search {
-      margin-bottom: 6px;
+      margin-bottom: 4px;
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
     }
     .multi-dropdown-actions {
       display: flex;
-      gap: 8px;
-      margin-bottom: 6px;
+      gap: 6px;
+      margin-bottom: 4px;
     }
     .multi-dropdown-actions button {
       min-width: 0;
-      padding: 7px 9px;
-      font-size: 12px;
+      padding: 5px 7px;
+      font-size: 11px;
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
     }
     .multi-dropdown-options {
-      max-height: 220px;
+      max-height: 180px;
       overflow: auto;
       display: grid;
-      gap: 6px;
-      padding-right: 4px;
+      gap: 4px;
+      padding-right: 2px;
     }
     .multi-dropdown-option {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px 10px;
-      border-radius: 8px;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 7px;
       background: #ffffff;
-      font-size: 14px;
+      font-size: 12px;
       cursor: pointer;
       color: var(--text);
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
     }
     .multi-dropdown-option:hover {
       background: #eff6ff;
@@ -581,6 +599,9 @@ html = """<!DOCTYPE html>
     .multi-dropdown-option input {
       width: auto;
       margin: 0;
+      animation: none !important;
+      transition: none !important;
+      transform: none !important;
     }
     .chart-head {
       display: flex;
@@ -1303,9 +1324,9 @@ __XLSX_BUNDLE__
         topN: '10',
         start: '',
         end: '',
-        channel: '',
+        channel: [],
         category: [],
-        advertisor: '',
+        advertisor: [],
         time: 'minutes'
       },
       sections: {
@@ -1326,6 +1347,7 @@ __STATE_SECTIONS_JS__
       shareCancelBtn: document.getElementById('shareCancelBtn'),
       shareDownloadBtn: document.getElementById('shareDownloadBtn'),
       statusText: document.getElementById('statusText'),
+      filterErrorText: document.getElementById('filterErrorText'),
       activeDateRangeText: document.getElementById('activeDateRangeText'),
       totalRecordsText: document.getElementById('totalRecordsText'),
       excludedChips: document.getElementById('excludedChips'),
@@ -1339,6 +1361,13 @@ __STATE_SECTIONS_JS__
         start: document.getElementById('globalStart'),
         end: document.getElementById('globalEnd'),
         channel: document.getElementById('globalChannel'),
+        channelDropdown: document.getElementById('globalChannelDropdown'),
+        channelTrigger: document.getElementById('globalChannelTrigger'),
+        channelValue: document.getElementById('globalChannelValue'),
+        channelSearch: document.getElementById('globalChannelSearch'),
+        channelOptions: document.getElementById('globalChannelOptions'),
+        channelAll: document.getElementById('globalChannelAll'),
+        channelClear: document.getElementById('globalChannelClear'),
         category: document.getElementById('globalCategory'),
         categoryDropdown: document.getElementById('globalCategoryDropdown'),
         categoryTrigger: document.getElementById('globalCategoryTrigger'),
@@ -1348,6 +1377,13 @@ __STATE_SECTIONS_JS__
         categoryAll: document.getElementById('globalCategoryAll'),
         categoryClear: document.getElementById('globalCategoryClear'),
         advertisor: document.getElementById('globalAdvertisor'),
+        advertisorDropdown: document.getElementById('globalAdvertisorDropdown'),
+        advertisorTrigger: document.getElementById('globalAdvertisorTrigger'),
+        advertisorValue: document.getElementById('globalAdvertisorValue'),
+        advertisorSearch: document.getElementById('globalAdvertisorSearch'),
+        advertisorOptions: document.getElementById('globalAdvertisorOptions'),
+        advertisorAll: document.getElementById('globalAdvertisorAll'),
+        advertisorClear: document.getElementById('globalAdvertisorClear'),
         time: document.getElementById('globalTime'),
         reset: document.getElementById('globalReset')
       },
@@ -2098,17 +2134,17 @@ __DOM_SECTIONS_JS__
         topN: '10',
         start: '',
         end: '',
-        channel: '',
+        channel: [],
         category: [],
-        advertisor: '',
+        advertisor: [],
         time: 'minutes'
       };
       state.sections = {
-        g1: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },
-        g2: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },
-        g3: { topN: '10', start: '', end: '', channel: '', category: [], view: 'heat' },
-        g4: { topN: '10', start: '', end: '', channel: '', category: '', view: 'heat' },
-        g5: { start: '', end: '', channel: '', category: [], advertisor: '', time: 'minutes', view: 'heat' }
+        g1: { topN: '10', start: '', end: '', channel: [], category: [], view: 'bar' },
+        g2: { topN: '10', start: '', end: '', channel: [], category: [], view: 'bar' },
+        g3: { topN: '10', start: '', end: '', channel: [], category: [], view: 'heat' },
+        g4: { topN: '10', start: '', end: '', channel: [], category: '', view: 'heat' },
+        g5: { start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'heat' }
       };
       if (dom.totalRecordsText) dom.totalRecordsText.textContent = '0';
       if (dom.activeDateRangeText) dom.activeDateRangeText.textContent = 'All Dates';
@@ -2129,8 +2165,16 @@ __DOM_SECTIONS_JS__
           controls.end.min = '';
           controls.end.max = '';
         }
-        if (controls.channel) controls.channel.innerHTML = '<option value="">All Channels</option>';
-        if (controls.advertisor) controls.advertisor.innerHTML = '<option value="">All Advertisers</option>';
+        if (controls.channel) controls.channel.innerHTML = '';
+        if (controls.channelValue) controls.channelValue.textContent = 'All Channels';
+        if (controls.channelOptions) controls.channelOptions.innerHTML = '';
+        if (controls.channelSearch) controls.channelSearch.value = '';
+        if (controls.channelDropdown) controls.channelDropdown.classList.remove('open');
+        if (controls.advertisor) controls.advertisor.innerHTML = '';
+        if (controls.advertisorValue) controls.advertisorValue.textContent = 'All Advertisers';
+        if (controls.advertisorOptions) controls.advertisorOptions.innerHTML = '';
+        if (controls.advertisorSearch) controls.advertisorSearch.value = '';
+        if (controls.advertisorDropdown) controls.advertisorDropdown.classList.remove('open');
         if (controls.time) controls.time.value = 'minutes';
         if (controls.category) {
           controls.category.innerHTML = '';
@@ -2155,14 +2199,23 @@ __DOM_SECTIONS_JS__
         dom.global.end.min = '';
         dom.global.end.max = '';
       }
-      if (dom.global.channel) dom.global.channel.innerHTML = '<option value="">All Channels</option>';
-      if (dom.global.advertisor) dom.global.advertisor.innerHTML = '<option value="">All Advertisers</option>';
+      if (dom.global.channel) dom.global.channel.innerHTML = '';
+      if (dom.global.channelValue) dom.global.channelValue.textContent = 'All Channels';
+      if (dom.global.channelOptions) dom.global.channelOptions.innerHTML = '';
+      if (dom.global.channelSearch) dom.global.channelSearch.value = '';
+      if (dom.global.channelDropdown) dom.global.channelDropdown.classList.remove('open');
+      if (dom.global.advertisor) dom.global.advertisor.innerHTML = '';
+      if (dom.global.advertisorValue) dom.global.advertisorValue.textContent = 'All Advertisers';
+      if (dom.global.advertisorOptions) dom.global.advertisorOptions.innerHTML = '';
+      if (dom.global.advertisorSearch) dom.global.advertisorSearch.value = '';
+      if (dom.global.advertisorDropdown) dom.global.advertisorDropdown.classList.remove('open');
       if (dom.global.time) dom.global.time.value = 'minutes';
       if (dom.global.category) dom.global.category.innerHTML = '';
       if (dom.global.categoryValue) dom.global.categoryValue.textContent = 'All Categories';
       if (dom.global.categoryOptions) dom.global.categoryOptions.innerHTML = '';
       if (dom.global.categorySearch) dom.global.categorySearch.value = '';
       if (dom.global.categoryDropdown) dom.global.categoryDropdown.classList.remove('open');
+      setDateValidationError('');
       clearWorkbookSelection();
       setUploadSuccessState(false);
       setStatus('Choose a CSV or Excel file to generate the dashboard.', false);
@@ -2205,16 +2258,124 @@ __DOM_SECTIONS_JS__
       renderHeaderStats();
       updateStickyFilterPosition();
     }
-    function updateCategoryDropdownValue(controls, selectedValues) {
+    const DATE_VALIDATION_MESSAGE = 'Start Date cannot be later than End Date.';
+    function setDateValidationError(message = '') {
+      if (!dom.filterErrorText) return;
+      dom.filterErrorText.textContent = message;
+      dom.filterErrorText.hidden = !message;
+    }
+    function refreshDateBounds(controls) {
+      if (!controls || !controls.start || !controls.end) return;
+      const min = controls.start.dataset.boundMin || '';
+      const max = controls.end.dataset.boundMax || '';
+      controls.start.min = min;
+      controls.end.max = max;
+      controls.start.max = controls.end.value || max;
+      controls.end.min = controls.start.value || min;
+    }
+    function rememberValidDateValues(controls) {
+      if (!controls || !controls.start || !controls.end) return;
+      controls.start.dataset.prevValue = controls.start.value || '';
+      controls.end.dataset.prevValue = controls.end.value || '';
+    }
+    function handleDateRangeChange(controls, changedField) {
+      if (!controls || !controls.start || !controls.end) return true;
+      refreshDateBounds(controls);
+      if (controls.start.value && controls.end.value && controls.start.value > controls.end.value) {
+        const input = controls[changedField];
+        if (input) input.value = input.dataset.prevValue || '';
+        refreshDateBounds(controls);
+        setDateValidationError(DATE_VALIDATION_MESSAGE);
+        return false;
+      }
+      rememberValidDateValues(controls);
+      setDateValidationError('');
+      return true;
+    }
+    function validateDateRange(startValue, endValue) {
+      if (startValue && endValue && startValue > endValue) {
+        setDateValidationError(DATE_VALIDATION_MESSAGE);
+        return false;
+      }
+      setDateValidationError('');
+      return true;
+    }
+    function updateMultiDropdownValue(controls, field, selectedValues, allLabel, noun) {
       const selected = selectedValues || [];
-      if (!controls.categoryValue) return;
+      const valueNode = controls && controls[`${field}Value`];
+      if (!valueNode) return;
       if (!selected.length) {
-        controls.categoryValue.textContent = 'All Categories';
+        valueNode.textContent = allLabel;
         return;
       }
-      controls.categoryValue.textContent = selected.length <= 2
+      valueNode.textContent = selected.length <= 2
         ? selected.join(', ')
-        : `${selected.length} Categories Selected`;
+        : `${selected.length} ${noun} Selected`;
+    }
+    function getChannelValues() {
+      return uniqueSorted(state.cleanedRows.map(row => row.channel));
+    }
+    function matchesMultiFilter(value, filterValues) {
+      if (Array.isArray(filterValues) && filterValues.length) return filterValues.includes(value);
+      if (!Array.isArray(filterValues) && filterValues) return value === filterValues;
+      return true;
+    }
+    function getAdvertisorValues(channelFilter = state.global.channel) {
+      return uniqueSorted(
+        state.cleanedRows
+          .filter(row => matchesMultiFilter(row.channel, channelFilter))
+          .map(row => row.product)
+      );
+    }
+    function sanitizeAdvertisorSelection() {
+      const valid = new Set(getAdvertisorValues(state.global.channel));
+      state.global.advertisor = uniqueSorted((state.global.advertisor || []).filter(value => valid.has(value)));
+    }
+    function populateMultiSelect(select, values, selectedValues) {
+      if (!select) return;
+      const selected = new Set(selectedValues || []);
+      select.innerHTML = '';
+      values.forEach(value => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        option.selected = selected.has(value);
+        select.appendChild(option);
+      });
+    }
+    function populateMultiDropdownOptions(controls, field, values, selectedValues, filterText, onChange, isValid = () => true) {
+      const optionsNode = controls && controls[`${field}Options`];
+      if (!optionsNode) return;
+      const selected = new Set(selectedValues || []);
+      const query = String(filterText || '').trim().toLowerCase();
+      const filtered = values.filter(value => !query || value.toLowerCase().includes(query));
+      optionsNode.innerHTML = '';
+      filtered.forEach(value => {
+        const label = document.createElement('label');
+        label.className = 'multi-dropdown-option';
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.value = value;
+        input.checked = selected.has(value);
+        const span = document.createElement('span');
+        span.textContent = value;
+        label.appendChild(input);
+        label.appendChild(span);
+        optionsNode.appendChild(label);
+        input.addEventListener('change', () => {
+          if (!isValid()) {
+            input.checked = selected.has(value);
+            return;
+          }
+          const next = new Set(selectedValues || []);
+          if (input.checked) next.add(value);
+          else next.delete(value);
+          onChange([...next]);
+        });
+      });
+    }
+    function updateCategoryDropdownValue(controls, selectedValues) {
+      updateMultiDropdownValue(controls, 'category', selectedValues, 'All Categories', 'Categories');
     }
     function syncGlobalCategorySelection(selectedValues, options = {}) {
       const controls = dom.global;
@@ -2246,6 +2407,10 @@ __DOM_SECTIONS_JS__
         label.appendChild(span);
         controls.categoryOptions.appendChild(label);
         input.addEventListener('change', () => {
+          if (!validateDateRange(controls.start.value, controls.end.value)) {
+            input.checked = selected.has(value);
+            return;
+          }
           const next = new Set(state.global.category || []);
           if (input.checked) next.add(input.value);
           else next.delete(input.value);
@@ -2300,6 +2465,10 @@ __DOM_SECTIONS_JS__
         label.appendChild(span);
         controls.categoryOptions.appendChild(label);
         input.addEventListener('change', () => {
+          if (!validateDateRange(dom.global.start.value, dom.global.end.value)) {
+            input.checked = selected.has(value);
+            return;
+          }
           const next = new Set(state.global.category || []);
           if (input.checked) next.add(input.value);
           else next.delete(input.value);
@@ -2309,30 +2478,116 @@ __DOM_SECTIONS_JS__
       });
       updateCategoryDropdownValue(controls, state.global.category || []);
     }
+    function syncGlobalChannelSelection(selectedValues, options = {}) {
+      state.global.channel = uniqueSorted(selectedValues || []);
+      sanitizeAdvertisorSelection();
+      if (dom.global.channelSearch && !options.preserveSearchText) dom.global.channelSearch.value = '';
+      populateGlobalChannelDropdown(dom.global.channelSearch ? dom.global.channelSearch.value : '');
+      populateGlobalAdvertisorDropdown(dom.global.advertisorSearch ? dom.global.advertisorSearch.value : '');
+    }
+    function syncSharedChannelSelection(selectedValues, sourceSectionKey, options = {}) {
+      syncGlobalChannelSelection(selectedValues, options);
+      SECTION_KEYS.forEach(sectionKey => {
+        const controls = dom.sections[sectionKey];
+        if (!controls.channel) return;
+        if (controls.channelSearch && !options.preserveSearchText && sectionKey === sourceSectionKey) {
+          controls.channelSearch.value = '';
+        }
+        setMultiSelectValues(controls.channel, state.global.channel);
+        populateChannelDropdown(sectionKey, controls.channelSearch ? controls.channelSearch.value : '');
+      });
+      if (dom.sections.g5.advertisor) {
+        setMultiSelectValues(dom.sections.g5.advertisor, state.global.advertisor);
+        populateAdvertisorDropdown('g5', dom.sections.g5.advertisorSearch ? dom.sections.g5.advertisorSearch.value : '');
+      }
+      applyGlobalStateToSections();
+    }
+    function populateChannelDropdown(sectionKey, filterText = '') {
+      const controls = dom.sections[sectionKey];
+      if (!controls || !controls.channel) return;
+      const values = getChannelValues();
+      populateMultiSelect(controls.channel, values, state.global.channel);
+      populateMultiDropdownOptions(controls, 'channel', values, state.global.channel, filterText, next => {
+        syncSharedChannelSelection(next, sectionKey, { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
+      }, () => validateDateRange(controls.start.value, controls.end.value));
+      updateMultiDropdownValue(controls, 'channel', state.global.channel, 'All Channels', 'Channels');
+    }
+    function populateGlobalChannelDropdown(filterText = '') {
+      const controls = dom.global;
+      const values = getChannelValues();
+      populateMultiSelect(controls.channel, values, state.global.channel);
+      populateMultiDropdownOptions(controls, 'channel', values, state.global.channel, filterText, next => {
+        syncGlobalChannelSelection(next, { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
+      }, () => validateDateRange(dom.global.start.value, dom.global.end.value));
+      updateMultiDropdownValue(controls, 'channel', state.global.channel, 'All Channels', 'Channels');
+    }
+    function syncGlobalAdvertisorSelection(selectedValues, options = {}) {
+      const valid = new Set(getAdvertisorValues(state.global.channel));
+      state.global.advertisor = uniqueSorted((selectedValues || []).filter(value => valid.has(value)));
+      if (dom.global.advertisorSearch && !options.preserveSearchText) dom.global.advertisorSearch.value = '';
+      populateGlobalAdvertisorDropdown(dom.global.advertisorSearch ? dom.global.advertisorSearch.value : '');
+    }
+    function syncSharedAdvertisorSelection(selectedValues, sourceSectionKey, options = {}) {
+      syncGlobalAdvertisorSelection(selectedValues, options);
+      if (dom.sections.g5.advertisor) {
+        if (dom.sections.g5.advertisorSearch && !options.preserveSearchText && sourceSectionKey === 'g5') {
+          dom.sections.g5.advertisorSearch.value = '';
+        }
+        setMultiSelectValues(dom.sections.g5.advertisor, state.global.advertisor);
+        populateAdvertisorDropdown('g5', dom.sections.g5.advertisorSearch ? dom.sections.g5.advertisorSearch.value : '');
+      }
+      applyGlobalStateToSections();
+    }
+    function populateAdvertisorDropdown(sectionKey, filterText = '') {
+      const controls = dom.sections[sectionKey];
+      if (!controls || !controls.advertisor) return;
+      const values = getAdvertisorValues(state.global.channel);
+      populateMultiSelect(controls.advertisor, values, state.global.advertisor);
+      populateMultiDropdownOptions(controls, 'advertisor', values, state.global.advertisor, filterText, next => {
+        syncSharedAdvertisorSelection(next, sectionKey, { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
+      }, () => validateDateRange(controls.start.value, controls.end.value));
+      updateMultiDropdownValue(controls, 'advertisor', state.global.advertisor, 'All Advertisers', 'Advertisers');
+    }
+    function populateGlobalAdvertisorDropdown(filterText = '') {
+      const controls = dom.global;
+      const values = getAdvertisorValues(state.global.channel);
+      populateMultiSelect(controls.advertisor, values, state.global.advertisor);
+      populateMultiDropdownOptions(controls, 'advertisor', values, state.global.advertisor, filterText, next => {
+        syncGlobalAdvertisorSelection(next, { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
+      }, () => validateDateRange(dom.global.start.value, dom.global.end.value));
+      updateMultiDropdownValue(controls, 'advertisor', state.global.advertisor, 'All Advertisers', 'Advertisers');
+    }
     function initializeGlobalControls() {
       const rows = state.cleanedRows;
       const dates = uniqueSorted(rows.map(row => row.date));
-      populateSelect(dom.global.channel, uniqueSorted(rows.map(row => row.channel)), 'All Channels');
-      populateSelect(dom.global.advertisor, uniqueSorted(rows.map(row => row.product)), 'All Advertisers');
       dom.global.topN.value = state.global.topN || '10';
       dom.global.time.value = state.global.time || 'minutes';
       dom.global.start.value = dates[0] || '';
       dom.global.end.value = dates[dates.length - 1] || '';
-      dom.global.start.min = dates[0] || '';
-      dom.global.start.max = dates[dates.length - 1] || '';
-      dom.global.end.min = dates[0] || '';
-      dom.global.end.max = dates[dates.length - 1] || '';
+      dom.global.start.dataset.boundMin = dates[0] || '';
+      dom.global.start.dataset.boundMax = dates[dates.length - 1] || '';
+      dom.global.end.dataset.boundMin = dates[0] || '';
+      dom.global.end.dataset.boundMax = dates[dates.length - 1] || '';
+      refreshDateBounds(dom.global);
+      rememberValidDateValues(dom.global);
       state.global.start = dom.global.start.value;
       state.global.end = dom.global.end.value;
+      sanitizeAdvertisorSelection();
+      populateGlobalChannelDropdown();
+      populateGlobalAdvertisorDropdown();
       populateGlobalCategoryDropdown();
     }
     function syncGlobalState() {
       state.global.topN = dom.global.topN.value;
       state.global.start = dom.global.start.value;
       state.global.end = dom.global.end.value;
-      state.global.channel = dom.global.channel.value;
+      state.global.channel = Array.from(dom.global.channel.selectedOptions).map(option => option.value);
       state.global.category = Array.from(dom.global.category.selectedOptions).map(option => option.value);
-      state.global.advertisor = dom.global.advertisor.value;
+      state.global.advertisor = Array.from(dom.global.advertisor.selectedOptions).map(option => option.value);
       state.global.time = dom.global.time.value;
     }
     function setMultiSelectValues(select, values) {
@@ -2348,31 +2603,67 @@ __DOM_SECTIONS_JS__
         if (controls.topN) controls.topN.value = state.global.topN;
         if (controls.start) controls.start.value = state.global.start;
         if (controls.end) controls.end.value = state.global.end;
-        if (controls.channel) controls.channel.value = state.global.channel;
+        if (controls.channel) setMultiSelectValues(controls.channel, state.global.channel);
         if (controls.category) setMultiSelectValues(controls.category, state.global.category);
-        if (controls.advertisor) controls.advertisor.value = state.global.advertisor;
+        if (controls.advertisor) setMultiSelectValues(controls.advertisor, state.global.advertisor);
         if (controls.time) controls.time.value = state.global.time;
+        if (controls.channelValue) updateMultiDropdownValue(controls, 'channel', state.global.channel, 'All Channels', 'Channels');
         if (controls.categoryValue) updateCategoryDropdownValue(controls, state.global.category);
+        if (controls.advertisorValue) updateMultiDropdownValue(controls, 'advertisor', state.global.advertisor, 'All Advertisers', 'Advertisers');
+        if (controls.channelOptions) {
+          populateChannelDropdown(sectionKey, controls.channelSearch ? controls.channelSearch.value : '');
+        }
         if (sharedCategorySections().includes(sectionKey)) {
           populateCategoryDropdown(sectionKey, controls.categorySearch ? controls.categorySearch.value : '');
+        }
+        if (controls.advertisorOptions) {
+          populateAdvertisorDropdown(sectionKey, controls.advertisorSearch ? controls.advertisorSearch.value : '');
         }
         if (controls.topN) target.topN = state.global.topN;
         target.start = state.global.start;
         target.end = state.global.end;
-        target.channel = state.global.channel;
+        target.channel = [...state.global.channel];
         target.category = [...state.global.category];
         if (sectionKey === 'g5') {
-          target.advertisor = state.global.advertisor;
+          target.advertisor = [...state.global.advertisor];
           target.time = state.global.time;
         }
       });
     }
     function bindGlobalControls() {
-      ['topN', 'start', 'end', 'channel', 'advertisor', 'time'].forEach(key => {
+      ['topN', 'time'].forEach(key => {
         dom.global[key].addEventListener('change', () => {
+          if (!validateDateRange(dom.global.start.value, dom.global.end.value)) return;
           syncGlobalState();
           syncAndRenderSections(SECTION_KEYS);
         });
+      });
+      ['start', 'end'].forEach(key => {
+        dom.global[key].addEventListener('change', () => {
+          if (!handleDateRangeChange(dom.global, key)) return;
+          syncGlobalState();
+          syncAndRenderSections(SECTION_KEYS);
+        });
+      });
+      dom.global.channelTrigger.addEventListener('click', event => {
+        event.preventDefault();
+        dom.global.channelDropdown.classList.toggle('open');
+        if (dom.global.channelDropdown.classList.contains('open')) dom.global.channelSearch.focus();
+      });
+      dom.global.channelSearch.addEventListener('input', () => {
+        populateGlobalChannelDropdown(dom.global.channelSearch.value);
+      });
+      dom.global.channelAll.addEventListener('click', () => {
+        if (!validateDateRange(dom.global.start.value, dom.global.end.value)) return;
+        dom.global.channelDropdown.classList.add('open');
+        syncGlobalChannelSelection(getChannelValues(), { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
+      });
+      dom.global.channelClear.addEventListener('click', () => {
+        if (!validateDateRange(dom.global.start.value, dom.global.end.value)) return;
+        dom.global.channelDropdown.classList.add('open');
+        syncGlobalChannelSelection([], { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
       });
       dom.global.categoryTrigger.addEventListener('click', event => {
         event.preventDefault();
@@ -2385,26 +2676,48 @@ __DOM_SECTIONS_JS__
         populateGlobalCategoryDropdown(dom.global.categorySearch.value);
       });
       dom.global.categoryAll.addEventListener('click', () => {
+        if (!validateDateRange(dom.global.start.value, dom.global.end.value)) return;
         dom.global.categoryDropdown.classList.add('open');
         syncGlobalCategorySelection(getCategoryValues(), { preserveSearchText: true });
         syncAndRenderSections(SECTION_KEYS);
       });
       dom.global.categoryClear.addEventListener('click', () => {
+        if (!validateDateRange(dom.global.start.value, dom.global.end.value)) return;
         dom.global.categoryDropdown.classList.add('open');
         syncGlobalCategorySelection([], { preserveSearchText: true });
         syncAndRenderSections(SECTION_KEYS);
       });
+      dom.global.advertisorTrigger.addEventListener('click', event => {
+        event.preventDefault();
+        dom.global.advertisorDropdown.classList.toggle('open');
+        if (dom.global.advertisorDropdown.classList.contains('open')) dom.global.advertisorSearch.focus();
+      });
+      dom.global.advertisorSearch.addEventListener('input', () => {
+        populateGlobalAdvertisorDropdown(dom.global.advertisorSearch.value);
+      });
+      dom.global.advertisorAll.addEventListener('click', () => {
+        if (!validateDateRange(dom.global.start.value, dom.global.end.value)) return;
+        dom.global.advertisorDropdown.classList.add('open');
+        syncGlobalAdvertisorSelection(getAdvertisorValues(state.global.channel), { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
+      });
+      dom.global.advertisorClear.addEventListener('click', () => {
+        if (!validateDateRange(dom.global.start.value, dom.global.end.value)) return;
+        dom.global.advertisorDropdown.classList.add('open');
+        syncGlobalAdvertisorSelection([], { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
+      });
       dom.global.reset.addEventListener('click', () => {
         state.global.topN = '10';
-        state.global.channel = '';
+        state.global.channel = [];
         state.global.category = [];
-        state.global.advertisor = '';
+        state.global.advertisor = [];
         state.global.time = 'minutes';
         initializeGlobalControls();
-        dom.global.channel.value = '';
-        dom.global.advertisor.value = '';
         dom.global.time.value = 'minutes';
         syncGlobalCategorySelection([]);
+        syncGlobalChannelSelection([]);
+        syncGlobalAdvertisorSelection([]);
         syncGlobalState();
         syncAndRenderSections(SECTION_KEYS);
       });
@@ -2412,38 +2725,29 @@ __DOM_SECTIONS_JS__
     function initializeSectionControls(sectionKey) {
       const rows = state.cleanedRows;
       const dates = uniqueSorted(rows.map(row => row.date));
-      const channels = uniqueSorted(rows.map(row => row.channel));
       const section = dom.sections[sectionKey];
-      populateSelect(section.channel, channels, 'All Channels');
+      populateMultiSelect(section.channel, getChannelValues(), state.global.channel);
       if (section.category) populateSelect(section.category, getCategoryValues(), 'All Categories');
       if (sectionKey === 'g5') {
-        const advertisors = uniqueSorted(rows.map(row => row.product));
-        populateSelect(section.advertisor, advertisors, 'All Advertisers');
+        populateMultiSelect(section.advertisor, getAdvertisorValues(state.global.channel), state.global.advertisor);
         section.time.value = 'minutes';
       }
       section.start.value = dates[0] || '';
       section.end.value = dates[dates.length - 1] || '';
-      section.start.min = dates[0] || '';
-      section.start.max = dates[dates.length - 1] || '';
-      section.end.min = dates[0] || '';
-      section.end.max = dates[dates.length - 1] || '';
-    }
-    function matchesCategoryFilter(row, categoryFilter) {
-      if (Array.isArray(categoryFilter) && categoryFilter.length) {
-        return categoryFilter.includes(row.category);
-      }
-      if (!Array.isArray(categoryFilter) && categoryFilter) {
-        return row.category === categoryFilter;
-      }
-      return true;
+      section.start.dataset.boundMin = dates[0] || '';
+      section.start.dataset.boundMax = dates[dates.length - 1] || '';
+      section.end.dataset.boundMin = dates[0] || '';
+      section.end.dataset.boundMax = dates[dates.length - 1] || '';
+      refreshDateBounds(section);
+      rememberValidDateValues(section);
     }
     function filterRows(rows, filters = {}, options = {}) {
       return rows.filter(row => {
-        if (filters.channel && row.channel !== filters.channel) return false;
-        if (!matchesCategoryFilter(row, filters.category)) return false;
+        if (!matchesMultiFilter(row.channel, filters.channel)) return false;
+        if (!matchesMultiFilter(row.category, filters.category)) return false;
         if (filters.start && (!row.date || row.date < filters.start)) return false;
         if (filters.end && (!row.date || row.date > filters.end)) return false;
-        if (filters.advertisor && row.product !== filters.advertisor) return false;
+        if (!matchesMultiFilter(row.product, filters.advertisor)) return false;
         if (options.requireHourlySlot) {
           const hour = parseHourValue(row.adtime);
           if (hour === null || hour < 6) return false;
@@ -2964,7 +3268,7 @@ __DOM_SECTIONS_JS__
             'stroke-width': 1
           });
           const title = svgEl('title');
-          title.textContent = `Advertiser: ${item.advertisor}\nDate: ${formatDate(row.date)}\n${metricLabel()}: ${formatDurationValue(value, true)}\nChannel: ${state.global.channel || 'All'}\nCategory: ${(state.global.category || []).length ? state.global.category.join(', ') : 'All'}`;
+          title.textContent = `Advertiser: ${item.advertisor}\nDate: ${formatDate(row.date)}\n${metricLabel()}: ${formatDurationValue(value, true)}\nChannel: ${multiFilterLabel(state.global.channel, 'All')}\nCategory: ${(state.global.category || []).length ? state.global.category.join(', ') : 'All'}`;
           rect.appendChild(title);
           svg.appendChild(rect);
           if (value && ((compact && cellW >= 38 && cellH >= 22) || (!compact && cellW >= 52 && cellH >= 28))) {
@@ -3295,19 +3599,26 @@ __DOM_SECTIONS_JS__
         ? ((sectionState.category || []).length ? sectionState.category.join(', ') : emptyLabel)
         : (sectionState.category || emptyLabel);
     }
+    function multiFilterLabel(values, emptyLabel) {
+      return Array.isArray(values)
+        ? (values.length ? values.join(', ') : emptyLabel)
+        : (values || emptyLabel);
+    }
     function filterSummaryLines(sectionKey, sectionState, forPage = false) {
       const categoryLabel = categoryFilterLabel(state.global, forPage ? 'All' : 'all');
+      const channelLabel = multiFilterLabel(state.global.channel, forPage ? 'All' : 'all');
+      const advertiserLabel = multiFilterLabel(state.global.advertisor, forPage ? 'All' : 'all');
       return forPage
         ? [
             `Top N: ${state.global.topN || 'All'}`,
             `Start Date: ${state.global.start ? formatDate(state.global.start) : 'All'}`,
             `End Date: ${state.global.end ? formatDate(state.global.end) : 'All'}`,
-            `Channel: ${state.global.channel || 'All'}`,
+            `Channel: ${channelLabel}`,
             `Category: ${categoryLabel}`,
-            `Advertiser: ${state.global.advertisor || 'All'}`,
+            `Advertiser: ${advertiserLabel}`,
             `Time: ${state.global.time || 'minutes'}`
           ]
-        : [`<strong>Global</strong> | Top N: ${state.global.topN || 'all'}, Start: ${state.global.start || 'all'}, End: ${state.global.end || 'all'}, Channel: ${state.global.channel || 'all'}, Category: ${categoryLabel}, Advertiser: ${state.global.advertisor || 'all'}, Time: ${state.global.time || 'minutes'}`];
+        : [`<strong>Global</strong> | Top N: ${state.global.topN || 'all'}, Start: ${state.global.start || 'all'}, End: ${state.global.end || 'all'}, Channel: ${channelLabel}, Category: ${categoryLabel}, Advertiser: ${advertiserLabel}, Time: ${state.global.time || 'minutes'}`];
     }
     function getActiveFiltersMarkup() {
       return `<div class="summary-line">${filterSummaryLines('global', state.global)[0]}</div>`;
@@ -3407,7 +3718,9 @@ __DOM_SECTIONS_JS__
       if (!source) return null;
       return {
         ...source,
-        category: Array.isArray(source.category) ? [...source.category] : source.category
+        channel: Array.isArray(source.channel) ? [...source.channel] : source.channel,
+        category: Array.isArray(source.category) ? [...source.category] : source.category,
+        advertisor: Array.isArray(source.advertisor) ? [...source.advertisor] : source.advertisor
       };
     }
     function getDatasetNameForExport() {
@@ -3435,7 +3748,9 @@ __DOM_SECTIONS_JS__
         statusText: dom.statusText?.textContent || 'Loaded shared dashboard snapshot.',
         global: {
           ...state.global,
-          category: [...(state.global.category || [])]
+          channel: [...(state.global.channel || [])],
+          category: [...(state.global.category || [])],
+          advertisor: [...(state.global.advertisor || [])]
         },
         sections: SECTION_KEYS.reduce((acc, sectionKey) => {
           acc[sectionKey] = cloneSectionState(state.sections[sectionKey]);
@@ -3450,7 +3765,9 @@ __DOM_SECTIONS_JS__
         state.global = {
           ...state.global,
           ...snapshot.global,
-          category: [...(snapshot.global.category || [])]
+          channel: [...(snapshot.global.channel || [])],
+          category: [...(snapshot.global.category || [])],
+          advertisor: [...(snapshot.global.advertisor || [])]
         };
       }
       if (snapshot.sections) {
@@ -3460,19 +3777,25 @@ __DOM_SECTIONS_JS__
           state.sections[sectionKey] = {
             ...state.sections[sectionKey],
             ...next,
-            category: Array.isArray(next.category) ? [...next.category] : next.category
+            channel: Array.isArray(next.channel) ? [...next.channel] : next.channel,
+            category: Array.isArray(next.category) ? [...next.category] : next.category,
+            advertisor: Array.isArray(next.advertisor) ? [...next.advertisor] : next.advertisor
           };
         });
       }
       dom.global.topN.value = state.global.topN || '10';
       dom.global.start.value = state.global.start || '';
       dom.global.end.value = state.global.end || '';
-      dom.global.channel.value = state.global.channel || '';
-      dom.global.advertisor.value = state.global.advertisor || '';
       dom.global.time.value = state.global.time || 'minutes';
+      setMultiSelectValues(dom.global.channel, state.global.channel || []);
       setMultiSelectValues(dom.global.category, state.global.category || []);
+      setMultiSelectValues(dom.global.advertisor, state.global.advertisor || []);
+      updateMultiDropdownValue(dom.global, 'channel', state.global.channel || [], 'All Channels', 'Channels');
       updateCategoryDropdownValue(dom.global, state.global.category || []);
+      updateMultiDropdownValue(dom.global, 'advertisor', state.global.advertisor || [], 'All Advertisers', 'Advertisers');
+      populateGlobalChannelDropdown('');
       populateGlobalCategoryDropdown('');
+      populateGlobalAdvertisorDropdown('');
       if (dom.statusText && snapshot.statusText) {
         dom.statusText.textContent = snapshot.statusText;
       }
@@ -3570,14 +3893,14 @@ __DOM_SECTIONS_JS__
       if (controls.topN) target.topN = controls.topN.value;
       target.start = controls.start.value;
       target.end = controls.end.value;
-      target.channel = controls.channel.value;
+      target.channel = Array.from(controls.channel.selectedOptions).map(option => option.value);
       if (sharedCategorySections().includes(sectionKey)) {
         target.category = Array.from(controls.category.selectedOptions).map(option => option.value);
       } else if (controls.category) {
         target.category = controls.category.value;
       }
       if (sectionKey === 'g5') {
-        target.advertisor = controls.advertisor.value;
+        target.advertisor = Array.from(controls.advertisor.selectedOptions).map(option => option.value);
         target.time = controls.time.value;
       }
     }
@@ -3586,26 +3909,59 @@ __DOM_SECTIONS_JS__
       if (controls.topN && dom.global.topN) dom.global.topN.value = controls.topN.value;
       if (controls.start && dom.global.start) dom.global.start.value = controls.start.value;
       if (controls.end && dom.global.end) dom.global.end.value = controls.end.value;
-      if (controls.channel && dom.global.channel) dom.global.channel.value = controls.channel.value;
-      if (controls.advertisor && dom.global.advertisor) dom.global.advertisor.value = controls.advertisor.value;
+      if (controls.channel && dom.global.channel) setMultiSelectValues(dom.global.channel, Array.from(controls.channel.selectedOptions).map(option => option.value));
+      if (controls.advertisor && dom.global.advertisor) setMultiSelectValues(dom.global.advertisor, Array.from(controls.advertisor.selectedOptions).map(option => option.value));
       if (controls.time && dom.global.time) dom.global.time.value = controls.time.value;
+      syncGlobalChannelSelection(Array.from(controls.channel.selectedOptions).map(option => option.value), { preserveSearchText: true });
       if (sharedCategorySections().includes(sectionKey) && controls.category) {
         syncGlobalCategorySelection(Array.from(controls.category.selectedOptions).map(option => option.value), { preserveSearchText: true });
+      }
+      if (controls.advertisor) {
+        syncGlobalAdvertisorSelection(Array.from(controls.advertisor.selectedOptions).map(option => option.value), { preserveSearchText: true });
       }
       syncGlobalState();
     }
     function bindSection(sectionKey) {
       const controls = dom.sections[sectionKey];
       const controlKeys = sectionKey === 'g5'
-        ? ['start', 'end', 'channel', 'advertisor', 'time', 'category']
-        : ['topN', 'start', 'end', 'channel', 'category'];
+        ? ['time']
+        : ['topN'];
       controlKeys.forEach(key => {
         if (!controls[key]) return;
         controls[key].addEventListener('change', () => {
+          if (!validateDateRange(controls.start.value, controls.end.value)) return;
           syncSectionState(sectionKey);
           syncGlobalFromSection(sectionKey);
           syncAndRenderSections(SECTION_KEYS);
         });
+      });
+      ['start', 'end'].forEach(key => {
+        controls[key].addEventListener('change', () => {
+          if (!handleDateRangeChange(controls, key)) return;
+          syncSectionState(sectionKey);
+          syncGlobalFromSection(sectionKey);
+          syncAndRenderSections(SECTION_KEYS);
+        });
+      });
+      controls.channelTrigger.addEventListener('click', event => {
+        event.preventDefault();
+        controls.channelDropdown.classList.toggle('open');
+        if (controls.channelDropdown.classList.contains('open')) controls.channelSearch.focus();
+      });
+      controls.channelSearch.addEventListener('input', () => {
+        populateChannelDropdown(sectionKey, controls.channelSearch.value);
+      });
+      controls.channelAll.addEventListener('click', () => {
+        if (!validateDateRange(controls.start.value, controls.end.value)) return;
+        controls.channelDropdown.classList.add('open');
+        syncSharedChannelSelection(getChannelValues(), sectionKey, { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
+      });
+      controls.channelClear.addEventListener('click', () => {
+        if (!validateDateRange(controls.start.value, controls.end.value)) return;
+        controls.channelDropdown.classList.add('open');
+        syncSharedChannelSelection([], sectionKey, { preserveSearchText: true });
+        syncAndRenderSections(SECTION_KEYS);
       });
       if (sharedCategorySections().includes(sectionKey)) {
         controls.categoryTrigger.addEventListener('click', event => {
@@ -3619,21 +3975,45 @@ __DOM_SECTIONS_JS__
           populateCategoryDropdown(sectionKey, controls.categorySearch.value);
         });
         controls.categoryAll.addEventListener('click', () => {
+          if (!validateDateRange(controls.start.value, controls.end.value)) return;
           controls.categoryDropdown.classList.add('open');
           syncSharedCategorySelection(getCategoryValues(), sectionKey, { preserveSearchText: true });
           syncAndRenderSections(sharedCategorySections());
           renderSummary();
         });
         controls.categoryClear.addEventListener('click', () => {
+          if (!validateDateRange(controls.start.value, controls.end.value)) return;
           controls.categoryDropdown.classList.add('open');
           syncSharedCategorySelection([], sectionKey, { preserveSearchText: true });
           syncAndRenderSections(sharedCategorySections());
           renderSummary();
         });
       }
+      if (controls.advertisorTrigger) {
+        controls.advertisorTrigger.addEventListener('click', event => {
+          event.preventDefault();
+          controls.advertisorDropdown.classList.toggle('open');
+          if (controls.advertisorDropdown.classList.contains('open')) controls.advertisorSearch.focus();
+        });
+        controls.advertisorSearch.addEventListener('input', () => {
+          populateAdvertisorDropdown(sectionKey, controls.advertisorSearch.value);
+        });
+        controls.advertisorAll.addEventListener('click', () => {
+          if (!validateDateRange(controls.start.value, controls.end.value)) return;
+          controls.advertisorDropdown.classList.add('open');
+          syncSharedAdvertisorSelection(getAdvertisorValues(state.global.channel), sectionKey, { preserveSearchText: true });
+          syncAndRenderSections(SECTION_KEYS);
+        });
+        controls.advertisorClear.addEventListener('click', () => {
+          if (!validateDateRange(controls.start.value, controls.end.value)) return;
+          controls.advertisorDropdown.classList.add('open');
+          syncSharedAdvertisorSelection([], sectionKey, { preserveSearchText: true });
+          syncAndRenderSections(SECTION_KEYS);
+        });
+      }
       controls.reset.addEventListener('click', () => {
         if (controls.topN) controls.topN.value = '10';
-        controls.channel.value = '';
+        setMultiSelectValues(controls.channel, []);
         if (sharedCategorySections().includes(sectionKey)) {
           controls.categorySearch.value = '';
           syncSharedCategorySelection([], sectionKey);
@@ -3654,9 +4034,11 @@ __DOM_SECTIONS_JS__
           dom.sections.g3.barBtn.classList.remove('active');
         }
         if (sectionKey === 'g5') {
-          controls.advertisor.value = '';
+          setMultiSelectValues(controls.advertisor, []);
           controls.time.value = 'minutes';
         }
+        syncSharedChannelSelection([], sectionKey, { preserveSearchText: true });
+        if (controls.advertisor) syncSharedAdvertisorSelection([], sectionKey, { preserveSearchText: true });
         if (sharedCategorySections().includes(sectionKey)) {
           syncGlobalFromSection(sectionKey);
           syncAndRenderSections(SECTION_KEYS);
@@ -3778,17 +4160,25 @@ __DOM_SECTIONS_JS__
           }
         });
         document.addEventListener('click', event => {
+          if (dom.global.channelDropdown && !dom.global.channelDropdown.contains(event.target)) {
+            dom.global.channelDropdown.classList.remove('open');
+          }
           if (dom.global.categoryDropdown && !dom.global.categoryDropdown.contains(event.target)) {
             dom.global.categoryDropdown.classList.remove('open');
+          }
+          if (dom.global.advertisorDropdown && !dom.global.advertisorDropdown.contains(event.target)) {
+            dom.global.advertisorDropdown.classList.remove('open');
           }
           if (dom.sheetMenu && dom.sheetBtn && !dom.sheetMenu.contains(event.target) && !dom.sheetBtn.contains(event.target)) {
             hideSheetMenu();
           }
-          sharedCategorySections().forEach(sectionKey => {
-            const dropdown = dom.sections[sectionKey].categoryDropdown;
-            if (dropdown && !dropdown.contains(event.target)) {
-              dropdown.classList.remove('open');
-            }
+          SECTION_KEYS.forEach(sectionKey => {
+            ['channelDropdown', 'categoryDropdown', 'advertisorDropdown'].forEach(field => {
+              const dropdown = dom.sections[sectionKey][field];
+              if (dropdown && !dropdown.contains(event.target)) {
+                dropdown.classList.remove('open');
+              }
+            });
           });
         });
       }
