@@ -1010,7 +1010,7 @@ html = """<!DOCTYPE html>
         </div>
         <div class="action-row" id="headerActionRow">
           <div class="header-icon-group">
-            <input class="upload-input-hidden" id="fileUpload" type="file" accept=".csv,text/csv">
+            <input class="upload-input-hidden" id="fileUpload" type="file" accept=".csv">
             <label class="pdf-btn icon-btn" for="fileUpload" title="Upload File" aria-label="Upload File">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 16V4"></path>
@@ -1234,81 +1234,26 @@ __DOM_SECTIONS_JS__
         row.push(field);
         lines.push(row);
       }
-      const normalizedLines = lines.filter(line => line.some(cell => String(cell || '').trim()));
-      if (!normalizedLines.length) throw new Error('The selected CSV file is empty.');
-      const headers = normalizedLines[0].map(v => String(v || '').replace(/^\uFEFF/, '').trim());
-      const normalizedHeaderMap = Object.fromEntries(headers.map((value, idx) => [
-        value.toLowerCase().replace(/\\s+/g, ' ').trim(),
-        idx
-      ]));
-      const required = {
-        'Channel Name': ['channel name', 'channel'],
-        'Pdate': ['pdate', 'date'],
-        'Brand Name': ['brand name', 'brandname'],
-        'Company': ['company'],
-        'Aaddur': ['aaddur', 'addur', 'ad duration', 'ad duration sec'],
-        'Category': ['category']
-      };
-      const resolved = {};
-      for (const [label, aliases] of Object.entries(required)) {
-        const match = aliases.find(alias => alias in normalizedHeaderMap);
-        if (!match) throw new Error('Missing required column: ' + label);
-        resolved[label] = normalizedHeaderMap[match];
+      if (!lines.length) return rows;
+      const headers = lines[0].map(v => (v || '').trim());
+      const index = Object.fromEntries(headers.map((value, idx) => [value, idx]));
+      const required = ['Channel Name', 'Pdate', 'Brand Name', 'Company', 'Aaddur', 'Category'];
+      for (const key of required) {
+        if (!(key in index)) throw new Error('Missing required column: ' + key);
       }
-      const adstIndex = ['adst', 'ad st', 'ad time'].find(alias => alias in normalizedHeaderMap);
-      let validRowCount = 0;
-      for (let i = 1; i < normalizedLines.length; i++) {
-        const line = normalizedLines[i];
-        const record = normalizeRow({
-          'Channel Name': line[resolved['Channel Name']] || '',
-          'Pdate': line[resolved['Pdate']] || '',
-          'Adst': adstIndex ? (line[normalizedHeaderMap[adstIndex]] || '') : '',
-          'Brand Name': line[resolved['Brand Name']] || '',
-          'Company': line[resolved['Company']] || '',
-          'Aaddur': line[resolved['Aaddur']] || '',
-          'Category': line[resolved['Category']] || ''
-        });
-        if (!record.channel && !record.company && !record.product && !record.category && !record.aaddur) continue;
-        rows.push(record);
-        validRowCount++;
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        rows.push(normalizeRow({
+          'Channel Name': line[index['Channel Name']] || '',
+          'Pdate': line[index['Pdate']] || '',
+          'Adst': 'Adst' in index ? (line[index['Adst']] || '') : '',
+          'Brand Name': line[index['Brand Name']] || '',
+          'Company': line[index['Company']] || '',
+          'Aaddur': line[index['Aaddur']] || '',
+          'Category': line[index['Category']] || ''
+        }));
       }
-      if (!validRowCount) throw new Error('The selected CSV file does not contain any usable data rows.');
       return rows;
-    }
-    function setStatus(message, isError = false) {
-      if (!dom.statusText) return;
-      dom.statusText.textContent = message || '';
-      dom.statusText.style.display = message ? 'block' : 'none';
-      dom.statusText.style.color = isError ? '#b91c1c' : '#0f172a';
-    }
-    function readUploadedFile(file, encoding = 'UTF-8') {
-      return new Promise((resolve, reject) => {
-        if (!file) {
-          reject(new Error('No file selected'));
-          return;
-        }
-        const reader = new FileReader();
-        reader.onerror = () => reject(new Error('Could not read CSV file'));
-        reader.onload = event => resolve(String(event.target && event.target.result || '').replace(/^\\uFEFF/, ''));
-        reader.readAsText(file, encoding);
-      });
-    }
-    async function parseUploadedCsvFile(file) {
-      const fileName = String(file && file.name || '').toLowerCase();
-      if (!fileName.endsWith('.csv')) {
-        throw new Error('Invalid file format. Please select a CSV file.');
-      }
-      const encodings = ['UTF-8', 'windows-1252', 'iso-8859-1'];
-      let lastError = null;
-      for (const encoding of encodings) {
-        try {
-          const text = await readUploadedFile(file, encoding);
-          return parseCsv(text);
-        } catch (error) {
-          lastError = error;
-        }
-      }
-      throw lastError || new Error('Could not read CSV file');
     }
     function cleanRows(rows) {
       return rows.filter(row => !EXCLUDED.has(row.category));
@@ -3001,15 +2946,9 @@ __DOM_SECTIONS_JS__
     function loadRows(rows, status) {
       state.rawRows = rows;
       state.cleanedRows = cleanRows(rows);
-      if (!state.rawRows.length) {
-        throw new Error('The selected CSV file is empty.');
-      }
-      if (!state.cleanedRows.length) {
-        throw new Error('No valid dashboard rows remain after applying the exclusion rules.');
-      }
       initializeSections();
       renderExcluded();
-      setStatus(status, false);
+      dom.statusText.textContent = status;
       renderAll();
     }
     if (dom.fileUpload) {
@@ -3017,13 +2956,10 @@ __DOM_SECTIONS_JS__
         const file = event.target.files && event.target.files[0];
         if (!file) return;
         try {
-          setStatus(`Reading file: ${file.name}`, false);
-          const rows = await parseUploadedCsvFile(file);
-          loadRows(rows, `Loaded file: ${file.name}`);
+          const text = await file.text();
+          loadRows(parseCsv(text), `Loaded file: ${file.name}`);
         } catch (error) {
-          setStatus(error.message || 'Could not read CSV file', true);
-        } finally {
-          event.target.value = '';
+          dom.statusText.textContent = error.message || 'Could not read CSV file';
         }
       });
     }
@@ -3036,7 +2972,6 @@ __DOM_SECTIONS_JS__
       renderExcluded();
       initializeSections();
       renderAll();
-      setStatus('', false);
     }
   </script>
 </body>

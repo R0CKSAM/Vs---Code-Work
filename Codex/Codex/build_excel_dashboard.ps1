@@ -130,23 +130,6 @@ try {
         }
     }
 
-    if ($headerMap.ContainsKey("Feed Name")) {
-        $feedCol = $headerMap["Feed Name"]
-        if ($headerMap.ContainsKey("Channel Name")) {
-            $channelCol = $headerMap["Channel Name"]
-            if ($lastRow -ge 2) {
-                $sourceRange = $dataSheet.Range($dataSheet.Cells.Item(2, $feedCol), $dataSheet.Cells.Item($lastRow, $feedCol))
-                $targetRange = $dataSheet.Range($dataSheet.Cells.Item(2, $channelCol), $dataSheet.Cells.Item($lastRow, $channelCol))
-                $targetRange.Value2 = $sourceRange.Value2
-            }
-        }
-        else {
-            $dataSheet.Cells.Item(1, $feedCol).Value2 = "Channel Name"
-            $headerMap.Remove("Feed Name")
-            $headerMap["Channel Name"] = $feedCol
-        }
-    }
-
     foreach ($requiredHeader in @("Channel Name", "Pdate", "Brand Name", "Aaddur", "Category", "Company")) {
         if (-not $headerMap.ContainsKey($requiredHeader)) {
             throw "Required column missing from CSV: $requiredHeader"

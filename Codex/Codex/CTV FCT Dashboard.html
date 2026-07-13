@@ -1,154 +1,4 @@
-import csv
-import json
-from datetime import datetime
-from pathlib import Path
-CSV_PATH = Path(r"D:\Vs - Code Work\Codex\CTV FCT.csv")
-OUTPUT_PATH = Path(r"D:\Vs - Code Work\Codex\CTV FCT Dashboard.html")
-STANDALONE_OUTPUT_PATH = Path(r"D:\Vs - Code Work\Codex\CTV FCT Dashboard Standalone.html")
-EXCLUDED = [
-    "ASTROLOGERS",
-    "CHANNEL IMAGERY",
-    "PROMO CHANNEL PROPERTIES",
-    "PROMO CHANNEL/BRAND",
-    "PROMO PROGRAM",
-    "PROMO TAG",
-    "SHORT PROGRAM",
-    "TELEVISIONS",
-]
-def parse_date(value: str) -> str:
-    value = (value or "").strip()
-    if not value:
-        return ""
-    try:
-        return datetime.strptime(value, "%d-%m-%y").strftime("%Y-%m-%d")
-    except ValueError:
-        return value
-def parse_int(value: str) -> int:
-    try:
-        return int(float((value or "0").replace(",", "").strip()))
-    except ValueError:
-        return 0
-rows = []
-with CSV_PATH.open("r", encoding="utf-8-sig", newline="") as fh:
-    reader = csv.DictReader(fh)
-    for record in reader:
-        rows.append(
-            {
-                "channel": (record.get("Channel Name") or "").strip(),
-                "date": parse_date(record.get("Pdate") or ""),
-                "adtime": (record.get("Adst") or "").strip(),
-                "product": (record.get("Brand Name") or "").strip(),
-                "company": (record.get("Company") or "").strip(),
-                "aaddur": parse_int(record.get("Aaddur") or "0"),
-                "category": (record.get("Category") or "").strip(),
-            }
-        )
-generated_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-report_date = datetime.now().strftime("%d %b %Y")
-payload = {
-    "rows": [],
-    "excluded": EXCLUDED,
-    "generatedAt": generated_at,
-}
-embedded_payload = {
-    "rows": rows,
-    "excluded": EXCLUDED,
-    "generatedAt": generated_at,
-}
-def select_control(control_id: str, label: str, options: str = "", extra: str = "") -> str:
-    return f'<div><label class="label" for="{control_id}">{label}</label><select id="{control_id}"{extra}>{options}</select></div>'
-def date_control(control_id: str, label: str) -> str:
-    return f'<div><label class="label" for="{control_id}">{label}</label><input id="{control_id}" type="date"></div>'
-def reset_control(control_id: str) -> str:
-    return f'<div><label class="label">&nbsp;</label><button id="{control_id}" type="button">Reset</button></div>'
-def category_dropdown(section_key: str) -> str:
-    return f"""          <div class="multi-dropdown" id="{section_key}CategoryDropdown">
-            <label class="label" for="{section_key}CategoryTrigger">Category</label>
-            <button class="multi-dropdown-trigger" id="{section_key}CategoryTrigger" type="button">
-              <span class="multi-dropdown-value" id="{section_key}CategoryValue">All Categories</span>
-              <span>&#9660;</span>
-            </button>
-            <div class="multi-dropdown-panel">
-              <input class="multi-dropdown-search" id="{section_key}CategorySearch" type="text" placeholder="Search categories">
-              <div class="multi-dropdown-actions">
-                <button id="{section_key}CategoryAll" type="button">Select All</button>
-                <button id="{section_key}CategoryClear" type="button">Clear All</button>
-              </div>
-              <div class="multi-dropdown-options" id="{section_key}CategoryOptions"></div>
-            </div>
-            <select id="{section_key}Category" multiple hidden></select>
-          </div>"""
-def build_global_filter_html() -> str:
-    top_n = '<option value="10">Top 10</option><option value="20">Top 20</option>'
-    return f"""    <section class="section sticky-filter-wrap" id="stickyFilterWrap">
-      <div class="panel section-card sticky-filter-shell" id="stickyFilterShell">
-        <div class="section-controls global-controls">
-          {select_control("globalTopN", "Top N", top_n)}
-          {date_control("globalStart", "Start Date")}
-          {date_control("globalEnd", "End Date")}
-          {select_control("globalChannel", "Channel")}
-          {category_dropdown("global")}
-          {select_control("globalAdvertisor", "Advertiser")}
-          {select_control("globalTime", "Time", '<option value="minutes">Minutes</option><option value="seconds">Seconds</option>')}
-          {reset_control("globalReset")}
-        </div>
-      </div>
-    </section>"""
-def section_block(section_class: str, title: str, controls: list[str], chart_id: str, extras: str = "", head_actions: str = "") -> str:
-    return f"""    <section class="{section_class}">
-      <div class="section-head">
-        <h2>{title}</h2>
-      </div>
-      <div class="panel section-card">
-        <div class="section-controls">
-{chr(10).join(controls)}
-        </div>
-        <div class="chart-head">
-          <div class="chart-actions">
-{head_actions}
-            <button class="full-btn" id="{chart_id[:2]}FullBtn" type="button">Full Screen</button>
-          </div>
-        </div>
-{extras}
-        <div class="chart-box" id="{chart_id}"></div>
-      </div>
-    </section>"""
-def build_sections_html() -> str:
-    top_n = '<option value="10">Top 10</option><option value="20">Top 20</option>'
-    return "\n\n".join([
-        section_block("section graph1-scope", "Top Advertiser (FCT)", [select_control("g1TopN", "Top N", top_n), date_control("g1Start", "Start Date"), date_control("g1End", "End Date"), select_control("g1Channel", "Channel"), category_dropdown("g1"), reset_control("g1Reset")], "g1Chart", '        <div class="legend" id="g1Legend"></div>'),
-        section_block("section", "Top Advertiser by Channels (FCT)", [select_control("g2TopN", "Top N", top_n), date_control("g2Start", "Start Date"), date_control("g2End", "End Date"), select_control("g2Channel", "Channel"), category_dropdown("g2"), reset_control("g2Reset")], "g2Chart", '        <div class="legend" id="g2Legend"></div>\n        <div class="chart-metric" id="g2Metric"></div>', '            <div class="toggle-group">\n              <button class="toggle-btn active" id="g2BarBtn" type="button">Bar Chart</button>\n              <button class="toggle-btn" id="g2PieBtn" type="button">Pie Chart</button>\n            </div>\n'),
-        section_block("section", "Top Advertiser by Date (FCT)", [select_control("g3TopN", "Top N", top_n), date_control("g3Start", "Start Date"), date_control("g3End", "End Date"), select_control("g3Channel", "Channel"), category_dropdown("g3"), reset_control("g3Reset")], "g3Chart", '        <div class="legend" id="g3Legend"></div>', '            <div class="toggle-group">\n              <button class="toggle-btn active" id="g3HeatmapBtn" type="button">Heatmap</button>\n              <button class="toggle-btn" id="g3BarBtn" type="button">Bar Chart</button>\n            </div>\n'),
-        section_block("section", "Channel Category Overview", [select_control("g4TopN", "Category View", top_n), date_control("g4Start", "Start Date"), date_control("g4End", "End Date"), select_control("g4Channel", "Channel"), reset_control("g4Reset")], "g4Chart"),
-        section_block("section", "FCT Hourly Analysis", [date_control("g5Start", "Start Date"), date_control("g5End", "End Date"), select_control("g5Channel", "Channel"), category_dropdown("g5"), select_control("g5Advertisor", "Advertiser"), select_control("g5Time", "Time", '<option value="minutes">Minutes</option><option value="seconds">Seconds</option>'), reset_control("g5Reset")], "g5Chart", '        <div class="legend-scale" id="g5Legend">\n          <span>Low AD Duration</span>\n          <div class="legend-gradient"></div>\n          <span>High AD Duration</span>\n        </div>\n        <div class="total-panel">\n          <div class="total-title">Total</div>\n          <div class="total-grid" id="g5TotalGrid"></div>\n        </div>'),
-    ])
-def build_state_sections_js() -> str:
-    return "\n".join([
-        "        g1: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },",
-        "        g2: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },",
-        "        g3: { topN: '10', start: '', end: '', channel: '', category: [], view: 'heat' },",
-        "        g4: { topN: '10', start: '', end: '', channel: '', category: '', view: 'heat' },",
-        "        g5: { start: '', end: '', channel: '', category: [], advertisor: '', time: 'minutes', view: 'heat' }",
-    ])
-def build_dom_sections_js() -> str:
-    section_fields = {
-        "g1": ["topN", "start", "end", "channel", "category", "categoryDropdown", "categoryTrigger", "categoryValue", "categorySearch", "categoryOptions", "categoryAll", "categoryClear", "reset", "legend", "chart", "panel", "fullBtn"],
-        "g2": ["topN", "start", "end", "channel", "category", "categoryDropdown", "categoryTrigger", "categoryValue", "categorySearch", "categoryOptions", "categoryAll", "categoryClear", "reset", "legend", "chart", "metric", "panel", "fullBtn", "barBtn", "pieBtn"],
-        "g3": ["topN", "start", "end", "channel", "category", "categoryDropdown", "categoryTrigger", "categoryValue", "categorySearch", "categoryOptions", "categoryAll", "categoryClear", "reset", "legend", "chart", "panel", "fullBtn", "heatmapBtn", "barBtn"],
-        "g4": ["topN", "start", "end", "channel", "reset", "chart", "panel", "fullBtn"],
-        "g5": ["start", "end", "channel", "category", "categoryDropdown", "categoryTrigger", "categoryValue", "categorySearch", "categoryOptions", "categoryAll", "categoryClear", "advertisor", "time", "reset", "legend", "chart", "totalGrid", "panel", "fullBtn"],
-    }
-    suffix = {"topN": "TopN", "start": "Start", "end": "End", "channel": "Channel", "category": "Category", "categoryDropdown": "CategoryDropdown", "categoryTrigger": "CategoryTrigger", "categoryValue": "CategoryValue", "categorySearch": "CategorySearch", "categoryOptions": "CategoryOptions", "categoryAll": "CategoryAll", "categoryClear": "CategoryClear", "reset": "Reset", "legend": "Legend", "chart": "Chart", "metric": "Metric", "fullBtn": "FullBtn", "barBtn": "BarBtn", "heatmapBtn": "HeatmapBtn", "pieBtn": "PieBtn", "advertisor": "Advertisor", "time": "Time", "totalGrid": "TotalGrid"}
-    blocks = []
-    for key, fields in section_fields.items():
-        lines = [f"        {key}: {{"]
-        for field in fields:
-            lines.append(f"          panel: document.getElementById('{key}Chart').closest('.panel')," if field == "panel" else f"          {field}: document.getElementById('{key}{suffix[field]}'),")
-        lines[-1] = lines[-1].rstrip(",")
-        lines.append("        }")
-        blocks.append("\n".join(lines))
-    return ",\n".join(blocks)
-html = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -1006,11 +856,11 @@ html = """<!DOCTYPE html>
       </div>
       <div class="top-actions">
         <div class="top-meta">
-          <div class="meta-pill">📅 <span id="reportDateText">__REPORT_DATE__</span>  🕒 <span id="reportTimeText">__GENERATED_AT__</span></div>
+          <div class="meta-pill">📅 <span id="reportDateText">09 Jul 2026</span>  🕒 <span id="reportTimeText">2026-07-09 18:10:52</span></div>
         </div>
         <div class="action-row" id="headerActionRow">
           <div class="header-icon-group">
-            <input class="upload-input-hidden" id="fileUpload" type="file" accept=".csv,text/csv">
+            <input class="upload-input-hidden" id="fileUpload" type="file" accept=".csv">
             <label class="pdf-btn icon-btn" for="fileUpload" title="Upload File" aria-label="Upload File">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M12 16V4"></path>
@@ -1037,7 +887,35 @@ html = """<!DOCTYPE html>
         <span class="excluded-items" id="excludedChips"></span>
       </div>
     </section>
-__GLOBAL_FILTER_HTML__
+    <section class="section sticky-filter-wrap" id="stickyFilterWrap">
+      <div class="panel section-card sticky-filter-shell" id="stickyFilterShell">
+        <div class="section-controls global-controls">
+          <div><label class="label" for="globalTopN">Top N</label><select id="globalTopN"><option value="10">Top 10</option><option value="20">Top 20</option></select></div>
+          <div><label class="label" for="globalStart">Start Date</label><input id="globalStart" type="date"></div>
+          <div><label class="label" for="globalEnd">End Date</label><input id="globalEnd" type="date"></div>
+          <div><label class="label" for="globalChannel">Channel</label><select id="globalChannel"></select></div>
+                    <div class="multi-dropdown" id="globalCategoryDropdown">
+            <label class="label" for="globalCategoryTrigger">Category</label>
+            <button class="multi-dropdown-trigger" id="globalCategoryTrigger" type="button">
+              <span class="multi-dropdown-value" id="globalCategoryValue">All Categories</span>
+              <span>&#9660;</span>
+            </button>
+            <div class="multi-dropdown-panel">
+              <input class="multi-dropdown-search" id="globalCategorySearch" type="text" placeholder="Search categories">
+              <div class="multi-dropdown-actions">
+                <button id="globalCategoryAll" type="button">Select All</button>
+                <button id="globalCategoryClear" type="button">Clear All</button>
+              </div>
+              <div class="multi-dropdown-options" id="globalCategoryOptions"></div>
+            </div>
+            <select id="globalCategory" multiple hidden></select>
+          </div>
+          <div><label class="label" for="globalAdvertisor">Advertiser</label><select id="globalAdvertisor"></select></div>
+          <div><label class="label" for="globalTime">Time</label><select id="globalTime"><option value="minutes">Minutes</option><option value="seconds">Seconds</option></select></div>
+          <div><label class="label">&nbsp;</label><button id="globalReset" type="button">Reset</button></div>
+        </div>
+      </div>
+    </section>
     <section class="section" id="dashboardSummarySection">
       <div class="panel section-card">
         <div class="section-head">
@@ -1046,7 +924,202 @@ __GLOBAL_FILTER_HTML__
         <div class="summary-lines" id="summaryLines"></div>
       </div>
     </section>
-__SECTIONS_HTML__
+    <section class="section graph1-scope">
+      <div class="section-head">
+        <h2>Top Advertiser (FCT)</h2>
+      </div>
+      <div class="panel section-card">
+        <div class="section-controls">
+<div><label class="label" for="g1TopN">Top N</label><select id="g1TopN"><option value="10">Top 10</option><option value="20">Top 20</option></select></div>
+<div><label class="label" for="g1Start">Start Date</label><input id="g1Start" type="date"></div>
+<div><label class="label" for="g1End">End Date</label><input id="g1End" type="date"></div>
+<div><label class="label" for="g1Channel">Channel</label><select id="g1Channel"></select></div>
+          <div class="multi-dropdown" id="g1CategoryDropdown">
+            <label class="label" for="g1CategoryTrigger">Category</label>
+            <button class="multi-dropdown-trigger" id="g1CategoryTrigger" type="button">
+              <span class="multi-dropdown-value" id="g1CategoryValue">All Categories</span>
+              <span>&#9660;</span>
+            </button>
+            <div class="multi-dropdown-panel">
+              <input class="multi-dropdown-search" id="g1CategorySearch" type="text" placeholder="Search categories">
+              <div class="multi-dropdown-actions">
+                <button id="g1CategoryAll" type="button">Select All</button>
+                <button id="g1CategoryClear" type="button">Clear All</button>
+              </div>
+              <div class="multi-dropdown-options" id="g1CategoryOptions"></div>
+            </div>
+            <select id="g1Category" multiple hidden></select>
+          </div>
+<div><label class="label">&nbsp;</label><button id="g1Reset" type="button">Reset</button></div>
+        </div>
+        <div class="chart-head">
+          <div class="chart-actions">
+
+            <button class="full-btn" id="g1FullBtn" type="button">Full Screen</button>
+          </div>
+        </div>
+        <div class="legend" id="g1Legend"></div>
+        <div class="chart-box" id="g1Chart"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>Top Advertiser by Channels (FCT)</h2>
+      </div>
+      <div class="panel section-card">
+        <div class="section-controls">
+<div><label class="label" for="g2TopN">Top N</label><select id="g2TopN"><option value="10">Top 10</option><option value="20">Top 20</option></select></div>
+<div><label class="label" for="g2Start">Start Date</label><input id="g2Start" type="date"></div>
+<div><label class="label" for="g2End">End Date</label><input id="g2End" type="date"></div>
+<div><label class="label" for="g2Channel">Channel</label><select id="g2Channel"></select></div>
+          <div class="multi-dropdown" id="g2CategoryDropdown">
+            <label class="label" for="g2CategoryTrigger">Category</label>
+            <button class="multi-dropdown-trigger" id="g2CategoryTrigger" type="button">
+              <span class="multi-dropdown-value" id="g2CategoryValue">All Categories</span>
+              <span>&#9660;</span>
+            </button>
+            <div class="multi-dropdown-panel">
+              <input class="multi-dropdown-search" id="g2CategorySearch" type="text" placeholder="Search categories">
+              <div class="multi-dropdown-actions">
+                <button id="g2CategoryAll" type="button">Select All</button>
+                <button id="g2CategoryClear" type="button">Clear All</button>
+              </div>
+              <div class="multi-dropdown-options" id="g2CategoryOptions"></div>
+            </div>
+            <select id="g2Category" multiple hidden></select>
+          </div>
+<div><label class="label">&nbsp;</label><button id="g2Reset" type="button">Reset</button></div>
+        </div>
+        <div class="chart-head">
+          <div class="chart-actions">
+            <div class="toggle-group">
+              <button class="toggle-btn active" id="g2BarBtn" type="button">Bar Chart</button>
+              <button class="toggle-btn" id="g2PieBtn" type="button">Pie Chart</button>
+            </div>
+
+            <button class="full-btn" id="g2FullBtn" type="button">Full Screen</button>
+          </div>
+        </div>
+        <div class="legend" id="g2Legend"></div>
+        <div class="chart-metric" id="g2Metric"></div>
+        <div class="chart-box" id="g2Chart"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>Top Advertiser by Date (FCT)</h2>
+      </div>
+      <div class="panel section-card">
+        <div class="section-controls">
+<div><label class="label" for="g3TopN">Top N</label><select id="g3TopN"><option value="10">Top 10</option><option value="20">Top 20</option></select></div>
+<div><label class="label" for="g3Start">Start Date</label><input id="g3Start" type="date"></div>
+<div><label class="label" for="g3End">End Date</label><input id="g3End" type="date"></div>
+<div><label class="label" for="g3Channel">Channel</label><select id="g3Channel"></select></div>
+          <div class="multi-dropdown" id="g3CategoryDropdown">
+            <label class="label" for="g3CategoryTrigger">Category</label>
+            <button class="multi-dropdown-trigger" id="g3CategoryTrigger" type="button">
+              <span class="multi-dropdown-value" id="g3CategoryValue">All Categories</span>
+              <span>&#9660;</span>
+            </button>
+            <div class="multi-dropdown-panel">
+              <input class="multi-dropdown-search" id="g3CategorySearch" type="text" placeholder="Search categories">
+              <div class="multi-dropdown-actions">
+                <button id="g3CategoryAll" type="button">Select All</button>
+                <button id="g3CategoryClear" type="button">Clear All</button>
+              </div>
+              <div class="multi-dropdown-options" id="g3CategoryOptions"></div>
+            </div>
+            <select id="g3Category" multiple hidden></select>
+          </div>
+<div><label class="label">&nbsp;</label><button id="g3Reset" type="button">Reset</button></div>
+        </div>
+        <div class="chart-head">
+          <div class="chart-actions">
+            <div class="toggle-group">
+              <button class="toggle-btn active" id="g3HeatmapBtn" type="button">Heatmap</button>
+              <button class="toggle-btn" id="g3BarBtn" type="button">Bar Chart</button>
+            </div>
+
+            <button class="full-btn" id="g3FullBtn" type="button">Full Screen</button>
+          </div>
+        </div>
+        <div class="legend" id="g3Legend"></div>
+        <div class="chart-box" id="g3Chart"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>Channel Category Overview</h2>
+      </div>
+      <div class="panel section-card">
+        <div class="section-controls">
+<div><label class="label" for="g4TopN">Category View</label><select id="g4TopN"><option value="10">Top 10</option><option value="20">Top 20</option></select></div>
+<div><label class="label" for="g4Start">Start Date</label><input id="g4Start" type="date"></div>
+<div><label class="label" for="g4End">End Date</label><input id="g4End" type="date"></div>
+<div><label class="label" for="g4Channel">Channel</label><select id="g4Channel"></select></div>
+<div><label class="label">&nbsp;</label><button id="g4Reset" type="button">Reset</button></div>
+        </div>
+        <div class="chart-head">
+          <div class="chart-actions">
+
+            <button class="full-btn" id="g4FullBtn" type="button">Full Screen</button>
+          </div>
+        </div>
+
+        <div class="chart-box" id="g4Chart"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2>FCT Hourly Analysis</h2>
+      </div>
+      <div class="panel section-card">
+        <div class="section-controls">
+<div><label class="label" for="g5Start">Start Date</label><input id="g5Start" type="date"></div>
+<div><label class="label" for="g5End">End Date</label><input id="g5End" type="date"></div>
+<div><label class="label" for="g5Channel">Channel</label><select id="g5Channel"></select></div>
+          <div class="multi-dropdown" id="g5CategoryDropdown">
+            <label class="label" for="g5CategoryTrigger">Category</label>
+            <button class="multi-dropdown-trigger" id="g5CategoryTrigger" type="button">
+              <span class="multi-dropdown-value" id="g5CategoryValue">All Categories</span>
+              <span>&#9660;</span>
+            </button>
+            <div class="multi-dropdown-panel">
+              <input class="multi-dropdown-search" id="g5CategorySearch" type="text" placeholder="Search categories">
+              <div class="multi-dropdown-actions">
+                <button id="g5CategoryAll" type="button">Select All</button>
+                <button id="g5CategoryClear" type="button">Clear All</button>
+              </div>
+              <div class="multi-dropdown-options" id="g5CategoryOptions"></div>
+            </div>
+            <select id="g5Category" multiple hidden></select>
+          </div>
+<div><label class="label" for="g5Advertisor">Advertiser</label><select id="g5Advertisor"></select></div>
+<div><label class="label" for="g5Time">Time</label><select id="g5Time"><option value="minutes">Minutes</option><option value="seconds">Seconds</option></select></div>
+<div><label class="label">&nbsp;</label><button id="g5Reset" type="button">Reset</button></div>
+        </div>
+        <div class="chart-head">
+          <div class="chart-actions">
+
+            <button class="full-btn" id="g5FullBtn" type="button">Full Screen</button>
+          </div>
+        </div>
+        <div class="legend-scale" id="g5Legend">
+          <span>Low AD Duration</span>
+          <div class="legend-gradient"></div>
+          <span>High AD Duration</span>
+        </div>
+        <div class="total-panel">
+          <div class="total-title">Total</div>
+          <div class="total-grid" id="g5TotalGrid"></div>
+        </div>
+        <div class="chart-box" id="g5Chart"></div>
+      </div>
+    </section>
     <button class="share-fab" id="shareBtn" type="button" title="Share Dashboard" aria-label="Share Dashboard">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 16V5"></path>
@@ -1066,7 +1139,7 @@ __SECTIONS_HTML__
       </div>
     </div>
   <script>
-    const PAYLOAD = __PAYLOAD_JSON__;
+    const PAYLOAD = {"rows": [], "excluded": ["ASTROLOGERS", "CHANNEL IMAGERY", "PROMO CHANNEL PROPERTIES", "PROMO CHANNEL/BRAND", "PROMO PROGRAM", "PROMO TAG", "SHORT PROGRAM", "TELEVISIONS"], "generatedAt": "2026-07-09 18:10:52"};
     const EXCLUDED = new Set(PAYLOAD.excluded);
     const numberFormat = new Intl.NumberFormat('en-US');
     const longDate = new Intl.DateTimeFormat('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -1098,7 +1171,11 @@ __SECTIONS_HTML__
         time: 'minutes'
       },
       sections: {
-__STATE_SECTIONS_JS__
+        g1: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },
+        g2: { topN: '10', start: '', end: '', channel: '', category: [], view: 'bar' },
+        g3: { topN: '10', start: '', end: '', channel: '', category: [], view: 'heat' },
+        g4: { topN: '10', start: '', end: '', channel: '', category: '', view: 'heat' },
+        g5: { start: '', end: '', channel: '', category: [], advertisor: '', time: 'minutes', view: 'heat' }
       }
     };
     const dom = {
@@ -1136,7 +1213,99 @@ __STATE_SECTIONS_JS__
         reset: document.getElementById('globalReset')
       },
       sections: {
-__DOM_SECTIONS_JS__
+        g1: {
+          topN: document.getElementById('g1TopN'),
+          start: document.getElementById('g1Start'),
+          end: document.getElementById('g1End'),
+          channel: document.getElementById('g1Channel'),
+          category: document.getElementById('g1Category'),
+          categoryDropdown: document.getElementById('g1CategoryDropdown'),
+          categoryTrigger: document.getElementById('g1CategoryTrigger'),
+          categoryValue: document.getElementById('g1CategoryValue'),
+          categorySearch: document.getElementById('g1CategorySearch'),
+          categoryOptions: document.getElementById('g1CategoryOptions'),
+          categoryAll: document.getElementById('g1CategoryAll'),
+          categoryClear: document.getElementById('g1CategoryClear'),
+          reset: document.getElementById('g1Reset'),
+          legend: document.getElementById('g1Legend'),
+          chart: document.getElementById('g1Chart'),
+          panel: document.getElementById('g1Chart').closest('.panel'),
+          fullBtn: document.getElementById('g1FullBtn')
+        },
+        g2: {
+          topN: document.getElementById('g2TopN'),
+          start: document.getElementById('g2Start'),
+          end: document.getElementById('g2End'),
+          channel: document.getElementById('g2Channel'),
+          category: document.getElementById('g2Category'),
+          categoryDropdown: document.getElementById('g2CategoryDropdown'),
+          categoryTrigger: document.getElementById('g2CategoryTrigger'),
+          categoryValue: document.getElementById('g2CategoryValue'),
+          categorySearch: document.getElementById('g2CategorySearch'),
+          categoryOptions: document.getElementById('g2CategoryOptions'),
+          categoryAll: document.getElementById('g2CategoryAll'),
+          categoryClear: document.getElementById('g2CategoryClear'),
+          reset: document.getElementById('g2Reset'),
+          legend: document.getElementById('g2Legend'),
+          chart: document.getElementById('g2Chart'),
+          metric: document.getElementById('g2Metric'),
+          panel: document.getElementById('g2Chart').closest('.panel'),
+          fullBtn: document.getElementById('g2FullBtn'),
+          barBtn: document.getElementById('g2BarBtn'),
+          pieBtn: document.getElementById('g2PieBtn')
+        },
+        g3: {
+          topN: document.getElementById('g3TopN'),
+          start: document.getElementById('g3Start'),
+          end: document.getElementById('g3End'),
+          channel: document.getElementById('g3Channel'),
+          category: document.getElementById('g3Category'),
+          categoryDropdown: document.getElementById('g3CategoryDropdown'),
+          categoryTrigger: document.getElementById('g3CategoryTrigger'),
+          categoryValue: document.getElementById('g3CategoryValue'),
+          categorySearch: document.getElementById('g3CategorySearch'),
+          categoryOptions: document.getElementById('g3CategoryOptions'),
+          categoryAll: document.getElementById('g3CategoryAll'),
+          categoryClear: document.getElementById('g3CategoryClear'),
+          reset: document.getElementById('g3Reset'),
+          legend: document.getElementById('g3Legend'),
+          chart: document.getElementById('g3Chart'),
+          panel: document.getElementById('g3Chart').closest('.panel'),
+          fullBtn: document.getElementById('g3FullBtn'),
+          heatmapBtn: document.getElementById('g3HeatmapBtn'),
+          barBtn: document.getElementById('g3BarBtn')
+        },
+        g4: {
+          topN: document.getElementById('g4TopN'),
+          start: document.getElementById('g4Start'),
+          end: document.getElementById('g4End'),
+          channel: document.getElementById('g4Channel'),
+          reset: document.getElementById('g4Reset'),
+          chart: document.getElementById('g4Chart'),
+          panel: document.getElementById('g4Chart').closest('.panel'),
+          fullBtn: document.getElementById('g4FullBtn')
+        },
+        g5: {
+          start: document.getElementById('g5Start'),
+          end: document.getElementById('g5End'),
+          channel: document.getElementById('g5Channel'),
+          category: document.getElementById('g5Category'),
+          categoryDropdown: document.getElementById('g5CategoryDropdown'),
+          categoryTrigger: document.getElementById('g5CategoryTrigger'),
+          categoryValue: document.getElementById('g5CategoryValue'),
+          categorySearch: document.getElementById('g5CategorySearch'),
+          categoryOptions: document.getElementById('g5CategoryOptions'),
+          categoryAll: document.getElementById('g5CategoryAll'),
+          categoryClear: document.getElementById('g5CategoryClear'),
+          advertisor: document.getElementById('g5Advertisor'),
+          time: document.getElementById('g5Time'),
+          reset: document.getElementById('g5Reset'),
+          legend: document.getElementById('g5Legend'),
+          chart: document.getElementById('g5Chart'),
+          totalGrid: document.getElementById('g5TotalGrid'),
+          panel: document.getElementById('g5Chart').closest('.panel'),
+          fullBtn: document.getElementById('g5FullBtn')
+        }
       }
     };
     const SECTION_KEYS = ['g1', 'g2', 'g3', 'g4', 'g5'];
@@ -1150,7 +1319,7 @@ __DOM_SECTIONS_JS__
       return String(value || '')
         .trim()
         .toLowerCase()
-        .replace(/\b([a-z])/g, letter => letter.toUpperCase());
+        .replace(/([a-z])/g, letter => letter.toUpperCase());
     }
     function activeTimeUnit() { return state.global.time || 'minutes'; }
     function formatDurationValue(value, withUnit = false) {
@@ -1180,7 +1349,7 @@ __DOM_SECTIONS_JS__
     function normalizeDate(value) {
       const raw = String(value || '').trim();
       if (!raw) return '';
-      if (/^\\d{4}-\\d{2}-\\d{2}$/.test(raw)) return raw;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
       const parts = raw.split('-').map(p => p.trim());
       if (parts.length === 3) {
         let [day, month, year] = parts;
@@ -1220,8 +1389,8 @@ __DOM_SECTIONS_JS__
         } else if (ch === ',' && !inQuotes) {
           row.push(field);
           field = '';
-        } else if ((ch === '\\n' || ch === '\\r') && !inQuotes) {
-          if (ch === '\\r' && next === '\\n') i++;
+        } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+          if (ch === '\r' && next === '\n') i++;
           row.push(field);
           lines.push(row);
           row = [];
@@ -1234,81 +1403,26 @@ __DOM_SECTIONS_JS__
         row.push(field);
         lines.push(row);
       }
-      const normalizedLines = lines.filter(line => line.some(cell => String(cell || '').trim()));
-      if (!normalizedLines.length) throw new Error('The selected CSV file is empty.');
-      const headers = normalizedLines[0].map(v => String(v || '').replace(/^\uFEFF/, '').trim());
-      const normalizedHeaderMap = Object.fromEntries(headers.map((value, idx) => [
-        value.toLowerCase().replace(/\\s+/g, ' ').trim(),
-        idx
-      ]));
-      const required = {
-        'Channel Name': ['channel name', 'channel'],
-        'Pdate': ['pdate', 'date'],
-        'Brand Name': ['brand name', 'brandname'],
-        'Company': ['company'],
-        'Aaddur': ['aaddur', 'addur', 'ad duration', 'ad duration sec'],
-        'Category': ['category']
-      };
-      const resolved = {};
-      for (const [label, aliases] of Object.entries(required)) {
-        const match = aliases.find(alias => alias in normalizedHeaderMap);
-        if (!match) throw new Error('Missing required column: ' + label);
-        resolved[label] = normalizedHeaderMap[match];
+      if (!lines.length) return rows;
+      const headers = lines[0].map(v => (v || '').trim());
+      const index = Object.fromEntries(headers.map((value, idx) => [value, idx]));
+      const required = ['Channel Name', 'Pdate', 'Brand Name', 'Company', 'Aaddur', 'Category'];
+      for (const key of required) {
+        if (!(key in index)) throw new Error('Missing required column: ' + key);
       }
-      const adstIndex = ['adst', 'ad st', 'ad time'].find(alias => alias in normalizedHeaderMap);
-      let validRowCount = 0;
-      for (let i = 1; i < normalizedLines.length; i++) {
-        const line = normalizedLines[i];
-        const record = normalizeRow({
-          'Channel Name': line[resolved['Channel Name']] || '',
-          'Pdate': line[resolved['Pdate']] || '',
-          'Adst': adstIndex ? (line[normalizedHeaderMap[adstIndex]] || '') : '',
-          'Brand Name': line[resolved['Brand Name']] || '',
-          'Company': line[resolved['Company']] || '',
-          'Aaddur': line[resolved['Aaddur']] || '',
-          'Category': line[resolved['Category']] || ''
-        });
-        if (!record.channel && !record.company && !record.product && !record.category && !record.aaddur) continue;
-        rows.push(record);
-        validRowCount++;
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        rows.push(normalizeRow({
+          'Channel Name': line[index['Channel Name']] || '',
+          'Pdate': line[index['Pdate']] || '',
+          'Adst': 'Adst' in index ? (line[index['Adst']] || '') : '',
+          'Brand Name': line[index['Brand Name']] || '',
+          'Company': line[index['Company']] || '',
+          'Aaddur': line[index['Aaddur']] || '',
+          'Category': line[index['Category']] || ''
+        }));
       }
-      if (!validRowCount) throw new Error('The selected CSV file does not contain any usable data rows.');
       return rows;
-    }
-    function setStatus(message, isError = false) {
-      if (!dom.statusText) return;
-      dom.statusText.textContent = message || '';
-      dom.statusText.style.display = message ? 'block' : 'none';
-      dom.statusText.style.color = isError ? '#b91c1c' : '#0f172a';
-    }
-    function readUploadedFile(file, encoding = 'UTF-8') {
-      return new Promise((resolve, reject) => {
-        if (!file) {
-          reject(new Error('No file selected'));
-          return;
-        }
-        const reader = new FileReader();
-        reader.onerror = () => reject(new Error('Could not read CSV file'));
-        reader.onload = event => resolve(String(event.target && event.target.result || '').replace(/^\\uFEFF/, ''));
-        reader.readAsText(file, encoding);
-      });
-    }
-    async function parseUploadedCsvFile(file) {
-      const fileName = String(file && file.name || '').toLowerCase();
-      if (!fileName.endsWith('.csv')) {
-        throw new Error('Invalid file format. Please select a CSV file.');
-      }
-      const encodings = ['UTF-8', 'windows-1252', 'iso-8859-1'];
-      let lastError = null;
-      for (const encoding of encodings) {
-        try {
-          const text = await readUploadedFile(file, encoding);
-          return parseCsv(text);
-        } catch (error) {
-          lastError = error;
-        }
-      }
-      throw lastError || new Error('Could not read CSV file');
     }
     function cleanRows(rows) {
       return rows.filter(row => !EXCLUDED.has(row.category));
@@ -1376,7 +1490,7 @@ __DOM_SECTIONS_JS__
     function parseHourValue(value) {
       const raw = String(value || '').trim();
       if (!raw) return null;
-      const match = raw.match(/^(\\d{1,2}):(\\d{2})(?::(\\d{2}))?$/);
+      const match = raw.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
       if (!match) return null;
       const hour = Number.parseInt(match[1], 10);
       if (!Number.isFinite(hour) || hour < 0 || hour > 23) return null;
@@ -1385,7 +1499,7 @@ __DOM_SECTIONS_JS__
     function normalizeTimeValue(value) {
       const raw = String(value || '').trim();
       if (!raw) return '';
-      const match = raw.match(/^(\\d{1,2})[:.](\\d{2})(?:[:.](\\d{2}))?$/);
+      const match = raw.match(/^(\d{1,2})[:.](\d{2})(?:[:.](\d{2}))?$/);
       if (!match) return raw;
       const hour = match[1].padStart(2, '0');
       const minute = match[2].padStart(2, '0');
@@ -2056,7 +2170,9 @@ __DOM_SECTIONS_JS__
         const fill = channelColor(item.channel, 'g2');
         svg.appendChild(svgEl('path', { d: path, fill, stroke: '#ffffff', 'stroke-width': 1.2 }));
         const title = svgEl('title');
-        title.textContent = `Channel: ${item.channel}\n${metricLabel()}: ${formatDurationValue(item.total, true)}\nShare: ${(fraction * 100).toFixed(0)}%`;
+        title.textContent = `Channel: ${item.channel}
+${metricLabel()}: ${formatDurationValue(item.total, true)}
+Share: ${(fraction * 100).toFixed(0)}%`;
         svg.lastChild.appendChild(title);
         const mid = startAngle + (endAngle - startAngle) / 2;
         const label = polar(radius + 38, mid);
@@ -2206,7 +2322,11 @@ __DOM_SECTIONS_JS__
             'stroke-width': 1
           });
           const title = svgEl('title');
-          title.textContent = `Advertiser: ${item.advertisor}\nDate: ${formatDate(row.date)}\n${metricLabel()}: ${formatDurationValue(value, true)}\nChannel: ${state.global.channel || 'All'}\nCategory: ${(state.global.category || []).length ? state.global.category.join(', ') : 'All'}`;
+          title.textContent = `Advertiser: ${item.advertisor}
+Date: ${formatDate(row.date)}
+${metricLabel()}: ${formatDurationValue(value, true)}
+Channel: ${state.global.channel || 'All'}
+Category: ${(state.global.category || []).length ? state.global.category.join(', ') : 'All'}`;
           rect.appendChild(title);
           svg.appendChild(rect);
           if (value && cellW >= 52 && cellH >= 28) {
@@ -2297,8 +2417,12 @@ __DOM_SECTIONS_JS__
           });
           const title = svgEl('title');
           title.textContent = hasValue
-            ? `Channel: ${channel}\nCategory: ${category}\n${metricLabel()}: ${formatDurationValue(value, true)}`
-            : `Channel: ${channel}\nCategory: ${category}\nNo data available`;
+            ? `Channel: ${channel}
+Category: ${category}
+${metricLabel()}: ${formatDurationValue(value, true)}`
+            : `Channel: ${channel}
+Category: ${category}
+No data available`;
           rect.appendChild(title);
           svg.appendChild(rect);
           if (hasValue && cellW >= 52 && cellH >= 28) {
@@ -2373,7 +2497,9 @@ __DOM_SECTIONS_JS__
             'stroke-width': 1
           });
           const title = svgEl('title');
-          title.textContent = `Channel: ${channel}\nTime Slot: ${hourSlotLabel(hour)}\nAD Duration: ${unitMeta.format(displayValue)}`;
+          title.textContent = `Channel: ${channel}
+Time Slot: ${hourSlotLabel(hour)}
+AD Duration: ${unitMeta.format(displayValue)}`;
           rect.appendChild(title);
           svg.appendChild(rect);
           if (value && cellW >= 28 && cellH >= 22) {
@@ -2614,19 +2740,19 @@ __DOM_SECTIONS_JS__
     }
     function getDatasetNameForExport() {
       const status = String(dom.statusText?.textContent || '').trim();
-      const loaded = status.match(/Loaded file:\\s*(.+)$/i);
-      if (loaded && loaded[1]) return loaded[1].replace(/\\.[^.]+$/, '');
+      const loaded = status.match(/Loaded file:\s*(.+)$/i);
+      if (loaded && loaded[1]) return loaded[1].replace(/\.[^.]+$/, '');
       return 'Dashboard';
     }
     function sanitizeFilenamePart(value) {
       return String(value || 'Dashboard')
-        .replace(/[\\/:*?"<>|]+/g, ' ')
-        .replace(/\\s+/g, '_')
+        .replace(/[\/:*?"<>|]+/g, ' ')
+        .replace(/\s+/g, '_')
         .replace(/^_+|_+$/g, '')
         .slice(0, 60) || 'Dashboard';
     }
     function buildShareFilename() {
-      const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\\.\\d+Z$/, '').replace('T', '_');
+      const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, '').replace('T', '_');
       return `CTV FCT_${sanitizeFilenamePart(getDatasetNameForExport())}_${stamp}.html`;
     }
     function serializeDashboardState() {
@@ -2694,22 +2820,26 @@ __DOM_SECTIONS_JS__
         generatedAt: new Date().toISOString()
       };
       const exportState = serializeDashboardState();
-      const preloadScript = `\n<script>window.PRELOADED_DATASET = ${JSON.stringify(exportPayload.rows)};window.PRELOADED_DASHBOARD_STATE = ${JSON.stringify(exportState)};<\\/script>\n`;
-      const shareStylePatch = `\n<style>body{min-height:auto !important;overflow:auto !important;} .share-fab,.share-modal{display:none !important;}</style>\n`;
-      let exportedHtml = '<!DOCTYPE html>\\n' + document.documentElement.outerHTML;
-      exportedHtml = exportedHtml.replace(/<button class="share-fab"[\\s\\S]*?<\\/button>\\s*/m, '');
-      exportedHtml = exportedHtml.replace(/<div class="share-modal" id="shareModal"[\\s\\S]*?<\\/div>\\s*<\\/div>\\s*/m, '');
-      exportedHtml = exportedHtml.replace(/<input class="upload-input-hidden" id="fileUpload"[\\s\\S]*?<label class="pdf-btn icon-btn" for="fileUpload"[\\s\\S]*?<\\/label>\\s*/m, '');
-      exportedHtml = exportedHtml.replace(/const PAYLOAD = [\\s\\S]*?;\\n\\s*const EXCLUDED = new Set\\(PAYLOAD\\.excluded\\);/, `const PAYLOAD = ${JSON.stringify(exportPayload)};\\n    const EXCLUDED = new Set(PAYLOAD.excluded);`);
-      exportedHtml = exportedHtml.replace(/const dom = \\{\\n\\s*fileUpload: document\\.getElementById\\('fileUpload'\\),/, "const dom = {\\n      fileUpload: document.getElementById('fileUpload'),");
-      exportedHtml = exportedHtml.replace(/\\s*shareBtn: document\\.getElementById\\('shareBtn'\\),\\n/, '\\n');
-      exportedHtml = exportedHtml.replace(/\\s*shareModal: document\\.getElementById\\('shareModal'\\),\\n/, '\\n');
-      exportedHtml = exportedHtml.replace(/\\s*shareCancelBtn: document\\.getElementById\\('shareCancelBtn'\\),\\n/, '\\n');
-      exportedHtml = exportedHtml.replace(/\\s*shareDownloadBtn: document\\.getElementById\\('shareDownloadBtn'\\),\\n/, '\\n');
-      exportedHtml = exportedHtml.replace(/if \\(dom\\.fileUpload\\) \\{[\\s\\S]*?\\n    \\}/, '');
-      exportedHtml = exportedHtml.replace(/if \\(dom\\.shareBtn\\) \\{[\\s\\S]*?\\n        \\}/, '');
-      exportedHtml = exportedHtml.replace(/<div class="status" id="statusText">[\\s\\S]*?<\\/div>/, '<div class="status" id="statusText">Loaded shared dashboard snapshot.</div>');
-      exportedHtml = exportedHtml.replace(/<body([^>]*)style="[^"]*overflow:\\s*hidden;?[^"]*"([^>]*)>/i, '<body$1$2>');
+      const preloadScript = `
+<script>window.PRELOADED_DATASET = ${JSON.stringify(exportPayload.rows)};window.PRELOADED_DASHBOARD_STATE = ${JSON.stringify(exportState)};<\/script>
+`;
+      const shareStylePatch = `
+<style>body{min-height:auto !important;overflow:auto !important;} .share-fab,.share-modal{display:none !important;}</style>
+`;
+      let exportedHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+      exportedHtml = exportedHtml.replace(/<button class="share-fab"[\s\S]*?<\/button>\s*/m, '');
+      exportedHtml = exportedHtml.replace(/<div class="share-modal" id="shareModal"[\s\S]*?<\/div>\s*<\/div>\s*/m, '');
+      exportedHtml = exportedHtml.replace(/<input class="upload-input-hidden" id="fileUpload"[\s\S]*?<label class="pdf-btn icon-btn" for="fileUpload"[\s\S]*?<\/label>\s*/m, '');
+      exportedHtml = exportedHtml.replace(/const PAYLOAD = [\s\S]*?;\n\s*const EXCLUDED = new Set\(PAYLOAD\.excluded\);/, `const PAYLOAD = ${JSON.stringify(exportPayload)};\n    const EXCLUDED = new Set(PAYLOAD.excluded);`);
+      exportedHtml = exportedHtml.replace(/const dom = \{\n\s*fileUpload: document\.getElementById\('fileUpload'\),/, "const dom = {\n      fileUpload: document.getElementById('fileUpload'),");
+      exportedHtml = exportedHtml.replace(/\s*shareBtn: document\.getElementById\('shareBtn'\),\n/, '\n');
+      exportedHtml = exportedHtml.replace(/\s*shareModal: document\.getElementById\('shareModal'\),\n/, '\n');
+      exportedHtml = exportedHtml.replace(/\s*shareCancelBtn: document\.getElementById\('shareCancelBtn'\),\n/, '\n');
+      exportedHtml = exportedHtml.replace(/\s*shareDownloadBtn: document\.getElementById\('shareDownloadBtn'\),\n/, '\n');
+      exportedHtml = exportedHtml.replace(/if \(dom\.fileUpload\) \{[\s\S]*?\n    \}/, '');
+      exportedHtml = exportedHtml.replace(/if \(dom\.shareBtn\) \{[\s\S]*?\n        \}/, '');
+      exportedHtml = exportedHtml.replace(/<div class="status" id="statusText">[\s\S]*?<\/div>/, '<div class="status" id="statusText">Loaded shared dashboard snapshot.</div>');
+      exportedHtml = exportedHtml.replace(/<body([^>]*)style="[^"]*overflow:\s*hidden;?[^"]*"([^>]*)>/i, '<body$1$2>');
       exportedHtml = exportedHtml.replace('<head>', `<head>${preloadScript}${shareStylePatch}`);
       const blob = new Blob([exportedHtml], { type: 'text/html;charset=utf-8' });
       const url = URL.createObjectURL(blob);
@@ -3001,15 +3131,9 @@ __DOM_SECTIONS_JS__
     function loadRows(rows, status) {
       state.rawRows = rows;
       state.cleanedRows = cleanRows(rows);
-      if (!state.rawRows.length) {
-        throw new Error('The selected CSV file is empty.');
-      }
-      if (!state.cleanedRows.length) {
-        throw new Error('No valid dashboard rows remain after applying the exclusion rules.');
-      }
       initializeSections();
       renderExcluded();
-      setStatus(status, false);
+      dom.statusText.textContent = status;
       renderAll();
     }
     if (dom.fileUpload) {
@@ -3017,13 +3141,10 @@ __DOM_SECTIONS_JS__
         const file = event.target.files && event.target.files[0];
         if (!file) return;
         try {
-          setStatus(`Reading file: ${file.name}`, false);
-          const rows = await parseUploadedCsvFile(file);
-          loadRows(rows, `Loaded file: ${file.name}`);
+          const text = await file.text();
+          loadRows(parseCsv(text), `Loaded file: ${file.name}`);
         } catch (error) {
-          setStatus(error.message || 'Could not read CSV file', true);
-        } finally {
-          event.target.value = '';
+          dom.statusText.textContent = error.message || 'Could not read CSV file';
         }
       });
     }
@@ -3036,69 +3157,7 @@ __DOM_SECTIONS_JS__
       renderExcluded();
       initializeSections();
       renderAll();
-      setStatus('', false);
     }
   </script>
 </body>
 </html>
-"""
-html = html.replace("__GENERATED_AT__", payload["generatedAt"])
-html = html.replace("__REPORT_DATE__", report_date)
-html = html.replace("__PAYLOAD_JSON__", json.dumps(payload, ensure_ascii=True))
-html = html.replace("__GLOBAL_FILTER_HTML__", build_global_filter_html())
-html = html.replace("__SECTIONS_HTML__", build_sections_html())
-html = html.replace("__STATE_SECTIONS_JS__", build_state_sections_js())
-html = html.replace("__DOM_SECTIONS_JS__", build_dom_sections_js())
-def build_standalone_html(source_html: str) -> str:
-    source_actions = """        <div class="action-row" id="headerActionRow">
-          <div class="header-icon-group">
-            <input class="upload-input-hidden" id="fileUpload" type="file" accept=".csv">
-            <label class="pdf-btn icon-btn" for="fileUpload" title="Upload File" aria-label="Upload File">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 16V4"></path>
-                <path d="M7 9l5-5 5 5"></path>
-                <path d="M4 20h16"></path>
-              </svg>
-              <span class="sr-only">Upload File</span>
-            </label>
-            <button class="pdf-btn icon-btn" id="pdfBtn" type="button" title="Download Report" aria-label="Download Report">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 4v12"></path>
-                <path d="M7 11l5 5 5-5"></path>
-                <path d="M4 20h16"></path>
-              </svg>
-              <span class="sr-only">Download Report</span>
-            </button>
-          </div>
-        </div>"""
-    standalone_actions = """        <div class="action-row" id="headerActionRow">
-          <div class="header-icon-group">
-            <button class="pdf-btn icon-btn" id="pdfBtn" type="button" title="Download Report" aria-label="Download Report">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 4v12"></path>
-                <path d="M7 11l5 5 5-5"></path>
-                <path d="M4 20h16"></path>
-              </svg>
-              <span class="sr-only">Download Report</span>
-            </button>
-          </div>
-        </div>"""
-    standalone = source_html.replace(source_actions, standalone_actions, 1)
-    standalone = standalone.replace(
-        json.dumps(payload, ensure_ascii=True),
-        json.dumps(embedded_payload, ensure_ascii=True),
-        1,
-    )
-    standalone = standalone.replace(
-        "    renderExcluded();\n    initializeSections();\n    renderAll();",
-        "    loadRows(PAYLOAD.rows, 'Loaded embedded dataset');",
-        1,
-    )
-    standalone = standalone.replace(
-        "        <div class=\"status\" id=\"statusText\">Choose a CSV file to generate the dashboard.</div>",
-        "        <div class=\"status\" id=\"statusText\">Loaded embedded dataset and ready for interactive use.</div>",
-        1,
-    )
-    return standalone
-OUTPUT_PATH.write_text(html, encoding="utf-8")
-print(OUTPUT_PATH)
