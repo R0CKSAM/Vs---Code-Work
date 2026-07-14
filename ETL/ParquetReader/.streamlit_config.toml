@@ -1,0 +1,28 @@
+# Streamlit Configuration File
+# 
+# HOW TO USE THIS FILE:
+# 1. Create a folder called ".streamlit" in your project directory
+# 2. Copy this file as "config.toml" inside that folder
+# 3. Restart Streamlit
+#
+# For example:
+# Your project folder/
+# ├── parquet_viewer_FINAL.py
+# ├── .streamlit/              (create this folder)
+# │   └── config.toml          (copy this file here, rename without underscore)
+# └── data/
+#     └── your_file.parquet
+
+[client]
+# Increase upload file size limit to 2GB (default is 200MB)
+maxUploadSize = 2000
+
+[logger]
+level = "error"
+
+[theme]
+primaryColor = "#1f77b4"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f0f2f6"
+textColor = "#262730"
+font = "sans serif"

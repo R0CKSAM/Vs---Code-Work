@@ -95,15 +95,15 @@ def build_cmcd_table(con, args: argparse.Namespace) -> None:
             COUNT(*) FILTER (WHERE statusCode = '200')::BIGINT AS status_200_ts_rows,
             COUNT(*) FILTER (WHERE cmcd_decoded IS NOT NULL)::BIGINT AS cmcd_rows,
             COUNT(*) FILTER (WHERE cmcd_sid IS NOT NULL)::BIGINT AS cmcd_sid_rows,
-            approx_count_distinct(cmcd_sid)::BIGINT AS distinct_cmcd_sessions,
-            approx_count_distinct(cmcd_cid)::BIGINT AS distinct_cmcd_content_ids,
+            COUNT(DISTINCT cmcd_sid)::BIGINT AS distinct_cmcd_sessions,
+            COUNT(DISTINCT cmcd_cid)::BIGINT AS distinct_cmcd_content_ids,
             SUM(COALESCE(cmcd_duration_ms, 0)) * {HOURS_PER_MILLISECOND:.16f}
                 AS cmcd_reported_duration_hours,
             AVG(cmcd_encoded_bitrate) AS avg_cmcd_encoded_bitrate,
             AVG(cmcd_measured_throughput) AS avg_cmcd_measured_throughput,
-            approx_count_distinct(cliIP)::BIGINT AS approx_unique_ips,
-            approx_count_distinct(UA)::BIGINT AS distinct_uas,
-            approx_count_distinct(COALESCE(cliIP, '') || '|' || COALESCE(UA, ''))::BIGINT AS distinct_ipua_pairs
+            COUNT(DISTINCT cliIP)::BIGINT AS approx_unique_ips,
+            COUNT(DISTINCT UA)::BIGINT AS distinct_uas,
+            COUNT(DISTINCT COALESCE(cliIP, '') || '|' || COALESCE(UA, ''))::BIGINT AS distinct_ipua_pairs
         FROM resolved
         GROUP BY 1,2,3,4,5,6,9
         """
@@ -121,8 +121,8 @@ def write_manifest(args: argparse.Namespace, new_rows: int, output_path: Path) -
             "end": args.end or "",
         },
         "metric_notes": {
-            "distinct_cmcd_sessions": "Approximate daily distinct CMCD sid values on FAST .ts rows, using DuckDB approx_count_distinct to keep large-day ETL memory-safe. This is playback-session telemetry, not app queryStr session_id.",
-            "distinct_cmcd_content_ids": "Approximate daily distinct CMCD cid values on FAST .ts rows, using DuckDB approx_count_distinct to keep large-day ETL memory-safe.",
+            "distinct_cmcd_sessions": "Exact daily distinct CMCD sid values on FAST .ts rows. This is playback-session telemetry, not app queryStr session_id.",
+            "distinct_cmcd_content_ids": "Exact daily distinct CMCD cid values on FAST .ts rows.",
             "cmcd_reported_duration_hours": "Sum of CMCD d= duration milliseconds converted to hours; only rows carrying CMCD contribute.",
             "cmcd_sid_rows": "Rows carrying a parseable CMCD sid.",
             "raw_ts_rows": "All FAST .ts rows for the platform/channel; use with cmcd_sid_rows for coverage.",

@@ -1,4 +1,4 @@
-﻿param(
+param(
     [string]$RemoteRoot = "veto:veto-stream-logs/veto-stream-logs",
     [string]$StreamRemoteRoot = "veto:veto-stream-logs/veto-stream-logs",
     [string]$FastRemoteRoot = "veto:veto-stream-logs/veto-fast-logs",
@@ -73,59 +73,12 @@ $DefaultOverviewLakeRoot = if ($OverviewLakeRoot) {
 }
 $env:VG_OVERVIEW_LAKE_ROOT = $DefaultOverviewLakeRoot
 $env:VG_OVERVIEW_SOURCES = $OverviewSources
-$DefaultTempCandidates = @()
-if ($env:VG_DUCKDB_TEMP_DIR) {
-    $DefaultTempCandidates += $env:VG_DUCKDB_TEMP_DIR
-}
-$DefaultTempCandidates += "\\192.168.50.11\analysis team\Veto Logs Backup\etl_temp\deep_profile"
-$DefaultTempCandidates += "Z:\Veto Logs Backup\etl_temp\deep_profile"
-$DefaultTempCandidates += (Join-Path $WorkspaceRoot "output\cache\duckdb_temp\deep_profile")
-if ($env:LOCALAPPDATA) {
-    $DefaultTempCandidates += (Join-Path $env:LOCALAPPDATA "VetoETL\duckdb_temp\deep_profile")
-}
-
-function Get-TempCandidateFreeBytes {
-    param([Parameter(Mandatory = $true)][string]$Path)
-
-    try {
-        $root = [System.IO.Path]::GetPathRoot($Path)
-        if (-not $root) { return -1 }
-        if ($root.StartsWith("\\")) {
-            # UNC shares do not always report reliably through DriveInfo on Windows.
-            # Use them only when the share root is reachable.
-            if (-not (Test-Path $root)) { return -1 }
-            return [int64]::MaxValue
-        }
-        if (-not (Test-Path $root)) { return -1 }
-        return ([System.IO.DriveInfo]::new($root)).AvailableFreeSpace
-    } catch {
-        return -1
-    }
-}
-
-function Resolve-DefaultDuckDbTempDir {
-    param([string[]]$Candidates)
-
-    $bestPath = $null
-    $bestFree = -1
-    foreach ($candidate in $Candidates) {
-        if (-not $candidate) { continue }
-        $free = Get-TempCandidateFreeBytes -Path $candidate
-        if ($free -gt $bestFree) {
-            $bestPath = $candidate
-            $bestFree = $free
-        }
-    }
-    if ($bestPath) { return $bestPath }
-    return (Join-Path $WorkspaceRoot "output\cache\duckdb_temp\deep_profile")
-}
-
 $DefaultDeepProfileTempDir = if ($DeepProfileTempDir) {
     $DeepProfileTempDir
-} elseif ($env:VG_DUCKDB_TEMP_DIR) {
-    $env:VG_DUCKDB_TEMP_DIR
+} elseif ($env:LOCALAPPDATA) {
+    Join-Path $env:LOCALAPPDATA "VetoETL\duckdb_temp\deep_profile"
 } else {
-    Resolve-DefaultDuckDbTempDir -Candidates $DefaultTempCandidates
+    Join-Path $WorkspaceRoot "output\cache\duckdb_temp\deep_profile"
 }
 $env:VG_DUCKDB_TEMP_DIR = $DefaultDeepProfileTempDir
 try {

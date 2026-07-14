@@ -2129,10 +2129,7 @@ def main() -> None:
                 "--out-dir",
                 str(output_root / "watch_hours" / "concurrency"),
                 "--threads",
-                # CMCD aggregation is the memory-heavy FAST concurrency step; keep
-                # it independent from the wider concurrency thread count so a
-                # large FAST day cannot skip the dashboard refresh.
-                str(max(1, min(int(args.concurrency_threads), 2))),
+                str(max(1, int(args.concurrency_threads))),
                 "--memory-limit",
                 args.concurrency_memory,
             ]
@@ -2190,12 +2187,6 @@ def main() -> None:
         for latency_source in latency_sources:
             source_start = latency_start
             source_end = latency_end
-            latency_step_threads = max(1, int(args.latency_threads))
-            if latency_source == "fast":
-                # FAST latency days are much larger than STREAM; clamping only
-                # this source prevents DuckDB memory pressure without slowing
-                # the smaller STREAM pass.
-                latency_step_threads = min(latency_step_threads, 2)
             latency_cmd = [
                 python,
                 str(latency_incremental_script),
@@ -2214,7 +2205,7 @@ def main() -> None:
             "--title",
             "Veto Latency",
             "--threads",
-                str(latency_step_threads),
+                str(max(1, int(args.latency_threads))),
                 "--memory-limit",
                 args.latency_memory,
             ]
@@ -2444,4 +2435,3 @@ if __name__ == "__main__":
             )
             RUN_RECORDER.finish("failed")
         raise
-

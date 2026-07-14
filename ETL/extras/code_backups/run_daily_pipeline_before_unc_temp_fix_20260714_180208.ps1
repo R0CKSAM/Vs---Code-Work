@@ -77,7 +77,6 @@ $DefaultTempCandidates = @()
 if ($env:VG_DUCKDB_TEMP_DIR) {
     $DefaultTempCandidates += $env:VG_DUCKDB_TEMP_DIR
 }
-$DefaultTempCandidates += "\\192.168.50.11\analysis team\Veto Logs Backup\etl_temp\deep_profile"
 $DefaultTempCandidates += "Z:\Veto Logs Backup\etl_temp\deep_profile"
 $DefaultTempCandidates += (Join-Path $WorkspaceRoot "output\cache\duckdb_temp\deep_profile")
 if ($env:LOCALAPPDATA) {
@@ -92,8 +91,7 @@ function Get-TempCandidateFreeBytes {
         if (-not $root) { return -1 }
         if ($root.StartsWith("\\")) {
             # UNC shares do not always report reliably through DriveInfo on Windows.
-            # Use them only when the share root is reachable.
-            if (-not (Test-Path $root)) { return -1 }
+            # Treat them as usable when the share root is reachable.
             return [int64]::MaxValue
         }
         if (-not (Test-Path $root)) { return -1 }

@@ -1,0 +1,71 @@
+===============================================
+FASTEST WAY TO GET STARTED (Copy & Paste)
+===============================================
+
+STEP 1: Copy the command below and paste in Command Prompt or Terminal
+
+Windows (Command Prompt):
+pip install streamlit polars pyarrow && streamlit run parquet_viewer_FINAL.py
+
+Mac/Linux (Terminal):
+pip install streamlit polars pyarrow && streamlit run parquet_viewer_FINAL.py
+
+STEP 2: Press Enter
+
+STEP 3: A browser window will open
+- Select "Direct File Path (Recommended)"
+- Copy full path to your file
+- Example: D:\Veto Logs Backup\Vs - Code Work\ETL\ParquetReader\part_stream_2026_07_09_0.parquet
+- Paste in the text box
+- Click "Load File"
+
+STEP 4: Done! Your data loads instantly ⚡
+
+===============================================
+WHAT TO DO IF SOMETHING BREAKS
+===============================================
+
+Error: "Module not found"
+→ Run again: pip install streamlit polars pyarrow
+
+Error: "File not found"
+→ Make sure path is complete including drive letter (C:\, D:\, etc.)
+→ Don't use relative paths
+
+Error: "Address already in use"
+→ Press Ctrl+C to stop
+→ Wait 5 seconds
+→ Run command again
+
+App won't start
+→ pip install --upgrade streamlit
+
+===============================================
+FILES TO USE
+===============================================
+
+✅ parquet_viewer_FINAL.py       (USE THIS)
+❌ parquet_viewer_FIXED.py       (has error, don't use)
+❌ parquet_viewer_1gb.py         (old version, don't use)
+
+===============================================
+IF YOU PREFER NO UI (Pure Python)
+===============================================
+
+Option 1: Edit file and run
+- Open parquet_reader_STANDALONE.py
+- Change line 80: PARQUET_FILE = "path/to/your/file.parquet"
+- Run: python parquet_reader_STANDALONE.py
+
+Option 2: Run with argument
+python parquet_reader_STANDALONE.py "C:\path\to\file.parquet"
+
+===============================================
+THAT'S IT!
+===============================================
+
+Most common issue: Using wrong file path
+- Right-click file → Properties → Copy path
+- Paste in app → It works
+
+Any questions? Read START_HERE.md for detailed guide.

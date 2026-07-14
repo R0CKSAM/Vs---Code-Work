@@ -1,15 +1,15 @@
 {
-  "generated_at_utc": "2026-07-13T05:12:13.406231+00:00",
+  "generated_at_utc": "2026-07-14T06:23:08.352221+00:00",
   "source": "fast",
   "lake": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
   "output": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\output\\watch_hours\\concurrency\\fast_platform_channel_cmcd_daily.parquet",
   "date_range_replaced": {
-    "start": "2026-07-12",
-    "end": "2026-07-13"
+    "start": "2026-07-13",
+    "end": "2026-07-14"
   },
   "metric_notes": {
-    "distinct_cmcd_sessions": "Exact daily distinct CMCD sid values on FAST .ts rows. This is playback-session telemetry, not app queryStr session_id.",
-    "distinct_cmcd_content_ids": "Exact daily distinct CMCD cid values on FAST .ts rows.",
+    "distinct_cmcd_sessions": "Approximate daily distinct CMCD sid values on FAST .ts rows, using DuckDB approx_count_distinct to keep large-day ETL memory-safe. This is playback-session telemetry, not app queryStr session_id.",
+    "distinct_cmcd_content_ids": "Approximate daily distinct CMCD cid values on FAST .ts rows, using DuckDB approx_count_distinct to keep large-day ETL memory-safe.",
     "cmcd_reported_duration_hours": "Sum of CMCD d= duration milliseconds converted to hours; only rows carrying CMCD contribute.",
     "cmcd_sid_rows": "Rows carrying a parseable CMCD sid.",
     "raw_ts_rows": "All FAST .ts rows for the platform/channel; use with cmcd_sid_rows for coverage."

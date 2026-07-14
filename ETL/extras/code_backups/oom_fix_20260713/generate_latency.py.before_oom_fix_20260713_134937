@@ -335,10 +335,10 @@ def build_tables(args: argparse.Namespace) -> dict[str, pd.DataFrame]:
     con = None  # FIX-6
     try:
         con = connect(args)  # FIX-6
-        logger.info("Creating latency base view...")  # FIX-11
+        logger.info("Creating latency base table...")  # FIX-11
         con.execute(
             f"""
-            CREATE OR REPLACE TEMP VIEW latency_base AS
+            CREATE OR REPLACE TEMP TABLE latency_base AS
             WITH raw AS (
                 SELECT
                     COALESCE(CAST(source AS VARCHAR), 'stream') AS source,
