@@ -68,6 +68,24 @@
       "class",
       "genre",
       "vertical"
+    ],
+    "programme_name": [
+      "programme",
+      "programme name",
+      "program",
+      "program name",
+      "show",
+      "show name",
+      "content",
+      "property"
+    ],
+    "programme_type": [
+      "programme type",
+      "program type",
+      "show type",
+      "content type",
+      "program genre",
+      "programme genre"
     ]
   }
 }

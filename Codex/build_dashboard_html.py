@@ -23,7 +23,7 @@ TIME_OPTIONS = '<option value="minutes">Minutes</option><option value="seconds">
 CATEGORY_FIELDS = ["category", "categoryDropdown", "categoryTrigger", "categoryValue", "categorySearch", "categoryOptions", "categoryAll", "categoryClear"]
 CHANNEL_FIELDS = ["channel", "channelDropdown", "channelTrigger", "channelValue", "channelSearch", "channelOptions", "channelAll", "channelClear"]
 ADVERTISOR_FIELDS = ["advertisor", "advertisorDropdown", "advertisorTrigger", "advertisorValue", "advertisorSearch", "advertisorOptions", "advertisorAll", "advertisorClear"]
-DOM_FIELD_SUFFIXES = {"topN": "TopN", "start": "Start", "end": "End", "channel": "Channel", "channelDropdown": "ChannelDropdown", "channelTrigger": "ChannelTrigger", "channelValue": "ChannelValue", "channelSearch": "ChannelSearch", "channelOptions": "ChannelOptions", "channelAll": "ChannelAll", "channelClear": "ChannelClear", "category": "Category", "categoryDropdown": "CategoryDropdown", "categoryTrigger": "CategoryTrigger", "categoryValue": "CategoryValue", "categorySearch": "CategorySearch", "categoryOptions": "CategoryOptions", "categoryAll": "CategoryAll", "categoryClear": "CategoryClear", "reset": "Reset", "legend": "Legend", "chart": "Chart", "metric": "Metric", "fullBtn": "FullBtn", "barBtn": "BarBtn", "heatmapBtn": "HeatmapBtn", "pieBtn": "PieBtn", "advertisor": "Advertisor", "advertisorDropdown": "AdvertisorDropdown", "advertisorTrigger": "AdvertisorTrigger", "advertisorValue": "AdvertisorValue", "advertisorSearch": "AdvertisorSearch", "advertisorOptions": "AdvertisorOptions", "advertisorAll": "AdvertisorAll", "advertisorClear": "AdvertisorClear", "time": "Time", "totalGrid": "TotalGrid"}
+DOM_FIELD_SUFFIXES = {"topN": "TopN", "start": "Start", "end": "End", "channel": "Channel", "channelDropdown": "ChannelDropdown", "channelTrigger": "ChannelTrigger", "channelValue": "ChannelValue", "channelSearch": "ChannelSearch", "channelOptions": "ChannelOptions", "channelAll": "ChannelAll", "channelClear": "ChannelClear", "category": "Category", "categoryDropdown": "CategoryDropdown", "categoryTrigger": "CategoryTrigger", "categoryValue": "CategoryValue", "categorySearch": "CategorySearch", "categoryOptions": "CategoryOptions", "categoryAll": "CategoryAll", "categoryClear": "CategoryClear", "reset": "Reset", "legend": "Legend", "chart": "Chart", "metric": "Metric", "fullBtn": "FullBtn", "barBtn": "BarBtn", "heatmapBtn": "HeatmapBtn", "pieBtn": "PieBtn", "advertisor": "Advertisor", "advertisorDropdown": "AdvertisorDropdown", "advertisorTrigger": "AdvertisorTrigger", "advertisorValue": "AdvertisorValue", "advertisorSearch": "AdvertisorSearch", "advertisorOptions": "AdvertisorOptions", "advertisorAll": "AdvertisorAll", "advertisorClear": "AdvertisorClear", "time": "Time", "totalGrid": "TotalGrid", "insight": "Insight"}
 def section_config(key: str, section_class: str, title: str, chart_id: str, controls: list[tuple], extras: str = "", head_actions: str = "", state: str = "", dom_fields: list[str] | None = None) -> dict:
     return {"key": key, "section_class": section_class, "title": title, "chart_id": chart_id, "controls": controls, "extras": extras, "head_actions": head_actions, "state": state, "dom_fields": dom_fields or []}
 SECTION_CONFIGS = [
@@ -32,6 +32,11 @@ SECTION_CONFIGS = [
     section_config("g3", "section", "Top Advertiser by Date (FCT)", "g3Chart", [("select", "TopN", "Top N", TOP_N_OPTIONS), ("date", "Start", "Start Date"), ("date", "End", "End Date"), ("multi", "channel", "Channel", "All Channels", "Search channels"), ("category",), ("reset", "Reset")], extras='        <div class="legend" id="g3Legend"></div>', head_actions='            <div class="toggle-group">\n              <button class="toggle-btn active" id="g3HeatmapBtn" type="button">Heatmap</button>\n              <button class="toggle-btn" id="g3BarBtn" type="button">Bar Chart</button>\n            </div>\n', state="{ topN: '10', start: '', end: '', channel: [], category: [], view: 'heat' }", dom_fields=["topN", "start", "end", *CHANNEL_FIELDS, *CATEGORY_FIELDS, "reset", "legend", "chart", "panel", "fullBtn", "heatmapBtn", "barBtn"]),
     section_config("g4", "section", "Channel Category Overview", "g4Chart", [("select", "TopN", "Category View", TOP_N_OPTIONS), ("date", "Start", "Start Date"), ("date", "End", "End Date"), ("multi", "channel", "Channel", "All Channels", "Search channels"), ("reset", "Reset")], state="{ topN: '10', start: '', end: '', channel: [], category: '', view: 'heat' }", dom_fields=["topN", "start", "end", *CHANNEL_FIELDS, "reset", "chart", "panel", "fullBtn"]),
     section_config("g5", "section", "FCT Hourly Analysis", "g5Chart", [("date", "Start", "Start Date"), ("date", "End", "End Date"), ("multi", "channel", "Channel", "All Channels", "Search channels"), ("category",), ("multi", "advertisor", "Advertiser", "All Advertisers", "Search advertisers"), ("select", "Time", "Time", TIME_OPTIONS), ("reset", "Reset")], extras='        <div class="legend-scale" id="g5Legend">\n          <span>Low AD Duration</span>\n          <div class="legend-gradient"></div>\n          <span>High AD Duration</span>\n        </div>\n        <div class="total-panel">\n          <div class="total-title">Total</div>\n          <div class="total-grid" id="g5TotalGrid"></div>\n        </div>', state="{ start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'heat' }", dom_fields=["start", "end", *CHANNEL_FIELDS, *CATEGORY_FIELDS, *ADVERTISOR_FIELDS, "time", "reset", "legend", "chart", "totalGrid", "panel", "fullBtn"]),
+    section_config("g6", "section", "Average Creative Duration", "g6Chart", [], extras='        <div class="legend" id="g6Legend"></div>\n        <div class="chart-metric" id="g6Metric"></div>', state="{ topN: '10', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'bar' }", dom_fields=["legend", "chart", "metric", "panel", "fullBtn"]),
+    section_config("g7", "section", "Day-wise Advertising Activity", "g7Chart", [], state="{ topN: '10', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'line' }", dom_fields=["chart", "panel", "fullBtn"]),
+    section_config("g8", "section", "Leading Advertising Categories", "g8Chart", [], extras='        <div class="legend" id="g8Legend"></div>', state="{ topN: '10', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'bar' }", dom_fields=["legend", "chart", "panel", "fullBtn"]),
+    section_config("g9", "section", "High-value Programmes", "g9Chart", [], extras='        <div class="legend" id="g9Legend"></div>', state="{ topN: '10', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'cherry' }", dom_fields=["legend", "chart", "panel", "fullBtn"]),
+    section_config("g10", "section", "Category Programme Preference", "g10Chart", [], extras='        <div class="legend-scale g10-legend-scale" id="g10Legend">\n          <span>Low Volume</span>\n          <div class="legend-gradient"></div>\n          <span>High Volume</span>\n        </div>', state="{ topN: '10', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'heat' }", dom_fields=["legend", "chart", "panel", "fullBtn"]),
 ]
 def parse_date(value: str) -> str:
     value = (value or "").strip()
@@ -134,18 +139,25 @@ def build_global_filter_html() -> str:
       </div>
     </section>"""
 def section_block(section_class: str, title: str, controls: list[str], chart_id: str, extras: str = "", head_actions: str = "") -> str:
+    controls_html = f"""        <div class="section-controls">
+{chr(10).join(controls)}
+        </div>
+""" if controls else ""
+    full_btn_id = chart_id.replace("Chart", "FullBtn")
+    section_key = chart_id.replace("Chart", "")
     return f"""    <section class="{section_class}">
       <div class="section-head">
         <h2>{title}</h2>
       </div>
       <div class="panel section-card">
-        <div class="section-controls">
-{chr(10).join(controls)}
+        <div class="fullscreen-focus-header" aria-hidden="true">
+          <h3>{title}</h3>
+          <div class="chart-insight" id="{section_key}Insight"></div>
         </div>
-        <div class="chart-head">
+{controls_html}        <div class="chart-head">
           <div class="chart-actions">
 {head_actions}
-            <button class="full-btn" id="{chart_id[:2]}FullBtn" type="button">Full Screen</button>
+            <button class="full-btn" id="{full_btn_id}" type="button">Full Screen</button>
           </div>
         </div>
 {extras}
@@ -154,13 +166,65 @@ def section_block(section_class: str, title: str, controls: list[str], chart_id:
     </section>"""
 def build_sections_html() -> str:
     return "\n\n".join(section_block(config["section_class"], config["title"], build_controls(config["key"], config["controls"]), config["chart_id"], config["extras"], config["head_actions"]) for config in SECTION_CONFIGS)
+def build_tail_summary_html() -> str:
+    return """    <section class="section tail-summary-section" id="tailSummarySection">
+      <div class="section-head">
+        <h2>Performance Snapshots</h2>
+      </div>
+      <div class="panel section-card tail-summary-card">
+        <div class="tail-summary-block">
+          <div class="tail-summary-header">
+            <h3 class="tail-summary-title">Weekday vs Weekend</h3>
+            <div class="tail-filter-group" id="dayTypeFilter" role="tablist" aria-label="Day Type Filter">
+              <button class="tail-filter-btn active" data-value="weekday" type="button">Weekday</button>
+              <button class="tail-filter-btn" data-value="weekend" type="button">Weekend</button>
+            </div>
+          </div>
+          <div class="tail-card-grid" id="dayTypeSummaryGrid">
+            <div class="tail-stat-card">
+              <div class="tail-stat-label">Top Performing Brand</div>
+              <div class="tail-stat-value" id="dayTypeTopBrand">-</div>
+              <div class="tail-stat-note" id="dayTypeTopBrandNote"></div>
+            </div>
+            <div class="tail-stat-card">
+              <div class="tail-stat-label">Top Category</div>
+              <div class="tail-stat-value" id="dayTypeTopCategory">-</div>
+              <div class="tail-stat-note" id="dayTypeTopCategoryNote"></div>
+            </div>
+            <div class="tail-stat-card">
+              <div class="tail-stat-label">Spot Length</div>
+              <div class="tail-stat-value" id="dayTypeSpotLength">-</div>
+              <div class="tail-stat-note" id="dayTypeSpotLengthNote"></div>
+            </div>
+          </div>
+        </div>
+        <div class="tail-summary-divider"></div>
+        <div class="tail-summary-block">
+          <div class="tail-summary-header">
+            <h3 class="tail-summary-title">Time Period Row Count</h3>
+            <div class="tail-filter-group" id="periodFilter" role="tablist" aria-label="Time Period Filter">
+              <button class="tail-filter-btn active" data-value="day" type="button">Day</button>
+              <button class="tail-filter-btn" data-value="week" type="button">Week</button>
+              <button class="tail-filter-btn" data-value="month" type="button">Month</button>
+            </div>
+          </div>
+          <div class="tail-card-grid tail-card-grid-single">
+            <div class="tail-stat-card">
+              <div class="tail-stat-label">Number of Rows</div>
+              <div class="tail-stat-value" id="periodRowCount">0</div>
+              <div class="tail-stat-note" id="periodRowCountNote"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>"""
 def build_state_sections_js() -> str:
     return "\n".join(f"        {config['key']}: {config['state']}{',' if index < len(SECTION_CONFIGS) - 1 else ''}" for index, config in enumerate(SECTION_CONFIGS))
 def build_dom_sections_js() -> str:
     blocks = []
     for config in SECTION_CONFIGS:
         key = config["key"]
-        fields = config["dom_fields"]
+        fields = config["dom_fields"] + ([] if "insight" in config["dom_fields"] else ["insight"])
         lines = [f"        {key}: {{"]
         for field in fields:
             lines.append(
@@ -190,6 +254,8 @@ html = """<!DOCTYPE html>
       --muted: #6b7280;
       --shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
       --font: "Segoe UI", Arial, sans-serif;
+      --brand: #2563eb;
+      --teal: #0f766e;
       --accent-1: #2563eb;
       --accent-2: #60a5fa;
       --accent-3: #1d4ed8;
@@ -928,6 +994,14 @@ html = """<!DOCTYPE html>
       transition: background 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
       overflow: hidden;
     }
+    @keyframes chartFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .chart-animated {
+      animation: chartFadeIn 220ms ease;
+      transform-origin: center;
+    }
     .chart-box.top20-mode {
       height: clamp(520px, 64vw, 760px);
     }
@@ -993,10 +1067,15 @@ html = """<!DOCTYPE html>
       border: 1px solid var(--line);
       background: linear-gradient(90deg, rgba(46, 107, 16, 0.080) 0%, rgba(46, 107, 16, 0.180) 35%, rgba(46, 107, 16, 0.280) 68%, rgba(46, 107, 16, 0.364) 100%);
     }
+    .g10-legend-scale .legend-gradient {
+      background: linear-gradient(90deg, #eff6ff 0%, #bfdbfe 35%, #60a5fa 68%, #1d4ed8 100%);
+    }
     .legend-item {
       display: inline-flex;
       align-items: center;
       gap: 7px;
+      color: var(--text);
+      font-weight: 600;
     }
     .legend-swatch {
       width: 10px;
@@ -1009,6 +1088,13 @@ html = """<!DOCTYPE html>
       height: 100%;
       display: block;
       overflow: visible;
+    }
+    svg.chart text,
+    svg.chart tspan,
+    .chart-label {
+      fill: var(--text);
+      color: var(--text);
+      font-family: "Segoe UI", Arial, sans-serif;
     }
     .excluded-inline {
       color: #7f1d1d;
@@ -1076,6 +1162,132 @@ html = """<!DOCTYPE html>
     .summary-line strong {
       font-weight: 400;
     }
+    .tail-summary-card {
+      display: grid;
+      gap: 12px;
+      padding: 12px 14px;
+    }
+    .tail-summary-block {
+      display: grid;
+      gap: 10px;
+    }
+    .tail-summary-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .tail-summary-title {
+      margin: 0;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+    .tail-filter-group {
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface-soft);
+    }
+    .tail-filter-btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 7px 12px;
+      background: transparent;
+      color: var(--muted);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1;
+      cursor: pointer;
+      transition: background 180ms ease, color 180ms ease, box-shadow 180ms ease;
+    }
+    .tail-filter-btn.active {
+      background: #2563eb;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.16);
+    }
+    .tail-card-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .tail-card-grid-single {
+      grid-template-columns: minmax(0, 240px);
+    }
+    .tail-stat-card {
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+      display: grid;
+      gap: 4px;
+      min-height: 92px;
+      align-content: start;
+    }
+    .tail-stat-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.35px;
+      text-transform: uppercase;
+    }
+    .tail-stat-value {
+      color: var(--text);
+      font-size: 20px;
+      font-weight: 900;
+      line-height: 1.1;
+      word-break: break-word;
+    }
+    .tail-stat-note {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+    .tail-summary-divider {
+      height: 1px;
+      width: 100%;
+      background: var(--line);
+    }
+    .fullscreen-focus-header {
+      display: none;
+      margin-bottom: 12px;
+    }
+    .fullscreen-focus-header h3 {
+      margin: 0 0 10px;
+      color: var(--text);
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      line-height: 1.1;
+    }
+    .chart-insight {
+      display: none;
+      padding: 10px 12px;
+      border: 1px solid rgba(37, 99, 235, 0.14);
+      border-radius: 10px;
+      background: linear-gradient(90deg, rgba(37, 99, 235, 0.10), rgba(15, 118, 110, 0.08));
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+    .chart-insight.visible {
+      display: block;
+    }
+    .chart-insight-label {
+      color: var(--accent-3);
+      font-weight: 800;
+      margin-right: 6px;
+    }
     .info-note {
       margin-top: 10px;
       color: var(--muted);
@@ -1123,6 +1335,14 @@ html = """<!DOCTYPE html>
     .panel:fullscreen .chart-head,
     .panel:-webkit-full-screen .chart-head {
       margin-top: 6px;
+    }
+    .panel:fullscreen .fullscreen-focus-header,
+    .panel:-webkit-full-screen .fullscreen-focus-header {
+      display: block;
+    }
+    .panel:fullscreen .chart-insight.visible,
+    .panel:-webkit-full-screen .chart-insight.visible {
+      display: block;
     }
     .panel:fullscreen .chart-box, .panel:-webkit-full-screen .chart-box {
       height: calc(100vh - 280px);
@@ -1204,6 +1424,20 @@ html = """<!DOCTYPE html>
       .chart-box.top20-mode {
         height: clamp(460px, 88vw, 700px);
       }
+      .tail-card-grid,
+      .tail-card-grid-single {
+        grid-template-columns: 1fr;
+      }
+      .tail-summary-header {
+        align-items: flex-start;
+      }
+      .tail-filter-group {
+        width: 100%;
+        border-radius: 14px;
+      }
+      .tail-stat-card {
+        min-height: 0;
+      }
     }
   </style>
 </head>
@@ -1269,6 +1503,7 @@ __GLOBAL_FILTER_HTML__
       </div>
     </section>
 __SECTIONS_HTML__
+__TAIL_SUMMARY_HTML__
     <button class="share-fab" id="shareBtn" type="button" title="Share Dashboard" aria-label="Share Dashboard">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 16V5"></path>
@@ -1307,6 +1542,11 @@ __XLSX_BUNDLE__
       g1: ['#3b82f6', '#22c55e', '#ef4444', '#a855f7'],
       g2: ['#3b82f6', '#22c55e', '#ef4444', '#a855f7'],
       g3: ['#1d4ed8', '#0f766e', '#b45309', '#7c3aed', '#be123c', '#0369a1', '#166534', '#7f1d1d'],
+      g6: ['#dbeafe', '#93c5fd', '#60a5fa', '#2563eb'],
+      g7: '#2563eb',
+      g8: ['#2563eb'],
+      g9: ['#2563eb', '#22c55e', '#f59e0b', '#7c3aed', '#ef4444', '#14b8a6'],
+      g10: ['rgba(233, 241, 249, 0.38)', 'rgba(194, 214, 232, 0.50)', 'rgba(111, 145, 176, 0.65)', 'rgba(52, 92, 129, 0.78)', 'rgba(23, 59, 92, 0.90)'],
       heat: ['#eef4ff', '#dbeafe', '#93c5fd', '#60a5fa', '#2563eb'],
       g4heat: ['#e0f2fe', '#7dd3fc', '#7dd3fc'],
       g5heat: ['#f3f4f6', '#e5e7eb', '#d1d5db', '#9ca3af', '#9ca3af']
@@ -1320,6 +1560,10 @@ __XLSX_BUNDLE__
       pendingWorkbook: null,
       pendingWorkbookFileName: '',
       pendingWorkbookSelectedSheet: '',
+      supplemental: {
+        dayType: 'weekday',
+        period: 'day'
+      },
       global: {
         topN: '10',
         start: '',
@@ -1352,8 +1596,19 @@ __STATE_SECTIONS_JS__
       totalRecordsText: document.getElementById('totalRecordsText'),
       excludedChips: document.getElementById('excludedChips'),
       summaryLines: document.getElementById('summaryLines'),
+      dayTypeFilter: document.getElementById('dayTypeFilter'),
+      periodFilter: document.getElementById('periodFilter'),
+      dayTypeTopBrand: document.getElementById('dayTypeTopBrand'),
+      dayTypeTopBrandNote: document.getElementById('dayTypeTopBrandNote'),
+      dayTypeTopCategory: document.getElementById('dayTypeTopCategory'),
+      dayTypeTopCategoryNote: document.getElementById('dayTypeTopCategoryNote'),
+      dayTypeSpotLength: document.getElementById('dayTypeSpotLength'),
+      dayTypeSpotLengthNote: document.getElementById('dayTypeSpotLengthNote'),
+      periodRowCount: document.getElementById('periodRowCount'),
+      periodRowCountNote: document.getElementById('periodRowCountNote'),
       headerSection: document.getElementById('dashboardHeaderSection'),
       summarySection: document.getElementById('dashboardSummarySection'),
+      tailSummarySection: document.getElementById('tailSummarySection'),
       stickyFilterWrap: document.getElementById('stickyFilterWrap'),
       stickyFilterShell: document.getElementById('stickyFilterShell'),
       global: {
@@ -1391,7 +1646,7 @@ __STATE_SECTIONS_JS__
 __DOM_SECTIONS_JS__
       }
     };
-    const SECTION_KEYS = ['g1', 'g2', 'g3', 'g4', 'g5'];
+    const SECTION_KEYS = ['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'g9', 'g10'];
     const CATEGORY_SECTION_KEYS = ['g1', 'g2', 'g3', 'g5'];
     function formatNumber(value) { return numberFormat.format(value || 0); }
     function sentenceCaseName(value) {
@@ -1493,7 +1748,9 @@ __DOM_SECTIONS_JS__
         product: String(record['Brand Name'] || '').trim(),
         company: String(record['Company'] || '').trim(),
         aaddur: Number.isFinite(aaddur) ? aaddur : 0,
-        category: String(record['Category'] || '').trim()
+        category: String(record['Category'] || '').trim(),
+        programme: String(record['Programme Name'] || record['Program Name'] || '').trim(),
+        programmeType: String(record['Programme Type'] || record['Program Type'] || '').trim()
       };
     }
     function logPreprocessInfo(message, details) {
@@ -1524,7 +1781,9 @@ __DOM_SECTIONS_JS__
         brand_name: 'Brand Name',
         company_name: 'Company',
         metric_value: 'Aaddur',
-        category_name: 'Category'
+        category_name: 'Category',
+        programme_name: 'Programme Name',
+        programme_type: 'Programme Type'
       };
     }
     function loadDatasetFromCsvText(text) {
@@ -1638,6 +1897,8 @@ __DOM_SECTIONS_JS__
       const company = choose(['company', 'client', 'customer', 'account', 'owner', 'group'], textPredicate, true);
       const product = choose(['brand', 'product', 'advertiser', 'campaign', 'item', 'title', 'name'], textPredicate, true);
       const category = choose(['category', 'segment', 'type', 'class', 'genre', 'vertical'], textPredicate, true);
+      const programme = choose(['programme', 'program', 'show', 'content', 'property'], textPredicate);
+      const programmeType = choose(['programme type', 'program type', 'show type', 'content type', 'genre'], textPredicate);
       return {
         report_date: date,
         time_slot: adtime,
@@ -1646,7 +1907,9 @@ __DOM_SECTIONS_JS__
         channel_name: channel,
         company_name: company,
         brand_name: product,
-        category_name: category
+        category_name: category,
+        programme_name: programme,
+        programme_type: programmeType
       };
     }
     function standardizeColumns(records) {
@@ -1749,7 +2012,9 @@ __DOM_SECTIONS_JS__
         [labels.brand_name]: record.brand_name || '',
         [labels.company_name]: record.company_name || '',
         [labels.metric_value]: record.metric_value ?? '1',
-        [labels.category_name]: record.category_name || ''
+        [labels.category_name]: record.category_name || '',
+        [labels.programme_name]: record.programme_name || '',
+        [labels.programme_type]: record.programme_type || ''
       });
     }
     function preprocessDataset(records, sourceLabel) {
@@ -1970,6 +2235,24 @@ __DOM_SECTIONS_JS__
       const a = start.a + (end.a - start.a) * mix;
       return `rgba(${r}, ${g}, ${b}, ${a.toFixed(3)})`;
     }
+    function themeVar(name, fallback) {
+      const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      return value || fallback;
+    }
+    function appendLinearGradient(svg, gradientId, startColor, endColor, horizontal = true) {
+      let defs = svg.querySelector('defs');
+      if (!defs) {
+        defs = svgEl('defs');
+        svg.appendChild(defs);
+      }
+      const gradient = svgEl('linearGradient', horizontal
+        ? { id: gradientId, x1: '0%', y1: '0%', x2: '100%', y2: '0%' }
+        : { id: gradientId, x1: '0%', y1: '100%', x2: '0%', y2: '0%' });
+      gradient.appendChild(svgEl('stop', { offset: '0%', 'stop-color': startColor }));
+      gradient.appendChild(svgEl('stop', { offset: '100%', 'stop-color': endColor }));
+      defs.appendChild(gradient);
+      return `url(#${gradientId})`;
+    }
     function graph4HeatColor(value, maxValue) {
       const scale = Math.max(0, Math.min(1, value / Math.max(maxValue, 1)));
       return interpolateRgbaColor(
@@ -1977,6 +2260,18 @@ __DOM_SECTIONS_JS__
         { r: 74, g: 65, b: 168, a: 0.313 },
         scale
       );
+    }
+    function graph10HeatColor(value, maxValue) {
+      const scale = Math.max(0, Math.min(1, value / Math.max(maxValue, 1)));
+      return interpolateRgbaColor(
+        { r: 233, g: 241, b: 249, a: 0.38 },
+        { r: 23, g: 59, b: 92, a: 0.90 },
+        scale
+      );
+    }
+    function graph10LabelColor(value, maxValue) {
+      const scale = Math.max(0, Math.min(1, value / Math.max(maxValue, 1)));
+      return scale >= 0.58 ? '#ffffff' : '#172033';
     }
     function channelColor(channel, paletteKey) {
       const fixed = CHANNEL_COLORS[String(channel || '').trim().toUpperCase()];
@@ -2022,10 +2317,12 @@ __DOM_SECTIONS_JS__
     function makeSvg(box) {
       const width = Math.max(box.clientWidth || 900, 320);
       const height = Math.max(box.clientHeight || 500, 260);
+      box.style.overflowX = 'hidden';
       box.innerHTML = '';
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-      svg.setAttribute('class', 'chart');
+      svg.setAttribute('class', 'chart chart-animated');
+      svg.style.fontFamily = '"Segoe UI", Arial, sans-serif';
       box.appendChild(svg);
       return { svg, width, height };
     }
@@ -2033,6 +2330,9 @@ __DOM_SECTIONS_JS__
       const el = document.createElementNS('http://www.w3.org/2000/svg', name);
       Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
       return el;
+    }
+    function chartLabelColor() {
+      return themeVar('--text', '#172033');
     }
     function addWrappedText(svg, text, x, y, maxChars, fill, size, anchor, weight) {
       const parts = [];
@@ -2046,7 +2346,7 @@ __DOM_SECTIONS_JS__
       if (remaining) parts.push(remaining);
       const scaledSize = Math.round((size || 12) * 1.18 * 10) / 10;
       const textEl = svgEl('text', {
-        x, y, fill,
+        x, y, fill: fill || chartLabelColor(),
         'font-size': scaledSize,
         'font-weight': weight || 700,
         'text-anchor': anchor || 'middle'
@@ -2059,6 +2359,7 @@ __DOM_SECTIONS_JS__
       svg.appendChild(textEl);
     }
     function drawEmpty(box, message) {
+      box.style.overflowX = 'hidden';
       box.innerHTML = `<div class="empty">${message}</div>`;
     }
     function populateSelect(select, values, placeholder) {
@@ -2130,6 +2431,10 @@ __DOM_SECTIONS_JS__
       state.pendingWorkbook = null;
       state.pendingWorkbookFileName = '';
       state.pendingWorkbookSelectedSheet = '';
+      state.supplemental = {
+        dayType: 'weekday',
+        period: 'day'
+      };
       state.global = {
         topN: '10',
         start: '',
@@ -2144,7 +2449,12 @@ __DOM_SECTIONS_JS__
         g2: { topN: '10', start: '', end: '', channel: [], category: [], view: 'bar' },
         g3: { topN: '10', start: '', end: '', channel: [], category: [], view: 'heat' },
         g4: { topN: '10', start: '', end: '', channel: [], category: '', view: 'heat' },
-        g5: { start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'heat' }
+        g5: { start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'heat' },
+        g6: { topN: '10', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'bar' },
+        g7: { topN: '10', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'line' },
+        g8: { topN: '10', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'bar' },
+        g9: { topN: '10', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'cherry' },
+        g10: { topN: '10', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'heat' }
       };
       if (dom.totalRecordsText) dom.totalRecordsText.textContent = '0';
       if (dom.activeDateRangeText) dom.activeDateRangeText.textContent = 'All Dates';
@@ -2186,6 +2496,10 @@ __DOM_SECTIONS_JS__
         if (controls.legend) controls.legend.innerHTML = '';
         if (controls.metric) controls.metric.textContent = '';
         if (controls.totalGrid) controls.totalGrid.innerHTML = '';
+        if (controls.insight) {
+          controls.insight.classList.remove('visible');
+          controls.insight.innerHTML = '';
+        }
         if (controls.chart) drawEmpty(controls.chart, 'Upload a file to generate this visualization.');
       });
       if (dom.global.topN) dom.global.topN.value = '10';
@@ -2600,6 +2914,7 @@ __DOM_SECTIONS_JS__
       SECTION_KEYS.forEach(sectionKey => {
         const controls = dom.sections[sectionKey];
         const target = state.sections[sectionKey];
+        if (!controls || !target) return;
         if (controls.topN) controls.topN.value = state.global.topN;
         if (controls.start) controls.start.value = state.global.start;
         if (controls.end) controls.end.value = state.global.end;
@@ -2619,11 +2934,13 @@ __DOM_SECTIONS_JS__
         if (controls.advertisorOptions) {
           populateAdvertisorDropdown(sectionKey, controls.advertisorSearch ? controls.advertisorSearch.value : '');
         }
-        if (controls.topN) target.topN = state.global.topN;
+        target.topN = state.global.topN;
         target.start = state.global.start;
         target.end = state.global.end;
         target.channel = [...state.global.channel];
         target.category = [...state.global.category];
+        target.advertisor = [...state.global.advertisor];
+        target.time = state.global.time;
         if (sectionKey === 'g5') {
           target.advertisor = [...state.global.advertisor];
           target.time = state.global.time;
@@ -2726,20 +3043,22 @@ __DOM_SECTIONS_JS__
       const rows = state.cleanedRows;
       const dates = uniqueSorted(rows.map(row => row.date));
       const section = dom.sections[sectionKey];
-      populateMultiSelect(section.channel, getChannelValues(), state.global.channel);
+      if (section.channel) populateMultiSelect(section.channel, getChannelValues(), state.global.channel);
       if (section.category) populateSelect(section.category, getCategoryValues(), 'All Categories');
-      if (sectionKey === 'g5') {
+      if (sectionKey === 'g5' && section.advertisor) {
         populateMultiSelect(section.advertisor, getAdvertisorValues(state.global.channel), state.global.advertisor);
         section.time.value = 'minutes';
       }
-      section.start.value = dates[0] || '';
-      section.end.value = dates[dates.length - 1] || '';
-      section.start.dataset.boundMin = dates[0] || '';
-      section.start.dataset.boundMax = dates[dates.length - 1] || '';
-      section.end.dataset.boundMin = dates[0] || '';
-      section.end.dataset.boundMax = dates[dates.length - 1] || '';
-      refreshDateBounds(section);
-      rememberValidDateValues(section);
+      if (section.start && section.end) {
+        section.start.value = dates[0] || '';
+        section.end.value = dates[dates.length - 1] || '';
+        section.start.dataset.boundMin = dates[0] || '';
+        section.start.dataset.boundMax = dates[dates.length - 1] || '';
+        section.end.dataset.boundMin = dates[0] || '';
+        section.end.dataset.boundMax = dates[dates.length - 1] || '';
+        refreshDateBounds(section);
+        rememberValidDateValues(section);
+      }
     }
     function filterRows(rows, filters = {}, options = {}) {
       return rows.filter(row => {
@@ -2763,6 +3082,121 @@ __DOM_SECTIONS_JS__
         category: state.global.category,
         advertisor: state.global.advertisor
       });
+    }
+    function parseDateValue(value) {
+      if (!value) return null;
+      const date = new Date(`${value}T00:00:00`);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+    function isWeekendDateValue(value) {
+      const date = parseDateValue(value);
+      if (!date) return false;
+      const day = date.getDay();
+      return day === 0 || day === 6;
+    }
+    function weekdayWeekendRows(rows, dayType) {
+      return rows.filter(row => dayType === 'weekend' ? isWeekendDateValue(row.date) : !isWeekendDateValue(row.date));
+    }
+    function topBrandSummary(rows) {
+      const totals = new Map();
+      rows.forEach(row => {
+        const key = String(row.product || '').trim() || 'Unknown Brand';
+        const bucket = totals.get(key) || { label: key, total: 0, spots: 0 };
+        bucket.total += row.aaddur || 0;
+        bucket.spots += 1;
+        totals.set(key, bucket);
+      });
+      return [...totals.values()].sort((a, b) => b.total - a.total || b.spots - a.spots || a.label.localeCompare(b.label))[0] || null;
+    }
+    function topCategorySummary(rows) {
+      const totals = new Map();
+      rows.forEach(row => {
+        const key = String(row.category || '').trim() || 'Unknown Category';
+        const bucket = totals.get(key) || { label: key, total: 0, spots: 0 };
+        bucket.total += row.aaddur || 0;
+        bucket.spots += 1;
+        totals.set(key, bucket);
+      });
+      return [...totals.values()].sort((a, b) => b.total - a.total || b.spots - a.spots || a.label.localeCompare(b.label))[0] || null;
+    }
+    function topSpotLengthSummary(rows) {
+      const totals = new Map();
+      rows.forEach(row => {
+        const key = `${creativeDurationBucket(row.aaddur)} sec`;
+        const bucket = totals.get(key) || { label: key, spots: 0 };
+        bucket.spots += 1;
+        totals.set(key, bucket);
+      });
+      return [...totals.values()].sort((a, b) => b.spots - a.spots || a.label.localeCompare(b.label))[0] || null;
+    }
+    function startOfWeek(date) {
+      const result = new Date(date.getTime());
+      const day = result.getDay();
+      const diff = day === 0 ? -6 : 1 - day;
+      result.setDate(result.getDate() + diff);
+      result.setHours(0, 0, 0, 0);
+      return result;
+    }
+    function endOfWeek(date) {
+      const result = startOfWeek(date);
+      result.setDate(result.getDate() + 6);
+      return result;
+    }
+    function latestPeriodRows(rows, period) {
+      const datedRows = rows.filter(row => !!parseDateValue(row.date));
+      if (!datedRows.length) return { rows: [], label: 'No data available' };
+      const latestDate = datedRows.map(row => parseDateValue(row.date)).sort((a, b) => b - a)[0];
+      if (!latestDate) return { rows: [], label: 'No data available' };
+      let filteredRows = [];
+      let label = '';
+      if (period === 'day') {
+        const target = latestDate.toISOString().slice(0, 10);
+        filteredRows = datedRows.filter(row => row.date === target);
+        label = formatDate(target);
+      } else if (period === 'week') {
+        const start = startOfWeek(latestDate);
+        const end = endOfWeek(latestDate);
+        filteredRows = datedRows.filter(row => {
+          const date = parseDateValue(row.date);
+          return date && date >= start && date <= end;
+        });
+        label = `${formatDate(start.toISOString().slice(0, 10))} to ${formatDate(end.toISOString().slice(0, 10))}`;
+      } else {
+        const year = latestDate.getFullYear();
+        const month = latestDate.getMonth();
+        filteredRows = datedRows.filter(row => {
+          const date = parseDateValue(row.date);
+          return date && date.getFullYear() === year && date.getMonth() === month;
+        });
+        label = latestDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+      }
+      return { rows: filteredRows, label };
+    }
+    function setTailStat(node, noteNode, value, note) {
+      if (node) node.textContent = value;
+      if (noteNode) noteNode.textContent = note;
+    }
+    function setTailFilterActive(container, value) {
+      if (!container) return;
+      container.querySelectorAll('.tail-filter-btn').forEach(button => {
+        button.classList.toggle('active', button.dataset.value === value);
+      });
+    }
+    function renderSupplementalSummary() {
+      const sourceRows = getGlobalFilteredRows();
+      const dayType = state.supplemental.dayType || 'weekday';
+      const period = state.supplemental.period || 'day';
+      setTailFilterActive(dom.dayTypeFilter, dayType);
+      setTailFilterActive(dom.periodFilter, period);
+      const dayRows = weekdayWeekendRows(sourceRows, dayType);
+      const topBrand = topBrandSummary(dayRows);
+      const topCategory = topCategorySummary(dayRows);
+      const topSpotLength = topSpotLengthSummary(dayRows);
+      setTailStat(dom.dayTypeTopBrand, dom.dayTypeTopBrandNote, topBrand ? titleCaseName(topBrand.label) : 'No data', topBrand ? `${formatDurationValue(topBrand.total, true)} across ${formatCount(topBrand.spots)} spots` : 'No rows available for this selection');
+      setTailStat(dom.dayTypeTopCategory, dom.dayTypeTopCategoryNote, topCategory ? sentenceCaseName(topCategory.label) : 'No data', topCategory ? `${formatDurationValue(topCategory.total, true)} across ${formatCount(topCategory.spots)} spots` : 'No rows available for this selection');
+      setTailStat(dom.dayTypeSpotLength, dom.dayTypeSpotLengthNote, topSpotLength ? topSpotLength.label : 'No data', topSpotLength ? `${formatCount(topSpotLength.spots)} advertisement spots` : 'No rows available for this selection');
+      const periodSummary = latestPeriodRows(sourceRows, period);
+      setTailStat(dom.periodRowCount, dom.periodRowCountNote, formatCount(periodSummary.rows.length), periodSummary.rows.length ? `${period.charAt(0).toUpperCase() + period.slice(1)} window: ${periodSummary.label}` : 'No rows available for this selection');
     }
     function getSectionRows(sectionKey) {
       const sectionState = state.sections[sectionKey];
@@ -2902,18 +3336,205 @@ __DOM_SECTIONS_JS__
       map.forEach(value => { maxValue = Math.max(maxValue, value); });
       return { channels, hours: visibleHours, map, maxValue: Math.max(maxValue, 1) };
     }
+    function getTopNLimit(sectionKey = 'g8', fallback = 10) {
+      const sectionState = state.sections[sectionKey] || {};
+      return Number.parseInt(sectionState.topN || state.global.topN || String(fallback), 10) || fallback;
+    }
+    function formatCount(value) {
+      return formatNumber(Math.round(value || 0));
+    }
+    function creativeDurationBucket(value) {
+      const duration = Math.max(0, Math.round(value || 0));
+      const buckets = [10, 20, 30, 60];
+      let best = buckets[0];
+      let bestDistance = Math.abs(duration - best);
+      buckets.slice(1).forEach(bucket => {
+        const distance = Math.abs(duration - bucket);
+        if (distance < bestDistance) {
+          best = bucket;
+          bestDistance = distance;
+        }
+      });
+      return best;
+    }
+    function buildCreativeDurationDistribution(rows) {
+      const buckets = [10, 20, 30, 60].map(seconds => ({
+        label: `${seconds} sec`,
+        seconds,
+        spots: 0
+      }));
+      rows.forEach(row => {
+        const seconds = creativeDurationBucket(row.aaddur);
+        const bucket = buckets.find(item => item.seconds === seconds);
+        if (bucket) bucket.spots += 1;
+      });
+      const totalSpots = buckets.reduce((sum, item) => sum + item.spots, 0);
+      return buckets.map(item => ({
+        ...item,
+        share: totalSpots ? (item.spots / totalSpots) * 100 : 0
+      }));
+    }
+    function buildDayWiseActivity(rows) {
+      const totals = new Map();
+      rows.forEach(row => {
+        if (!row.date) return;
+        const bucket = totals.get(row.date) || { date: row.date, spots: 0, airtime: 0 };
+        bucket.spots += 1;
+        bucket.airtime += row.aaddur || 0;
+        totals.set(row.date, bucket);
+      });
+      return [...totals.values()].sort((a, b) => a.date.localeCompare(b.date));
+    }
+    function buildCategoryVolume(rows, limit) {
+      const totals = new Map();
+      rows.forEach(row => {
+        const key = row.category || 'Unknown';
+        const bucket = totals.get(key) || { category: key, spots: 0, airtime: 0 };
+        bucket.spots += 1;
+        bucket.airtime += row.aaddur || 0;
+        totals.set(key, bucket);
+      });
+      return [...totals.values()]
+        .sort((a, b) => b.spots - a.spots || b.airtime - a.airtime || a.category.localeCompare(b.category))
+        .slice(0, limit);
+    }
+    function normalizeProgrammeTypeLabel(value) {
+      const normalized = String(value || '').trim();
+      if (!normalized) return '';
+      const allowed = new Set(['Morning', 'Afternoon', 'Prime Time', 'Late Night', 'Channel Slot', 'Unspecified']);
+      return allowed.has(normalized) ? normalized : '';
+    }
+    function deriveProgrammeType(row) {
+      const explicit = normalizeProgrammeTypeLabel(row.programmeType);
+      if (explicit) return explicit;
+      const hour = parseHourValue(row.adtime);
+      if (hour === null) return row.channel ? 'Channel Slot' : 'Unspecified';
+      if (hour >= 6 && hour < 12) return 'Morning';
+      if (hour >= 12 && hour < 17) return 'Afternoon';
+      if (hour >= 17 && hour < 21) return 'Prime Time';
+      return 'Late Night';
+    }
+    function programmeTypeLabel(row) {
+      return deriveProgrammeType(row);
+    }
+    function programmeLabel(row) {
+      const explicit = String(row.programme || '').trim();
+      if (explicit) return explicit;
+      const channel = String(row.channel || '').trim() || 'Unknown Channel';
+      const hour = parseHourValue(row.adtime);
+      if (hour !== null) return `${channel} • ${hourSlotLabel(hour)}`;
+      const derivedType = deriveProgrammeType(row);
+      if (derivedType && derivedType !== 'Unspecified') return `${channel} • ${derivedType}`;
+      if (row.category) return `${channel} • ${row.category}`;
+      return channel;
+    }
+    function buildProgrammeInsights(rows, limit) {
+      const totals = new Map();
+      rows.forEach(row => {
+        const programme = programmeLabel(row);
+        if (!programme) return;
+        const bucket = totals.get(programme) || {
+          programme,
+          type: programmeTypeLabel(row) || 'Unspecified',
+          spots: 0,
+          airtime: 0,
+          advertisers: new Set(),
+          categories: new Set()
+        };
+        bucket.spots += 1;
+        bucket.airtime += row.aaddur || 0;
+        if (row.company) bucket.advertisers.add(row.company);
+        if (row.category) bucket.categories.add(row.category);
+        if (!bucket.type || bucket.type === 'Unspecified') bucket.type = programmeTypeLabel(row) || bucket.type;
+        totals.set(programme, bucket);
+      });
+      return [...totals.values()]
+        .map(item => ({
+          programme: item.programme,
+          type: item.type || 'Unspecified',
+          spots: item.spots,
+          airtime: item.airtime,
+          advertiserCount: item.advertisers.size,
+          categoryCount: item.categories.size
+        }))
+        .sort((a, b) => b.airtime - a.airtime || b.spots - a.spots || a.programme.localeCompare(b.programme))
+        .slice(0, limit);
+    }
+    function buildCategoryProgrammeMatrix(rows, limit) {
+      const categoryTotals = new Map();
+      const typeTotals = new Map();
+      const map = new Map();
+      rows.forEach(row => {
+        const category = String(row.category || '').trim();
+        const programmeType = programmeTypeLabel(row);
+        if (!category || !programmeType) return;
+        categoryTotals.set(category, (categoryTotals.get(category) || 0) + 1);
+        typeTotals.set(programmeType, (typeTotals.get(programmeType) || 0) + 1);
+        const key = `${category}|||${programmeType}`;
+        const bucket = map.get(key) || { spots: 0, airtime: 0 };
+        bucket.spots += 1;
+        bucket.airtime += row.aaddur || 0;
+        map.set(key, bucket);
+      });
+      const categories = [...categoryTotals.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .slice(0, limit)
+        .map(([category]) => category);
+      const programmeTypes = [...typeTotals.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .slice(0, limit)
+        .map(([type]) => type);
+      let maxSpots = 0;
+      categories.forEach(category => {
+        programmeTypes.forEach(type => {
+          const bucket = map.get(`${category}|||${type}`);
+          if (bucket) maxSpots = Math.max(maxSpots, bucket.spots);
+        });
+      });
+      return {
+        categories,
+        programmeTypes,
+        map,
+        maxSpots: Math.max(maxSpots, 1)
+      };
+    }
+    const GRAPH9_TIME_ORDER = ['Morning', 'Afternoon', 'Prime Time', 'Late Night'];
+    const GRAPH9_TIME_LABELS = {
+      'Morning': 'Morning',
+      'Afternoon': 'after noon',
+      'Prime Time': 'Prime Time',
+      'Late Night': 'Late Night'
+    };
+    const GRAPH9_TIME_COLORS = {
+      'Morning': '#2563eb',
+      'Afternoon': '#f59e0b',
+      'Prime Time': '#16a34a',
+      'Late Night': '#7c3aed'
+    };
+    function graph9TimeKey(type) {
+      if (type === 'Morning' || type === 'Afternoon' || type === 'Prime Time' || type === 'Late Night') {
+        return type;
+      }
+      return 'Late Night';
+    }
+    function graph9TimeLabel(type) {
+      return GRAPH9_TIME_LABELS[graph9TimeKey(type)] || String(type || 'Late Night');
+    }
+    function programmeTypeColor(type) {
+      return GRAPH9_TIME_COLORS[graph9TimeKey(type)] || chartPalettes.g9[0];
+    }
     function drawAxes(svg, margin, plotW, plotH, xTitle, yTitle, width, height, maxValue) {
       for (let i = 0; i <= 4; i++) {
         const y = margin.top + plotH - (plotH * i / 4);
         svg.appendChild(svgEl('line', { x1: margin.left, y1: y, x2: margin.left + plotW, y2: y, stroke: '#e5e7eb', 'stroke-width': 1 }));
-        const tick = svgEl('text', { x: margin.left - 8, y: y + 5, fill: '#6b7280', 'font-size': 12, 'text-anchor': 'end' });
+        const tick = svgEl('text', { x: margin.left - 8, y: y + 5, fill: chartLabelColor(), 'font-size': 12, 'text-anchor': 'end' });
         tick.textContent = formatDurationValue(maxValue * i / 4);
         svg.appendChild(tick);
       }
       const xAxisLabel = svgEl('text', {
         x: margin.left + plotW / 2,
         y: height - 6,
-        fill: '#1f2937',
+        fill: chartLabelColor(),
         'font-size': 15,
         'font-weight': 700,
         'text-anchor': 'middle'
@@ -2923,7 +3544,7 @@ __DOM_SECTIONS_JS__
       const yAxisLabel = svgEl('text', {
         x: 20,
         y: margin.top + plotH / 2,
-        fill: '#1f2937',
+        fill: chartLabelColor(),
         'font-size': 15,
         'font-weight': 700,
         'text-anchor': 'middle',
@@ -2934,8 +3555,118 @@ __DOM_SECTIONS_JS__
     }
     function renderLegend(container, items) {
       container.innerHTML = items.map(item =>
-        `<span class="legend-item"><i class="legend-swatch" style="background:${item.color}"></i>${item.label}</span>`
+        `<span class="legend-item chart-label"><i class="legend-swatch" style="background:${item.color}"></i>${item.label}</span>`
       ).join('');
+    }
+    function formatInsightPercent(value) {
+      return `${(value || 0).toFixed(1)}%`;
+    }
+    function setSectionInsight(sectionKey, text) {
+      const node = dom.sections[sectionKey] && dom.sections[sectionKey].insight;
+      if (!node) return;
+      if (!text) {
+        node.classList.remove('visible');
+        node.innerHTML = '';
+        return;
+      }
+      node.innerHTML = `<span class="chart-insight-label">💡 Insight:</span>${text}`;
+      node.classList.add('visible');
+    }
+    function buildGraph1Insight(rows) {
+      const topAdvertiser = aggregateAdvertisors(rows)[0];
+      if (!topAdvertiser) return 'No data is available for the current selection.';
+      const total = rows.reduce((sum, row) => sum + row.aaddur, 0) || 1;
+      return `${titleCaseName(topAdvertiser.advertisor)} leads the filtered view with ${formatDurationValue(topAdvertiser.total, true)}, contributing ${formatInsightPercent((topAdvertiser.total / total) * 100)} of total ad duration.`;
+    }
+    function buildGraph2Insight(rows) {
+      const topAdvertiser = aggregateAdvertisors(rows)[0];
+      const topChannel = buildChannelDistribution(rows)[0];
+      if (!topAdvertiser || !topChannel) return 'No data is available for the current selection.';
+      return `${titleCaseName(topAdvertiser.advertisor)} is the dominant advertiser, while ${titleCaseName(topChannel.channel)} carries the strongest channel contribution at ${formatDurationValue(topChannel.total, true)}.`;
+    }
+    function buildGraph3Insight(rows) {
+      const dates = buildDateTotals(rows);
+      const topAdvertiser = aggregateAdvertisors(rows)[0];
+      if (!dates.length || !topAdvertiser) return 'No data is available for the current selection.';
+      const peakDay = dates.reduce((best, item) => item.total > best.total ? item : best, dates[0]);
+      return `${titleCaseName(topAdvertiser.advertisor)} stays most prominent, with advertising intensity peaking on ${formatDate(peakDay.date)} at ${formatDurationValue(peakDay.total, true)}.`;
+    }
+    function buildGraph4Insight(rows) {
+      const matrix = buildHeatmapMatrix(rows, getTopNLimit('g4'));
+      let best = null;
+      matrix.categories.forEach(category => {
+        matrix.channels.forEach(channel => {
+          const value = matrix.map.get(`${channel}|||${category}`) || 0;
+          if (!best || value > best.value) best = { channel, category, value };
+        });
+      });
+      if (!best || !best.value) return 'No data is available for the current selection.';
+      return `${sentenceCaseName(best.category)} on ${titleCaseName(best.channel)} is the strongest category-channel combination, generating ${formatDurationValue(best.value, true)} in the filtered period.`;
+    }
+    function buildGraph5Insight(rows) {
+      const matrix = buildChannelHourlyMatrix(rows);
+      let best = null;
+      matrix.channels.forEach(channel => {
+        matrix.hours.forEach(hour => {
+          const value = matrix.map.get(`${channel}|||${hour}`) || 0;
+          if (!best || value > best.value) best = { channel, hour, value };
+        });
+      });
+      if (!best || !best.value) return 'No data is available for the current selection.';
+      return `${titleCaseName(best.channel)} delivers the heaviest hourly load during ${hourSlotLabel(best.hour)}, when ad duration reaches ${formatDurationValue(best.value, true)}.`;
+    }
+    function buildGraph6Insight(rows) {
+      const distribution = buildCreativeDurationDistribution(rows).sort((a, b) => b.spots - a.spots);
+      const leader = distribution[0];
+      if (!leader || !leader.spots) return 'No data is available for the current selection.';
+      return `${leader.label} creatives are used most often, accounting for ${formatCount(leader.spots)} advertisement spots and ${formatInsightPercent(leader.share)} of the filtered mix.`;
+    }
+    function buildGraph7Insight(rows) {
+      const points = buildDayWiseActivity(rows);
+      if (!points.length) return 'No data is available for the current selection.';
+      const highest = points.reduce((best, point) => point.spots > best.spots ? point : best, points[0]);
+      const lowest = points.reduce((best, point) => point.spots < best.spots ? point : best, points[0]);
+      return `Advertising activity peaked on ${formatDate(highest.date)} with ${formatCount(highest.spots)} spots, while ${formatDate(lowest.date)} recorded the lightest activity at ${formatCount(lowest.spots)} spots.`;
+    }
+    function buildGraph8Insight(rows) {
+      const categories = buildCategoryVolume(rows, getTopNLimit('g8'));
+      const leader = categories[0];
+      const totalSpots = categories.reduce((sum, item) => sum + item.spots, 0) || 1;
+      if (!leader) return 'No data is available for the current selection.';
+      return `${sentenceCaseName(leader.category)} is the leading advertising category with ${formatCount(leader.spots)} spots, representing ${formatInsightPercent((leader.spots / totalSpots) * 100)} of the top category set.`;
+    }
+    function buildGraph9Insight(rows) {
+      const programmes = buildProgrammeInsights(rows, getTopNLimit('g9'));
+      const leader = programmes[0];
+      if (!leader) return 'No data is available for the current selection.';
+      return `${leader.programme} attracts the strongest value concentration with ${formatCount(leader.advertiserCount)} advertisers and ${formatDurationValue(leader.airtime, true)} of total airtime.`;
+    }
+    function buildGraph10Insight(rows) {
+      const matrix = buildCategoryProgrammeMatrix(rows, getTopNLimit('g10'));
+      let best = null;
+      matrix.categories.forEach(category => {
+        matrix.programmeTypes.forEach(type => {
+          const bucket = matrix.map.get(`${category}|||${type}`);
+          const spots = bucket ? bucket.spots : 0;
+          if (!best || spots > best.spots) best = { category, type, spots };
+        });
+      });
+      if (!best || !best.spots) return 'No data is available for the current selection.';
+      return `${sentenceCaseName(best.category)} shows the strongest programme preference for ${best.type}, where the filtered dataset records the highest interaction at ${formatCount(best.spots)} spots.`;
+    }
+    function buildSectionInsight(sectionKey, rows) {
+      if (!rows.length) return 'No data is available for the current selection.';
+      if (sectionKey === 'g1') return buildGraph1Insight(rows);
+      if (sectionKey === 'g2') return buildGraph2Insight(rows);
+      if (sectionKey === 'g3') return buildGraph3Insight(rows);
+      if (sectionKey === 'g4') return buildGraph4Insight(rows);
+      if (sectionKey === 'g5') return buildGraph5Insight(rows);
+      if (sectionKey === 'g6') return buildGraph6Insight(rows);
+      if (sectionKey === 'g7') return buildGraph7Insight(rows);
+      if (sectionKey === 'g8') return buildGraph8Insight(rows);
+      if (sectionKey === 'g9') return buildGraph9Insight(rows);
+      if (sectionKey === 'g10') return buildGraph10Insight(rows);
+      return '';
     }
     function drawGraph1(rows) {
       applyChartDensity('g1');
@@ -3507,6 +4238,491 @@ __DOM_SECTIONS_JS__
         </div>
       `).join('');
     }
+    function drawGraph6Donut(rows) {
+      const distribution = buildCreativeDurationDistribution(rows);
+      const totalSpots = distribution.reduce((sum, item) => sum + item.spots, 0);
+      if (!totalSpots) {
+        drawEmpty(dom.sections.g6.chart, 'No data available for selected filters');
+        dom.sections.g6.legend.innerHTML = '';
+        if (dom.sections.g6.metric) dom.sections.g6.metric.textContent = '';
+        return;
+      }
+      resetChartBoxHeight(dom.sections.g6.chart);
+      const { svg, width, height } = makeSvg(dom.sections.g6.chart);
+      const cx = width * 0.38;
+      const cy = height * 0.52;
+      const radius = Math.min(width, height) * 0.26;
+      const innerRadius = radius * 0.52;
+      let startAngle = -Math.PI / 2;
+      function polar(r, angle) {
+        return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+      }
+      distribution.forEach((item, index) => {
+        const fraction = item.spots / totalSpots;
+        const endAngle = startAngle + fraction * Math.PI * 2;
+        const outerStart = polar(radius, startAngle);
+        const outerEnd = polar(radius, endAngle);
+        const innerStart = polar(innerRadius, endAngle);
+        const innerEnd = polar(innerRadius, startAngle);
+        const largeArc = fraction > 0.5 ? 1 : 0;
+        const path = [
+          `M ${outerStart.x} ${outerStart.y}`,
+          `A ${radius} ${radius} 0 ${largeArc} 1 ${outerEnd.x} ${outerEnd.y}`,
+          `L ${innerStart.x} ${innerStart.y}`,
+          `A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${innerEnd.x} ${innerEnd.y}`,
+          'Z'
+        ].join(' ');
+        const segment = svgEl('path', {
+          d: path,
+          fill: chartPalettes.g6[index % chartPalettes.g6.length],
+          stroke: '#ffffff',
+          'stroke-width': 1.5
+        });
+        const title = svgEl('title');
+        title.textContent = `${item.label}\nTotal Spots: ${formatCount(item.spots)}\nShare: ${item.share.toFixed(1)}%`;
+        segment.appendChild(title);
+        svg.appendChild(segment);
+        const mid = startAngle + (endAngle - startAngle) / 2;
+        const labelPoint = polar(radius + 34, mid);
+        addWrappedText(
+          svg,
+          `${item.label} ${item.share.toFixed(1)}%`,
+          labelPoint.x,
+          labelPoint.y,
+          14,
+          '#1f2937',
+          9.5,
+          mid > Math.PI / 2 || mid < -Math.PI / 2 ? 'end' : 'start',
+          800
+        );
+        startAngle = endAngle;
+      });
+      const totalLabel = svgEl('text', {
+        x: cx,
+        y: cy - 8,
+        fill: '#1f2937',
+        'font-size': 24,
+        'font-weight': 800,
+        'text-anchor': 'middle'
+      });
+      totalLabel.textContent = formatCount(totalSpots);
+      svg.appendChild(totalLabel);
+      const totalSubLabel = svgEl('text', {
+        x: cx,
+        y: cy + 18,
+        fill: '#6b7280',
+        'font-size': 13,
+        'font-weight': 700,
+        'text-anchor': 'middle'
+      });
+      totalSubLabel.textContent = 'Total Spots';
+      svg.appendChild(totalSubLabel);
+      if (dom.sections.g6.metric) {
+        const leader = distribution.slice().sort((a, b) => b.spots - a.spots)[0];
+        dom.sections.g6.metric.textContent = `Most used creative: ${leader.label} • ${formatCount(leader.spots)} spots • ${leader.share.toFixed(1)}% share`;
+      }
+      renderLegend(dom.sections.g6.legend, distribution.map((item, index) => ({
+        label: `${item.label} (${formatCount(item.spots)})`,
+        color: chartPalettes.g6[index % chartPalettes.g6.length]
+      })));
+    }
+    function drawGraph6Bar(rows) {
+      const distribution = buildCreativeDurationDistribution(rows);
+      const totalSpots = distribution.reduce((sum, item) => sum + item.spots, 0);
+      if (!totalSpots) {
+        drawEmpty(dom.sections.g6.chart, 'No data available for selected filters');
+        dom.sections.g6.legend.innerHTML = '';
+        if (dom.sections.g6.metric) dom.sections.g6.metric.textContent = '';
+        return;
+      }
+      setChartBoxHeight(dom.sections.g6.chart, 500);
+      const { svg, width, height } = makeSvg(dom.sections.g6.chart);
+      const barGradient = appendLinearGradient(svg, 'g6BarGradient', themeVar('--brand', '#2563eb'), themeVar('--teal', '#0f766e'));
+      const margin = { top: 26, right: 104, bottom: 48, left: 152 };
+      const plotW = width - margin.left - margin.right;
+      const plotH = height - margin.top - margin.bottom;
+      const maxSpots = Math.max(...distribution.map(item => item.spots), 1);
+      for (let i = 0; i <= 4; i++) {
+        const x = margin.left + (plotW * i / 4);
+        svg.appendChild(svgEl('line', { x1: x, y1: margin.top, x2: x, y2: margin.top + plotH, stroke: '#e5e7eb', 'stroke-width': 1 }));
+        const tick = svgEl('text', { x, y: margin.top + plotH + 22, fill: '#6b7280', 'font-size': 12, 'text-anchor': 'middle' });
+        tick.textContent = formatCount((maxSpots * i) / 4);
+        svg.appendChild(tick);
+      }
+      distribution.forEach((item, index) => {
+        const rowHeight = plotH / distribution.length;
+        const barHeight = Math.max(rowHeight - 16, 24);
+        const y = margin.top + index * rowHeight + (rowHeight - barHeight) / 2;
+        const widthValue = (item.spots / maxSpots) * plotW;
+        const bar = svgEl('rect', {
+          x: margin.left,
+          y,
+          width: Math.max(widthValue, item.spots ? 4 : 0),
+          height: barHeight,
+          rx: 8,
+          fill: barGradient
+        });
+        const title = svgEl('title');
+        title.textContent = `${item.label}\nTotal Spots: ${formatCount(item.spots)}\nShare: ${item.share.toFixed(1)}%`;
+        bar.appendChild(title);
+        svg.appendChild(bar);
+        addWrappedText(svg, item.label, margin.left - 14, y + barHeight * 0.58, 14, '#1f2937', 10.6, 'end', 800);
+        const valueLabel = svgEl('text', {
+          x: Math.min(margin.left + widthValue + 10, width - margin.right + 18),
+          y: y + barHeight * 0.6,
+          fill: '#1f2937',
+          'font-size': 11.5,
+          'font-weight': 800,
+          'text-anchor': 'start'
+        });
+        valueLabel.textContent = `${formatCount(item.spots)} (${item.share.toFixed(1)}%)`;
+        svg.appendChild(valueLabel);
+      });
+      const xAxisTitle = svgEl('text', {
+        x: margin.left + plotW / 2,
+        y: height - 10,
+        fill: '#1f2937',
+        'font-size': 13,
+        'font-weight': 800,
+        'text-anchor': 'middle'
+      });
+      xAxisTitle.textContent = 'Number of Advertisement Spots';
+      svg.appendChild(xAxisTitle);
+      const yAxisTitle = svgEl('text', {
+        x: 22,
+        y: margin.top + plotH / 2,
+        fill: '#1f2937',
+        'font-size': 13,
+        'font-weight': 800,
+        'text-anchor': 'middle',
+        transform: `rotate(-90 22 ${margin.top + plotH / 2})`
+      });
+      yAxisTitle.textContent = 'Creative Duration (Seconds)';
+      svg.appendChild(yAxisTitle);
+      if (dom.sections.g6.metric) {
+        dom.sections.g6.metric.textContent = `Creative duration mix across ${formatCount(totalSpots)} filtered ad spots`;
+      }
+      renderLegend(dom.sections.g6.legend, distribution.map((item, index) => ({
+        label: item.label,
+        color: chartPalettes.g6[index % chartPalettes.g6.length]
+      })));
+    }
+    function drawGraph7(rows) {
+      const points = buildDayWiseActivity(rows);
+      if (!points.length) {
+        drawEmpty(dom.sections.g7.chart, 'No data available for selected filters');
+        return;
+      }
+      setChartBoxHeight(dom.sections.g7.chart, 500);
+      const { svg, width, height } = makeSvg(dom.sections.g7.chart);
+      const margin = { top: 28, right: 34, bottom: 98, left: 76 };
+      const plotW = width - margin.left - margin.right;
+      const plotH = height - margin.top - margin.bottom;
+      const maxSpots = withAxisHeadroom(Math.max(...points.map(point => point.spots), 1));
+      for (let i = 0; i <= 4; i++) {
+        const y = margin.top + plotH - (plotH * i / 4);
+        svg.appendChild(svgEl('line', { x1: margin.left, y1: y, x2: margin.left + plotW, y2: y, stroke: '#e5e7eb', 'stroke-width': 1 }));
+        const tick = svgEl('text', { x: margin.left - 8, y: y + 5, fill: '#6b7280', 'font-size': 12, 'text-anchor': 'end' });
+        tick.textContent = formatCount((maxSpots * i) / 4);
+        svg.appendChild(tick);
+      }
+      const pathPoints = points.map((point, index) => {
+        const x = margin.left + (plotW * index / Math.max(points.length - 1, 1));
+        const y = margin.top + plotH - ((point.spots / maxSpots) * plotH);
+        return { ...point, x, y };
+      });
+      const areaPath = pathPoints.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ')
+        + ` L ${pathPoints[pathPoints.length - 1].x} ${margin.top + plotH}`
+        + ` L ${pathPoints[0].x} ${margin.top + plotH} Z`;
+      svg.appendChild(svgEl('path', { d: areaPath, fill: 'rgba(37, 99, 235, 0.12)' }));
+      const linePath = pathPoints.map((point, index) => `${index ? 'L' : 'M'} ${point.x} ${point.y}`).join(' ');
+      svg.appendChild(svgEl('path', {
+        d: linePath,
+        fill: 'none',
+        stroke: chartPalettes.g7,
+        'stroke-width': 3.5,
+        'stroke-linecap': 'round',
+        'stroke-linejoin': 'round'
+      }));
+      const highest = pathPoints.reduce((best, point) => point.spots > best.spots ? point : best, pathPoints[0]);
+      const lowest = pathPoints.reduce((best, point) => point.spots < best.spots ? point : best, pathPoints[0]);
+      pathPoints.forEach(point => {
+        const isExtreme = point === highest || point === lowest;
+        const circle = svgEl('circle', {
+          cx: point.x,
+          cy: point.y,
+          r: isExtreme ? 6 : 4.5,
+          fill: isExtreme ? '#ffffff' : chartPalettes.g7,
+          stroke: isExtreme ? '#ef4444' : '#1d4ed8',
+          'stroke-width': isExtreme ? 3 : 2
+        });
+        const title = svgEl('title');
+        title.textContent = `Date: ${formatDate(point.date)}\nAd Spots: ${formatCount(point.spots)}\nAirtime: ${formatDurationValue(point.airtime, true)}`;
+        circle.appendChild(title);
+        svg.appendChild(circle);
+      });
+      addWrappedText(svg, 'Date', margin.left + plotW / 2, height - 12, 20, '#1f2937', 13, 'middle', 800);
+      const yAxisTitle = svgEl('text', {
+        x: 22,
+        y: margin.top + plotH / 2,
+        fill: '#1f2937',
+        'font-size': 13,
+        'font-weight': 800,
+        'text-anchor': 'middle',
+        transform: `rotate(-90 22 ${margin.top + plotH / 2})`
+      });
+      yAxisTitle.textContent = 'Number of Ad Spots';
+      svg.appendChild(yAxisTitle);
+      pathPoints.forEach((point, index) => {
+        if (points.length > 12 && index % 2 === 1) return;
+        addWrappedText(svg, formatDate(point.date), point.x, margin.top + plotH + 20, 10, '#1f2937', 9.2, 'middle', 700);
+      });
+      addWrappedText(svg, `Highest: ${formatDate(highest.date)} (${formatCount(highest.spots)})`, highest.x, Math.max(highest.y - 28, margin.top + 16), 18, '#1f2937', 9.5, 'middle', 800);
+      addWrappedText(svg, `Lowest: ${formatDate(lowest.date)} (${formatCount(lowest.spots)})`, lowest.x, Math.min(lowest.y + 24, margin.top + plotH - 12), 18, '#6b7280', 9.5, 'middle', 800);
+    }
+    function drawGraph8(rows) {
+      const categories = buildCategoryVolume(rows, getTopNLimit('g8'));
+      if (!categories.length) {
+        drawEmpty(dom.sections.g8.chart, 'No data available for selected filters');
+        dom.sections.g8.legend.innerHTML = '';
+        return;
+      }
+      const compact = getTopNLimit('g8') >= 20;
+      setChartBoxHeight(dom.sections.g8.chart, compact ? 620 : 500);
+      const { svg, width, height } = makeSvg(dom.sections.g8.chart);
+      const barGradient = appendLinearGradient(svg, 'g8BarGradient', themeVar('--brand', '#2563eb'), themeVar('--teal', '#0f766e'));
+      const margin = { top: 28, right: 28, bottom: compact ? 132 : 110, left: 78 };
+      const plotW = width - margin.left - margin.right;
+      const plotH = height - margin.top - margin.bottom;
+      const maxSpots = withAxisHeadroom(Math.max(...categories.map(item => item.spots), 1));
+      for (let i = 0; i <= 4; i++) {
+        const y = margin.top + plotH - (plotH * i / 4);
+        svg.appendChild(svgEl('line', { x1: margin.left, y1: y, x2: margin.left + plotW, y2: y, stroke: '#e5e7eb', 'stroke-width': 1 }));
+        const tick = svgEl('text', { x: margin.left - 10, y: y + 5, fill: '#6b7280', 'font-size': 12, 'text-anchor': 'end' });
+        tick.textContent = formatCount((maxSpots * i) / 4);
+        svg.appendChild(tick);
+      }
+      const groupW = plotW / Math.max(categories.length, 1);
+      const barW = Math.max(groupW - 18, compact ? 18 : 26);
+      categories.forEach((item, index) => {
+        const x = margin.left + index * groupW + (groupW - barW) / 2;
+        const barHeight = (item.spots / maxSpots) * plotH;
+        const y = margin.top + plotH - barHeight;
+        const bar = svgEl('rect', {
+          x,
+          y,
+          width: barW,
+          height: barHeight,
+          rx: 6,
+          fill: barGradient
+        });
+        const title = svgEl('title');
+        title.textContent = `Category: ${item.category}\nTotal Spots: ${formatCount(item.spots)}\nAirtime: ${formatDurationValue(item.airtime, true)}`;
+        bar.appendChild(title);
+        svg.appendChild(bar);
+        const valueLabel = svgEl('text', {
+          x: x + barW / 2,
+          y: Math.max(y - 8, margin.top + 12),
+          fill: '#1f2937',
+          'font-size': compact ? 9.5 : 11.5,
+          'font-weight': 800,
+          'text-anchor': 'middle'
+        });
+        valueLabel.textContent = formatCount(item.spots);
+        svg.appendChild(valueLabel);
+        addWrappedText(svg, item.category, x + barW / 2, margin.top + plotH + 18, compact ? 10 : 12, '#1f2937', compact ? 8.8 : 10.2, 'middle', 700);
+      });
+      addWrappedText(svg, 'Advertiser Categories', margin.left + plotW / 2, height - 10, 24, '#1f2937', 13, 'middle', 800);
+      const yAxisTitle = svgEl('text', {
+        x: 22,
+        y: margin.top + plotH / 2,
+        fill: '#1f2937',
+        'font-size': 13,
+        'font-weight': 800,
+        'text-anchor': 'middle',
+        transform: `rotate(-90 22 ${margin.top + plotH / 2})`
+      });
+      yAxisTitle.textContent = 'Number of Ad Spots';
+      svg.appendChild(yAxisTitle);
+      renderLegend(dom.sections.g8.legend, [{
+        label: 'Advertisement Spots',
+        color: themeVar('--brand', '#2563eb')
+      }]);
+    }
+    function drawGraph9(rows) {
+      const programmes = buildProgrammeInsights(rows, getTopNLimit('g9'));
+      if (!programmes.length) {
+        drawEmpty(dom.sections.g9.chart, 'No programme data available for the selected filters');
+        dom.sections.g9.legend.innerHTML = '';
+        return;
+      }
+      const compact = programmes.length >= 15;
+      setChartBoxHeight(dom.sections.g9.chart, compact ? 620 : 520);
+      const { svg, width, height } = makeSvg(dom.sections.g9.chart);
+      const margin = { top: 32, right: 34, bottom: compact ? 126 : 112, left: 72 };
+      const plotW = width - margin.left - margin.right;
+      const plotH = height - margin.top - margin.bottom;
+      const maxAirtime = withAxisHeadroom(Math.max(...programmes.map(item => item.airtime), 1));
+      for (let i = 0; i <= 4; i++) {
+        const y = margin.top + plotH - (plotH * i / 4);
+        svg.appendChild(svgEl('line', { x1: margin.left, y1: y, x2: margin.left + plotW, y2: y, stroke: '#e5e7eb', 'stroke-width': 1 }));
+        const yTick = svgEl('text', { x: margin.left - 8, y: y + 5, fill: '#6b7280', 'font-size': 12, 'text-anchor': 'end' });
+        yTick.textContent = formatDurationValue((maxAirtime * i) / 4);
+        svg.appendChild(yTick);
+      }
+      const slotCount = Math.max(programmes.length, 1);
+      const groupW = plotW / slotCount;
+      const stemStroke = 3;
+      programmes.forEach((item, index) => {
+        const x = margin.left + index * groupW + groupW / 2;
+        const y = margin.top + plotH - ((item.airtime / maxAirtime) * plotH);
+        const radius = compact ? 11 : 12.5;
+        const fill = programmeTypeColor(item.type);
+        const stem = svgEl('line', {
+          x1: x,
+          y1: margin.top + plotH,
+          x2: x,
+          y2: y,
+          stroke: fill,
+          'stroke-width': stemStroke,
+          'stroke-linecap': 'round'
+        });
+        const cherry = svgEl('circle', {
+          cx: x,
+          cy: y,
+          r: radius,
+          fill,
+          stroke: '#ffffff',
+          'stroke-width': 2.2
+        });
+        const title = svgEl('title');
+        title.textContent = `Programme: ${item.programme}\nTime Category: ${graph9TimeLabel(item.type)}\nAdvertisers: ${formatCount(item.advertiserCount)}\nCategories: ${formatCount(item.categoryCount)}\nTotal Airtime: ${formatDurationValue(item.airtime, true)}\nTotal Spots: ${formatCount(item.spots)}`;
+        cherry.appendChild(title);
+        svg.appendChild(stem);
+        svg.appendChild(cherry);
+        const valueLabel = svgEl('text', {
+          x,
+          y: Math.max(y - 14, margin.top + 12),
+          fill: '#1f2937',
+          'font-size': compact ? 9.5 : 10.5,
+          'font-weight': 800,
+          'text-anchor': 'middle'
+        });
+        valueLabel.textContent = formatDurationValue(item.airtime);
+        svg.appendChild(valueLabel);
+        addWrappedText(svg, item.programme, x, margin.top + plotH + 18, compact ? 8 : 10, '#1f2937', compact ? 8.6 : 9.4, 'middle', 700);
+      });
+      addWrappedText(svg, 'Programme', margin.left + plotW / 2, height - 10, 20, '#1f2937', 13, 'middle', 800);
+      const yAxisTitle = svgEl('text', {
+        x: 22,
+        y: margin.top + plotH / 2,
+        fill: '#1f2937',
+        'font-size': 13,
+        'font-weight': 800,
+        'text-anchor': 'middle',
+        transform: `rotate(-90 22 ${margin.top + plotH / 2})`
+      });
+      yAxisTitle.textContent = 'Total Airtime';
+      svg.appendChild(yAxisTitle);
+      renderLegend(dom.sections.g9.legend, GRAPH9_TIME_ORDER.map(type => ({
+        label: graph9TimeLabel(type),
+        color: programmeTypeColor(type)
+      })));
+    }
+    function drawGraph10(rows) {
+      const matrix = buildCategoryProgrammeMatrix(rows, getTopNLimit('g10'));
+      if (!matrix.categories.length || !matrix.programmeTypes.length) {
+        drawEmpty(dom.sections.g10.chart, 'No programme type data available for the selected filters');
+        return;
+      }
+      const compact = matrix.categories.length >= 12 || matrix.programmeTypes.length >= 12;
+      const dynamicHeight = compact
+        ? 680 + Math.max(0, matrix.categories.length - 10) * 18
+        : 360 + matrix.categories.length * 28;
+      setChartBoxHeight(dom.sections.g10.chart, dynamicHeight);
+      dom.sections.g10.chart.style.overflowX = 'auto';
+      const box = dom.sections.g10.chart;
+      const clientWidth = Math.max(box.clientWidth || 900, 320);
+      const width = Math.max(clientWidth, 280 + matrix.programmeTypes.length * (compact ? 110 : 96));
+      const height = Math.max(box.clientHeight || dynamicHeight, dynamicHeight);
+      box.innerHTML = '';
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      svg.setAttribute('width', String(width));
+      svg.setAttribute('height', String(height));
+      svg.setAttribute('class', 'chart chart-animated');
+      box.appendChild(svg);
+      const margin = { top: 26, right: 28, bottom: compact ? 124 : 94, left: compact ? 196 : 164 };
+      const plotW = width - margin.left - margin.right;
+      const plotH = height - margin.top - margin.bottom;
+      const cellW = plotW / Math.max(matrix.programmeTypes.length, 1);
+      const cellH = plotH / Math.max(matrix.categories.length, 1);
+      for (let ci = 0; ci <= matrix.programmeTypes.length; ci++) {
+        const x = margin.left + ci * cellW;
+        svg.appendChild(svgEl('line', { x1: x, y1: margin.top, x2: x, y2: margin.top + plotH, stroke: '#e5e7eb', 'stroke-width': 1 }));
+      }
+      for (let ri = 0; ri <= matrix.categories.length; ri++) {
+        const y = margin.top + ri * cellH;
+        svg.appendChild(svgEl('line', { x1: margin.left, y1: y, x2: margin.left + plotW, y2: y, stroke: '#e5e7eb', 'stroke-width': 1 }));
+      }
+      matrix.programmeTypes.forEach((type, ci) => {
+        addWrappedText(svg, type, margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, compact ? 10 : 12, '#1f2937', compact ? 8.8 : 10.5, 'middle', 700);
+      });
+      matrix.categories.forEach((category, ri) => {
+        addWrappedText(svg, category, margin.left - 10, margin.top + ri * cellH + cellH * 0.56, compact ? 14 : 18, '#1f2937', compact ? 8.8 : 10.8, 'end', 700);
+      });
+      matrix.categories.forEach((category, ri) => {
+        matrix.programmeTypes.forEach((type, ci) => {
+          const x = margin.left + ci * cellW;
+          const y = margin.top + ri * cellH;
+          const bucket = matrix.map.get(`${category}|||${type}`);
+          const spots = bucket ? bucket.spots : 0;
+          const airtime = bucket ? bucket.airtime : 0;
+          const insetX = Math.min(7, Math.max(3, cellW * 0.08));
+          const insetY = Math.min(8, Math.max(3, cellH * 0.08));
+          const rect = svgEl('rect', {
+            x: x + insetX,
+            y: y + insetY,
+            width: Math.max(cellW - (insetX * 2), 2),
+            height: Math.max(cellH - (insetY * 2), 2),
+            rx: 7,
+            fill: spots ? graph10HeatColor(spots, matrix.maxSpots) : '#ffffff',
+            stroke: spots ? 'rgba(23, 59, 92, 0.16)' : '#ffffff',
+            'stroke-width': 1
+          });
+          const title = svgEl('title');
+          title.textContent = spots
+            ? `Category: ${category}\nProgramme Type: ${type}\nAd Spots: ${formatCount(spots)}\nAirtime: ${formatDurationValue(airtime, true)}`
+            : `Category: ${category}\nProgramme Type: ${type}\nNo data available`;
+          rect.appendChild(title);
+          svg.appendChild(rect);
+          if (spots && ((compact && cellW >= 44 && cellH >= 24) || (!compact && cellW >= 54 && cellH >= 28))) {
+            const label = svgEl('text', {
+              x: x + cellW / 2,
+              y: y + cellH * 0.57,
+              fill: graph10LabelColor(spots, matrix.maxSpots),
+              'font-size': 11,
+              'font-weight': 900,
+              'text-anchor': 'middle'
+            });
+            label.textContent = formatCount(spots);
+            svg.appendChild(label);
+          }
+        });
+      });
+      addWrappedText(svg, 'Programme Type', margin.left + plotW / 2, height - 10, 20, '#1f2937', 13, 'middle', 800);
+      const yAxisTitle = svgEl('text', {
+        x: 22,
+        y: margin.top + plotH / 2,
+        fill: '#1f2937',
+        'font-size': 13,
+        'font-weight': 800,
+        'text-anchor': 'middle',
+        transform: `rotate(-90 22 ${margin.top + plotH / 2})`
+      });
+      yAxisTitle.textContent = 'Category';
+      svg.appendChild(yAxisTitle);
+    }
     function renderExcluded() {
       dom.excludedChips.textContent = `Excluded categories: ${PAYLOAD.excluded.map(sentenceCaseName).join(' • ')}`;
     }
@@ -3746,6 +4962,9 @@ __DOM_SECTIONS_JS__
       return {
         reportClock: new Date().toISOString(),
         statusText: dom.statusText?.textContent || 'Loaded shared dashboard snapshot.',
+        supplemental: {
+          ...state.supplemental
+        },
         global: {
           ...state.global,
           channel: [...(state.global.channel || [])],
@@ -3761,6 +4980,12 @@ __DOM_SECTIONS_JS__
     function applyExportedState(snapshot) {
       if (!snapshot) return;
       if (snapshot.reportClock) state.reportClock = snapshot.reportClock;
+      if (snapshot.supplemental) {
+        state.supplemental = {
+          ...state.supplemental,
+          ...snapshot.supplemental
+        };
+      }
       if (snapshot.global) {
         state.global = {
           ...state.global,
@@ -3796,6 +5021,8 @@ __DOM_SECTIONS_JS__
       populateGlobalChannelDropdown('');
       populateGlobalCategoryDropdown('');
       populateGlobalAdvertisorDropdown('');
+      setTailFilterActive(dom.dayTypeFilter, state.supplemental.dayType || 'weekday');
+      setTailFilterActive(dom.periodFilter, state.supplemental.period || 'day');
       if (dom.statusText && snapshot.statusText) {
         dom.statusText.textContent = snapshot.statusText;
       }
@@ -3862,6 +5089,7 @@ __DOM_SECTIONS_JS__
     }
     function renderSection(sectionKey) {
       const rows = getSectionRows(sectionKey);
+      setSectionInsight(sectionKey, buildSectionInsight(sectionKey, rows));
       if (sectionKey === 'g1') drawGraph1(rows);
       if (sectionKey === 'g2') {
         if (state.sections.g2.view === 'pie') {
@@ -3879,11 +5107,17 @@ __DOM_SECTIONS_JS__
       }
       if (sectionKey === 'g4') drawGraph4(rows);
       if (sectionKey === 'g5') drawGraph5(rows);
+      if (sectionKey === 'g6') drawGraph6Bar(rows);
+      if (sectionKey === 'g7') drawGraph7(rows);
+      if (sectionKey === 'g8') drawGraph8(rows);
+      if (sectionKey === 'g9') drawGraph9(rows);
+      if (sectionKey === 'g10') drawGraph10(rows);
     }
     function renderAll() {
       applyGlobalStateToSections();
       rerenderSections(SECTION_KEYS);
       renderSummary();
+      renderSupplementalSummary();
       renderHeaderStats();
       updateStickyFilterPosition();
     }
@@ -3891,9 +5125,9 @@ __DOM_SECTIONS_JS__
       const controls = dom.sections[sectionKey];
       const target = state.sections[sectionKey];
       if (controls.topN) target.topN = controls.topN.value;
-      target.start = controls.start.value;
-      target.end = controls.end.value;
-      target.channel = Array.from(controls.channel.selectedOptions).map(option => option.value);
+      if (controls.start) target.start = controls.start.value;
+      if (controls.end) target.end = controls.end.value;
+      if (controls.channel) target.channel = Array.from(controls.channel.selectedOptions).map(option => option.value);
       if (sharedCategorySections().includes(sectionKey)) {
         target.category = Array.from(controls.category.selectedOptions).map(option => option.value);
       } else if (controls.category) {
@@ -3923,6 +5157,7 @@ __DOM_SECTIONS_JS__
     }
     function bindSection(sectionKey) {
       const controls = dom.sections[sectionKey];
+      if (!controls.reset || !controls.start || !controls.end || !controls.channel) return;
       const controlKeys = sectionKey === 'g5'
         ? ['time']
         : ['topN'];
@@ -4049,6 +5284,24 @@ __DOM_SECTIONS_JS__
         }
       });
     }
+    function bindSupplementalControls() {
+      if (dom.dayTypeFilter) {
+        dom.dayTypeFilter.querySelectorAll('.tail-filter-btn').forEach(button => {
+          button.addEventListener('click', () => {
+            state.supplemental.dayType = button.dataset.value || 'weekday';
+            renderSupplementalSummary();
+          });
+        });
+      }
+      if (dom.periodFilter) {
+        dom.periodFilter.querySelectorAll('.tail-filter-btn').forEach(button => {
+          button.addEventListener('click', () => {
+            state.supplemental.period = button.dataset.value || 'day';
+            renderSupplementalSummary();
+          });
+        });
+      }
+    }
     function toggleFullScreen(sectionKey) {
       const panel = dom.sections[sectionKey].panel;
       if (!document.fullscreenElement) {
@@ -4092,13 +5345,14 @@ __DOM_SECTIONS_JS__
       initializeGlobalControls();
       SECTION_KEYS.forEach(sectionKey => {
         initializeSectionControls(sectionKey);
-        if (!state.initialized) bindSection(sectionKey);
+        if (!state.initialized && dom.sections[sectionKey].reset) bindSection(sectionKey);
         if (!state.initialized) {
           dom.sections[sectionKey].fullBtn.addEventListener('click', () => toggleFullScreen(sectionKey));
         }
       });
       if (!state.initialized) {
         bindGlobalControls();
+        bindSupplementalControls();
         if (dom.pdfBtn) {
           dom.pdfBtn.addEventListener('click', exportDashboardPdf);
         }
@@ -4272,6 +5526,7 @@ html = html.replace("__VALUE_MAPPING_CONFIG_JSON__", json.dumps(value_mapping_co
 html = html.replace("__XLSX_BUNDLE__", xlsx_bundle)
 html = html.replace("__GLOBAL_FILTER_HTML__", build_global_filter_html())
 html = html.replace("__SECTIONS_HTML__", build_sections_html())
+html = html.replace("__TAIL_SUMMARY_HTML__", build_tail_summary_html())
 html = html.replace("__STATE_SECTIONS_JS__", build_state_sections_js())
 html = html.replace("__DOM_SECTIONS_JS__", build_dom_sections_js())
 OUTPUT_PATH.write_text(html, encoding="utf-8")
