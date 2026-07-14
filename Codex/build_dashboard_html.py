@@ -37,6 +37,9 @@ SECTION_CONFIGS = [
     section_config("g8", "section", "Leading Advertising Categories", "g8Chart", [], extras='        <div class="legend" id="g8Legend"></div>', state="{ topN: '10', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'bar' }", dom_fields=["legend", "chart", "panel", "fullBtn"]),
     section_config("g9", "section", "High-value Programmes", "g9Chart", [], extras='        <div class="legend" id="g9Legend"></div>', state="{ topN: '10', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'cherry' }", dom_fields=["legend", "chart", "panel", "fullBtn"]),
     section_config("g10", "section", "Category Programme Preference", "g10Chart", [], extras='        <div class="legend-scale g10-legend-scale" id="g10Legend">\n          <span>Low Volume</span>\n          <div class="legend-gradient"></div>\n          <span>High Volume</span>\n        </div>', state="{ topN: '10', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'heat' }", dom_fields=["legend", "chart", "panel", "fullBtn"]),
+    section_config("g11", "section", "Advertiser Share of Voice Trend", "g11Chart", [], extras='        <div class="legend" id="g11Legend"></div>\n        <div class="chart-metric" id="g11Metric"></div>', state="{ topN: '4', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'stacked' }", dom_fields=["legend", "metric", "chart", "panel", "fullBtn"]),
+    section_config("g12", "section", "Channel Efficiency Matrix", "g12Chart", [], extras='        <div class="chart-metric" id="g12Metric"></div>', state="{ topN: '10', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'bar' }", dom_fields=["metric", "chart", "panel", "fullBtn"]),
+    section_config("g13", "section", "Advertiser Concentration by Channel", "g13Chart", [], extras='        <div class="legend" id="g13Legend"></div>\n        <div class="chart-metric" id="g13Metric"></div>', state="{ topN: '5', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'bar' }", dom_fields=["legend", "metric", "chart", "panel", "fullBtn"]),
 ]
 def parse_date(value: str) -> str:
     value = (value or "").strip()
@@ -167,53 +170,25 @@ def section_block(section_class: str, title: str, controls: list[str], chart_id:
 def build_sections_html() -> str:
     return "\n\n".join(section_block(config["section_class"], config["title"], build_controls(config["key"], config["controls"]), config["chart_id"], config["extras"], config["head_actions"]) for config in SECTION_CONFIGS)
 def build_tail_summary_html() -> str:
-    return """    <section class="section tail-summary-section" id="tailSummarySection">
-      <div class="section-head">
-        <h2>Performance Snapshots</h2>
-      </div>
-      <div class="panel section-card tail-summary-card">
-        <div class="tail-summary-block">
-          <div class="tail-summary-header">
-            <h3 class="tail-summary-title">Weekday vs Weekend</h3>
-            <div class="tail-filter-group" id="dayTypeFilter" role="tablist" aria-label="Day Type Filter">
-              <button class="tail-filter-btn active" data-value="weekday" type="button">Weekday</button>
-              <button class="tail-filter-btn" data-value="weekend" type="button">Weekend</button>
-            </div>
-          </div>
-          <div class="tail-card-grid" id="dayTypeSummaryGrid">
-            <div class="tail-stat-card">
-              <div class="tail-stat-label">Top Performing Brand</div>
-              <div class="tail-stat-value" id="dayTypeTopBrand">-</div>
-              <div class="tail-stat-note" id="dayTypeTopBrandNote"></div>
-            </div>
-            <div class="tail-stat-card">
-              <div class="tail-stat-label">Top Category</div>
-              <div class="tail-stat-value" id="dayTypeTopCategory">-</div>
-              <div class="tail-stat-note" id="dayTypeTopCategoryNote"></div>
-            </div>
-            <div class="tail-stat-card">
-              <div class="tail-stat-label">Spot Length</div>
-              <div class="tail-stat-value" id="dayTypeSpotLength">-</div>
-              <div class="tail-stat-note" id="dayTypeSpotLengthNote"></div>
-            </div>
-          </div>
+    return ""
+def build_dataset_summary_html() -> str:
+    return """    <section class="section" id="datasetSummarySection">
+      <div class="panel section-card dataset-summary-card">
+        <div class="section-head">
+          <h2>Dataset Summary</h2>
         </div>
-        <div class="tail-summary-divider"></div>
-        <div class="tail-summary-block">
-          <div class="tail-summary-header">
-            <h3 class="tail-summary-title">Time Period Row Count</h3>
-            <div class="tail-filter-group" id="periodFilter" role="tablist" aria-label="Time Period Filter">
-              <button class="tail-filter-btn active" data-value="day" type="button">Day</button>
-              <button class="tail-filter-btn" data-value="week" type="button">Week</button>
-              <button class="tail-filter-btn" data-value="month" type="button">Month</button>
-            </div>
+        <div class="dataset-summary-grid">
+          <div class="dataset-kpi-card">
+            <div class="dataset-kpi-label">Total Rows</div>
+            <div class="dataset-kpi-value" id="datasetSummaryTotalRows">0</div>
           </div>
-          <div class="tail-card-grid tail-card-grid-single">
-            <div class="tail-stat-card">
-              <div class="tail-stat-label">Number of Rows</div>
-              <div class="tail-stat-value" id="periodRowCount">0</div>
-              <div class="tail-stat-note" id="periodRowCountNote"></div>
-            </div>
+          <div class="dataset-kpi-card">
+            <div class="dataset-kpi-label">Total Categories</div>
+            <div class="dataset-kpi-value" id="datasetSummaryTotalCategories">0</div>
+          </div>
+          <div class="dataset-kpi-card">
+            <div class="dataset-kpi-label">Total Advertisers</div>
+            <div class="dataset-kpi-value" id="datasetSummaryTotalAdvertisers">0</div>
           </div>
         </div>
       </div>
@@ -1068,7 +1043,7 @@ html = """<!DOCTYPE html>
       background: linear-gradient(90deg, rgba(46, 107, 16, 0.080) 0%, rgba(46, 107, 16, 0.180) 35%, rgba(46, 107, 16, 0.280) 68%, rgba(46, 107, 16, 0.364) 100%);
     }
     .g10-legend-scale .legend-gradient {
-      background: linear-gradient(90deg, #eff6ff 0%, #bfdbfe 35%, #60a5fa 68%, #1d4ed8 100%);
+      background: linear-gradient(90deg, rgba(23, 59, 92, 0.18) 0%, rgba(23, 59, 92, 0.26) 35%, rgba(23, 59, 92, 0.35) 68%, rgba(23, 59, 92, 0.44) 100%);
     }
     .legend-item {
       display: inline-flex;
@@ -1162,75 +1137,156 @@ html = """<!DOCTYPE html>
     .summary-line strong {
       font-weight: 400;
     }
+    .dataset-summary-card {
+      display: grid;
+      gap: 8px;
+    }
+    .dataset-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .dataset-kpi-card {
+      min-width: 0;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+      display: grid;
+      gap: 4px;
+      align-content: center;
+    }
+    .dataset-kpi-label {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1px;
+    }
+    .dataset-kpi-value {
+      color: var(--text);
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.1;
+      word-break: break-word;
+    }
     .tail-summary-card {
       display: grid;
-      gap: 12px;
-      padding: 12px 14px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      padding: 0;
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+    }
+    .tail-summary-section,
+    .tail-summary-section .panel,
+    .tail-summary-section .tail-summary-card,
+    .tail-summary-section .tail-summary-block,
+    .tail-summary-section .tail-card-grid,
+    .tail-summary-section .tail-card-grid-single {
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+    }
+    .tail-summary-section .section-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 0;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, .05);
+      min-width: 0;
+      overflow: hidden;
     }
     .tail-summary-block {
       display: grid;
-      gap: 10px;
+      gap: 14px;
+      align-content: start;
+    }
+    .tail-summary-panel {
+      background:
+        radial-gradient(circle at top right, rgba(96, 165, 250, 0.14), transparent 34%),
+        linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      border-radius: 16px;
+      padding: 18px 18px 16px;
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+      min-height: 100%;
     }
     .tail-summary-header {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
-      gap: 10px;
-      flex-wrap: wrap;
+      gap: 14px;
+      flex-wrap: nowrap;
+    }
+    .tail-summary-heading {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
     }
     .tail-summary-title {
       margin: 0;
       color: var(--text);
-      font-size: 15px;
-      font-weight: 800;
-      line-height: 1.2;
+      font-size: 19px;
+      font-weight: 900;
+      line-height: 1.1;
     }
-    .tail-filter-group {
-      display: inline-flex;
-      align-items: center;
-      flex-wrap: wrap;
+    .tail-filter-field {
+      display: grid;
       gap: 6px;
-      padding: 4px;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      background: var(--surface-soft);
+      min-width: 180px;
+      max-width: 220px;
+      width: 100%;
     }
-    .tail-filter-btn {
-      border: 0;
-      border-radius: 999px;
-      padding: 7px 12px;
-      background: transparent;
+    .tail-filter-label {
       color: var(--muted);
-      font: inherit;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 800;
-      line-height: 1;
-      cursor: pointer;
-      transition: background 180ms ease, color 180ms ease, box-shadow 180ms ease;
+      letter-spacing: 0.35px;
+      text-transform: uppercase;
     }
-    .tail-filter-btn.active {
-      background: #2563eb;
-      color: #ffffff;
-      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.16);
+    .tail-filter-select {
+      width: 100%;
+      min-width: 0;
+      min-height: 42px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
     }
     .tail-card-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
     }
     .tail-card-grid-single {
-      grid-template-columns: minmax(0, 240px);
+      grid-template-columns: minmax(0, 1fr);
+      justify-content: stretch;
     }
     .tail-stat-card {
-      padding: 12px 14px;
-      border-radius: 10px;
-      border: 1px solid var(--line);
-      background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+      padding: 15px 15px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(241, 245, 249, 0.92) 100%);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
       display: grid;
-      gap: 4px;
-      min-height: 92px;
+      gap: 6px;
+      min-height: 116px;
       align-content: start;
+      min-width: 0;
+      overflow: hidden;
+      position: relative;
+    }
+    .tail-stat-card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 14px;
+      bottom: 14px;
+      width: 4px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, var(--brand), var(--teal));
     }
     .tail-stat-label {
       color: var(--muted);
@@ -1238,24 +1294,30 @@ html = """<!DOCTYPE html>
       font-weight: 800;
       letter-spacing: 0.35px;
       text-transform: uppercase;
+      padding-left: 10px;
     }
     .tail-stat-value {
       color: var(--text);
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 900;
-      line-height: 1.1;
+      line-height: 1.05;
       word-break: break-word;
+      padding-left: 10px;
     }
     .tail-stat-note {
       color: var(--muted);
       font-size: 12px;
       font-weight: 600;
       line-height: 1.4;
+      padding-left: 10px;
     }
-    .tail-summary-divider {
-      height: 1px;
-      width: 100%;
-      background: var(--line);
+    .tail-summary-section .tail-stat-value,
+    .tail-summary-section .tail-stat-note,
+    .tail-summary-section .tail-stat-label,
+    .tail-summary-section .tail-summary-title,
+    .tail-summary-section .tail-filter-label {
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
     .fullscreen-focus-header {
       display: none;
@@ -1405,6 +1467,9 @@ html = """<!DOCTYPE html>
       .section-card {
         padding: 14px;
       }
+      .dataset-summary-grid {
+        grid-template-columns: 1fr;
+      }
       .section-head {
         flex-wrap: wrap;
       }
@@ -1428,12 +1493,22 @@ html = """<!DOCTYPE html>
       .tail-card-grid-single {
         grid-template-columns: 1fr;
       }
+      .tail-summary-card {
+        grid-template-columns: 1fr;
+      }
+      .tail-summary-panel {
+        min-height: 0;
+      }
       .tail-summary-header {
         align-items: flex-start;
+        flex-wrap: wrap;
       }
-      .tail-filter-group {
+      .tail-summary-heading {
         width: 100%;
-        border-radius: 14px;
+      }
+      .tail-filter-field {
+        width: 100%;
+        max-width: none;
       }
       .tail-stat-card {
         min-height: 0;
@@ -1503,7 +1578,7 @@ __GLOBAL_FILTER_HTML__
       </div>
     </section>
 __SECTIONS_HTML__
-__TAIL_SUMMARY_HTML__
+__DATASET_SUMMARY_HTML__
     <button class="share-fab" id="shareBtn" type="button" title="Share Dashboard" aria-label="Share Dashboard">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 16V5"></path>
@@ -1542,11 +1617,14 @@ __XLSX_BUNDLE__
       g1: ['#3b82f6', '#22c55e', '#ef4444', '#a855f7'],
       g2: ['#3b82f6', '#22c55e', '#ef4444', '#a855f7'],
       g3: ['#1d4ed8', '#0f766e', '#b45309', '#7c3aed', '#be123c', '#0369a1', '#166534', '#7f1d1d'],
-      g6: ['#dbeafe', '#93c5fd', '#60a5fa', '#2563eb'],
+      g6: ['#dbeafe', '#93c5fd', '#67e8f9', '#5eead4'],
       g7: '#2563eb',
-      g8: ['#2563eb'],
+      g8: ['#93c5fd'],
       g9: ['#2563eb', '#22c55e', '#f59e0b', '#7c3aed', '#ef4444', '#14b8a6'],
-      g10: ['rgba(233, 241, 249, 0.38)', 'rgba(194, 214, 232, 0.50)', 'rgba(111, 145, 176, 0.65)', 'rgba(52, 92, 129, 0.78)', 'rgba(23, 59, 92, 0.90)'],
+      g10: ['rgba(23, 59, 92, 0.18)', 'rgba(23, 59, 92, 0.26)', 'rgba(23, 59, 92, 0.35)', 'rgba(23, 59, 92, 0.40)', 'rgba(23, 59, 92, 0.44)'],
+      g11: ['#2563eb', '#16a34a', '#f59e0b', '#7c3aed', '#94a3b8'],
+      g12: ['#93c5fd'],
+      g13: ['#93c5fd'],
       heat: ['#eef4ff', '#dbeafe', '#93c5fd', '#60a5fa', '#2563eb'],
       g4heat: ['#e0f2fe', '#7dd3fc', '#7dd3fc'],
       g5heat: ['#f3f4f6', '#e5e7eb', '#d1d5db', '#9ca3af', '#9ca3af']
@@ -1561,8 +1639,7 @@ __XLSX_BUNDLE__
       pendingWorkbookFileName: '',
       pendingWorkbookSelectedSheet: '',
       supplemental: {
-        dayType: 'weekday',
-        period: 'day'
+        dayType: 'weekday'
       },
       global: {
         topN: '10',
@@ -1596,19 +1673,11 @@ __STATE_SECTIONS_JS__
       totalRecordsText: document.getElementById('totalRecordsText'),
       excludedChips: document.getElementById('excludedChips'),
       summaryLines: document.getElementById('summaryLines'),
-      dayTypeFilter: document.getElementById('dayTypeFilter'),
-      periodFilter: document.getElementById('periodFilter'),
-      dayTypeTopBrand: document.getElementById('dayTypeTopBrand'),
-      dayTypeTopBrandNote: document.getElementById('dayTypeTopBrandNote'),
-      dayTypeTopCategory: document.getElementById('dayTypeTopCategory'),
-      dayTypeTopCategoryNote: document.getElementById('dayTypeTopCategoryNote'),
-      dayTypeSpotLength: document.getElementById('dayTypeSpotLength'),
-      dayTypeSpotLengthNote: document.getElementById('dayTypeSpotLengthNote'),
-      periodRowCount: document.getElementById('periodRowCount'),
-      periodRowCountNote: document.getElementById('periodRowCountNote'),
+      datasetSummaryTotalRows: document.getElementById('datasetSummaryTotalRows'),
+      datasetSummaryTotalCategories: document.getElementById('datasetSummaryTotalCategories'),
+      datasetSummaryTotalAdvertisers: document.getElementById('datasetSummaryTotalAdvertisers'),
       headerSection: document.getElementById('dashboardHeaderSection'),
       summarySection: document.getElementById('dashboardSummarySection'),
-      tailSummarySection: document.getElementById('tailSummarySection'),
       stickyFilterWrap: document.getElementById('stickyFilterWrap'),
       stickyFilterShell: document.getElementById('stickyFilterShell'),
       global: {
@@ -1646,7 +1715,7 @@ __STATE_SECTIONS_JS__
 __DOM_SECTIONS_JS__
       }
     };
-    const SECTION_KEYS = ['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'g9', 'g10'];
+    const SECTION_KEYS = ['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'g9', 'g10', 'g11', 'g12', 'g13'];
     const CATEGORY_SECTION_KEYS = ['g1', 'g2', 'g3', 'g5'];
     function formatNumber(value) { return numberFormat.format(value || 0); }
     function sentenceCaseName(value) {
@@ -2264,14 +2333,13 @@ __DOM_SECTIONS_JS__
     function graph10HeatColor(value, maxValue) {
       const scale = Math.max(0, Math.min(1, value / Math.max(maxValue, 1)));
       return interpolateRgbaColor(
-        { r: 233, g: 241, b: 249, a: 0.38 },
-        { r: 23, g: 59, b: 92, a: 0.90 },
+        { r: 23, g: 59, b: 92, a: 0.18 },
+        { r: 23, g: 59, b: 92, a: 0.44 },
         scale
       );
     }
     function graph10LabelColor(value, maxValue) {
-      const scale = Math.max(0, Math.min(1, value / Math.max(maxValue, 1)));
-      return scale >= 0.58 ? '#ffffff' : '#172033';
+      return '#ffffff';
     }
     function channelColor(channel, paletteKey) {
       const fixed = CHANNEL_COLORS[String(channel || '').trim().toUpperCase()];
@@ -2423,6 +2491,14 @@ __DOM_SECTIONS_JS__
       if (dom.totalRecordsText) dom.totalRecordsText.textContent = formatNumber(rows.length);
       if (dom.activeDateRangeText) dom.activeDateRangeText.textContent = activeRange;
     }
+    function renderDatasetSummary() {
+      const rows = state.rawRows || [];
+      const categories = new Set(rows.map(row => String(row.category || '').trim()).filter(Boolean));
+      const advertisers = new Set(rows.map(row => String(row.company || '').trim()).filter(Boolean));
+      if (dom.datasetSummaryTotalRows) dom.datasetSummaryTotalRows.textContent = formatNumber(rows.length);
+      if (dom.datasetSummaryTotalCategories) dom.datasetSummaryTotalCategories.textContent = formatNumber(categories.size);
+      if (dom.datasetSummaryTotalAdvertisers) dom.datasetSummaryTotalAdvertisers.textContent = formatNumber(advertisers.size);
+    }
     function resetDashboardState() {
       state.rawRows = [];
       state.standardizedRows = [];
@@ -2432,8 +2508,7 @@ __DOM_SECTIONS_JS__
       state.pendingWorkbookFileName = '';
       state.pendingWorkbookSelectedSheet = '';
       state.supplemental = {
-        dayType: 'weekday',
-        period: 'day'
+        dayType: 'weekday'
       };
       state.global = {
         topN: '10',
@@ -2461,6 +2536,7 @@ __DOM_SECTIONS_JS__
       if (dom.summaryLines) {
         dom.summaryLines.innerHTML = '<div class="summary-line">Upload a CSV or XLSX file to generate dashboard insights.</div>';
       }
+      renderDatasetSummary();
       SECTION_KEYS.forEach(sectionKey => {
         const controls = dom.sections[sectionKey];
         if (!controls) return;
@@ -2913,6 +2989,18 @@ __DOM_SECTIONS_JS__
     function applyGlobalStateToSections() {
       SECTION_KEYS.forEach(sectionKey => {
         const controls = dom.sections[sectionKey];
+        if (!state.sections[sectionKey]) {
+          state.sections[sectionKey] = {
+            topN: state.global.topN,
+            start: state.global.start,
+            end: state.global.end,
+            channel: [...state.global.channel],
+            category: [...state.global.category],
+            advertisor: [...state.global.advertisor],
+            time: state.global.time,
+            view: ''
+          };
+        }
         const target = state.sections[sectionKey];
         if (!controls || !target) return;
         if (controls.topN) controls.topN.value = state.global.topN;
@@ -3172,34 +3260,14 @@ __DOM_SECTIONS_JS__
       }
       return { rows: filteredRows, label };
     }
-    function setTailStat(node, noteNode, value, note) {
-      if (node) node.textContent = value;
-      if (noteNode) noteNode.textContent = note;
-    }
-    function setTailFilterActive(container, value) {
-      if (!container) return;
-      container.querySelectorAll('.tail-filter-btn').forEach(button => {
-        button.classList.toggle('active', button.dataset.value === value);
-      });
-    }
-    function renderSupplementalSummary() {
-      const sourceRows = getGlobalFilteredRows();
-      const dayType = state.supplemental.dayType || 'weekday';
-      const period = state.supplemental.period || 'day';
-      setTailFilterActive(dom.dayTypeFilter, dayType);
-      setTailFilterActive(dom.periodFilter, period);
-      const dayRows = weekdayWeekendRows(sourceRows, dayType);
-      const topBrand = topBrandSummary(dayRows);
-      const topCategory = topCategorySummary(dayRows);
-      const topSpotLength = topSpotLengthSummary(dayRows);
-      setTailStat(dom.dayTypeTopBrand, dom.dayTypeTopBrandNote, topBrand ? titleCaseName(topBrand.label) : 'No data', topBrand ? `${formatDurationValue(topBrand.total, true)} across ${formatCount(topBrand.spots)} spots` : 'No rows available for this selection');
-      setTailStat(dom.dayTypeTopCategory, dom.dayTypeTopCategoryNote, topCategory ? sentenceCaseName(topCategory.label) : 'No data', topCategory ? `${formatDurationValue(topCategory.total, true)} across ${formatCount(topCategory.spots)} spots` : 'No rows available for this selection');
-      setTailStat(dom.dayTypeSpotLength, dom.dayTypeSpotLengthNote, topSpotLength ? topSpotLength.label : 'No data', topSpotLength ? `${formatCount(topSpotLength.spots)} advertisement spots` : 'No rows available for this selection');
-      const periodSummary = latestPeriodRows(sourceRows, period);
-      setTailStat(dom.periodRowCount, dom.periodRowCountNote, formatCount(periodSummary.rows.length), periodSummary.rows.length ? `${period.charAt(0).toUpperCase() + period.slice(1)} window: ${periodSummary.label}` : 'No rows available for this selection');
-    }
     function getSectionRows(sectionKey) {
-      const sectionState = state.sections[sectionKey];
+      const sectionState = state.sections[sectionKey] || {
+        start: state.global.start,
+        end: state.global.end,
+        channel: state.global.channel,
+        category: state.global.category,
+        advertisor: state.global.advertisor
+      };
       return filterRows(state.cleanedRows, {
         start: sectionState.start,
         end: sectionState.end,
@@ -3230,9 +3298,12 @@ __DOM_SECTIONS_JS__
         bucket[row.channel] += row.aaddur;
         matrix.set(row.company, bucket);
       });
+      const sortedAdvertisors = topAdvertisors
+        .slice()
+        .sort((a, b) => b.total - a.total || a.advertisor.localeCompare(b.advertisor));
       return {
         channels,
-        rows: topAdvertisors.map(item => ({
+        rows: sortedAdvertisors.map(item => ({
           advertisor: item.advertisor,
           total: item.total,
           values: matrix.get(item.advertisor) || Object.fromEntries(channels.map(channel => [channel, 0]))
@@ -3461,6 +3532,7 @@ __DOM_SECTIONS_JS__
         .slice(0, limit);
     }
     function buildCategoryProgrammeMatrix(rows, limit) {
+      const preferredProgrammeOrder = ['Morning', 'Afternoon', 'Prime Time', 'Late Night'];
       const categoryTotals = new Map();
       const typeTotals = new Map();
       const map = new Map();
@@ -3481,7 +3553,16 @@ __DOM_SECTIONS_JS__
         .slice(0, limit)
         .map(([category]) => category);
       const programmeTypes = [...typeTotals.entries()]
-        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .sort((a, b) => {
+          const orderA = preferredProgrammeOrder.indexOf(a[0]);
+          const orderB = preferredProgrammeOrder.indexOf(b[0]);
+          if (orderA !== -1 || orderB !== -1) {
+            if (orderA === -1) return 1;
+            if (orderB === -1) return -1;
+            if (orderA !== orderB) return orderA - orderB;
+          }
+          return b[1] - a[1] || a[0].localeCompare(b[0]);
+        })
         .slice(0, limit)
         .map(([type]) => type);
       let maxSpots = 0;
@@ -3497,6 +3578,81 @@ __DOM_SECTIONS_JS__
         map,
         maxSpots: Math.max(maxSpots, 1)
       };
+    }
+    function buildAdvertiserShareOfVoiceTrend(rows, limit = 4) {
+      const dates = uniqueSorted(rows.map(row => row.date).filter(Boolean));
+      const advertiserTotals = new Map();
+      const dateTotals = new Map();
+      const dateAdvertiserTotals = new Map();
+      rows.forEach(row => {
+        const date = String(row.date || '').trim();
+        const advertiser = String(row.product || '').trim() || 'Unknown Brand';
+        const amount = row.aaddur || 0;
+        if (!date) return;
+        advertiserTotals.set(advertiser, (advertiserTotals.get(advertiser) || 0) + amount);
+        dateTotals.set(date, (dateTotals.get(date) || 0) + amount);
+        const key = `${date}|||${advertiser}`;
+        dateAdvertiserTotals.set(key, (dateAdvertiserTotals.get(key) || 0) + amount);
+      });
+      const leaders = [...advertiserTotals.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .slice(0, limit)
+        .map(([advertiser]) => advertiser);
+      const advertisers = leaders.length ? [...leaders, 'Others'] : [];
+      const points = dates.map(date => {
+        const total = dateTotals.get(date) || 0;
+        const values = {};
+        let leaderTotal = 0;
+        leaders.forEach(advertiser => {
+          const value = dateAdvertiserTotals.get(`${date}|||${advertiser}`) || 0;
+          values[advertiser] = total ? (value / total) * 100 : 0;
+          leaderTotal += value;
+        });
+        values.Others = total ? Math.max(0, ((total - leaderTotal) / total) * 100) : 0;
+        return { date, total, values };
+      });
+      return { dates, advertisers, points };
+    }
+    function buildChannelEfficiency(rows) {
+      const map = new Map();
+      rows.forEach(row => {
+        const channel = String(row.channel || '').trim();
+        if (!channel) return;
+        const bucket = map.get(channel) || { channel, spots: 0, total: 0 };
+        bucket.spots += 1;
+        bucket.total += row.aaddur || 0;
+        map.set(channel, bucket);
+      });
+      return [...map.values()]
+        .map(item => ({ ...item, average: item.spots ? item.total / item.spots : 0 }))
+        .sort((a, b) => b.total - a.total || b.spots - a.spots || a.channel.localeCompare(b.channel));
+    }
+    function buildChannelConcentration(rows, limit = 5) {
+      const channelMap = new Map();
+      rows.forEach(row => {
+        const channel = String(row.channel || '').trim();
+        const advertiser = String(row.product || '').trim() || 'Unknown Brand';
+        if (!channel) return;
+        const bucket = channelMap.get(channel) || { total: 0, advertisers: new Map(), uniqueAdvertisers: new Set() };
+        const amount = row.aaddur || 0;
+        bucket.total += amount;
+        bucket.advertisers.set(advertiser, (bucket.advertisers.get(advertiser) || 0) + amount);
+        bucket.uniqueAdvertisers.add(advertiser);
+        channelMap.set(channel, bucket);
+      });
+      return [...channelMap.entries()]
+        .map(([channel, data]) => {
+          const ranked = [...data.advertisers.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+          const topTotal = ranked.slice(0, limit).reduce((sum, [, value]) => sum + value, 0);
+          return {
+            channel,
+            share: data.total ? (topTotal / data.total) * 100 : 0,
+            topTotal,
+            total: data.total,
+            advertiserCount: data.uniqueAdvertisers.size
+          };
+        })
+        .sort((a, b) => b.share - a.share || b.total - a.total || a.channel.localeCompare(b.channel));
     }
     const GRAPH9_TIME_ORDER = ['Morning', 'Afternoon', 'Prime Time', 'Late Night'];
     const GRAPH9_TIME_LABELS = {
@@ -3654,6 +3810,27 @@ __DOM_SECTIONS_JS__
       if (!best || !best.spots) return 'No data is available for the current selection.';
       return `${sentenceCaseName(best.category)} shows the strongest programme preference for ${best.type}, where the filtered dataset records the highest interaction at ${formatCount(best.spots)} spots.`;
     }
+    function buildGraph11Insight(rows) {
+      const trend = buildAdvertiserShareOfVoiceTrend(rows, 4);
+      if (trend.points.length < 2 || trend.advertisers.length < 2) return 'No data is available for the current selection.';
+      const primary = trend.advertisers[0];
+      const first = trend.points[0].values[primary] || 0;
+      const last = trend.points[trend.points.length - 1].values[primary] || 0;
+      const direction = last > first ? 'gained' : last < first ? 'lost' : 'held';
+      return `${titleCaseName(primary)} ${direction} share of voice across the filtered period, moving from ${formatPercent(first)} to ${formatPercent(last)} of daily ad duration.`;
+    }
+    function buildGraph12Insight(rows) {
+      const channels = buildChannelEfficiency(rows);
+      const leader = channels[0];
+      if (!leader) return 'No data is available for the current selection.';
+      return `${titleCaseName(leader.channel)} combines the heaviest total load with ${formatCount(leader.spots)} spots and an average creative duration of ${formatDurationValue(leader.average, true)}.`;
+    }
+    function buildGraph13Insight(rows) {
+      const concentration = buildChannelConcentration(rows, 5);
+      const leader = concentration[0];
+      if (!leader) return 'No data is available for the current selection.';
+      return `${titleCaseName(leader.channel)} is the most concentrated channel, with its top five advertisers accounting for ${formatPercent(leader.share)} of total ad duration.`;
+    }
     function buildSectionInsight(sectionKey, rows) {
       if (!rows.length) return 'No data is available for the current selection.';
       if (sectionKey === 'g1') return buildGraph1Insight(rows);
@@ -3666,6 +3843,9 @@ __DOM_SECTIONS_JS__
       if (sectionKey === 'g8') return buildGraph8Insight(rows);
       if (sectionKey === 'g9') return buildGraph9Insight(rows);
       if (sectionKey === 'g10') return buildGraph10Insight(rows);
+      if (sectionKey === 'g11') return buildGraph11Insight(rows);
+      if (sectionKey === 'g12') return buildGraph12Insight(rows);
+      if (sectionKey === 'g13') return buildGraph13Insight(rows);
       return '';
     }
     function drawGraph1(rows) {
@@ -3712,7 +3892,9 @@ __DOM_SECTIONS_JS__
     function drawGraph2Bar(rows) {
       applyChartDensity('g2');
       if (dom.sections.g2.metric) dom.sections.g2.metric.textContent = '';
-      const topAdvertisors = aggregateAdvertisors(rows).slice(0, Number.parseInt(state.sections.g2.topN, 10));
+      const topAdvertisors = aggregateAdvertisors(rows)
+        .slice(0, Number.parseInt(state.sections.g2.topN, 10))
+        .sort((a, b) => b.total - a.total || a.advertisor.localeCompare(b.advertisor));
       const matrix = buildAdvertisorChannelMatrix(rows, topAdvertisors);
       if (!matrix.rows.length || !matrix.channels.length) {
         drawEmpty(dom.sections.g2.chart, 'No data available for selected filters');
@@ -4337,7 +4519,12 @@ __DOM_SECTIONS_JS__
       }
       setChartBoxHeight(dom.sections.g6.chart, 500);
       const { svg, width, height } = makeSvg(dom.sections.g6.chart);
-      const barGradient = appendLinearGradient(svg, 'g6BarGradient', themeVar('--brand', '#2563eb'), themeVar('--teal', '#0f766e'));
+      const barGradient = appendLinearGradient(
+        svg,
+        'g6BarGradient',
+        themeVar('--brand', '#2563eb'),
+        themeVar('--teal', '#0f766e')
+      );
       const margin = { top: 26, right: 104, bottom: 48, left: 152 };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
@@ -4427,7 +4614,9 @@ __DOM_SECTIONS_JS__
         svg.appendChild(tick);
       }
       const pathPoints = points.map((point, index) => {
-        const x = margin.left + (plotW * index / Math.max(points.length - 1, 1));
+        const x = points.length === 1
+          ? margin.left + (plotW / 2)
+          : margin.left + (plotW * index / Math.max(points.length - 1, 1));
         const y = margin.top + plotH - ((point.spots / maxSpots) * plotH);
         return { ...point, x, y };
       });
@@ -4460,6 +4649,19 @@ __DOM_SECTIONS_JS__
         title.textContent = `Date: ${formatDate(point.date)}\nAd Spots: ${formatCount(point.spots)}\nAirtime: ${formatDurationValue(point.airtime, true)}`;
         circle.appendChild(title);
         svg.appendChild(circle);
+        if (isExtreme) {
+          addWrappedText(
+            svg,
+            formatCount(point.spots),
+            point.x,
+            Math.max(point.y - 16, margin.top + 10),
+            18,
+            '#1f2937',
+            9.5,
+            'middle',
+            800
+          );
+        }
       });
       addWrappedText(svg, 'Date', margin.left + plotW / 2, height - 12, 20, '#1f2937', 13, 'middle', 800);
       const yAxisTitle = svgEl('text', {
@@ -4477,8 +4679,6 @@ __DOM_SECTIONS_JS__
         if (points.length > 12 && index % 2 === 1) return;
         addWrappedText(svg, formatDate(point.date), point.x, margin.top + plotH + 20, 10, '#1f2937', 9.2, 'middle', 700);
       });
-      addWrappedText(svg, `Highest: ${formatDate(highest.date)} (${formatCount(highest.spots)})`, highest.x, Math.max(highest.y - 28, margin.top + 16), 18, '#1f2937', 9.5, 'middle', 800);
-      addWrappedText(svg, `Lowest: ${formatDate(lowest.date)} (${formatCount(lowest.spots)})`, lowest.x, Math.min(lowest.y + 24, margin.top + plotH - 12), 18, '#6b7280', 9.5, 'middle', 800);
     }
     function drawGraph8(rows) {
       const categories = buildCategoryVolume(rows, getTopNLimit('g8'));
@@ -4490,7 +4690,12 @@ __DOM_SECTIONS_JS__
       const compact = getTopNLimit('g8') >= 20;
       setChartBoxHeight(dom.sections.g8.chart, compact ? 620 : 500);
       const { svg, width, height } = makeSvg(dom.sections.g8.chart);
-      const barGradient = appendLinearGradient(svg, 'g8BarGradient', themeVar('--brand', '#2563eb'), themeVar('--teal', '#0f766e'));
+      const barGradient = appendLinearGradient(
+        svg,
+        'g8BarGradient',
+        themeVar('--brand', '#2563eb'),
+        themeVar('--teal', '#0f766e')
+      );
       const margin = { top: 28, right: 28, bottom: compact ? 132 : 110, left: 78 };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
@@ -4723,6 +4928,274 @@ __DOM_SECTIONS_JS__
       yAxisTitle.textContent = 'Category';
       svg.appendChild(yAxisTitle);
     }
+    function drawGraph11(rows) {
+      const trend = buildAdvertiserShareOfVoiceTrend(rows, 4);
+      if (!trend.points.length || trend.advertisers.length < 2) {
+        drawEmpty(dom.sections.g11.chart, 'No advertiser share trend is available for the selected filters');
+        dom.sections.g11.legend.innerHTML = '';
+        dom.sections.g11.metric.textContent = '';
+        return;
+      }
+      setChartBoxHeight(dom.sections.g11.chart, 520);
+      const { svg, width, height } = makeSvg(dom.sections.g11.chart);
+      const margin = { top: 24, right: 28, bottom: 92, left: 62 };
+      const plotW = width - margin.left - margin.right;
+      const plotH = height - margin.top - margin.bottom;
+      for (let i = 0; i <= 4; i++) {
+        const share = i * 25;
+        const y = margin.top + plotH - (plotH * share / 100);
+        svg.appendChild(svgEl('line', { x1: margin.left, y1: y, x2: margin.left + plotW, y2: y, stroke: '#e5e7eb', 'stroke-width': 1 }));
+        const tick = svgEl('text', { x: margin.left - 10, y: y + 5, fill: '#6b7280', 'font-size': 12, 'text-anchor': 'end' });
+        tick.textContent = `${share}%`;
+        svg.appendChild(tick);
+      }
+      const isSingle = trend.points.length === 1;
+      const step = isSingle ? 0 : plotW / Math.max(trend.points.length - 1, 1);
+      const xForIndex = index => isSingle ? margin.left + plotW / 2 : margin.left + (index * step);
+      if (isSingle) {
+        const barWidth = Math.min(140, plotW * 0.36);
+        const x = margin.left + (plotW - barWidth) / 2;
+        let offset = 0;
+        trend.advertisers.forEach((advertiser, index) => {
+          const share = trend.points[0].values[advertiser] || 0;
+          const barHeight = plotH * (share / 100);
+          const y = margin.top + plotH - offset - barHeight;
+          const rect = svgEl('rect', {
+            x,
+            y,
+            width: barWidth,
+            height: Math.max(barHeight, 0),
+            fill: chartPalettes.g11[index % chartPalettes.g11.length],
+            'fill-opacity': advertiser === 'Others' ? 0.50 : 0.72
+          });
+          const title = svgEl('title');
+          title.textContent = `${advertiser}: ${formatPercent(share)} share on ${formatDate(trend.points[0].date)}`;
+          rect.appendChild(title);
+          svg.appendChild(rect);
+          offset += barHeight;
+        });
+      } else {
+        const cumulative = trend.points.map(() => 0);
+        trend.advertisers.forEach((advertiser, index) => {
+          const color = chartPalettes.g11[index % chartPalettes.g11.length];
+          const upperPoints = [];
+          const lowerPoints = [];
+          trend.points.forEach((point, pointIndex) => {
+            const base = cumulative[pointIndex];
+            const next = base + (point.values[advertiser] || 0);
+            upperPoints.push([xForIndex(pointIndex), margin.top + plotH - ((next / 100) * plotH)]);
+            lowerPoints.push([xForIndex(pointIndex), margin.top + plotH - ((base / 100) * plotH)]);
+            cumulative[pointIndex] = next;
+          });
+          const polygon = svgEl('polygon', {
+            points: [...upperPoints, ...lowerPoints.reverse()].map(([x, y]) => `${x},${y}`).join(' '),
+            fill: color,
+            'fill-opacity': advertiser === 'Others' ? 0.42 : 0.22,
+            stroke: color,
+            'stroke-width': 1.4
+          });
+          const title = svgEl('title');
+          title.textContent = advertiser;
+          polygon.appendChild(title);
+          svg.appendChild(polygon);
+        });
+      }
+      trend.points.forEach((point, index) => {
+        const x = xForIndex(index);
+        svg.appendChild(svgEl('line', { x1: x, y1: margin.top + plotH, x2: x, y2: margin.top + plotH + 6, stroke: '#cbd5e1', 'stroke-width': 1 }));
+        if (trend.points.length <= 8 || index % 2 === 0 || index === trend.points.length - 1) {
+          addWrappedText(svg, formatDate(point.date), x, margin.top + plotH + 18, 10, '#1f2937', 9.1, 'middle', 700);
+        }
+      });
+      addWrappedText(svg, 'Date', margin.left + plotW / 2, height - 10, 20, '#1f2937', 13, 'middle', 800);
+      const yAxisTitle = svgEl('text', {
+        x: 20,
+        y: margin.top + plotH / 2,
+        fill: '#1f2937',
+        'font-size': 13,
+        'font-weight': 800,
+        'text-anchor': 'middle',
+        transform: `rotate(-90 20 ${margin.top + plotH / 2})`
+      });
+      yAxisTitle.textContent = 'Share of Voice (%)';
+      svg.appendChild(yAxisTitle);
+      renderLegend(dom.sections.g11.legend, trend.advertisers.map((advertiser, index) => ({
+        label: advertiser === 'Others' ? 'Others' : titleCaseName(advertiser),
+        color: chartPalettes.g11[index % chartPalettes.g11.length]
+      })));
+      dom.sections.g11.metric.textContent = 'Daily share of total ad duration for the top four advertisers plus Others.';
+    }
+    function drawGraph12(rows) {
+      const channels = buildChannelEfficiency(rows);
+      if (!channels.length) {
+        drawEmpty(dom.sections.g12.chart, 'No channel efficiency data is available for the selected filters');
+        dom.sections.g12.metric.textContent = '';
+        return;
+      }
+      const compact = channels.length >= 10;
+      setChartBoxHeight(dom.sections.g12.chart, compact ? 620 : 540);
+      const { svg, width, height } = makeSvg(dom.sections.g12.chart);
+      const gradient = appendLinearGradient(
+        svg,
+        'g12BarGradient',
+        themeVar('--brand', '#2563eb'),
+        themeVar('--teal', '#0f766e')
+      );
+      const margin = { top: 26, right: 110, bottom: 70, left: 132 };
+      const plotW = width - margin.left - margin.right;
+      const plotH = height - margin.top - margin.bottom;
+      const maxTotal = withAxisHeadroom(Math.max(...channels.map(item => item.total), 1));
+      const rowH = plotH / Math.max(channels.length, 1);
+      for (let i = 0; i <= 4; i++) {
+        const x = margin.left + (plotW * i / 4);
+        svg.appendChild(svgEl('line', { x1: x, y1: margin.top, x2: x, y2: margin.top + plotH, stroke: '#e5e7eb', 'stroke-width': 1 }));
+        const tick = svgEl('text', { x, y: margin.top + plotH + 24, fill: '#6b7280', 'font-size': 12, 'text-anchor': 'middle' });
+        tick.textContent = formatDurationValue((maxTotal * i) / 4);
+        svg.appendChild(tick);
+      }
+      channels.forEach((item, index) => {
+        const y = margin.top + index * rowH + (rowH * 0.18);
+        const barH = Math.max(rowH * 0.56, 18);
+        const barW = (item.total / maxTotal) * plotW;
+        svg.appendChild(svgEl('rect', {
+          x: margin.left,
+          y,
+          width: plotW,
+          height: barH,
+          rx: 7,
+          fill: '#eef2ff'
+        }));
+        const bar = svgEl('rect', {
+          x: margin.left,
+          y,
+          width: Math.max(barW, 0),
+          height: barH,
+          rx: 7,
+          fill: gradient
+        });
+        const title = svgEl('title');
+        title.textContent = `Channel: ${item.channel}\nAd Spots: ${formatCount(item.spots)}\nTotal Duration: ${formatDurationValue(item.total, true)}\nAverage Creative Duration: ${formatDurationValue(item.average, true)}`;
+        bar.appendChild(title);
+        svg.appendChild(bar);
+        addWrappedText(svg, item.channel, margin.left - 10, y + (barH * 0.58), 14, '#1f2937', 10, 'end', 700);
+        const valueLabel = svgEl('text', {
+          x: Math.min(margin.left + barW + 8, margin.left + plotW - 4),
+          y: y + (barH * 0.46),
+          fill: '#1f2937',
+          'font-size': 10.5,
+          'font-weight': 800,
+          'text-anchor': 'start'
+        });
+        valueLabel.textContent = formatDurationValue(item.total, true);
+        svg.appendChild(valueLabel);
+        const detailLabel = svgEl('text', {
+          x: Math.min(margin.left + barW + 8, margin.left + plotW - 4),
+          y: y + (barH * 0.83),
+          fill: '#6b7280',
+          'font-size': 9.4,
+          'font-weight': 700,
+          'text-anchor': 'start'
+        });
+        detailLabel.textContent = `${formatCount(item.spots)} spots | Avg ${formatDurationValue(item.average, true)}`;
+        svg.appendChild(detailLabel);
+      });
+      addWrappedText(svg, `Total Ad Duration (${activeTimeUnit() === 'minutes' ? 'Min' : 'Sec'})`, margin.left + plotW / 2, height - 10, 26, '#1f2937', 13, 'middle', 800);
+      const yAxisTitle = svgEl('text', {
+        x: 22,
+        y: margin.top + plotH / 2,
+        fill: '#1f2937',
+        'font-size': 13,
+        'font-weight': 800,
+        'text-anchor': 'middle',
+        transform: `rotate(-90 22 ${margin.top + plotH / 2})`
+      });
+      yAxisTitle.textContent = 'Channel';
+      svg.appendChild(yAxisTitle);
+      dom.sections.g12.metric.textContent = 'Bar length shows total ad duration, with inline labels for ad spots and average creative duration.';
+    }
+    function drawGraph13(rows) {
+      const concentration = buildChannelConcentration(rows, 5);
+      if (!concentration.length) {
+        drawEmpty(dom.sections.g13.chart, 'No concentration data is available for the selected filters');
+        dom.sections.g13.legend.innerHTML = '';
+        dom.sections.g13.metric.textContent = '';
+        return;
+      }
+      const compact = concentration.length >= 10;
+      setChartBoxHeight(dom.sections.g13.chart, compact ? 620 : 520);
+      const { svg, width, height } = makeSvg(dom.sections.g13.chart);
+      const gradient = appendLinearGradient(
+        svg,
+        'g13BarGradient',
+        themeVar('--brand', '#2563eb'),
+        themeVar('--teal', '#0f766e')
+      );
+      const margin = { top: 24, right: 36, bottom: 72, left: 132 };
+      const plotW = width - margin.left - margin.right;
+      const plotH = height - margin.top - margin.bottom;
+      const rowH = plotH / Math.max(concentration.length, 1);
+      for (let i = 0; i <= 4; i++) {
+        const percent = i * 25;
+        const x = margin.left + (plotW * percent / 100);
+        svg.appendChild(svgEl('line', { x1: x, y1: margin.top, x2: x, y2: margin.top + plotH, stroke: '#e5e7eb', 'stroke-width': 1 }));
+        const tick = svgEl('text', { x, y: margin.top + plotH + 24, fill: '#6b7280', 'font-size': 12, 'text-anchor': 'middle' });
+        tick.textContent = `${percent}%`;
+        svg.appendChild(tick);
+      }
+      concentration.forEach((item, index) => {
+        const y = margin.top + index * rowH + (rowH * 0.18);
+        const barH = Math.max(rowH * 0.54, 18);
+        const barW = plotW * (item.share / 100);
+        svg.appendChild(svgEl('rect', {
+          x: margin.left,
+          y,
+          width: plotW,
+          height: barH,
+          rx: 7,
+          fill: '#eef2ff'
+        }));
+        const bar = svgEl('rect', {
+          x: margin.left,
+          y,
+          width: Math.max(barW, 0),
+          height: barH,
+          rx: 7,
+          fill: gradient
+        });
+        const title = svgEl('title');
+        title.textContent = `Channel: ${item.channel}\nTop 5 advertiser share: ${formatPercent(item.share)}\nTop 5 duration: ${formatDurationValue(item.topTotal, true)}\nUnique advertisers: ${formatCount(item.advertiserCount)}`;
+        bar.appendChild(title);
+        svg.appendChild(bar);
+        addWrappedText(svg, item.channel, margin.left - 10, y + (barH * 0.58), 14, '#1f2937', 10, 'end', 700);
+        const label = svgEl('text', {
+          x: Math.min(margin.left + barW + 8, margin.left + plotW - 4),
+          y: y + (barH * 0.62),
+          fill: '#1f2937',
+          'font-size': 11,
+          'font-weight': 800,
+          'text-anchor': 'start'
+        });
+        label.textContent = `${item.share.toFixed(1)}%`;
+        svg.appendChild(label);
+      });
+      addWrappedText(svg, 'Top 5 Advertiser Share of Channel Duration', margin.left + plotW / 2, height - 10, 28, '#1f2937', 13, 'middle', 800);
+      const yAxisTitle = svgEl('text', {
+        x: 22,
+        y: margin.top + plotH / 2,
+        fill: '#1f2937',
+        'font-size': 13,
+        'font-weight': 800,
+        'text-anchor': 'middle',
+        transform: `rotate(-90 22 ${margin.top + plotH / 2})`
+      });
+      yAxisTitle.textContent = 'Channel';
+      svg.appendChild(yAxisTitle);
+      renderLegend(dom.sections.g13.legend, [{
+        label: 'Top 5 advertiser share',
+        color: themeVar('--brand', '#2563eb')
+      }]);
+      dom.sections.g13.metric.textContent = 'Higher percentages indicate stronger advertiser concentration within a channel.';
+    }
     function renderExcluded() {
       dom.excludedChips.textContent = `Excluded categories: ${PAYLOAD.excluded.map(sentenceCaseName).join(' • ')}`;
     }
@@ -4770,7 +5243,7 @@ __DOM_SECTIONS_JS__
           'Top 5 highest performing categories: No category data is available for the current selection.',
           'Top 5 advertisers: No advertiser data is available for the current selection.',
           'Key trend: No trend is available because the filtered dataset is empty.',
-          'Additional insight: Apply a broader date range or remove filters to restore comparable dashboard insights.'
+          'Additional insight: Aaj Tak comparison is unavailable because the filtered dataset is empty.'
         ].map(line => `<div class="summary-line">${line}</div>`).join('');
         renderHeaderStats();
         return;
@@ -4781,7 +5254,6 @@ __DOM_SECTIONS_JS__
       const advertisers = aggregateAdvertisors(rows);
       const topChannel = channelDistribution[0] || { channel: 'N/A', total: 0 };
       const topCategory = categories[0] || { category: 'N/A', total: 0 };
-      const lowestChannel = channelDistribution[channelDistribution.length - 1] || { channel: 'N/A', total: 0 };
       const topCategoryPct = total ? (topCategory.total / total) * 100 : 0;
       const topChannelPct = total ? (topChannel.total / total) * 100 : 0;
       const topFiveCategories = categories
@@ -4799,13 +5271,21 @@ __DOM_SECTIONS_JS__
       const topFiveCategoryTotal = categories.slice(0, 5).reduce((sum, item) => sum + item.total, 0);
       const advertiserShare = total ? (topFiveAdvertiserTotal / total) * 100 : 0;
       const categoryShare = total ? (topFiveCategoryTotal / total) * 100 : 0;
-      const channelLeadMultiple = lowestChannel.total ? topChannel.total / lowestChannel.total : 0;
+      const aajTakChannel = channelDistribution.find(item => String(item.channel || '').trim().toUpperCase() === 'AAJ TAK') || null;
+      const aajTakDeltaPct = aajTakChannel && aajTakChannel.total
+        ? ((topChannel.total - aajTakChannel.total) / aajTakChannel.total) * 100
+        : null;
+      const aajTakComparison = !aajTakChannel || !aajTakChannel.total
+        ? 'Aaj Tak comparison is unavailable for the current filtered dataset'
+        : String(topChannel.channel || '').trim().toUpperCase() === 'AAJ TAK'
+          ? 'Aaj Tak is the reference channel at 0.00% variance'
+          : `${titleCaseName(topChannel.channel)} is ${formatPercent(Math.abs(aajTakDeltaPct))} ${aajTakDeltaPct >= 0 ? 'above' : 'below'} Aaj Tak`;
       const lines = [
         `Total advertisement duration: ${formatDurationValue(total, true)} distributed across ${channelDistributionInline}.`,
         `Top 5 highest performing categories: ${topFiveCategories}.`,
         `Top 5 advertisers: ${topFiveAdvertisers}.`,
         `Key trend: ${titleCaseName(topChannel.channel)} is the strongest performing channel with ${formatDurationValue(topChannel.total, true)} (${formatPercent(topChannelPct)}) of total advertisement duration, while ${sentenceCaseName(topCategory.category)} remains the leading category contributing ${formatPercent(topCategoryPct)} of the overall advertisement duration.`,
-        `Additional insight: The top five advertisers contribute ${formatPercent(advertiserShare)} of total duration, the top five categories contribute ${formatPercent(categoryShare)}, and ${lowestChannel.total ? `${titleCaseName(topChannel.channel)} airs ${channelLeadMultiple.toFixed(2)}x the ad time of ${titleCaseName(lowestChannel.channel)}` : 'channel concentration remains visible in the filtered data'}.`
+        `Additional insight: The top five advertisers contribute ${formatPercent(advertiserShare)} of total duration, the top five categories contribute ${formatPercent(categoryShare)}, and ${aajTakComparison}.`
       ];
       dom.summaryLines.innerHTML = lines.map(line => `<div class="summary-line">${line}</div>`).join('');
       renderHeaderStats();
@@ -4860,7 +5340,7 @@ __DOM_SECTIONS_JS__
       const title = 'CTV FCT Dashboard';
       const generatedAt = new Date().toLocaleString();
       const summaryHtml = document.getElementById('summaryLines').innerHTML;
-      const graphSections = ['g1Chart', 'g2Chart', 'g3Chart', 'g4Chart', 'g5Chart']
+      const graphSections = SECTION_KEYS.map(sectionKey => `${sectionKey}Chart`)
         .map(id => document.getElementById(id)?.closest('.section'))
         .filter(Boolean);
       const graphPages = graphSections.map((section, index) => {
@@ -5021,8 +5501,6 @@ __DOM_SECTIONS_JS__
       populateGlobalChannelDropdown('');
       populateGlobalCategoryDropdown('');
       populateGlobalAdvertisorDropdown('');
-      setTailFilterActive(dom.dayTypeFilter, state.supplemental.dayType || 'weekday');
-      setTailFilterActive(dom.periodFilter, state.supplemental.period || 'day');
       if (dom.statusText && snapshot.statusText) {
         dom.statusText.textContent = snapshot.statusText;
       }
@@ -5112,18 +5590,35 @@ __DOM_SECTIONS_JS__
       if (sectionKey === 'g8') drawGraph8(rows);
       if (sectionKey === 'g9') drawGraph9(rows);
       if (sectionKey === 'g10') drawGraph10(rows);
+      if (sectionKey === 'g11') drawGraph11(rows);
+      if (sectionKey === 'g12') drawGraph12(rows);
+      if (sectionKey === 'g13') drawGraph13(rows);
     }
     function renderAll() {
       applyGlobalStateToSections();
       rerenderSections(SECTION_KEYS);
       renderSummary();
-      renderSupplementalSummary();
+      renderDatasetSummary();
       renderHeaderStats();
       updateStickyFilterPosition();
     }
     function syncSectionState(sectionKey) {
       const controls = dom.sections[sectionKey];
+      if (!controls) return;
+      if (!state.sections[sectionKey]) {
+        state.sections[sectionKey] = {
+          topN: state.global.topN,
+          start: state.global.start,
+          end: state.global.end,
+          channel: [...state.global.channel],
+          category: [...state.global.category],
+          advertisor: [...state.global.advertisor],
+          time: state.global.time,
+          view: ''
+        };
+      }
       const target = state.sections[sectionKey];
+      if (!target) return;
       if (controls.topN) target.topN = controls.topN.value;
       if (controls.start) target.start = controls.start.value;
       if (controls.end) target.end = controls.end.value;
@@ -5284,24 +5779,6 @@ __DOM_SECTIONS_JS__
         }
       });
     }
-    function bindSupplementalControls() {
-      if (dom.dayTypeFilter) {
-        dom.dayTypeFilter.querySelectorAll('.tail-filter-btn').forEach(button => {
-          button.addEventListener('click', () => {
-            state.supplemental.dayType = button.dataset.value || 'weekday';
-            renderSupplementalSummary();
-          });
-        });
-      }
-      if (dom.periodFilter) {
-        dom.periodFilter.querySelectorAll('.tail-filter-btn').forEach(button => {
-          button.addEventListener('click', () => {
-            state.supplemental.period = button.dataset.value || 'day';
-            renderSupplementalSummary();
-          });
-        });
-      }
-    }
     function toggleFullScreen(sectionKey) {
       const panel = dom.sections[sectionKey].panel;
       if (!document.fullscreenElement) {
@@ -5352,7 +5829,6 @@ __DOM_SECTIONS_JS__
       });
       if (!state.initialized) {
         bindGlobalControls();
-        bindSupplementalControls();
         if (dom.pdfBtn) {
           dom.pdfBtn.addEventListener('click', exportDashboardPdf);
         }
@@ -5527,6 +6003,7 @@ html = html.replace("__XLSX_BUNDLE__", xlsx_bundle)
 html = html.replace("__GLOBAL_FILTER_HTML__", build_global_filter_html())
 html = html.replace("__SECTIONS_HTML__", build_sections_html())
 html = html.replace("__TAIL_SUMMARY_HTML__", build_tail_summary_html())
+html = html.replace("__DATASET_SUMMARY_HTML__", build_dataset_summary_html())
 html = html.replace("__STATE_SECTIONS_JS__", build_state_sections_js())
 html = html.replace("__DOM_SECTIONS_JS__", build_dom_sections_js())
 OUTPUT_PATH.write_text(html, encoding="utf-8")
