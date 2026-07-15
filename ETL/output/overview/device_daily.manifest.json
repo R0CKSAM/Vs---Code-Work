@@ -1436,70 +1436,84 @@
       ]
     },
     "2026-07-09": {
-      "bytes": 7531817256,
-      "files": 4,
-      "mtime_ns_max": 1783655768254725300,
-      "mtime_ns_sum": 7134450171868198600,
+      "bytes": 7531825848,
+      "files": 5,
+      "mtime_ns_max": 1784088074235263900,
+      "mtime_ns_sum": 8918538246103462500,
       "roots": [
         "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
       ],
-      "rows": 77000192,
+      "rows": 77000203,
       "sources": [
         "fast",
         "stream"
       ]
     },
     "2026-07-10": {
-      "bytes": 7234003166,
-      "files": 4,
-      "mtime_ns_max": 1783741949723866800,
-      "mtime_ns_sum": 7134795380340242900,
+      "bytes": 7234096603,
+      "files": 6,
+      "mtime_ns_max": 1784088105382683300,
+      "mtime_ns_sum": 10702971559704702400,
       "roots": [
         "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
       ],
-      "rows": 74150195,
+      "rows": 74151851,
       "sources": [
         "fast",
         "stream"
       ]
     },
     "2026-07-11": {
-      "bytes": 6422645287,
-      "files": 4,
-      "mtime_ns_max": 1783828306350146500,
-      "mtime_ns_sum": 7135140453491929000,
+      "bytes": 6422735480,
+      "files": 5,
+      "mtime_ns_max": 1784088074200066700,
+      "mtime_ns_sum": 8919228527691995700,
       "roots": [
         "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
       ],
-      "rows": 65826446,
+      "rows": 65827888,
       "sources": [
         "fast",
         "stream"
       ]
     },
     "2026-07-12": {
-      "bytes": 6221195679,
-      "files": 4,
-      "mtime_ns_max": 1783914236295173600,
-      "mtime_ns_sum": 7135485035625274100,
+      "bytes": 6221238358,
+      "files": 5,
+      "mtime_ns_max": 1784088074222006900,
+      "mtime_ns_sum": 8919573109847281000,
       "roots": [
         "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
       ],
-      "rows": 63114649,
+      "rows": 63115291,
       "sources": [
         "fast",
         "stream"
       ]
     },
     "2026-07-13": {
-      "bytes": 6670511280,
-      "files": 4,
-      "mtime_ns_max": 1784000774362597200,
-      "mtime_ns_sum": 7135829964790389100,
+      "bytes": 6670694227,
+      "files": 6,
+      "mtime_ns_max": 1784088105534741700,
+      "mtime_ns_sum": 10704006144493851600,
       "roots": [
         "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
       ],
-      "rows": 68812890,
+      "rows": 68816451,
+      "sources": [
+        "fast",
+        "stream"
+      ]
+    },
+    "2026-07-14": {
+      "bytes": 6271658053,
+      "files": 4,
+      "mtime_ns_max": 1784088105406953500,
+      "mtime_ns_sum": 7136177694842151200,
+      "roots": [
+        "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
+      ],
+      "rows": 64395288,
       "sources": [
         "fast",
         "stream"

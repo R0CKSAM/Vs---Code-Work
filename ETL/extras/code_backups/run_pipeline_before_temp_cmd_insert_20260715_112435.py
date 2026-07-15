@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """Run the production ETL + dashboard pipeline from one place."""
 
 from __future__ import annotations
@@ -1857,7 +1857,6 @@ def main() -> None:
                 "--memory-limit",
                 args.concurrency_memory,
             ]
-            _append_temp_dir(concurrency_cmd, deep_profile_temp_dir)
             if concurrency_start and concurrency_end:
                 concurrency_cmd.extend(["--start", concurrency_start, "--end", concurrency_end])
             concurrency_ok = run(
@@ -1886,7 +1885,6 @@ def main() -> None:
                     "--memory-limit",
                     args.concurrency_memory,
                 ]
-                _append_temp_dir(stream_concurrency_cmd, deep_profile_temp_dir)
                 if concurrency_start and concurrency_end:
                     stream_concurrency_cmd.extend(["--start", concurrency_start, "--end", concurrency_end])
                 stream_concurrency_ok = run(
@@ -1915,7 +1913,6 @@ def main() -> None:
                 "--memory-limit",
                 args.concurrency_memory,
             ]
-            _append_temp_dir(manifest_minute_fast_cmd, deep_profile_temp_dir)
             if concurrency_start and concurrency_end:
                 manifest_minute_fast_cmd.extend(["--start", concurrency_start, "--end", concurrency_end])
             run(
@@ -1943,7 +1940,6 @@ def main() -> None:
                     "--memory-limit",
                     args.concurrency_memory,
                 ]
-                _append_temp_dir(manifest_minute_stream_cmd, deep_profile_temp_dir)
                 if concurrency_start and concurrency_end:
                     manifest_minute_stream_cmd.extend(["--start", concurrency_start, "--end", concurrency_end])
                 run(
@@ -1970,7 +1966,6 @@ def main() -> None:
                 "--memory-limit",
                 args.concurrency_memory,
             ]
-            _append_temp_dir(identity_minute_fast_cmd, deep_profile_temp_dir)
             if concurrency_start and concurrency_end:
                 identity_minute_fast_cmd.extend(["--start", concurrency_start, "--end", concurrency_end])
             run(
@@ -1998,7 +1993,6 @@ def main() -> None:
                     "--memory-limit",
                     args.concurrency_memory,
                 ]
-                _append_temp_dir(identity_minute_stream_cmd, deep_profile_temp_dir)
                 if concurrency_start and concurrency_end:
                     identity_minute_stream_cmd.extend(["--start", concurrency_start, "--end", concurrency_end])
                 run(
@@ -2023,7 +2017,6 @@ def main() -> None:
                 "--memory-limit",
                 args.concurrency_memory,
             ]
-            _append_temp_dir(fast_identity_cmd, deep_profile_temp_dir)
             if concurrency_start and concurrency_end:
                 fast_identity_cmd.extend(["--start", concurrency_start, "--end", concurrency_end])
             fast_identity_ok = run(
@@ -2048,7 +2041,6 @@ def main() -> None:
                 "--memory-limit",
                 args.concurrency_memory,
             ]
-            _append_temp_dir(fast_geo_cmd, deep_profile_temp_dir)
             if concurrency_start and concurrency_end:
                 fast_geo_cmd.extend(["--start", concurrency_start, "--end", concurrency_end])
             fast_geo_ok = run(
@@ -2073,7 +2065,6 @@ def main() -> None:
                 "--memory-limit",
                 args.concurrency_memory,
             ]
-            _append_temp_dir(fast_ua_device_cmd, deep_profile_temp_dir)
             if concurrency_start and concurrency_end:
                 fast_ua_device_cmd.extend(["--start", concurrency_start, "--end", concurrency_end])
             fast_ua_device_ok = run(
@@ -2098,7 +2089,6 @@ def main() -> None:
                 "--memory-limit",
                 args.concurrency_memory,
             ]
-            _append_temp_dir(fast_manifest_cmd, deep_profile_temp_dir)
             if concurrency_start and concurrency_end:
                 fast_manifest_cmd.extend(["--start", concurrency_start, "--end", concurrency_end])
             fast_manifest_ok = run(
@@ -2123,7 +2113,6 @@ def main() -> None:
                 "--memory-limit",
                 args.concurrency_memory,
             ]
-            _append_temp_dir(fast_bandwidth_cmd, deep_profile_temp_dir)
             if concurrency_start and concurrency_end:
                 fast_bandwidth_cmd.extend(["--start", concurrency_start, "--end", concurrency_end])
             fast_bandwidth_ok = run(
@@ -2151,7 +2140,6 @@ def main() -> None:
                 "--memory-limit",
                 args.concurrency_memory,
             ]
-            _append_temp_dir(fast_cmcd_cmd, deep_profile_temp_dir)
             if concurrency_start and concurrency_end:
                 fast_cmcd_cmd.extend(["--start", concurrency_start, "--end", concurrency_end])
             fast_cmcd_ok = run(

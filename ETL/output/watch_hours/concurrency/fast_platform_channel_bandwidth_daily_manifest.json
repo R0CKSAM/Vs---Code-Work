@@ -1,11 +1,11 @@
 {
-  "generated_at_utc": "2026-07-14T06:21:18.971461+00:00",
+  "generated_at_utc": "2026-07-15T05:14:17.887186+00:00",
   "source": "fast",
   "lake": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
   "output": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\output\\watch_hours\\concurrency\\fast_platform_channel_bandwidth_daily.parquet",
   "date_range_replaced": {
-    "start": "2026-07-13",
-    "end": "2026-07-14"
+    "start": "2026-07-14",
+    "end": "2026-07-15"
   },
   "metric_notes": {
     "total_bytes": "Exact sum(totalBytes) on FAST .ts video segment rows at platform/channel grain.",
