@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrome Report Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/3.1.2/css/buttons.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/4.0.1/css/fixedHeader.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.3/css/responsive.dataTables.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-shell">
+        <header class="topbar">
+            <div class="brand-block">
+                <p class="eyebrow">Static Monitoring Dashboard</p>
+                <h1>Chrome Report Dashboard</h1>
+                <p class="topbar-subtitle">Python JSON pipeline + interactive frontend</p>
+            </div>
+            <div class="topbar-actions">
+                <button class="topbar-button" id="refreshButton" type="button">Refresh Data</button>
+                <button class="topbar-button" id="viewAnalyticsButton" type="button">View Analytics</button>
+                <button class="topbar-button" id="fullscreenButton" type="button">Full Screen</button>
+                <button class="topbar-button" type="button">Settings</button>
+            </div>
+        </header>
+
+        <main class="dashboard">
+            <section class="kpi-grid">
+                <article class="kpi-card">
+                    <div class="kpi-icon blue">TR</div>
+                    <div class="kpi-copy">
+                        <span>Total Records</span>
+                        <strong id="kpiTotalRecords">0</strong>
+                        <small>Visible comparison records</small>
+                    </div>
+                </article>
+                <article class="kpi-card">
+                    <div class="kpi-icon cyan">MK</div>
+                    <div class="kpi-copy">
+                        <span>Total Markets</span>
+                        <strong id="kpiTotalMarkets">0</strong>
+                        <small>Filtered market count</small>
+                    </div>
+                </article>
+                <article class="kpi-card">
+                    <div class="kpi-icon violet">MS</div>
+                    <div class="kpi-copy">
+                        <span>Total MSOs</span>
+                        <strong id="kpiTotalMsos">0</strong>
+                        <small>Unique MSO groups</small>
+                    </div>
+                </article>
+                <article class="kpi-card">
+                    <div class="kpi-icon slate">CH</div>
+                    <div class="kpi-copy">
+                        <span>Total Channels</span>
+                        <strong id="kpiTotalChannels">0</strong>
+                        <small>Distinct channel names</small>
+                    </div>
+                </article>
+                <article class="kpi-card">
+                    <div class="kpi-icon green">CR</div>
+                    <div class="kpi-copy">
+                        <span>Changed Records</span>
+                        <strong id="kpiChangedRecords">0</strong>
+                        <small>Rows with frequency changes</small>
+                    </div>
+                </article>
+                <article class="kpi-card">
+                    <div class="kpi-icon yellow">NC</div>
+                    <div class="kpi-copy">
+                        <span>No Change Records</span>
+                        <strong id="kpiNoChangeRecords">0</strong>
+                        <small>Stable all four weeks</small>
+                    </div>
+                </article>
+                <article class="kpi-card">
+                    <div class="kpi-icon blue">AV</div>
+                    <div class="kpi-copy">
+                        <span>India TV Avg Frequency</span>
+                        <strong id="kpiIndiaTvAvg">0</strong>
+                        <small>Average of W1 to W4 values</small>
+                    </div>
+                </article>
+                <article class="kpi-card">
+                    <div class="kpi-icon cyan">HF</div>
+                    <div class="kpi-copy">
+                        <span>Highest Frequency Channel</span>
+                        <strong id="kpiHighestChannel">-</strong>
+                        <small id="kpiHighestChannelValue">No matching records</small>
+                    </div>
+                </article>
+            </section>
+
+            <section class="panel filter-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="panel-label">Excel Style Filters</p>
+                        <h2>Column Filters</h2>
+                    </div>
+                    <div class="panel-actions">
+                        <button class="ghost-action" id="resetFilters" type="button">Reset Filters</button>
+                        <button class="primary-action" id="applyFilters" type="button">Apply Filters</button>
+                    </div>
+                </div>
+                <p class="topbar-subtitle" id="filterStatus">Fetching latest data...</p>
+                <div class="column-filters" id="columnFilters"></div>
+            </section>
+
+            <section class="panel table-panel">
+                <div class="panel-heading compact">
+                    <div>
+                        <p class="panel-label">Main Data Table</p>
+                        <h2>Frequency Comparison Table</h2>
+                    </div>
+                    <div class="table-meta">
+                        <span class="status-pill live" id="sourceFilesPill">Loading source files...</span>
+                        <span class="status-pill neutral" id="statusPill">Preparing dashboard</span>
+                    </div>
+                </div>
+
+                <div class="table-wrap">
+                    <div class="loading-overlay" id="tableLoading">Fetching latest data...</div>
+                    <table id="reportTable" class="display nowrap" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Week</th>
+                                <th>Transmission</th>
+                                <th>MSO</th>
+                                <th>Market</th>
+                                <th>MSO Type</th>
+                                <th>City</th>
+                                <th>Head End</th>
+                                <th>Channel Name</th>
+                                <th>Band</th>
+                                <th>TV Channel No</th>
+                                <th>CR No</th>
+                                <th>W1 Frequency</th>
+                                <th>W2 Frequency</th>
+                                <th>W3 Frequency</th>
+                                <th>W4 Frequency</th>
+                                <th>Change Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="error-box" id="errorBox" hidden></div>
+            </section>
+
+            <section class="panel analytics-panel" id="analyticsPanel" hidden>
+                <div class="panel-heading compact">
+                    <div>
+                        <p class="panel-label">On Demand Analytics</p>
+                        <h2>Chart Insights</h2>
+                    </div>
+                    <div class="table-meta">
+                        <span class="status-pill neutral" id="analyticsStatus">Click View Analytics to load charts</span>
+                    </div>
+                </div>
+                <div class="analytics-grid">
+                    <div class="chart-card"><canvas id="trendChart"></canvas></div>
+                    <div class="chart-card"><canvas id="marketChart"></canvas></div>
+                    <div class="chart-card"><canvas id="msoChart"></canvas></div>
+                    <div class="chart-card"><canvas id="distributionChart"></canvas></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.1.2/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.1.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.1.2/js/buttons.print.min.js"></script>
+    <script src="https://cdn.datatables.net/fixedheader/4.0.1/js/dataTables.fixedHeader.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/3.0.3/js/dataTables.responsive.min.js"></script>
+    <script src="data/kpi_summary.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+window.CHROME_REPORT_KPI_SUMMARY={"source_files":["Week24.xlsx","Week25.xlsx","Week26.xlsx","Week27.xlsx"],"record_count":85243,"total_markets":40,"total_msos":598,"total_channels":26,"changed_records":858,"no_change_records":84385,"india_tv_average_frequency":356.34,"highest_frequency_channel":"IND 24","highest_frequency_value":21014};

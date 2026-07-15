@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CHROME REPORT</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Weekly Frequency Intelligence</p>
+        <h1>CHROME REPORT</h1>
+      </div>
+      <div class="hero-actions">
+        <button id="fullscreenButton" class="primary-button">FULL SCREEN &#x26F6;</button>
+        <button id="refreshButton" class="ghost-button">Refresh Data</button>
+        <button id="printButton" class="primary-button">Print Dashboard</button>
+      </div>
+    </header>
+
+    <section class="kpi-grid">
+      <article class="kpi-card">
+        <span>Total Channels</span>
+        <strong id="kpiTotal">0</strong>
+      </article>
+      <article class="kpi-card">
+        <span>Frequency Increased</span>
+        <strong id="kpiIncrease">0</strong>
+      </article>
+      <article class="kpi-card">
+        <span>Frequency Decreased</span>
+        <strong id="kpiDecrease">0</strong>
+      </article>
+      <article class="kpi-card">
+        <span>No Change</span>
+        <strong id="kpiNoChange">0</strong>
+      </article>
+    </section>
+
+    <section class="panel filter-panel">
+      <div class="panel-heading">
+        <h2>Filters</h2>
+        <p>Slice the report by market, MSO type, city, and search terms.</p>
+      </div>
+      <div class="filter-grid">
+        <label>
+          <span>Market</span>
+          <select id="marketFilter"></select>
+        </label>
+        <label>
+          <span>MSO Type</span>
+          <select id="msoFilter"></select>
+        </label>
+        <label>
+          <span>City</span>
+          <select id="cityFilter"></select>
+        </label>
+        <label class="search-field">
+          <span>Search</span>
+          <input id="searchInput" type="search" placeholder="Search channel, name, city...">
+        </label>
+        <div class="action-row">
+          <button id="resetButton" class="ghost-button">Reset</button>
+          <button id="exportButton" class="primary-button">Export Filtered Excel</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel table-panel">
+      <div class="panel-heading table-heading">
+        <div>
+          <h2>Weekly Frequency Analysis</h2>
+          <p>Compact weekly comparison report with color-coded changes.</p>
+        </div>
+        <div class="table-meta">
+          <span id="resultCount">0 records</span>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="reportTable">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination-bar">
+        <button id="prevPage" class="ghost-button">Previous</button>
+        <span id="pageInfo">Page 1</span>
+        <button id="nextPage" class="ghost-button">Next</button>
+      </div>
+    </section>
+  </div>
+
+  <template id="emptyStateTemplate">
+    <tr>
+      <td colspan="100%" class="empty-state">No records match the current filters.</td>
+    </tr>
+  </template>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

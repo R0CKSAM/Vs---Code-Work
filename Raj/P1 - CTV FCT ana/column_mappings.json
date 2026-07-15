@@ -1,0 +1,91 @@
+{
+  "standard_columns": {
+    "feed_name": [
+      "feed name",
+      "feed_name",
+      "feed",
+      "network",
+      "station",
+      "source"
+    ],
+    "channel_name": [
+      "channel",
+      "channel name"
+    ],
+    "report_date": [
+      "pdate",
+      "date",
+      "report date",
+      "air date",
+      "event date",
+      "broadcast date"
+    ],
+    "time_slot": [
+      "adst",
+      "time",
+      "ad time",
+      "slot",
+      "time slot",
+      "hour"
+    ],
+    "brand_name": [
+      "brand name",
+      "brand",
+      "product",
+      "advertiser",
+      "campaign",
+      "item",
+      "title",
+      "name"
+    ],
+    "company_name": [
+      "company",
+      "client",
+      "customer",
+      "account",
+      "owner",
+      "group"
+    ],
+    "metric_value": [
+      "aaddur",
+      "ad duration",
+      "ad duration sec",
+      "duration",
+      "amount",
+      "value",
+      "metric",
+      "total",
+      "count",
+      "qty",
+      "quantity",
+      "revenue",
+      "sales"
+    ],
+    "category_name": [
+      "category",
+      "segment",
+      "type",
+      "class",
+      "genre",
+      "vertical"
+    ],
+    "programme_name": [
+      "programme",
+      "programme name",
+      "program",
+      "program name",
+      "show",
+      "show name",
+      "content",
+      "property"
+    ],
+    "programme_type": [
+      "programme type",
+      "program type",
+      "show type",
+      "content type",
+      "program genre",
+      "programme genre"
+    ]
+  }
+}
