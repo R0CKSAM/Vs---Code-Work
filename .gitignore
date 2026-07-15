@@ -48,6 +48,13 @@ ETL/output/exports/**/*.html
 ETL/output/**/*.json
 ETL/extras/repair_artifacts/
 
+# Local backups and browser-validation artifacts
+ETL/extras/backups/
+ETL/extras/code_backups/
+ETL/extras/validation/chrome_*/
+ETL/extras/validation/master_dashboard/
+ETL/extras/validation/*.png
+
 # DuckDB cache/database files
 *.duckdb
 *.duckdb.wal

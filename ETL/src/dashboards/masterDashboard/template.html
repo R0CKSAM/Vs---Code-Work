@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Veto Master Dashboard</title>
+  <style>
+    :root{
+      --bg:#f4f7f8;--surface:#fff;--ink:#17252d;--muted:#60717a;--line:#d8e1e5;
+      --teal:#087f78;--blue:#2463a2;--green:#23845f;--gold:#b27712;--red:#b43c32;
+      --shadow:0 8px 24px rgba(24,45,55,.09);--header-height:0px;
+    }
+    *{box-sizing:border-box;letter-spacing:0}
+    html{scroll-behavior:smooth;background:var(--bg)}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Segoe UI",Arial,sans-serif;overflow-x:hidden}
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    .top-shell{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.98);border-bottom:1px solid var(--line);box-shadow:0 5px 18px rgba(24,45,55,.08)}
+    .top-inner{width:min(1600px,100%);margin:0 auto;padding:12px clamp(12px,2vw,28px) 10px}
+    .title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;min-width:0}
+    .title-block{min-width:0}
+    h1{margin:0;font-size:clamp(20px,2vw,30px);line-height:1.15;font-weight:750;color:#102f3a}
+    .meta{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:7px 16px;color:var(--muted);font-size:12px;line-height:1.35;text-align:right}
+    .meta strong{display:block;color:var(--ink);font-size:12px;font-weight:700}
+    .filter-row{display:grid;grid-template-columns:minmax(360px,1.45fr) minmax(230px,.8fr) minmax(260px,1fr);gap:10px;margin-top:10px;align-items:stretch}
+    .filter-group{min-width:0;border:1px solid var(--line);background:#f8fafb;padding:8px;border-radius:6px}
+    .filter-label{display:block;margin:0 0 6px;color:#52636c;font-size:11px;font-weight:750;text-transform:uppercase}
+    .date-line,.source-line{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}
+    .segmented{display:inline-flex;border:1px solid #c7d2d8;border-radius:5px;overflow:hidden;background:#fff;flex:0 0 auto}
+    .segmented button{min-height:32px;border:0;border-right:1px solid #d4dde1;background:#fff;color:#465961;padding:6px 10px;font-size:12px;font-weight:650;white-space:nowrap}
+    .segmented button:last-child{border-right:0}
+    .segmented button.active{background:#153f4d;color:#fff}
+    .date-inputs{display:flex;align-items:center;gap:6px;flex:1 1 240px;min-width:0}
+    .date-inputs input{height:34px;min-width:125px;max-width:165px;flex:1;border:1px solid #c7d2d8;border-radius:5px;background:#fff;color:var(--ink);padding:5px 8px}
+    .date-separator{color:var(--muted);font-size:12px;font-weight:700}
+    .quick-buttons{display:flex;gap:4px;flex-wrap:wrap}
+    .quick-buttons button{height:30px;border:1px solid #c7d2d8;border-radius:5px;background:#fff;color:#41555e;padding:4px 8px;font-size:11px;font-weight:650}
+    .quick-buttons button:hover{border-color:#80949e;color:#173d49}
+    .channel-picker{position:relative;min-width:0}
+    .channel-picker details{position:relative}
+    .channel-picker summary{height:34px;display:flex;align-items:center;justify-content:space-between;gap:8px;list-style:none;border:1px solid #c7d2d8;border-radius:5px;background:#fff;padding:5px 10px;font-size:12px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .channel-picker summary::-webkit-details-marker{display:none}
+    .channel-picker summary::after{content:"▾";flex:0 0 auto;color:#5d7079}
+    .channel-picker details[open] summary::after{content:"▴"}
+    .channel-panel{position:absolute;right:0;top:39px;width:min(420px,calc(100vw - 24px));max-height:min(460px,70vh);display:flex;flex-direction:column;background:#fff;border:1px solid #c7d2d8;border-radius:6px;box-shadow:var(--shadow);z-index:80;overflow:hidden}
+    .channel-tools{padding:9px;border-bottom:1px solid var(--line);background:#f8fafb}
+    .channel-tools input{width:100%;height:34px;border:1px solid #c7d2d8;border-radius:5px;padding:6px 9px}
+    .channel-actions{display:flex;gap:6px;margin-top:7px}
+    .channel-actions button{border:1px solid #c7d2d8;border-radius:5px;background:#fff;padding:5px 9px;color:#314b57;font-size:11px;font-weight:700}
+    .channel-options{overflow:auto;padding:5px 0}
+    .channel-option{display:flex;align-items:center;gap:8px;padding:7px 10px;font-size:12px;cursor:pointer}
+    .channel-option:hover{background:#eef5f6}
+    .channel-option input{width:16px;height:16px;accent-color:var(--teal);flex:0 0 auto}
+    .scope-line{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;color:#53666f;font-size:11px;line-height:1.35}
+    .scope-line strong{color:#183c49}
+    .scope-error{color:var(--red);font-weight:700}
+    main{width:min(1600px,100%);margin:0 auto;padding:18px clamp(12px,2vw,28px) 34px}
+    .section{margin-bottom:18px;min-width:0}
+    .section-head{display:flex;align-items:end;justify-content:space-between;gap:14px;margin:0 0 9px}
+    .section-head h2{margin:0;font-size:16px;line-height:1.2;color:#163946}
+    .section-head p{margin:2px 0 0;color:var(--muted);font-size:11px}
+    .kpi-grid{display:grid;gap:10px;min-width:0}
+    .kpi-grid.viewing{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .kpi-grid.audience{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .kpi-card{position:relative;min-width:0;min-height:126px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:13px 14px 12px;overflow:hidden}
+    .kpi-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent,var(--teal))}
+    .kpi-label{color:#4d626c;font-size:12px;font-weight:700;line-height:1.3;overflow-wrap:anywhere}
+    .kpi-value{margin:9px 0 7px;color:#102f3a;font-size:clamp(23px,2.2vw,36px);font-weight:760;line-height:1;white-space:normal;overflow-wrap:anywhere}
+    .kpi-value.na{font-size:22px;color:#718087}
+    .kpi-note{color:var(--muted);font-size:11px;line-height:1.35;overflow-wrap:anywhere}
+    .analysis-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,.85fr);gap:10px;min-width:0}
+    .distribution-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;min-width:0}
+    .panel{min-width:0;background:#fff;border:1px solid var(--line);border-radius:6px;padding:13px}
+    .panel h3{margin:0;color:#173a46;font-size:14px}
+    .panel-sub{margin:3px 0 10px;color:var(--muted);font-size:11px}
+    .chart-wrap{position:relative;width:100%;height:300px;min-width:0}
+    .empty{height:220px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:13px}
+    .leaderboard{display:grid;gap:7px}
+    .rank-row{display:grid;grid-template-columns:28px minmax(100px,1fr) minmax(90px,.5fr);align-items:center;gap:8px;min-width:0}
+    .rank{color:#687b84;font-size:11px;font-weight:750;text-align:center}
+    .rank-main{min-width:0}
+    .rank-name{display:flex;justify-content:space-between;gap:8px;color:#263f49;font-size:12px;font-weight:650;min-width:0}
+    .rank-name span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .mini-track{height:5px;margin-top:5px;background:#edf1f3;border-radius:3px;overflow:hidden}
+    .mini-fill{height:100%;background:var(--teal);border-radius:3px}
+    .rank-value{text-align:right;color:#173d49;font-size:12px;font-weight:750;white-space:nowrap}.rank-value span{color:var(--muted);font-size:10px;font-weight:650}
+    .distribution-note{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;min-height:31px;margin:3px 0 10px;color:var(--muted);font-size:11px;line-height:1.35}
+    .distribution-note strong{color:#294955;white-space:nowrap}
+    .distribution-grid .mini-fill.device{background:#2463a2}
+    .distribution-grid .mini-fill.os{background:#23845f}
+    .distribution-grid .mini-fill.state{background:#087f78}
+    .distribution-grid .mini-fill.country{background:#b27712}
+    .coverage-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+    .coverage-item{border:1px solid var(--line);background:#fff;border-radius:6px;padding:10px 12px;color:#53656e;font-size:11px;line-height:1.4}
+    .coverage-item strong{display:block;color:#173b47;font-size:12px;margin-bottom:2px}
+    .guide{background:#fff;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+    .guide summary{padding:11px 13px;cursor:pointer;color:#173b47;font-size:13px;font-weight:750}
+    .guide-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1px;background:var(--line);border-top:1px solid var(--line)}
+    .guide-item{background:#fff;padding:10px 12px;color:#596b74;font-size:11px;line-height:1.4}
+    .guide-item strong{display:block;color:#263f49;margin-bottom:3px}
+    .noscript{margin:15px;padding:12px;background:#fff4d9;border:1px solid #e3c474;color:#6e5012}
+    @media(max-width:1050px){
+      .title-row{display:block}.meta{justify-content:flex-start;text-align:left;margin-top:7px}
+      .filter-row{grid-template-columns:1fr 1fr}.filter-group:first-child{grid-column:1/-1}
+      .kpi-grid.audience{grid-template-columns:repeat(2,minmax(0,1fr))}.analysis-grid,.distribution-grid{grid-template-columns:1fr}
+    }
+    @media(max-width:680px){
+      .top-inner{padding:9px 10px}.meta{display:grid;grid-template-columns:1fr 1fr;gap:5px 10px}
+      .filter-row{grid-template-columns:1fr}.filter-group:first-child{grid-column:auto}
+      .date-line{display:block}.segmented{margin-bottom:6px}.date-inputs{width:100%}.date-inputs input{max-width:none}
+      .quick-buttons{margin-top:6px}.scope-line{align-items:flex-start;display:block}.scope-line span{display:block;margin-top:2px}
+      main{padding:13px 10px 25px}.kpi-grid.viewing,.kpi-grid.audience{grid-template-columns:1fr 1fr}
+      .kpi-card{min-height:116px;padding:11px 12px}.kpi-value{font-size:25px}.chart-wrap{height:260px}
+    }
+    @media(max-width:430px){.meta{grid-template-columns:1fr}.kpi-grid.viewing,.kpi-grid.audience{grid-template-columns:1fr}.rank-row{grid-template-columns:24px minmax(0,1fr)}.rank-value{grid-column:2;text-align:left}.channel-panel{right:auto;left:0}}
+  </style>
+  $CHARTJS_TAG
+</head>
+<body>
+  <div class="top-shell">
+    <div class="top-inner">
+      <div class="title-row">
+        <div class="title-block"><h1 id="dashboardTitle">Veto Master Dashboard</h1></div>
+        <div class="meta">
+          <div><span>Created</span><strong id="createdAt"></strong></div>
+          <div><span>Truth Sources</span><strong id="truthSources"></strong></div>
+          <div><span>Data Coverage</span><strong id="coverageDates"></strong></div>
+        </div>
+      </div>
+      <div class="filter-row" aria-label="Dashboard filters">
+        <div class="filter-group">
+          <span class="filter-label">Date</span>
+          <div class="date-line">
+            <div class="segmented" aria-label="Date mode">
+              <button type="button" id="singleMode" class="active">Single Date</button>
+              <button type="button" id="rangeMode">Date Range</button>
+            </div>
+            <div class="date-inputs">
+              <input id="dateFrom" type="date" aria-label="Date from">
+              <span class="date-separator" id="dateSeparator" hidden>to</span>
+              <input id="dateTo" type="date" aria-label="Date to" hidden>
+            </div>
+            <div class="quick-buttons" aria-label="Quick date ranges">
+              <button type="button" data-range="latest">Latest</button>
+              <button type="button" data-range="7">7D</button>
+              <button type="button" data-range="30">30D</button>
+              <button type="button" data-range="all">All</button>
+            </div>
+          </div>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">Source</span>
+          <div class="source-line segmented" id="sourceButtons" aria-label="Source filter"></div>
+        </div>
+        <div class="filter-group channel-picker">
+          <span class="filter-label">Channel</span>
+          <details id="channelDetails">
+            <summary id="channelSummary">All Channels</summary>
+            <div class="channel-panel">
+              <div class="channel-tools">
+                <input id="channelSearch" type="search" placeholder="Search channels" aria-label="Search channels">
+                <div class="channel-actions">
+                  <button type="button" id="selectAllChannels">Select all</button>
+                  <button type="button" id="clearChannels">Clear</button>
+                </div>
+              </div>
+              <div class="channel-options" id="channelOptions"></div>
+            </div>
+          </details>
+        </div>
+      </div>
+      <div class="scope-line">
+        <strong id="usedRange"></strong>
+        <span id="scopeDescription"></span>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <section class="section">
+      <div class="section-head"><div><h2>Viewing</h2><p>Selected content consumption across all HTTP statuses</p></div></div>
+      <div class="kpi-grid viewing">
+        <article class="kpi-card" style="--accent:var(--teal)"><div class="kpi-label">Total Watch Hours</div><div class="kpi-value" id="watchHours">0</div><div class="kpi-note" id="watchHoursNote"></div></article>
+        <article class="kpi-card" style="--accent:var(--blue)"><div class="kpi-label">Total Clips Watched</div><div class="kpi-value" id="clipsWatched">0</div><div class="kpi-note" id="clipsWatchedNote"></div></article>
+        <article class="kpi-card" style="--accent:var(--gold)"><div class="kpi-label">Total Views</div><div class="kpi-value" id="totalViews">0</div><div class="kpi-note" id="totalViewsNote"></div></article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><div><h2>Audience &amp; Engagement</h2><p>Identity availability follows the selected truth source</p></div></div>
+      <div class="kpi-grid audience">
+        <article class="kpi-card" style="--accent:var(--green)"><div class="kpi-label">Total Users (IP Address)</div><div class="kpi-value" id="ipUsers">0</div><div class="kpi-note" id="ipUsersNote"></div></article>
+        <article class="kpi-card" style="--accent:var(--blue)"><div class="kpi-label">Total Users (Device ID)</div><div class="kpi-value" id="deviceUsers">0</div><div class="kpi-note" id="deviceUsersNote"></div></article>
+        <article class="kpi-card" style="--accent:var(--gold)"><div class="kpi-label">Total Users (Session ID)</div><div class="kpi-value" id="sessionUsers">0</div><div class="kpi-note" id="sessionUsersNote"></div></article>
+        <article class="kpi-card" style="--accent:var(--red)"><div class="kpi-label">Average Watch Time per User</div><div class="kpi-value" id="averageWatch">0</div><div class="kpi-note" id="averageWatchNote"></div></article>
+      </div>
+    </section>
+
+    <section class="section analysis-grid">
+      <article class="panel">
+        <h3>Daily Performance</h3>
+        <p class="panel-sub">Watch hours and IP audience for the current filters</p>
+        <div class="chart-wrap"><canvas id="dailyChart" aria-label="Daily watch hours and IP users chart"></canvas><div class="empty" id="chartEmpty" hidden>No matching data for this selection.</div></div>
+      </article>
+      <article class="panel">
+        <h3>Channel Contribution</h3>
+        <p class="panel-sub">Channels ranked by watch hours in the selected range</p>
+        <div class="leaderboard" id="channelLeaderboard"></div>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><div><h2>Devices &amp; Operating Systems</h2><p>UA-attributed watch hours for the current filters</p></div></div>
+      <div class="distribution-grid">
+        <article class="panel">
+          <h3>Device Types</h3>
+          <div class="distribution-note"><span id="deviceScopeNote"></span><strong id="uaCoverage"></strong></div>
+          <div class="leaderboard" id="deviceLeaderboard"></div>
+        </article>
+        <article class="panel">
+          <h3>Operating Systems</h3>
+          <div class="distribution-note"><span id="osScopeNote"></span><strong>All HTTP statuses</strong></div>
+          <div class="leaderboard" id="osLeaderboard"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><div><h2>Markets</h2><p>Watch-hour contribution by India state/region and international country</p></div></div>
+      <div class="distribution-grid">
+        <article class="panel">
+          <h3>India State / Region</h3>
+          <div class="distribution-note"><span>Top markets ranked by selected watch hours</span><strong>India</strong></div>
+          <div class="leaderboard" id="stateLeaderboard"></div>
+        </article>
+        <article class="panel">
+          <h3>International Markets</h3>
+          <div class="distribution-note"><span>Countries outside India ranked by watch hours</span><strong>Country</strong></div>
+          <div class="leaderboard" id="countryLeaderboard"></div>
+        </article>
+      </div>
+    </section>
+    <section class="section">
+      <div class="section-head"><div><h2>Coverage</h2><p>Completed-day ranges used by this dashboard</p></div></div>
+      <div class="coverage-strip" id="coverageStrip"></div>
+    </section>
+
+    <section class="section">
+      <details class="guide">
+        <summary>Metric Guide</summary>
+        <div class="guide-grid" id="guideGrid"></div>
+      </details>
+    </section>
+  </main>
+  <noscript><div class="noscript">JavaScript is required to use the dashboard filters.</div></noscript>
+
+  <script>
+    const DATA=$DATA_BLOB;
+    function unpackCompact(payload){
+      if(!payload||!Array.isArray(payload.rows))return [];
+      const columns=payload.columns||[],dictionaries=payload.dictionaries||{};
+      return payload.rows.map(function(values){
+        const row={};
+        columns.forEach(function(column,index){
+          const dictionary=dictionaries[column];
+          row[column]=dictionary?(values[index]<0?null:dictionary[values[index]]):values[index];
+        });
+        return row;
+      });
+    }
+    const UA_ROWS=unpackCompact(DATA.ua_daily);
+    const MARKET_ROWS=unpackCompact(DATA.market_daily);
+    const nf0=new Intl.NumberFormat("en-IN",{maximumFractionDigits:0});
+    const nf1=new Intl.NumberFormat("en-IN",{minimumFractionDigits:1,maximumFractionDigits:1});
+    const state={source:"all",mode:"single",from:DATA.meta.data_max_date,to:DATA.meta.data_max_date,channels:null,search:""};
+    let dailyChart=null;
+
+    function el(id){return document.getElementById(id)}
+    function num(value){const parsed=Number(value);return Number.isFinite(parsed)?parsed:0}
+    function sum(rows,key){return rows.reduce(function(total,row){return total+num(row[key])},0)}
+    function unique(values){return Array.from(new Set(values))}
+    function escapeHtml(value){return String(value).replace(/[&<>'"]/g,function(ch){return {"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[ch]})}
+    function formatDate(value){if(!value)return "";const parts=String(value).slice(0,10).split("-");return parts.length===3?parts[2]+"/"+parts[1]+"/"+parts[0].slice(2):String(value)}
+    function addDays(value,days){const date=new Date(String(value).slice(0,10)+"T00:00:00Z");date.setUTCDate(date.getUTCDate()+days);return date.toISOString().slice(0,10)}
+    function formatCount(value){return nf0.format(Math.round(num(value)))}
+    function formatHours(value){return nf1.format(num(value))+" h"}
+    function formatMinutes(value){return nf1.format(num(value))+" min"}
+    function sourceLabel(){return state.source==="all"?"ALL SOURCES":state.source.toUpperCase()}
+    function availableRanges(){return DATA.meta.source_ranges||[]}
+    function rangeForSource(){
+      const rows=availableRanges().filter(function(row){return state.source==="all"||row.source===state.source});
+      if(!rows.length)return {min:DATA.meta.data_min_date,max:DATA.meta.data_max_date};
+      return {min:rows.reduce(function(v,row){return v<row.min_date?v:row.min_date},rows[0].min_date),max:rows.reduce(function(v,row){return v>row.max_date?v:row.max_date},rows[0].max_date)};
+    }
+    function sourceOk(row){return state.source==="all"||String(row.source)===state.source}
+    function dateOk(row){const value=String(row.log_date||"").slice(0,10);return value>=state.from&&value<=state.to}
+    function activeChannels(){return unique((DATA.channel_daily||[]).filter(sourceOk).map(function(row){return String(row.channel_name)})).sort(function(a,b){return a.localeCompare(b)});}
+    function channelOk(row){return state.channels===null||state.channels.has(String(row.channel_name))}
+    function selectedRows(){
+      const rows=state.channels===null?(DATA.source_daily||[]):(DATA.channel_daily||[]);
+      return rows.filter(function(row){return sourceOk(row)&&dateOk(row)&&(state.channels===null||channelOk(row))});
+    }
+    function selectedChannelRows(){return (DATA.channel_daily||[]).filter(function(row){return sourceOk(row)&&dateOk(row)&&channelOk(row)});}
+    function selectedDayCount(rows){return unique(rows.map(function(row){return String(row.log_date).slice(0,10)})).length}
+    function setValue(id,value,isAvailable){const node=el(id);node.textContent=isAvailable===false?"Not Available":value;node.classList.toggle("na",isAvailable===false)}
+
+    function renderMetadata(){
+      el("dashboardTitle").textContent=DATA.meta.title;
+      document.title=DATA.meta.title;
+      el("createdAt").textContent=DATA.meta.created_at_ist;
+      el("truthSources").textContent=(DATA.meta.sources||[]).map(function(v){return String(v).toUpperCase()}).join(" + ");
+      const ranges=availableRanges().map(function(row){return row.source.toUpperCase()+" "+formatDate(row.min_date)+" to "+formatDate(row.max_date)});
+      el("coverageDates").textContent=ranges.join(" | ");
+      el("coverageStrip").innerHTML=availableRanges().map(function(row){return '<div class="coverage-item"><strong>'+escapeHtml(row.source.toUpperCase())+'</strong>'+formatDate(row.min_date)+' to '+formatDate(row.max_date)+'<br>Latest completed ETL data</div>'}).join("");
+      const labels={watch_hours:"Watch Hours",ip_users:"IP Users",device_users:"Device ID Users",session_users:"Session ID Users",clips_watched:"Clips Watched",total_views:"Total Views",average_watch:"Average Watch Time",device_os:"Devices & OS",markets:"Markets"};
+      el("guideGrid").innerHTML=Object.keys(DATA.definitions||{}).map(function(key){return '<div class="guide-item"><strong>'+escapeHtml(labels[key]||key)+'</strong>'+escapeHtml(DATA.definitions[key])+'</div>'}).join("");
+    }
+
+    function renderSourceButtons(){
+      const values=["all"].concat(DATA.meta.sources||[]);
+      el("sourceButtons").innerHTML=values.map(function(value){return '<button type="button" data-source="'+escapeHtml(value)+'" class="'+(state.source===value?"active":"")+'">'+(value==="all"?"ALL":value.toUpperCase())+'</button>'}).join("");
+      el("sourceButtons").querySelectorAll("button").forEach(function(button){button.addEventListener("click",function(){setSource(button.dataset.source)})});
+    }
+
+    function setSource(source){
+      state.source=source;
+      const bounds=rangeForSource();
+      if(state.from<bounds.min)state.from=bounds.min;
+      if(state.to>bounds.max)state.to=bounds.max;
+      if(state.from>state.to){state.from=bounds.max;state.to=bounds.max;state.mode="single"}
+      if(state.channels!==null){
+        const allowed=new Set(activeChannels());
+        state.channels=new Set(Array.from(state.channels).filter(function(name){return allowed.has(name)}));
+        if(state.channels.size===allowed.size)state.channels=null;
+      }
+      syncDateControls();renderSourceButtons();renderChannelOptions();renderAll();
+    }
+
+    function setDateMode(mode){
+      state.mode=mode;
+      if(mode==="single")state.to=state.from;
+      el("singleMode").classList.toggle("active",mode==="single");
+      el("rangeMode").classList.toggle("active",mode==="range");
+      el("dateTo").hidden=mode==="single";el("dateSeparator").hidden=mode==="single";
+      syncDateControls();renderAll();
+    }
+
+    function syncDateControls(){
+      const bounds=rangeForSource();
+      [el("dateFrom"),el("dateTo")].forEach(function(input){input.min=bounds.min;input.max=bounds.max});
+      el("dateFrom").value=state.from;el("dateTo").value=state.to;
+      el("dateTo").hidden=state.mode==="single";el("dateSeparator").hidden=state.mode==="single";
+      el("singleMode").classList.toggle("active",state.mode==="single");el("rangeMode").classList.toggle("active",state.mode==="range");
+    }
+
+    function setQuickRange(value){
+      const bounds=rangeForSource();
+      if(value==="latest"){state.mode="single";state.from=bounds.max;state.to=bounds.max}
+      else if(value==="all"){state.mode="range";state.from=bounds.min;state.to=bounds.max}
+      else{state.mode="range";state.to=bounds.max;state.from=addDays(bounds.max,-(Number(value)-1));if(state.from<bounds.min)state.from=bounds.min}
+      syncDateControls();renderAll();
+    }
+
+    function renderChannelOptions(){
+      const channels=activeChannels();
+      const search=state.search.toLowerCase();
+      const visible=channels.filter(function(name){return name.toLowerCase().includes(search)});
+      el("channelOptions").innerHTML=visible.map(function(name){const checked=state.channels===null||state.channels.has(name);return '<label class="channel-option"><input type="checkbox" data-channel="'+escapeHtml(name)+'" '+(checked?"checked":"")+'><span>'+escapeHtml(name)+'</span></label>'}).join("");
+      el("channelOptions").querySelectorAll("input").forEach(function(input){input.addEventListener("change",function(){toggleChannel(input.dataset.channel,input.checked)})});
+      const selected=state.channels===null?channels.length:state.channels.size;
+      el("channelSummary").textContent=state.channels===null?"All Channels":selected+" channel"+(selected===1?"":"s")+" selected";
+    }
+
+    function toggleChannel(name,checked){
+      const channels=activeChannels();
+      if(state.channels===null)state.channels=new Set(channels);
+      if(checked)state.channels.add(name);else state.channels.delete(name);
+      if(state.channels.size===channels.length)state.channels=null;
+      renderChannelOptions();renderAll();
+    }
+
+    function identityNote(kind,days,custom){
+      if(state.source==="fast")return "Not present in FAST CDN source";
+      let text=days>1?"Sum of daily distinct "+kind+" across "+days+" days":"Distinct "+kind+" for selected day";
+      if(custom)text+="; selected channels can share identities";
+      if(state.source==="all")text+="; STREAM identity only";
+      return text;
+    }
+
+    function renderKpis(){
+      const rows=selectedRows();
+      const days=selectedDayCount(rows);
+      const custom=state.channels!==null;
+      const watch=sum(rows,"watch_hours"),clips=sum(rows,"clips_watched"),views=sum(rows,"total_views"),ips=sum(rows,"ip_users");
+      const hasDevices=rows.some(function(row){return row.total_devices!==null&&row.total_devices!==undefined});
+      const hasSessions=rows.some(function(row){return row.total_sessions!==null&&row.total_sessions!==undefined});
+      const devices=sum(rows,"total_devices"),sessions=sum(rows,"total_sessions");
+      const avg=ips>0?watch*60/ips:null;
+      setValue("watchHours",formatHours(watch),true);el("watchHoursNote").textContent="All-status .ts requests × 6 seconds";
+      setValue("clipsWatched",formatCount(clips),true);el("clipsWatchedNote").textContent="All-status .ts media-segment plays";
+      setValue("totalViews",formatCount(views),true);el("totalViewsNote").textContent=".m3u8 playback-manifest requests";
+      setValue("ipUsers",formatCount(ips),rows.length>0);el("ipUsersNote").textContent=days>1?"Sum of daily distinct cliIP across "+days+" days"+(custom?"; channel overlap possible":""):"Distinct cliIP for selected day"+(custom?"; channel overlap possible":"");
+      setValue("deviceUsers",formatCount(devices),hasDevices);el("deviceUsersNote").textContent=identityNote("device_id",days,custom);
+      setValue("sessionUsers",formatCount(sessions),hasSessions);el("sessionUsersNote").textContent=identityNote("session_id",days,custom);
+      setValue("averageWatch",avg===null?"":formatMinutes(avg),avg!==null);el("averageWatchNote").textContent=avg===null?"Matching IP denominator is unavailable":"Watch minutes ÷ selected daily IP total";
+    }
+
+    function groupedByDate(rows){
+      const map=new Map();
+      rows.forEach(function(row){const date=String(row.log_date).slice(0,10);if(!map.has(date))map.set(date,{date:date,watch_hours:0,ip_users:0});const item=map.get(date);item.watch_hours+=num(row.watch_hours);item.ip_users+=num(row.ip_users)});
+      return Array.from(map.values()).sort(function(a,b){return a.date.localeCompare(b.date)});
+    }
+
+    function renderChart(){
+      const rows=groupedByDate(selectedRows());
+      if(dailyChart){dailyChart.destroy();dailyChart=null}
+      const canvas=el("dailyChart"),empty=el("chartEmpty");
+      canvas.hidden=!rows.length;empty.hidden=!!rows.length;
+      if(!rows.length||!window.Chart)return;
+      dailyChart=new Chart(canvas,{type:"line",data:{labels:rows.map(function(row){return formatDate(row.date)}),datasets:[{label:"Watch Hours",data:rows.map(function(row){return row.watch_hours}),borderColor:"#087f78",backgroundColor:"rgba(8,127,120,.10)",borderWidth:2,pointRadius:rows.length>45?0:2,tension:.22,yAxisID:"y"},{label:"IP Users",data:rows.map(function(row){return row.ip_users}),borderColor:"#2463a2",backgroundColor:"rgba(36,99,162,.08)",borderWidth:2,pointRadius:rows.length>45?0:2,tension:.22,yAxisID:"y1"}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{position:"bottom",labels:{boxWidth:10,usePointStyle:true,font:{size:11}}},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+": "+(ctx.dataset.yAxisID==="y"?nf1.format(ctx.parsed.y)+" h":formatCount(ctx.parsed.y))}}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:10,font:{size:10}}},y:{beginAtZero:true,position:"left",title:{display:true,text:"Watch Hours",font:{size:10}},ticks:{font:{size:10}}},y1:{beginAtZero:true,position:"right",title:{display:true,text:"IP Users",font:{size:10}},grid:{drawOnChartArea:false},ticks:{font:{size:10}}}}}});
+    }
+
+    function renderLeaderboard(){
+      const rows=selectedChannelRows(),map=new Map();
+      rows.forEach(function(row){const name=String(row.channel_name);map.set(name,(map.get(name)||0)+num(row.watch_hours))});
+      const ranked=Array.from(map.entries()).sort(function(a,b){return b[1]-a[1]}).slice(0,12),max=ranked.length?ranked[0][1]:0;
+      el("channelLeaderboard").innerHTML=ranked.length?ranked.map(function(item,index){const width=max?Math.max(2,item[1]*100/max):0;return '<div class="rank-row"><div class="rank">#'+(index+1)+'</div><div class="rank-main"><div class="rank-name"><span title="'+escapeHtml(item[0])+'">'+escapeHtml(item[0])+'</span></div><div class="mini-track"><div class="mini-fill" style="width:'+width.toFixed(2)+'%"></div></div></div><div class="rank-value">'+formatHours(item[1])+'</div></div>'}).join(""):'<div class="empty">No matching channel data.</div>';
+    }
+
+    function scopedDimensionRows(rows,key,value){
+      const sourceScope=state.channels===null;
+      return rows.filter(function(row){
+        const channelScoped=row.channel_name!==null&&row.channel_name!==undefined;
+        return sourceOk(row)&&dateOk(row)&&row[key]===value&&
+          (sourceScope?!channelScoped:(channelScoped&&channelOk(row)));
+      });
+    }
+
+    function renderRankedDistribution(targetId,rows,limit,barClass){
+      const totals=new Map();
+      rows.forEach(function(row){
+        const label=String(row.label||"Unknown / NA");
+        totals.set(label,(totals.get(label)||0)+num(row.raw_ts_rows));
+      });
+      const ranked=Array.from(totals.entries())
+        .map(function(item){return {label:item[0],hours:item[1]*num(DATA.meta.segment_seconds)/3600}})
+        .sort(function(a,b){return b.hours-a.hours||a.label.localeCompare(b.label)});
+      ranked.forEach(function(item,index){item.rank=index+1});
+      let shown=ranked.slice(0,limit);
+      const unknown=ranked.find(function(item){return item.label==="Unknown / NA"});
+      if(unknown&&unknown.rank>limit)shown=shown.concat([unknown]);
+      const total=ranked.reduce(function(value,item){return value+item.hours},0);
+      const max=ranked.length?ranked[0].hours:0;
+      el(targetId).innerHTML=shown.length?shown.map(function(item){
+        const width=max?Math.max(2,item.hours*100/max):0;
+        const share=total?item.hours*100/total:0;
+        return '<div class="rank-row"><div class="rank">#'+item.rank+'</div><div class="rank-main"><div class="rank-name"><span title="'+escapeHtml(item.label)+'">'+escapeHtml(item.label)+'</span></div><div class="mini-track"><div class="mini-fill '+barClass+'" style="width:'+width.toFixed(2)+'%"></div></div></div><div class="rank-value">'+formatHours(item.hours)+'<br><span>'+nf1.format(share)+'%</span></div></div>';
+      }).join(""):'<div class="empty">No matching data for this selection.</div>';
+      return total;
+    }
+
+    function renderDeviceAndOs(){
+      const deviceRows=scopedDimensionRows(UA_ROWS,"dimension","device");
+      const osRows=scopedDimensionRows(UA_ROWS,"dimension","os");
+      const attributedRows=deviceRows.reduce(function(value,row){return value+num(row.raw_ts_rows)},0);
+      const selectedSegments=sum(selectedRows(),"clips_watched");
+      const coverage=selectedSegments>0?attributedRows*100/selectedSegments:null;
+      el("uaCoverage").textContent=coverage===null?"No playback":"UA coverage "+nf1.format(coverage)+"%";
+      const coarse=state.channels!==null&&(state.source==="stream"||state.source==="all");
+      el("deviceScopeNote").textContent=coarse?"FAST decoded UA; STREAM coarse channel UA family":"Decoded incremental UA reference";
+      el("osScopeNote").textContent=coarse?"STREAM channel OS is a coarse UA-family inference":"Decoded OS family from UA";
+      renderRankedDistribution("deviceLeaderboard",deviceRows,12,"device");
+      renderRankedDistribution("osLeaderboard",osRows,12,"os");
+    }
+
+    function renderMarkets(){
+      const states=scopedDimensionRows(MARKET_ROWS,"market_level","india_state");
+      const countries=scopedDimensionRows(MARKET_ROWS,"market_level","country");
+      renderRankedDistribution("stateLeaderboard",states,12,"state");
+      renderRankedDistribution("countryLeaderboard",countries,10,"country");
+    }
+    function renderScope(){
+      const invalid=!state.from||!state.to||state.from>state.to;
+      el("usedRange").classList.toggle("scope-error",invalid);
+      el("usedRange").textContent=invalid?"Choose a valid date range":"Used Range: "+formatDate(state.from)+(state.from===state.to?"":" to "+formatDate(state.to));
+      const channelText=state.channels===null?"All Channels":state.channels.size+" selected channel"+(state.channels.size===1?"":"s");
+      el("scopeDescription").textContent=sourceLabel()+" | "+channelText+" | "+DATA.meta.freshness;
+    }
+
+    function renderAll(){renderScope();renderKpis();renderChart();renderLeaderboard();renderDeviceAndOs();renderMarkets()}
+
+    el("singleMode").addEventListener("click",function(){setDateMode("single")});
+    el("rangeMode").addEventListener("click",function(){setDateMode("range")});
+    el("dateFrom").addEventListener("change",function(){state.from=this.value;if(state.mode==="single")state.to=state.from;syncDateControls();renderAll()});
+    el("dateTo").addEventListener("change",function(){state.to=this.value;renderAll()});
+    document.querySelectorAll("[data-range]").forEach(function(button){button.addEventListener("click",function(){setQuickRange(button.dataset.range)})});
+    el("channelSearch").addEventListener("input",function(){state.search=this.value;renderChannelOptions()});
+    el("selectAllChannels").addEventListener("click",function(){state.channels=null;renderChannelOptions();renderAll()});
+    el("clearChannels").addEventListener("click",function(){state.channels=new Set();renderChannelOptions();renderAll()});
+    document.addEventListener("click",function(event){const details=el("channelDetails");if(details.open&&!details.contains(event.target))details.removeAttribute("open")});
+
+    renderMetadata();renderSourceButtons();syncDateControls();renderChannelOptions();renderAll();
+  </script>
+</body>
+</html>

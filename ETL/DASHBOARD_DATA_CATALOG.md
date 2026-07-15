@@ -33,6 +33,7 @@ This file is the first place to check before building a new dashboard. It lists 
 | Veto Concurrency | `output/watch_hours/concurrency/veto_concurrency.html` | `output/watch_hours/concurrency/*.parquet` |
 | Veto Latency | `output/latency/veto_latency.html` | `output/latency/profile/*.parquet` |
 | Veto Audience Operations | `output/audience_ops/veto_audience_operations.html` | Watch-hour daily tables, latency profile, concurrency, identity, content, device decode, overview daily CSV |
+| Veto Master Dashboard | `output/master/veto_master_dashboard.html` | Compact watch, identity, decoded UA device/OS, and channel-aware market marts |
 | STREAM Showcase | `output/watch_hours/stream_showcase/stream_watch_hours_showcase.html` | `daily_volume.parquet`, `geo_daily.parquet` |
 | STREAM Showcase Excel | `output/watch_hours/stream_showcase/stream_watch_hours_showcase.xlsx` | Same as STREAM Showcase |
 | Viewer Journey Menu | `output/exports/viewer_journey/viewer_journey_menu.html` | `output/exports/viewer_journey/viewer_journey_index.parquet` |
@@ -168,6 +169,22 @@ Folder: `output/content`
 | `parts/content_daily/source=.../year=.../month=.../day=.../*.parquet` | n/a | daily part | Incremental content parts | Do not use directly |
 
 FAST content title is not available from current query string evidence.
+
+## Master Dashboard Tables
+
+Folder: `output/master/data`
+
+These compact tables are rebuilt quickly from existing marts; they do not rescan the lake.
+
+| File | Grain | What It Means | Users |
+|---|---|---|---|
+| `master_source_daily.parquet` | date + source | Source-level all-status watch hours, 6-second media clips, daily distinct IPs, manifest views, and available STREAM device/session identities | Veto Master Dashboard |
+| `master_channel_daily.parquet` | date + source + channel | The same metrics at channel grain; view-only channels are retained even when no `.ts` playback follows the manifest request | Veto Master Dashboard |
+| `master_ua_daily.parquet` | date + source + source/channel scope + device/OS label | UA-attributed all-status watch hours. FAST channel rows use decoded UA detail; STREAM channel rows use the available coarse UA family. | Veto Master Dashboard |
+| `master_market_daily.parquet` | date + source + source/channel scope + India state or other country | Channel-aware market watch hours with India state aliases normalized and invalid India-state labels surfaced as Unknown / NA | Veto Master Dashboard |
+| `master_dashboard_manifest.json` | generation run | Creation time, source coverage, row counts, and upstream mart paths | Pipeline/debug |
+
+For multi-day selections, IP/device/session cards are sums of daily distinct values and can count a returning identity on more than one day. FAST does not currently expose app `device_id` or `session_id`, so those metrics remain unavailable for FAST rather than being represented as zero.
 
 ## Device And UA Decode
 
