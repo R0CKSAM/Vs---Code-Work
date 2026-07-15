@@ -12,7 +12,8 @@ Single-folder workflow for your Veto watch-hours pipeline and dashboards.
 - `src/tools/asn/` : optional ASN lookup/refresh tools
 - `data/` : local lake, ASN lookup data, and raw backup folders
 - `output/` : generated watch-hours dashboard, overview dashboard, logs, and state
-- `extras/` : old reports, archived generated HTML, and non-runtime clutter
+- `extras/` : standalone apps, one-off helpers/data, code backups, validation artifacts,
+  archived outputs, and other files that are not part of the daily production runtime
 
 ## Quick run
 

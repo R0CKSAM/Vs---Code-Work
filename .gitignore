@@ -35,9 +35,11 @@ superset/
 *.xlsx
 *.xls
 
-# Large generated banner archives
-ETL/Banner Maker/
-ETL/Banner Maker/*.zip
+# Standalone extras and generated archives are not production ETL inputs.
+# Existing tracked utility source remains tracked; new local assets stay out of Git.
+ETL/extras/apps/Banner Maker/
+ETL/extras/output_archives/
+ETL/extras/one_off_data/
 
 # Generated dashboard HTML can exceed GitHub's file-size limit.
 ETL/output/**/*.html
