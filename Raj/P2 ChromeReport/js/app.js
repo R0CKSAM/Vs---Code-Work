@@ -1,77 +1,42 @@
 const columns = [
-    "week",
-    "transmission",
-    "mso",
-    "market",
-    "mso_type",
-    "city",
-    "head_end",
-    "channel_name",
-    "band",
-    "tv_channel_no",
-    "cr_no",
-    "w1_frequency",
-    "w2_frequency",
-    "w3_frequency",
-    "w4_frequency",
-    "change_status",
+    { key: "transmission", label: "Transmission", filterable: true },
+    { key: "mso", label: "MSO", filterable: true },
+    { key: "market", label: "Market", filterable: true },
+    { key: "mso_type", label: "MSO Type", filterable: true },
+    { key: "city", label: "City", filterable: true },
+    { key: "head_end", label: "Head End", filterable: true },
+    { key: "channel_name", label: "Channel Name", filterable: true },
+    { key: "band", label: "Band", filterable: true },
+    { key: "tv_channel_no", label: "TV Channel No", filterable: true },
+    { key: "cr_no", label: "CR No", filterable: true },
+    { key: "w1_frequency", label: "Week 1 Frequency", filterable: false },
+    { key: "w2_frequency", label: "Week 2 Frequency", filterable: false },
+    { key: "w3_frequency", label: "Week 3 Frequency", filterable: false },
+    { key: "w4_frequency", label: "Week 4 Frequency", filterable: false },
+    { key: "change_status", label: "Change Status", filterable: true },
 ];
-
-const filterColumns = [
-    "week",
-    "transmission",
-    "mso",
-    "market",
-    "mso_type",
-    "city",
-    "head_end",
-    "channel_name",
-    "band",
-    "tv_channel_no",
-    "cr_no",
-    "change_status",
-];
-
-const filterLabels = {
-    week: "Week",
-    transmission: "Transmission",
-    mso: "MSO",
-    market: "Market",
-    mso_type: "MSO Type",
-    city: "City",
-    head_end: "Head End",
-    channel_name: "Channel Name",
-    band: "Band",
-    tv_channel_no: "TV Channel No",
-    cr_no: "CR No",
-    change_status: "Change Status",
-};
 
 const defaultChannel = "India TV";
 
 const state = {
     records: [],
-    selectedFilters: {},
     dataTable: null,
-    chartInstances: [],
-    fullDataLoaded: false,
-    chartDataLoaded: false,
+    selectedFilters: {},
+    popupColumn: null,
+    popupSearch: "",
 };
 
 const elements = {
-    columnFilters: document.getElementById("columnFilters"),
     refreshButton: document.getElementById("refreshButton"),
-    viewAnalyticsButton: document.getElementById("viewAnalyticsButton"),
     fullscreenButton: document.getElementById("fullscreenButton"),
-    resetFiltersButton: document.getElementById("resetFilters"),
     applyFiltersButton: document.getElementById("applyFilters"),
+    resetFiltersButton: document.getElementById("resetFilters"),
     sourceFilesPill: document.getElementById("sourceFilesPill"),
     statusPill: document.getElementById("statusPill"),
-    filterStatus: document.getElementById("filterStatus"),
     errorBox: document.getElementById("errorBox"),
     tableLoading: document.getElementById("tableLoading"),
-    analyticsPanel: document.getElementById("analyticsPanel"),
-    analyticsStatus: document.getElementById("analyticsStatus"),
+    tableHead: document.getElementById("reportTableHead"),
+    tableFrame: document.getElementById("tableFrame"),
     kpiTotalRecords: document.getElementById("kpiTotalRecords"),
     kpiTotalMarkets: document.getElementById("kpiTotalMarkets"),
     kpiTotalMsos: document.getElementById("kpiTotalMsos"),
@@ -83,14 +48,16 @@ const elements = {
     kpiHighestChannelValue: document.getElementById("kpiHighestChannelValue"),
 };
 
-function resetSelectionState() {
+function initializeFilterState() {
     state.selectedFilters = Object.fromEntries(
-        filterColumns.map((column) => [column, new Set()])
+        columns.filter((column) => column.filterable).map((column) => [column.key, new Set()])
     );
-    state.selectedFilters.channel_name = new Set([defaultChannel]);
 }
 
 function safeNumber(value) {
+    if (value === "NA" || value === "" || value === null || value === undefined) {
+        return null;
+    }
     const number = Number(value);
     return Number.isFinite(number) ? number : null;
 }
@@ -99,8 +66,8 @@ function compareClass(current, previous) {
     const currentValue = safeNumber(current);
     const previousValue = safeNumber(previous);
     if (currentValue === null || previousValue === null) return "compare-same";
-    if (currentValue > previousValue) return "compare-up";
     if (currentValue < previousValue) return "compare-down";
+    if (currentValue > previousValue) return "compare-up";
     return "compare-same";
 }
 
@@ -137,151 +104,97 @@ function setSummaryKpis(summary) {
         : "No matching records";
 }
 
-function getUniqueOptions(column) {
-    return [...new Set(state.records.map((record) => record[column]).filter(Boolean))].sort((a, b) =>
+function displayFrequency(value) {
+    if (value === null || value === undefined || value === "") {
+        return "NA";
+    }
+    return String(value);
+}
+
+function normalizeRecord(record) {
+    return {
+        ...record,
+        w1_frequency: displayFrequency(record.w1_frequency),
+        w2_frequency: displayFrequency(record.w2_frequency),
+        w3_frequency: displayFrequency(record.w3_frequency),
+        w4_frequency: displayFrequency(record.w4_frequency),
+    };
+}
+
+function recordMatches(record) {
+    return Object.entries(state.selectedFilters).every(([key, selected]) => {
+        if (!selected.size) return true;
+        return selected.has(record[key]);
+    });
+}
+
+function getColumnOptions(columnKey) {
+    return [...new Set(state.records.map((record) => record[columnKey]).filter(Boolean))].sort((a, b) =>
         String(a).localeCompare(String(b), undefined, { sensitivity: "base" })
     );
 }
 
-function updateTriggerText(card) {
-    const column = card.dataset.column;
-    const selected = [...state.selectedFilters[column]];
-    const textWrap = card.querySelector(".filter-trigger-text");
-
-    if (!selected.length) {
-        textWrap.innerHTML = '<span class="filter-placeholder">All values</span>';
-        return;
-    }
-
-    const visible = selected.slice(0, 2)
-        .map((value) => `<span class="filter-chip">${value}</span>`)
-        .join("");
-    const extra = selected.length > 2 ? `<span class="filter-count">+${selected.length - 2} more</span>` : "";
-    textWrap.innerHTML = `${visible}${extra}`;
-}
-
-function renderFilterOptions(card, query = "") {
-    const column = card.dataset.column;
-    const optionsWrap = card.querySelector(".filter-options");
-    const lowerQuery = query.trim().toLowerCase();
-    const options = getUniqueOptions(column).filter((value) =>
-        String(value).toLowerCase().includes(lowerQuery)
+function getVisibleFilterOptions(columnKey) {
+    const query = state.popupSearch.trim().toLowerCase();
+    return getColumnOptions(columnKey).filter((value) =>
+        String(value).toLowerCase().includes(query)
     );
-
-    optionsWrap.innerHTML = options
-        .map((value) => `
-            <label class="filter-option">
-                <input type="checkbox" value="${String(value).replaceAll('"', "&quot;")}" ${state.selectedFilters[column].has(value) ? "checked" : ""}>
-                <span>${value}</span>
-            </label>
-        `)
-        .join("");
 }
 
-function createFilterCard(column) {
-    const card = document.createElement("div");
-    card.className = "filter-card";
-    card.dataset.column = column;
-    card.innerHTML = `
-        <label class="filter-label">${filterLabels[column]}</label>
-        <button type="button" class="filter-trigger">
-            <span class="filter-trigger-text"></span>
-            <span>▼</span>
-        </button>
-        <div class="filter-menu">
-            <input class="filter-search" type="search" placeholder="Search ${filterLabels[column]}...">
-            <div class="filter-menu-actions">
-                <button type="button" class="select-all">Select All</button>
-                <button type="button" class="clear-filter">Clear</button>
-            </div>
-            <div class="filter-options"></div>
+function filterButtonClass(columnKey) {
+    return state.selectedFilters[columnKey]?.size ? "header-filter-button active" : "header-filter-button";
+}
+
+function renderTableHeader() {
+    elements.tableHead.innerHTML = `
+        <tr>
+            ${columns.map((column) => `
+                <th data-column="${column.key}">
+                    <div class="header-cell">
+                        <div class="header-top">
+                            <span class="header-label">${column.label}</span>
+                            ${column.filterable ? `<button type="button" class="${filterButtonClass(column.key)}" data-filter-button="${column.key}">&#9662;</button>` : ""}
+                        </div>
+                    </div>
+                </th>
+            `).join("")}
+        </tr>
+    `;
+}
+
+function renderFilterPopup(columnKey, anchor) {
+    removeFilterPopup();
+
+    const popup = document.createElement("div");
+    popup.id = "headerFilterPopup";
+    popup.className = "filter-popup";
+    popup.dataset.column = columnKey;
+
+    const options = getVisibleFilterOptions(columnKey);
+    popup.innerHTML = `
+        <input class="filter-popup-search" type="search" placeholder="Search ${columns.find((column) => column.key === columnKey).label}..." value="${escapeHtml(state.popupSearch)}">
+        <div class="filter-popup-actions">
+            <button type="button" data-action="select-all">Select All</button>
+            <button type="button" data-action="clear">Clear Selection</button>
+        </div>
+        <div class="filter-popup-options">
+            ${options.map((value) => `
+                <label class="filter-popup-option">
+                    <input type="checkbox" value="${escapeHtml(value)}" ${state.selectedFilters[columnKey].has(value) ? "checked" : ""}>
+                    <span>${escapeHtml(value)}</span>
+                </label>
+            `).join("")}
         </div>
     `;
 
-    updateTriggerText(card);
-    renderFilterOptions(card);
-    return card;
+    document.body.appendChild(popup);
+    const rect = anchor.getBoundingClientRect();
+    popup.style.top = `${rect.bottom + 6}px`;
+    popup.style.left = `${Math.max(12, rect.left - 200 + rect.width)}px`;
 }
 
-function renderFilters() {
-    elements.columnFilters.innerHTML = "";
-    filterColumns.forEach((column) => {
-        elements.columnFilters.appendChild(createFilterCard(column));
-    });
-    elements.filterStatus.textContent = state.fullDataLoaded
-        ? "Filters are live and update the table immediately."
-        : "Fetching latest data...";
-}
-
-function closeOtherMenus(currentCard) {
-    document.querySelectorAll(".filter-card.open").forEach((card) => {
-        if (card !== currentCard) {
-            card.classList.remove("open");
-        }
-    });
-}
-
-function bindFilterEvents() {
-    elements.columnFilters.addEventListener("click", (event) => {
-        const card = event.target.closest(".filter-card");
-        const trigger = event.target.closest(".filter-trigger");
-
-        if (trigger && card) {
-            closeOtherMenus(card);
-            card.classList.toggle("open");
-            return;
-        }
-
-        if (event.target.closest(".clear-filter") && card) {
-            state.selectedFilters[card.dataset.column].clear();
-            renderFilterOptions(card, card.querySelector(".filter-search").value);
-            updateTriggerText(card);
-            applyFilters();
-            return;
-        }
-
-        if (event.target.closest(".select-all") && card) {
-            getUniqueOptions(card.dataset.column).forEach((value) => state.selectedFilters[card.dataset.column].add(value));
-            renderFilterOptions(card, card.querySelector(".filter-search").value);
-            updateTriggerText(card);
-            applyFilters();
-        }
-    });
-
-    elements.columnFilters.addEventListener("input", (event) => {
-        const card = event.target.closest(".filter-card");
-        if (!card) return;
-
-        if (event.target.classList.contains("filter-search")) {
-            renderFilterOptions(card, event.target.value);
-            return;
-        }
-
-        if (event.target.type === "checkbox") {
-            const { column } = card.dataset;
-            if (event.target.checked) {
-                state.selectedFilters[column].add(event.target.value);
-            } else {
-                state.selectedFilters[column].delete(event.target.value);
-            }
-            updateTriggerText(card);
-            applyFilters();
-        }
-    });
-
-    document.addEventListener("click", (event) => {
-        if (!event.target.closest(".filter-card")) {
-            document.querySelectorAll(".filter-card.open").forEach((card) => card.classList.remove("open"));
-        }
-    });
-}
-
-function recordMatches(record) {
-    return filterColumns.every((column) => {
-        const selected = state.selectedFilters[column];
-        if (!selected || !selected.size) return true;
-        return selected.has(record[column]);
-    });
+function removeFilterPopup() {
+    document.getElementById("headerFilterPopup")?.remove();
 }
 
 function updateKpis(records) {
@@ -328,46 +241,24 @@ function updateKpis(records) {
 }
 
 function buildTable() {
+    renderTableHeader();
+
     if (state.dataTable) {
         state.dataTable.destroy();
-        $("#reportTable").empty().append(`
-            <thead>
-                <tr>
-                    <th>Week</th>
-                    <th>Transmission</th>
-                    <th>MSO</th>
-                    <th>Market</th>
-                    <th>MSO Type</th>
-                    <th>City</th>
-                    <th>Head End</th>
-                    <th>Channel Name</th>
-                    <th>Band</th>
-                    <th>TV Channel No</th>
-                    <th>CR No</th>
-                    <th>W1 Frequency</th>
-                    <th>W2 Frequency</th>
-                    <th>W3 Frequency</th>
-                    <th>W4 Frequency</th>
-                    <th>Change Status</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        `);
     }
 
-    $.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter((fn) => !fn.__chromeReportFilter);
+    $.fn.dataTable.ext.search = $.fn.dataTable.ext.search.filter((fn) => !fn.__chromeHeaderFilter);
     const customFilter = (settings, _, dataIndex) => {
         if (settings.nTable.id !== "reportTable") return true;
         const record = state.records[dataIndex];
         return record ? recordMatches(record) : true;
     };
-    customFilter.__chromeReportFilter = true;
+    customFilter.__chromeHeaderFilter = true;
     $.fn.dataTable.ext.search.push(customFilter);
 
     state.dataTable = new DataTable("#reportTable", {
         data: state.records,
         columns: [
-            { data: "week" },
             { data: "transmission" },
             { data: "mso" },
             { data: "market" },
@@ -378,28 +269,43 @@ function buildTable() {
             { data: "band" },
             { data: "tv_channel_no" },
             { data: "cr_no" },
-            { data: "w1_frequency", render: (data) => `<span class="compare-same">${data ?? ""}</span>` },
-            { data: "w2_frequency", render: (data, _, row) => `<span class="${compareClass(data, row.w1_frequency)}">${data ?? ""}</span>` },
-            { data: "w3_frequency", render: (data, _, row) => `<span class="${compareClass(data, row.w2_frequency)}">${data ?? ""}</span>` },
-            { data: "w4_frequency", render: (data, _, row) => `<span class="${compareClass(data, row.w3_frequency)}">${data ?? ""}</span>` },
+            { data: "w1_frequency", render: (data) => `<span class="compare-same">${displayFrequency(data)}</span>` },
+            { data: "w2_frequency", render: (data, _, row) => `<span class="${compareClass(data, row.w1_frequency)}">${displayFrequency(data)}</span>` },
+            { data: "w3_frequency", render: (data, _, row) => `<span class="${compareClass(data, row.w2_frequency)}">${displayFrequency(data)}</span>` },
+            { data: "w4_frequency", render: (data, _, row) => `<span class="${compareClass(data, row.w3_frequency)}">${displayFrequency(data)}</span>` },
             { data: "change_status", render: (data) => `<span class="${changeStatusClass(data)}">${data}</span>` },
         ],
         paging: true,
-        searching: true,
+        searching: false,
         ordering: true,
         info: true,
-        responsive: true,
         fixedHeader: true,
         scrollX: true,
         scrollY: "540px",
         pageLength: 25,
-        lengthMenu: [10, 25, 50, 100],
-        order: [[7, "asc"]],
+        lengthMenu: [25, 50, 100],
+        order: [[6, "asc"]],
         deferRender: true,
-        dom: "Bfrtip",
-        buttons: ["copyHtml5", "csvHtml5", "excelHtml5", "print"],
+        autoWidth: false,
+        dom: "lrtip",
+        columnDefs: [
+            { targets: 0, width: "90px" },
+            { targets: 1, width: "100px" },
+            { targets: 2, width: "90px" },
+            { targets: 3, width: "90px" },
+            { targets: 4, width: "90px" },
+            { targets: 5, width: "100px" },
+            { targets: 6, width: "120px" },
+            { targets: 7, width: "60px" },
+            { targets: 8, width: "80px" },
+            { targets: 9, width: "80px" },
+            { targets: 10, width: "90px" },
+            { targets: 11, width: "90px" },
+            { targets: 12, width: "90px" },
+            { targets: 13, width: "90px" },
+            { targets: 14, width: "100px" },
+        ],
         language: {
-            search: "Global Search:",
             lengthMenu: "Show _MENU_ rows",
             emptyTable: "Fetching latest data...",
         },
@@ -407,6 +313,10 @@ function buildTable() {
             const visibleRecords = this.api().rows({ search: "applied" }).data().toArray();
             updateKpis(visibleRecords);
             elements.statusPill.textContent = `${visibleRecords.length.toLocaleString()} visible records`;
+            renderTableHeader();
+        },
+        initComplete: function () {
+            setLoading(false);
         },
     });
 }
@@ -439,168 +349,139 @@ async function loadKpiSummary() {
     }
     setSummaryKpis(summary);
     setMeta(summary);
-    elements.statusPill.textContent = "KPI ready, table loading in background";
+    elements.statusPill.textContent = "KPI ready, table loading";
 }
 
 async function loadMergedData() {
     setLoading(true, "Fetching latest data...");
-    elements.filterStatus.textContent = "Fetching latest data...";
     await loadScript("data/merged_data.js");
-
     const mergedData = window.CHROME_REPORT_MERGED_DATA;
     if (!mergedData || !Array.isArray(mergedData.records)) {
         throw new Error("Missing data/merged_data.js. Run python/generate_json.py first.");
     }
-
-    state.records = mergedData.records;
-    state.fullDataLoaded = true;
-    resetSelectionState();
-    renderFilters();
+    state.records = mergedData.records.map(normalizeRecord);
     buildTable();
     applyFilters();
-    setLoading(false);
-    elements.filterStatus.textContent = "Filters are live and update results instantly.";
-}
-
-async function loadChartAssets() {
-    if (!window.Chart) {
-        await loadScript("https://cdn.jsdelivr.net/npm/chart.js");
-    }
-    if (!state.chartDataLoaded) {
-        await loadScript("data/chart_data.js");
-        state.chartDataLoaded = true;
-    }
-}
-
-function destroyCharts() {
-    state.chartInstances.forEach((chart) => chart.destroy());
-    state.chartInstances = [];
-}
-
-function buildAnalyticsCharts() {
-    const chartData = window.CHROME_REPORT_CHART_DATA;
-    if (!chartData) {
-        throw new Error("Missing data/chart_data.js. Run python/generate_json.py first.");
-    }
-
-    destroyCharts();
-    const commonOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { labels: { color: "#f8fafc" } },
-        },
-        scales: {
-            x: { ticks: { color: "#cbd5e1" }, grid: { color: "rgba(148,163,184,0.15)" } },
-            y: { ticks: { color: "#cbd5e1" }, grid: { color: "rgba(148,163,184,0.15)" } },
-        },
-    };
-
-    state.chartInstances.push(new Chart(document.getElementById("trendChart"), {
-        type: "line",
-        data: {
-            labels: chartData.weekly_trend.labels,
-            datasets: [{ label: "Average Frequency", data: chartData.weekly_trend.values, borderColor: "#3b82f6", backgroundColor: "rgba(59,130,246,0.2)" }],
-        },
-        options: commonOptions,
-    }));
-
-    state.chartInstances.push(new Chart(document.getElementById("marketChart"), {
-        type: "bar",
-        data: {
-            labels: chartData.top_markets.labels,
-            datasets: [{ label: "Changed Records", data: chartData.top_markets.values, backgroundColor: "#22c55e" }],
-        },
-        options: commonOptions,
-    }));
-
-    state.chartInstances.push(new Chart(document.getElementById("msoChart"), {
-        type: "bar",
-        data: {
-            labels: chartData.top_msos.labels,
-            datasets: [{ label: "Changed Records", data: chartData.top_msos.values, backgroundColor: "#facc15" }],
-        },
-        options: commonOptions,
-    }));
-
-    state.chartInstances.push(new Chart(document.getElementById("distributionChart"), {
-        type: "doughnut",
-        data: {
-            labels: chartData.frequency_distribution.labels,
-            datasets: [{ data: chartData.frequency_distribution.values, backgroundColor: ["#3b82f6", "#22c55e", "#facc15", "#ef4444", "#8b5cf6", "#14b8a6", "#f97316"] }],
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { labels: { color: "#f8fafc" } } },
-        },
-    }));
-}
-
-async function openAnalytics() {
-    try {
-        elements.analyticsPanel.hidden = false;
-        elements.analyticsStatus.textContent = "Loading analytics...";
-        await loadChartAssets();
-        buildAnalyticsCharts();
-        elements.analyticsStatus.textContent = "Analytics loaded on demand";
-    } catch (error) {
-        showError(error.message);
-        elements.analyticsStatus.textContent = "Analytics failed to load";
-    }
-}
-
-async function initializeDashboard() {
-    clearError();
-    setLoading(true, "Fetching latest data...");
-    resetSelectionState();
-    elements.columnFilters.innerHTML = "";
-
-    try {
-        await loadKpiSummary();
-        setTimeout(async () => {
-            try {
-                await loadMergedData();
-            } catch (error) {
-                showError(error.message);
-                setLoading(false);
-                elements.statusPill.textContent = "Table load failed";
-            }
-        }, 50);
-    } catch (error) {
-        showError(error.message);
-        setLoading(false);
-        elements.statusPill.textContent = "KPI load failed";
-    }
 }
 
 function bindButtons() {
-    elements.refreshButton.addEventListener("click", () => {
-        window.location.reload();
-    });
-    elements.viewAnalyticsButton.addEventListener("click", openAnalytics);
-    elements.resetFiltersButton.addEventListener("click", () => {
-        resetSelectionState();
-        renderFilters();
+    elements.refreshButton.addEventListener("click", () => window.location.reload());
+    elements.applyFiltersButton.addEventListener("click", () => {
+        removeFilterPopup();
+        state.popupColumn = null;
+        state.popupSearch = "";
         applyFilters();
     });
-    elements.applyFiltersButton.addEventListener("click", applyFilters);
-
+    elements.resetFiltersButton.addEventListener("click", () => {
+        initializeFilterState();
+        state.popupSearch = "";
+        state.popupColumn = null;
+        removeFilterPopup();
+        renderTableHeader();
+        applyFilters();
+    });
     elements.fullscreenButton.addEventListener("click", async () => {
         if (!document.fullscreenElement) {
-            await document.documentElement.requestFullscreen();
-            elements.fullscreenButton.textContent = "Exit Full Screen";
+            await elements.tableFrame.requestFullscreen();
         } else {
             await document.exitFullscreen();
-            elements.fullscreenButton.textContent = "Full Screen";
         }
     });
-
     document.addEventListener("fullscreenchange", () => {
         elements.fullscreenButton.textContent = document.fullscreenElement ? "Exit Full Screen" : "Full Screen";
     });
 }
 
-bindFilterEvents();
-bindButtons();
+function bindHeaderFilters() {
+    document.addEventListener("click", (event) => {
+        const filterButton = event.target.closest("[data-filter-button]");
+        if (filterButton) {
+            const columnKey = filterButton.dataset.filterButton;
+            if (state.popupColumn === columnKey) {
+                state.popupColumn = null;
+                state.popupSearch = "";
+                removeFilterPopup();
+            } else {
+                state.popupColumn = columnKey;
+                state.popupSearch = "";
+                renderFilterPopup(columnKey, filterButton);
+            }
+            return;
+        }
+
+        const popup = event.target.closest("#headerFilterPopup");
+        if (!popup) {
+            state.popupColumn = null;
+            state.popupSearch = "";
+            removeFilterPopup();
+            return;
+        }
+
+        const columnKey = popup.dataset.column;
+        if (event.target.matches("[data-action='select-all']")) {
+            getVisibleFilterOptions(columnKey).forEach((value) => state.selectedFilters[columnKey].add(value));
+            renderFilterPopup(columnKey, document.querySelector(`[data-filter-button="${columnKey}"]`));
+            renderTableHeader();
+            applyFilters();
+            return;
+        }
+
+        if (event.target.matches("[data-action='clear']")) {
+            state.selectedFilters[columnKey].clear();
+            renderFilterPopup(columnKey, document.querySelector(`[data-filter-button="${columnKey}"]`));
+            renderTableHeader();
+            applyFilters();
+            return;
+        }
+    });
+
+    document.addEventListener("input", (event) => {
+        const popup = event.target.closest("#headerFilterPopup");
+        if (!popup) return;
+        const columnKey = popup.dataset.column;
+
+        if (event.target.classList.contains("filter-popup-search")) {
+            state.popupSearch = event.target.value;
+            renderFilterPopup(columnKey, document.querySelector(`[data-filter-button="${columnKey}"]`));
+            return;
+        }
+
+        if (event.target.type === "checkbox") {
+            if (event.target.checked) {
+                state.selectedFilters[columnKey].add(event.target.value);
+            } else {
+                state.selectedFilters[columnKey].delete(event.target.value);
+            }
+            renderFilterPopup(columnKey, document.querySelector(`[data-filter-button="${columnKey}"]`));
+            renderTableHeader();
+            applyFilters();
+        }
+    });
+}
+
+async function initializeDashboard() {
+    clearError();
+    initializeFilterState();
+    bindButtons();
+    bindHeaderFilters();
+
+    try {
+        await loadKpiSummary();
+        await loadMergedData();
+    } catch (error) {
+        showError(error.message);
+        setLoading(false);
+        elements.statusPill.textContent = "Dashboard failed to load";
+    }
+}
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+}
+
 initializeDashboard();
