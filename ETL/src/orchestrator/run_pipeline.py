@@ -752,6 +752,11 @@ def main() -> None:
         action="store_true",
         help="Skip Veto Audience Operations dashboard generation.",
     )
+    parser.add_argument(
+        "--skip-master",
+        action="store_true",
+        help="Skip Veto Master Dashboard generation.",
+    )
 
     # 001.py controls
     parser.add_argument(
@@ -1052,6 +1057,11 @@ def main() -> None:
         default=None,
         help="Standalone Veto Audience Operations dashboard html output path.",
     )
+    parser.add_argument(
+        "--master-html",
+        default=None,
+        help="Standalone Veto Master Dashboard html output path.",
+    )
 
     args = parser.parse_args()
 
@@ -1087,6 +1097,7 @@ def main() -> None:
     concurrency_dashboard_dir = src_root / "dashboards" / "concurrencyDashboard"
     overview_dashboard_dir = src_root / "dashboards" / "overViewDashboard"
     audience_dashboard_dir = src_root / "dashboards" / "audienceOpsDashboard"
+    master_dashboard_dir = src_root / "dashboards" / "masterDashboard"
     profile_dir = Path(args.watch_profile).resolve() if args.watch_profile else output_root / "watch_hours" / "profile"
     watch_out = Path(args.watch_out).resolve() if args.watch_out else output_root / "watch_hours" / "veto_watch_hours.html"
     concurrency_out = (
@@ -1109,6 +1120,11 @@ def main() -> None:
         if args.audience_html
         else output_root / "audience_ops" / "veto_audience_operations.html"
     )
+    master_out = (
+        Path(args.master_html).resolve()
+        if args.master_html
+        else output_root / "master" / "veto_master_dashboard.html"
+    )
     overview_data_dir = Path(args.overview_data_dir).resolve() if args.overview_data_dir else output_root / "overview"
     overview_html = Path(args.overview_html).resolve() if args.overview_html else overview_data_dir / "overview_dashboard.html"
 
@@ -1127,6 +1143,7 @@ def main() -> None:
         and args.skip_identity_mart
         and args.skip_content_mart
         and args.skip_audience
+        and args.skip_master
         and not args.run_ua_profile
     ):
         raise SystemExit("Nothing to run. Remove one skip flag.")
@@ -1137,6 +1154,7 @@ def main() -> None:
     latency_out.parent.mkdir(parents=True, exist_ok=True)
     latency_profile.mkdir(parents=True, exist_ok=True)
     audience_out.parent.mkdir(parents=True, exist_ok=True)
+    master_out.parent.mkdir(parents=True, exist_ok=True)
     overview_data_dir.mkdir(parents=True, exist_ok=True)
     overview_html.parent.mkdir(parents=True, exist_ok=True)
 
@@ -1307,6 +1325,10 @@ def main() -> None:
     audience_dashboard_script = _local_script(
         etl_root,
         str(Path("src") / "dashboards" / "audienceOpsDashboard" / "generate_audience_ops.py"),
+    )
+    master_dashboard_script = _local_script(
+        etl_root,
+        str(Path("src") / "dashboards" / "masterDashboard" / "generate_master_dashboard.py"),
     )
 
     if not args.skip_etl:
@@ -2407,6 +2429,35 @@ def main() -> None:
             record_skip("audience_ops_dashboard_html", reason)
     else:
         print("\n[skip] audience operations dashboard skipped.")
+
+    if not args.skip_master:
+        master_cmd = [
+            python,
+            str(master_dashboard_script),
+            "--output-root",
+            str(output_root),
+            "--out",
+            str(master_out),
+            "--title",
+            "Veto Master Dashboard",
+        ]
+        if args.dry_run:
+            master_cmd.append("--dry-run")
+        if identity_ok:
+            run(
+                master_cmd,
+                cwd=master_dashboard_dir,
+                env=env,
+                step_name="master_dashboard_html",
+                log_dir=log_dir,
+                allow_failure=args.continue_on_error,
+            )
+        else:
+            reason = "identity mart failed; skipped master HTML refresh to avoid publishing stale identity data"
+            print(f"\n[skip] master_dashboard_html: {reason}")
+            record_skip("master_dashboard_html", reason)
+    else:
+        print("\n[skip] master dashboard skipped.")
 
     if not args.skip_watch:
         watch_cmd = [

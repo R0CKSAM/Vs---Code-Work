@@ -197,7 +197,23 @@ def merge_date_rows(base: pd.DataFrame, delta: pd.DataFrame, dates: set[str]) ->
     if base.empty:
         merged = delta
     elif "log_date" in base.columns:
-        kept = base[~base["log_date"].astype(str).isin(replace_dates)].copy()
+        if "source" in base.columns and "source" in delta.columns:
+            base_partition_keys = (
+                base["log_date"].astype(str)
+                + "\x1f"
+                + base["source"].fillna("").astype(str).str.strip().str.lower()
+            )
+            delta_sources = set(
+                delta["source"].fillna("").astype(str).str.strip().str.lower()
+            )
+            delta_partition_keys = {
+                f"{date_value}\x1f{source_value}"
+                for date_value in replace_dates
+                for source_value in delta_sources
+            }
+            kept = base[~base_partition_keys.isin(delta_partition_keys)].copy()
+        else:
+            kept = base[~base["log_date"].astype(str).isin(replace_dates)].copy()
         merged = pd.concat([kept, delta], ignore_index=True, sort=False)
     else:
         merged = delta

@@ -61,6 +61,7 @@ PATH_MAP = {
     # User-approved YRF and Epic live channel path IDs.
     "yrfmusic": "YRF Music",
     "sagamusic": "SAGA Music",
+    "sikhratnavali": "Sikh Ratnavali",
     "sagaharyanvi": "Saga Music Haryanvi",
     "epic_tv": "Epic TV",
     "epic_bharat": "Epic Bharat",
