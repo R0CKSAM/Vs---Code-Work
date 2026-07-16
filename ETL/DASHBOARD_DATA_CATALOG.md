@@ -1,8 +1,10 @@
 # ETL Dashboard Data Catalog
 
-Generated from a deep scan of `ETL/src`, `ETL/data`, and `ETL/output` on 2026-06-19.
+Originally generated from a deep scan of `ETL/src`, `ETL/data`, and `ETL/output` on 2026-06-19. Last updated on 2026-07-15 after adding the Veto Master Dashboard and its reusable marts.
 
 This file is the first place to check before building a new dashboard. It lists the reusable parquet, CSV, Excel, JSON, and HTML artifacts already produced by the ETL, what each artifact means, and which dashboard currently uses it.
+
+This catalog is an engineering reference, not a runtime input. Dashboard generators read the documented marts directly, so moving a timestamped catalog backup into `extras/` does not affect dashboard execution.
 
 ## Rules Of Use
 

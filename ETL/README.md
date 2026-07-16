@@ -6,6 +6,7 @@ Single-folder workflow for your Veto watch-hours pipeline and dashboards.
 
 - `run.py` : main command you run
 - `run_daily_pipeline.ps1` : rclone-yesterday helper
+- `DASHBOARD_DATA_CATALOG.md` : required first reference before designing a new dashboard or mart
 - `src/` : all Python code
 - `tools/` : optional bundled command-line tools, such as rclone
 - `config/` : optional portable config files, such as `rclone.conf`
