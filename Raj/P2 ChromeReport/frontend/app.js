@@ -40,8 +40,9 @@ const state = {
     gridApi: null,
     sortModel: [],
     weekColumns: [],
-    visibleWeekColumns: [],
+    weekLabels: {},
     openDropdownKey: null,
+    currentView: "frequency",
 };
 
 const elements = {
@@ -61,6 +62,10 @@ const elements = {
     exportExcelButton: document.getElementById("exportExcelButton"),
     fullscreenButton: document.getElementById("fullscreenButton"),
     fullscreenPanel: document.getElementById("fullscreenPanel"),
+    tableTitle: document.getElementById("tableTitle"),
+    frequencyViewButton: document.getElementById("frequencyViewButton"),
+    rankViewButton: document.getElementById("rankViewButton"),
+    bandViewButton: document.getElementById("bandViewButton"),
 };
 
 function createEmptyFilters() {
@@ -78,9 +83,9 @@ function queryParams(page, pageSize) {
         page,
         page_size: pageSize,
         filters: JSON.stringify(activeFilterPayload()),
-        group_by: JSON.stringify([]),
         sort_model: JSON.stringify(state.sortModel),
         search: "",
+        mode: state.currentView,
     };
 }
 
@@ -102,7 +107,7 @@ function cssEscape(value) {
 }
 
 function weekLabel(columnKey) {
-    return state.metadata?.week_labels?.[columnKey] || columnKey;
+    return state.weekLabels?.[columnKey] || state.metadata?.week_labels?.[columnKey] || columnKey;
 }
 
 function selectedCount(key) {
@@ -296,17 +301,34 @@ function normalizeNumeric(value) {
 }
 
 function renderWeekCell(value, previousValue) {
-    const current = normalizeNumeric(value);
-    const previous = normalizeNumeric(previousValue);
     let cssClass = "same";
     let prefix = "";
-    if (current !== null && previous !== null) {
-        if (current > previous) {
+    if (state.currentView === "band") {
+        const currentText = String(value ?? "").trim();
+        const previousText = String(previousValue ?? "").trim();
+        if (currentText && previousText && currentText !== previousText) {
             cssClass = "increase";
             prefix = "▲ ";
-        } else if (current < previous) {
-            cssClass = "decrease";
-            prefix = "▼ ";
+        }
+    } else {
+        const current = normalizeNumeric(value);
+        const previous = normalizeNumeric(previousValue);
+        if (current !== null && previous !== null) {
+            if (state.currentView === "rank") {
+                if (current < previous) {
+                    cssClass = "decrease";
+                    prefix = "▲ ";
+                } else if (current > previous) {
+                    cssClass = "increase";
+                    prefix = "▼ ";
+                }
+            } else if (current > previous) {
+                cssClass = "increase";
+                prefix = "▲ ";
+            } else if (current < previous) {
+                cssClass = "decrease";
+                prefix = "▼ ";
+            }
         }
     }
     const displayValue = value === null || value === undefined || value === "" ? "NA" : value;
@@ -317,6 +339,11 @@ function renderStatusCell(value) {
     const normalized = String(value || "→ No Change");
     const cssClass = normalized.startsWith("↑") ? "increase" : normalized.startsWith("↓") ? "decrease" : "same";
     return `<span class="status-pill ${cssClass}">${escapeHtml(normalized)}</span>`;
+}
+
+function renderTextCell(value) {
+    const normalized = String(value ?? "").trim();
+    return escapeHtml(normalized || "--");
 }
 
 function createWeekColumn(columnKey, previousColumnKey) {
@@ -335,8 +362,7 @@ function createWeekColumn(columnKey, previousColumnKey) {
 
 function getVisibleWeekKeys() {
     if (state.activeFilters.Week.length) {
-        const reverse = Object.fromEntries(Object.entries(state.metadata?.week_labels ?? {}).map(([k, v]) => [v, k]));
-        return state.activeFilters.Week.map((label) => reverse[label]).filter(Boolean);
+        return state.weekColumns.filter((field) => state.activeFilters.Week.includes(weekLabel(field)));
     }
     return state.weekColumns;
 }
@@ -344,19 +370,18 @@ function getVisibleWeekKeys() {
 function buildColumnDefs() {
     const visibleWeeks = getVisibleWeekKeys();
     const pinned = [
-        { headerName: "Market", field: "Market", pinned: "left", minWidth: 118, width: 118, sortable: true, filter: false, suppressMenu: true, suppressHeaderMenuButton: true },
-        { headerName: "MSO", field: "MSO", pinned: "left", minWidth: 118, width: 118, sortable: true, filter: false, suppressMenu: true, suppressHeaderMenuButton: true },
-        { headerName: "City", field: "City", pinned: "left", minWidth: 108, width: 108, sortable: true, filter: false, suppressMenu: true, suppressHeaderMenuButton: true },
-        { headerName: "Head End", field: "Head End", pinned: "left", minWidth: 138, width: 138, sortable: true, filter: false, suppressMenu: true, suppressHeaderMenuButton: true },
-        { headerName: "Channel Name", field: "Channel Name", pinned: "left", minWidth: 148, width: 148, sortable: true, filter: false, suppressMenu: true, suppressHeaderMenuButton: true },
-        { headerName: "CR No", field: "CR No", pinned: "left", minWidth: 96, width: 96, sortable: true, filter: false, suppressMenu: true, suppressHeaderMenuButton: true },
+        { headerName: "Market", field: "Market", pinned: "left", minWidth: 190, width: 190, sortable: true, filter: false, suppressMenu: true, suppressHeaderMenuButton: true, cellRenderer: (params) => renderTextCell(params.value) },
+        { headerName: "MSO", field: "MSO", pinned: "left", minWidth: 130, width: 130, sortable: true, filter: false, suppressMenu: true, suppressHeaderMenuButton: true, cellRenderer: (params) => renderTextCell(params.value) },
+        { headerName: "City", field: "City", pinned: "left", minWidth: 105, width: 105, sortable: true, filter: false, suppressMenu: true, suppressHeaderMenuButton: true, cellRenderer: (params) => renderTextCell(params.value) },
+        { headerName: "Head End", field: "Head End", pinned: "left", minWidth: 148, width: 148, sortable: true, filter: false, suppressMenu: true, suppressHeaderMenuButton: true, cellRenderer: (params) => renderTextCell(params.value) },
+        { headerName: "Channel Name", field: "Channel Name", pinned: "left", minWidth: 148, width: 148, sortable: true, filter: false, suppressMenu: true, suppressHeaderMenuButton: true, cellRenderer: (params) => renderTextCell(params.value) },
+        { headerName: "CR No", field: "CR No", pinned: "left", minWidth: 92, width: 92, sortable: true, filter: false, suppressMenu: true, suppressHeaderMenuButton: true, cellRenderer: (params) => renderTextCell(params.value) },
     ];
     const weeks = visibleWeeks.map((key, index) => createWeekColumn(key, index > 0 ? visibleWeeks[index - 1] : null));
     return [
         ...pinned,
         ...weeks,
-        { headerName: "Latest Week", field: visibleWeeks[visibleWeeks.length - 1] || state.weekColumns[state.weekColumns.length - 1], minWidth: 110, width: 110, hide: true },
-        { headerName: "Status", field: "Status", minWidth: 126, width: 126, sortable: true, filter: false, suppressMenu: true, suppressHeaderMenuButton: true, cellRenderer: (params) => renderStatusCell(params.value) },
+        { headerName: "Status", field: state.currentView === "frequency" ? "Frequency Status" : state.currentView === "rank" ? "Rank Status" : "Band Status", minWidth: 126, width: 126, sortable: true, filter: false, suppressMenu: true, suppressHeaderMenuButton: true, cellRenderer: (params) => renderStatusCell(params.value) },
     ];
 }
 
@@ -386,6 +411,29 @@ function updateExportLinks() {
     elements.exportExcelButton.href = `${api.defaults.baseURL}/export/excel?${params.toString()}`;
 }
 
+function updateViewUi() {
+    const titles = {
+        frequency: "Frequency Distribution",
+        rank: "Rank Distribution",
+        band: "Band Distribution",
+    };
+    elements.tableTitle.textContent = titles[state.currentView];
+    const buttonMap = {
+        frequency: elements.frequencyViewButton,
+        rank: elements.rankViewButton,
+        band: elements.bandViewButton,
+    };
+    Object.entries(buttonMap).forEach(([view, button]) => {
+        if (view === state.currentView) {
+            button.classList.remove("btn-outline-primary");
+            button.classList.add("btn-primary");
+        } else {
+            button.classList.remove("btn-primary");
+            button.classList.add("btn-outline-primary");
+        }
+    });
+}
+
 function createDatasource() {
     return {
         getRows: async (params) => {
@@ -401,6 +449,7 @@ function createDatasource() {
                 const response = await api.get("/data", { params: queryParams(page, pageSize) });
                 const payload = response.data;
                 state.weekColumns = payload.week_columns || [];
+                state.weekLabels = payload.week_labels || {};
                 rebuildGridColumns();
                 updateHeaderAndKpis(payload.total_rows);
                 setGridStatus(`${payload.total_rows.toLocaleString()} records available`);
@@ -460,10 +509,12 @@ async function loadMetadata(force = false) {
         .then((response) => {
             state.metadata = response.data;
             state.weekColumns = state.metadata.weeks || [];
+            state.weekLabels = state.metadata.week_labels || {};
             elements.sourceFilesBadge.textContent = (state.metadata.source_files || []).join(" | ") || "No files";
             elements.lastRefreshBadge.textContent = new Date().toLocaleString();
             updateHeaderAndKpis(state.metadata.totals?.records ?? 0);
             renderFilters();
+            updateViewUi();
             rebuildGridColumns();
             return state.metadata;
         })
@@ -546,6 +597,24 @@ function bindEvents() {
             console.error(error);
         }
     });
+    elements.frequencyViewButton.addEventListener("click", () => {
+        state.currentView = "frequency";
+        updateViewUi();
+        rebuildGridColumns();
+        reloadGrid();
+    });
+    elements.rankViewButton.addEventListener("click", () => {
+        state.currentView = "rank";
+        updateViewUi();
+        rebuildGridColumns();
+        reloadGrid();
+    });
+    elements.bandViewButton.addEventListener("click", () => {
+        state.currentView = "band";
+        updateViewUi();
+        rebuildGridColumns();
+        reloadGrid();
+    });
     document.addEventListener("fullscreenchange", () => {
         elements.fullscreenButton.textContent = document.fullscreenElement === elements.fullscreenPanel ? "Exit Full Screen" : "Full Screen";
     });
@@ -564,6 +633,7 @@ function bindEvents() {
 async function initialize() {
     bindEvents();
     renderFilterSkeleton();
+    updateViewUi();
     buildGrid();
     updateExportLinks();
     loadMetadata().catch(() => undefined);

@@ -62,6 +62,7 @@ COLUMN_ALIASES = {
     "frequency": "Frequency",
     "frequency_lcn_no": "Frequency",
     "frequency_no": "Frequency",
+    "rank_within_genre": "Rank",
 }
 
 
@@ -99,6 +100,10 @@ def parse_week_number(path: Path) -> int:
 
 def week_column_name(index: int) -> str:
     return f"W{index}"
+
+
+def measure_column_name(prefix: str, index: int) -> str:
+    return f"{prefix}{index}"
 
 
 def format_week_label(path: Path) -> str:
@@ -158,4 +163,11 @@ def available_week_columns(df: pd.DataFrame) -> list[str]:
     return sorted(
         [column for column in df.columns if re.fullmatch(r"W\d+", column)],
         key=lambda item: int(item[1:]),
+    )
+
+
+def available_measure_columns(df: pd.DataFrame, prefix: str) -> list[str]:
+    return sorted(
+        [column for column in df.columns if re.fullmatch(rf"{re.escape(prefix)}\d+", column)],
+        key=lambda item: int(re.search(r"(\d+)$", item).group(1)),
     )

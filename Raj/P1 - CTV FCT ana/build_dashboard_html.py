@@ -590,6 +590,49 @@ html = """<!DOCTYPE html>
       margin-bottom: 6px;
       align-items: end;
     }
+    /* CHANGED: hide embedded filters for Graphs 1-5 in the normal dashboard view; fullscreen rules re-enable them. */
+    #g1FullscreenShell > .section-controls,
+    #g2FullscreenShell > .section-controls,
+    #g3FullscreenShell > .section-controls,
+    #g4FullscreenShell > .section-controls,
+    #g5FullscreenShell > .section-controls {
+      display: none;
+    }
+    #g1FullscreenShell:fullscreen > .section-controls,
+    #g1FullscreenShell:-webkit-full-screen > .section-controls,
+    #g2FullscreenShell:fullscreen > .section-controls,
+    #g2FullscreenShell:-webkit-full-screen > .section-controls,
+    #g3FullscreenShell:fullscreen > .section-controls,
+    #g3FullscreenShell:-webkit-full-screen > .section-controls,
+    #g4FullscreenShell:fullscreen > .section-controls,
+    #g4FullscreenShell:-webkit-full-screen > .section-controls,
+    #g5FullscreenShell:fullscreen > .section-controls,
+    #g5FullscreenShell:-webkit-full-screen > .section-controls {
+      display: flex !important;
+    }
+    /* CHANGED: normalize internal spacing for Graphs 3, 4, 5, and 8 so these cards align with the rest of the dashboard. */
+    #g3FullscreenShell,
+    #g4FullscreenShell,
+    #g5FullscreenShell,
+    #g8FullscreenShell {
+      display: grid;
+      align-content: start;
+      row-gap: 10px;
+    }
+    #g3FullscreenShell > .chart-head,
+    #g3FullscreenShell > .legend,
+    #g3FullscreenShell > .chart-box,
+    #g4FullscreenShell > .chart-head,
+    #g4FullscreenShell > .chart-box,
+    #g5FullscreenShell > .chart-head,
+    #g5FullscreenShell > .legend-scale,
+    #g5FullscreenShell > .total-panel,
+    #g5FullscreenShell > .chart-box,
+    #g8FullscreenShell > .chart-head,
+    #g8FullscreenShell > .legend,
+    #g8FullscreenShell > .chart-box {
+      margin: 0;
+    }
     .sticky-filter-wrap {
       position: relative;
       z-index: 40;
@@ -4050,11 +4093,15 @@ __DOM_SECTIONS_JS__
       return GRAPH9_TIME_COLORS[graph9TimeKey(type)] || chartPalettes.g9[0];
     }
     function drawAxes(svg, margin, plotW, plotH, xTitle, yTitle, width, height, maxValue) {
+      const axisOptions = arguments[8] || {}
+      const tickFormatter = typeof axisOptions.tickFormatter === 'function'
+        ? axisOptions.tickFormatter
+        : value => formatDurationValue(value);
       for (let i = 0; i <= 4; i++) {
         const y = margin.top + plotH - (plotH * i / 4);
         svg.appendChild(svgEl('line', { x1: margin.left, y1: y, x2: margin.left + plotW, y2: y, stroke: '#e5e7eb', 'stroke-width': 1 }));
         const tick = svgEl('text', { x: margin.left - 8, y: y + 5, fill: chartLabelColor(), 'font-size': 12, 'text-anchor': 'end' });
-        tick.textContent = formatDurationValue(maxValue * i / 4);
+        tick.textContent = tickFormatter(maxValue * i / 4);
         svg.appendChild(tick);
       }
       const xAxisLabel = svgEl('text', {
@@ -4067,17 +4114,39 @@ __DOM_SECTIONS_JS__
       });
       xAxisLabel.textContent = xTitle;
       svg.appendChild(xAxisLabel);
-      const yAxisLabel = svgEl('text', {
-        x: 20,
-        y: margin.top + plotH / 2,
+      appendYAxisTitle(svg, margin, plotH, yTitle, {
         fill: chartLabelColor(),
-        'font-size': 15,
-        'font-weight': 700,
-        'text-anchor': 'middle',
-        transform: `rotate(-90 20 ${margin.top + plotH / 2})`
+        fontSize: 15,
+        fontWeight: 700,
+        offset: axisOptions.yAxisOffset
       });
-      yAxisLabel.textContent = yTitle;
+    }
+    /* CHANGED: shared axis-title helper keeps extra spacing between Y-axis titles and tick labels across charts. */
+    function appendYAxisTitle(svg, margin, plotH, title, options = {}) {
+      const axisX = Math.max(10, margin.left - (options.offset || 54));
+      const axisY = margin.top + plotH / 2;
+      const yAxisLabel = svgEl('text', {
+        x: axisX,
+        y: axisY,
+        fill: options.fill || '#1f2937',
+        'font-size': options.fontSize || 13,
+        'font-weight': options.fontWeight || 800,
+        'text-anchor': 'middle',
+        transform: `rotate(-90 ${axisX} ${axisY})`
+      });
+      yAxisLabel.textContent = title;
       svg.appendChild(yAxisLabel);
+    }
+    /* CHANGED: Graph 1 shows whole-minute values only when the dashboard is in Minutes mode. */
+    function formatWholeMinutesValue(value, withUnit = false) {
+      const minutes = Math.round((value || 0) / 60);
+      const formatted = minutes.toLocaleString('en-US', { maximumFractionDigits: 0 });
+      return withUnit ? `${formatted} min` : formatted;
+    }
+    function formatGraph1MetricValue(value, withUnit = false) {
+      return activeTimeUnit() === 'minutes'
+        ? formatWholeMinutesValue(value, withUnit)
+        : formatDurationValue(value, withUnit);
     }
     function renderLegend(container, items) {
       container.innerHTML = items.map(item =>
@@ -4148,7 +4217,7 @@ __DOM_SECTIONS_JS__
       return `${leader.label} creatives are used most often, accounting for ${formatCount(leader.spots)} advertisement spots and ${formatInsightPercent(leader.share)} of the filtered mix.`;
     }
     function buildGraph7Insight(rows) {
-      const points = buildDayWiseActivity(rows);
+      const points = buildDayWiseActivity(rows).sort((a, b) => a.date.localeCompare(b.date));
       if (!points.length) return 'No data is available for the current selection.';
       const highest = points.reduce((best, point) => point.spots > best.spots ? point : best, points[0]);
       const lowest = points.reduce((best, point) => point.spots < best.spots ? point : best, points[0]);
@@ -4234,7 +4303,9 @@ __DOM_SECTIONS_JS__
       const plotH = height - margin.top - margin.bottom;
       const compact = isTop20Mode('g1');
       const maxValue = withAxisHeadroom(Math.max(...topAdvertisers.map(item => item.total), 1));
-      drawAxes(svg, margin, plotW, plotH, 'Top Advertisers', metricLabel(), width, height, maxValue);
+      drawAxes(svg, margin, plotW, plotH, 'Top Advertisers', metricLabel(), width, height, maxValue, {
+        tickFormatter: value => formatGraph1MetricValue(value)
+      });
       const slotCount = Math.max(Number.parseInt(state.sections.g1.topN, 10) || topAdvertisers.length, 1);
       const groupW = plotW / slotCount;
       const barW = Math.max(groupW - 18, 18);
@@ -4242,7 +4313,11 @@ __DOM_SECTIONS_JS__
         const x = margin.left + index * groupW + (groupW - barW) / 2;
         const h = (item.total / maxValue) * plotH;
         const y = margin.top + plotH - h;
-        svg.appendChild(svgEl('rect', { x, y, width: barW, height: h, rx: 5, fill: chartPalettes.g1[0] }));
+        const bar = svgEl('rect', { x, y, width: barW, height: h, rx: 5, fill: chartPalettes.g1[0] });
+        const title = svgEl('title');
+        title.textContent = `Advertiser: ${item.advertisor}\n${metricLabel()}: ${formatGraph1MetricValue(item.total, true)}`;
+        bar.appendChild(title);
+        svg.appendChild(bar);
         const dataLabel = svgEl('text', {
           x: x + barW / 2,
           y: Math.max(y - 6, margin.top + 10),
@@ -4252,7 +4327,7 @@ __DOM_SECTIONS_JS__
           'text-anchor': 'middle'
         });
         if (!compact) {
-          dataLabel.textContent = formatDurationValue(item.total);
+          dataLabel.textContent = formatGraph1MetricValue(item.total);
           svg.appendChild(dataLabel);
         }
         addWrappedText(svg, item.advertisor, x + barW / 2, margin.top + plotH + 18, compact ? 10 : 12, '#1f2937', compact ? 8.8 : 10, 'middle', 700);
@@ -4392,20 +4467,22 @@ __DOM_SECTIONS_JS__
       }
       const compact = isTop20Mode('g3');
       const dynamicHeight = compact
-        ? 620 + Math.max(0, topAdvertisors.length - 10) * 16 + Math.max(0, matrix.rows.length - 7) * 10
-        : 540;
+        ? 580 + Math.max(0, topAdvertisors.length - 10) * 14 + Math.max(0, matrix.rows.length - 7) * 8
+        : 500;
       setChartBoxHeight(dom.sections.g3.chart, dynamicHeight);
       const { svg, width, height } = makeSvg(dom.sections.g3.chart);
       const margin = {
         top: 18,
         right: compact ? 34 : 24,
         bottom: compact ? 116 : 86,
-        left: compact ? 70 : 58
+        left: compact ? 72 : 60
       };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
       const maxValue = withAxisHeadroom(Math.max(...matrix.rows.flatMap(row => topAdvertisors.map(item => row.values[item.advertisor] || 0)), 1));
-      drawAxes(svg, margin, plotW, plotH, 'Date', metricLabel(), width, height, maxValue);
+      drawAxes(svg, margin, plotW, plotH, 'Date', metricLabel(), width, height, maxValue, {
+        yAxisOffset: compact ? 72 : 68
+      });
       const groupW = plotW / Math.max(matrix.rows.length, 1);
       const barW = Math.max((groupW - 14) / Math.max(topAdvertisors.length, 1) - 2, compact ? 4 : 3);
       for (let gi = 0; gi <= matrix.rows.length; gi++) {
@@ -4469,8 +4546,8 @@ __DOM_SECTIONS_JS__
       }
       const compact = isTop20Mode('g3');
       const dynamicHeight = compact
-        ? 700 + Math.max(0, topAdvertisors.length - 10) * 18 + Math.max(0, matrix.rows.length - 7) * 12
-        : 220 + topAdvertisors.length * 24;
+        ? 640 + Math.max(0, topAdvertisors.length - 10) * 16 + Math.max(0, matrix.rows.length - 7) * 10
+        : 200 + topAdvertisors.length * 22;
       setChartBoxHeight(dom.sections.g3.chart, dynamicHeight);
       const { svg, width, height } = makeSvg(dom.sections.g3.chart);
       const margin = {
@@ -4495,17 +4572,7 @@ __DOM_SECTIONS_JS__
       });
       xAxisLabel.textContent = 'Date';
       svg.appendChild(xAxisLabel);
-      const yAxisLabel = svgEl('text', {
-        x: 28,
-        y: margin.top + plotH / 2,
-        fill: '#1f2937',
-        'font-size': 17,
-        'font-weight': 800,
-        'text-anchor': 'middle',
-        transform: `rotate(-90 28 ${margin.top + plotH / 2})`
-      });
-      yAxisLabel.textContent = 'Advertiser';
-      svg.appendChild(yAxisLabel);
+      appendYAxisTitle(svg, margin, plotH, 'Advertiser', { fontSize: 17, fontWeight: 800, offset: 82 });
       for (let gi = 0; gi <= matrix.rows.length; gi++) {
         const x = margin.left + gi * cellW;
         svg.appendChild(svgEl('line', {
@@ -4582,8 +4649,8 @@ __DOM_SECTIONS_JS__
       }
       const compact = isTop20Mode('g4');
       const dynamicHeight = compact
-        ? 700 + Math.max(0, matrix.categories.length - 10) * 18 + Math.max(0, matrix.channels.length - 5) * 10
-        : 340 + matrix.categories.length * 28 + Math.max(0, matrix.channels.length - 5) * 8;
+        ? 640 + Math.max(0, matrix.categories.length - 10) * 16 + Math.max(0, matrix.channels.length - 5) * 8
+        : 320 + matrix.categories.length * 24 + Math.max(0, matrix.channels.length - 5) * 6;
       setChartBoxHeight(dom.sections.g4.chart, dynamicHeight);
       dom.sections.g4.chart.style.overflowX = 'auto';
       const box = dom.sections.g4.chart;
@@ -4618,13 +4685,7 @@ __DOM_SECTIONS_JS__
       });
       xAxisLabel.textContent = 'Channel';
       svg.appendChild(xAxisLabel);
-      const yAxisLabel = svgEl('text', {
-        x: 28, y: margin.top + plotH / 2, fill: '#1f2937',
-        'font-size': 17, 'font-weight': 800, 'text-anchor': 'middle',
-        transform: `rotate(-90 28 ${margin.top + plotH / 2})`
-      });
-      yAxisLabel.textContent = 'Category';
-      svg.appendChild(yAxisLabel);
+      appendYAxisTitle(svg, margin, plotH, 'Category', { fontSize: 17, fontWeight: 800, offset: 82 });
       for (let ci = 0; ci <= matrix.channels.length; ci++) {
         const x = margin.left + ci * cellW;
         svg.appendChild(svgEl('line', {
@@ -4706,9 +4767,9 @@ __DOM_SECTIONS_JS__
         if (dom.sections.g5.totalGrid) dom.sections.g5.totalGrid.innerHTML = '<div class="empty">No data available</div>';
         return;
       }
-      resetChartBoxHeight(dom.sections.g5.chart);
+      setChartBoxHeight(dom.sections.g5.chart, 460);
       const { svg, width, height } = makeSvg(dom.sections.g5.chart);
-      const margin = { top: 28, right: 28, bottom: 78, left: 140 };
+      const margin = { top: 24, right: 24, bottom: 72, left: 136 };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
       const cellW = plotW / Math.max(matrix.hours.length, 1);
@@ -4716,13 +4777,7 @@ __DOM_SECTIONS_JS__
       const xAxisLabel = svgEl('text', { x: margin.left + plotW / 2, y: height - 8, fill: '#1f2937', 'font-size': 15, 'font-weight': 700, 'text-anchor': 'middle' });
       xAxisLabel.textContent = 'Hour of Day';
       svg.appendChild(xAxisLabel);
-      const yAxisLabel = svgEl('text', {
-        x: 24, y: margin.top + plotH / 2, fill: '#1f2937',
-        'font-size': 15, 'font-weight': 700, 'text-anchor': 'middle',
-        transform: `rotate(-90 24 ${margin.top + plotH / 2})`
-      });
-      yAxisLabel.textContent = 'Channel';
-      svg.appendChild(yAxisLabel);
+      appendYAxisTitle(svg, margin, plotH, 'Channel', { fontSize: 15, fontWeight: 700, offset: 82 });
       matrix.hours.forEach((hour, ci) => {
         addWrappedText(svg, hourLabel(hour), margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, 5, '#6b7280', 10.5, 'middle', 700);
       });
@@ -5016,7 +5071,7 @@ __DOM_SECTIONS_JS__
           'stroke-width': isExtreme ? 3 : 2
         });
         const title = svgEl('title');
-        title.textContent = `Date: ${formatDate(point.date)}\nAd Spots: ${formatCount(point.spots)}\nAirtime: ${formatDurationValue(point.airtime, true)}`;
+        title.textContent = `Channel Scope: ${(state.global.channel || []).length ? state.global.channel.join(', ') : 'All Channels'}\nDate: ${formatDate(point.date)}\nAd Spots: ${formatCount(point.spots)}\nAirtime: ${formatDurationValue(point.airtime, true)}`;
         circle.appendChild(title);
         svg.appendChild(circle);
         addWrappedText(
@@ -5032,20 +5087,21 @@ __DOM_SECTIONS_JS__
         );
       });
       addWrappedText(svg, 'Date', margin.left + plotW / 2, height - 12, 20, '#1f2937', 13, 'middle', 800);
-      const yAxisTitle = svgEl('text', {
-        x: 22,
-        y: margin.top + plotH / 2,
-        fill: '#1f2937',
-        'font-size': 13,
-        'font-weight': 800,
-        'text-anchor': 'middle',
-        transform: `rotate(-90 22 ${margin.top + plotH / 2})`
-      });
-      yAxisTitle.textContent = 'Number of Ad Spots';
-      svg.appendChild(yAxisTitle);
+      appendYAxisTitle(svg, margin, plotH, 'Number of Ad Spots');
       pathPoints.forEach((point, index) => {
-        if (points.length > 12 && index % 2 === 1) return;
-        addWrappedText(svg, formatDate(point.date), point.x, margin.top + plotH + 20, 10, '#1f2937', 9.2, 'middle', 700);
+        const denseLabels = points.length > 10;
+        const labelY = margin.top + plotH + (denseLabels ? 34 : 20);
+        const label = svgEl('text', {
+          x: point.x,
+          y: labelY,
+          fill: '#1f2937',
+          'font-size': denseLabels ? 8.2 : 9.2,
+          'font-weight': 700,
+          'text-anchor': denseLabels ? 'end' : 'middle',
+          transform: denseLabels ? `rotate(-38 ${point.x} ${labelY})` : undefined
+        });
+        label.textContent = formatDate(point.date);
+        svg.appendChild(label);
       });
     }
     function drawGraph8(rows) {
@@ -5056,7 +5112,7 @@ __DOM_SECTIONS_JS__
         return;
       }
       const compact = getTopNLimit('g8') >= 20;
-      setChartBoxHeight(dom.sections.g8.chart, compact ? 620 : 500);
+      setChartBoxHeight(dom.sections.g8.chart, compact ? 580 : 460);
       const { svg, width, height } = makeSvg(dom.sections.g8.chart);
       const barGradient = appendLinearGradient(
         svg,
@@ -5064,7 +5120,7 @@ __DOM_SECTIONS_JS__
         themeVar('--brand', '#2563eb'),
         themeVar('--teal', '#0f766e')
       );
-      const margin = { top: 28, right: 28, bottom: compact ? 132 : 110, left: 78 };
+      const margin = { top: 24, right: 24, bottom: compact ? 124 : 100, left: 80 };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
       const maxSpots = withAxisHeadroom(Math.max(...categories.map(item => item.spots), 1));
@@ -5106,17 +5162,7 @@ __DOM_SECTIONS_JS__
         addWrappedText(svg, item.category, x + barW / 2, margin.top + plotH + 18, compact ? 10 : 12, '#1f2937', compact ? 8.8 : 10.2, 'middle', 700);
       });
       addWrappedText(svg, 'Advertiser Categories', margin.left + plotW / 2, height - 10, 24, '#1f2937', 13, 'middle', 800);
-      const yAxisTitle = svgEl('text', {
-        x: 22,
-        y: margin.top + plotH / 2,
-        fill: '#1f2937',
-        'font-size': 13,
-        'font-weight': 800,
-        'text-anchor': 'middle',
-        transform: `rotate(-90 22 ${margin.top + plotH / 2})`
-      });
-      yAxisTitle.textContent = 'Number of Ad Spots';
-      svg.appendChild(yAxisTitle);
+      appendYAxisTitle(svg, margin, plotH, 'Number of Ad Spots', { offset: 76 });
       renderLegend(dom.sections.g8.legend, [{
         label: 'Advertisement Spots',
         color: themeVar('--brand', '#2563eb')
@@ -5375,22 +5421,22 @@ __DOM_SECTIONS_JS__
       trend.points.forEach((point, index) => {
         const x = xForIndex(index);
         svg.appendChild(svgEl('line', { x1: x, y1: margin.top + plotH, x2: x, y2: margin.top + plotH + 6, stroke: '#cbd5e1', 'stroke-width': 1 }));
-        if (trend.points.length <= 8 || index % 2 === 0 || index === trend.points.length - 1) {
-          addWrappedText(svg, formatDate(point.date), x, margin.top + plotH + 18, 10, '#1f2937', 9.1, 'middle', 700);
-        }
+        const denseLabels = trend.points.length > 8;
+        const labelY = margin.top + plotH + (denseLabels ? 32 : 18);
+        const label = svgEl('text', {
+          x,
+          y: labelY,
+          fill: '#1f2937',
+          'font-size': denseLabels ? 8.2 : 9.1,
+          'font-weight': 700,
+          'text-anchor': denseLabels ? 'end' : 'middle',
+          transform: denseLabels ? `rotate(-38 ${x} ${labelY})` : undefined
+        });
+        label.textContent = formatDate(point.date);
+        svg.appendChild(label);
       });
       addWrappedText(svg, 'Date', margin.left + plotW / 2, height - 10, 20, '#1f2937', 13, 'middle', 800);
-      const yAxisTitle = svgEl('text', {
-        x: 20,
-        y: margin.top + plotH / 2,
-        fill: '#1f2937',
-        'font-size': 13,
-        'font-weight': 800,
-        'text-anchor': 'middle',
-        transform: `rotate(-90 20 ${margin.top + plotH / 2})`
-      });
-      yAxisTitle.textContent = 'Share of Voice (%)';
-      svg.appendChild(yAxisTitle);
+      appendYAxisTitle(svg, margin, plotH, 'Share of Voice (%)');
       renderLegend(dom.sections.g11.legend, trend.advertisers.map((advertiser, index) => ({
         label: advertiser === 'Others' ? 'Others' : titleCaseName(advertiser),
         color: advertiser === 'Others' ? GRAPH11_OTHERS_COLOR : chartPalettes.g11[index % chartPalettes.g11.length]

@@ -18,7 +18,7 @@ body {
     background: var(--bg);
     color: var(--text);
     font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    font-size: 12px;
+    font-size: 11px;
 }
 
 .app-header {
@@ -265,6 +265,10 @@ body {
     border-color: var(--primary-hover);
 }
 
+.view-switcher .btn {
+    min-width: 78px;
+}
+
 .grid-status {
     min-height: 18px;
     display: flex;
@@ -304,11 +308,11 @@ body {
     --ag-selected-row-background-color: #DBEAFE;
     --ag-border-color: #E2E8F0;
     --ag-secondary-border-color: #E2E8F0;
-    --ag-font-size: 11px;
+    --ag-font-size: 10px;
     --ag-font-family: Inter, system-ui, sans-serif;
     --ag-grid-size: 5px;
-    --ag-row-height: 29px;
-    --ag-header-height: 33px;
+    --ag-row-height: 27px;
+    --ag-header-height: 31px;
 }
 
 .ag-theme-quartz .ag-root-wrapper {
@@ -322,8 +326,14 @@ body {
 }
 
 .ag-theme-quartz .ag-header-cell-text {
-    font-size: 0.74rem;
+    font-size: 0.7rem;
     font-weight: 700;
+}
+
+.ag-theme-quartz .ag-cell-value {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .week-cell {
