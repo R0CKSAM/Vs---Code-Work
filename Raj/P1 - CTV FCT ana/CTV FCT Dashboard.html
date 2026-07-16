@@ -3567,6 +3567,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       applyGlobalStateToSections();
       rerenderSections(sectionKeys);
       renderSummary();
+      /* CHANGED: keep the Dataset Summary KPIs synchronized with every live filter update. */
+      renderDatasetSummary();
       renderHeaderStats();
       updateStickyFilterPosition();
     }
@@ -6750,18 +6752,45 @@ Unique advertisers: ${formatCount(item.advertiserCount)}`;
         }
       });
     }
+    /* CHANGED: create a dedicated fullscreen shell around each chart card body so only the visualization area can expand. */
+    function ensureFullscreenShells() {
+      SECTION_KEYS.forEach(sectionKey => {
+        const sectionDom = dom.sections[sectionKey];
+        if (!sectionDom || !sectionDom.panel) return;
+        let shell = sectionDom.panel.querySelector('.chart-fullscreen-shell');
+        if (!shell) {
+          shell = document.createElement('div');
+          shell.className = 'chart-fullscreen-shell';
+          shell.id = `${sectionKey}FullscreenShell`;
+          while (sectionDom.panel.firstChild) {
+            shell.appendChild(sectionDom.panel.firstChild);
+          }
+          sectionDom.panel.appendChild(shell);
+        }
+        sectionDom.fullscreenShell = shell;
+      });
+    }
+    function getFullscreenTarget(sectionKey) {
+      const sectionDom = dom.sections[sectionKey];
+      if (!sectionDom) return null;
+      if (!sectionDom.fullscreenShell && sectionDom.panel) {
+        sectionDom.fullscreenShell = sectionDom.panel.querySelector('.chart-fullscreen-shell');
+      }
+      return sectionDom.fullscreenShell || sectionDom.panel;
+    }
     function toggleFullScreen(sectionKey) {
-      const panel = dom.sections[sectionKey].panel;
+      const fullTarget = getFullscreenTarget(sectionKey);
+      if (!fullTarget) return;
       if (!document.fullscreenElement) {
-        if (panel.requestFullscreen) panel.requestFullscreen();
-      } else if (document.fullscreenElement === panel) {
+        if (fullTarget.requestFullscreen) fullTarget.requestFullscreen();
+      } else if (document.fullscreenElement === fullTarget) {
         if (document.exitFullscreen) document.exitFullscreen();
       }
     }
     function updateFullButtons() {
       SECTION_KEYS.forEach(sectionKey => {
-        const panel = dom.sections[sectionKey].panel;
-        const isActive = document.fullscreenElement === panel;
+        const fullTarget = getFullscreenTarget(sectionKey);
+        const isActive = document.fullscreenElement === fullTarget;
         dom.sections[sectionKey].fullBtn.textContent = isActive ? 'Exit Full Screen' : 'Full Screen';
       });
     }
@@ -6770,7 +6799,7 @@ Unique advertisers: ${formatCount(item.advertiserCount)}`;
       return Array.from(panel.children).find(child =>
         child &&
         child.classList &&
-        (child.classList.contains('chart-head') || child.classList.contains('chart-box'))
+        (child.classList.contains('fullscreen-focus-header') || child.classList.contains('section-controls') || child.classList.contains('chart-head') || child.classList.contains('chart-box'))
       ) || null;
     }
     /* CHANGED: move the live global filter panel into the active fullscreen chart so the expanded view matches dashboard behavior. */
@@ -6809,6 +6838,7 @@ Unique advertisers: ${formatCount(item.advertiserCount)}`;
       updateStickyFilterPosition();
     }
     function initializeSections() {
+      ensureFullscreenShells();
       initializeGlobalControls();
       SECTION_KEYS.forEach(sectionKey => {
         initializeSectionControls(sectionKey);
@@ -6869,7 +6899,7 @@ Unique advertisers: ${formatCount(item.advertiserCount)}`;
           });
         }
         document.addEventListener('fullscreenchange', () => {
-          const fullPanel = document.fullscreenElement && document.fullscreenElement.classList && document.fullscreenElement.classList.contains('panel')
+          const fullPanel = document.fullscreenElement && document.fullscreenElement.classList && document.fullscreenElement.classList.contains('chart-fullscreen-shell')
             ? document.fullscreenElement
             : null;
           if (fullPanel) moveGlobalFiltersToFullscreen(fullPanel);

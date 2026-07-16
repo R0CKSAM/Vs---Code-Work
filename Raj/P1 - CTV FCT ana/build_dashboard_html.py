@@ -3009,6 +3009,8 @@ __DOM_SECTIONS_JS__
       applyGlobalStateToSections();
       rerenderSections(sectionKeys);
       renderSummary();
+      /* CHANGED: keep the Dataset Summary KPIs synchronized with every live filter update. */
+      renderDatasetSummary();
       renderHeaderStats();
       updateStickyFilterPosition();
     }
