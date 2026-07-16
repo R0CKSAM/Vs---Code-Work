@@ -47,11 +47,11 @@
     .topbar {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
       flex-wrap: wrap;
-      gap: 14px;
+      gap: 12px;
       margin-bottom: 6px;
-      padding: 0;
+      padding: 4px 0 2px;
       background: transparent;
       border: 0;
       border-radius: 0;
@@ -67,31 +67,35 @@
     }
     .title-block {
       display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 4px;
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
       min-width: 0;
+      flex: 1 1 auto;
     }
     .title-block h1 {
       margin: 0;
       color: var(--text);
-      font-size: 30px;
+      font-size: 22px;
       font-weight: 800;
       letter-spacing: 0.2px;
-      line-height: 1.05;
+      line-height: 1;
+      white-space: nowrap;
     }
     .title-meta {
       color: var(--muted);
-      font-size: 12px;
-      font-weight: 600;
-      line-height: 1.2;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+      white-space: nowrap;
     }
     .title-range {
       color: var(--muted);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
-      line-height: 1.3;
-      margin-top: 2px;
+      line-height: 1;
+      margin-top: 0;
+      white-space: nowrap;
     }
     .title-meta strong {
       color: var(--text);
@@ -102,25 +106,30 @@
       flex-direction: row;
       align-items: center;
       flex-wrap: wrap;
-      justify-content: flex-end;
-      gap: 8px;
-      min-width: auto;
+      justify-content: flex-start;
+      gap: 10px;
+      min-width: 220px;
+      margin-left: auto;
       position: relative;
       z-index: 1;
     }
     .action-row {
       display: flex;
-      gap: 6px;
+      gap: 8px;
       align-items: center;
-      justify-content: flex-end;
+      justify-content: flex-start;
       width: auto;
     }
     .header-icon-group {
       position: relative;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
+      gap: 4px;
+      flex-wrap: nowrap;
+      padding: 4px 8px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 700px;
+      background: rgba(255, 255, 255, 0.72);
     }
     .hero, .panel {
       background: var(--panel);
@@ -236,7 +245,7 @@
     }
     .status {
       display: none;
-      max-width: 260px;
+      max-width: 220px;
       font-size: 11px;
       line-height: 1.3;
     }
@@ -283,25 +292,16 @@
       margin-bottom: 6px;
       align-items: end;
     }
-    .global-controls {
-      margin-bottom: 0;
-    }
-    .section:not(.sticky-filter-wrap) .section-controls {
-      display: none;
-    }
     .sticky-filter-wrap {
       position: relative;
       z-index: 40;
     }
-    .sticky-filter-wrap.is-stuck {
-      min-height: var(--sticky-filter-height, 0px);
-    }
     .sticky-filter-shell {
-      position: relative;
-      z-index: 10;
+      position: sticky;
+      top: 0;
+      z-index: 80;
       background: rgb(184, 127, 123);
       box-shadow: 0 6px 18px rgba(15, 23, 42, 0.14);
-      padding: 6px 8px;
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
     }
@@ -321,12 +321,11 @@
     .sticky-filter-shell .multi-dropdown {
       display: flex;
       flex-direction: column;
-      justify-content: flex-end;
-      min-height: 40px;
+      justify-content: flex-start;
+      min-height: 0;
     }
     .sticky-filter-shell.is-stuck {
-      position: fixed;
-      top: 10px;
+      top: 0;
       z-index: 80;
     }
     .graph1-scope,
@@ -344,6 +343,8 @@
       gap: 2px;
       animation: none !important;
       transition: none !important;
+      min-width: 0;
+      max-width: 100%;
     }
     .multi-dropdown-trigger {
       min-height: 30px;
@@ -360,6 +361,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      min-width: 0;
       font-size: 12px;
     }
     .multi-dropdown-panel {
@@ -497,13 +499,13 @@
     }
     .pdf-btn {
       width: auto;
-      min-width: 34px;
-      height: 34px;
+      min-width: 30px;
+      height: 30px;
       border-radius: 999px;
-      padding: 0 12px;
+      padding: 0 10px;
       background: #ffffff;
       color: var(--muted);
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 800;
       letter-spacing: 0.35px;
       box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
@@ -517,9 +519,9 @@
       background: #ffffff;
     }
     .icon-btn {
-      width: 34px;
-      min-width: 34px;
-      height: 34px;
+      width: 30px;
+      min-width: 30px;
+      height: 30px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -528,14 +530,14 @@
       cursor: pointer;
     }
     .upload-btn {
-      min-width: 34px;
-      width: 34px;
+      min-width: 30px;
+      width: 30px;
       justify-content: center;
       padding: 0;
     }
     .sheet-btn {
-      min-width: 34px;
-      width: 34px;
+      min-width: 30px;
+      width: 30px;
       justify-content: center;
       padding: 0;
     }
@@ -555,16 +557,18 @@
     }
     .sheet-menu {
       position: absolute;
-      right: 0;
-      top: calc(100% + 8px);
-      min-width: 220px;
-      max-width: min(640px, calc(100vw - 32px));
+      right: auto;
+      left: calc(100% + 8px);
+      top: 50%;
+      transform: translateY(-50%);
+      min-width: 100px;
+      max-width: min(200px, calc(100vw - 32px));
       padding: 8px 10px;
       border-radius: 10px;
       border: 1px solid var(--line);
       background: #ffffff;
       box-shadow: 0 12px 24px rgba(15, 23, 42, 0.14);
-      z-index: 120;
+      z-index: 80;
       display: none;
     }
     .sheet-menu.open {
@@ -727,8 +731,8 @@
       color: #ffffff;
     }
     .icon-btn svg {
-      width: 14px;
-      height: 14px;
+      width: 12px;
+      height: 12px;
       fill: none;
       stroke: currentColor;
       stroke-width: 1.9;
@@ -766,6 +770,16 @@
     }
     .chart-box.top20-mode {
       height: clamp(520px, 64vw, 760px);
+    }
+    /* CHANGED: keep the last four chart cards at stable heights so browser zoom does not expand their backgrounds. */
+    #g10Chart,
+    #g11Chart,
+    #g12Chart,
+    #g13Chart {
+      height: 33rem !important;
+      min-height: 33rem !important;
+      max-height: 33rem !important;
+      overflow: auto;
     }
     .legend {
       margin-bottom: 14px;
@@ -860,13 +874,21 @@
     }
     .excluded-inline {
       color: #7f1d1d;
-      font-size: 14px;
-      line-height: 1.5;
+      font-size: 11px;
+      line-height: 1.2;
       letter-spacing: 0.2px;
-      padding: 10px 12px;
+      padding: 6px 8px;
       background: #fef2f2;
       border: 1px solid #fecaca;
       border-radius: 8px;
+      min-width: 0;
+      flex: 1 1 auto;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .excluded-categories {
+      margin-top: 0;
     }
     .excluded-items {
       color: #374151;
@@ -970,7 +992,7 @@
     }
     .dataset-kpi-row {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 8px;
     }
     .dataset-kpi-card {
@@ -1205,48 +1227,65 @@
       font-size: 13px;
       line-height: 1.6;
     }
-    .panel:fullscreen, .panel:-webkit-full-screen {
+    /* CHANGED: fullscreen is scoped to the inner chart shell so filters keep their normal compact height. */
+    .chart-fullscreen-shell {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+      gap: 0;
+    }
+    .chart-fullscreen-shell:fullscreen, .chart-fullscreen-shell:-webkit-full-screen {
       width: 100vw;
       height: 100vh;
       margin: 0;
       padding: 22px;
       border-radius: 0;
-      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      overflow: hidden;
       background: #f8fafc;
     }
-    .panel:fullscreen > .section-controls,
-    .panel:-webkit-full-screen > .section-controls {
+    .chart-fullscreen-shell:fullscreen > .section-controls,
+    .chart-fullscreen-shell:-webkit-full-screen > .section-controls {
       display: none !important;
     }
-    .panel:fullscreen .sticky-filter-shell .section-controls,
-    .panel:-webkit-full-screen .sticky-filter-shell .section-controls {
+    .chart-fullscreen-shell:fullscreen .sticky-filter-shell .section-controls,
+    .chart-fullscreen-shell:-webkit-full-screen .sticky-filter-shell .section-controls {
       display: grid;
     }
-    .panel:fullscreen .sticky-filter-shell,
-    .panel:-webkit-full-screen .sticky-filter-shell {
-      display: inline-block;
-      position: sticky;
-      top: 0;
-      left: auto !important;
-      width: fit-content !important;
-      max-width: 100%;
-      margin-bottom: 14px;
+    .chart-fullscreen-shell:fullscreen .sticky-filter-shell,
+    .chart-fullscreen-shell:-webkit-full-screen .sticky-filter-shell {
+      display: block;
+      flex: 0 0 auto;
+      height: auto;
+      min-height: 0;
+      align-self: stretch;
+      position: static;
+      top: auto;
+      left: auto;
+      width: auto;
+      max-width: none;
+      margin: 0 0 12px;
       z-index: 5;
     }
-    .panel:fullscreen .sticky-filter-shell .section-controls,
-    .panel:-webkit-full-screen .sticky-filter-shell .section-controls {
-      display: inline-flex;
-      flex-wrap: wrap;
-      align-items: flex-end;
-      width: fit-content;
+    .chart-fullscreen-shell:fullscreen .sticky-filter-shell .section-controls,
+    .chart-fullscreen-shell:-webkit-full-screen .sticky-filter-shell .section-controls {
+      display: grid;
+      width: auto;
       max-width: 100%;
+      margin-bottom: 0;
     }
-    .panel:fullscreen .section-controls,
-    .panel:-webkit-full-screen .section-controls {
+    .chart-fullscreen-shell:fullscreen > .section-controls,
+    .chart-fullscreen-shell:-webkit-full-screen > .section-controls {
       display: flex;
       flex-wrap: wrap;
       justify-content: flex-start;
       align-items: end;
+      flex: 0 0 auto;
+      height: auto;
+      min-height: 0;
       gap: 6px;
       margin-bottom: 14px;
       position: sticky;
@@ -1258,121 +1297,125 @@
       background: #ffffff;
       box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
     }
-    .panel:fullscreen .global-controls,
-    .panel:-webkit-full-screen .global-controls {
+    .chart-fullscreen-shell:fullscreen > .global-controls,
+    .chart-fullscreen-shell:-webkit-full-screen > .global-controls {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
     }
-    .panel:fullscreen .section-controls > div,
-    .panel:fullscreen .section-controls .multi-dropdown,
-    .panel:-webkit-full-screen .section-controls > div,
-    .panel:-webkit-full-screen .section-controls .multi-dropdown {
+    .chart-fullscreen-shell:fullscreen > .section-controls > div,
+    .chart-fullscreen-shell:fullscreen > .section-controls .multi-dropdown,
+    .chart-fullscreen-shell:-webkit-full-screen > .section-controls > div,
+    .chart-fullscreen-shell:-webkit-full-screen > .section-controls .multi-dropdown {
       flex: 0 0 auto;
       width: auto;
       min-width: 0;
       max-width: max-content;
     }
-    .panel:fullscreen .section-controls .label,
-    .panel:-webkit-full-screen .section-controls .label {
+    .chart-fullscreen-shell:fullscreen > .section-controls .label,
+    .chart-fullscreen-shell:-webkit-full-screen > .section-controls .label {
       font-size: 11px;
       line-height: 1.2;
       margin-bottom: 3px;
     }
-    .panel:fullscreen .section-controls input,
-    .panel:fullscreen .section-controls select,
-    .panel:fullscreen .section-controls button,
-    .panel:-webkit-full-screen .section-controls input,
-    .panel:-webkit-full-screen .section-controls select,
-    .panel:-webkit-full-screen .section-controls button {
+    .chart-fullscreen-shell:fullscreen > .section-controls input,
+    .chart-fullscreen-shell:fullscreen > .section-controls select,
+    .chart-fullscreen-shell:fullscreen > .section-controls button,
+    .chart-fullscreen-shell:-webkit-full-screen > .section-controls input,
+    .chart-fullscreen-shell:-webkit-full-screen > .section-controls select,
+    .chart-fullscreen-shell:-webkit-full-screen > .section-controls button {
       min-height: 34px;
       padding-top: 6px;
       padding-bottom: 6px;
       font-size: 12px;
     }
-    .panel:fullscreen .chart-inline-filter,
-    .panel:-webkit-full-screen .chart-inline-filter {
+    .chart-fullscreen-shell:fullscreen .chart-inline-filter,
+    .chart-fullscreen-shell:-webkit-full-screen .chart-inline-filter {
       min-width: 118px;
       gap: 3px;
     }
-    .panel:fullscreen .chart-inline-filter label,
-    .panel:-webkit-full-screen .chart-inline-filter label {
+    .chart-fullscreen-shell:fullscreen .chart-inline-filter label,
+    .chart-fullscreen-shell:-webkit-full-screen .chart-inline-filter label {
       font-size: 11px;
     }
-    .panel:fullscreen .chart-inline-filter select,
-    .panel:-webkit-full-screen .chart-inline-filter select {
+    .chart-fullscreen-shell:fullscreen .chart-inline-filter select,
+    .chart-fullscreen-shell:-webkit-full-screen .chart-inline-filter select {
       min-height: 34px;
       padding: 6px 26px 6px 10px;
       font-size: 12px;
     }
     @media (max-width: 640px) {
-      .panel:fullscreen .section-controls,
-      .panel:-webkit-full-screen .section-controls {
+      .chart-fullscreen-shell:fullscreen > .section-controls,
+      .chart-fullscreen-shell:-webkit-full-screen > .section-controls {
         gap: 4px;
         padding: 6px;
       }
-      .panel:fullscreen .section-controls > div,
-      .panel:fullscreen .section-controls .multi-dropdown,
-      .panel:-webkit-full-screen .section-controls > div,
-      .panel:-webkit-full-screen .section-controls .multi-dropdown {
+      .chart-fullscreen-shell:fullscreen > .section-controls > div,
+      .chart-fullscreen-shell:fullscreen > .section-controls .multi-dropdown,
+      .chart-fullscreen-shell:-webkit-full-screen > .section-controls > div,
+      .chart-fullscreen-shell:-webkit-full-screen > .section-controls .multi-dropdown {
         max-width: none;
       }
-      .panel:fullscreen .section-controls input,
-      .panel:fullscreen .section-controls select,
-      .panel:fullscreen .section-controls button,
-      .panel:-webkit-full-screen .section-controls input,
-      .panel:-webkit-full-screen .section-controls select,
-      .panel:-webkit-full-screen .section-controls button {
+      .chart-fullscreen-shell:fullscreen > .section-controls input,
+      .chart-fullscreen-shell:fullscreen > .section-controls select,
+      .chart-fullscreen-shell:fullscreen > .section-controls button,
+      .chart-fullscreen-shell:-webkit-full-screen > .section-controls input,
+      .chart-fullscreen-shell:-webkit-full-screen > .section-controls select,
+      .chart-fullscreen-shell:-webkit-full-screen > .section-controls button {
         min-height: 32px;
         font-size: 11px;
       }
-      .panel:fullscreen .chart-inline-filter,
-      .panel:-webkit-full-screen .chart-inline-filter {
+      .chart-fullscreen-shell:fullscreen .chart-inline-filter,
+      .chart-fullscreen-shell:-webkit-full-screen .chart-inline-filter {
         min-width: 104px;
       }
-      .panel:fullscreen .chart-head,
-      .panel:-webkit-full-screen .chart-head,
-      .panel:fullscreen .chart-actions,
-      .panel:-webkit-full-screen .chart-actions {
+      .chart-fullscreen-shell:fullscreen .chart-head,
+      .chart-fullscreen-shell:-webkit-full-screen .chart-head,
+      .chart-fullscreen-shell:fullscreen .chart-actions,
+      .chart-fullscreen-shell:-webkit-full-screen .chart-actions {
         width: fit-content;
         max-width: 100%;
       }
     }
-    .panel:fullscreen .chart-head,
-    .panel:-webkit-full-screen .chart-head {
-      display: inline-flex;
-      width: fit-content;
+    .chart-fullscreen-shell:fullscreen .chart-head,
+    .chart-fullscreen-shell:-webkit-full-screen .chart-head {
+      display: flex;
+      flex: 0 0 auto;
+      width: 100%;
       max-width: 100%;
       align-items: center;
-      justify-content: flex-start;
-      margin-top: 6px;
+      justify-content: space-between;
+      margin: 6px 0 10px;
     }
-    .panel:fullscreen .chart-actions,
-    .panel:-webkit-full-screen .chart-actions {
+    .chart-fullscreen-shell:fullscreen .chart-actions,
+    .chart-fullscreen-shell:-webkit-full-screen .chart-actions {
       width: auto;
-      margin-left: 0;
-      justify-content: flex-start;
+      margin-left: auto;
+      justify-content: flex-end;
       flex-wrap: wrap;
     }
-    .panel:fullscreen .fullscreen-focus-header,
-    .panel:-webkit-full-screen .fullscreen-focus-header {
+    .chart-fullscreen-shell:fullscreen .fullscreen-focus-header,
+    .chart-fullscreen-shell:-webkit-full-screen .fullscreen-focus-header {
       display: block;
     }
-    .panel:fullscreen .chart-insight.visible,
-    .panel:-webkit-full-screen .chart-insight.visible {
+    .chart-fullscreen-shell:fullscreen .chart-insight.visible,
+    .chart-fullscreen-shell:-webkit-full-screen .chart-insight.visible {
       display: block;
     }
-    .panel:fullscreen .chart-box, .panel:-webkit-full-screen .chart-box {
-      height: calc(100vh - 280px);
-      min-height: 520px;
+    .chart-fullscreen-shell:fullscreen .chart-box,
+    .chart-fullscreen-shell:-webkit-full-screen .chart-box {
+      flex: 1 1 auto;
+      min-height: 0;
+      height: auto;
     }
-    .panel:fullscreen .section-head h2, .panel:-webkit-full-screen .section-head h2 {
+    .chart-fullscreen-shell:fullscreen .section-head h2, .chart-fullscreen-shell:-webkit-full-screen .section-head h2 {
       font-size: 32px;
     }
-    .panel:fullscreen .legend,
-    .panel:fullscreen .legend-scale,
-    .panel:-webkit-full-screen .legend,
-    .panel:-webkit-full-screen .legend-scale {
+    .chart-fullscreen-shell:fullscreen .legend,
+    .chart-fullscreen-shell:fullscreen .legend-scale,
+    .chart-fullscreen-shell:-webkit-full-screen .legend,
+    .chart-fullscreen-shell:-webkit-full-screen .legend-scale {
+      flex: 0 0 auto;
       font-size: 15px;
     }
     @media print {
@@ -1392,33 +1435,70 @@
       }
     }
     @media (max-width: 1280px) {
-      .global-controls {
-        grid-template-columns: 1fr;
-      }
       .topbar {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .title-block {
         align-items: flex-start;
       }
-      .top-actions {
-        align-items: flex-end;
-        justify-content: space-between;
+      .title-block {
         flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+      }
+      .top-actions {
+        align-items: center;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        margin-left: 0;
+        min-width: 0;
       }
       .action-row {
-        justify-content: flex-end;
+        justify-content: flex-start;
         flex-wrap: wrap;
       }
       .header-icon-group {
         width: auto;
-        justify-content: flex-end;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+      .excluded-inline {
+        flex-basis: 100%;
       }
     }
     @media (max-width: 900px) {
       .page {
         width: 100%;
+      }
+      #g10Chart,
+      #g11Chart,
+      #g12Chart,
+      #g13Chart {
+        height: 29rem !important;
+        min-height: 29rem !important;
+        max-height: 29rem !important;
+      }
+      .sheet-menu {
+        left: 0;
+        right: auto;
+        top: calc(100% + 8px);
+        transform: none;
+        min-width: min(220px, calc(100vw - 32px));
+        max-width: min(320px, calc(100vw - 32px));
+      }
+      .topbar {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .title-block h1 {
+        font-size: 18px;
+      }
+      .title-range,
+      .title-meta,
+      .excluded-inline {
+        font-size: 10px;
+      }
+      .top-actions,
+      .action-row,
+      .header-icon-group {
+        flex-wrap: wrap;
       }
       .pre-summary-grid {
         grid-template-columns: 1fr;
@@ -1524,15 +1604,13 @@
         </div>
         <div class="status" id="statusText">Choose a CSV or Excel file to generate the dashboard.</div>
       </div>
-    </section>
-    <section class="section">
-      <div class="excluded-inline">
+      <div class="excluded-inline excluded-categories" title="">
         <span class="excluded-items" id="excludedChips"></span>
       </div>
     </section>
-    <section class="section sticky-filter-wrap" id="stickyFilterWrap">
+    <div class="section sticky-filter-wrap" id="stickyFilterWrap">
       <div class="panel section-card sticky-filter-shell" id="stickyFilterShell">
-        <div class="section-controls global-controls">
+          <div class="section-controls global-controls">
           <div><label class="label" for="globalTopN">Top N</label><select id="globalTopN"><option value="10">Top 10</option><option value="20">Top 20</option></select></div>
           <div><label class="label" for="globalStart">Start Date</label><input id="globalStart" type="date"></div>
           <div><label class="label" for="globalEnd">End Date</label><input id="globalEnd" type="date"></div>
@@ -1589,15 +1667,14 @@
         </div>
         <div class="filter-error" id="filterErrorText" hidden></div>
       </div>
-    </section>
-    <section class="section" id="dashboardSummarySection">
+      <section class="section" id="dashboardSummarySection">
       <div class="panel section-card">
         <div class="section-head">
           <h2>Dashboard Summary</h2>
         </div>
         <div class="summary-lines" id="summaryLines"></div>
       </div>
-    </section>
+      </section>
     <section class="section graph1-scope">
       <div class="section-head">
         <h2>Top Advertiser (FCT)</h2>
@@ -2099,12 +2176,24 @@
                 <div class="dataset-kpi-value" id="datasetSummaryOriginalRows">0</div>
               </div>
               <div class="dataset-kpi-card">
+                <div class="dataset-kpi-label">Total Channels</div>
+                <div class="dataset-kpi-value" id="datasetSummaryOriginalChannels">0</div>
+              </div>
+              <div class="dataset-kpi-card">
                 <div class="dataset-kpi-label">Total Categories</div>
                 <div class="dataset-kpi-value" id="datasetSummaryOriginalCategories">0</div>
               </div>
               <div class="dataset-kpi-card">
                 <div class="dataset-kpi-label">Total Advertisers</div>
                 <div class="dataset-kpi-value" id="datasetSummaryOriginalAdvertisers">0</div>
+              </div>
+              <div class="dataset-kpi-card">
+                <div class="dataset-kpi-label">Total Duration</div>
+                <div class="dataset-kpi-value" id="datasetSummaryOriginalDuration">0</div>
+              </div>
+              <div class="dataset-kpi-card">
+                <div class="dataset-kpi-label">Average Duration</div>
+                <div class="dataset-kpi-value" id="datasetSummaryOriginalAverage">0</div>
               </div>
             </div>
           </div>
@@ -2116,6 +2205,10 @@
                 <div class="dataset-kpi-value" id="datasetSummaryFilteredRows">0</div>
               </div>
               <div class="dataset-kpi-card">
+                <div class="dataset-kpi-label">Total Channels</div>
+                <div class="dataset-kpi-value" id="datasetSummaryFilteredChannels">0</div>
+              </div>
+              <div class="dataset-kpi-card">
                 <div class="dataset-kpi-label">Total Categories</div>
                 <div class="dataset-kpi-value" id="datasetSummaryFilteredCategories">0</div>
               </div>
@@ -2123,11 +2216,28 @@
                 <div class="dataset-kpi-label">Total Advertisers</div>
                 <div class="dataset-kpi-value" id="datasetSummaryFilteredAdvertisers">0</div>
               </div>
+              <div class="dataset-kpi-card">
+                <div class="dataset-kpi-label">Total Duration</div>
+                <div class="dataset-kpi-value" id="datasetSummaryFilteredDuration">0</div>
+              </div>
+              <div class="dataset-kpi-card">
+                <div class="dataset-kpi-label">Average Duration</div>
+                <div class="dataset-kpi-value" id="datasetSummaryFilteredAverage">0</div>
+              </div>
+              <div class="dataset-kpi-card">
+                <div class="dataset-kpi-label">Row Coverage</div>
+                <div class="dataset-kpi-value" id="datasetSummaryFilteredRowCoverage">0%</div>
+              </div>
+              <div class="dataset-kpi-card">
+                <div class="dataset-kpi-label">Duration Coverage</div>
+                <div class="dataset-kpi-value" id="datasetSummaryFilteredDurationCoverage">0%</div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </section>
+    </div>
     <button class="share-fab" id="shareBtn" type="button" title="Share Dashboard" aria-label="Share Dashboard">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 16V5"></path>
@@ -2257,11 +2367,19 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       excludedChips: document.getElementById('excludedChips'),
       summaryLines: document.getElementById('summaryLines'),
       datasetSummaryOriginalRows: document.getElementById('datasetSummaryOriginalRows'),
+      datasetSummaryOriginalChannels: document.getElementById('datasetSummaryOriginalChannels'),
       datasetSummaryOriginalCategories: document.getElementById('datasetSummaryOriginalCategories'),
       datasetSummaryOriginalAdvertisers: document.getElementById('datasetSummaryOriginalAdvertisers'),
+      datasetSummaryOriginalDuration: document.getElementById('datasetSummaryOriginalDuration'),
+      datasetSummaryOriginalAverage: document.getElementById('datasetSummaryOriginalAverage'),
       datasetSummaryFilteredRows: document.getElementById('datasetSummaryFilteredRows'),
+      datasetSummaryFilteredChannels: document.getElementById('datasetSummaryFilteredChannels'),
       datasetSummaryFilteredCategories: document.getElementById('datasetSummaryFilteredCategories'),
       datasetSummaryFilteredAdvertisers: document.getElementById('datasetSummaryFilteredAdvertisers'),
+      datasetSummaryFilteredDuration: document.getElementById('datasetSummaryFilteredDuration'),
+      datasetSummaryFilteredAverage: document.getElementById('datasetSummaryFilteredAverage'),
+      datasetSummaryFilteredRowCoverage: document.getElementById('datasetSummaryFilteredRowCoverage'),
+      datasetSummaryFilteredDurationCoverage: document.getElementById('datasetSummaryFilteredDurationCoverage'),
       headerSection: document.getElementById('dashboardHeaderSection'),
       summarySection: document.getElementById('dashboardSummarySection'),
       stickyFilterWrap: document.getElementById('stickyFilterWrap'),
@@ -2501,6 +2619,11 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     };
     const SECTION_KEYS = ['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'g9', 'g10', 'g11', 'g12', 'g13'];
     const CATEGORY_SECTION_KEYS = ['g1', 'g2', 'g3', 'g5'];
+    const fullscreenFilterState = {
+      originalParent: null,
+      originalNextSibling: null,
+      activePanel: null
+    };
     function formatNumber(value) { return numberFormat.format(value || 0); }
     function sentenceCaseName(value) {
       const raw = String(value || '').trim().toLowerCase();
@@ -3278,16 +3401,32 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     function renderDatasetSummary() {
       const originalRows = state.rawRows || [];
       const filteredRows = getDashboardSummaryRows();
+      const originalChannels = new Set(originalRows.map(row => String(row.channel || '').trim()).filter(Boolean));
       const originalCategories = new Set(originalRows.map(row => String(row.category || '').trim()).filter(Boolean));
       const originalAdvertisers = new Set(originalRows.map(row => String(row.company || '').trim()).filter(Boolean));
+      const filteredChannels = new Set(filteredRows.map(row => String(row.channel || '').trim()).filter(Boolean));
       const filteredCategories = new Set(filteredRows.map(row => String(row.category || '').trim()).filter(Boolean));
       const filteredAdvertisers = new Set(filteredRows.map(row => String(row.company || '').trim()).filter(Boolean));
+      const originalDuration = originalRows.reduce((sum, row) => sum + (row.aaddur || 0), 0);
+      const filteredDuration = filteredRows.reduce((sum, row) => sum + (row.aaddur || 0), 0);
+      const originalAverage = originalRows.length ? originalDuration / originalRows.length : 0;
+      const filteredAverage = filteredRows.length ? filteredDuration / filteredRows.length : 0;
+      const rowCoverage = originalRows.length ? (filteredRows.length / originalRows.length) * 100 : 0;
+      const durationCoverage = originalDuration ? (filteredDuration / originalDuration) * 100 : 0;
       if (dom.datasetSummaryOriginalRows) dom.datasetSummaryOriginalRows.textContent = formatNumber(originalRows.length);
+      if (dom.datasetSummaryOriginalChannels) dom.datasetSummaryOriginalChannels.textContent = formatNumber(originalChannels.size);
       if (dom.datasetSummaryOriginalCategories) dom.datasetSummaryOriginalCategories.textContent = formatNumber(originalCategories.size);
       if (dom.datasetSummaryOriginalAdvertisers) dom.datasetSummaryOriginalAdvertisers.textContent = formatNumber(originalAdvertisers.size);
+      if (dom.datasetSummaryOriginalDuration) dom.datasetSummaryOriginalDuration.textContent = formatDurationValue(originalDuration, true);
+      if (dom.datasetSummaryOriginalAverage) dom.datasetSummaryOriginalAverage.textContent = formatDurationValue(originalAverage, true);
       if (dom.datasetSummaryFilteredRows) dom.datasetSummaryFilteredRows.textContent = formatNumber(filteredRows.length);
+      if (dom.datasetSummaryFilteredChannels) dom.datasetSummaryFilteredChannels.textContent = formatNumber(filteredChannels.size);
       if (dom.datasetSummaryFilteredCategories) dom.datasetSummaryFilteredCategories.textContent = formatNumber(filteredCategories.size);
       if (dom.datasetSummaryFilteredAdvertisers) dom.datasetSummaryFilteredAdvertisers.textContent = formatNumber(filteredAdvertisers.size);
+      if (dom.datasetSummaryFilteredDuration) dom.datasetSummaryFilteredDuration.textContent = formatDurationValue(filteredDuration, true);
+      if (dom.datasetSummaryFilteredAverage) dom.datasetSummaryFilteredAverage.textContent = formatDurationValue(filteredAverage, true);
+      if (dom.datasetSummaryFilteredRowCoverage) dom.datasetSummaryFilteredRowCoverage.textContent = formatPercent(rowCoverage);
+      if (dom.datasetSummaryFilteredDurationCoverage) dom.datasetSummaryFilteredDurationCoverage.textContent = formatPercent(durationCoverage);
     }
     function resetDashboardState() {
       state.rawRows = [];
@@ -3402,34 +3541,27 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       updateFullButtons();
     }
     function updateStickyFilterPosition() {
-      const wrap = dom.stickyFilterWrap;
-      const shell = dom.stickyFilterShell;
-      const header = dom.headerSection;
-      if (!wrap || !shell || !header) return;
-      if (document.fullscreenElement) {
-        wrap.classList.remove('is-stuck');
-        wrap.style.removeProperty('--sticky-filter-height');
-        shell.classList.remove('is-stuck');
-        shell.style.left = '';
-        shell.style.width = '';
+      if (!dom.stickyFilterWrap || !dom.stickyFilterShell) return;
+      if (document.fullscreenElement || dom.stickyFilterShell.classList.contains('is-in-fullscreen')) {
+        dom.stickyFilterWrap.classList.remove('is-stuck');
+        dom.stickyFilterShell.classList.remove('is-stuck');
+        dom.stickyFilterShell.style.removeProperty('--sticky-left');
+        dom.stickyFilterShell.style.removeProperty('--sticky-width');
+        dom.stickyFilterWrap.style.removeProperty('--sticky-filter-height');
         return;
       }
-      const headerBottom = header.getBoundingClientRect().bottom;
-      const shouldStick = headerBottom <= 10;
+      const wrapRect = dom.stickyFilterWrap.getBoundingClientRect();
+      const shouldStick = wrapRect.top <= 0;
+      dom.stickyFilterWrap.classList.toggle('is-stuck', shouldStick);
+      dom.stickyFilterShell.classList.toggle('is-stuck', shouldStick);
       if (shouldStick) {
-        const rect = wrap.getBoundingClientRect();
-        wrap.classList.add('is-stuck');
-        wrap.style.setProperty('--sticky-filter-height', `${shell.offsetHeight}px`);
-        shell.classList.add('is-stuck');
-        shell.style.left = `${rect.left}px`;
-        shell.style.width = `${rect.width}px`;
+        dom.stickyFilterShell.style.setProperty('--sticky-left', `${wrapRect.left}px`);
+        dom.stickyFilterShell.style.setProperty('--sticky-width', `${wrapRect.width}px`);
       } else {
-        wrap.classList.remove('is-stuck');
-        wrap.style.removeProperty('--sticky-filter-height');
-        shell.classList.remove('is-stuck');
-        shell.style.left = '';
-        shell.style.width = '';
+        dom.stickyFilterShell.style.removeProperty('--sticky-left');
+        dom.stickyFilterShell.style.removeProperty('--sticky-width');
       }
+      dom.stickyFilterWrap.style.setProperty('--sticky-filter-height', `${dom.stickyFilterShell.offsetHeight}px`);
     }
     function syncAndRenderSections(sectionKeys) {
       applyGlobalStateToSections();
@@ -6633,29 +6765,48 @@ Unique advertisers: ${formatCount(item.advertiserCount)}`;
         dom.sections[sectionKey].fullBtn.textContent = isActive ? 'Exit Full Screen' : 'Full Screen';
       });
     }
+    function getFullscreenFilterAnchor(panel) {
+      if (!panel) return null;
+      return Array.from(panel.children).find(child =>
+        child &&
+        child.classList &&
+        (child.classList.contains('chart-head') || child.classList.contains('chart-box'))
+      ) || null;
+    }
+    /* CHANGED: move the live global filter panel into the active fullscreen chart so the expanded view matches dashboard behavior. */
     function moveGlobalFiltersToFullscreen(panel) {
-      const wrap = dom.stickyFilterWrap;
-      const shell = dom.stickyFilterShell;
-      if (!wrap || !shell || !panel) return;
-      if (panel.contains(shell)) return;
-      wrap.classList.add('is-stuck');
-      wrap.style.setProperty('--sticky-filter-height', `${shell.offsetHeight}px`);
-      shell.classList.remove('is-stuck');
-      shell.style.left = '';
-      shell.style.width = '';
-      panel.insertBefore(shell, panel.firstChild);
+      if (!panel || !dom.stickyFilterShell) return;
+      if (!fullscreenFilterState.originalParent) {
+        fullscreenFilterState.originalParent = dom.stickyFilterShell.parentNode;
+        fullscreenFilterState.originalNextSibling = dom.stickyFilterShell.nextSibling;
+      }
+      if (dom.stickyFilterShell.parentNode !== panel) {
+        const anchor = getFullscreenFilterAnchor(panel);
+        if (anchor) panel.insertBefore(dom.stickyFilterShell, anchor);
+        else panel.appendChild(dom.stickyFilterShell);
+      }
+      fullscreenFilterState.activePanel = panel;
+      panel.classList.add('has-fullscreen-filters');
+      dom.stickyFilterShell.classList.add('is-in-fullscreen');
+      updateStickyFilterPosition();
     }
     function restoreGlobalFiltersFromFullscreen() {
-      const wrap = dom.stickyFilterWrap;
-      const shell = dom.stickyFilterShell;
-      if (!wrap || !shell) return;
-      if (wrap.contains(shell)) return;
-      wrap.appendChild(shell);
-      wrap.classList.remove('is-stuck');
-      wrap.style.removeProperty('--sticky-filter-height');
-      shell.classList.remove('is-stuck');
-      shell.style.left = '';
-      shell.style.width = '';
+      if (!dom.stickyFilterShell || !fullscreenFilterState.originalParent) {
+        updateStickyFilterPosition();
+        return;
+      }
+      if (fullscreenFilterState.activePanel) {
+        fullscreenFilterState.activePanel.classList.remove('has-fullscreen-filters');
+      }
+      const { originalParent, originalNextSibling } = fullscreenFilterState;
+      if (originalNextSibling && originalNextSibling.parentNode === originalParent) {
+        originalParent.insertBefore(dom.stickyFilterShell, originalNextSibling);
+      } else {
+        originalParent.appendChild(dom.stickyFilterShell);
+      }
+      dom.stickyFilterShell.classList.remove('is-in-fullscreen');
+      fullscreenFilterState.activePanel = null;
+      updateStickyFilterPosition();
     }
     function initializeSections() {
       initializeGlobalControls();

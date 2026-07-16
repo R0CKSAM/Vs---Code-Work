@@ -23,7 +23,7 @@ TIME_OPTIONS = '<option value="minutes">Minutes</option><option value="seconds">
 CATEGORY_FIELDS = ["category", "categoryDropdown", "categoryTrigger", "categoryValue", "categorySearch", "categoryOptions", "categoryAll", "categoryClear"]
 CHANNEL_FIELDS = ["channel", "channelDropdown", "channelTrigger", "channelValue", "channelSearch", "channelOptions", "channelAll", "channelClear"]
 ADVERTISOR_FIELDS = ["advertisor", "advertisorDropdown", "advertisorTrigger", "advertisorValue", "advertisorSearch", "advertisorOptions", "advertisorAll", "advertisorClear"]
-DOM_FIELD_SUFFIXES = {"topN": "TopN", "start": "Start", "end": "End", "channel": "Channel", "channelDropdown": "ChannelDropdown", "channelTrigger": "ChannelTrigger", "channelValue": "ChannelValue", "channelSearch": "ChannelSearch", "channelOptions": "ChannelOptions", "channelAll": "ChannelAll", "channelClear": "ChannelClear", "category": "Category", "categoryDropdown": "CategoryDropdown", "categoryTrigger": "CategoryTrigger", "categoryValue": "CategoryValue", "categorySearch": "CategorySearch", "categoryOptions": "CategoryOptions", "categoryAll": "CategoryAll", "categoryClear": "CategoryClear", "reset": "Reset", "legend": "Legend", "chart": "Chart", "metric": "Metric", "fullBtn": "FullBtn", "barBtn": "BarBtn", "heatmapBtn": "HeatmapBtn", "pieBtn": "PieBtn", "advertisor": "Advertisor", "advertisorDropdown": "AdvertisorDropdown", "advertisorTrigger": "AdvertisorTrigger", "advertisorValue": "AdvertisorValue", "advertisorSearch": "AdvertisorSearch", "advertisorOptions": "AdvertisorOptions", "advertisorAll": "AdvertisorAll", "advertisorClear": "AdvertisorClear", "time": "Time", "totalGrid": "TotalGrid", "insight": "Insight", "compareCount": "CompareCount"}
+DOM_FIELD_SUFFIXES = {"topN": "TopN", "start": "Start", "end": "End", "channel": "Channel", "channelDropdown": "ChannelDropdown", "channelTrigger": "ChannelTrigger", "channelValue": "ChannelValue", "channelSearch": "ChannelSearch", "channelOptions": "ChannelOptions", "channelAll": "ChannelAll", "channelClear": "ChannelClear", "category": "Category", "categoryDropdown": "CategoryDropdown", "categoryTrigger": "CategoryTrigger", "categoryValue": "CategoryValue", "categorySearch": "CategorySearch", "categoryOptions": "CategoryOptions", "categoryAll": "CategoryAll", "categoryClear": "CategoryClear", "reset": "Reset", "legend": "Legend", "chart": "Chart", "metric": "Metric", "fullBtn": "FullBtn", "barBtn": "BarBtn", "heatmapBtn": "HeatmapBtn", "pieBtn": "PieBtn", "advertisor": "Advertisor", "advertisorDropdown": "AdvertisorDropdown", "advertisorTrigger": "AdvertisorTrigger", "advertisorValue": "AdvertisorValue", "advertisorSearch": "AdvertisorSearch", "advertisorOptions": "AdvertisorOptions", "advertisorAll": "AdvertisorAll", "advertisorClear": "AdvertisorClear", "time": "Time", "totalGrid": "TotalGrid", "insight": "Insight", "compareCount": "CompareCount", "fullscreenShell": "FullscreenShell"}
 def section_config(key: str, section_class: str, title: str, chart_id: str, controls: list[tuple], extras: str = "", head_actions: str = "", state: str = "", dom_fields: list[str] | None = None) -> dict:
     return {"key": key, "section_class": section_class, "title": title, "chart_id": chart_id, "controls": controls, "extras": extras, "head_actions": head_actions, "state": state, "dom_fields": dom_fields or []}
 SECTION_CONFIGS = [
@@ -126,9 +126,7 @@ def build_controls(section_key: str, controls: list[tuple]) -> list[str]:
             built.append(multi_dropdown(section_key, suffix.title(), label, all_label, search_placeholder))
     return built
 def build_global_filter_html() -> str:
-    return f"""    <section class="section sticky-filter-wrap" id="stickyFilterWrap">
-      <div class="panel section-card sticky-filter-shell" id="stickyFilterShell">
-        <div class="section-controls global-controls">
+    return f"""        <div class="section-controls global-controls">
           {select_control("globalTopN", "Top N", TOP_N_OPTIONS)}
           {date_control("globalStart", "Start Date")}
           {date_control("globalEnd", "End Date")}
@@ -138,9 +136,7 @@ def build_global_filter_html() -> str:
           {select_control("globalTime", "Time", TIME_OPTIONS)}
           {reset_control("globalReset")}
         </div>
-        <div class="filter-error" id="filterErrorText" hidden></div>
-      </div>
-    </section>"""
+        <div class="filter-error" id="filterErrorText" hidden></div>"""
 def section_block(section_class: str, title: str, controls: list[str], chart_id: str, extras: str = "", head_actions: str = "") -> str:
     controls_html = f"""        <div class="section-controls">
 {chr(10).join(controls)}
@@ -153,6 +149,8 @@ def section_block(section_class: str, title: str, controls: list[str], chart_id:
         <h2>{title}</h2>
       </div>
       <div class="panel section-card">
+        <!-- CHANGED: fullscreen now targets only the chart shell so the card itself does not stretch the filter area. -->
+        <div class="chart-fullscreen-shell" id="{section_key}FullscreenShell">
         <div class="fullscreen-focus-header" aria-hidden="true">
           <h3>{title}</h3>
           <div class="chart-insight" id="{section_key}Insight"></div>
@@ -165,6 +163,7 @@ def section_block(section_class: str, title: str, controls: list[str], chart_id:
         </div>
 {extras}
         <div class="chart-box" id="{chart_id}"></div>
+        </div>
       </div>
     </section>"""
 def build_sections_html() -> str:
@@ -216,12 +215,24 @@ def build_dataset_summary_html() -> str:
                 <div class="dataset-kpi-value" id="datasetSummaryOriginalRows">0</div>
               </div>
               <div class="dataset-kpi-card">
+                <div class="dataset-kpi-label">Total Channels</div>
+                <div class="dataset-kpi-value" id="datasetSummaryOriginalChannels">0</div>
+              </div>
+              <div class="dataset-kpi-card">
                 <div class="dataset-kpi-label">Total Categories</div>
                 <div class="dataset-kpi-value" id="datasetSummaryOriginalCategories">0</div>
               </div>
               <div class="dataset-kpi-card">
                 <div class="dataset-kpi-label">Total Advertisers</div>
                 <div class="dataset-kpi-value" id="datasetSummaryOriginalAdvertisers">0</div>
+              </div>
+              <div class="dataset-kpi-card">
+                <div class="dataset-kpi-label">Total Duration</div>
+                <div class="dataset-kpi-value" id="datasetSummaryOriginalDuration">0</div>
+              </div>
+              <div class="dataset-kpi-card">
+                <div class="dataset-kpi-label">Average Duration</div>
+                <div class="dataset-kpi-value" id="datasetSummaryOriginalAverage">0</div>
               </div>
             </div>
           </div>
@@ -233,12 +244,32 @@ def build_dataset_summary_html() -> str:
                 <div class="dataset-kpi-value" id="datasetSummaryFilteredRows">0</div>
               </div>
               <div class="dataset-kpi-card">
+                <div class="dataset-kpi-label">Total Channels</div>
+                <div class="dataset-kpi-value" id="datasetSummaryFilteredChannels">0</div>
+              </div>
+              <div class="dataset-kpi-card">
                 <div class="dataset-kpi-label">Total Categories</div>
                 <div class="dataset-kpi-value" id="datasetSummaryFilteredCategories">0</div>
               </div>
               <div class="dataset-kpi-card">
                 <div class="dataset-kpi-label">Total Advertisers</div>
                 <div class="dataset-kpi-value" id="datasetSummaryFilteredAdvertisers">0</div>
+              </div>
+              <div class="dataset-kpi-card">
+                <div class="dataset-kpi-label">Total Duration</div>
+                <div class="dataset-kpi-value" id="datasetSummaryFilteredDuration">0</div>
+              </div>
+              <div class="dataset-kpi-card">
+                <div class="dataset-kpi-label">Average Duration</div>
+                <div class="dataset-kpi-value" id="datasetSummaryFilteredAverage">0</div>
+              </div>
+              <div class="dataset-kpi-card">
+                <div class="dataset-kpi-label">Row Coverage</div>
+                <div class="dataset-kpi-value" id="datasetSummaryFilteredRowCoverage">0%</div>
+              </div>
+              <div class="dataset-kpi-card">
+                <div class="dataset-kpi-label">Duration Coverage</div>
+                <div class="dataset-kpi-value" id="datasetSummaryFilteredDurationCoverage">0%</div>
               </div>
             </div>
           </div>
@@ -251,12 +282,14 @@ def build_dom_sections_js() -> str:
     blocks = []
     for config in SECTION_CONFIGS:
         key = config["key"]
-        fields = config["dom_fields"] + ([] if "insight" in config["dom_fields"] else ["insight"])
+        fields = config["dom_fields"] + ([] if "insight" in config["dom_fields"] else ["insight"]) + ([] if "fullscreenShell" in config["dom_fields"] else ["fullscreenShell"])
         lines = [f"        {key}: {{"]
         for field in fields:
             lines.append(
                 f"          panel: document.getElementById('{key}Chart').closest('.panel'),"
                 if field == "panel"
+                else f"          fullscreenShell: document.getElementById('{key}FullscreenShell'),"
+                if field == "fullscreenShell"
                 else f"          {field}: document.getElementById('{key}{DOM_FIELD_SUFFIXES[field]}'),"
             )
         lines[-1] = lines[-1].rstrip(",")
@@ -312,11 +345,11 @@ html = """<!DOCTYPE html>
     .topbar {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
       flex-wrap: wrap;
-      gap: 14px;
+      gap: 12px;
       margin-bottom: 6px;
-      padding: 0;
+      padding: 4px 0 2px;
       background: transparent;
       border: 0;
       border-radius: 0;
@@ -332,31 +365,35 @@ html = """<!DOCTYPE html>
     }
     .title-block {
       display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 4px;
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
       min-width: 0;
+      flex: 1 1 auto;
     }
     .title-block h1 {
       margin: 0;
       color: var(--text);
-      font-size: 30px;
+      font-size: 22px;
       font-weight: 800;
       letter-spacing: 0.2px;
-      line-height: 1.05;
+      line-height: 1;
+      white-space: nowrap;
     }
     .title-meta {
       color: var(--muted);
-      font-size: 12px;
-      font-weight: 600;
-      line-height: 1.2;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+      white-space: nowrap;
     }
     .title-range {
       color: var(--muted);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
-      line-height: 1.3;
-      margin-top: 2px;
+      line-height: 1;
+      margin-top: 0;
+      white-space: nowrap;
     }
     .title-meta strong {
       color: var(--text);
@@ -367,25 +404,30 @@ html = """<!DOCTYPE html>
       flex-direction: row;
       align-items: center;
       flex-wrap: wrap;
-      justify-content: flex-end;
-      gap: 8px;
-      min-width: auto;
+      justify-content: flex-start;
+      gap: 10px;
+      min-width: 220px;
+      margin-left: auto;
       position: relative;
       z-index: 1;
     }
     .action-row {
       display: flex;
-      gap: 6px;
+      gap: 8px;
       align-items: center;
-      justify-content: flex-end;
+      justify-content: flex-start;
       width: auto;
     }
     .header-icon-group {
       position: relative;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      flex-wrap: wrap;
+      gap: 8px;
+      flex-wrap: nowrap;
+      padding: 4px 8px;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
     }
     .hero, .panel {
       background: var(--panel);
@@ -501,7 +543,7 @@ html = """<!DOCTYPE html>
     }
     .status {
       display: none;
-      max-width: 260px;
+      max-width: 220px;
       font-size: 11px;
       line-height: 1.3;
     }
@@ -548,25 +590,16 @@ html = """<!DOCTYPE html>
       margin-bottom: 6px;
       align-items: end;
     }
-    .global-controls {
-      margin-bottom: 0;
-    }
-    .section:not(.sticky-filter-wrap) .section-controls {
-      display: none;
-    }
     .sticky-filter-wrap {
       position: relative;
       z-index: 40;
     }
-    .sticky-filter-wrap.is-stuck {
-      min-height: var(--sticky-filter-height, 0px);
-    }
     .sticky-filter-shell {
-      position: relative;
-      z-index: 40;
+      position: sticky;
+      top: 0;
+      z-index: 80;
       background: rgb(184, 127, 123);
       box-shadow: 0 6px 18px rgba(15, 23, 42, 0.14);
-      padding: 6px 8px;
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
     }
@@ -586,12 +619,11 @@ html = """<!DOCTYPE html>
     .sticky-filter-shell .multi-dropdown {
       display: flex;
       flex-direction: column;
-      justify-content: flex-end;
-      min-height: 40px;
+      justify-content: flex-start;
+      min-height: 0;
     }
     .sticky-filter-shell.is-stuck {
-      position: fixed;
-      top: 10px;
+      top: 0;
       z-index: 80;
     }
     .graph1-scope,
@@ -609,6 +641,8 @@ html = """<!DOCTYPE html>
       gap: 2px;
       animation: none !important;
       transition: none !important;
+      min-width: 0;
+      max-width: 100%;
     }
     .multi-dropdown-trigger {
       min-height: 30px;
@@ -625,6 +659,7 @@ html = """<!DOCTYPE html>
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      min-width: 0;
       font-size: 12px;
     }
     .multi-dropdown-panel {
@@ -762,13 +797,13 @@ html = """<!DOCTYPE html>
     }
     .pdf-btn {
       width: auto;
-      min-width: 34px;
-      height: 34px;
+      min-width: 30px;
+      height: 30px;
       border-radius: 999px;
-      padding: 0 12px;
+      padding: 0 10px;
       background: #ffffff;
       color: var(--muted);
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 800;
       letter-spacing: 0.35px;
       box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
@@ -782,9 +817,9 @@ html = """<!DOCTYPE html>
       background: #ffffff;
     }
     .icon-btn {
-      width: 34px;
-      min-width: 34px;
-      height: 34px;
+      width: 30px;
+      min-width: 30px;
+      height: 30px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -793,14 +828,14 @@ html = """<!DOCTYPE html>
       cursor: pointer;
     }
     .upload-btn {
-      min-width: 34px;
-      width: 34px;
+      min-width: 30px;
+      width: 30px;
       justify-content: center;
       padding: 0;
     }
     .sheet-btn {
-      min-width: 34px;
-      width: 34px;
+      min-width: 30px;
+      width: 30px;
       justify-content: center;
       padding: 0;
     }
@@ -820,8 +855,10 @@ html = """<!DOCTYPE html>
     }
     .sheet-menu {
       position: absolute;
-      right: 0;
-      top: calc(100% + 8px);
+      right: auto;
+      left: calc(100% + 8px);
+      top: 50%;
+      transform: translateY(-50%);
       min-width: 220px;
       max-width: min(640px, calc(100vw - 32px));
       padding: 8px 10px;
@@ -992,8 +1029,8 @@ html = """<!DOCTYPE html>
       color: #ffffff;
     }
     .icon-btn svg {
-      width: 14px;
-      height: 14px;
+      width: 12px;
+      height: 12px;
       fill: none;
       stroke: currentColor;
       stroke-width: 1.9;
@@ -1031,6 +1068,16 @@ html = """<!DOCTYPE html>
     }
     .chart-box.top20-mode {
       height: clamp(520px, 64vw, 760px);
+    }
+    /* CHANGED: keep the last four chart cards at stable heights so browser zoom does not expand their backgrounds. */
+    #g10Chart,
+    #g11Chart,
+    #g12Chart,
+    #g13Chart {
+      height: 33rem !important;
+      min-height: 33rem !important;
+      max-height: 33rem !important;
+      overflow: auto;
     }
     .legend {
       margin-bottom: 14px;
@@ -1125,13 +1172,21 @@ html = """<!DOCTYPE html>
     }
     .excluded-inline {
       color: #7f1d1d;
-      font-size: 14px;
-      line-height: 1.5;
+      font-size: 11px;
+      line-height: 1.2;
       letter-spacing: 0.2px;
-      padding: 10px 12px;
+      padding: 6px 8px;
       background: #fef2f2;
       border: 1px solid #fecaca;
       border-radius: 8px;
+      min-width: 0;
+      flex: 1 1 auto;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .excluded-categories {
+      margin-top: 0;
     }
     .excluded-items {
       color: #374151;
@@ -1235,7 +1290,7 @@ html = """<!DOCTYPE html>
     }
     .dataset-kpi-row {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 8px;
     }
     .dataset-kpi-card {
@@ -1470,48 +1525,65 @@ html = """<!DOCTYPE html>
       font-size: 13px;
       line-height: 1.6;
     }
-    .panel:fullscreen, .panel:-webkit-full-screen {
+    /* CHANGED: fullscreen is scoped to the inner chart shell so filters keep their normal compact height. */
+    .chart-fullscreen-shell {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      min-height: 0;
+      gap: 0;
+    }
+    .chart-fullscreen-shell:fullscreen, .chart-fullscreen-shell:-webkit-full-screen {
       width: 100vw;
       height: 100vh;
       margin: 0;
       padding: 22px;
       border-radius: 0;
-      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      overflow: hidden;
       background: #f8fafc;
     }
-    .panel:fullscreen > .section-controls,
-    .panel:-webkit-full-screen > .section-controls {
+    .chart-fullscreen-shell:fullscreen > .section-controls,
+    .chart-fullscreen-shell:-webkit-full-screen > .section-controls {
       display: none !important;
     }
-    .panel:fullscreen .sticky-filter-shell .section-controls,
-    .panel:-webkit-full-screen .sticky-filter-shell .section-controls {
+    .chart-fullscreen-shell:fullscreen .sticky-filter-shell .section-controls,
+    .chart-fullscreen-shell:-webkit-full-screen .sticky-filter-shell .section-controls {
       display: grid;
     }
-    .panel:fullscreen .sticky-filter-shell,
-    .panel:-webkit-full-screen .sticky-filter-shell {
-      display: inline-block;
-      position: sticky;
-      top: 0;
-      left: auto !important;
-      width: fit-content !important;
-      max-width: 100%;
-      margin-bottom: 14px;
+    .chart-fullscreen-shell:fullscreen .sticky-filter-shell,
+    .chart-fullscreen-shell:-webkit-full-screen .sticky-filter-shell {
+      display: block;
+      flex: 0 0 auto;
+      height: auto;
+      min-height: 0;
+      align-self: stretch;
+      position: static;
+      top: auto;
+      left: auto;
+      width: auto;
+      max-width: none;
+      margin: 0 0 12px;
       z-index: 5;
     }
-    .panel:fullscreen .sticky-filter-shell .section-controls,
-    .panel:-webkit-full-screen .sticky-filter-shell .section-controls {
-      display: inline-flex;
-      flex-wrap: wrap;
-      align-items: flex-end;
-      width: fit-content;
+    .chart-fullscreen-shell:fullscreen .sticky-filter-shell .section-controls,
+    .chart-fullscreen-shell:-webkit-full-screen .sticky-filter-shell .section-controls {
+      display: grid;
+      width: auto;
       max-width: 100%;
+      margin-bottom: 0;
     }
-    .panel:fullscreen .section-controls,
-    .panel:-webkit-full-screen .section-controls {
+    .chart-fullscreen-shell:fullscreen > .section-controls,
+    .chart-fullscreen-shell:-webkit-full-screen > .section-controls {
       display: flex;
       flex-wrap: wrap;
       justify-content: flex-start;
       align-items: end;
+      flex: 0 0 auto;
+      height: auto;
+      min-height: 0;
       gap: 6px;
       margin-bottom: 14px;
       position: sticky;
@@ -1523,121 +1595,125 @@ html = """<!DOCTYPE html>
       background: #ffffff;
       box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
     }
-    .panel:fullscreen .global-controls,
-    .panel:-webkit-full-screen .global-controls {
+    .chart-fullscreen-shell:fullscreen > .global-controls,
+    .chart-fullscreen-shell:-webkit-full-screen > .global-controls {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
     }
-    .panel:fullscreen .section-controls > div,
-    .panel:fullscreen .section-controls .multi-dropdown,
-    .panel:-webkit-full-screen .section-controls > div,
-    .panel:-webkit-full-screen .section-controls .multi-dropdown {
+    .chart-fullscreen-shell:fullscreen > .section-controls > div,
+    .chart-fullscreen-shell:fullscreen > .section-controls .multi-dropdown,
+    .chart-fullscreen-shell:-webkit-full-screen > .section-controls > div,
+    .chart-fullscreen-shell:-webkit-full-screen > .section-controls .multi-dropdown {
       flex: 0 0 auto;
       width: auto;
       min-width: 0;
       max-width: max-content;
     }
-    .panel:fullscreen .section-controls .label,
-    .panel:-webkit-full-screen .section-controls .label {
+    .chart-fullscreen-shell:fullscreen > .section-controls .label,
+    .chart-fullscreen-shell:-webkit-full-screen > .section-controls .label {
       font-size: 11px;
       line-height: 1.2;
       margin-bottom: 3px;
     }
-    .panel:fullscreen .section-controls input,
-    .panel:fullscreen .section-controls select,
-    .panel:fullscreen .section-controls button,
-    .panel:-webkit-full-screen .section-controls input,
-    .panel:-webkit-full-screen .section-controls select,
-    .panel:-webkit-full-screen .section-controls button {
+    .chart-fullscreen-shell:fullscreen > .section-controls input,
+    .chart-fullscreen-shell:fullscreen > .section-controls select,
+    .chart-fullscreen-shell:fullscreen > .section-controls button,
+    .chart-fullscreen-shell:-webkit-full-screen > .section-controls input,
+    .chart-fullscreen-shell:-webkit-full-screen > .section-controls select,
+    .chart-fullscreen-shell:-webkit-full-screen > .section-controls button {
       min-height: 34px;
       padding-top: 6px;
       padding-bottom: 6px;
       font-size: 12px;
     }
-    .panel:fullscreen .chart-inline-filter,
-    .panel:-webkit-full-screen .chart-inline-filter {
+    .chart-fullscreen-shell:fullscreen .chart-inline-filter,
+    .chart-fullscreen-shell:-webkit-full-screen .chart-inline-filter {
       min-width: 118px;
       gap: 3px;
     }
-    .panel:fullscreen .chart-inline-filter label,
-    .panel:-webkit-full-screen .chart-inline-filter label {
+    .chart-fullscreen-shell:fullscreen .chart-inline-filter label,
+    .chart-fullscreen-shell:-webkit-full-screen .chart-inline-filter label {
       font-size: 11px;
     }
-    .panel:fullscreen .chart-inline-filter select,
-    .panel:-webkit-full-screen .chart-inline-filter select {
+    .chart-fullscreen-shell:fullscreen .chart-inline-filter select,
+    .chart-fullscreen-shell:-webkit-full-screen .chart-inline-filter select {
       min-height: 34px;
       padding: 6px 26px 6px 10px;
       font-size: 12px;
     }
     @media (max-width: 640px) {
-      .panel:fullscreen .section-controls,
-      .panel:-webkit-full-screen .section-controls {
+      .chart-fullscreen-shell:fullscreen > .section-controls,
+      .chart-fullscreen-shell:-webkit-full-screen > .section-controls {
         gap: 4px;
         padding: 6px;
       }
-      .panel:fullscreen .section-controls > div,
-      .panel:fullscreen .section-controls .multi-dropdown,
-      .panel:-webkit-full-screen .section-controls > div,
-      .panel:-webkit-full-screen .section-controls .multi-dropdown {
+      .chart-fullscreen-shell:fullscreen > .section-controls > div,
+      .chart-fullscreen-shell:fullscreen > .section-controls .multi-dropdown,
+      .chart-fullscreen-shell:-webkit-full-screen > .section-controls > div,
+      .chart-fullscreen-shell:-webkit-full-screen > .section-controls .multi-dropdown {
         max-width: none;
       }
-      .panel:fullscreen .section-controls input,
-      .panel:fullscreen .section-controls select,
-      .panel:fullscreen .section-controls button,
-      .panel:-webkit-full-screen .section-controls input,
-      .panel:-webkit-full-screen .section-controls select,
-      .panel:-webkit-full-screen .section-controls button {
+      .chart-fullscreen-shell:fullscreen > .section-controls input,
+      .chart-fullscreen-shell:fullscreen > .section-controls select,
+      .chart-fullscreen-shell:fullscreen > .section-controls button,
+      .chart-fullscreen-shell:-webkit-full-screen > .section-controls input,
+      .chart-fullscreen-shell:-webkit-full-screen > .section-controls select,
+      .chart-fullscreen-shell:-webkit-full-screen > .section-controls button {
         min-height: 32px;
         font-size: 11px;
       }
-      .panel:fullscreen .chart-inline-filter,
-      .panel:-webkit-full-screen .chart-inline-filter {
+      .chart-fullscreen-shell:fullscreen .chart-inline-filter,
+      .chart-fullscreen-shell:-webkit-full-screen .chart-inline-filter {
         min-width: 104px;
       }
-      .panel:fullscreen .chart-head,
-      .panel:-webkit-full-screen .chart-head,
-      .panel:fullscreen .chart-actions,
-      .panel:-webkit-full-screen .chart-actions {
+      .chart-fullscreen-shell:fullscreen .chart-head,
+      .chart-fullscreen-shell:-webkit-full-screen .chart-head,
+      .chart-fullscreen-shell:fullscreen .chart-actions,
+      .chart-fullscreen-shell:-webkit-full-screen .chart-actions {
         width: fit-content;
         max-width: 100%;
       }
     }
-    .panel:fullscreen .chart-head,
-    .panel:-webkit-full-screen .chart-head {
-      display: inline-flex;
-      width: fit-content;
+    .chart-fullscreen-shell:fullscreen .chart-head,
+    .chart-fullscreen-shell:-webkit-full-screen .chart-head {
+      display: flex;
+      flex: 0 0 auto;
+      width: 100%;
       max-width: 100%;
       align-items: center;
-      justify-content: flex-start;
-      margin-top: 6px;
+      justify-content: space-between;
+      margin: 6px 0 10px;
     }
-    .panel:fullscreen .chart-actions,
-    .panel:-webkit-full-screen .chart-actions {
+    .chart-fullscreen-shell:fullscreen .chart-actions,
+    .chart-fullscreen-shell:-webkit-full-screen .chart-actions {
       width: auto;
-      margin-left: 0;
-      justify-content: flex-start;
+      margin-left: auto;
+      justify-content: flex-end;
       flex-wrap: wrap;
     }
-    .panel:fullscreen .fullscreen-focus-header,
-    .panel:-webkit-full-screen .fullscreen-focus-header {
+    .chart-fullscreen-shell:fullscreen .fullscreen-focus-header,
+    .chart-fullscreen-shell:-webkit-full-screen .fullscreen-focus-header {
       display: block;
     }
-    .panel:fullscreen .chart-insight.visible,
-    .panel:-webkit-full-screen .chart-insight.visible {
+    .chart-fullscreen-shell:fullscreen .chart-insight.visible,
+    .chart-fullscreen-shell:-webkit-full-screen .chart-insight.visible {
       display: block;
     }
-    .panel:fullscreen .chart-box, .panel:-webkit-full-screen .chart-box {
-      height: calc(100vh - 280px);
-      min-height: 520px;
+    .chart-fullscreen-shell:fullscreen .chart-box,
+    .chart-fullscreen-shell:-webkit-full-screen .chart-box {
+      flex: 1 1 auto;
+      min-height: 0;
+      height: auto;
     }
-    .panel:fullscreen .section-head h2, .panel:-webkit-full-screen .section-head h2 {
+    .chart-fullscreen-shell:fullscreen .section-head h2, .chart-fullscreen-shell:-webkit-full-screen .section-head h2 {
       font-size: 32px;
     }
-    .panel:fullscreen .legend,
-    .panel:fullscreen .legend-scale,
-    .panel:-webkit-full-screen .legend,
-    .panel:-webkit-full-screen .legend-scale {
+    .chart-fullscreen-shell:fullscreen .legend,
+    .chart-fullscreen-shell:fullscreen .legend-scale,
+    .chart-fullscreen-shell:-webkit-full-screen .legend,
+    .chart-fullscreen-shell:-webkit-full-screen .legend-scale {
+      flex: 0 0 auto;
       font-size: 15px;
     }
     @media print {
@@ -1657,33 +1733,70 @@ html = """<!DOCTYPE html>
       }
     }
     @media (max-width: 1280px) {
-      .global-controls {
-        grid-template-columns: 1fr;
-      }
       .topbar {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .title-block {
         align-items: flex-start;
       }
-      .top-actions {
-        align-items: flex-end;
-        justify-content: space-between;
+      .title-block {
         flex-wrap: wrap;
+        align-items: center;
+        gap: 6px;
+      }
+      .top-actions {
+        align-items: center;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        margin-left: 0;
+        min-width: 0;
       }
       .action-row {
-        justify-content: flex-end;
+        justify-content: flex-start;
         flex-wrap: wrap;
       }
       .header-icon-group {
         width: auto;
-        justify-content: flex-end;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+      .excluded-inline {
+        flex-basis: 100%;
       }
     }
     @media (max-width: 900px) {
       .page {
         width: 100%;
+      }
+      #g10Chart,
+      #g11Chart,
+      #g12Chart,
+      #g13Chart {
+        height: 29rem !important;
+        min-height: 29rem !important;
+        max-height: 29rem !important;
+      }
+      .sheet-menu {
+        left: 0;
+        right: auto;
+        top: calc(100% + 8px);
+        transform: none;
+        min-width: min(220px, calc(100vw - 32px));
+        max-width: min(320px, calc(100vw - 32px));
+      }
+      .topbar {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .title-block h1 {
+        font-size: 18px;
+      }
+      .title-range,
+      .title-meta,
+      .excluded-inline {
+        font-size: 10px;
+      }
+      .top-actions,
+      .action-row,
+      .header-icon-group {
+        flex-wrap: wrap;
       }
       .pre-summary-grid {
         grid-template-columns: 1fr;
@@ -1789,23 +1902,25 @@ html = """<!DOCTYPE html>
         </div>
         <div class="status" id="statusText">Choose a CSV or Excel file to generate the dashboard.</div>
       </div>
-    </section>
-    <section class="section">
-      <div class="excluded-inline">
+      <div class="excluded-inline excluded-categories" title="">
         <span class="excluded-items" id="excludedChips"></span>
       </div>
     </section>
+    <div class="section sticky-filter-wrap" id="stickyFilterWrap">
+      <div class="panel section-card sticky-filter-shell" id="stickyFilterShell">
 __GLOBAL_FILTER_HTML__
-    <section class="section" id="dashboardSummarySection">
+      </div>
+      <section class="section" id="dashboardSummarySection">
       <div class="panel section-card">
         <div class="section-head">
           <h2>Dashboard Summary</h2>
         </div>
         <div class="summary-lines" id="summaryLines"></div>
       </div>
-    </section>
+      </section>
 __SECTIONS_HTML__
 __DATASET_SUMMARY_HTML__
+    </div>
     <button class="share-fab" id="shareBtn" type="button" title="Share Dashboard" aria-label="Share Dashboard">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M12 16V5"></path>
@@ -1901,11 +2016,19 @@ __STATE_SECTIONS_JS__
       excludedChips: document.getElementById('excludedChips'),
       summaryLines: document.getElementById('summaryLines'),
       datasetSummaryOriginalRows: document.getElementById('datasetSummaryOriginalRows'),
+      datasetSummaryOriginalChannels: document.getElementById('datasetSummaryOriginalChannels'),
       datasetSummaryOriginalCategories: document.getElementById('datasetSummaryOriginalCategories'),
       datasetSummaryOriginalAdvertisers: document.getElementById('datasetSummaryOriginalAdvertisers'),
+      datasetSummaryOriginalDuration: document.getElementById('datasetSummaryOriginalDuration'),
+      datasetSummaryOriginalAverage: document.getElementById('datasetSummaryOriginalAverage'),
       datasetSummaryFilteredRows: document.getElementById('datasetSummaryFilteredRows'),
+      datasetSummaryFilteredChannels: document.getElementById('datasetSummaryFilteredChannels'),
       datasetSummaryFilteredCategories: document.getElementById('datasetSummaryFilteredCategories'),
       datasetSummaryFilteredAdvertisers: document.getElementById('datasetSummaryFilteredAdvertisers'),
+      datasetSummaryFilteredDuration: document.getElementById('datasetSummaryFilteredDuration'),
+      datasetSummaryFilteredAverage: document.getElementById('datasetSummaryFilteredAverage'),
+      datasetSummaryFilteredRowCoverage: document.getElementById('datasetSummaryFilteredRowCoverage'),
+      datasetSummaryFilteredDurationCoverage: document.getElementById('datasetSummaryFilteredDurationCoverage'),
       headerSection: document.getElementById('dashboardHeaderSection'),
       summarySection: document.getElementById('dashboardSummarySection'),
       stickyFilterWrap: document.getElementById('stickyFilterWrap'),
@@ -1947,6 +2070,11 @@ __DOM_SECTIONS_JS__
     };
     const SECTION_KEYS = ['g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8', 'g9', 'g10', 'g11', 'g12', 'g13'];
     const CATEGORY_SECTION_KEYS = ['g1', 'g2', 'g3', 'g5'];
+    const fullscreenFilterState = {
+      originalParent: null,
+      originalNextSibling: null,
+      activePanel: null
+    };
     function formatNumber(value) { return numberFormat.format(value || 0); }
     function sentenceCaseName(value) {
       const raw = String(value || '').trim().toLowerCase();
@@ -2724,16 +2852,32 @@ __DOM_SECTIONS_JS__
     function renderDatasetSummary() {
       const originalRows = state.rawRows || [];
       const filteredRows = getDashboardSummaryRows();
+      const originalChannels = new Set(originalRows.map(row => String(row.channel || '').trim()).filter(Boolean));
       const originalCategories = new Set(originalRows.map(row => String(row.category || '').trim()).filter(Boolean));
       const originalAdvertisers = new Set(originalRows.map(row => String(row.company || '').trim()).filter(Boolean));
+      const filteredChannels = new Set(filteredRows.map(row => String(row.channel || '').trim()).filter(Boolean));
       const filteredCategories = new Set(filteredRows.map(row => String(row.category || '').trim()).filter(Boolean));
       const filteredAdvertisers = new Set(filteredRows.map(row => String(row.company || '').trim()).filter(Boolean));
+      const originalDuration = originalRows.reduce((sum, row) => sum + (row.aaddur || 0), 0);
+      const filteredDuration = filteredRows.reduce((sum, row) => sum + (row.aaddur || 0), 0);
+      const originalAverage = originalRows.length ? originalDuration / originalRows.length : 0;
+      const filteredAverage = filteredRows.length ? filteredDuration / filteredRows.length : 0;
+      const rowCoverage = originalRows.length ? (filteredRows.length / originalRows.length) * 100 : 0;
+      const durationCoverage = originalDuration ? (filteredDuration / originalDuration) * 100 : 0;
       if (dom.datasetSummaryOriginalRows) dom.datasetSummaryOriginalRows.textContent = formatNumber(originalRows.length);
+      if (dom.datasetSummaryOriginalChannels) dom.datasetSummaryOriginalChannels.textContent = formatNumber(originalChannels.size);
       if (dom.datasetSummaryOriginalCategories) dom.datasetSummaryOriginalCategories.textContent = formatNumber(originalCategories.size);
       if (dom.datasetSummaryOriginalAdvertisers) dom.datasetSummaryOriginalAdvertisers.textContent = formatNumber(originalAdvertisers.size);
+      if (dom.datasetSummaryOriginalDuration) dom.datasetSummaryOriginalDuration.textContent = formatDurationValue(originalDuration, true);
+      if (dom.datasetSummaryOriginalAverage) dom.datasetSummaryOriginalAverage.textContent = formatDurationValue(originalAverage, true);
       if (dom.datasetSummaryFilteredRows) dom.datasetSummaryFilteredRows.textContent = formatNumber(filteredRows.length);
+      if (dom.datasetSummaryFilteredChannels) dom.datasetSummaryFilteredChannels.textContent = formatNumber(filteredChannels.size);
       if (dom.datasetSummaryFilteredCategories) dom.datasetSummaryFilteredCategories.textContent = formatNumber(filteredCategories.size);
       if (dom.datasetSummaryFilteredAdvertisers) dom.datasetSummaryFilteredAdvertisers.textContent = formatNumber(filteredAdvertisers.size);
+      if (dom.datasetSummaryFilteredDuration) dom.datasetSummaryFilteredDuration.textContent = formatDurationValue(filteredDuration, true);
+      if (dom.datasetSummaryFilteredAverage) dom.datasetSummaryFilteredAverage.textContent = formatDurationValue(filteredAverage, true);
+      if (dom.datasetSummaryFilteredRowCoverage) dom.datasetSummaryFilteredRowCoverage.textContent = formatPercent(rowCoverage);
+      if (dom.datasetSummaryFilteredDurationCoverage) dom.datasetSummaryFilteredDurationCoverage.textContent = formatPercent(durationCoverage);
     }
     function resetDashboardState() {
       state.rawRows = [];
@@ -2848,34 +2992,18 @@ __DOM_SECTIONS_JS__
       updateFullButtons();
     }
     function updateStickyFilterPosition() {
-      const wrap = dom.stickyFilterWrap;
-      const shell = dom.stickyFilterShell;
-      const header = dom.headerSection;
-      if (!wrap || !shell || !header) return;
-      if (document.fullscreenElement) {
-        wrap.classList.remove('is-stuck');
-        wrap.style.removeProperty('--sticky-filter-height');
-        shell.classList.remove('is-stuck');
-        shell.style.left = '';
-        shell.style.width = '';
+      if (!dom.stickyFilterWrap || !dom.stickyFilterShell) return;
+      if (document.fullscreenElement || dom.stickyFilterShell.classList.contains('is-in-fullscreen')) {
+        dom.stickyFilterWrap.classList.remove('is-stuck');
+        dom.stickyFilterShell.classList.remove('is-stuck');
+        dom.stickyFilterWrap.style.removeProperty('--sticky-filter-height');
         return;
       }
-      const headerBottom = header.getBoundingClientRect().bottom;
-      const shouldStick = headerBottom <= 10;
-      if (shouldStick) {
-        const rect = wrap.getBoundingClientRect();
-        wrap.classList.add('is-stuck');
-        wrap.style.setProperty('--sticky-filter-height', `${shell.offsetHeight}px`);
-        shell.classList.add('is-stuck');
-        shell.style.left = `${rect.left}px`;
-        shell.style.width = `${rect.width}px`;
-      } else {
-        wrap.classList.remove('is-stuck');
-        wrap.style.removeProperty('--sticky-filter-height');
-        shell.classList.remove('is-stuck');
-        shell.style.left = '';
-        shell.style.width = '';
-      }
+      const wrapRect = dom.stickyFilterWrap.getBoundingClientRect();
+      const shouldStick = wrapRect.top <= 0;
+      dom.stickyFilterWrap.classList.toggle('is-stuck', shouldStick);
+      dom.stickyFilterShell.classList.toggle('is-stuck', shouldStick);
+      dom.stickyFilterWrap.style.setProperty('--sticky-filter-height', `${dom.stickyFilterShell.offsetHeight}px`);
     }
     function syncAndRenderSections(sectionKeys) {
       applyGlobalStateToSections();
@@ -6025,43 +6153,62 @@ __DOM_SECTIONS_JS__
       });
     }
     function toggleFullScreen(sectionKey) {
-      const panel = dom.sections[sectionKey].panel;
+      const fullTarget = dom.sections[sectionKey].fullscreenShell || dom.sections[sectionKey].panel;
       if (!document.fullscreenElement) {
-        if (panel.requestFullscreen) panel.requestFullscreen();
-      } else if (document.fullscreenElement === panel) {
+        if (fullTarget.requestFullscreen) fullTarget.requestFullscreen();
+      } else if (document.fullscreenElement === fullTarget) {
         if (document.exitFullscreen) document.exitFullscreen();
       }
     }
     function updateFullButtons() {
       SECTION_KEYS.forEach(sectionKey => {
-        const panel = dom.sections[sectionKey].panel;
-        const isActive = document.fullscreenElement === panel;
+        const fullTarget = dom.sections[sectionKey].fullscreenShell || dom.sections[sectionKey].panel;
+        const isActive = document.fullscreenElement === fullTarget;
         dom.sections[sectionKey].fullBtn.textContent = isActive ? 'Exit Full Screen' : 'Full Screen';
       });
     }
+    function getFullscreenFilterAnchor(panel) {
+      if (!panel) return null;
+      return Array.from(panel.children).find(child =>
+        child &&
+        child.classList &&
+        (child.classList.contains('fullscreen-focus-header') || child.classList.contains('section-controls') || child.classList.contains('chart-head') || child.classList.contains('chart-box'))
+      ) || null;
+    }
+    /* CHANGED: move the live global filter panel into the active fullscreen chart so the expanded view matches dashboard behavior. */
     function moveGlobalFiltersToFullscreen(panel) {
-      const wrap = dom.stickyFilterWrap;
-      const shell = dom.stickyFilterShell;
-      if (!wrap || !shell || !panel) return;
-      if (panel.contains(shell)) return;
-      wrap.classList.add('is-stuck');
-      wrap.style.setProperty('--sticky-filter-height', `${shell.offsetHeight}px`);
-      shell.classList.remove('is-stuck');
-      shell.style.left = '';
-      shell.style.width = '';
-      panel.insertBefore(shell, panel.firstChild);
+      if (!panel || !dom.stickyFilterShell) return;
+      if (!fullscreenFilterState.originalParent) {
+        fullscreenFilterState.originalParent = dom.stickyFilterShell.parentNode;
+        fullscreenFilterState.originalNextSibling = dom.stickyFilterShell.nextSibling;
+      }
+      if (dom.stickyFilterShell.parentNode !== panel) {
+        const anchor = getFullscreenFilterAnchor(panel);
+        if (anchor) panel.insertBefore(dom.stickyFilterShell, anchor);
+        else panel.appendChild(dom.stickyFilterShell);
+      }
+      fullscreenFilterState.activePanel = panel;
+      panel.classList.add('has-fullscreen-filters');
+      dom.stickyFilterShell.classList.add('is-in-fullscreen');
+      updateStickyFilterPosition();
     }
     function restoreGlobalFiltersFromFullscreen() {
-      const wrap = dom.stickyFilterWrap;
-      const shell = dom.stickyFilterShell;
-      if (!wrap || !shell) return;
-      if (wrap.contains(shell)) return;
-      wrap.appendChild(shell);
-      wrap.classList.remove('is-stuck');
-      wrap.style.removeProperty('--sticky-filter-height');
-      shell.classList.remove('is-stuck');
-      shell.style.left = '';
-      shell.style.width = '';
+      if (!dom.stickyFilterShell || !fullscreenFilterState.originalParent) {
+        updateStickyFilterPosition();
+        return;
+      }
+      if (fullscreenFilterState.activePanel) {
+        fullscreenFilterState.activePanel.classList.remove('has-fullscreen-filters');
+      }
+      const { originalParent, originalNextSibling } = fullscreenFilterState;
+      if (originalNextSibling && originalNextSibling.parentNode === originalParent) {
+        originalParent.insertBefore(dom.stickyFilterShell, originalNextSibling);
+      } else {
+        originalParent.appendChild(dom.stickyFilterShell);
+      }
+      dom.stickyFilterShell.classList.remove('is-in-fullscreen');
+      fullscreenFilterState.activePanel = null;
+      updateStickyFilterPosition();
     }
     function initializeSections() {
       initializeGlobalControls();
@@ -6124,7 +6271,7 @@ __DOM_SECTIONS_JS__
           });
         }
         document.addEventListener('fullscreenchange', () => {
-          const fullPanel = document.fullscreenElement && document.fullscreenElement.classList && document.fullscreenElement.classList.contains('panel')
+          const fullPanel = document.fullscreenElement && document.fullscreenElement.classList && document.fullscreenElement.classList.contains('chart-fullscreen-shell')
             ? document.fullscreenElement
             : null;
           if (fullPanel) moveGlobalFiltersToFullscreen(fullPanel);
