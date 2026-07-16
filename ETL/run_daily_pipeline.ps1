@@ -24,7 +24,8 @@
     [switch]$SkipWatch,
     [switch]$SkipOverview,
     [switch]$SkipUaProfile,
-    [int]$UaApiLimit = -1,
+    # Keep the daily path bounded; use -UaApiLimit -1 only for a deliberate backlog run.
+    [int]$UaApiLimit = 25,
     [switch]$SkipUaMalformedApi,
     [switch]$RunDeviceDecode,
     [switch]$StrictPipeline,
@@ -91,13 +92,18 @@ function Get-TempCandidateFreeBytes {
         $root = [System.IO.Path]::GetPathRoot($Path)
         if (-not $root) { return -1 }
         if ($root.StartsWith("\\")) {
-            # UNC shares do not always report reliably through DriveInfo on Windows.
-            # Use them only when the share root is reachable.
+            # UNC free-space reporting is unreliable and previously used MaxValue,
+            # which forced every automatic run onto the network share. Keep a
+            # reachable share as a last-resort candidate without outranking local disk.
             if (-not (Test-Path $root)) { return -1 }
-            return [int64]::MaxValue
+            return 0
         }
         if (-not (Test-Path $root)) { return -1 }
-        return ([System.IO.DriveInfo]::new($root)).AvailableFreeSpace
+        $drive = [System.IO.DriveInfo]::new($root)
+        if ($drive.DriveType -eq [System.IO.DriveType]::Network) {
+            return 0
+        }
+        return $drive.AvailableFreeSpace
     } catch {
         return -1
     }

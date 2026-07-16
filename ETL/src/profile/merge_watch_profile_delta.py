@@ -37,7 +37,6 @@ DAILY_TABLE_NAMES = [
 ]
 
 PROFILE_DAILY_FILES = [
-    "daily_volume",
     "channel_daily",
 ]
 
@@ -261,6 +260,13 @@ def merge_profile_tables(base_profile: Path, delta_profile: Path, dates: set[str
         )
         if not merged.empty:
             write_table(merged, base_daily / f"{name}.csv")
+
+    # The daily_tables version is the canonical source-aware fact table. Do
+    # not merge a source-less delta into an older source-scoped profile copy:
+    # that creates a mixed history where only new days include FAST data.
+    canonical_daily = read_table(base_daily / "daily_volume.csv")
+    if not canonical_daily.empty:
+        write_table(canonical_daily, base_profile / "daily_volume.csv")
 
 
 def group_frame(

@@ -942,6 +942,16 @@ def build_overview_from_marts(
     if daily.empty or source_daily.empty:
         return [], []
 
+    # Newer profile merges mirror the canonical source-aware daily table into
+    # the legacy profile path. Collapse it only for the all-source fallback
+    # rows; source-specific rows below must retain their original grain.
+    if "source" in daily.columns:
+        numeric_columns = [
+            column for column in daily.columns
+            if column != "source" and pd.api.types.is_numeric_dtype(daily[column])
+        ]
+        daily = daily.groupby("log_date", as_index=False)[numeric_columns].sum()
+
     identity = _filter_mart_dates(
         _read_mart(output_root / "identity" / "identity_daily.parquet"),
         "log_date",
@@ -958,6 +968,14 @@ def build_overview_from_marts(
     latency_daily = keep_completed_ist_dates(latency_daily, "log_date")
     identity_by_source, identity_by_date = _identity_lookup(identity)
     bytes_by_source = _source_byte_lookup(latency_daily)
+    if "total_bytes" not in daily.columns:
+        daily["total_bytes"] = daily["log_date"].map(
+            lambda date_key: sum(
+                value
+                for (byte_date, _source), value in bytes_by_source.items()
+                if byte_date == str(date_key)
+            )
+        )
     existing_sessions = _existing_source_session_lookup(out_dir, year, month)
 
     overview_rows: list[dict] = []

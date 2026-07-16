@@ -1380,10 +1380,10 @@
       ]
     },
     "2026-07-05": {
-      "bytes": 6488918280,
+      "bytes": 6488918316,
       "files": 5,
-      "mtime_ns_max": 1783398353784653900,
-      "mtime_ns_sum": 8916571155475634600,
+      "mtime_ns_max": 1783482991825017200,
+      "mtime_ns_sum": 8916655793515997900,
       "roots": [
         "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE"
       ],
@@ -1394,10 +1394,10 @@
       ]
     },
     "2026-07-06": {
-      "bytes": 7212201547,
+      "bytes": 7212308152,
       "files": 4,
-      "mtime_ns_max": 1783398379340590500,
-      "mtime_ns_sum": 7133415737505602500,
+      "mtime_ns_max": 1783483126426766800,
+      "mtime_ns_sum": 7133585122658341900,
       "roots": [
         "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE"
       ],
@@ -1413,7 +1413,7 @@
       "mtime_ns_max": 1783483153991065500,
       "mtime_ns_sum": 7133932370302068400,
       "roots": [
-        "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE"
       ],
       "rows": 70195960,
       "sources": [
@@ -1427,7 +1427,7 @@
       "mtime_ns_max": 1783569342539652500,
       "mtime_ns_sum": 7134104910179696800,
       "roots": [
-        "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE"
       ],
       "rows": 76229557,
       "sources": [
@@ -1441,7 +1441,7 @@
       "mtime_ns_max": 1784088074235263900,
       "mtime_ns_sum": 8918538246103462500,
       "roots": [
-        "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE"
       ],
       "rows": 77000203,
       "sources": [
@@ -1455,7 +1455,7 @@
       "mtime_ns_max": 1784088105382683300,
       "mtime_ns_sum": 10702971559704702400,
       "roots": [
-        "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE"
       ],
       "rows": 74151851,
       "sources": [
@@ -1469,7 +1469,7 @@
       "mtime_ns_max": 1784088074200066700,
       "mtime_ns_sum": 8919228527691995700,
       "roots": [
-        "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE"
       ],
       "rows": 65827888,
       "sources": [
@@ -1483,7 +1483,7 @@
       "mtime_ns_max": 1784088074222006900,
       "mtime_ns_sum": 8919573109847281000,
       "roots": [
-        "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE"
       ],
       "rows": 63115291,
       "sources": [
@@ -1497,7 +1497,8 @@
       "mtime_ns_max": 1784088105534741700,
       "mtime_ns_sum": 10704006144493851600,
       "roots": [
-        "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
+        "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE"
       ],
       "rows": 68816451,
       "sources": [
@@ -1506,14 +1507,29 @@
       ]
     },
     "2026-07-14": {
-      "bytes": 6271658053,
-      "files": 4,
-      "mtime_ns_max": 1784088105406953500,
-      "mtime_ns_sum": 7136177694842151200,
+      "bytes": 6271673745,
+      "files": 5,
+      "mtime_ns_max": 1784173991051748500,
+      "mtime_ns_sum": 8920351685893899700,
+      "roots": [
+        "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE"
+      ],
+      "rows": 64395368,
+      "sources": [
+        "fast",
+        "stream"
+      ]
+    },
+    "2026-07-15": {
+      "bytes": 6947918884,
+      "files": 3,
+      "mtime_ns_max": 1784174021669677600,
+      "mtime_ns_sum": 5352436086739308600,
       "roots": [
         "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
       ],
-      "rows": 64395288,
+      "rows": 69781391,
       "sources": [
         "fast",
         "stream"

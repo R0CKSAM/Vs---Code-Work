@@ -352,6 +352,52 @@ def _lower_parallelism(command: list[str]) -> tuple[Optional[list[str]], list[st
     return (retry, changes) if changes else (None, [])
 
 
+def _switch_to_fallback_temp(
+    command: list[str],
+    env: dict[str, str],
+    step_name: str,
+) -> tuple[Optional[list[str]], Optional[dict[str, str]], list[str]]:
+    """Move a failed DuckDB spill to a controlled local directory for one retry."""
+    fallback_root_text = env.get("VG_DUCKDB_FALLBACK_TEMP_DIR", "").strip()
+    if not fallback_root_text or "--temp-dir" not in command:
+        return None, None, []
+
+    fallback_root = Path(fallback_root_text).expanduser().resolve()
+    fallback_dir = (fallback_root / _safe_log_name(step_name)).resolve()
+    if fallback_root not in fallback_dir.parents:
+        return None, None, []
+
+    temp_index = command.index("--temp-dir") + 1
+    if temp_index >= len(command):
+        return None, None, []
+
+    current_temp = command[temp_index]
+    if Path(current_temp).expanduser() == fallback_dir:
+        return None, None, []
+
+    # This child directory is owned by the retry mechanism, so stale spill
+    # files from an interrupted prior retry are safe to replace.
+    try:
+        if fallback_dir.exists():
+            shutil.rmtree(fallback_dir)
+        fallback_dir.mkdir(parents=True, exist_ok=True)
+        free_bytes = shutil.disk_usage(fallback_dir).free
+    except OSError:
+        return None, None, []
+    if free_bytes < 8 * 1024**3:
+        return None, None, []
+
+    retry_command = list(command)
+    retry_command[temp_index] = str(fallback_dir)
+    retry_env = dict(env)
+    retry_env["VG_DUCKDB_TEMP_DIR"] = str(fallback_dir)
+    change = (
+        f"--temp-dir {current_temp}->{fallback_dir} "
+        f"({free_bytes / 1024**3:.1f}GB free)"
+    )
+    return retry_command, retry_env, [change]
+
+
 class RunRecorder:
     def __init__(self, output_root: Path, args: argparse.Namespace, base_root: Path, lake_root: Path) -> None:
         self.output_root = output_root
@@ -562,19 +608,33 @@ def run(
             if any(Path(part).name.lower() == "03.py" for part in current_command):
                 retry_env, env_changes = _lower_partition_env(current_env)
             retry_changes = command_changes + env_changes
+            error_class = entry.get("error_class")
+            if error_class == "disk_space":
+                fallback_command, fallback_env, fallback_changes = _switch_to_fallback_temp(
+                    retry_command or current_command,
+                    retry_env or current_env,
+                    step_name,
+                )
+                if fallback_changes:
+                    retry_command = fallback_command
+                    retry_env = fallback_env
+                    retry_changes.extend(fallback_changes)
+                else:
+                    # Lowering threads cannot repair a genuinely full disk.
+                    retry_changes = []
             if (
                 retry_on_memory
                 and attempt == 1
-                and entry.get("error_class") == "memory_or_temp_spill"
+                and error_class in {"memory_or_temp_spill", "disk_space"}
                 and retry_changes
             ):
                 entry["status"] = "retrying"
-                entry["retry_reason"] = "memory_or_temp_spill"
+                entry["retry_reason"] = error_class
                 entry["retry_changes"] = retry_changes
                 if RUN_RECORDER is not None:
                     RUN_RECORDER.record_step(entry)
                 print(
-                    f"[retry] {step_name} hit memory/temp pressure. "
+                    f"[retry] {step_name} hit {error_class}. "
                     f"Retrying once with: {', '.join(retry_changes)}"
                 )
                 if retry_command is not None:
@@ -1190,6 +1250,9 @@ def main() -> None:
             "VG_OVERVIEW_SOURCES": args.overview_sources or "",
             "VG_DUCKDB_TEMP_DIR": str(deep_profile_temp_dir),
             "VG_DUCKDB_MAX_TEMP_SIZE": str(args.deep_profile_max_temp_size),
+            "VG_DUCKDB_FALLBACK_TEMP_DIR": str(
+                output_root / "cache" / "duckdb_temp" / "fallback"
+            ),
             "PYTHONIOENCODING": "utf-8",
             "PYTHONUTF8": "1",
         }
@@ -1555,17 +1618,25 @@ def main() -> None:
         print("\n[skip] deep profile step skipped.")
 
     if not args.skip_device_snapshot:
+        snapshot_cmd = [
+            python,
+            str(snapshot_generator_script),
+            "--lake",
+            str(lake_root),
+            "--snapshot-csv",
+            str(overview_data_dir / "device_snapshot.csv"),
+            "--daily-csv",
+            str(overview_data_dir / "device_daily.csv"),
+        ]
+        if args.etl1_daily_date:
+            target_day = date.fromisoformat(args.etl1_daily_date)
+            lookback_days = max(0, int(args.lake_repair_lookback_days))
+            snapshot_cmd.extend([
+                "--start", (target_day - timedelta(days=lookback_days)).isoformat(),
+                "--end", target_day.isoformat(),
+            ])
         run(
-            [
-                python,
-                str(snapshot_generator_script),
-                "--lake",
-                str(lake_root),
-                "--snapshot-csv",
-                str(overview_data_dir / "device_snapshot.csv"),
-                "--daily-csv",
-                str(overview_data_dir / "device_daily.csv"),
-            ],
+            snapshot_cmd,
             cwd=etl_root,
             env=env,
             step_name="overview_device_snapshot",

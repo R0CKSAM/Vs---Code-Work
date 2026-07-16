@@ -56,11 +56,13 @@ def _load_common_module(module_name: str, file_name: str) -> Any:
 
 _chartjs_module = _load_common_module("veto_common_chartjs", "chartjs.py")
 _render_module = _load_common_module("veto_common_render", "render.py")
+_source_ranges_module = _load_common_module("veto_common_source_ranges_audience", "source_ranges.py")
 
 load_chartjs = _chartjs_module.load_chartjs
 chartjs_script = _render_module.chartjs_script
 json_blob = _render_module.json_blob
 render_template = _render_module.render_template
+archive_true_source_ranges_from_lake = _source_ranges_module.true_source_ranges_from_lake
 
 
 def get_duckdb() -> Any | None:
@@ -299,18 +301,41 @@ def source_true_ranges_from_lake(df: pd.DataFrame, lake_root: Path | None = None
     if not ranges:
         return []
     lake_root = lake_root or resolve_lake_root()
+    source_dates = {
+        str(item.get("source", "")).lower(): [
+            str(item.get("min_date", "") or "")[:10],
+            str(item.get("max_date", "") or "")[:10],
+        ]
+        for item in ranges
+        if str(item.get("source", "")).strip()
+    }
+    precise_by_source = {
+        str(item.get("source", "")).lower(): item
+        for item in archive_true_source_ranges_from_lake(source_dates, lake_root)
+    }
     out: list[dict[str, Any]] = []
     for item in ranges:
         source = str(item.get("source", "")).lower()
         min_date = str(item.get("min_date", "") or "")[:10]
         max_date = str(item.get("max_date", "") or "")[:10]
-        first_epoch, _ = reqtime_bounds(day_partition_folder(lake_root, source, min_date))
-        _, last_epoch = reqtime_bounds(day_partition_folder(lake_root, source, max_date))
+        precise = precise_by_source.get(source, {})
+        first_ist = str(precise.get("first_ist", "") or "")
+        last_ist = str(precise.get("last_ist", "") or "")
+        if first_ist and last_ist:
+            first_epoch = datetime.strptime(first_ist, "%Y-%m-%d %H:%M:%S").replace(tzinfo=IST_ZONE).timestamp()
+            last_epoch = datetime.strptime(last_ist, "%Y-%m-%d %H:%M:%S").replace(tzinfo=IST_ZONE).timestamp()
+        else:
+            # Preserve the direct-partition fallback for installations without
+            # an archive root configured or readable.
+            first_epoch, _ = reqtime_bounds(day_partition_folder(lake_root, source, min_date))
+            _, last_epoch = reqtime_bounds(day_partition_folder(lake_root, source, max_date))
+            first_ist = format_epoch_ist(first_epoch)
+            last_ist = format_epoch_ist(last_epoch)
         enriched = dict(item)
         enriched.update(
             {
-                "first_ist": format_epoch_ist(first_epoch) or (f"{min_date} 00:00:00" if min_date else ""),
-                "last_ist": format_epoch_ist(last_epoch) or (f"{max_date} 23:59:59" if max_date else ""),
+                "first_ist": first_ist or (f"{min_date} 00:00:00" if min_date else ""),
+                "last_ist": last_ist or (f"{max_date} 23:59:59" if max_date else ""),
                 "first_epoch": first_epoch,
                 "last_epoch": last_epoch,
                 "basis": "reqTimeSec min/max from first and last lake partitions",

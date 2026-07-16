@@ -308,6 +308,8 @@ def run_snapshot(
     lake_root: Path,
     snapshot_csv: Path,
     daily_csv: Path,
+    start: str | None = None,
+    end: str | None = None,
 ) -> None:
     daily_tmp = daily_csv.with_name("_device_daily_refresh.csv")
     daily_merged_tmp = daily_csv.with_name("_device_daily_merged.csv")
@@ -316,9 +318,24 @@ def run_snapshot(
     if not lake_root.is_dir():
         raise SystemExit(f"Lake folder not found: {lake_root}")
 
+    previous_manifest_seed = load_daily_manifest(manifest_path)
     lake_roots = resolve_lake_roots(lake_root)
-    partitions = discover_lake_partitions(lake_roots, sources=["fast", "stream"])
     cutoff_date = latest_completed_ist_date()
+    scope_requested = bool(start or end)
+    has_incremental_state = (
+        daily_csv.exists()
+        and bool(previous_manifest_seed)
+        and csv_has_column(daily_csv, "source")
+    )
+    # A fresh or damaged state must scan the full lake. Scheduled runs with
+    # healthy state only inspect the target date plus the repair lookback.
+    scope_active = scope_requested and has_incremental_state
+    partitions = discover_lake_partitions(
+        lake_roots,
+        sources=["fast", "stream"],
+        start=start if scope_active else None,
+        end=end if scope_active else None,
+    )
     partitions = [partition for partition in partitions if partition.date_text <= cutoff_date]
     if not partitions:
         raise SystemExit(f"No completed winning lake partitions found from: {', '.join(str(root) for root in lake_roots)}")
@@ -406,7 +423,7 @@ def run_snapshot(
     log_step(1, 5, "Schema checked and lake day signatures prepared")
     con = get_conn()
     try:
-        previous_manifest = load_daily_manifest(manifest_path)
+        previous_manifest = previous_manifest_seed
         csv_dates = existing_daily_dates(con, daily_csv)
         daily_has_source = csv_has_column(daily_csv, "source")
 
@@ -435,7 +452,11 @@ def run_snapshot(
                 for day, signature in day_signatures.items()
                 if previous_manifest.get(day) != signature
             }
-            removed_dates = (set(previous_manifest) | csv_dates) - current_dates
+            removed_dates = (
+                set()
+                if scope_active
+                else (set(previous_manifest) | csv_dates) - current_dates
+            )
             refresh_dates = changed_dates | removed_dates
             refresh_query_dates = refresh_dates & current_dates
             daily_needs_refresh = bool(refresh_dates)
@@ -491,7 +512,12 @@ def run_snapshot(
                 refreshed_dates=refresh_dates,
                 full_replace=full_replace,
             )
-            save_daily_manifest(manifest_path, day_signatures)
+            manifest_to_save = (
+                {**previous_manifest, **day_signatures}
+                if scope_active
+                else day_signatures
+            )
+            save_daily_manifest(manifest_path, manifest_to_save)
             log_step(3, 5, f"Refreshed {refreshed_rows:,} daily rows")
         else:
             log_step(2, 5, "Daily CSV unchanged")
@@ -515,12 +541,16 @@ def main() -> None:
     parser.add_argument("--lake", default=str(DEFAULT_LAKE_ROOT))
     parser.add_argument("--snapshot-csv", default=str(DEFAULT_CSV_OUT))
     parser.add_argument("--daily-csv", default=str(DEFAULT_DAILY_CSV_OUT))
+    parser.add_argument("--start", default=None, help="Optional IST date window start, YYYY-MM-DD.")
+    parser.add_argument("--end", default=None, help="Optional IST date window end, YYYY-MM-DD.")
     args = parser.parse_args()
 
     run_snapshot(
         lake_root=Path(args.lake).expanduser().resolve(),
         snapshot_csv=Path(args.snapshot_csv).expanduser().resolve(),
         daily_csv=Path(args.daily_csv).expanduser().resolve(),
+        start=args.start,
+        end=args.end,
     )
 
 
