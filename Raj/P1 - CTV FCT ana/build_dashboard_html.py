@@ -28,14 +28,14 @@ def section_config(key: str, section_class: str, title: str, chart_id: str, cont
     return {"key": key, "section_class": section_class, "title": title, "chart_id": chart_id, "controls": controls, "extras": extras, "head_actions": head_actions, "state": state, "dom_fields": dom_fields or []}
 SECTION_CONFIGS = [
     section_config("g1", "section graph1-scope", "Top Advertiser (FCT)", "g1Chart", [("select", "TopN", "Top N", TOP_N_OPTIONS), ("date", "Start", "Start Date"), ("date", "End", "End Date"), ("multi", "channel", "Channel", "All Channels", "Search channels"), ("category",), ("reset", "Reset")], extras='        <div class="legend" id="g1Legend"></div>', state="{ topN: '10', start: '', end: '', channel: [], category: [], view: 'bar' }", dom_fields=["topN", "start", "end", *CHANNEL_FIELDS, *CATEGORY_FIELDS, "reset", "legend", "chart", "panel", "fullBtn"]),
-    section_config("g2", "section", "Top Advertiser by Channels (FCT)", "g2Chart", [("select", "TopN", "Top N", TOP_N_OPTIONS), ("date", "Start", "Start Date"), ("date", "End", "End Date"), ("multi", "channel", "Channel", "All Channels", "Search channels"), ("category",), ("reset", "Reset")], extras='        <div class="legend" id="g2Legend"></div>\n        <div class="chart-metric" id="g2Metric"></div>', head_actions='            <div class="toggle-group">\n              <button class="toggle-btn active" id="g2BarBtn" type="button">Bar Chart</button>\n              <button class="toggle-btn" id="g2PieBtn" type="button">Pie Chart</button>\n            </div>\n', state="{ topN: '10', start: '', end: '', channel: [], category: [], view: 'bar' }", dom_fields=["topN", "start", "end", *CHANNEL_FIELDS, *CATEGORY_FIELDS, "reset", "legend", "chart", "metric", "panel", "fullBtn", "barBtn", "pieBtn"]),
-    section_config("g3", "section", "Top Advertiser by Date (FCT)", "g3Chart", [("select", "TopN", "Top N", TOP_N_OPTIONS), ("date", "Start", "Start Date"), ("date", "End", "End Date"), ("multi", "channel", "Channel", "All Channels", "Search channels"), ("category",), ("reset", "Reset")], extras='        <div class="legend" id="g3Legend"></div>', head_actions='            <div class="toggle-group">\n              <button class="toggle-btn active" id="g3HeatmapBtn" type="button">Heatmap</button>\n              <button class="toggle-btn" id="g3BarBtn" type="button">Bar Chart</button>\n            </div>\n', state="{ topN: '10', start: '', end: '', channel: [], category: [], view: 'heat' }", dom_fields=["topN", "start", "end", *CHANNEL_FIELDS, *CATEGORY_FIELDS, "reset", "legend", "chart", "panel", "fullBtn", "heatmapBtn", "barBtn"]),
+    section_config("g2", "section", "Top Advertiser by Channels (FCT)", "g2Chart", [("select", "TopN", "Top N", TOP_N_OPTIONS), ("date", "Start", "Start Date"), ("date", "End", "End Date"), ("multi", "channel", "Channel", "All Channels", "Search channels"), ("category",), ("reset", "Reset")], extras='        <div class="legend" id="g2Legend"></div>\n        <div class="chart-metric" id="g2Metric"></div>', head_actions='            <div class="toggle-group">\n              <button class="toggle-btn active" id="g2BarBtn" type="button">Bar Chart</button>\n            </div>\n', state="{ topN: '10', start: '', end: '', channel: [], category: [], view: 'bar' }", dom_fields=["topN", "start", "end", *CHANNEL_FIELDS, *CATEGORY_FIELDS, "reset", "legend", "chart", "metric", "panel", "fullBtn", "barBtn"]),
+    section_config("g3", "section", "Top Advertiser by Date (FCT)", "g3Chart", [("select", "TopN", "Top N", TOP_N_OPTIONS), ("date", "Start", "Start Date"), ("date", "End", "End Date"), ("multi", "channel", "Channel", "All Channels", "Search channels"), ("category",), ("reset", "Reset")], extras='        <div class="legend" id="g3Legend"></div>', head_actions='            <div class="toggle-group">\n              <button class="toggle-btn active" id="g3HeatmapBtn" type="button">Heatmap</button>\n            </div>\n', state="{ topN: '10', start: '', end: '', channel: [], category: [], view: 'heat' }", dom_fields=["topN", "start", "end", *CHANNEL_FIELDS, *CATEGORY_FIELDS, "reset", "legend", "chart", "panel", "fullBtn", "heatmapBtn"]),
     section_config("g4", "section", "Channel Category Overview", "g4Chart", [("select", "TopN", "Category View", TOP_N_OPTIONS), ("date", "Start", "Start Date"), ("date", "End", "End Date"), ("multi", "channel", "Channel", "All Channels", "Search channels"), ("reset", "Reset")], state="{ topN: '10', start: '', end: '', channel: [], category: '', view: 'heat' }", dom_fields=["topN", "start", "end", *CHANNEL_FIELDS, "reset", "chart", "panel", "fullBtn"]),
     section_config("g5", "section", "FCT Hourly Analysis", "g5Chart", [("date", "Start", "Start Date"), ("date", "End", "End Date"), ("multi", "channel", "Channel", "All Channels", "Search channels"), ("category",), ("multi", "advertisor", "Advertiser", "All Advertisers", "Search advertisers"), ("select", "Time", "Time", TIME_OPTIONS), ("reset", "Reset")], extras='        <div class="legend-scale" id="g5Legend">\n          <span>Low AD Duration</span>\n          <div class="legend-gradient"></div>\n          <span>High AD Duration</span>\n        </div>\n        <div class="total-panel">\n          <div class="total-title">Total</div>\n          <div class="total-grid" id="g5TotalGrid"></div>\n        </div>', state="{ start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'heat' }", dom_fields=["start", "end", *CHANNEL_FIELDS, *CATEGORY_FIELDS, *ADVERTISOR_FIELDS, "time", "reset", "legend", "chart", "totalGrid", "panel", "fullBtn"]),
     section_config("g6", "section", "Average Creative Duration", "g6Chart", [], extras='        <div class="legend" id="g6Legend"></div>\n        <div class="chart-metric" id="g6Metric"></div>', state="{ topN: '10', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'bar' }", dom_fields=["legend", "chart", "metric", "panel", "fullBtn"]),
     section_config("g7", "section", "Day-wise Advertising Activity", "g7Chart", [], state="{ topN: '10', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'line' }", dom_fields=["chart", "panel", "fullBtn"]),
     section_config("g8", "section", "Leading Advertising Categories", "g8Chart", [], extras='        <div class="legend" id="g8Legend"></div>', state="{ topN: '10', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'bar' }", dom_fields=["legend", "chart", "panel", "fullBtn"]),
-    section_config("g9", "section", "High-value Programmes", "g9Chart", [], extras='        <div class="legend" id="g9Legend"></div>', state="{ topN: '10', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'cherry' }", dom_fields=["legend", "chart", "panel", "fullBtn"]),
+    section_config("g9", "section", "Advertisement Time Distribution by Day Part", "g9Chart", [], extras='        <div class="legend" id="g9Legend"></div>', state="{ topN: '10', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'cherry' }", dom_fields=["legend", "chart", "panel", "fullBtn"]),
     section_config("g10", "section", "Category Programme Preference", "g10Chart", [], extras='        <div class="legend-scale g10-legend-scale" id="g10Legend">\n          <span>Low Volume</span>\n          <div class="legend-gradient"></div>\n          <span>High Volume</span>\n        </div>', state="{ topN: '10', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'heat' }", dom_fields=["legend", "chart", "panel", "fullBtn"]),
     section_config("g11", "section", "Advertiser Share of Voice Trend", "g11Chart", [], extras='        <div class="legend" id="g11Legend"></div>\n        <div class="chart-metric" id="g11Metric"></div>', head_actions='            <div class="chart-inline-filter">\n              <label for="g11CompareCount">Advertisers</label>\n              <select id="g11CompareCount">\n                <option value="1">Top 1</option>\n                <option value="2">Top 2</option>\n                <option value="3" selected>Top 3</option>\n                <option value="5">Top 5</option>\n                <option value="7">Top 7</option>\n                <option value="10">Top 10</option>\n                <option value="15">Top 15</option>\n                <option value="all">All Advertisers</option>\n              </select>\n            </div>\n', state="{ topN: '3', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'stacked' }", dom_fields=["compareCount", "legend", "metric", "chart", "panel", "fullBtn"]),
     section_config("g12", "section", "Channel Efficiency Matrix", "g12Chart", [], extras='        <div class="chart-metric" id="g12Metric"></div>', state="{ topN: '10', start: '', end: '', channel: [], category: [], advertisor: [], time: 'minutes', view: 'bar' }", dom_fields=["metric", "chart", "panel", "fullBtn"]),
@@ -590,25 +590,13 @@ html = """<!DOCTYPE html>
       margin-bottom: 6px;
       align-items: end;
     }
-    /* CHANGED: hide embedded filters for Graphs 1-5 in the normal dashboard view; fullscreen rules re-enable them. */
+    /* CHANGED: keep section-level filters out of Graphs 1-5 so fullscreen uses only the primary sticky filter bar. */
     #g1FullscreenShell > .section-controls,
     #g2FullscreenShell > .section-controls,
     #g3FullscreenShell > .section-controls,
     #g4FullscreenShell > .section-controls,
     #g5FullscreenShell > .section-controls {
       display: none;
-    }
-    #g1FullscreenShell:fullscreen > .section-controls,
-    #g1FullscreenShell:-webkit-full-screen > .section-controls,
-    #g2FullscreenShell:fullscreen > .section-controls,
-    #g2FullscreenShell:-webkit-full-screen > .section-controls,
-    #g3FullscreenShell:fullscreen > .section-controls,
-    #g3FullscreenShell:-webkit-full-screen > .section-controls,
-    #g4FullscreenShell:fullscreen > .section-controls,
-    #g4FullscreenShell:-webkit-full-screen > .section-controls,
-    #g5FullscreenShell:fullscreen > .section-controls,
-    #g5FullscreenShell:-webkit-full-screen > .section-controls {
-      display: flex !important;
     }
     /* CHANGED: normalize internal spacing for Graphs 3, 4, 5, and 8 so these cards align with the rest of the dashboard. */
     #g3FullscreenShell,
@@ -1112,10 +1100,16 @@ html = """<!DOCTYPE html>
     .chart-box.top20-mode {
       height: clamp(520px, 64vw, 760px);
     }
-    /* CHANGED: keep the last four chart cards at stable heights so browser zoom does not expand their backgrounds. */
+    /* CHANGED: keep compact chart cards at stable heights so browser zoom does not expand their backgrounds. */
+    #g9Chart,
+    #g12Chart {
+      height: 24rem !important;
+      min-height: 24rem !important;
+      max-height: 24rem !important;
+      overflow: auto;
+    }
     #g10Chart,
     #g11Chart,
-    #g12Chart,
     #g13Chart {
       height: 33rem !important;
       min-height: 33rem !important;
@@ -1289,7 +1283,8 @@ html = """<!DOCTYPE html>
     }
     .dataset-summary-card {
       display: grid;
-      gap: 8px;
+      gap: 6px;
+      padding: 12px 14px;
     }
     .pre-summary-grid-wrap {
       margin-top: 14px;
@@ -1318,44 +1313,44 @@ html = """<!DOCTYPE html>
     .dataset-summary-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
+      gap: 6px 8px;
     }
     .dataset-summary-block {
       display: grid;
-      gap: 8px;
+      gap: 6px;
       min-width: 0;
     }
     .dataset-summary-block-title {
       color: var(--text);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 800;
       letter-spacing: 0.1px;
     }
     .dataset-kpi-row {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+      gap: 6px;
     }
     .dataset-kpi-card {
       min-width: 0;
-      padding: 10px 12px;
+      padding: 8px 10px;
       border: 1px solid var(--line);
-      border-radius: 10px;
+      border-radius: 8px;
       background: #ffffff;
       box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
       display: grid;
-      gap: 4px;
+      gap: 3px;
       align-content: center;
     }
     .dataset-kpi-label {
       color: var(--muted);
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 700;
-      letter-spacing: 0.1px;
+      letter-spacing: 0.05px;
     }
     .dataset-kpi-value {
       color: var(--text);
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 800;
       line-height: 1.1;
       word-break: break-word;
@@ -1618,58 +1613,6 @@ html = """<!DOCTYPE html>
       max-width: 100%;
       margin-bottom: 0;
     }
-    .chart-fullscreen-shell:fullscreen > .section-controls,
-    .chart-fullscreen-shell:-webkit-full-screen > .section-controls {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: flex-start;
-      align-items: end;
-      flex: 0 0 auto;
-      height: auto;
-      min-height: 0;
-      gap: 6px;
-      margin-bottom: 14px;
-      position: sticky;
-      top: 0;
-      z-index: 4;
-      padding: 8px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #ffffff;
-      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
-    }
-    .chart-fullscreen-shell:fullscreen > .global-controls,
-    .chart-fullscreen-shell:-webkit-full-screen > .global-controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .chart-fullscreen-shell:fullscreen > .section-controls > div,
-    .chart-fullscreen-shell:fullscreen > .section-controls .multi-dropdown,
-    .chart-fullscreen-shell:-webkit-full-screen > .section-controls > div,
-    .chart-fullscreen-shell:-webkit-full-screen > .section-controls .multi-dropdown {
-      flex: 0 0 auto;
-      width: auto;
-      min-width: 0;
-      max-width: max-content;
-    }
-    .chart-fullscreen-shell:fullscreen > .section-controls .label,
-    .chart-fullscreen-shell:-webkit-full-screen > .section-controls .label {
-      font-size: 11px;
-      line-height: 1.2;
-      margin-bottom: 3px;
-    }
-    .chart-fullscreen-shell:fullscreen > .section-controls input,
-    .chart-fullscreen-shell:fullscreen > .section-controls select,
-    .chart-fullscreen-shell:fullscreen > .section-controls button,
-    .chart-fullscreen-shell:-webkit-full-screen > .section-controls input,
-    .chart-fullscreen-shell:-webkit-full-screen > .section-controls select,
-    .chart-fullscreen-shell:-webkit-full-screen > .section-controls button {
-      min-height: 34px;
-      padding-top: 6px;
-      padding-bottom: 6px;
-      font-size: 12px;
-    }
     .chart-fullscreen-shell:fullscreen .chart-inline-filter,
     .chart-fullscreen-shell:-webkit-full-screen .chart-inline-filter {
       min-width: 118px;
@@ -1686,26 +1629,6 @@ html = """<!DOCTYPE html>
       font-size: 12px;
     }
     @media (max-width: 640px) {
-      .chart-fullscreen-shell:fullscreen > .section-controls,
-      .chart-fullscreen-shell:-webkit-full-screen > .section-controls {
-        gap: 4px;
-        padding: 6px;
-      }
-      .chart-fullscreen-shell:fullscreen > .section-controls > div,
-      .chart-fullscreen-shell:fullscreen > .section-controls .multi-dropdown,
-      .chart-fullscreen-shell:-webkit-full-screen > .section-controls > div,
-      .chart-fullscreen-shell:-webkit-full-screen > .section-controls .multi-dropdown {
-        max-width: none;
-      }
-      .chart-fullscreen-shell:fullscreen > .section-controls input,
-      .chart-fullscreen-shell:fullscreen > .section-controls select,
-      .chart-fullscreen-shell:fullscreen > .section-controls button,
-      .chart-fullscreen-shell:-webkit-full-screen > .section-controls input,
-      .chart-fullscreen-shell:-webkit-full-screen > .section-controls select,
-      .chart-fullscreen-shell:-webkit-full-screen > .section-controls button {
-        min-height: 32px;
-        font-size: 11px;
-      }
       .chart-fullscreen-shell:fullscreen .chart-inline-filter,
       .chart-fullscreen-shell:-webkit-full-screen .chart-inline-filter {
         min-width: 104px;
@@ -1808,9 +1731,14 @@ html = """<!DOCTYPE html>
       .page {
         width: 100%;
       }
+      #g9Chart,
+      #g12Chart {
+        height: 22rem !important;
+        min-height: 22rem !important;
+        max-height: 22rem !important;
+      }
       #g10Chart,
       #g11Chart,
-      #g12Chart,
       #g13Chart {
         height: 29rem !important;
         min-height: 29rem !important;
@@ -1992,12 +1920,15 @@ __XLSX_BUNDLE__
     const EXCLUDED = new Set(PAYLOAD.excluded);
     const numberFormat = new Intl.NumberFormat('en-US');
     const longDate = new Intl.DateTimeFormat('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+    /* CHANGED: centralize stable channel colors so Graph 2 keeps the same mapping across filters, sorting, refreshes, and fullscreen. */
     const CHANNEL_COLORS = {
       'AAJ TAK': '#22c55e',
       'ABP NEWS': '#3b82f6',
       'INDIA TV': '#ef4444',
       'NEWS18 INDIA': '#a855f7'
     };
+    const CHANNEL_COLOR_FALLBACK_PALETTE = ['#0f766e', '#b45309', '#7c3aed', '#be123c', '#0369a1', '#166534', '#1d4ed8', '#7f1d1d'];
+    const channelColorRegistry = new Map(Object.entries(CHANNEL_COLORS));
     const chartPalettes = {
       g1: ['#3b82f6', '#22c55e', '#ef4444', '#a855f7'],
       g2: ['#3b82f6', '#22c55e', '#ef4444', '#a855f7'],
@@ -2742,13 +2673,30 @@ __DOM_SECTIONS_JS__
     function graph10LabelColor(value, maxValue) {
       return '#ffffff';
     }
+    /* CHANGED: normalize channel labels before color lookup so Graph 2 keeps the exact requested colors even when feed-style variants appear. */
+    function normalizeChannelColorKey(channel) {
+      const raw = String(channel || '').trim().toUpperCase().replace(/\\s+/g, ' ');
+      if (!raw) return '';
+      if (raw === 'CN AAJ TAK' || raw === 'YT AAJ TAK') return 'AAJ TAK';
+      if (raw === 'YT ABP NEWS' || raw === 'CN ABP NEWS') return 'ABP NEWS';
+      if (raw === 'CN INDIA TV' || raw === 'YT INDIA TV') return 'INDIA TV';
+      if (raw === 'YT CN NEWS18 INDIA' || raw === 'CN NEWS18 INDIA' || raw === 'YT NEWS18 INDIA') return 'NEWS18 INDIA';
+      return raw;
+    }
+    /* CHANGED: use one reusable channel-color registry instead of per-render dynamic assignment. */
     function channelColor(channel, paletteKey) {
-      const fixed = CHANNEL_COLORS[String(channel || '').trim().toUpperCase()];
+      const normalizedChannel = normalizeChannelColorKey(channel);
+      if (!normalizedChannel) {
+        const palette = chartPalettes[paletteKey] || chartPalettes.g1;
+        return palette[0];
+      }
+      const fixed = channelColorRegistry.get(normalizedChannel);
       if (fixed) return fixed;
-      const palette = chartPalettes[paletteKey] || chartPalettes.g1;
-      let hash = 0;
-      for (let i = 0; i < channel.length; i++) hash = channel.charCodeAt(i) + ((hash << 5) - hash);
-      return palette[Math.abs(hash) % palette.length];
+      const usedColors = new Set(channelColorRegistry.values());
+      const fallbackColor = CHANNEL_COLOR_FALLBACK_PALETTE.find(color => !usedColors.has(color))
+        || CHANNEL_COLOR_FALLBACK_PALETTE[channelColorRegistry.size % CHANNEL_COLOR_FALLBACK_PALETTE.length];
+      channelColorRegistry.set(normalizedChannel, fallbackColor);
+      return fallbackColor;
     }
     function channelHeatColor(channel, value, maxValue) {
       const scale = Math.max(0, Math.min(1, value / Math.max(maxValue, 1)));
@@ -2794,6 +2742,40 @@ __DOM_SECTIONS_JS__
       svg.style.fontFamily = '"Segoe UI", Arial, sans-serif';
       box.appendChild(svg);
       return { svg, width, height };
+    }
+    /* CHANGED: keep filtered charts compact by capping single-item categorical width and shrinking single-row chart height. */
+    function resolveVerticalBarLayout(plotW, itemCount, options = {}) {
+      const slotCount = Math.max(options.slotCountFloor || itemCount || 1, 1);
+      const groupW = plotW / slotCount;
+      let barW = Math.max(groupW - (options.gap ?? 18), options.minBarWidth ?? 18);
+      if (itemCount <= 1) {
+        barW = Math.min(barW, options.maxSingleBarWidth ?? 180);
+      } else if (options.maxBarWidth) {
+        barW = Math.min(barW, options.maxBarWidth);
+      }
+      return { slotCount, groupW, barW };
+    }
+    function resolveGroupedBarLayout(plotW, rowCount, seriesCount, options = {}) {
+      const groupW = plotW / Math.max(rowCount || 1, 1);
+      let barW = Math.max(
+        (groupW - (options.groupPadding ?? 14)) / Math.max(seriesCount || 1, 1) - (options.barGap ?? 2),
+        options.minBarWidth ?? 4
+      );
+      if (rowCount <= 1) {
+        barW = Math.min(barW, options.maxSingleBarWidth ?? 28);
+      } else if (options.maxBarWidth) {
+        barW = Math.min(barW, options.maxBarWidth);
+      }
+      const clusterW = Math.max(
+        (Math.max(seriesCount || 1, 1) * barW) + (Math.max((seriesCount || 1) - 1, 0) * (options.barGap ?? 2)),
+        0
+      );
+      return { groupW, barW, clusterW };
+    }
+    function resolveCompactChartHeight(itemCount, defaultHeight, options = {}) {
+      if (itemCount <= 1) return options.singleHeight ?? Math.min(defaultHeight, 320);
+      if (itemCount === 2) return options.doubleHeight ?? Math.min(defaultHeight, 360);
+      return defaultHeight;
     }
     function svgEl(name, attrs = {}) {
       const el = document.createElementNS('http://www.w3.org/2000/svg', name);
@@ -3940,6 +3922,51 @@ __DOM_SECTIONS_JS__
         .sort((a, b) => b.airtime - a.airtime || b.spots - a.spots || a.programme.localeCompare(b.programme))
         .slice(0, limit);
     }
+    /* CHANGED: Graph 9 always aggregates programmes across all channels while preserving the other active filters. */
+    function getGraph9CombinedRows() {
+      return filterRows(state.cleanedRows, {
+        start: state.global.start,
+        end: state.global.end,
+        channel: [],
+        category: state.global.category,
+        advertisor: state.global.advertisor
+      });
+    }
+    function buildHighValueProgrammeRanking(rows, limit) {
+      const totals = new Map();
+      rows.forEach(row => {
+        const programme = programmeLabel(row);
+        if (!programme) return;
+        const channel = String(row.channel || '').trim() || 'Unknown Channel';
+        const bucket = totals.get(programme) || {
+          programme,
+          airtime: 0,
+          spots: 0,
+          channelTotals: new Map()
+        };
+        bucket.airtime += row.aaddur || 0;
+        bucket.spots += 1;
+        bucket.channelTotals.set(channel, (bucket.channelTotals.get(channel) || 0) + (row.aaddur || 0));
+        totals.set(programme, bucket);
+      });
+      const ranked = [...totals.values()]
+        .map(item => {
+          const dominantChannel = [...item.channelTotals.entries()]
+            .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0] || 'Unknown Channel';
+          return {
+            programme: item.programme,
+            airtime: item.airtime,
+            spots: item.spots,
+            dominantChannel
+          };
+        })
+        .sort((a, b) => b.airtime - a.airtime || b.spots - a.spots || a.programme.localeCompare(b.programme))
+        .slice(0, limit);
+      return {
+        scopeLabel: 'All Channels Combined',
+        items: ranked
+      };
+    }
     function buildCategoryProgrammeMatrix(rows, limit) {
       const preferredProgrammeOrder = ['Morning', 'Afternoon', 'Prime Time', 'Late Night'];
       const categoryTotals = new Map();
@@ -4066,31 +4093,92 @@ __DOM_SECTIONS_JS__
         })
         .sort((a, b) => b.share - a.share || b.total - a.total || a.channel.localeCompare(b.channel));
     }
-    const GRAPH9_TIME_ORDER = ['Morning', 'Afternoon', 'Prime Time', 'Late Night'];
-    const GRAPH9_TIME_LABELS = {
-      'Morning': 'Morning',
-      'Afternoon': 'after noon',
-      'Prime Time': 'Prime Time',
-      'Late Night': 'Late Night'
+    const GRAPH9_DAY_PARTS = [
+      { key: 'early_morning', label: 'Early Morning', range: '07:00-10:00', start: 7, end: 10, color: '#2563eb' },
+      { key: 'morning', label: 'Morning', range: '10:00-12:00', start: 10, end: 12, color: '#16a34a' },
+      { key: 'afternoon', label: 'Afternoon', range: '12:00-16:00', start: 12, end: 16, color: '#f59e0b' },
+      { key: 'evening', label: 'Evening', range: '16:00-19:00', start: 16, end: 19, color: '#7c3aed' },
+      { key: 'night', label: 'Night', range: '19:00-23:00', start: 19, end: 23, color: '#ef4444' }
+    ];
+    const GRAPH6_DURATION_COLORS = {
+      10: '#93c5fd',
+      20: '#3b82f6',
+      30: '#67e8f9',
+      60: '#2dd4bf'
     };
-    const GRAPH9_TIME_COLORS = {
-      'Morning': '#2563eb',
-      'Afternoon': '#f59e0b',
-      'Prime Time': '#16a34a',
-      'Late Night': '#7c3aed'
-    };
+    const GRAPH11_ADVERTISER_PALETTE = [
+      '#2563eb', '#16a34a', '#f59e0b', '#7c3aed', '#ef4444',
+      '#06b6d4', '#ec4899', '#eab308', '#92400e', '#0f766e',
+      '#1d4ed8', '#15803d', '#ea580c', '#9333ea', '#dc2626',
+      '#0891b2', '#db2777', '#ca8a04', '#7c2d12', '#0d9488'
+    ];
     const GRAPH11_OTHERS_COLOR = '#94a3b8';
-    function graph9TimeKey(type) {
-      if (type === 'Morning' || type === 'Afternoon' || type === 'Prime Time' || type === 'Late Night') {
-        return type;
+    const advertiserColorRegistry = new Map();
+    function graph9BucketForHour(hour) {
+      return GRAPH9_DAY_PARTS.find(part => hour >= part.start && hour < part.end) || null;
+    }
+    function graph9ChannelScopeLabel(selectedChannels) {
+      const channels = (selectedChannels || []).filter(Boolean);
+      if (!channels.length) return 'All Channels';
+      if (channels.length === 1) return channels[0];
+      return channels.length === 2 ? channels.join(', ') : `${channels.length} Selected Channels`;
+    }
+    function formatGraph9DurationValue(value, withUnit = false) {
+      const unit = activeTimeUnit();
+      if (unit === 'hours') {
+        const hours = (value || 0) / 3600;
+        const digits = hours >= 100 ? 0 : 1;
+        const formatted = hours.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+        return withUnit ? `${formatted} hr` : formatted;
       }
-      return 'Late Night';
+      if (unit === 'minutes') {
+        return formatWholeMinutesValue(value, withUnit);
+      }
+      const formatted = formatNumber(Math.round(value || 0));
+      return withUnit ? `${formatted} sec` : formatted;
     }
-    function graph9TimeLabel(type) {
-      return GRAPH9_TIME_LABELS[graph9TimeKey(type)] || String(type || 'Late Night');
+    function buildGraph9DayPartDistribution(rows) {
+      const totals = new Map(GRAPH9_DAY_PARTS.map(part => [part.key, { ...part, total: 0, spots: 0 }]));
+      rows.forEach(row => {
+        const hour = parseHourValue(row.adtime);
+        if (hour === null) return;
+        const bucket = graph9BucketForHour(hour);
+        if (!bucket) return;
+        const target = totals.get(bucket.key);
+        target.total += row.aaddur || 0;
+        target.spots += 1;
+      });
+      const ordered = GRAPH9_DAY_PARTS.map(part => totals.get(part.key));
+      const totalAirtime = ordered.reduce((sum, item) => sum + item.total, 0) || 0;
+      return ordered.map(item => ({
+        ...item,
+        percentage: totalAirtime ? (item.total / totalAirtime) * 100 : 0
+      }));
     }
-    function programmeTypeColor(type) {
-      return GRAPH9_TIME_COLORS[graph9TimeKey(type)] || chartPalettes.g9[0];
+    function brightenColor(hex, factor = 0.18) {
+      return interpolateHexColor(hex, '#ffffff', factor);
+    }
+    function setSvgTransition(node, properties = 'all', duration = 180) {
+      if (!node) return;
+      node.style.transition = `${properties} ${duration}ms ease`;
+    }
+    function graph6DurationColor(seconds) {
+      return GRAPH6_DURATION_COLORS[seconds] || '#93c5fd';
+    }
+    function normalizeAdvertiserColorKey(advertiser) {
+      return String(advertiser || '').trim().toUpperCase().replace(/\\s+/g, ' ');
+    }
+    function advertiserColor(advertiser) {
+      const key = normalizeAdvertiserColorKey(advertiser);
+      if (!key) return GRAPH11_ADVERTISER_PALETTE[0];
+      if (key === 'OTHERS') return GRAPH11_OTHERS_COLOR;
+      const existing = advertiserColorRegistry.get(key);
+      if (existing) return existing;
+      const used = new Set(advertiserColorRegistry.values());
+      const nextColor = GRAPH11_ADVERTISER_PALETTE.find(color => !used.has(color))
+        || GRAPH11_ADVERTISER_PALETTE[advertiserColorRegistry.size % GRAPH11_ADVERTISER_PALETTE.length];
+      advertiserColorRegistry.set(key, nextColor);
+      return nextColor;
     }
     function drawAxes(svg, margin, plotW, plotH, xTitle, yTitle, width, height, maxValue) {
       const axisOptions = arguments[8] || {}
@@ -4136,6 +4224,42 @@ __DOM_SECTIONS_JS__
       });
       yAxisLabel.textContent = title;
       svg.appendChild(yAxisLabel);
+    }
+    /* CHANGED: compute professional Y-axis spacing from the rendered label content instead of hardcoded gaps. */
+    function estimateWrappedLabelWidth(labels, fontSize = 11, maxCharsPerLine = 16) {
+      let longestLineChars = 0;
+      (labels || []).forEach(label => {
+        const words = String(label || '').trim().split(/\\s+/).filter(Boolean);
+        if (!words.length) return;
+        let currentLine = '';
+        words.forEach(word => {
+          const nextLine = currentLine ? `${currentLine} ${word}` : word;
+          if (currentLine && nextLine.length > maxCharsPerLine) {
+            longestLineChars = Math.max(longestLineChars, currentLine.length);
+            currentLine = word;
+          } else {
+            currentLine = nextLine;
+          }
+        });
+        longestLineChars = Math.max(longestLineChars, currentLine.length);
+      });
+      return longestLineChars * fontSize * 0.62;
+    }
+    function resolveYAxisLayout(baseLeft, labels, options = {}) {
+      const fontSize = options.fontSize || 11;
+      const maxCharsPerLine = options.maxCharsPerLine || 16;
+      const labelAnchorPad = options.labelAnchorPad || 10;
+      const titleGap = options.titleGap || 28;
+      const titleInset = options.titleInset || 18;
+      const estimatedLabelWidth = estimateWrappedLabelWidth(labels, fontSize, maxCharsPerLine);
+      const left = Math.max(
+        baseLeft,
+        Math.ceil(estimatedLabelWidth + labelAnchorPad + titleGap + titleInset)
+      );
+      return {
+        left,
+        offset: options.offset || Math.min(left - titleInset, Math.ceil(estimatedLabelWidth + labelAnchorPad + titleGap))
+      };
     }
     /* CHANGED: Graph 1 shows whole-minute values only when the dashboard is in Minutes mode. */
     function formatWholeMinutesValue(value, withUnit = false) {
@@ -4224,17 +4348,22 @@ __DOM_SECTIONS_JS__
       return `Advertising activity peaked on ${formatDate(highest.date)} with ${formatCount(highest.spots)} spots, while ${formatDate(lowest.date)} recorded the lightest activity at ${formatCount(lowest.spots)} spots.`;
     }
     function buildGraph8Insight(rows) {
-      const categories = buildCategoryVolume(rows, getTopNLimit('g8'));
-      const leader = categories[0];
-      const totalSpots = categories.reduce((sum, item) => sum + item.spots, 0) || 1;
-      if (!leader) return 'No data is available for the current selection.';
-      return `${sentenceCaseName(leader.category)} is the leading advertising category with ${formatCount(leader.spots)} spots, representing ${formatInsightPercent((leader.spots / totalSpots) * 100)} of the top category set.`;
+      const channels = buildChannelDistribution(rows);
+      const topChannel = channels[0];
+      if (!topChannel) return 'No data is available for the current selection.';
+      const total = channels.reduce((sum, item) => sum + item.total, 0) || 1;
+      return `${titleCaseName(topChannel.channel)} leads the filtered channel ranking with ${formatDurationValue(topChannel.total, true)}, contributing ${formatInsightPercent((topChannel.total / total) * 100)} of total advertisement time.`;
     }
     function buildGraph9Insight(rows) {
-      const programmes = buildProgrammeInsights(rows, getTopNLimit('g9'));
-      const leader = programmes[0];
-      if (!leader) return 'No data is available for the current selection.';
-      return `${leader.programme} attracts the strongest value concentration with ${formatCount(leader.advertiserCount)} advertisers and ${formatDurationValue(leader.airtime, true)} of total airtime.`;
+      const buckets = buildGraph9DayPartDistribution(rows);
+      const totalAirtime = buckets.reduce((sum, item) => sum + item.total, 0) || 0;
+      const leader = buckets.reduce((best, item) => item.total > best.total ? item : best, buckets[0] || null);
+      if (!leader || !totalAirtime || !leader.total) return 'No data is available for the current selection.';
+      const scopeLabel = graph9ChannelScopeLabel((state.sections.g9 && state.sections.g9.channel) || state.global.channel || []);
+      if (scopeLabel === 'All Channels') {
+        return `Across all channels, ${leader.label} (${leader.range}) records the highest advertisement duration with ${formatGraph9DurationValue(leader.total, true)}, contributing ${formatInsightPercent(leader.percentage)} of total airtime.`;
+      }
+      return `${scopeLabel} records its highest advertisement duration during ${leader.label} (${leader.range}) with ${formatGraph9DurationValue(leader.total, true)}.`;
     }
     function buildGraph10Insight(rows) {
       const matrix = buildCategoryProgrammeMatrix(rows, getTopNLimit('g10'));
@@ -4298,17 +4427,23 @@ __DOM_SECTIONS_JS__
       resetChartBoxHeight(dom.sections.g1.chart);
       const { svg, width, height } = makeSvg(dom.sections.g1.chart);
       svg.style.fontFamily = '"Segoe UI", Arial, sans-serif';
-      const margin = { top: 18, right: 24, bottom: 118, left: 70 };
+      const margin = { top: 18, right: 24, bottom: 118, left: 84 };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
       const compact = isTop20Mode('g1');
       const maxValue = withAxisHeadroom(Math.max(...topAdvertisers.map(item => item.total), 1));
       drawAxes(svg, margin, plotW, plotH, 'Top Advertisers', metricLabel(), width, height, maxValue, {
-        tickFormatter: value => formatGraph1MetricValue(value)
+        tickFormatter: value => formatGraph1MetricValue(value),
+        yAxisOffset: 76
       });
       const slotCount = Math.max(Number.parseInt(state.sections.g1.topN, 10) || topAdvertisers.length, 1);
-      const groupW = plotW / slotCount;
-      const barW = Math.max(groupW - 18, 18);
+      const { groupW, barW } = resolveVerticalBarLayout(plotW, topAdvertisers.length, {
+        slotCountFloor: slotCount,
+        gap: 18,
+        minBarWidth: 18,
+        maxSingleBarWidth: 160,
+        maxBarWidth: compact ? 56 : 72
+      });
       topAdvertisers.forEach((item, index) => {
         const x = margin.left + index * groupW + (groupW - barW) / 2;
         const h = (item.total / maxValue) * plotH;
@@ -4349,16 +4484,23 @@ __DOM_SECTIONS_JS__
       }
       resetChartBoxHeight(dom.sections.g2.chart);
       const { svg, width, height } = makeSvg(dom.sections.g2.chart);
-      const margin = { top: 18, right: 24, bottom: 118, left: 58 };
+      const margin = { top: 18, right: 24, bottom: 118, left: 82 };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
       const compact = isTop20Mode('g2');
       const maxValue = withAxisHeadroom(Math.max(...matrix.rows.flatMap(row => matrix.channels.map(channel => row.values[channel] || 0)), 1));
-      drawAxes(svg, margin, plotW, plotH, advertisorLabel(), metricLabel(), width, height, maxValue);
-      const groupW = plotW / Math.max(matrix.rows.length, 1);
-      const barW = Math.max((groupW - 14) / Math.max(matrix.channels.length, 1) - 2, 4);
+      drawAxes(svg, margin, plotW, plotH, advertisorLabel(), metricLabel(), width, height, maxValue, {
+        yAxisOffset: 76
+      });
+      const { groupW, barW, clusterW } = resolveGroupedBarLayout(plotW, matrix.rows.length, matrix.channels.length, {
+        groupPadding: 14,
+        barGap: 2,
+        minBarWidth: 4,
+        maxSingleBarWidth: 26,
+        maxBarWidth: compact ? 18 : 24
+      });
       matrix.rows.forEach((row, gi) => {
-        const startX = margin.left + gi * groupW + 7;
+        const startX = margin.left + gi * groupW + Math.max((groupW - clusterW) / 2, 7);
         if (gi > 0) {
           const dividerX = margin.left + gi * groupW;
           svg.appendChild(svgEl('line', {
@@ -4402,139 +4544,7 @@ __DOM_SECTIONS_JS__
         color: channelColor(channel, 'g2')
       })));
     }
-    function drawGraph2Pie(rows) {
-      applyChartDensity('g2');
-      const distribution = buildChannelDistribution(rows);
-      if (!distribution.length) {
-        drawEmpty(dom.sections.g2.chart, 'No data available for selected filters');
-        dom.sections.g2.legend.innerHTML = '';
-        if (dom.sections.g2.metric) dom.sections.g2.metric.textContent = '';
-        return;
-      }
-      resetChartBoxHeight(dom.sections.g2.chart);
-      const { svg, width, height } = makeSvg(dom.sections.g2.chart);
-      const cx = width * 0.44;
-      const cy = height * 0.53;
-      const radius = Math.min(width, height) * 0.31;
-      const innerRadius = radius * 0.42;
-      const total = distribution.reduce((sum, item) => sum + item.total, 0) || 1;
-      const compact = isTop20Mode('g2');
-      if (dom.sections.g2.metric) {
-        dom.sections.g2.metric.textContent = `Total advertisement duration: ${formatDurationValue(total, true)}`;
-      }
-      let startAngle = -Math.PI / 2;
-      function polar(r, angle) {
-        return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
-      }
-      distribution.forEach(item => {
-        const fraction = item.total / total;
-        const endAngle = startAngle + fraction * Math.PI * 2;
-        const outerStart = polar(radius, startAngle);
-        const outerEnd = polar(radius, endAngle);
-        const innerStart = polar(innerRadius, endAngle);
-        const innerEnd = polar(innerRadius, startAngle);
-        const largeArc = fraction > 0.5 ? 1 : 0;
-        const path = [
-          `M ${outerStart.x} ${outerStart.y}`,
-          `A ${radius} ${radius} 0 ${largeArc} 1 ${outerEnd.x} ${outerEnd.y}`,
-          `L ${innerStart.x} ${innerStart.y}`,
-          `A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${innerEnd.x} ${innerEnd.y}`,
-          'Z'
-        ].join(' ');
-        const fill = channelColor(item.channel, 'g2');
-        svg.appendChild(svgEl('path', { d: path, fill, stroke: '#ffffff', 'stroke-width': 1.2 }));
-        const title = svgEl('title');
-        title.textContent = `Channel: ${item.channel}\n${metricLabel()}: ${formatDurationValue(item.total, true)}\nShare: ${(fraction * 100).toFixed(0)}%`;
-        svg.lastChild.appendChild(title);
-        const mid = startAngle + (endAngle - startAngle) / 2;
-        const label = polar(radius + 38, mid);
-        addWrappedText(svg, `${item.channel} ${formatDurationValue(item.total, true)} ${(fraction * 100).toFixed(0)}%`, label.x, label.y, compact ? 13 : 16, '#1f2937', compact ? 8.6 : 10, mid > Math.PI / 2 || mid < -Math.PI / 2 ? 'end' : 'start', 700);
-        startAngle = endAngle;
-      });
-      renderLegend(dom.sections.g2.legend, distribution.map(item => ({
-        label: item.channel,
-        color: channelColor(item.channel, 'g2')
-      })));
-    }
-    function drawGraph3Bar(rows) {
-      applyChartDensity('g3');
-      const topAdvertisors = aggregateAdvertisors(rows).slice(0, Number.parseInt(state.sections.g3.topN, 10));
-      const matrix = buildAdvertisorDateMatrix(rows, topAdvertisors);
-      if (!matrix.rows.length || !topAdvertisors.length) {
-        drawEmpty(dom.sections.g3.chart, 'No data available for selected filters');
-        dom.sections.g3.legend.innerHTML = '';
-        return;
-      }
-      const compact = isTop20Mode('g3');
-      const dynamicHeight = compact
-        ? 580 + Math.max(0, topAdvertisors.length - 10) * 14 + Math.max(0, matrix.rows.length - 7) * 8
-        : 500;
-      setChartBoxHeight(dom.sections.g3.chart, dynamicHeight);
-      const { svg, width, height } = makeSvg(dom.sections.g3.chart);
-      const margin = {
-        top: 18,
-        right: compact ? 34 : 24,
-        bottom: compact ? 116 : 86,
-        left: compact ? 72 : 60
-      };
-      const plotW = width - margin.left - margin.right;
-      const plotH = height - margin.top - margin.bottom;
-      const maxValue = withAxisHeadroom(Math.max(...matrix.rows.flatMap(row => topAdvertisors.map(item => row.values[item.advertisor] || 0)), 1));
-      drawAxes(svg, margin, plotW, plotH, 'Date', metricLabel(), width, height, maxValue, {
-        yAxisOffset: compact ? 72 : 68
-      });
-      const groupW = plotW / Math.max(matrix.rows.length, 1);
-      const barW = Math.max((groupW - 14) / Math.max(topAdvertisors.length, 1) - 2, compact ? 4 : 3);
-      for (let gi = 0; gi <= matrix.rows.length; gi++) {
-        const x = margin.left + gi * groupW;
-        svg.appendChild(svgEl('line', {
-          x1: x,
-          y1: margin.top,
-          x2: x,
-          y2: margin.top + plotH,
-          stroke: '#e5e7eb',
-          'stroke-width': 1
-        }));
-      }
-      matrix.rows.forEach((row, gi) => {
-        const startX = margin.left + gi * groupW + 7;
-        topAdvertisors.forEach((item, pi) => {
-          const value = row.values[item.advertisor] || 0;
-          const h = (value / maxValue) * plotH;
-          const x = startX + pi * (barW + 2);
-          const y = margin.top + plotH - h;
-          svg.appendChild(svgEl('rect', {
-            x, y, width: barW, height: h, rx: 2,
-            fill: chartPalettes.g3[pi % chartPalettes.g3.length],
-            stroke: 'rgba(255,255,255,0.18)',
-            'stroke-width': 0.8
-          }));
-          if (value && ((compact && barW >= 8 && h >= 18) || (!compact && barW >= 7 && h >= 14))) {
-            const dataLabel = svgEl('text', {
-              x: x + barW / 2, y: Math.max(y - 6, margin.top + 10),
-              fill: '#000000', 'font-size': compact ? 8.8 : 11.5, 'font-weight': 700, 'text-anchor': 'middle'
-            });
-            dataLabel.textContent = value ? formatDurationValue(value) : '';
-            svg.appendChild(dataLabel);
-          }
-        });
-        addWrappedText(
-          svg,
-          formatDate(row.date),
-          startX + ((topAdvertisors.length * (barW + 2)) - 2) / 2,
-          margin.top + plotH + 18,
-          compact ? 7 : 10,
-          '#1f2937',
-          compact ? 8.2 : 10.5,
-          'middle',
-          700
-        );
-      });
-      renderLegend(dom.sections.g3.legend, topAdvertisors.map((item, idx) => ({
-        label: item.advertisor,
-        color: chartPalettes.g3[idx % chartPalettes.g3.length]
-      })));
-    }
+    /* CHANGED: removed Graph 2 pie view and Graph 3 bar view so each graph keeps one standardized visualization mode. */
     function drawGraph3Heatmap(rows) {
       applyChartDensity('g3');
       const topAdvertisors = aggregateAdvertisors(rows).slice(0, Number.parseInt(state.sections.g3.topN, 10));
@@ -4550,11 +4560,16 @@ __DOM_SECTIONS_JS__
         : 200 + topAdvertisors.length * 22;
       setChartBoxHeight(dom.sections.g3.chart, dynamicHeight);
       const { svg, width, height } = makeSvg(dom.sections.g3.chart);
+      const yAxisLayout = resolveYAxisLayout(compact ? 196 : 160, topAdvertisors.map(item => item.advertisor), {
+        fontSize: compact ? 8.8 : 11,
+        maxCharsPerLine: compact ? 14 : 16,
+        titleGap: 86
+      });
       const margin = {
         top: 24,
         right: compact ? 36 : 28,
         bottom: compact ? 118 : 92,
-        left: compact ? 196 : 160
+        left: yAxisLayout.left
       };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
@@ -4572,7 +4587,7 @@ __DOM_SECTIONS_JS__
       });
       xAxisLabel.textContent = 'Date';
       svg.appendChild(xAxisLabel);
-      appendYAxisTitle(svg, margin, plotH, 'Advertiser', { fontSize: 17, fontWeight: 800, offset: 82 });
+      appendYAxisTitle(svg, margin, plotH, 'Advertiser', { fontSize: 17, fontWeight: 800, offset: yAxisLayout.offset });
       for (let gi = 0; gi <= matrix.rows.length; gi++) {
         const x = margin.left + gi * cellW;
         svg.appendChild(svgEl('line', {
@@ -4664,11 +4679,16 @@ __DOM_SECTIONS_JS__
       svg.setAttribute('height', String(height));
       svg.setAttribute('class', 'chart');
       box.appendChild(svg);
+      const yAxisLayout = resolveYAxisLayout(compact ? 196 : 168, matrix.categories, {
+        fontSize: compact ? 8.8 : 10.8,
+        maxCharsPerLine: compact ? 14 : 18,
+        titleGap: 86
+      });
       const margin = {
         top: 24,
         right: compact ? 36 : 28,
         bottom: compact ? 122 : 96,
-        left: compact ? 196 : 168
+        left: yAxisLayout.left
       };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
@@ -4685,7 +4705,7 @@ __DOM_SECTIONS_JS__
       });
       xAxisLabel.textContent = 'Channel';
       svg.appendChild(xAxisLabel);
-      appendYAxisTitle(svg, margin, plotH, 'Category', { fontSize: 17, fontWeight: 800, offset: 82 });
+      appendYAxisTitle(svg, margin, plotH, 'Category', { fontSize: 17, fontWeight: 800, offset: yAxisLayout.offset });
       for (let ci = 0; ci <= matrix.channels.length; ci++) {
         const x = margin.left + ci * cellW;
         svg.appendChild(svgEl('line', {
@@ -4769,7 +4789,12 @@ __DOM_SECTIONS_JS__
       }
       setChartBoxHeight(dom.sections.g5.chart, 460);
       const { svg, width, height } = makeSvg(dom.sections.g5.chart);
-      const margin = { top: 24, right: 24, bottom: 72, left: 136 };
+      const yAxisLayout = resolveYAxisLayout(136, matrix.channels, {
+        fontSize: 11,
+        maxCharsPerLine: 16,
+        titleGap: 86
+      });
+      const margin = { top: 24, right: 24, bottom: 72, left: yAxisLayout.left };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
       const cellW = plotW / Math.max(matrix.hours.length, 1);
@@ -4777,7 +4802,7 @@ __DOM_SECTIONS_JS__
       const xAxisLabel = svgEl('text', { x: margin.left + plotW / 2, y: height - 8, fill: '#1f2937', 'font-size': 15, 'font-weight': 700, 'text-anchor': 'middle' });
       xAxisLabel.textContent = 'Hour of Day';
       svg.appendChild(xAxisLabel);
-      appendYAxisTitle(svg, margin, plotH, 'Channel', { fontSize: 15, fontWeight: 700, offset: 82 });
+      appendYAxisTitle(svg, margin, plotH, 'Channel', { fontSize: 15, fontWeight: 700, offset: yAxisLayout.offset });
       matrix.hours.forEach((hour, ci) => {
         addWrappedText(svg, hourLabel(hour), margin.left + ci * cellW + cellW / 2, margin.top + plotH + 18, 5, '#6b7280', 10.5, 'middle', 700);
       });
@@ -4864,7 +4889,7 @@ __DOM_SECTIONS_JS__
       function polar(r, angle) {
         return { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
       }
-      distribution.forEach((item, index) => {
+      distribution.forEach(item => {
         const fraction = item.spots / totalSpots;
         const endAngle = startAngle + fraction * Math.PI * 2;
         const outerStart = polar(radius, startAngle);
@@ -4881,7 +4906,7 @@ __DOM_SECTIONS_JS__
         ].join(' ');
         const segment = svgEl('path', {
           d: path,
-          fill: chartPalettes.g6[index % chartPalettes.g6.length],
+          fill: graph6DurationColor(item.seconds),
           stroke: '#ffffff',
           'stroke-width': 1.5
         });
@@ -4928,9 +4953,9 @@ __DOM_SECTIONS_JS__
         const leader = distribution.slice().sort((a, b) => b.spots - a.spots)[0];
         dom.sections.g6.metric.textContent = `Most used creative: ${leader.label} • ${formatCount(leader.spots)} spots • ${leader.share.toFixed(1)}% share`;
       }
-      renderLegend(dom.sections.g6.legend, distribution.map((item, index) => ({
+      renderLegend(dom.sections.g6.legend, distribution.map(item => ({
         label: `${item.label} (${formatCount(item.spots)})`,
-        color: chartPalettes.g6[index % chartPalettes.g6.length]
+        color: graph6DurationColor(item.seconds)
       })));
     }
     function drawGraph6Bar(rows) {
@@ -4944,13 +4969,12 @@ __DOM_SECTIONS_JS__
       }
       setChartBoxHeight(dom.sections.g6.chart, 500);
       const { svg, width, height } = makeSvg(dom.sections.g6.chart);
-      const barGradient = appendLinearGradient(
-        svg,
-        'g6BarGradient',
-        themeVar('--brand', '#2563eb'),
-        themeVar('--teal', '#0f766e')
-      );
-      const margin = { top: 26, right: 104, bottom: 48, left: 152 };
+      const yAxisLayout = resolveYAxisLayout(152, distribution.map(item => item.label), {
+        fontSize: 10.6,
+        maxCharsPerLine: 14,
+        titleGap: 84
+      });
+      const margin = { top: 26, right: 104, bottom: 48, left: yAxisLayout.left };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
       const maxSpots = Math.max(...distribution.map(item => item.spots), 1);
@@ -4972,7 +4996,7 @@ __DOM_SECTIONS_JS__
           width: Math.max(widthValue, item.spots ? 4 : 0),
           height: barHeight,
           rx: 8,
-          fill: barGradient
+          fill: graph6DurationColor(item.seconds)
         });
         const title = svgEl('title');
         title.textContent = `${item.label}\nTotal Spots: ${formatCount(item.spots)}\nShare: ${item.share.toFixed(1)}%`;
@@ -5000,23 +5024,13 @@ __DOM_SECTIONS_JS__
       });
       xAxisTitle.textContent = 'Number of Advertisement Spots';
       svg.appendChild(xAxisTitle);
-      const yAxisTitle = svgEl('text', {
-        x: 22,
-        y: margin.top + plotH / 2,
-        fill: '#1f2937',
-        'font-size': 13,
-        'font-weight': 800,
-        'text-anchor': 'middle',
-        transform: `rotate(-90 22 ${margin.top + plotH / 2})`
-      });
-      yAxisTitle.textContent = 'Creative Duration (Seconds)';
-      svg.appendChild(yAxisTitle);
+      appendYAxisTitle(svg, margin, plotH, 'Creative Duration (Seconds)', { offset: yAxisLayout.offset });
       if (dom.sections.g6.metric) {
         dom.sections.g6.metric.textContent = `Creative duration mix across ${formatCount(totalSpots)} filtered ad spots`;
       }
-      renderLegend(dom.sections.g6.legend, distribution.map((item, index) => ({
+      renderLegend(dom.sections.g6.legend, distribution.map(item => ({
         label: item.label,
-        color: chartPalettes.g6[index % chartPalettes.g6.length]
+        color: graph6DurationColor(item.seconds)
       })));
     }
     function drawGraph7(rows) {
@@ -5027,7 +5041,7 @@ __DOM_SECTIONS_JS__
       }
       setChartBoxHeight(dom.sections.g7.chart, 500);
       const { svg, width, height } = makeSvg(dom.sections.g7.chart);
-      const margin = { top: 28, right: 34, bottom: 98, left: 76 };
+      const margin = { top: 28, right: 34, bottom: 98, left: 88 };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
       const maxSpots = withAxisHeadroom(Math.max(...points.map(point => point.spots), 1));
@@ -5087,7 +5101,7 @@ __DOM_SECTIONS_JS__
         );
       });
       addWrappedText(svg, 'Date', margin.left + plotW / 2, height - 12, 20, '#1f2937', 13, 'middle', 800);
-      appendYAxisTitle(svg, margin, plotH, 'Number of Ad Spots');
+      appendYAxisTitle(svg, margin, plotH, 'Number of Ad Spots', { offset: 78 });
       pathPoints.forEach((point, index) => {
         const denseLabels = points.length > 10;
         const labelY = margin.top + plotH + (denseLabels ? 34 : 20);
@@ -5112,7 +5126,10 @@ __DOM_SECTIONS_JS__
         return;
       }
       const compact = getTopNLimit('g8') >= 20;
-      setChartBoxHeight(dom.sections.g8.chart, compact ? 580 : 460);
+      setChartBoxHeight(dom.sections.g8.chart, resolveCompactChartHeight(categories.length, compact ? 580 : 460, {
+        singleHeight: 320,
+        doubleHeight: 380
+      }));
       const { svg, width, height } = makeSvg(dom.sections.g8.chart);
       const barGradient = appendLinearGradient(
         svg,
@@ -5120,7 +5137,7 @@ __DOM_SECTIONS_JS__
         themeVar('--brand', '#2563eb'),
         themeVar('--teal', '#0f766e')
       );
-      const margin = { top: 24, right: 24, bottom: compact ? 124 : 100, left: 80 };
+      const margin = { top: 24, right: 24, bottom: compact ? 124 : 100, left: 92 };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
       const maxSpots = withAxisHeadroom(Math.max(...categories.map(item => item.spots), 1));
@@ -5131,8 +5148,12 @@ __DOM_SECTIONS_JS__
         tick.textContent = formatCount((maxSpots * i) / 4);
         svg.appendChild(tick);
       }
-      const groupW = plotW / Math.max(categories.length, 1);
-      const barW = Math.max(groupW - 18, compact ? 18 : 26);
+      const { groupW, barW } = resolveVerticalBarLayout(plotW, categories.length, {
+        gap: 18,
+        minBarWidth: compact ? 18 : 26,
+        maxSingleBarWidth: 180,
+        maxBarWidth: compact ? 44 : 64
+      });
       categories.forEach((item, index) => {
         const x = margin.left + index * groupW + (groupW - barW) / 2;
         const barHeight = (item.spots / maxSpots) * plotH;
@@ -5162,90 +5183,148 @@ __DOM_SECTIONS_JS__
         addWrappedText(svg, item.category, x + barW / 2, margin.top + plotH + 18, compact ? 10 : 12, '#1f2937', compact ? 8.8 : 10.2, 'middle', 700);
       });
       addWrappedText(svg, 'Advertiser Categories', margin.left + plotW / 2, height - 10, 24, '#1f2937', 13, 'middle', 800);
-      appendYAxisTitle(svg, margin, plotH, 'Number of Ad Spots', { offset: 76 });
+      appendYAxisTitle(svg, margin, plotH, 'Number of Ad Spots', { offset: 80 });
       renderLegend(dom.sections.g8.legend, [{
         label: 'Advertisement Spots',
         color: themeVar('--brand', '#2563eb')
       }]);
     }
     function drawGraph9(rows) {
-      const programmes = buildProgrammeInsights(rows, getTopNLimit('g9'));
-      if (!programmes.length) {
-        drawEmpty(dom.sections.g9.chart, 'No programme data available for the selected filters');
+      const buckets = buildGraph9DayPartDistribution(rows);
+      const totalAirtime = buckets.reduce((sum, item) => sum + item.total, 0) || 0;
+      if (!totalAirtime) {
+        drawEmpty(dom.sections.g9.chart, 'No day-part airtime is available for the selected filters');
         dom.sections.g9.legend.innerHTML = '';
         return;
       }
-      const compact = programmes.length >= 15;
-      setChartBoxHeight(dom.sections.g9.chart, compact ? 620 : 520);
+      const section = dom.sections.g9.panel && dom.sections.g9.panel.closest('.section');
+      const heading = section && section.querySelector('.section-head h2');
+      const fullscreenHeading = dom.sections.g9.panel && dom.sections.g9.panel.querySelector('.fullscreen-focus-header h3');
+      const titleText = 'Advertisement Time Distribution by Day Part';
+      if (heading) heading.textContent = titleText;
+      if (fullscreenHeading) fullscreenHeading.textContent = titleText;
+      setChartBoxHeight(dom.sections.g9.chart, 384);
       const { svg, width, height } = makeSvg(dom.sections.g9.chart);
-      const margin = { top: 32, right: 34, bottom: compact ? 126 : 112, left: 72 };
+      const margin = { top: 34, right: 34, bottom: 110, left: 100 };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
-      const maxAirtime = withAxisHeadroom(Math.max(...programmes.map(item => item.airtime), 1));
-      for (let i = 0; i <= 4; i++) {
-        const y = margin.top + plotH - (plotH * i / 4);
-        svg.appendChild(svgEl('line', { x1: margin.left, y1: y, x2: margin.left + plotW, y2: y, stroke: '#e5e7eb', 'stroke-width': 1 }));
-        const yTick = svgEl('text', { x: margin.left - 8, y: y + 5, fill: '#6b7280', 'font-size': 12, 'text-anchor': 'end' });
-        yTick.textContent = formatDurationValue((maxAirtime * i) / 4);
-        svg.appendChild(yTick);
+      const maxAirtime = withAxisHeadroom(Math.max(...buckets.map(item => item.total), 1));
+      const scopeLabel = graph9ChannelScopeLabel((state.sections.g9 && state.sections.g9.channel) || state.global.channel || []);
+      drawAxes(svg, margin, plotW, plotH, '', 'Total Advertisement Time', width, height, maxAirtime, {
+        tickFormatter: value => formatGraph9DurationValue(value),
+        yAxisOffset: 82
+      });
+      const groupW = plotW / GRAPH9_DAY_PARTS.length;
+      const baseY = margin.top + plotH;
+      const stemStroke = 3.6;
+      const hoverItems = [];
+      function applyHover(activeIndex) {
+        hoverItems.forEach((item, index) => {
+          const isActive = activeIndex === index;
+          const hasActive = activeIndex !== null && activeIndex !== undefined;
+          item.group.style.opacity = hasActive && !isActive ? '0.34' : '1';
+          item.guide.style.opacity = isActive ? '1' : '0';
+          item.glow.setAttribute('opacity', isActive ? '0.18' : '0');
+          item.stem.setAttribute('stroke', isActive ? brightenColor(item.color, 0.22) : item.color);
+          item.stem.setAttribute('stroke-width', isActive ? String(stemStroke + 1.4) : String(stemStroke));
+          item.circle.setAttribute('fill', isActive ? brightenColor(item.color, 0.18) : item.color);
+          item.circle.setAttribute('r', isActive ? '14.2' : '12');
+          item.label.setAttribute('fill', isActive ? brightenColor(item.color, 0.08) : '#1f2937');
+        });
       }
-      const slotCount = Math.max(programmes.length, 1);
-      const groupW = plotW / slotCount;
-      const stemStroke = 3;
-      programmes.forEach((item, index) => {
+      buckets.forEach((item, index) => {
         const x = margin.left + index * groupW + groupW / 2;
-        const y = margin.top + plotH - ((item.airtime / maxAirtime) * plotH);
-        const radius = compact ? 11 : 12.5;
-        const fill = programmeTypeColor(item.type);
+        const y = baseY - ((item.total / maxAirtime) * plotH);
+        const color = item.color;
+        const guide = svgEl('line', {
+          x1: x,
+          y1: margin.top,
+          x2: x,
+          y2: baseY,
+          stroke: 'rgba(148, 163, 184, 0.65)',
+          'stroke-width': 1.2,
+          'stroke-dasharray': '5 5',
+          opacity: 0
+        });
+        setSvgTransition(guide, 'opacity', 180);
+        svg.appendChild(guide);
+        const group = svgEl('g');
+        group.style.transition = 'opacity 180ms ease';
         const stem = svgEl('line', {
           x1: x,
-          y1: margin.top + plotH,
+          y1: baseY,
           x2: x,
           y2: y,
-          stroke: fill,
+          stroke: color,
           'stroke-width': stemStroke,
           'stroke-linecap': 'round'
         });
-        const cherry = svgEl('circle', {
+        setSvgTransition(stem, 'stroke-width, stroke', 180);
+        const glow = svgEl('circle', {
           cx: x,
           cy: y,
-          r: radius,
-          fill,
-          stroke: '#ffffff',
-          'stroke-width': 2.2
+          r: 20,
+          fill: color,
+          opacity: 0
         });
-        const title = svgEl('title');
-        title.textContent = `Programme: ${item.programme}\nTime Category: ${graph9TimeLabel(item.type)}\nAdvertisers: ${formatCount(item.advertiserCount)}\nCategories: ${formatCount(item.categoryCount)}\nTotal Airtime: ${formatDurationValue(item.airtime, true)}\nTotal Spots: ${formatCount(item.spots)}`;
-        cherry.appendChild(title);
-        svg.appendChild(stem);
-        svg.appendChild(cherry);
+        setSvgTransition(glow, 'opacity', 180);
+        const circle = svgEl('circle', {
+          cx: x,
+          cy: y,
+          r: 12,
+          fill: color,
+          stroke: '#ffffff',
+          'stroke-width': 2.4
+        });
+        setSvgTransition(circle, 'r, fill', 180);
         const valueLabel = svgEl('text', {
           x,
-          y: Math.max(y - 14, margin.top + 12),
+          y: Math.max(y - 18, margin.top + 12),
           fill: '#1f2937',
-          'font-size': compact ? 9.5 : 10.5,
+          'font-size': 11,
           'font-weight': 800,
           'text-anchor': 'middle'
         });
-        valueLabel.textContent = formatDurationValue(item.airtime);
-        svg.appendChild(valueLabel);
-        addWrappedText(svg, item.programme, x, margin.top + plotH + 18, compact ? 8 : 10, '#1f2937', compact ? 8.6 : 9.4, 'middle', 700);
+        valueLabel.textContent = formatGraph9DurationValue(item.total);
+        setSvgTransition(valueLabel, 'fill', 180);
+        const hoverTarget = svgEl('rect', {
+          x: x - Math.min(Math.max(groupW * 0.24, 24), 46),
+          y: margin.top,
+          width: Math.min(Math.max(groupW * 0.48, 48), 92),
+          height: plotH + 34,
+          fill: 'transparent',
+          tabindex: 0,
+          cursor: 'pointer'
+        });
+        const title = svgEl('title');
+        title.textContent = `${item.label}\n${item.range.replace('-', '–')}\n\nTotal Ad Time\n${formatGraph9DurationValue(item.total, true)}\n\nChannel\n${scopeLabel}\n\n${formatInsightPercent(item.percentage)} of Total Airtime`;
+        hoverTarget.appendChild(title);
+        ['mouseenter', 'focus'].forEach(eventName => hoverTarget.addEventListener(eventName, () => applyHover(index)));
+        ['mouseleave', 'blur'].forEach(eventName => hoverTarget.addEventListener(eventName, () => applyHover(null)));
+        group.appendChild(stem);
+        group.appendChild(glow);
+        group.appendChild(circle);
+        group.appendChild(valueLabel);
+        group.appendChild(hoverTarget);
+        svg.appendChild(group);
+        const bucketLabel = svgEl('text', {
+          x,
+          y: baseY + 20,
+          fill: '#1f2937',
+          'font-size': 10.4,
+          'font-weight': 800,
+          'text-anchor': 'middle'
+        });
+        const nameTspan = svgEl('tspan', { x, dy: 0 });
+        nameTspan.textContent = item.label;
+        bucketLabel.appendChild(nameTspan);
+        svg.appendChild(bucketLabel);
+        hoverItems.push({ group, guide, glow, stem, circle, label: valueLabel, color });
       });
-      addWrappedText(svg, 'Programme', margin.left + plotW / 2, height - 10, 20, '#1f2937', 13, 'middle', 800);
-      const yAxisTitle = svgEl('text', {
-        x: 22,
-        y: margin.top + plotH / 2,
-        fill: '#1f2937',
-        'font-size': 13,
-        'font-weight': 800,
-        'text-anchor': 'middle',
-        transform: `rotate(-90 22 ${margin.top + plotH / 2})`
-      });
-      yAxisTitle.textContent = 'Total Airtime';
-      svg.appendChild(yAxisTitle);
-      renderLegend(dom.sections.g9.legend, GRAPH9_TIME_ORDER.map(type => ({
-        label: graph9TimeLabel(type),
-        color: programmeTypeColor(type)
+      addWrappedText(svg, 'Day Part', margin.left + plotW / 2, height - 12, 12, '#1f2937', 13, 'middle', 800);
+      renderLegend(dom.sections.g9.legend, GRAPH9_DAY_PARTS.map(item => ({
+        label: `${item.label} (${item.range.replace('-', '–')})`,
+        color: item.color
       })));
     }
     function drawGraph10(rows) {
@@ -5271,7 +5350,12 @@ __DOM_SECTIONS_JS__
       svg.setAttribute('height', String(height));
       svg.setAttribute('class', 'chart chart-animated');
       box.appendChild(svg);
-      const margin = { top: 26, right: 28, bottom: compact ? 124 : 94, left: compact ? 196 : 164 };
+      const yAxisLayout = resolveYAxisLayout(compact ? 196 : 164, matrix.categories, {
+        fontSize: compact ? 8.8 : 10.8,
+        maxCharsPerLine: compact ? 14 : 18,
+        titleGap: 86
+      });
+      const margin = { top: 26, right: 28, bottom: compact ? 124 : 94, left: yAxisLayout.left };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
       const cellW = plotW / Math.max(matrix.programmeTypes.length, 1);
@@ -5330,17 +5414,7 @@ __DOM_SECTIONS_JS__
         });
       });
       addWrappedText(svg, 'Programme Type', margin.left + plotW / 2, height - 10, 20, '#1f2937', 13, 'middle', 800);
-      const yAxisTitle = svgEl('text', {
-        x: 22,
-        y: margin.top + plotH / 2,
-        fill: '#1f2937',
-        'font-size': 13,
-        'font-weight': 800,
-        'text-anchor': 'middle',
-        transform: `rotate(-90 22 ${margin.top + plotH / 2})`
-      });
-      yAxisTitle.textContent = 'Category';
-      svg.appendChild(yAxisTitle);
+      appendYAxisTitle(svg, margin, plotH, 'Category', { offset: yAxisLayout.offset });
     }
     function drawGraph11(rows) {
       const compareCount = (state.sections.g11 && state.sections.g11.topN) || '3';
@@ -5356,7 +5430,7 @@ __DOM_SECTIONS_JS__
       }
       setChartBoxHeight(dom.sections.g11.chart, 520);
       const { svg, width, height } = makeSvg(dom.sections.g11.chart);
-      const margin = { top: 24, right: 28, bottom: 92, left: 62 };
+      const margin = { top: 24, right: 28, bottom: 92, left: 84 };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
       for (let i = 0; i <= 4; i++) {
@@ -5374,16 +5448,17 @@ __DOM_SECTIONS_JS__
         const barWidth = Math.min(140, plotW * 0.36);
         const x = margin.left + (plotW - barWidth) / 2;
         let offset = 0;
-        trend.advertisers.forEach((advertiser, index) => {
+        trend.advertisers.forEach(advertiser => {
           const share = trend.points[0].values[advertiser] || 0;
           const barHeight = plotH * (share / 100);
           const y = margin.top + plotH - offset - barHeight;
+          const color = advertiserColor(advertiser);
           const rect = svgEl('rect', {
             x,
             y,
             width: barWidth,
             height: Math.max(barHeight, 0),
-            fill: advertiser === 'Others' ? GRAPH11_OTHERS_COLOR : chartPalettes.g11[index % chartPalettes.g11.length],
+            fill: color,
             'fill-opacity': advertiser === 'Others' ? 0.50 : 0.72
           });
           const title = svgEl('title');
@@ -5394,8 +5469,8 @@ __DOM_SECTIONS_JS__
         });
       } else {
         const cumulative = trend.points.map(() => 0);
-        trend.advertisers.forEach((advertiser, index) => {
-          const color = advertiser === 'Others' ? GRAPH11_OTHERS_COLOR : chartPalettes.g11[index % chartPalettes.g11.length];
+        trend.advertisers.forEach(advertiser => {
+          const color = advertiserColor(advertiser);
           const upperPoints = [];
           const lowerPoints = [];
           trend.points.forEach((point, pointIndex) => {
@@ -5408,9 +5483,9 @@ __DOM_SECTIONS_JS__
           const polygon = svgEl('polygon', {
             points: [...upperPoints, ...lowerPoints.reverse()].map(([x, y]) => `${x},${y}`).join(' '),
             fill: color,
-            'fill-opacity': advertiser === 'Others' ? 0.42 : 0.22,
+            'fill-opacity': advertiser === 'Others' ? 0.42 : 0.26,
             stroke: color,
-            'stroke-width': 1.4
+            'stroke-width': 1.7
           });
           const title = svgEl('title');
           title.textContent = advertiser;
@@ -5436,10 +5511,10 @@ __DOM_SECTIONS_JS__
         svg.appendChild(label);
       });
       addWrappedText(svg, 'Date', margin.left + plotW / 2, height - 10, 20, '#1f2937', 13, 'middle', 800);
-      appendYAxisTitle(svg, margin, plotH, 'Share of Voice (%)');
-      renderLegend(dom.sections.g11.legend, trend.advertisers.map((advertiser, index) => ({
+      appendYAxisTitle(svg, margin, plotH, 'Share of Voice (%)', { offset: 78 });
+      renderLegend(dom.sections.g11.legend, trend.advertisers.map(advertiser => ({
         label: advertiser === 'Others' ? 'Others' : titleCaseName(advertiser),
-        color: advertiser === 'Others' ? GRAPH11_OTHERS_COLOR : chartPalettes.g11[index % chartPalettes.g11.length]
+        color: advertiserColor(advertiser)
       })));
       const compareLabel = compareCount === 'all'
         ? 'all advertisers'
@@ -5454,7 +5529,10 @@ __DOM_SECTIONS_JS__
         return;
       }
       const compact = channels.length >= 10;
-      setChartBoxHeight(dom.sections.g12.chart, compact ? 620 : 540);
+      setChartBoxHeight(dom.sections.g12.chart, resolveCompactChartHeight(channels.length, compact ? 430 : 384, {
+        singleHeight: 250,
+        doubleHeight: 300
+      }));
       const { svg, width, height } = makeSvg(dom.sections.g12.chart);
       const gradient = appendLinearGradient(
         svg,
@@ -5462,7 +5540,12 @@ __DOM_SECTIONS_JS__
         themeVar('--brand', '#2563eb'),
         themeVar('--teal', '#0f766e')
       );
-      const margin = { top: 26, right: 110, bottom: 70, left: 132 };
+      const yAxisLayout = resolveYAxisLayout(132, channels.map(item => item.channel), {
+        fontSize: 10,
+        maxCharsPerLine: 16,
+        titleGap: 84
+      });
+      const margin = { top: 26, right: 110, bottom: 70, left: yAxisLayout.left };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
       const maxTotal = withAxisHeadroom(Math.max(...channels.map(item => item.total), 1));
@@ -5521,17 +5604,7 @@ __DOM_SECTIONS_JS__
         svg.appendChild(detailLabel);
       });
       addWrappedText(svg, `Total Ad Duration (${activeTimeUnit() === 'minutes' ? 'Min' : 'Sec'})`, margin.left + plotW / 2, height - 10, 26, '#1f2937', 13, 'middle', 800);
-      const yAxisTitle = svgEl('text', {
-        x: 22,
-        y: margin.top + plotH / 2,
-        fill: '#1f2937',
-        'font-size': 13,
-        'font-weight': 800,
-        'text-anchor': 'middle',
-        transform: `rotate(-90 22 ${margin.top + plotH / 2})`
-      });
-      yAxisTitle.textContent = 'Channel';
-      svg.appendChild(yAxisTitle);
+      appendYAxisTitle(svg, margin, plotH, 'Channel', { offset: yAxisLayout.offset });
       dom.sections.g12.metric.textContent = 'Bar length shows total ad duration, with inline labels for ad spots and average creative duration.';
     }
     function drawGraph13(rows) {
@@ -5543,7 +5616,10 @@ __DOM_SECTIONS_JS__
         return;
       }
       const compact = concentration.length >= 10;
-      setChartBoxHeight(dom.sections.g13.chart, compact ? 620 : 520);
+      setChartBoxHeight(dom.sections.g13.chart, resolveCompactChartHeight(concentration.length, compact ? 620 : 520, {
+        singleHeight: 280,
+        doubleHeight: 340
+      }));
       const { svg, width, height } = makeSvg(dom.sections.g13.chart);
       const gradient = appendLinearGradient(
         svg,
@@ -5551,7 +5627,12 @@ __DOM_SECTIONS_JS__
         themeVar('--brand', '#2563eb'),
         themeVar('--teal', '#0f766e')
       );
-      const margin = { top: 24, right: 36, bottom: 72, left: 132 };
+      const yAxisLayout = resolveYAxisLayout(132, concentration.map(item => item.channel), {
+        fontSize: 10,
+        maxCharsPerLine: 16,
+        titleGap: 84
+      });
+      const margin = { top: 24, right: 36, bottom: 72, left: yAxisLayout.left };
       const plotW = width - margin.left - margin.right;
       const plotH = height - margin.top - margin.bottom;
       const rowH = plotH / Math.max(concentration.length, 1);
@@ -5600,17 +5681,7 @@ __DOM_SECTIONS_JS__
         svg.appendChild(label);
       });
       addWrappedText(svg, 'Top 5 Advertiser Share of Channel Duration', margin.left + plotW / 2, height - 10, 28, '#1f2937', 13, 'middle', 800);
-      const yAxisTitle = svgEl('text', {
-        x: 22,
-        y: margin.top + plotH / 2,
-        fill: '#1f2937',
-        'font-size': 13,
-        'font-weight': 800,
-        'text-anchor': 'middle',
-        transform: `rotate(-90 22 ${margin.top + plotH / 2})`
-      });
-      yAxisTitle.textContent = 'Channel';
-      svg.appendChild(yAxisTitle);
+      appendYAxisTitle(svg, margin, plotH, 'Channel', { offset: yAxisLayout.offset });
       renderLegend(dom.sections.g13.legend, [{
         label: 'Top 5 advertiser share',
         color: themeVar('--brand', '#2563eb')
@@ -5926,13 +5997,12 @@ __DOM_SECTIONS_JS__
         dom.statusText.textContent = snapshot.statusText;
       }
       applyGlobalStateToSections();
-      if (dom.sections.g2.barBtn && dom.sections.g2.pieBtn) {
-        dom.sections.g2.barBtn.classList.toggle('active', state.sections.g2.view !== 'pie');
-        dom.sections.g2.pieBtn.classList.toggle('active', state.sections.g2.view === 'pie');
+      /* CHANGED: Graph 2 and Graph 3 now keep a single standardized view, so only the remaining button stays active. */
+      if (dom.sections.g2.barBtn) {
+        dom.sections.g2.barBtn.classList.add('active');
       }
-      if (dom.sections.g3.heatmapBtn && dom.sections.g3.barBtn) {
-        dom.sections.g3.heatmapBtn.classList.toggle('active', state.sections.g3.view !== 'bar');
-        dom.sections.g3.barBtn.classList.toggle('active', state.sections.g3.view === 'bar');
+      if (dom.sections.g3.heatmapBtn) {
+        dom.sections.g3.heatmapBtn.classList.add('active');
       }
       renderAll();
     }
@@ -5990,20 +6060,8 @@ __DOM_SECTIONS_JS__
       const rows = getSectionRows(sectionKey);
       setSectionInsight(sectionKey, buildSectionInsight(sectionKey, rows));
       if (sectionKey === 'g1') drawGraph1(rows);
-      if (sectionKey === 'g2') {
-        if (state.sections.g2.view === 'pie') {
-          drawGraph2Pie(rows);
-        } else {
-          drawGraph2Bar(rows);
-        }
-      }
-      if (sectionKey === 'g3') {
-        if (state.sections.g3.view === 'bar') {
-          drawGraph3Bar(rows);
-        } else {
-          drawGraph3Heatmap(rows);
-        }
-      }
+      if (sectionKey === 'g2') drawGraph2Bar(rows);
+      if (sectionKey === 'g3') drawGraph3Heatmap(rows);
       if (sectionKey === 'g4') drawGraph4(rows);
       if (sectionKey === 'g5') drawGraph5(rows);
       if (sectionKey === 'g6') drawGraph6Bar(rows);
@@ -6177,12 +6235,10 @@ __DOM_SECTIONS_JS__
         if (sectionKey === 'g2') {
           state.sections.g2.view = 'bar';
           dom.sections.g2.barBtn.classList.add('active');
-          dom.sections.g2.pieBtn.classList.remove('active');
         }
         if (sectionKey === 'g3') {
           state.sections.g3.view = 'heat';
           dom.sections.g3.heatmapBtn.classList.add('active');
-          dom.sections.g3.barBtn.classList.remove('active');
         }
         if (sectionKey === 'g5') {
           setMultiSelectValues(controls.advertisor, []);
@@ -6288,28 +6344,15 @@ __DOM_SECTIONS_JS__
             }
           });
         }
+        /* CHANGED: keep Graph 2 on Bar Chart and Graph 3 on Heatmap after removing the alternate view toggles. */
         dom.sections.g2.barBtn.addEventListener('click', () => {
           state.sections.g2.view = 'bar';
           dom.sections.g2.barBtn.classList.add('active');
-          dom.sections.g2.pieBtn.classList.remove('active');
-          renderSection('g2');
-        });
-        dom.sections.g2.pieBtn.addEventListener('click', () => {
-          state.sections.g2.view = 'pie';
-          dom.sections.g2.pieBtn.classList.add('active');
-          dom.sections.g2.barBtn.classList.remove('active');
           renderSection('g2');
         });
         dom.sections.g3.heatmapBtn.addEventListener('click', () => {
           state.sections.g3.view = 'heat';
           dom.sections.g3.heatmapBtn.classList.add('active');
-          dom.sections.g3.barBtn.classList.remove('active');
-          renderSection('g3');
-        });
-        dom.sections.g3.barBtn.addEventListener('click', () => {
-          state.sections.g3.view = 'bar';
-          dom.sections.g3.barBtn.classList.add('active');
-          dom.sections.g3.heatmapBtn.classList.remove('active');
           renderSection('g3');
         });
         if (dom.sections.g11.compareCount) {
@@ -6361,9 +6404,11 @@ __DOM_SECTIONS_JS__
       syncGlobalState();
       applyGlobalStateToSections();
       state.initialized = true;
-      if (dom.sections.g3.heatmapBtn && dom.sections.g3.barBtn) {
-        dom.sections.g3.heatmapBtn.classList.toggle('active', state.sections.g3.view === 'heat');
-        dom.sections.g3.barBtn.classList.toggle('active', state.sections.g3.view === 'bar');
+      if (dom.sections.g2.barBtn) {
+        dom.sections.g2.barBtn.classList.add('active');
+      }
+      if (dom.sections.g3.heatmapBtn) {
+        dom.sections.g3.heatmapBtn.classList.add('active');
       }
       updateFullButtons();
       handleViewportChange();
