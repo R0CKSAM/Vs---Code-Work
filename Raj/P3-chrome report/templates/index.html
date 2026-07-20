@@ -3,49 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CHROME REPORT</title>
+  <title>Chrome Report</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <div class="app-shell">
     <header class="hero">
-      <div>
-        <p class="eyebrow">Weekly Frequency Intelligence</p>
-        <h1>CHROME REPORT</h1>
+      <div class="hero-copy">
+        <h1>Chrome Report</h1>
       </div>
-      <div class="hero-actions">
-        <button id="fullscreenButton" class="primary-button">FULL SCREEN &#x26F6;</button>
-        <button id="refreshButton" class="ghost-button">Refresh Data</button>
-        <button id="printButton" class="primary-button">Print Dashboard</button>
+      <div class="hero-meta">
+        <article class="meta-card">
+          <span>Last Refresh</span>
+          <strong id="generatedAt">--</strong>
+        </article>
+        <article class="meta-card">
+          <span>Total Records</span>
+          <strong id="totalRecords">0</strong>
+        </article>
+        <div class="hero-actions">
+          <button id="refreshButton" class="ghost-button">Refresh</button>
+          <button id="downloadDashboardButton" class="ghost-button">Download Dashboard</button>
+        </div>
       </div>
     </header>
 
-    <section class="kpi-grid">
-      <article class="kpi-card">
-        <span>Total Channels</span>
-        <strong id="kpiTotal">0</strong>
-      </article>
-      <article class="kpi-card">
-        <span>Frequency Increased</span>
-        <strong id="kpiIncrease">0</strong>
-      </article>
-      <article class="kpi-card">
-        <span>Frequency Decreased</span>
-        <strong id="kpiDecrease">0</strong>
-      </article>
-      <article class="kpi-card">
-        <span>No Change</span>
-        <strong id="kpiNoChange">0</strong>
-      </article>
-    </section>
-
     <section class="panel filter-panel">
       <div class="panel-heading">
-        <h2>Filters</h2>
-        <p>Slice the report by market, MSO type, city, and search terms.</p>
+        <div>
+          <h2>Filter Panel</h2>
+        </div>
       </div>
       <div class="filter-grid">
         <label>
@@ -53,20 +43,43 @@
           <select id="marketFilter"></select>
         </label>
         <label>
-          <span>MSO Type</span>
-          <select id="msoFilter"></select>
-        </label>
-        <label>
           <span>City</span>
           <select id="cityFilter"></select>
         </label>
-        <label class="search-field">
-          <span>Search</span>
-          <input id="searchInput" type="search" placeholder="Search channel, name, city...">
+        <label>
+          <span>MSO Type</span>
+          <select id="msoTypeFilter"></select>
+        </label>
+        <label>
+          <span>MSO</span>
+          <select id="msoFilter"></select>
+        </label>
+        <label>
+          <span>Headend</span>
+          <select id="headendFilter"></select>
+        </label>
+        <label>
+          <span>CRN No</span>
+          <select id="crnFilter"></select>
+        </label>
+        <label>
+          <span>Channel</span>
+          <select id="channelFilter"></select>
+        </label>
+        <label>
+          <span>Band</span>
+          <select id="bandFilter"></select>
+        </label>
+        <label>
+          <span>Week</span>
+          <select id="weekFilter"></select>
+        </label>
+        <label>
+          <span>Change</span>
+          <select id="changeFilter"></select>
         </label>
         <div class="action-row">
-          <button id="resetButton" class="ghost-button">Reset</button>
-          <button id="exportButton" class="primary-button">Export Filtered Excel</button>
+          <button id="resetButton" class="ghost-button">Reset Filters</button>
         </div>
       </div>
     </section>
@@ -74,13 +87,22 @@
     <section class="panel table-panel">
       <div class="panel-heading table-heading">
         <div>
-          <h2>Weekly Frequency Analysis</h2>
-          <p>Compact weekly comparison report with color-coded changes.</p>
+          <h2 id="tableTitle">Weekly Frequency Analysis</h2>
         </div>
-        <div class="table-meta">
-          <span id="resultCount">0 records</span>
+        <div class="table-side">
+          <div class="view-switcher" id="viewSwitcher">
+            <button id="frequencyViewButton" class="switch-button active" type="button">Frequency</button>
+            <button id="rankViewButton" class="switch-button" type="button">Rank</button>
+            <button id="bandViewButton" class="switch-button" type="button">Band</button>
+          </div>
+          <button id="fullscreenButton" class="primary-button" type="button">Full Screen</button>
+          <div class="table-meta">
+            <span id="resultCount">0 records</span>
+            <span id="pageInfo">Page 1</span>
+          </div>
         </div>
       </div>
+      <div id="statusMessage" class="status-message" hidden></div>
       <div class="table-wrap">
         <table id="reportTable">
           <thead id="tableHead"></thead>
@@ -89,9 +111,32 @@
       </div>
       <div class="pagination-bar">
         <button id="prevPage" class="ghost-button">Previous</button>
-        <span id="pageInfo">Page 1</span>
         <button id="nextPage" class="ghost-button">Next</button>
       </div>
+    </section>
+
+    <section class="panel focus-panel">
+      <div class="panel-heading">
+        <div>
+          <h2>Channel Summary</h2>
+        </div>
+      </div>
+      <div id="focusSummary" class="focus-summary"></div>
+    </section>
+
+    <section class="kpi-grid bottom-kpis">
+      <article class="kpi-card compact-kpi">
+        <span>Total Channels</span>
+        <strong id="kpiTotal">0</strong>
+      </article>
+      <article class="kpi-card compact-kpi">
+        <span>Frequency Increased</span>
+        <strong id="kpiIncrease">0</strong>
+      </article>
+      <article class="kpi-card compact-kpi">
+        <span>Frequency Decreased</span>
+        <strong id="kpiDecrease">0</strong>
+      </article>
     </section>
   </div>
 

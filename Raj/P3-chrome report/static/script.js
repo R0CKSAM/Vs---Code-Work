@@ -1,10 +1,17 @@
 const state = {
   response: null,
+  view: "frequency",
   filters: {
     market: "",
-    mso_type: "",
     city: "",
-    search: "",
+    mso_type: "",
+    mso: "",
+    head_end: "",
+    crn_no: "",
+    channel_name: "",
+    band: "",
+    week: "",
+    change: "",
   },
   sortKey: "channel_name",
   sortDirection: "asc",
@@ -14,7 +21,6 @@ const state = {
 };
 
 const tableColumns = [
-  { key: "transmission", label: "TRANSMISSION" },
   { key: "market", label: "MARKET" },
   { key: "mso_type", label: "MSO TYPE" },
   { key: "city", label: "CITY" },
@@ -27,15 +33,58 @@ const tableColumns = [
 ];
 
 const marketFilter = document.getElementById("marketFilter");
-const msoFilter = document.getElementById("msoFilter");
 const cityFilter = document.getElementById("cityFilter");
-const searchInput = document.getElementById("searchInput");
+const msoTypeFilter = document.getElementById("msoTypeFilter");
+const msoFilter = document.getElementById("msoFilter");
+const headendFilter = document.getElementById("headendFilter");
+const crnFilter = document.getElementById("crnFilter");
+const channelFilter = document.getElementById("channelFilter");
+const bandFilter = document.getElementById("bandFilter");
+const weekFilter = document.getElementById("weekFilter");
+const changeFilter = document.getElementById("changeFilter");
 const resultCount = document.getElementById("resultCount");
 const pageInfo = document.getElementById("pageInfo");
 const fullscreenButton = document.getElementById("fullscreenButton");
+const statusMessage = document.getElementById("statusMessage");
+const generatedAt = document.getElementById("generatedAt");
+const totalRecords = document.getElementById("totalRecords");
+const tableTitle = document.getElementById("tableTitle");
+const focusSummary = document.getElementById("focusSummary");
+const viewButtons = {
+  frequency: document.getElementById("frequencyViewButton"),
+  rank: document.getElementById("rankViewButton"),
+  band: document.getElementById("bandViewButton"),
+};
+const filterOrder = [
+  "market",
+  "city",
+  "mso_type",
+  "mso",
+  "head_end",
+  "crn_no",
+  "channel_name",
+  "band",
+  "week",
+  "change",
+];
 
 function formatNumber(value) {
   return new Intl.NumberFormat().format(value);
+}
+
+function formatTimestamp(value) {
+  if (!value) return "--";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "--";
+  return date.toLocaleString("en-IN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
 }
 
 function createOption(value, label) {
@@ -46,10 +95,12 @@ function createOption(value, label) {
 }
 
 function populateSelect(select, values, allLabel, selectedValue) {
+  const normalizedValues = Array.isArray(values) ? values.filter((value) => value !== null && value !== undefined && String(value).trim() !== "") : [];
+  const safeSelectedValue = normalizedValues.includes(selectedValue) ? selectedValue : "";
   select.innerHTML = "";
   select.appendChild(createOption("", allLabel));
-  values.forEach((value) => select.appendChild(createOption(value, value)));
-  select.value = selectedValue || "";
+  normalizedValues.forEach((value) => select.appendChild(createOption(value, value)));
+  select.value = safeSelectedValue;
 }
 
 function buildTableHead(weeks) {
@@ -76,9 +127,61 @@ function buildTableHead(weeks) {
 
 function updateKpis(summary) {
   document.getElementById("kpiTotal").textContent = formatNumber(summary.total_channels);
-  document.getElementById("kpiIncrease").textContent = formatNumber(summary.increased);
-  document.getElementById("kpiDecrease").textContent = formatNumber(summary.decreased);
-  document.getElementById("kpiNoChange").textContent = formatNumber(summary.no_change);
+  if (state.view === "rank") {
+    document.querySelector(".compact-kpi:nth-child(2) span").textContent = "Rank Improved";
+    document.querySelector(".compact-kpi:nth-child(3) span").textContent = "Rank Declined";
+    document.getElementById("kpiIncrease").textContent = formatNumber(summary.improved ?? 0);
+    document.getElementById("kpiDecrease").textContent = formatNumber(summary.declined ?? 0);
+    return;
+  }
+  if (state.view === "band") {
+    document.querySelector(".compact-kpi:nth-child(2) span").textContent = "Band Changed";
+    document.querySelector(".compact-kpi:nth-child(3) span").textContent = "Band Stable";
+    document.getElementById("kpiIncrease").textContent = formatNumber(summary.changed ?? 0);
+    document.getElementById("kpiDecrease").textContent = formatNumber(summary.stable ?? 0);
+    return;
+  }
+  document.querySelector(".compact-kpi:nth-child(2) span").textContent = "Frequency Increased";
+  document.querySelector(".compact-kpi:nth-child(3) span").textContent = "Frequency Decreased";
+  document.getElementById("kpiIncrease").textContent = formatNumber(summary.increased ?? 0);
+  document.getElementById("kpiDecrease").textContent = formatNumber(summary.decreased ?? 0);
+}
+
+function updateHeaderMeta(payload) {
+  generatedAt.textContent = formatTimestamp(payload.generated_at);
+  totalRecords.textContent = formatNumber(payload.table.total_count);
+}
+
+function renderFocusSummary(items) {
+  if (!focusSummary) {
+    return;
+  }
+
+  if (!items?.length) {
+    focusSummary.innerHTML = '<div class="focus-line">No channel summary available for the current filters.</div>';
+    return;
+  }
+
+  const html = items
+    .map((item) => {
+      const latestBits = [];
+      if (item.latest_positive) {
+        latestBits.push(`${formatNumber(item.latest_positive)} ${item.positive_label} in ${item.latest_week}`);
+      }
+      if (item.latest_negative) {
+        latestBits.push(`${formatNumber(item.latest_negative)} ${item.negative_label} in ${item.latest_week}`);
+      }
+      const latestText = latestBits.length ? ` Latest: ${latestBits.join(", ")}.` : "";
+      return `
+        <div class="focus-line">
+          <strong>${item.label}</strong>
+          <span>${formatNumber(item.records)} rows, ${formatNumber(item.positive)} ${item.positive_label}, ${formatNumber(item.negative)} ${item.negative_label}, ${formatNumber(item.no_change)} stable.${latestText}</span>
+        </div>
+      `;
+    })
+    .join("");
+
+  focusSummary.innerHTML = html;
 }
 
 function renderTable(weeks, table) {
@@ -104,9 +207,9 @@ function renderTable(weeks, table) {
 
     weeks.forEach((week, index) => {
       const td = document.createElement("td");
-      td.textContent = record.frequencies[week] ?? "-";
       const status = index === 0 ? "missing" : record.changes[week];
       td.classList.add(`status-${status}`);
+      td.textContent = formatWeekValue(record.frequencies[week], status, index === 0);
       tr.appendChild(td);
     });
 
@@ -121,11 +224,75 @@ function renderTable(weeks, table) {
   tableBody.replaceChildren(fragment);
 }
 
+function formatWeekValue(value, status, isBaseline) {
+  if (value === null || value === undefined || value === "") return "-";
+  if (isBaseline || status === "baseline" || status === "missing" || status === "no_change") {
+    return String(value);
+  }
+  if (state.view === "rank") {
+    if (status === "improve") return `▲ ${value}`;
+    if (status === "decline") return `▼ ${value}`;
+    return String(value);
+  }
+  if (state.view === "band") {
+    if (status === "change") return `• ${value}`;
+    return String(value);
+  }
+  if (status === "increase") return `▲ ${value}`;
+  if (status === "decrease") return `▼ ${value}`;
+  return String(value);
+}
+
+function updateViewMeta() {
+  const titles = {
+    frequency: {
+      title: "Weekly Frequency Analysis",
+    },
+    rank: {
+      title: "Weekly Rank Analysis",
+    },
+    band: {
+      title: "Weekly Band Analysis",
+    },
+  };
+  tableTitle.textContent = titles[state.view].title;
+  Object.entries(viewButtons).forEach(([view, button]) => {
+    button.classList.toggle("active", view === state.view);
+  });
+}
+
+function renderStatusMessage(payload) {
+  if (payload.message) {
+    statusMessage.hidden = false;
+    statusMessage.textContent = `${payload.message} Folder: ${payload.data_directory}`;
+    return;
+  }
+  statusMessage.hidden = true;
+  statusMessage.textContent = "";
+}
+
 function syncFilterControls(payload) {
   populateSelect(marketFilter, payload.filters.markets, "All Markets", state.filters.market);
-  populateSelect(msoFilter, payload.filters.mso_types, "All MSO Types", state.filters.mso_type);
   populateSelect(cityFilter, payload.filters.cities, "All Cities", state.filters.city);
-  searchInput.value = state.filters.search;
+  populateSelect(msoTypeFilter, payload.filters.mso_types, "All MSO Types", state.filters.mso_type);
+  populateSelect(msoFilter, payload.filters.msos, "All MSO", state.filters.mso);
+  populateSelect(headendFilter, payload.filters.head_ends, "All Headend", state.filters.head_end);
+  populateSelect(crnFilter, payload.filters.crn_numbers, "All CRN No", state.filters.crn_no);
+  populateSelect(channelFilter, payload.filters.channels, "All Channels", state.filters.channel_name);
+  populateSelect(bandFilter, payload.filters.bands, "All Bands", state.filters.band);
+  populateSelect(weekFilter, payload.filters.weeks, "All Weeks", state.filters.week);
+  populateSelect(changeFilter, payload.filters.change_options, "All Changes", state.filters.change);
+
+  state.filters.market = marketFilter.value;
+  state.filters.city = cityFilter.value;
+  state.filters.mso_type = msoTypeFilter.value;
+  state.filters.mso = msoFilter.value;
+  state.filters.head_end = headendFilter.value;
+  state.filters.crn_no = crnFilter.value;
+  state.filters.channel_name = channelFilter.value;
+  state.filters.band = bandFilter.value;
+  state.filters.week = weekFilter.value;
+  state.filters.change = changeFilter.value;
 }
 
 function setLoading(loading) {
@@ -135,10 +302,17 @@ function setLoading(loading) {
 
 async function fetchDashboard() {
   const params = new URLSearchParams({
+    view: state.view,
     market: state.filters.market,
-    mso_type: state.filters.mso_type,
     city: state.filters.city,
-    search: state.filters.search,
+    mso_type: state.filters.mso_type,
+    mso: state.filters.mso,
+    head_end: state.filters.head_end,
+    crn_no: state.filters.crn_no,
+    channel_name: state.filters.channel_name,
+    band: state.filters.band,
+    week: state.filters.week,
+    change: state.filters.change,
     page: String(state.page),
     page_size: String(state.pageSize),
     sort_key: state.sortKey,
@@ -149,9 +323,13 @@ async function fetchDashboard() {
   try {
     const response = await fetch(`/api/frequency?${params.toString()}`);
     state.response = await response.json();
+    updateViewMeta();
     syncFilterControls(state.response);
     buildTableHead(state.response.weeks);
     updateKpis(state.response.summary);
+    updateHeaderMeta(state.response);
+    renderFocusSummary(state.response.focus_channels);
+    renderStatusMessage(state.response);
     renderTable(state.response.weeks, state.response.table);
   } finally {
     setLoading(false);
@@ -172,41 +350,52 @@ function handleSort(key) {
 async function toggleFullscreen() {
   if (!document.fullscreenElement) {
     await document.documentElement.requestFullscreen();
-    fullscreenButton.textContent = "EXIT FULL SCREEN \u2715";
+    fullscreenButton.textContent = "Exit Full Screen";
   } else {
     await document.exitFullscreen();
-    fullscreenButton.textContent = "FULL SCREEN \u26F6";
+    fullscreenButton.textContent = "Full Screen";
   }
 }
 
+function autoApplySelect(select, key) {
+  select.addEventListener("change", () => {
+    state.filters[key] = select.value;
+    const changedIndex = filterOrder.indexOf(key);
+    if (changedIndex >= 0) {
+      filterOrder.slice(changedIndex + 1).forEach((nextKey) => {
+        state.filters[nextKey] = "";
+      });
+    }
+    state.page = 1;
+    fetchDashboard();
+  });
+}
+
 function bindEvents() {
-  marketFilter.addEventListener("change", () => {
-    state.filters.market = marketFilter.value;
-    state.page = 1;
-    fetchDashboard();
-  });
-
-  msoFilter.addEventListener("change", () => {
-    state.filters.mso_type = msoFilter.value;
-    state.page = 1;
-    fetchDashboard();
-  });
-
-  cityFilter.addEventListener("change", () => {
-    state.filters.city = cityFilter.value;
-    state.page = 1;
-    fetchDashboard();
-  });
-
-  searchInput.addEventListener("input", () => {
-    state.filters.search = searchInput.value.trim();
-    state.page = 1;
-    window.clearTimeout(searchInput._debounce);
-    searchInput._debounce = window.setTimeout(fetchDashboard, 250);
-  });
+  autoApplySelect(marketFilter, "market");
+  autoApplySelect(cityFilter, "city");
+  autoApplySelect(msoTypeFilter, "mso_type");
+  autoApplySelect(msoFilter, "mso");
+  autoApplySelect(headendFilter, "head_end");
+  autoApplySelect(crnFilter, "crn_no");
+  autoApplySelect(channelFilter, "channel_name");
+  autoApplySelect(bandFilter, "band");
+  autoApplySelect(weekFilter, "week");
+  autoApplySelect(changeFilter, "change");
 
   document.getElementById("resetButton").addEventListener("click", () => {
-    state.filters = { market: "", mso_type: "", city: "", search: "" };
+    state.filters = {
+      market: "",
+      city: "",
+      mso_type: "",
+      mso: "",
+      head_end: "",
+      crn_no: "",
+      channel_name: "",
+      band: "",
+      week: "",
+      change: "",
+    };
     state.sortKey = "channel_name";
     state.sortDirection = "asc";
     state.page = 1;
@@ -225,37 +414,26 @@ function bindEvents() {
     fetchDashboard();
   });
 
-  document.getElementById("printButton").addEventListener("click", () => window.print());
   document.getElementById("refreshButton").addEventListener("click", () => {
     state.page = 1;
     fetchDashboard();
   });
-  document.getElementById("exportButton").addEventListener("click", exportFilteredData);
+  document.getElementById("downloadDashboardButton").addEventListener("click", () => {
+    window.location.href = "/download/dashboard";
+  });
+  Object.entries(viewButtons).forEach(([view, button]) => {
+    button.addEventListener("click", () => {
+      state.view = view;
+      state.page = 1;
+      fetchDashboard();
+    });
+  });
   fullscreenButton.addEventListener("click", toggleFullscreen);
   document.addEventListener("fullscreenchange", () => {
-    fullscreenButton.textContent = document.fullscreenElement ? "EXIT FULL SCREEN \u2715" : "FULL SCREEN \u26F6";
+    fullscreenButton.textContent = document.fullscreenElement ? "Exit Full Screen" : "Full Screen";
   });
-}
-
-async function exportFilteredData() {
-  const response = await fetch("/api/export", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      market: state.filters.market,
-      mso_type: state.filters.mso_type,
-      city: state.filters.city,
-      search: state.filters.search,
-    }),
-  });
-  const blob = await response.blob();
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "chrome_report_filtered.xlsx";
-  link.click();
-  URL.revokeObjectURL(url);
 }
 
 bindEvents();
+updateViewMeta();
 fetchDashboard();

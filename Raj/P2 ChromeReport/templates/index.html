@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chrome Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div class="hero-copy">
+        <h1>Chrome Report</h1>
+      </div>
+      <div class="hero-meta">
+        <article class="meta-card">
+          <span>Last Refresh</span>
+          <strong id="generatedAt">--</strong>
+        </article>
+        <article class="meta-card">
+          <span>Total Records</span>
+          <strong id="totalRecords">0</strong>
+        </article>
+        <div class="hero-actions">
+          <button id="refreshButton" class="ghost-button">Refresh</button>
+          <button id="downloadDashboardButton" class="ghost-button">Download Dashboard</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="table1-scope">
+      <section class="panel filter-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>Filter Panel</h2>
+          </div>
+        </div>
+        <div class="filter-grid">
+          <label>
+            <span>Market</span>
+            <select id="marketFilter"></select>
+          </label>
+          <label>
+            <span>City</span>
+            <select id="cityFilter"></select>
+          </label>
+          <label>
+            <span>MSO Type</span>
+            <select id="msoTypeFilter"></select>
+          </label>
+          <label>
+            <span>Headend</span>
+            <select id="headendFilter"></select>
+          </label>
+          <label>
+            <span>CRN No</span>
+            <select id="crnFilter"></select>
+          </label>
+          <label>
+            <span>Channel</span>
+            <select id="channelFilter"></select>
+          </label>
+          <label>
+            <span>Band</span>
+            <select id="bandFilter"></select>
+          </label>
+          <label>
+            <span>Week</span>
+            <select id="weekFilter"></select>
+          </label>
+          <label>
+            <span>Change</span>
+            <select id="changeFilter"></select>
+          </label>
+          <div class="action-row table1-filter-actions">
+            <button id="resetButton" class="ghost-button">Reset Filters</button>
+            <button id="fullscreenButton" class="primary-button" type="button">Full Screen</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel table-panel">
+        <div class="panel-heading table-heading">
+          <div>
+            <h2 id="tableTitle">Weekly Frequency Analysis</h2>
+          </div>
+          <div class="table-side">
+            <div class="view-switcher" id="viewSwitcher">
+              <button id="frequencyViewButton" class="switch-button active" type="button">Frequency</button>
+              <button id="rankViewButton" class="switch-button" type="button">Rank</button>
+              <button id="bandViewButton" class="switch-button" type="button">Band</button>
+            </div>
+            <div class="table-meta">
+              <span id="resultCount">0 records</span>
+              <span id="pageInfo">Page 1</span>
+            </div>
+          </div>
+        </div>
+        <div id="statusMessage" class="status-message" hidden></div>
+        <div class="table-wrap">
+          <table id="reportTable">
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+        <div class="pagination-bar">
+          <button id="prevPage" class="ghost-button">Previous</button>
+          <button id="exitFullscreenButton" class="ghost-button table-exit-fullscreen" type="button" hidden>Exit Full Screen</button>
+          <button id="nextPage" class="ghost-button">Next</button>
+        </div>
+      </section>
+
+      <section class="panel focus-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>Channel Summary</h2>
+          </div>
+        </div>
+        <div id="focusSummary" class="focus-summary"></div>
+      </section>
+    </div>
+
+    <section class="panel nbhd-panel">
+      <div class="panel-heading nbhd-heading">
+        <div>
+          <h2>Neighbourhood Comparison</h2>
+        </div>
+        <div class="table-meta">
+          <span id="nbhdResultCount">0 rows</span>
+        </div>
+      </div>
+      <div class="nbhd-toolbar">
+        <label>
+          <span>Market</span>
+          <select id="nbhdMarketFilter"></select>
+        </label>
+        <label>
+          <span>City</span>
+          <select id="nbhdCityFilter"></select>
+        </label>
+        <label>
+          <span>Headend</span>
+          <select id="nbhdHeadendFilter"></select>
+        </label>
+        <label>
+          <span>Week Range</span>
+          <select id="nbhdWeekRangeFilter"></select>
+        </label>
+        <label>
+          <span>Change</span>
+          <select id="nbhdChangeFilter"></select>
+        </label>
+        <div class="action-row nbhd-actions">
+          <button id="nbhdResetButton" class="ghost-button" type="button">Reset Filters</button>
+          <button id="nbhdFullscreenButton" class="primary-button" type="button">Full Screen</button>
+          <button id="nbhdRefreshButton" class="ghost-button" type="button">Refresh</button>
+        </div>
+      </div>
+      <div id="nbhdStatusMessage" class="status-message" hidden></div>
+      <div class="nbhd-table-wrap">
+        <table id="nbhdTable" class="nbhd-table">
+          <thead id="nbhdTableHead"></thead>
+          <tbody id="nbhdTableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination-bar nbhd-pagination-bar">
+        <button id="nbhdPrevPage" class="ghost-button" type="button">Previous</button>
+        <span id="nbhdPageInfo">Page 1 of 1</span>
+        <button id="nbhdNextPage" class="ghost-button" type="button">Next</button>
+        <button id="nbhdExitFullscreenButton" class="ghost-button nbhd-exit-fullscreen" type="button" hidden>Exit Full Screen</button>
+      </div>
+    </section>
+
+    <section class="panel ots-panel">
+      <div class="panel-heading ots-heading">
+        <div>
+          <h2>OTS Comparison</h2>
+        </div>
+        <div class="table-meta">
+          <span id="otsResultCount">0 records</span>
+        </div>
+      </div>
+      <div class="ots-toolbar">
+        <label class="ots-search-field">
+          <span>Search</span>
+          <input id="otsSearchInput" type="search" placeholder="Search market or channel..." />
+        </label>
+        <label class="ots-multiselect-field">
+          <span>Market</span>
+          <div class="ots-multiselect">
+            <button id="otsMarketButton" class="ots-select-button" type="button">All Markets</button>
+            <div id="otsMarketMenu" class="ots-multiselect-menu" hidden>
+              <div id="otsMarketOptions" class="ots-options-list"></div>
+            </div>
+          </div>
+        </label>
+        <label class="ots-multiselect-field">
+          <span>Channel</span>
+          <div class="ots-multiselect">
+            <button id="otsChannelButton" class="ots-select-button" type="button">All Channels</button>
+            <div id="otsChannelMenu" class="ots-multiselect-menu" hidden>
+              <div id="otsChannelOptions" class="ots-options-list"></div>
+            </div>
+          </div>
+        </label>
+        <label>
+          <span>Week From</span>
+          <select id="otsWeekFromFilter"></select>
+        </label>
+        <label>
+          <span>Week To</span>
+          <select id="otsWeekToFilter"></select>
+        </label>
+        <label>
+          <span>Change</span>
+          <select id="otsChangeFilter"></select>
+        </label>
+        <div class="action-row ots-actions">
+          <button id="otsResetButton" class="ghost-button" type="button">Reset Filters</button>
+          <button id="otsRefreshButton" class="ghost-button" type="button">Refresh</button>
+          <button id="otsFullscreenButton" class="primary-button" type="button">Full Screen</button>
+          <button id="otsExportExcelButton" class="ghost-button" type="button">Export to Excel</button>
+          <button id="otsExportCsvButton" class="ghost-button" type="button">Export to CSV</button>
+        </div>
+      </div>
+      <div id="otsStatusMessage" class="status-message" hidden></div>
+      <div class="ots-table-wrap">
+        <table id="otsTable" class="ots-table">
+          <thead id="otsTableHead"></thead>
+          <tbody id="otsTableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination-bar ots-pagination-bar">
+        <button id="otsPrevPage" class="ghost-button" type="button">Previous</button>
+        <span id="otsPageInfo">Page 1 of 1</span>
+        <button id="otsNextPage" class="ghost-button" type="button">Next</button>
+        <button id="otsExitFullscreenButton" class="ghost-button ots-exit-fullscreen" type="button" hidden>Exit Full Screen</button>
+      </div>
+    </section>
+
+    <section class="kpi-grid bottom-kpis">
+      <article class="kpi-card compact-kpi">
+        <span>Total Channels</span>
+        <strong id="kpiTotal">0</strong>
+      </article>
+      <article class="kpi-card compact-kpi">
+        <span>Frequency Increased</span>
+        <strong id="kpiIncrease">0</strong>
+      </article>
+      <article class="kpi-card compact-kpi">
+        <span>Frequency Decreased</span>
+        <strong id="kpiDecrease">0</strong>
+      </article>
+    </section>
+  </div>
+
+  <template id="emptyStateTemplate">
+    <tr>
+      <td colspan="100%" class="empty-state">No records match the current filters.</td>
+    </tr>
+  </template>
+
+  <script src="/static/script.js"></script>
+  <script>
+    window.__NBHD_INITIAL_DATA__ = __NBHD_INITIAL_DATA__;
+  </script>
+  <script src="/static/neighbourhood.js"></script>
+  <script>
+    window.__OTS_INITIAL_DATA__ = __OTS_INITIAL_DATA__;
+  </script>
+  <script src="/static/ots.js"></script>
+</body>
+</html>

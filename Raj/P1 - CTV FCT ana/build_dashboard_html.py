@@ -168,7 +168,7 @@ def section_block(section_class: str, title: str, controls: list[str], chart_id:
     </section>"""
 def build_sections_html() -> str:
     config_map = {config["key"]: config for config in SECTION_CONFIGS}
-    pre_summary_grid_keys = ["g6", "g13", "g7", "g11"]
+    pre_summary_grid_keys = ["g6", "g9", "g7", "g11"]
     leading_keys = [config["key"] for config in SECTION_CONFIGS if config["key"] not in pre_summary_grid_keys]
     leading_sections = [
         section_block(
