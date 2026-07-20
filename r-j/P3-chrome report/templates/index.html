@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chrome Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div class="hero-copy">
+        <h1>Chrome Report</h1>
+      </div>
+      <div class="hero-meta">
+        <article class="meta-card">
+          <span>Last Refresh</span>
+          <strong id="generatedAt">--</strong>
+        </article>
+        <article class="meta-card">
+          <span>Total Records</span>
+          <strong id="totalRecords">0</strong>
+        </article>
+        <div class="hero-actions">
+          <button id="refreshButton" class="ghost-button">Refresh</button>
+          <button id="downloadDashboardButton" class="ghost-button">Download Dashboard</button>
+        </div>
+      </div>
+    </header>
+
+    <section class="panel filter-panel">
+      <div class="panel-heading">
+        <div>
+          <h2>Filter Panel</h2>
+        </div>
+      </div>
+      <div class="filter-grid">
+        <label>
+          <span>Market</span>
+          <select id="marketFilter"></select>
+        </label>
+        <label>
+          <span>City</span>
+          <select id="cityFilter"></select>
+        </label>
+        <label>
+          <span>MSO Type</span>
+          <select id="msoTypeFilter"></select>
+        </label>
+        <label>
+          <span>MSO</span>
+          <select id="msoFilter"></select>
+        </label>
+        <label>
+          <span>Headend</span>
+          <select id="headendFilter"></select>
+        </label>
+        <label>
+          <span>CRN No</span>
+          <select id="crnFilter"></select>
+        </label>
+        <label>
+          <span>Channel</span>
+          <select id="channelFilter"></select>
+        </label>
+        <label>
+          <span>Band</span>
+          <select id="bandFilter"></select>
+        </label>
+        <label>
+          <span>Week</span>
+          <select id="weekFilter"></select>
+        </label>
+        <label>
+          <span>Change</span>
+          <select id="changeFilter"></select>
+        </label>
+        <div class="action-row">
+          <button id="resetButton" class="ghost-button">Reset Filters</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel table-panel">
+      <div class="panel-heading table-heading">
+        <div>
+          <h2 id="tableTitle">Weekly Frequency Analysis</h2>
+        </div>
+        <div class="table-side">
+          <div class="view-switcher" id="viewSwitcher">
+            <button id="frequencyViewButton" class="switch-button active" type="button">Frequency</button>
+            <button id="rankViewButton" class="switch-button" type="button">Rank</button>
+            <button id="bandViewButton" class="switch-button" type="button">Band</button>
+          </div>
+          <button id="fullscreenButton" class="primary-button" type="button">Full Screen</button>
+          <div class="table-meta">
+            <span id="resultCount">0 records</span>
+            <span id="pageInfo">Page 1</span>
+          </div>
+        </div>
+      </div>
+      <div id="statusMessage" class="status-message" hidden></div>
+      <div class="table-wrap">
+        <table id="reportTable">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination-bar">
+        <button id="prevPage" class="ghost-button">Previous</button>
+        <button id="nextPage" class="ghost-button">Next</button>
+      </div>
+    </section>
+
+    <section class="panel focus-panel">
+      <div class="panel-heading">
+        <div>
+          <h2>Channel Summary</h2>
+        </div>
+      </div>
+      <div id="focusSummary" class="focus-summary"></div>
+    </section>
+
+    <section class="kpi-grid bottom-kpis">
+      <article class="kpi-card compact-kpi">
+        <span>Total Channels</span>
+        <strong id="kpiTotal">0</strong>
+      </article>
+      <article class="kpi-card compact-kpi">
+        <span>Frequency Increased</span>
+        <strong id="kpiIncrease">0</strong>
+      </article>
+      <article class="kpi-card compact-kpi">
+        <span>Frequency Decreased</span>
+        <strong id="kpiDecrease">0</strong>
+      </article>
+    </section>
+  </div>
+
+  <template id="emptyStateTemplate">
+    <tr>
+      <td colspan="100%" class="empty-state">No records match the current filters.</td>
+    </tr>
+  </template>
+
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

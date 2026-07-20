@@ -50,6 +50,12 @@ ETL/output/exports/**/*.html
 ETL/output/**/*.json
 ETL/extras/repair_artifacts/
 
+# ASRUN demo output is regenerated locally and can be too large for GitHub.
+ETL/asrun_demo/output/*.html
+
+# P3 report output is generated from local Excel inputs; do not version generated reports.
+r-j/P3-chrome report/output/
+
 # Local backups and browser-validation artifacts
 ETL/extras/backups/
 ETL/extras/code_backups/

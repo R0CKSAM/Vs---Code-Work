@@ -93,8 +93,15 @@ def build_identity_minute_table(con, args: argparse.Namespace) -> None:
         resolved AS (
             SELECT
                 b.*,
-                COALESCE(h.host_channel_name, p.path_channel_name, 'Other') AS channel_name
+                COALESCE(
+                    hc.host_candidate_channel_name,
+                    h.host_channel_name,
+                    p.path_channel_name,
+                    'Other'
+                ) AS channel_name
             FROM base b
+            LEFT JOIN host_candidate_map hc
+                ON b.reqHost = hc.reqHost AND b.candidate_id = hc.candidate_id
             LEFT JOIN host_map h ON b.reqHost = h.reqHost
             LEFT JOIN path_map p ON b.candidate_id = p.candidate_id
         )
