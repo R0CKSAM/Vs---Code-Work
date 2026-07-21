@@ -1,11 +1,11 @@
 {
-  "generated_at_utc": "2026-07-20T03:44:07.709253+00:00",
+  "generated_at_utc": "2026-07-21T04:16:20.199153+00:00",
   "source": "stream",
   "lake": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
   "output": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\output\\watch_hours\\concurrency\\manifest_minute.parquet",
   "date_range_replaced": {
-    "start": "2026-07-19",
-    "end": "2026-07-20"
+    "start": "2026-07-20",
+    "end": "2026-07-21"
   },
   "metric_notes": {
     "m3u8_rows": "All .m3u8 manifest request rows per IST minute.",
@@ -14,5 +14,5 @@
     "unique_ips": "Distinct cliIP values per minute.",
     "unique_ipua_pairs": "Distinct cliIP + normalized UA signatures per minute."
   },
-  "new_rows": 92857
+  "new_rows": 96157
 }
