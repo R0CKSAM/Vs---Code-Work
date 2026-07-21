@@ -52,6 +52,16 @@ ETL/extras/repair_artifacts/
 
 # ASRUN demo output is regenerated locally and can be too large for GitHub.
 ETL/asrun_demo/output/*.html
+ETL/asrun_demo/data/raw/ASRUN-*.txt
+
+# Amagi browser automation keeps an authenticated local profile plus generated
+# diagnostics, downloaded CSV reports, and run logs on this workstation.
+ETL/edu/amagi_browser_profile/
+ETL/edu/amagi_playwright_profile/
+ETL/edu/diagnostics/
+ETL/edu/downloads/
+ETL/edu/logs/
+ETL/edu/*.png
 
 # P3 report output is generated from local Excel inputs; do not version generated reports.
 r-j/P3-chrome report/output/
