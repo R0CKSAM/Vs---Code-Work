@@ -71,15 +71,14 @@ def load_chartjs(cache_path: Path) -> str:
 
 
 def completed_window(daily: pd.DataFrame) -> tuple[str, str]:
-    stream_days = daily[daily["source"].eq("stream")].copy()
-    stream_days = stream_days[to_numeric(stream_days["raw_ts_rows"]).gt(0)]
-    if stream_days.empty:
-        raise ValueError("No STREAM watch-hour rows found in daily_volume.parquet")
+    usable = daily[to_numeric(daily["raw_ts_rows"]).gt(0)].copy()
+    if usable.empty:
+        raise ValueError("No watch-hour rows found in daily_volume.parquet")
 
     today_text = date.today().strftime("%Y-%m-%d")
-    complete = stream_days[stream_days["log_date"].lt(today_text)].copy()
+    complete = usable[usable["log_date"].lt(today_text)].copy()
     if complete.empty:
-        complete = stream_days
+        complete = usable
     return str(complete["log_date"].min()), str(complete["log_date"].max())
 
 
@@ -96,23 +95,6 @@ def add_watch_hours(df: pd.DataFrame, row_col: str = "raw_ts_rows") -> pd.DataFr
     if "raw_watch_hours" not in out.columns and row_col in out.columns:
         out["raw_watch_hours"] = to_numeric(out[row_col]) * CHUNK_HOURS
     return out
-
-
-def aggregate_daily(daily: pd.DataFrame, start: str, end: str) -> pd.DataFrame:
-    out = daily[
-        daily["source"].eq("stream")
-        & daily["log_date"].between(start, end)
-    ].copy()
-    out["raw_watch_hours"] = to_numeric(out["raw_ts_rows"]) * CHUNK_HOURS
-    keep = [
-        "log_date",
-        "raw_watch_hours",
-        "raw_ts_rows",
-        "m3u8_rows",
-        "rows",
-        "approx_unique_ips",
-    ]
-    return out[keep].sort_values("log_date")
 
 
 def group_sum(df: pd.DataFrame, keys: list[str], value_cols: list[str]) -> pd.DataFrame:
@@ -157,7 +139,7 @@ def best_range_hints(daily: pd.DataFrame) -> list[dict[str, Any]]:
             str(latest_32["log_date"].max()),
             32,
             float(latest_32["raw_watch_hours"].sum()),
-            "Default PR showcase range.",
+            "Latest completed 32-day window.",
         )
 
     for window in [1, 7, 15, 30]:
@@ -187,99 +169,123 @@ def records(df: pd.DataFrame, rename: dict[str, str] | None = None, limit: int |
     return out.to_dict(orient="records")
 
 
+def source_ranges(daily: pd.DataFrame) -> dict[str, dict[str, str]]:
+    ranges: dict[str, dict[str, str]] = {}
+    for source, frame in daily.groupby("source", dropna=False):
+        if frame.empty:
+            continue
+        ranges[str(source).upper()] = {
+            "start": str(frame["log_date"].min()),
+            "end": str(frame["log_date"].max()),
+        }
+    return ranges
+
+
 def build_data(watch_root: Path, title: str) -> tuple[dict[str, Any], dict[str, pd.DataFrame]]:
     daily = read_parquet(watch_root / "daily_tables" / "daily_volume.parquet")
     geo = read_parquet(watch_root / "daily_tables" / "geo_daily.parquet")
+    channel_daily = read_parquet(watch_root / "daily_tables" / "channel_audience_daily.parquet")
+    channel_geo = read_parquet(watch_root / "daily_tables" / "channel_geo_daily.parquet")
+    fast_platform_geo = read_parquet(
+        watch_root / "concurrency" / "fast_platform_channel_geo_daily.parquet"
+    )
 
-    for frame in [daily, geo]:
+    for frame in [daily, geo, channel_daily, channel_geo, fast_platform_geo]:
         frame["log_date"] = as_date_text(frame["log_date"])
+        frame["source"] = clean_text(frame["source"], "unknown").str.lower()
 
     start, end = completed_window(daily)
-    daily_stream = aggregate_daily(daily, start, end)
-    default_start, default_end = trailing_window(daily_stream, 32)
+    for frame in [daily, geo, channel_daily, channel_geo, fast_platform_geo]:
+        frame.dropna(subset=["log_date"], inplace=True)
+        frame = frame[frame["log_date"].between(start, end)]
+
+    daily["raw_watch_hours"] = to_numeric(daily["raw_ts_rows"]) * CHUNK_HOURS
+    daily_volume = group_sum(
+        daily[daily["log_date"].between(start, end)],
+        ["source", "log_date"],
+        ["raw_watch_hours", "approx_unique_ips"],
+    )
+
+    channel_daily["channel_name"] = clean_text(channel_daily["channel_name"])
+    channel_daily = group_sum(
+        channel_daily[channel_daily["log_date"].between(start, end)],
+        ["source", "log_date", "channel_name"],
+        ["raw_watch_hours", "approx_unique_ips"],
+    )
 
     geo = add_watch_hours(geo)
-    geo = geo[geo["source"].eq("stream") & geo["log_date"].between(start, end)].copy()
     geo["country"] = clean_text(geo["country"])
     geo["state"] = clean_text(geo["state"])
-    geo["city"] = clean_text(geo["city"])
-
-    country_summary = group_sum(
-        geo,
-        ["country"],
-        ["raw_watch_hours", "approx_unique_ips"],
-    ).sort_values("raw_watch_hours", ascending=False)
-    state_summary = group_sum(
-        geo[geo["country"].eq("IN")],
-        ["state"],
-        ["raw_watch_hours", "approx_unique_ips"],
-    ).sort_values("raw_watch_hours", ascending=False)
-    state_summary["avg_min_per_user_day"] = (
-        state_summary["raw_watch_hours"] * 60 / state_summary["approx_unique_ips"].replace(0, pd.NA)
-    ).fillna(0)
-
-    default_daily = daily_stream[daily_stream["log_date"].between(default_start, default_end)].copy()
-    default_geo = geo[geo["log_date"].between(default_start, default_end)].copy()
-    total_hours = float(default_daily["raw_watch_hours"].sum())
-    user_days = float(to_numeric(default_daily["approx_unique_ips"]).sum())
-    day_count = int(len(default_daily))
-    india_hours = float(default_geo.loc[default_geo["country"].eq("IN"), "raw_watch_hours"].sum())
-
-    summary = {
-        "rawHours": round(total_hours, 3),
-        "avgDailyUsers": round(user_days / day_count, 1) if day_count else 0,
-        "peakDailyUsers": int(to_numeric(daily_stream["approx_unique_ips"]).max()),
-        "peakDailyUserDate": str(daily_stream.loc[to_numeric(daily_stream["approx_unique_ips"]).idxmax(), "log_date"]),
-        "avgMinPerUserDay": round(total_hours * 60 / user_days, 2) if user_days else 0,
-        "indiaHours": round(india_hours, 3),
-        "indiaShare": round(india_hours * 100 / total_hours, 2) if total_hours else 0,
-    }
-
-    daily_records = records(
-        daily_stream,
-        {
-            "log_date": "date",
-            "raw_watch_hours": "rawHours",
-            "approx_unique_ips": "userDays",
-        },
-    )
-
     state_daily = group_sum(
-        geo[geo["country"].eq("IN")],
-        ["log_date", "state"],
+        geo[geo["log_date"].between(start, end) & geo["country"].eq("IN")],
+        ["source", "log_date", "state"],
         ["raw_watch_hours", "approx_unique_ips"],
     )
+
+    channel_geo = add_watch_hours(channel_geo)
+    channel_geo["channel_name"] = clean_text(channel_geo["channel_name"])
+    channel_geo["country"] = clean_text(channel_geo["country"])
+    channel_geo["state"] = clean_text(channel_geo["state"])
+    state_channel = group_sum(
+        channel_geo[
+            channel_geo["log_date"].between(start, end)
+            & channel_geo["country"].eq("IN")
+        ],
+        ["source", "log_date", "channel_name", "state"],
+        ["raw_watch_hours", "approx_unique_ips"],
+    )
+
+    fast_platform_geo = add_watch_hours(fast_platform_geo)
+    fast_platform_geo["platform_name"] = clean_text(fast_platform_geo["platform_name"])
+    fast_platform_geo["channel_name"] = clean_text(fast_platform_geo["channel_name"])
+    fast_platform_geo["country"] = clean_text(fast_platform_geo["country"])
+    fast_platform_geo["state"] = clean_text(fast_platform_geo["state"])
+    fast_platform_daily = group_sum(
+        fast_platform_geo[fast_platform_geo["log_date"].between(start, end)],
+        ["source", "log_date", "platform_name", "channel_name"],
+        ["raw_watch_hours", "approx_unique_ips"],
+    )
+    fast_platform_state = group_sum(
+        fast_platform_geo[
+            fast_platform_geo["log_date"].between(start, end)
+            & fast_platform_geo["country"].eq("IN")
+        ],
+        ["source", "log_date", "platform_name", "channel_name", "state"],
+        ["raw_watch_hours", "approx_unique_ips"],
+    )
+
+    stream_daily = daily_volume[daily_volume["source"].eq("stream")].copy()
+    default_start, default_end = trailing_window(stream_daily, 32)
     data = {
         "title": title,
-        "source": "STREAM",
+        "defaultSource": "stream",
         "generatedAt": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "range": {"start": start, "end": end},
         "defaultRange": {"start": default_start, "end": default_end},
-        "summary": summary,
-        "rangeHints": best_range_hints(daily_stream),
-        "daily": daily_records,
-        "statesDaily": records(
-            state_daily,
-            {
-                "log_date": "date",
-                "raw_watch_hours": "rawHours",
-                "approx_unique_ips": "userDays",
-            },
-        ),
+        "sourceRanges": source_ranges(daily_volume),
+        "platforms": sorted(str(value) for value in fast_platform_daily["platform_name"].unique()),
+        "dailyVolume": records(daily_volume, {"log_date": "date", "raw_watch_hours": "rawHours", "approx_unique_ips": "userDays"}),
+        "dailyChannel": records(channel_daily, {"log_date": "date", "raw_watch_hours": "rawHours", "approx_unique_ips": "userDays"}),
+        "statesDaily": records(state_daily, {"log_date": "date", "raw_watch_hours": "rawHours", "approx_unique_ips": "userDays"}),
+        "statesChannel": records(state_channel, {"log_date": "date", "raw_watch_hours": "rawHours", "approx_unique_ips": "userDays"}),
+        "fastPlatformDaily": records(fast_platform_daily, {"log_date": "date", "raw_watch_hours": "rawHours", "approx_unique_ips": "userDays"}),
+        "fastPlatformStates": records(fast_platform_state, {"log_date": "date", "raw_watch_hours": "rawHours", "approx_unique_ips": "userDays"}),
         "excelFile": "stream_watch_hours_showcase.xlsx",
     }
 
     excel_frames = {
         # Keep only the formula source sheets the interactive Excel dashboard needs.
         # They are hidden when the workbook is written so stakeholders see one clean tab.
-        "Daily Trend": daily_stream[["log_date", "raw_watch_hours", "approx_unique_ips"]].rename(
+        "Daily Trend": stream_daily[["log_date", "raw_watch_hours", "approx_unique_ips"]].rename(
             columns={
                 "log_date": "Date",
                 "raw_watch_hours": "Watch Hours",
                 "approx_unique_ips": "Approx Users",
             }
         ),
-        "State Daily": state_daily.rename(
+        "State Daily": state_daily[state_daily["source"].eq("stream")][
+            ["log_date", "state", "raw_watch_hours", "approx_unique_ips"]
+        ].rename(
             columns={
                 "log_date": "Date",
                 "state": "State",
@@ -537,10 +543,10 @@ def render_html(template_path: Path, data: dict[str, Any], chartjs: str) -> str:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate STREAM watch-hours PR showcase HTML and Excel.")
+    parser = argparse.ArgumentParser(description="Generate source-aware watch-hours showcase HTML and Excel.")
     parser.add_argument("--watch-root", default=str(DEFAULT_WATCH_ROOT), help="ETL/output/watch_hours folder")
     parser.add_argument("--out-dir", default=str(DEFAULT_OUT_DIR), help="Output folder for HTML and Excel")
-    parser.add_argument("--title", default="STREAM Watch Hours Showcase", help="Dashboard title")
+    parser.add_argument("--title", default="Veto Watch Hours Showcase", help="Dashboard title")
     parser.add_argument("--dry-run", action="store_true", help="Validate inputs without writing files")
     args = parser.parse_args()
 
@@ -555,7 +561,7 @@ def main() -> None:
 
     if args.dry_run:
         print(f"Dry run OK. Range: {data['range']['start']} to {data['range']['end']}")
-        print(f"Daily rows: {len(data['daily']):,}")
+        print(f"Daily rows: {len(data['dailyVolume']):,}")
         return
 
     write_excel(excel_out, excel_frames, data)

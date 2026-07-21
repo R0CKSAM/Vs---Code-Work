@@ -845,6 +845,14 @@ def main() -> None:
         help="Process only one downloaded raw day (YYYY-MM-DD) into source/date parquet folders.",
     )
     parser.add_argument(
+        "--etl1-batch-id",
+        default=None,
+        help=(
+            "Optional immutable batch ID for a partial-day run. It keeps same-day "
+            "lake parts append-only instead of replacing an earlier batch."
+        ),
+    )
+    parser.add_argument(
         "--etl1-daily-raw-root",
         default=None,
         help="Raw root containing stream/fast source folders for --etl1-daily-date.",
@@ -1408,6 +1416,7 @@ def main() -> None:
             )
             month = target_date.strftime("%m")
             day = target_date.strftime("%d")
+            batch_id = _safe_source_slug(args.etl1_batch_id) if args.etl1_batch_id else ""
             active_source_ids: list[str] = []
             stage_jobs: list[dict[str, str]] = []
             daily_sources = []
@@ -1422,6 +1431,8 @@ def main() -> None:
                     raise SystemExit(f"Daily raw folder not found for {source_key}: {input_dir}")
 
                 source_id = f"{source_key}_{target_date.strftime('%Y_%m_%d')}"
+                if batch_id:
+                    source_id = f"{source_id}_{batch_id}"
                 output_dir = (
                     base_root
                     / "stage"
@@ -1431,6 +1442,8 @@ def main() -> None:
                     / f"month={month}"
                     / f"day={day}"
                 )
+                if batch_id:
+                    output_dir = output_dir / f"batch={batch_id}"
                 final_clean_file = (
                     base_root
                     / "stage"
@@ -1439,8 +1452,10 @@ def main() -> None:
                     / f"year={target_date.strftime('%Y')}"
                     / f"month={month}"
                     / f"day={day}"
-                    / f"{source_id}_final_clean.parquet"
                 )
+                if batch_id:
+                    final_clean_file = final_clean_file / f"batch={batch_id}"
+                final_clean_file = final_clean_file / f"{source_id}_final_clean.parquet"
                 active_source_ids.append(source_id)
                 stage_jobs.append(
                     {
@@ -1469,28 +1484,38 @@ def main() -> None:
 
             env["VG_ETL_PROCESS_SOURCES"] = ",".join(active_source_ids)
             env["VG_ETL_STAGE_JOBS"] = json.dumps(stage_jobs)
-            env["VG_ETL_REPLACE_DATES"] = target_date.isoformat()
+            # A named micro batch adds new source-specific lake files. Replacing
+            # the day would delete earlier batches and break the accumulated view.
+            if batch_id:
+                env.pop("VG_ETL_REPLACE_DATES", None)
+            else:
+                env["VG_ETL_REPLACE_DATES"] = target_date.isoformat()
             print(f"\n[scope] ETL daily source IDs: {env['VG_ETL_PROCESS_SOURCES']}")
         else:
             run([python, "001.py"], cwd=pipeline_dir, env=env, step_name="etl_001_raw_to_parquet", log_dir=log_dir)
         run([python, "02.py"], cwd=pipeline_dir, env=env, step_name="etl_02_dedupe_final_clean", log_dir=log_dir)
         if args.etl1_daily_date:
-            repair_notes = _append_recent_lake_repair_jobs(
-                base_root=base_root,
-                lake_root=lake_root,
-                stage_jobs=stage_jobs,
-                active_source_ids=active_source_ids,
-                source_keys=[source_key for source_key, _ in daily_sources],
-                target_date=target_date,
-                lookback_days=max(0, int(args.lake_repair_lookback_days)),
-            )
+            repair_notes = []
+            if not batch_id:
+                repair_notes = _append_recent_lake_repair_jobs(
+                    base_root=base_root,
+                    lake_root=lake_root,
+                    stage_jobs=stage_jobs,
+                    active_source_ids=active_source_ids,
+                    source_keys=[source_key for source_key, _ in daily_sources],
+                    target_date=target_date,
+                    lookback_days=max(0, int(args.lake_repair_lookback_days)),
+                )
             if repair_notes:
                 print("\n[repair-scope] Incomplete recent lake partitions will be repaired before dashboards:")
                 for note in repair_notes:
                     print(f"  - {note}")
             env["VG_ETL_PROCESS_SOURCES"] = ",".join(active_source_ids)
             env["VG_ETL_STAGE_JOBS"] = json.dumps(stage_jobs)
-            env["VG_ETL_REPLACE_DATES"] = target_date.isoformat()
+            if batch_id:
+                env.pop("VG_ETL_REPLACE_DATES", None)
+            else:
+                env["VG_ETL_REPLACE_DATES"] = target_date.isoformat()
             print(f"\n[scope] ETL lake source IDs: {env['VG_ETL_PROCESS_SOURCES']}")
         partition_env = env.copy()
         partition_env.setdefault("VG_ETL_THREADS", "4")

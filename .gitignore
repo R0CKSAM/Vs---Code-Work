@@ -49,6 +49,10 @@ ETL/output/overview/*.html
 ETL/output/exports/**/*.html
 ETL/output/**/*.json
 ETL/extras/repair_artifacts/
+# Isolated micro-ETL benchmarks and their persistent local workspace are
+# generated data; only the runner source belongs in Git.
+ETL/output/benchmarks/
+ETL/output/micro_live/
 
 # ASRUN demo output is regenerated locally and can be too large for GitHub.
 ETL/asrun_demo/output/*.html
@@ -87,3 +91,4 @@ pDash_cache.duckdb
 asn_lookup_cache.json
 ETL/tools/node/node.exe
 ETL/tools/rclone/rclone.exe
+**/__pycache__/

@@ -278,7 +278,7 @@
   <header>
     <div class="bar">
       <div>
-        <h1 id="title">STREAM Watch Hours Showcase</h1>
+        <h1 id="title">Veto Watch Hours Showcase</h1>
         <p class="subtitle" id="rangeText"></p>
       </div>
       <div class="actions">
@@ -291,6 +291,15 @@
   <main>
     <section class="panel">
       <div class="filters">
+        <label>Source
+          <select id="sourceFilter"></select>
+        </label>
+        <label>Platform
+          <select id="platformFilter"></select>
+        </label>
+        <label>Channel
+          <select id="channelFilter"></select>
+        </label>
         <label>Date Mode
           <span class="button-row">
             <button type="button" id="singleDateBtn">Single Date</button>
@@ -334,6 +343,9 @@
     const INR = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 1 });
     const INT = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
     let dateMode = DATA.defaultRange.start === DATA.defaultRange.end ? 'single' : 'range';
+    let sourceValue = DATA.defaultSource || 'stream';
+    let platformValue = 'all';
+    let channelValue = 'all';
 
     function parseDate(value) {
       return new Date(value + 'T00:00:00');
@@ -371,6 +383,114 @@
       const start = document.getElementById('startDate').value;
       const end = dateMode === 'single' ? start : document.getElementById('endDate').value;
       return row.date >= start && row.date <= end;
+    }
+
+    function sourceMatches(row) {
+      return sourceValue === 'all' || row.source === sourceValue;
+    }
+
+    function aggregateByDate(rows) {
+      const dates = new Map();
+      rows.forEach((row) => {
+        const item = dates.get(row.date) || { date: row.date, rawHours: 0, userDays: 0 };
+        item.rawHours += Number(row.rawHours || 0);
+        item.userDays += Number(row.userDays || 0);
+        dates.set(row.date, item);
+      });
+      return Array.from(dates.values()).sort((a, b) => a.date.localeCompare(b.date));
+    }
+
+    function scopeDaily() {
+      if (sourceValue === 'fast' && platformValue !== 'all') {
+        return DATA.fastPlatformDaily.filter((row) =>
+          row.platform_name === platformValue && (channelValue === 'all' || row.channel_name === channelValue)
+        );
+      }
+      if (channelValue !== 'all') {
+        return DATA.dailyChannel.filter((row) =>
+          sourceMatches(row) && row.channel_name === channelValue
+        );
+      }
+      return DATA.dailyVolume.filter(sourceMatches);
+    }
+
+    function scopeStates() {
+      if (sourceValue === 'fast' && platformValue !== 'all') {
+        return DATA.fastPlatformStates.filter((row) =>
+          row.platform_name === platformValue && (channelValue === 'all' || row.channel_name === channelValue)
+        );
+      }
+      if (channelValue !== 'all') {
+        return DATA.statesChannel.filter((row) =>
+          sourceMatches(row) && row.channel_name === channelValue
+        );
+      }
+      return DATA.statesDaily.filter(sourceMatches);
+    }
+
+    function activeDaily() {
+      return aggregateByDate(scopeDaily());
+    }
+
+    function sourceLabel() {
+      return sourceValue === 'all' ? 'ALL' : sourceValue.toUpperCase();
+    }
+
+    function fillSelect(id, items, allLabel, selected) {
+      const select = document.getElementById(id);
+      select.replaceChildren();
+      const all = document.createElement('option');
+      all.value = 'all';
+      all.textContent = allLabel;
+      select.appendChild(all);
+      items.forEach((item) => {
+        const option = document.createElement('option');
+        option.value = item;
+        option.textContent = item;
+        select.appendChild(option);
+      });
+      select.value = items.includes(selected) ? selected : 'all';
+    }
+
+    function updateFilterOptions() {
+      const platformSelect = document.getElementById('platformFilter');
+      const sourceSelect = document.getElementById('sourceFilter');
+      sourceSelect.value = sourceValue;
+      const fastMode = sourceValue === 'fast';
+      if (!fastMode) platformValue = 'all';
+      fillSelect('platformFilter', fastMode ? DATA.platforms : [], 'All Platforms', platformValue);
+      platformValue = platformSelect.value;
+      platformSelect.disabled = !fastMode;
+      const candidateRows = fastMode && platformValue !== 'all'
+        ? DATA.fastPlatformDaily.filter((row) => row.platform_name === platformValue)
+        : DATA.dailyChannel.filter(sourceMatches);
+      const channels = Array.from(new Set(candidateRows.map((row) => row.channel_name))).sort((a, b) => a.localeCompare(b));
+      fillSelect('channelFilter', channels, 'All Channels', channelValue);
+      channelValue = document.getElementById('channelFilter').value;
+    }
+
+    function syncAvailability(resetToDefault) {
+      const rows = activeDaily();
+      const startInput = document.getElementById('startDate');
+      const endInput = document.getElementById('endDate');
+      if (!rows.length) {
+        startInput.value = '';
+        endInput.value = '';
+        return rows;
+      }
+      const minimum = rows[0].date;
+      const maximum = rows[rows.length - 1].date;
+      startInput.min = minimum;
+      startInput.max = maximum;
+      endInput.min = minimum;
+      endInput.max = maximum;
+      if (resetToDefault || !startInput.value || startInput.value < minimum || startInput.value > maximum) {
+        const trailing = rows.slice(-32);
+        startInput.value = trailing[0].date;
+        endInput.value = trailing[trailing.length - 1].date;
+      }
+      if (!endInput.value || endInput.value < startInput.value || endInput.value > maximum) endInput.value = maximum;
+      return rows;
     }
 
     function sumRows(rows, fields) {
@@ -419,9 +539,32 @@
       render();
     }
 
-    function renderHints() {
+    function renderHints(dailyRows) {
       const grid = document.getElementById('hintGrid');
-      grid.innerHTML = DATA.rangeHints.map((hint, index) => `
+      const hints = [];
+      if (dailyRows.length) {
+        const addHint = (label, rows, note) => hints.push({
+          label,
+          start: rows[0].date,
+          end: rows[rows.length - 1].date,
+          days: rows.length,
+          rawHours: rows.reduce((sum, row) => sum + Number(row.rawHours || 0), 0),
+          note
+        });
+        addHint('Max total', dailyRows, 'Largest cumulative number for the current source, platform, and channel filters.');
+        [1, 7, 15, 30].forEach((size) => {
+          if (dailyRows.length < size) return;
+          let best = dailyRows.slice(0, size);
+          let bestHours = best.reduce((sum, row) => sum + Number(row.rawHours || 0), 0);
+          for (let index = 1; index <= dailyRows.length - size; index += 1) {
+            const candidate = dailyRows.slice(index, index + size);
+            const hours = candidate.reduce((sum, row) => sum + Number(row.rawHours || 0), 0);
+            if (hours > bestHours) { best = candidate; bestHours = hours; }
+          }
+          addHint(size === 1 ? 'Best day' : `Best ${size}D`, best, 'Highest continuous watch-hours window in the current filters.');
+        });
+      }
+      grid.innerHTML = hints.map((hint, index) => `
         <div class="hint-card">
           <strong>${hint.label}</strong>
           <div class="big">${fmtHours(hint.rawHours)}</div>
@@ -499,34 +642,77 @@
       if (dateMode === 'single') document.getElementById('endDate').value = start;
       if (!start || !end || start > end) {
         document.getElementById('selectionStatus').textContent = 'Invalid range';
+        document.getElementById('impactGrid').innerHTML = '';
+        document.getElementById('kpiGrid').innerHTML = '';
+        document.getElementById('stateTable').innerHTML = '';
         return;
       }
-      const dailyRows = DATA.daily.filter(inRange);
-      const states = groupRows(DATA.statesDaily.filter(inRange), 'state', ['rawHours', 'userDays']);
-      document.getElementById('selectionStatus').textContent = `${fmtRange(start, end)} | ${dailyRows.length} days`;
+      const allDaily = activeDaily();
+      const dailyRows = allDaily.filter(inRange);
+      const states = groupRows(scopeStates().filter(inRange), 'state', ['rawHours', 'userDays']);
+      const platformText = platformValue === 'all' ? 'All Platforms' : platformValue;
+      const channelText = channelValue === 'all' ? 'All Channels' : channelValue;
+      document.getElementById('selectionStatus').textContent = `${fmtRange(start, end)} | ${sourceLabel()} | ${platformText} | ${channelText} | ${dailyRows.length} days`;
+      renderHints(allDaily);
       renderKpis(dailyRows);
       renderTables(states, dailyRows.length);
+    }
+
+    function applySourceFilter() {
+      sourceValue = document.getElementById('sourceFilter').value;
+      platformValue = 'all';
+      channelValue = 'all';
+      updateFilterOptions();
+      syncAvailability(true);
+      render();
+    }
+
+    function applyPlatformFilter() {
+      platformValue = document.getElementById('platformFilter').value;
+      channelValue = 'all';
+      updateFilterOptions();
+      syncAvailability(true);
+      render();
+    }
+
+    function applyChannelFilter() {
+      channelValue = document.getElementById('channelFilter').value;
+      syncAvailability(true);
+      render();
     }
 
     function boot() {
       document.getElementById('title').textContent = DATA.title;
       document.getElementById('excelLink').href = DATA.excelFile;
-      document.getElementById('rangeText').textContent =
-        `Source: ${DATA.source} | Completed data range: ${fmtRange(DATA.range.start, DATA.range.end)} | Last updated ${DATA.generatedAt} IST`;
-      document.getElementById('startDate').min = DATA.range.start;
-      document.getElementById('startDate').max = DATA.range.end;
-      document.getElementById('endDate').min = DATA.range.start;
-      document.getElementById('endDate').max = DATA.range.end;
-      document.getElementById('startDate').value = DATA.defaultRange.start;
-      document.getElementById('endDate').value = DATA.defaultRange.end;
+      fillSelect('sourceFilter', ['stream', 'fast'], 'All Sources', sourceValue);
+      document.getElementById('sourceFilter').options[0].textContent = 'ALL Sources';
+      Array.from(document.getElementById('sourceFilter').options).forEach((option) => {
+        if (option.value !== 'all') option.textContent = option.value.toUpperCase();
+      });
+      updateFilterOptions();
+      syncAvailability(true);
       syncDateMode();
-      renderHints();
-      document.getElementById('resetBtn').addEventListener('click', () => setRange(DATA.range.start, DATA.range.end));
-      document.getElementById('bestMaxBtn').addEventListener('click', () => setRange(DATA.range.start, DATA.range.end));
+      document.getElementById('resetBtn').addEventListener('click', () => {
+        sourceValue = DATA.defaultSource || 'stream';
+        platformValue = 'all';
+        channelValue = 'all';
+        updateFilterOptions();
+        const rows = syncAvailability(false);
+        if (rows.length) setRange(rows[0].date, rows[rows.length - 1].date);
+      });
+      document.getElementById('bestMaxBtn').addEventListener('click', () => {
+        const rows = activeDaily();
+        if (rows.length) setRange(rows[0].date, rows[rows.length - 1].date);
+      });
       document.getElementById('singleDateBtn').addEventListener('click', () => setDateMode('single'));
       document.getElementById('rangeDateBtn').addEventListener('click', () => setDateMode('range'));
       document.getElementById('startDate').addEventListener('change', render);
       document.getElementById('endDate').addEventListener('change', render);
+      document.getElementById('sourceFilter').addEventListener('change', applySourceFilter);
+      document.getElementById('platformFilter').addEventListener('change', applyPlatformFilter);
+      document.getElementById('channelFilter').addEventListener('change', applyChannelFilter);
+      document.getElementById('rangeText').textContent =
+        `Source-aware showcase | STREAM and FAST completed data | Last updated ${DATA.generatedAt} IST`;
       render();
     }
 
