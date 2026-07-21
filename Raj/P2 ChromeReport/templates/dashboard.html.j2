@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chrome Dashboard</title>
+  <style>
+{{ css_text }}
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Standalone Weekly Dashboard</p>
+        <h1>Chrome Report Automation</h1>
+        <p class="hero-copy">Double-click this file to explore the latest appended history with offline charts, filters, search, and Excel export.</p>
+      </div>
+      <div class="hero-meta">
+        <div class="meta-card">
+          <span>Generated</span>
+          <strong id="generatedAt">{{ generated_at }}</strong>
+        </div>
+        <div class="meta-card">
+          <span>Active Dataset</span>
+          <strong id="activeDatasetLabel">Distribution</strong>
+        </div>
+      </div>
+    </header>
+
+    <section class="control-panel">
+      <div class="tab-row" id="datasetTabs"></div>
+      <div class="filter-grid">
+        <label>
+          <span>Week</span>
+          <select id="weekFilter"></select>
+        </label>
+        <label>
+          <span>Market</span>
+          <select id="marketFilter"></select>
+        </label>
+        <label>
+          <span>Channel</span>
+          <select id="channelFilter"></select>
+        </label>
+        <label>
+          <span>Search</span>
+          <input id="searchInput" type="search" placeholder="Search any visible row field">
+        </label>
+        <div class="action-row">
+          <button id="resetButton" type="button" class="ghost-button">Reset Filters</button>
+          <button id="exportButton" type="button" class="primary-button">Export Filtered Table</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="kpi-grid">
+      <article class="kpi-card">
+        <span>Rows</span>
+        <strong id="rowsKpi">0</strong>
+      </article>
+      <article class="kpi-card">
+        <span>Markets</span>
+        <strong id="marketsKpi">0</strong>
+      </article>
+      <article class="kpi-card">
+        <span>Channels</span>
+        <strong id="channelsKpi">0</strong>
+      </article>
+      <article class="kpi-card">
+        <span>Latest Week</span>
+        <strong id="latestWeekKpi">-</strong>
+      </article>
+    </section>
+
+    <section class="content-grid">
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Trend</p>
+            <h2>Weekly Volume</h2>
+          </div>
+        </div>
+        <div id="weekChart" class="chart"></div>
+      </article>
+      <article class="panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">Mix</p>
+            <h2>Top Markets</h2>
+          </div>
+        </div>
+        <div id="marketChart" class="chart"></div>
+      </article>
+    </section>
+
+    <section class="panel table-panel">
+      <div class="panel-head table-head">
+        <div>
+          <p class="eyebrow">Filtered Table</p>
+          <h2 id="tableTitle">Distribution</h2>
+        </div>
+        <div class="table-summary">
+          <span id="tableCount">0 rows</span>
+          <span id="pageLabel">Page 1 of 1</span>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="dataTable">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination-row">
+        <button id="prevButton" type="button" class="ghost-button">Previous</button>
+        <button id="nextButton" type="button" class="ghost-button">Next</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+{{ plotly_js }}
+  </script>
+  <script>
+window.__DASHBOARD_DATA__ = {{ data_json }};
+  </script>
+  <script>
+{{ js_text }}
+  </script>
+</body>
+</html>

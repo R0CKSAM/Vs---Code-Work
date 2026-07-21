@@ -7,6 +7,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
 from openpyxl import Workbook, load_workbook
 from weekly_workbook_builder import ensure_combined_weekly_workbooks
 
@@ -20,6 +21,13 @@ OTS_DATA_DIR = BASE_DIR / "OTS"
 OUTPUT_DIR = BASE_DIR / "output"
 OUTPUT_JSON = OUTPUT_DIR / "frequency_report.json"
 OUTPUT_HTML = OUTPUT_DIR / "chrome_report_dashboard.html"
+HISTORY_DIR = BASE_DIR / "history"
+HISTORY_DISTRIBUTION_CSV = HISTORY_DIR / "distribution_history.csv"
+HISTORY_NBHD_CSV = HISTORY_DIR / "nbhd_history.csv"
+HISTORY_OTS_CSV = HISTORY_DIR / "ots_history.csv"
+LEGACY_HISTORY_DISTRIBUTION_CSV = BASE_DIR / "distribution_history.csv"
+LEGACY_HISTORY_NBHD_CSV = BASE_DIR / "nbhd_history.csv"
+LEGACY_HISTORY_OTS_CSV = BASE_DIR / "ots_history.csv"
 STYLE_FILE = BASE_DIR / "static" / "style.css"
 NBHD_SCRIPT_FILE = BASE_DIR / "static" / "neighbourhood.js"
 OTS_SCRIPT_FILE = BASE_DIR / "static" / "ots.js"
@@ -89,6 +97,7 @@ OTS_REPORT_CACHE: dict[str, Any] = {
 
 def ensure_directories() -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
+    HISTORY_DIR.mkdir(parents=True, exist_ok=True)
     NBHD_DATA_DIR.mkdir(parents=True, exist_ok=True)
     OTS_DATA_DIR.mkdir(parents=True, exist_ok=True)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -127,6 +136,36 @@ def week_sort_key(label: str) -> tuple[int, str]:
 
 def get_signature(files: list[Path]) -> tuple[tuple[str, int, int], ...]:
     return tuple((path.name, int(path.stat().st_mtime), path.stat().st_size) for path in files)
+
+
+def history_files_ready() -> bool:
+    paths = [resolve_history_path(HISTORY_DISTRIBUTION_CSV, LEGACY_HISTORY_DISTRIBUTION_CSV), resolve_history_path(HISTORY_NBHD_CSV, LEGACY_HISTORY_NBHD_CSV), resolve_history_path(HISTORY_OTS_CSV, LEGACY_HISTORY_OTS_CSV)]
+    return all(path.exists() and path.stat().st_size > 0 for path in paths)
+
+
+def get_history_signature() -> tuple[tuple[str, int, int], ...]:
+    paths = [
+        path
+        for path in [
+            resolve_history_path(HISTORY_DISTRIBUTION_CSV, LEGACY_HISTORY_DISTRIBUTION_CSV),
+            resolve_history_path(HISTORY_NBHD_CSV, LEGACY_HISTORY_NBHD_CSV),
+            resolve_history_path(HISTORY_OTS_CSV, LEGACY_HISTORY_OTS_CSV),
+        ]
+        if path.exists()
+    ]
+    return get_signature(paths)
+
+
+def read_history_csv(path: Path) -> pd.DataFrame:
+    if not path.exists():
+        return pd.DataFrame()
+    return pd.read_csv(path, keep_default_na=False, na_values=[""], low_memory=False)
+
+
+def resolve_history_path(primary: Path, legacy: Path) -> Path:
+    if primary.exists():
+        return primary
+    return legacy
 
 
 def normalize_header_key(value: Any) -> str:
@@ -374,6 +413,89 @@ def extract_nbhd_window(rows: list[dict[str, Any]], radius: int = 4) -> list[tup
 
 
 def build_nbhd_report() -> dict[str, Any]:
+    if history_files_ready():
+        history_path = resolve_history_path(HISTORY_NBHD_CSV, LEGACY_HISTORY_NBHD_CSV)
+        dataframe = read_history_csv(history_path)
+        if dataframe.empty:
+            return empty_nbhd_report()
+
+        weeks = sorted(dataframe["Week"].dropna().astype(str).unique().tolist(), key=week_sort_key)
+        merged: dict[str, dict[str, Any]] = {}
+
+        for week_label in weeks:
+            week_frame = dataframe[dataframe["Week"].astype(str) == week_label].copy()
+            rows = []
+            for row in week_frame.to_dict(orient="records"):
+                market = normalize_text(row.get("Market"))
+                city = normalize_text(row.get("City"))
+                head_end = normalize_text(row.get("Head-End"))
+                channel = normalize_text(row.get("Channel"))
+                if not market or not city or not head_end or not channel:
+                    continue
+                tv_ch_no = normalize_number(row.get("TV CH. No."))
+                frequency = normalize_number(row.get("Frequency"))
+                rows.append(
+                    {
+                        "type": normalize_text(row.get("Type")),
+                        "market": market,
+                        "city": city,
+                        "head_end": head_end,
+                        "channel": channel,
+                        "genre": normalize_text(row.get("Genre")),
+                        "frequency": frequency,
+                        "tv_ch_no": tv_ch_no,
+                        "order_token": tv_ch_no if tv_ch_no is not None else frequency,
+                    }
+                )
+
+            grouped: dict[tuple[str, str, str], list[dict[str, Any]]] = {}
+            for row in rows:
+                grouped.setdefault((row["market"], row["city"], row["head_end"]), []).append(row)
+
+            for (market, city, head_end), group_rows in grouped.items():
+                for offset, nbhd_row in extract_nbhd_window(group_rows):
+                    row_key = "||".join((market, city, head_end, str(offset)))
+                    record = merged.setdefault(
+                        row_key,
+                        {
+                            "row_key": row_key,
+                            "market": market,
+                            "city": city,
+                            "head_end": head_end,
+                            "position": offset,
+                            "is_reference": offset == 0,
+                            "channels": {},
+                            "genres": {},
+                            "frequencies": {},
+                        },
+                    )
+                    record["channels"][week_label] = normalize_text(nbhd_row["channel"])
+                    record["genres"][week_label] = normalize_text(nbhd_row["genre"])
+                    record["frequencies"][week_label] = nbhd_row["frequency"]
+
+        records = list(merged.values())
+        for record in records:
+            for week in weeks:
+                record["channels"].setdefault(week, "")
+                record["genres"].setdefault(week, "")
+                record["frequencies"].setdefault(week, None)
+
+        return {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "weeks": weeks,
+            "records": sorted(
+                records,
+                key=lambda item: (
+                    item["market"].lower(),
+                    item["city"].lower(),
+                    item["head_end"].lower(),
+                    item.get("position", 0),
+                ),
+            ),
+            "message": "",
+            "source_directory": str(history_path),
+        }
+
     week_files = get_nbhd_week_files()
     if not week_files:
         return empty_nbhd_report()
@@ -433,8 +555,7 @@ def build_nbhd_report() -> dict[str, Any]:
 
 
 def load_nbhd_report(force: bool = False) -> dict[str, Any]:
-    week_files = get_nbhd_week_files()
-    signature = get_signature(week_files)
+    signature = get_history_signature() if history_files_ready() else get_signature(get_nbhd_week_files())
     if not force and NBHD_REPORT_CACHE["report"] is not None and NBHD_REPORT_CACHE["signature"] == signature:
         return NBHD_REPORT_CACHE["report"]
 
@@ -445,6 +566,47 @@ def load_nbhd_report(force: bool = False) -> dict[str, Any]:
 
 
 def build_ots_report() -> dict[str, Any]:
+    if history_files_ready():
+        history_path = resolve_history_path(HISTORY_OTS_CSV, LEGACY_HISTORY_OTS_CSV)
+        dataframe = read_history_csv(history_path)
+        if dataframe.empty:
+            return empty_ots_report()
+
+        weeks = sorted(dataframe["Week"].dropna().astype(str).unique().tolist(), key=week_sort_key)
+        merged: dict[str, dict[str, Any]] = {}
+
+        for week_label in weeks:
+            week_frame = dataframe[dataframe["Week"].astype(str) == week_label]
+            for row in week_frame.to_dict(orient="records"):
+                market = normalize_text(row.get("Market"))
+                channel = normalize_text(row.get("Channel"))
+                if not market or not channel:
+                    continue
+                row_key = f"{market}||{channel}"
+                record = merged.setdefault(
+                    row_key,
+                    {
+                        "row_key": row_key,
+                        "market": market,
+                        "channel": channel,
+                        "ots_values": {},
+                    },
+                )
+                record["ots_values"][week_label] = normalize_ots_percentage(row.get("OTS"))
+
+        records = list(merged.values())
+        for record in records:
+            for week in weeks:
+                record["ots_values"].setdefault(week, None)
+
+        return {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "weeks": weeks,
+            "records": sorted(records, key=lambda item: (item["market"].lower(), item["channel"].lower())),
+            "message": "",
+            "source_directory": str(history_path),
+        }
+
     # Merge all weekly OTS workbooks into one dynamic week matrix keyed by market + channel.
     week_files = get_ots_week_files()
     if not week_files:
@@ -484,8 +646,7 @@ def build_ots_report() -> dict[str, Any]:
 
 def load_ots_report(force: bool = False) -> dict[str, Any]:
     # Reuse a signature cache so repeated dashboard refreshes do not re-parse unchanged OTS files.
-    week_files = get_ots_week_files()
-    signature = get_signature(week_files)
+    signature = get_history_signature() if history_files_ready() else get_signature(get_ots_week_files())
     if not force and OTS_REPORT_CACHE["report"] is not None and OTS_REPORT_CACHE["signature"] == signature:
         return OTS_REPORT_CACHE["report"]
 
@@ -581,6 +742,99 @@ def has_any_change(series: dict[str, Any], weeks: list[str]) -> bool:
 
 
 def build_report() -> dict[str, Any]:
+    if history_files_ready():
+        dataframe = read_history_csv(resolve_history_path(HISTORY_DISTRIBUTION_CSV, LEGACY_HISTORY_DISTRIBUTION_CSV))
+        if dataframe.empty:
+            report = empty_report()
+            report["message"] = "Distribution history CSV is empty."
+            return report
+
+        weeks = sorted(dataframe["Week"].dropna().astype(str).unique().tolist(), key=week_sort_key)
+        merged: dict[str, dict[str, Any]] = {}
+        for row in dataframe.to_dict(orient="records"):
+            transmission = normalize_text(row.get("Transmission"))
+            market = normalize_text(row.get("Market"))
+            mso_type = normalize_text(row.get("MSO Type"))
+            city = normalize_text(row.get("City"))
+            head_end = normalize_text(row.get("Head-End"))
+            channel_name = normalize_text(row.get("Channel Name"))
+            crn_no = normalize_text(row.get("CRN No."))
+            row_key = "||".join((transmission, market, mso_type, city, head_end, channel_name, crn_no))
+            if not row_key.replace("|", ""):
+                continue
+
+            week_label = normalize_text(row.get("Week"))
+            record = merged.setdefault(
+                row_key,
+                {
+                    "row_key": row_key,
+                    "transmission": transmission,
+                    "market": market,
+                    "mso_type": mso_type,
+                    "mso": transmission,
+                    "city": city,
+                    "head_end": head_end,
+                    "channel_name": channel_name,
+                    "band": normalize_text(row.get("Band")),
+                    "tv_ch_no": normalize_text(row.get("TV CH. No.")),
+                    "crn_no": crn_no,
+                    "genre": normalize_text(row.get("Genre")),
+                    "language": normalize_text(row.get("Language")),
+                    "name": channel_name,
+                    "week_label": week_label,
+                    "frequencies": {},
+                    "ranks": {},
+                    "bands": {},
+                    "changes": {},
+                    "rank_changes": {},
+                    "band_changes": {},
+                },
+            )
+            record["frequencies"][week_label] = normalize_number(row.get("Frequency/LCN No"))
+            record["ranks"][week_label] = normalize_rank(row.get("Rank Within Genre"))
+            record["bands"][week_label] = normalize_text(row.get("Band"))
+
+        records = list(merged.values())
+        for record in records:
+            for week in weeks:
+                record["frequencies"].setdefault(week, None)
+                record["ranks"].setdefault(week, None)
+                record["bands"].setdefault(week, "")
+
+            if weeks:
+                first_week = weeks[0]
+                record["changes"][first_week] = "baseline"
+                record["rank_changes"][first_week] = "baseline"
+                record["band_changes"][first_week] = "baseline"
+
+            for index in range(1, len(weeks)):
+                previous_week = weeks[index - 1]
+                current_week = weeks[index]
+                record["changes"][current_week] = calculate_frequency_change(
+                    record["frequencies"][previous_week],
+                    record["frequencies"][current_week],
+                )
+                record["rank_changes"][current_week] = calculate_rank_change(
+                    record["ranks"][previous_week],
+                    record["ranks"][current_week],
+                )
+                record["band_changes"][current_week] = calculate_band_change(
+                    record["bands"][previous_week],
+                    record["bands"][current_week],
+                )
+
+            record["change_status"] = "YES" if has_any_change(record["frequencies"], weeks) else "NO"
+            record["rank_change_status"] = "YES" if has_any_change(record["ranks"], weeks) else "NO"
+            record["band_change_status"] = "YES" if has_any_change(record["bands"], weeks) else "NO"
+
+        report = {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "weeks": weeks,
+            "records": records,
+            "message": "",
+        }
+        return report
+
     week_files = get_week_files()
     if not week_files:
         report = empty_report()
@@ -670,8 +924,7 @@ def build_report() -> dict[str, Any]:
 
 
 def load_report(force: bool = False) -> dict[str, Any]:
-    week_files = get_week_files()
-    signature = get_signature(week_files)
+    signature = get_history_signature() if history_files_ready() else get_signature(get_week_files())
     if not force and REPORT_CACHE["report"] is not None and REPORT_CACHE["signature"] == signature:
         return REPORT_CACHE["report"]
 
@@ -969,23 +1222,31 @@ def compact_inline_json(value: Any) -> str:
     return compact_json_text(value).replace("</", "<\\/")
 
 
+def build_dashboard_bundle(report: dict[str, Any] | None = None) -> dict[str, Any]:
+    frequency_report = report if report is not None else load_report(force=True)
+    return {
+        "frequency": frequency_report,
+        "nbhd": build_nbhd_api_payload({"market": "", "city": "", "head_end": ""}, "", force_refresh=True),
+        "ots": build_ots_api_payload(
+            {"markets": [], "channels": [], "week_from": "", "week_to": "", "change": "", "search": ""},
+            force_refresh=True,
+        ),
+    }
+
+
+def write_frequency_report_json(report: dict[str, Any] | None = None) -> Path:
+    bundle = build_dashboard_bundle(report)
+    OUTPUT_JSON.write_text(f"window.__CHROME_REPORT_DATA__ = {compact_inline_json(bundle)};", encoding="utf-8")
+    return OUTPUT_JSON
+
+
 def write_standalone_dashboard(report: dict[str, Any]) -> None:
     OUTPUT_HTML.write_text(create_standalone_dashboard(report), encoding="utf-8")
 
 
 def create_standalone_dashboard(report: dict[str, Any]) -> str:
     style_text = read_style()
-    report_json = compact_inline_json(report)
-    nbhd_report_json = compact_inline_json(
-        build_nbhd_api_payload({"market": "", "city": "", "head_end": ""}, "", force_refresh=True)
-    )
     nbhd_script_text = read_nbhd_script()
-    ots_report_json = compact_inline_json(
-        build_ots_api_payload(
-            {"markets": [], "channels": [], "week_from": "", "week_to": "", "change": "", "search": ""},
-            force_refresh=True,
-        )
-    )
     ots_script_text = read_ots_script()
 
     html = """<!DOCTYPE html>
@@ -1179,8 +1440,14 @@ __STYLE__
     <tr><td colspan="100%" class="empty-state">No records match the current filters.</td></tr>
   </template>
 
+  <script src="./frequency_report.json"></script>
   <script>
-const report = __DATA__;
+const reportBundle = window.__CHROME_REPORT_DATA__ || {
+  frequency: { generated_at: "", weeks: [], records: [], message: "Dashboard data file could not be loaded." },
+  nbhd: { generated_at: "", weeks: [], filters: { markets: [], cities: [], head_ends: [] }, table: { records: [], total_count: 0 }, message: "Neighbourhood data file could not be loaded.", source_directory: "" },
+  ots: { generated_at: "", weeks: [], visible_weeks: [], filters: { markets: [], channels: [] }, table: { records: [], total_count: 0 }, message: "OTS data file could not be loaded.", source_directory: "" }
+};
+const report = reportBundle.frequency;
 const state = {
   view: "frequency",
   filters: { market: "", city: "", mso_type: "", head_end: "", crn_no: "", channel_name: "", band: "", week: "", change: "" },
@@ -1622,13 +1889,13 @@ syncFullscreenButtons();
 render();
   </script>
   <script>
-window.__NBHD_STANDALONE_DATA__ = __NBHD_DATA__;
+window.__NBHD_STANDALONE_DATA__ = reportBundle.nbhd;
   </script>
   <script>
 __NBHD_SCRIPT__
   </script>
   <script>
-window.__OTS_STANDALONE_DATA__ = __OTS_DATA__;
+window.__OTS_STANDALONE_DATA__ = reportBundle.ots;
   </script>
   <script>
 __OTS_SCRIPT__
@@ -1639,10 +1906,7 @@ __OTS_SCRIPT__
 
     return (
         html.replace("__STYLE__", style_text)
-        .replace("__DATA__", report_json)
-        .replace("__NBHD_DATA__", nbhd_report_json)
         .replace("__NBHD_SCRIPT__", nbhd_script_text)
-        .replace("__OTS_DATA__", ots_report_json)
         .replace("__OTS_SCRIPT__", ots_script_text)
     )
 
@@ -2025,9 +2289,15 @@ def parse_ots_filters(query: dict[str, list[str]]) -> dict[str, Any]:
 def generate_standalone_dashboard() -> tuple[Path, Path]:
     ensure_directories()
     report = load_report(force=True)
-    OUTPUT_JSON.write_text(compact_json_text(report), encoding="utf-8")
+    write_frequency_report_json(report)
     write_standalone_dashboard(report)
     return OUTPUT_JSON, OUTPUT_HTML
+
+
+def generate_frequency_report_json() -> Path:
+    ensure_directories()
+    report = load_report(force=True)
+    return write_frequency_report_json(report)
 
 
 if __name__ == "__main__":
