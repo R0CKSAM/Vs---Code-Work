@@ -52,23 +52,36 @@
     return option;
   }
 
-  function extractWeekNumber(weekLabel) {
-    const match = String(weekLabel || "").match(/(\d{1,2})/);
-    return match ? Number(match[1]) : null;
+  function getWeekClusterController() {
+    return window.__CHROME_WEEK_CLUSTER__ || null;
   }
 
-  function buildWeekRangeOptions() {
-    const options = [];
-    let start = 1;
-    let useFourWeekBlock = true;
-    while (start <= 52) {
-      let end = start + (useFourWeekBlock ? 3 : 4);
-      if (end > 52) end = 52;
-      options.push(`${start}-${end}`);
-      start = end + 1;
-      useFourWeekBlock = !useFourWeekBlock;
+  function buildWeekRangeOptions(weeks) {
+    const controller = getWeekClusterController();
+    if (controller) {
+      return controller.getOptions(weeks || []);
+    }
+
+    const safeWeeks = Array.isArray(weeks) ? weeks.filter((week) => String(week || "").trim() !== "") : [];
+    const options = [{ value: "all", label: "All Weeks" }];
+    for (let index = 0; index < safeWeeks.length; index += 4) {
+      const slice = safeWeeks.slice(index, index + 4);
+      if (!slice.length) continue;
+      const label = slice.length === 1 ? slice[0] : `${slice[0]} to ${slice[slice.length - 1]}`;
+      options.push({ value: `${slice[0]}|||${slice[slice.length - 1]}`, label });
     }
     return options;
+  }
+
+  function populateOptionList(select, options, selectedValue) {
+    const safeOptions = Array.isArray(options) ? options.filter((option) => option && String(option.value || "").trim() !== "") : [];
+    const fallback = safeOptions.some((option) => option.value === selectedValue)
+      ? selectedValue
+      : (safeOptions[0]?.value || "");
+    select.innerHTML = "";
+    safeOptions.forEach((option) => select.appendChild(createOption(option.value, option.label)));
+    select.value = fallback;
+    return fallback;
   }
 
   function getPageSize() {
@@ -81,16 +94,11 @@
 
   function getVisibleWeeks(payload) {
     const allWeeks = payload.weeks || [];
-    if (!state.filters.week_range) return allWeeks;
-    const [startText, endText] = state.filters.week_range.split("-");
-    const start = Number(startText);
-    const end = Number(endText);
-    if (!Number.isFinite(start) || !Number.isFinite(end)) return allWeeks;
-    const matchedWeeks = allWeeks.filter((week) => {
-      const weekNumber = extractWeekNumber(week);
-      return weekNumber !== null && weekNumber >= start && weekNumber <= end;
-    });
-    return matchedWeeks.length ? matchedWeeks : allWeeks;
+    const controller = getWeekClusterController();
+    if (controller) {
+      return controller.getVisibleWeeks(allWeeks, state.filters.week_range || controller.getValue(allWeeks));
+    }
+    return allWeeks.slice(Math.max(0, allWeeks.length - 4));
   }
 
   function hasChangeInWeeks(record, weeks) {
@@ -139,7 +147,9 @@
     state.filters.market = populateSelect(marketFilter, payload.filters.markets, "All Markets", state.filters.market);
     state.filters.city = populateSelect(cityFilter, payload.filters.cities, "All Cities", state.filters.city);
     state.filters.head_end = populateSelect(headendFilter, payload.filters.head_ends, "All Headends", state.filters.head_end);
-    state.filters.week_range = populateSelect(weekRangeFilter, buildWeekRangeOptions(), "All Week Ranges", state.filters.week_range);
+    const controller = getWeekClusterController();
+    const preferredRange = state.filters.week_range || (controller ? controller.getValue(payload.weeks || []) : "");
+    state.filters.week_range = populateOptionList(weekRangeFilter, buildWeekRangeOptions(payload.weeks || []), preferredRange);
     state.filters.change = populateSelect(changeFilter, ["Changed", "No Change"], "All Changes", state.filters.change);
   }
 
@@ -161,9 +171,9 @@
 
     [
       { label: "Channel", key: "channel", className: "nbhd-group-channel" },
-      { label: "Genre", key: "genre", className: "nbhd-group-genre" },
       { label: "Frequency", key: "frequency", className: "nbhd-group-frequency" },
-    ].forEach((group, groupIndex) => {
+      { label: "Genre", key: "genre", className: "nbhd-group-genre" },
+    ].forEach((group) => {
       const th = document.createElement("th");
       th.textContent = group.label;
       th.colSpan = Math.max(weeks.length, 1);
@@ -205,8 +215,8 @@
 
     const groups = [
       { key: "channels", className: "nbhd-group-channel" },
-      { key: "genres", className: "nbhd-group-genre" },
       { key: "frequencies", className: "nbhd-group-frequency" },
+      { key: "genres", className: "nbhd-group-genre" },
     ];
     groups.forEach((groupConfig) => {
       if (!weeks.length) {
@@ -231,6 +241,28 @@
           } else if (weekIndex > 0 && current && !previous) {
             td.classList.add("nbhd-cell-new");
           } else if (weekIndex > 0 && current && previous && current !== previous) {
+            td.classList.add("nbhd-cell-changed");
+          }
+        }
+        if (groupConfig.key === "frequencies") {
+          const currentValue = value === null || value === undefined || value === "" ? null : Number(value);
+          const previousWeek = weekIndex > 0 ? weeks[weekIndex - 1] : "";
+          const previousRaw = previousWeek ? record[groupConfig.key][previousWeek] : null;
+          const previousValue = previousRaw === null || previousRaw === undefined || previousRaw === "" ? null : Number(previousRaw);
+          if (currentValue === null || Number.isNaN(currentValue)) {
+            td.classList.add("nbhd-cell-empty");
+          } else if (weekIndex > 0 && previousValue !== null && !Number.isNaN(previousValue)) {
+            if (currentValue > previousValue) td.classList.add("nbhd-cell-decrease");
+            else if (currentValue < previousValue) td.classList.add("nbhd-cell-increase");
+          }
+        }
+        if (groupConfig.key === "genres") {
+          const currentGenre = String(value || "").trim();
+          const previousWeek = weekIndex > 0 ? weeks[weekIndex - 1] : "";
+          const previousGenre = previousWeek ? String(record[groupConfig.key][previousWeek] || "").trim() : "";
+          if (!currentGenre || currentGenre === "-") {
+            td.classList.add("nbhd-cell-empty");
+          } else if (weekIndex > 0 && previousGenre && currentGenre !== previousGenre) {
             td.classList.add("nbhd-cell-changed");
           }
         }
@@ -515,7 +547,7 @@
     state.filters.market = "";
     state.filters.city = "";
     state.filters.head_end = "";
-    state.filters.week_range = "";
+    state.filters.week_range = getWeekClusterController()?.getValue(state.payload?.weeks || []) || "";
     state.filters.change = "";
     state.page = 1;
     if (searchInput) {
@@ -527,7 +559,18 @@
   bindSelect(marketFilter, "market");
   bindSelect(cityFilter, "city");
   bindSelect(headendFilter, "head_end");
-  bindSelect(weekRangeFilter, "week_range");
+  if (weekRangeFilter) {
+    weekRangeFilter.addEventListener("change", () => {
+      state.filters.week_range = weekRangeFilter.value;
+      state.page = 1;
+      const controller = getWeekClusterController();
+      if (controller) {
+        controller.setValue(state.filters.week_range, state.payload?.weeks || []);
+        return;
+      }
+      fetchPayload(false);
+    });
+  }
   bindSelect(changeFilter, "change");
   if (refreshButton) {
     refreshButton.addEventListener("click", () => fetchPayload(true));
@@ -588,6 +631,11 @@
       fullscreenState.usingNativeFullscreen = false;
       setFullscreen(false);
     }
+  });
+  window.addEventListener("chrome:week-cluster-change", (event) => {
+    state.filters.week_range = event.detail?.value || "";
+    state.page = 1;
+    fetchPayload(false);
   });
 
   if (state.initial) {

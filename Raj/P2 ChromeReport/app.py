@@ -1294,7 +1294,7 @@ __STYLE__
           <label><span>CRN No</span><select id="crnFilter"></select></label>
           <label><span>Channel</span><select id="channelFilter"></select></label>
           <label><span>Band</span><select id="bandFilter"></select></label>
-          <label><span>Week</span><select id="weekFilter"></select></label>
+          <label><span>Week Cluster</span><select id="weekClusterFilter"></select></label>
           <label><span>Change</span><select id="changeFilter"></select></label>
           <div class="action-row table1-filter-actions">
             <button id="resetButton" class="ghost-button" type="button">Reset Filters</button>
@@ -1329,6 +1329,34 @@ __STYLE__
           <button id="exitFullscreenButton" class="ghost-button table-exit-fullscreen" type="button" hidden>Exit Full Screen</button>
           <button id="nextPage" class="ghost-button" type="button">Next</button>
         </div>
+      </section>
+
+      <section class="panel channel-report-launcher">
+        <div class="panel-heading table-heading">
+          <div><h2>Channel Report</h2></div>
+          <div class="table-side">
+            <button id="channelReportToggleButton" class="primary-button" type="button">Show Report</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel channel-report-panel">
+        <div class="panel-heading">
+          <div><h2>Channel Report</h2></div>
+          <div class="table-meta">
+            <span id="channelReportCount">0 channels</span>
+          </div>
+        </div>
+        <div class="channel-report-toolbar">
+          <label><span>Report Channel</span><select id="channelReportChannelFilter"></select></label>
+          <label><span>Week From</span><select id="channelReportWeekFromFilter"></select></label>
+          <label><span>Week To</span><select id="channelReportWeekToFilter"></select></label>
+          <div class="action-row channel-report-actions">
+            <button id="channelReportResetButton" class="ghost-button" type="button">Reset</button>
+            <button id="channelReportHideButton" class="ghost-button" type="button">Hide</button>
+          </div>
+        </div>
+        <div id="channelReportContainer" class="channel-report-stack"></div>
       </section>
 
       <section class="panel focus-panel">
@@ -1401,8 +1429,6 @@ __STYLE__
           <button id="otsResetButton" class="ghost-button" type="button">Reset Filters</button>
           <button id="otsRefreshButton" class="ghost-button" type="button">Refresh</button>
           <button id="otsFullscreenButton" class="primary-button" type="button">Full Screen</button>
-          <button id="otsExportExcelButton" class="ghost-button" type="button">Export to Excel</button>
-          <button id="otsExportCsvButton" class="ghost-button" type="button">Export to CSV</button>
         </div>
       </div>
       <div id="otsStatusMessage" class="status-message" hidden></div>
@@ -1448,9 +1474,69 @@ const reportBundle = window.__CHROME_REPORT_DATA__ || {
   ots: { generated_at: "", weeks: [], visible_weeks: [], filters: { markets: [], channels: [] }, table: { records: [], total_count: 0 }, message: "OTS data file could not be loaded.", source_directory: "" }
 };
 const report = reportBundle.frequency;
+function normalizeWeeks(weeks) {
+  return Array.isArray(weeks) ? weeks.filter((week) => String(week || "").trim() !== "") : [];
+}
+window.__CHROME_WEEK_CLUSTER__ = window.__CHROME_WEEK_CLUSTER__ || (() => {
+  let currentValue = "";
+
+  function buildOptions(weeks) {
+    const safeWeeks = normalizeWeeks(weeks);
+    if (!safeWeeks.length) return [{ value: "all", label: "All Weeks", weeks: [] }];
+    const options = [{ value: "all", label: "All Weeks", weeks: safeWeeks.slice() }];
+    for (let index = 0; index < safeWeeks.length; index += 4) {
+      const slice = safeWeeks.slice(index, index + 4);
+      if (!slice.length) continue;
+      options.push({
+        value: `${slice[0]}|||${slice[slice.length - 1]}`,
+        label: slice.length === 1 ? slice[0] : `${slice[0]} to ${slice[slice.length - 1]}`,
+        weeks: slice,
+      });
+    }
+    return options;
+  }
+
+  function resolveValue(weeks, requestedValue = currentValue) {
+    const options = buildOptions(weeks);
+    if (!options.length) return "all";
+    if (requestedValue === "all" && options.some((option) => option.value === "all")) return "all";
+    if (options.some((option) => option.value === requestedValue)) return requestedValue;
+    const clusterOptions = options.filter((option) => option.value !== "all");
+    return clusterOptions.length ? clusterOptions[clusterOptions.length - 1].value : "all";
+  }
+
+  return {
+    getOptions(weeks) {
+      return buildOptions(weeks);
+    },
+    getValue(weeks) {
+      currentValue = resolveValue(weeks, currentValue);
+      return currentValue;
+    },
+    getVisibleWeeks(weeks, requestedValue = currentValue) {
+      const safeWeeks = normalizeWeeks(weeks);
+      if (!safeWeeks.length) return [];
+      const resolvedValue = resolveValue(safeWeeks, requestedValue);
+      if (resolvedValue === "all") return safeWeeks.slice();
+      const option = buildOptions(safeWeeks).find((item) => item.value === resolvedValue);
+      return option ? option.weeks.slice() : safeWeeks.slice(Math.max(0, safeWeeks.length - 4));
+    },
+    setValue(nextValue, weeks) {
+      currentValue = resolveValue(weeks, nextValue);
+      window.dispatchEvent(new CustomEvent("chrome:week-cluster-change", {
+        detail: {
+          value: currentValue,
+          weeks: this.getVisibleWeeks(weeks, currentValue),
+        },
+      }));
+      return currentValue;
+    },
+  };
+})();
+window.__CHROME_WEEK_CLUSTER__.getValue(report.weeks || []);
 const state = {
   view: "frequency",
-  filters: { market: "", city: "", mso_type: "", head_end: "", crn_no: "", channel_name: "", band: "", week: "", change: "" },
+  filters: { market: "", city: "", mso_type: "", head_end: "", crn_no: "", channel_name: "", band: "", change: "" },
   sortKey: "flow_order",
   sortDirection: "asc",
   page: 1,
@@ -1464,7 +1550,7 @@ const tableColumns = [
   { key: "crn_no", label: "CRN No." },
   { key: "channel_name", label: "CHANNEL NAME" },
 ];
-const filterOrder = ["market", "city", "mso_type", "head_end", "crn_no", "channel_name", "band", "week", "change"];
+const filterOrder = ["market", "city", "mso_type", "head_end", "crn_no", "channel_name", "band", "change"];
 const fieldMap = { market: "market", city: "city", mso_type: "mso_type", head_end: "head_end", crn_no: "crn_no", channel_name: "channel_name", band: "band" };
 const filters = {
   market: document.getElementById("marketFilter"),
@@ -1474,9 +1560,9 @@ const filters = {
   crn_no: document.getElementById("crnFilter"),
   channel_name: document.getElementById("channelFilter"),
   band: document.getElementById("bandFilter"),
-  week: document.getElementById("weekFilter"),
   change: document.getElementById("changeFilter"),
 };
+const weekClusterFilter = document.getElementById("weekClusterFilter");
 const viewButtons = {
   frequency: document.getElementById("frequencyViewButton"),
   rank: document.getElementById("rankViewButton"),
@@ -1495,6 +1581,24 @@ const fullscreenState = {
   tableScrollTop: 0,
   tableScrollLeft: 0,
 };
+const DEFAULT_CHANNEL_REPORTS = ["INDIA TV", "AAJ TAK", "NEWS 18 INDIA", "REPUBLIC BHARAT"];
+const channelReportState = {
+  channel: "__default__",
+  week_from: "",
+  week_to: "",
+  open: false,
+};
+const channelReportControls = {
+  channel: document.getElementById("channelReportChannelFilter"),
+  week_from: document.getElementById("channelReportWeekFromFilter"),
+  week_to: document.getElementById("channelReportWeekToFilter"),
+  container: document.getElementById("channelReportContainer"),
+  count: document.getElementById("channelReportCount"),
+  panel: document.querySelector(".channel-report-panel"),
+  toggle: document.getElementById("channelReportToggleButton"),
+  reset: document.getElementById("channelReportResetButton"),
+  hide: document.getElementById("channelReportHideButton"),
+};
 function formatNumber(value) { return new Intl.NumberFormat().format(value || 0); }
 function formatTimestamp(value) {
   const date = new Date(value);
@@ -1506,13 +1610,269 @@ function createOption(value, label) {
   option.textContent = label;
   return option;
 }
+function populateOptionList(select, options, selectedValue) {
+  const safeOptions = Array.isArray(options) ? options.filter((option) => option && String(option.value || "").trim() !== "") : [];
+  const fallback = safeOptions.some((option) => option.value === selectedValue) ? selectedValue : (safeOptions[0]?.value || "");
+  select.innerHTML = "";
+  safeOptions.forEach((option) => select.appendChild(createOption(option.value, option.label)));
+  select.value = fallback;
+  return fallback;
+}
+function getVisibleWeeks() {
+  return window.__CHROME_WEEK_CLUSTER__.getVisibleWeeks(report.weeks || [], window.__CHROME_WEEK_CLUSTER__.getValue(report.weeks || []));
+}
+function formatChannelLabel(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+function getChannelReportWeekPair() {
+  const allWeeks = normalizeWeeks(report.weeks || []);
+  if (!allWeeks.length) return [];
+  const fallbackTo = allWeeks[allWeeks.length - 1];
+  const fallbackFrom = allWeeks[Math.max(0, allWeeks.length - 2)] || fallbackTo;
+  const from = allWeeks.includes(channelReportState.week_from) ? channelReportState.week_from : fallbackFrom;
+  const to = allWeeks.includes(channelReportState.week_to) ? channelReportState.week_to : fallbackTo;
+  let fromIndex = allWeeks.indexOf(from);
+  let toIndex = allWeeks.indexOf(to);
+  if (fromIndex === toIndex && allWeeks.length > 1) {
+    fromIndex = Math.max(0, toIndex - 1);
+  }
+  if (fromIndex > toIndex) {
+    const swap = fromIndex;
+    fromIndex = toIndex;
+    toIndex = swap;
+  }
+  channelReportState.week_from = allWeeks[fromIndex];
+  channelReportState.week_to = allWeeks[toIndex];
+  return [allWeeks[fromIndex], allWeeks[toIndex]];
+}
+function buildChannelReportOptions() {
+  const channels = Array.from(
+    new Set(
+      (report.records || [])
+        .map((record) => String(record.channel_name || "").trim())
+        .filter(Boolean)
+    )
+  ).sort((left, right) => left.localeCompare(right));
+  return [
+    { value: "__default__", label: "Default 4 Channels" },
+    ...channels.map((channel) => ({ value: channel, label: formatChannelLabel(channel) })),
+  ];
+}
+function getChannelReportTargets() {
+  if (channelReportState.channel && channelReportState.channel !== "__default__") {
+    return [channelReportState.channel];
+  }
+  const available = new Set((report.records || []).map((record) => String(record.channel_name || "").trim()));
+  return DEFAULT_CHANNEL_REPORTS.filter((channel) => available.has(channel));
+}
+function buildChannelReportRows(channel, weeks) {
+  const [previousWeek, currentWeek] = weeks;
+  const grouped = new Map();
+  (report.records || []).forEach((record) => {
+    if (String(record.channel_name || "").trim() !== channel) return;
+    const market = String(record.market || "").trim();
+    const headend = String(record.head_end || "").trim();
+    const key = `${market}||${headend}`;
+    if (!grouped.has(key)) grouped.set(key, record);
+  });
+  return Array.from(grouped.values())
+    .map((record) => {
+      const previousFrequency = record.frequencies?.[previousWeek];
+      const currentFrequency = record.frequencies?.[currentWeek];
+      const previousRank = record.ranks?.[previousWeek];
+      const currentRank = record.ranks?.[currentWeek];
+      const previousMissing = previousFrequency === null || previousFrequency === undefined || previousFrequency === "";
+      const currentMissing = currentFrequency === null || currentFrequency === undefined || currentFrequency === "";
+      const hasFrequencyChange = previousMissing !== currentMissing || (!previousMissing && !currentMissing && previousFrequency !== currentFrequency);
+      return {
+        channel_name: record.channel_name,
+        market: record.market,
+        head_end: record.head_end,
+        previousFrequency,
+        currentFrequency,
+        previousRank,
+        currentRank,
+        hasFrequencyChange,
+      };
+    })
+    .filter((record) => record.hasFrequencyChange)
+    .sort((left, right) => {
+      const marketCompare = String(left.market || "").localeCompare(String(right.market || ""));
+      if (marketCompare !== 0) return marketCompare;
+      return String(left.head_end || "").localeCompare(String(right.head_end || ""));
+    });
+}
+function buildChannelReportNotes(channel, rows) {
+  const changed = [];
+  const added = [];
+  const dropped = [];
+  rows.forEach((row) => {
+    const previousMissing = row.previousFrequency === null || row.previousFrequency === undefined || row.previousFrequency === "";
+    const currentMissing = row.currentFrequency === null || row.currentFrequency === undefined || row.currentFrequency === "";
+    const location = `${row.market} - ${row.head_end}`;
+    if (!previousMissing && !currentMissing && row.previousFrequency !== row.currentFrequency) changed.push(location);
+    if (previousMissing && !currentMissing) added.push(location);
+    if (!previousMissing && currentMissing) dropped.push(location);
+  });
+  const label = formatChannelLabel(channel);
+  const notes = [];
+  if (changed.length) notes.push(`${label} LCN changed in ${changed.length} head end${changed.length === 1 ? "" : "s"}: ${changed.join(", ")}`);
+  if (added.length) notes.push(`${label} became available in ${added.length} head end${added.length === 1 ? "" : "s"}: ${added.join(", ")}`);
+  if (dropped.length) notes.push(`${label} dropped from ${dropped.length} head end${dropped.length === 1 ? "" : "s"}: ${dropped.join(", ")}`);
+  if (!notes.length) notes.push(`${label} has no frequency movement in the selected weeks.`);
+  return notes;
+}
+function renderChannelReports() {
+  if (channelReportControls.panel) {
+    channelReportControls.panel.hidden = !channelReportState.open;
+  }
+  if (channelReportControls.toggle) {
+    channelReportControls.toggle.textContent = channelReportState.open ? "Hide Report" : "Show Report";
+  }
+  if (!channelReportState.open) return;
+  const container = channelReportControls.container;
+  if (!container) return;
+  const weeks = getChannelReportWeekPair();
+  const allWeeks = normalizeWeeks(report.weeks || []);
+  channelReportState.channel = populateOptionList(channelReportControls.channel, buildChannelReportOptions(), channelReportState.channel || "__default__");
+  channelReportState.week_from = populateSelect(channelReportControls.week_from, allWeeks, "From Week", channelReportState.week_from);
+  channelReportState.week_to = populateSelect(channelReportControls.week_to, allWeeks, "To Week", channelReportState.week_to);
+  const activeWeeks = getChannelReportWeekPair();
+  const channels = getChannelReportTargets();
+  channelReportControls.count.textContent = `${channels.length} channel${channels.length === 1 ? "" : "s"}`;
+  const fragment = document.createDocumentFragment();
+  if (!channels.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = "No channel report data available.";
+    container.replaceChildren(empty);
+    return;
+  }
+  channels.forEach((channel) => {
+    const rows = buildChannelReportRows(channel, activeWeeks);
+    const notes = buildChannelReportNotes(channel, rows);
+    const card = document.createElement("section");
+    card.className = "channel-report-card";
+
+    const header = document.createElement("div");
+    header.className = "channel-report-card-header";
+    const title = document.createElement("h3");
+    title.textContent = formatChannelLabel(channel);
+    header.appendChild(title);
+    card.appendChild(header);
+
+    const wrap = document.createElement("div");
+    wrap.className = "channel-report-table-wrap";
+    const table = document.createElement("table");
+    table.className = "channel-report-table";
+    const thead = document.createElement("thead");
+
+    const groupRow = document.createElement("tr");
+    [
+      { text: "CHANNEL NAME", rowSpan: 2 },
+      { text: "MARKET", rowSpan: 2 },
+      { text: "HEAD-END", rowSpan: 2 },
+    ].forEach((column) => {
+      const th = document.createElement("th");
+      th.textContent = column.text;
+      th.rowSpan = column.rowSpan;
+      th.className = "channel-report-subhead";
+      groupRow.appendChild(th);
+    });
+    [
+      { text: "Freq", colSpan: activeWeeks.length },
+      { text: "Rank", colSpan: activeWeeks.length },
+    ].forEach((group) => {
+      const th = document.createElement("th");
+      th.textContent = group.text;
+      th.colSpan = Math.max(group.colSpan, 1);
+      th.className = "channel-report-group-head";
+      groupRow.appendChild(th);
+    });
+
+    const weekRow = document.createElement("tr");
+    [...activeWeeks, ...activeWeeks].forEach((week) => {
+      const th = document.createElement("th");
+      th.textContent = week;
+      th.className = "channel-report-subhead";
+      weekRow.appendChild(th);
+    });
+    thead.append(groupRow, weekRow);
+
+    const tbody = document.createElement("tbody");
+    if (!rows.length) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 3 + activeWeeks.length * 2;
+      td.className = "empty-state";
+      td.textContent = "No frequency changes found for the selected weeks.";
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+    } else {
+      rows.forEach((row) => {
+        const tr = document.createElement("tr");
+        [row.channel_name, row.market, row.head_end].forEach((value) => {
+          const td = document.createElement("td");
+          td.textContent = value || "";
+          tr.appendChild(td);
+        });
+        [
+          { previous: row.previousFrequency, current: row.currentFrequency },
+          { previous: row.previousRank, current: row.currentRank },
+        ].forEach((pair) => {
+          [pair.previous, pair.current].forEach((value, index) => {
+            const td = document.createElement("td");
+            td.textContent = value === null || value === undefined || value === "" ? "NA" : String(value);
+            td.className = "channel-report-cell-stable";
+            if (value === null || value === undefined || value === "") td.className = "channel-report-cell-missing";
+            if (index === 1 && pair.previous !== pair.current && value !== null && value !== undefined && value !== "") td.className = "channel-report-cell-changed";
+            tr.appendChild(td);
+          });
+        });
+        tbody.appendChild(tr);
+      });
+    }
+    table.append(thead, tbody);
+    wrap.appendChild(table);
+    card.appendChild(wrap);
+
+    const notesList = document.createElement("ul");
+    notesList.className = "channel-report-notes";
+    notes.forEach((note) => {
+      const item = document.createElement("li");
+      item.textContent = note;
+      notesList.appendChild(item);
+    });
+    card.appendChild(notesList);
+    fragment.appendChild(card);
+  });
+  container.replaceChildren(fragment);
+}
+function resetChannelReports() {
+  channelReportState.channel = "__default__";
+  channelReportState.week_from = "";
+  channelReportState.week_to = "";
+  renderChannelReports();
+}
+function getActiveBaseView() {
+  return state.view === "report" ? "frequency" : state.view;
+}
+function hasVisibleChange(record, viewConfig, weeks) {
+  if (weeks.length <= 1) return false;
+  const changedSet = state.view === "band" ? new Set(["change"]) : new Set(["increase", "decrease", "improve", "decline"]);
+  return weeks.slice(1).some((week) => changedSet.has(record[viewConfig.changes][week]));
+}
 function getViewConfig() {
-  if (state.view === "rank") return { series: "ranks", changes: "rank_changes", status: "rank_change_status", positive: "improve", negative: "decline", kpiOne: "Rank Improved", kpiTwo: "Rank Declined", title: "Weekly Rank Analysis" };
-  if (state.view === "band") return { series: "bands", changes: "band_changes", status: "band_change_status", positive: "change", negative: "no_change", kpiOne: "Band Changed", kpiTwo: "Band Stable", title: "Weekly Band Analysis" };
+  const activeView = getActiveBaseView();
+  if (activeView === "rank") return { series: "ranks", changes: "rank_changes", status: "rank_change_status", positive: "improve", negative: "decline", kpiOne: "Rank Improved", kpiTwo: "Rank Declined", title: "Weekly Rank Analysis" };
+  if (activeView === "band") return { series: "bands", changes: "band_changes", status: "band_change_status", positive: "change", negative: "no_change", kpiOne: "Band Changed", kpiTwo: "Band Stable", title: "Weekly Band Analysis" };
   return { series: "frequencies", changes: "changes", status: "change_status", positive: "increase", negative: "decrease", kpiOne: "Frequency Increased", kpiTwo: "Frequency Decreased", title: "Weekly Frequency Analysis" };
 }
 function filterRecords(ignoreKey = "") {
   const viewConfig = getViewConfig();
+  const visibleWeeks = getVisibleWeeks();
   return report.records.filter((record) => {
     for (const [key, field] of Object.entries(fieldMap)) {
       if (key === ignoreKey) continue;
@@ -1520,27 +1880,20 @@ function filterRecords(ignoreKey = "") {
     }
     if (ignoreKey !== "change" && state.filters.change) {
       if (state.filters.change === "Changed") {
-        if (state.filters.week) {
-          const changedSet = state.view === "band" ? new Set(["change"]) : new Set(["increase", "decrease", "improve", "decline"]);
-          if (!changedSet.has(record[viewConfig.changes][state.filters.week])) return false;
-        } else if (record[viewConfig.status] !== "YES") {
+        if (!hasVisibleChange(record, viewConfig, visibleWeeks)) {
           return false;
         }
       }
       if (state.filters.change === "No Change") {
-        if (state.filters.week) {
-          if (record[viewConfig.changes][state.filters.week] !== "no_change") return false;
-        } else if (record[viewConfig.status] !== "NO") {
+        if (hasVisibleChange(record, viewConfig, visibleWeeks)) {
           return false;
         }
       }
     }
-    if (ignoreKey !== "week" && state.filters.week && !record[viewConfig.series][state.filters.week] && record[viewConfig.series][state.filters.week] !== 0) return false;
     return true;
   });
 }
 function getOptions(key) {
-  if (key === "week") return report.weeks.slice();
   if (key === "change") return ["Changed", "No Change"];
   const field = fieldMap[key];
   const values = new Set();
@@ -1560,6 +1913,7 @@ function populateSelect(select, values, allLabel, selectedValue) {
   return safeSelectedValue;
 }
 function syncFilters() {
+  populateOptionList(weekClusterFilter, window.__CHROME_WEEK_CLUSTER__.getOptions(report.weeks || []), window.__CHROME_WEEK_CLUSTER__.getValue(report.weeks || []));
   state.filters.market = populateSelect(filters.market, getOptions("market"), "All Markets", state.filters.market);
   state.filters.city = populateSelect(filters.city, getOptions("city"), "All Cities", state.filters.city);
   state.filters.mso_type = populateSelect(filters.mso_type, getOptions("mso_type"), "All MSO Types", state.filters.mso_type);
@@ -1567,10 +1921,9 @@ function syncFilters() {
   state.filters.crn_no = populateSelect(filters.crn_no, getOptions("crn_no"), "All CRN No", state.filters.crn_no);
   state.filters.channel_name = populateSelect(filters.channel_name, getOptions("channel_name"), "All Channels", state.filters.channel_name);
   state.filters.band = populateSelect(filters.band, getOptions("band"), "All Bands", state.filters.band);
-  state.filters.week = populateSelect(filters.week, getOptions("week"), "All Weeks", state.filters.week);
   state.filters.change = populateSelect(filters.change, getOptions("change"), "All Changes", state.filters.change);
 }
-function sortValue(record, sortKey) {
+function sortValue(record, sortKey, weeks) {
   if (sortKey === "flow_order") {
     return [0, [
       String(record.market || "").toLowerCase(),
@@ -1581,16 +1934,17 @@ function sortValue(record, sortKey) {
   }
   const viewConfig = getViewConfig();
   let value = record[sortKey];
-  if (value === undefined && report.weeks.includes(sortKey)) value = record[viewConfig.series][sortKey];
+  if (value === undefined && weeks.includes(sortKey)) value = record[viewConfig.series][sortKey];
   if (value === null || value === undefined || value === "") return [1, ""];
   if (typeof value === "number") return [0, value];
   return [0, String(value).toLowerCase()];
 }
 function getFilteredRecords() {
+  const visibleWeeks = getVisibleWeeks();
   const items = filterRecords();
   const sorted = items.slice().sort((a, b) => {
-    const left = sortValue(a, state.sortKey);
-    const right = sortValue(b, state.sortKey);
+    const left = sortValue(a, state.sortKey, visibleWeeks);
+    const right = sortValue(b, state.sortKey, visibleWeeks);
     if (left[0] !== right[0]) return left[0] - right[0];
     if (left[1] < right[1]) return state.sortDirection === "asc" ? -1 : 1;
     if (left[1] > right[1]) return state.sortDirection === "asc" ? 1 : -1;
@@ -1598,10 +1952,103 @@ function getFilteredRecords() {
   });
   return sorted;
 }
+function getReportWeeks() {
+  const visibleWeeks = getVisibleWeeks();
+  return visibleWeeks.length > 2 ? visibleWeeks.slice(-2) : visibleWeeks.slice();
+}
+function getReportChannel(records) {
+  const selectedChannel = String(state.filters.channel_name || "").trim();
+  if (selectedChannel) return selectedChannel;
+  const channels = Array.from(
+    new Set(
+      records
+        .map((record) => String(record.channel_name || "").trim())
+        .filter(Boolean)
+    )
+  ).sort((left, right) => left.localeCompare(right));
+  return channels[0] || "";
+}
+function getReportRows(records) {
+  const channel = getReportChannel(records);
+  const reportWeeks = getReportWeeks();
+  const rows = records.filter((record) => String(record.channel_name || "").trim() === channel);
+  return { channel, weeks: reportWeeks, rows };
+}
+function buildReportNotes(rows, weeks, channel) {
+  if (!channel) {
+    return ["Select a channel in the Channel filter to view the report."];
+  }
+  if (weeks.length < 2) {
+    return [`${channel} report needs at least two visible weeks.`];
+  }
+  const [previousWeek, currentWeek] = weeks;
+  const changedHeadends = [];
+  const newHeadends = [];
+  const droppedHeadends = [];
+  rows.forEach((record) => {
+    const previous = record.frequencies?.[previousWeek];
+    const current = record.frequencies?.[currentWeek];
+    const headend = String(record.head_end || "").trim();
+    const previousMissing = previous === null || previous === undefined || previous === "";
+    const currentMissing = current === null || current === undefined || current === "";
+    if (!previousMissing && !currentMissing && previous !== current) changedHeadends.push(headend);
+    if (previousMissing && !currentMissing) newHeadends.push(headend);
+    if (!previousMissing && currentMissing) droppedHeadends.push(headend);
+  });
+  const notes = [];
+  if (changedHeadends.length) notes.push(`${channel} LCN changed in ${changedHeadends.length} head end${changedHeadends.length === 1 ? "" : "s"}: ${changedHeadends.join(", ")}`);
+  if (newHeadends.length) notes.push(`${channel} became available in ${newHeadends.length} head end${newHeadends.length === 1 ? "" : "s"}: ${newHeadends.join(", ")}`);
+  if (droppedHeadends.length) notes.push(`${channel} dropped in ${droppedHeadends.length} head end${droppedHeadends.length === 1 ? "" : "s"}: ${droppedHeadends.join(", ")}`);
+  if (!notes.length) notes.push(`${channel} has no frequency movement in ${currentWeek} compared with ${previousWeek}.`);
+  return notes;
+}
 function buildTableHead() {
   const tableHead = document.getElementById("tableHead");
+  if (state.view === "report") {
+    const reportData = getReportRows(getFilteredRecords());
+    const titleRow = document.createElement("tr");
+    const titleHead = document.createElement("th");
+    titleHead.colSpan = 3 + reportData.weeks.length * 2;
+    titleHead.textContent = reportData.channel || "Channel Report";
+    titleHead.className = "report-channel-title";
+    titleRow.appendChild(titleHead);
+
+    const groupRow = document.createElement("tr");
+    const leadingColumns = [
+      { label: "CHANNEL NAME", rowSpan: 2 },
+      { label: "MARKET", rowSpan: 2 },
+      { label: "HEAD-END", rowSpan: 2 },
+    ];
+    leadingColumns.forEach((column) => {
+      const th = document.createElement("th");
+      th.textContent = column.label;
+      th.rowSpan = column.rowSpan;
+      th.className = "report-subhead";
+      groupRow.appendChild(th);
+    });
+    [
+      { label: "Freq", span: reportData.weeks.length },
+      { label: "Rank", span: reportData.weeks.length },
+    ].forEach((group) => {
+      const th = document.createElement("th");
+      th.textContent = group.label;
+      th.colSpan = Math.max(group.span, 1);
+      th.className = "report-group-head";
+      groupRow.appendChild(th);
+    });
+
+    const weekRow = document.createElement("tr");
+    [...reportData.weeks, ...reportData.weeks].forEach((week) => {
+      const th = document.createElement("th");
+      th.textContent = week;
+      th.className = "report-subhead";
+      weekRow.appendChild(th);
+    });
+    tableHead.replaceChildren(titleRow, groupRow, weekRow);
+    return;
+  }
   const tr = document.createElement("tr");
-  [...tableColumns, ...report.weeks.map((week) => ({ key: week, label: week })), { key: "change_status", label: "CHANGE" }].forEach((column) => {
+  [...tableColumns, ...getVisibleWeeks().map((week) => ({ key: week, label: week })), { key: "change_status", label: "CHANGE" }].forEach((column) => {
     const th = document.createElement("th");
     const isActive = state.sortKey === column.key;
     const suffix = isActive ? (state.sortDirection === "asc" ? " ▲" : " ▼") : "";
@@ -1634,15 +2081,22 @@ function formatWeekValue(value, status, isBaseline) {
 }
 function renderFocusSummary(records) {
   const container = document.getElementById("focusSummary");
+  if (state.view === "report") {
+    const reportData = getReportRows(records);
+    const notes = buildReportNotes(reportData.rows, reportData.weeks, reportData.channel);
+    container.innerHTML = `<ul class="report-notes">${notes.map((note) => `<li>${note}</li>`).join("")}</ul>`;
+    return;
+  }
   const labels = { "INDIA TV": "India TV", "AAJ TAK": "Aaj Tak", "NEWS 18 INDIA": "News 18", "REPUBLIC BHARAT": "Republic Bharat" };
   const viewConfig = getViewConfig();
+  const visibleWeeks = getVisibleWeeks();
   const items = Object.entries(labels).map(([channel, label]) => {
     const selected = records.filter((record) => String(record.channel_name || "").toUpperCase() === channel);
     if (!selected.length) return "";
     let positive = 0, negative = 0, noChange = 0, latestPositive = 0, latestNegative = 0;
-    const latestWeek = report.weeks[report.weeks.length - 1];
+    const latestWeek = visibleWeeks[visibleWeeks.length - 1];
     selected.forEach((record) => {
-      report.weeks.slice(1).forEach((week) => {
+      visibleWeeks.slice(1).forEach((week) => {
         const status = record[viewConfig.changes][week];
         if (status === viewConfig.positive) positive += 1;
         else if (status === viewConfig.negative) negative += 1;
@@ -1661,6 +2115,53 @@ function renderFocusSummary(records) {
 }
 function renderTable(records) {
   const tableBody = document.getElementById("tableBody");
+  if (state.view === "report") {
+    const reportData = getReportRows(records);
+    const totalPages = Math.max(1, Math.ceil(reportData.rows.length / state.pageSize));
+    if (state.page > totalPages) state.page = totalPages;
+    const start = (state.page - 1) * state.pageSize;
+    const pageItems = reportData.rows.slice(start, start + state.pageSize);
+    if (!pageItems.length) {
+      tableBody.replaceChildren(document.getElementById("emptyStateTemplate").content.cloneNode(true));
+      return;
+    }
+    const [previousWeek, currentWeek] = reportData.weeks;
+    const fragment = document.createDocumentFragment();
+    pageItems.forEach((record) => {
+      const tr = document.createElement("tr");
+      [
+        record.channel_name,
+        record.market,
+        record.head_end,
+      ].forEach((value) => {
+        const td = document.createElement("td");
+        td.textContent = value || "";
+        tr.appendChild(td);
+      });
+      reportData.weeks.forEach((week) => {
+        const td = document.createElement("td");
+        const value = record.frequencies?.[week];
+        td.textContent = value === null || value === undefined || value === "" ? "NA" : String(value);
+        td.className = "report-cell-neutral";
+        if (value === null || value === undefined || value === "") td.className = "report-cell-missing";
+        if (week === currentWeek && previousWeek && record.frequencies?.[previousWeek] !== value && value !== null && value !== undefined && value !== "") td.className = "report-cell-latest";
+        tr.appendChild(td);
+      });
+      reportData.weeks.forEach((week) => {
+        const td = document.createElement("td");
+        const value = record.ranks?.[week];
+        td.textContent = value === null || value === undefined || value === "" ? "NA" : String(value);
+        td.className = "report-cell-neutral";
+        if (value === null || value === undefined || value === "") td.className = "report-cell-missing";
+        if (week === currentWeek && previousWeek && record.ranks?.[previousWeek] !== value && value !== null && value !== undefined && value !== "") td.className = "report-cell-latest";
+        tr.appendChild(td);
+      });
+      fragment.appendChild(tr);
+    });
+    tableBody.replaceChildren(fragment);
+    return;
+  }
+  const visibleWeeks = getVisibleWeeks();
   const start = (state.page - 1) * state.pageSize;
   const pageItems = records.slice(start, start + state.pageSize);
   if (!pageItems.length) {
@@ -1676,7 +2177,7 @@ function renderTable(records) {
       td.textContent = record[column.key] ?? "";
       tr.appendChild(td);
     });
-    report.weeks.forEach((week, index) => {
+    visibleWeeks.forEach((week, index) => {
       const td = document.createElement("td");
       const value = record[viewConfig.series][week];
       const rawStatus = index === 0 ? "baseline" : record[viewConfig.changes][week];
@@ -1686,18 +2187,39 @@ function renderTable(records) {
       tr.appendChild(td);
     });
     const changeTd = document.createElement("td");
-    changeTd.textContent = record[viewConfig.status];
-    changeTd.classList.add(record[viewConfig.status] === "NO" ? "change-no" : "change-yes");
+    changeTd.textContent = hasVisibleChange(record, viewConfig, visibleWeeks) ? "YES" : "NO";
+    changeTd.classList.add(changeTd.textContent === "NO" ? "change-no" : "change-yes");
     tr.appendChild(changeTd);
     fragment.appendChild(tr);
   });
   tableBody.replaceChildren(fragment);
 }
 function updateKpis(records) {
+  if (state.view === "report") {
+    const reportData = getReportRows(records);
+    const [previousWeek, currentWeek] = reportData.weeks;
+    let changedCount = 0;
+    let newCount = 0;
+    reportData.rows.forEach((record) => {
+      const previous = previousWeek ? record.frequencies?.[previousWeek] : null;
+      const current = currentWeek ? record.frequencies?.[currentWeek] : null;
+      const previousMissing = previous === null || previous === undefined || previous === "";
+      const currentMissing = current === null || current === undefined || current === "";
+      if (!previousMissing && !currentMissing && previous !== current) changedCount += 1;
+      if (previousMissing && !currentMissing) newCount += 1;
+    });
+    document.getElementById("kpiTotal").textContent = formatNumber(reportData.rows.length);
+    document.getElementById("kpiLabelOne").textContent = "LCN Changed";
+    document.getElementById("kpiLabelTwo").textContent = "New Availability";
+    document.getElementById("kpiIncrease").textContent = formatNumber(changedCount);
+    document.getElementById("kpiDecrease").textContent = formatNumber(newCount);
+    return;
+  }
   document.getElementById("kpiTotal").textContent = formatNumber(records.length);
   const viewConfig = getViewConfig();
+  const visibleWeeks = getVisibleWeeks();
   let positive = 0, negative = 0;
-  const latestWeek = report.weeks[report.weeks.length - 1];
+  const latestWeek = visibleWeeks[visibleWeeks.length - 1];
   records.forEach((record) => {
     const status = record[viewConfig.changes][latestWeek];
     if (status === viewConfig.positive) positive += 1;
@@ -1714,7 +2236,11 @@ function getPageSize() {
   return Math.max(45, Math.floor((viewportHeight - 230) / 26));
 }
 function downloadStandaloneDashboard() {
-  const html = `<!DOCTYPE html>\n${document.documentElement.outerHTML}`;
+  const embeddedBundle = JSON.stringify(window.__CHROME_REPORT_DATA__ || reportBundle || {}).split("</").join("<\\/");
+  const sourceTag = '<scr' + 'ipt src="./frequency_report.json"><\\/scr' + 'ipt>';
+  const embeddedTag = '<scr' + 'ipt>window.__CHROME_REPORT_DATA__ = ' + embeddedBundle + ';<\\/scr' + 'ipt>';
+  const html = `<!DOCTYPE html>\n${document.documentElement.outerHTML}`
+    .replace(sourceTag, embeddedTag);
   const blob = new Blob([html], { type: "text/html;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -1808,14 +2334,24 @@ async function toggleFullscreen() {
 }
 function render() {
   syncFilters();
+  renderChannelReports();
+  const visibleWeeks = getVisibleWeeks();
+  if (report.weeks.includes(state.sortKey) && !visibleWeeks.includes(state.sortKey)) {
+    state.sortKey = "flow_order";
+    state.sortDirection = "asc";
+  }
   const records = getFilteredRecords();
-  const totalPages = Math.max(1, Math.ceil(records.length / state.pageSize));
+  const reportData = state.view === "report" ? getReportRows(records) : null;
+  const displayCount = reportData ? reportData.rows.length : records.length;
+  const totalPages = Math.max(1, Math.ceil(displayCount / state.pageSize));
   if (state.page > totalPages) state.page = totalPages;
   document.getElementById("generatedAt").textContent = formatTimestamp(report.generated_at);
-  document.getElementById("totalRecords").textContent = formatNumber(records.length);
-  document.getElementById("resultCount").textContent = `${formatNumber(records.length)} records`;
+  document.getElementById("totalRecords").textContent = formatNumber(displayCount);
+  document.getElementById("resultCount").textContent = `${formatNumber(displayCount)} records`;
   document.getElementById("pageInfo").textContent = `Page ${state.page} of ${totalPages}`;
-  document.getElementById("tableTitle").textContent = getViewConfig().title;
+  document.getElementById("prevPage").disabled = state.page <= 1;
+  document.getElementById("nextPage").disabled = state.page >= totalPages;
+  document.getElementById("tableTitle").textContent = state.view === "report" ? "Channel Report" : getViewConfig().title;
   Object.entries(viewButtons).forEach(([view, button]) => button.classList.toggle("active", view === state.view));
   buildTableHead();
   renderTable(records);
@@ -1831,8 +2367,35 @@ Object.entries(filters).forEach(([key, select]) => {
     render();
   });
 });
+Object.entries(channelReportControls).forEach(([key, control]) => {
+  if (!control || key === "container" || key === "count" || key === "panel" || key === "toggle" || key === "reset" || key === "hide") return;
+  control.addEventListener("change", () => {
+    channelReportState[key] = control.value;
+    renderChannelReports();
+  });
+});
+if (channelReportControls.toggle) {
+  channelReportControls.toggle.addEventListener("click", () => {
+    channelReportState.open = !channelReportState.open;
+    renderChannelReports();
+  });
+}
+if (channelReportControls.hide) {
+  channelReportControls.hide.addEventListener("click", () => {
+    channelReportState.open = false;
+    renderChannelReports();
+  });
+}
+if (channelReportControls.reset) {
+  channelReportControls.reset.addEventListener("click", resetChannelReports);
+}
+if (weekClusterFilter) {
+  weekClusterFilter.addEventListener("change", () => {
+    window.__CHROME_WEEK_CLUSTER__.setValue(weekClusterFilter.value, report.weeks || []);
+  });
+}
 document.getElementById("resetButton").addEventListener("click", () => {
-  state.filters = { market: "", city: "", mso_type: "", head_end: "", crn_no: "", channel_name: "", band: "", week: "", change: "" };
+  state.filters = { market: "", city: "", mso_type: "", head_end: "", crn_no: "", channel_name: "", band: "", change: "" };
   state.sortKey = "flow_order";
   state.sortDirection = "asc";
   state.page = 1;
@@ -1840,7 +2403,9 @@ document.getElementById("resetButton").addEventListener("click", () => {
 });
 document.getElementById("prevPage").addEventListener("click", () => { if (state.page > 1) { state.page -= 1; render(); } });
 document.getElementById("nextPage").addEventListener("click", () => {
-  const totalPages = Math.max(1, Math.ceil(getFilteredRecords().length / state.pageSize));
+  const filteredRecords = getFilteredRecords();
+  const totalRows = state.view === "report" ? getReportRows(filteredRecords).rows.length : filteredRecords.length;
+  const totalPages = Math.max(1, Math.ceil(totalRows / state.pageSize));
   if (state.page < totalPages) { state.page += 1; render(); }
 });
 Object.entries(viewButtons).forEach(([view, button]) => {
@@ -1883,6 +2448,10 @@ window.addEventListener("resize", () => {
     state.page = 1;
     render();
   }
+});
+window.addEventListener("chrome:week-cluster-change", () => {
+  state.page = 1;
+  render();
 });
 document.getElementById("downloadDashboardButton").addEventListener("click", downloadStandaloneDashboard);
 syncFullscreenButtons();

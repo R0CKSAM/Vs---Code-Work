@@ -39,8 +39,6 @@
   const resetButton = document.getElementById("otsResetButton");
   const fullscreenButton = document.getElementById("otsFullscreenButton");
   const exitFullscreenButton = document.getElementById("otsExitFullscreenButton");
-  const exportExcelButton = document.getElementById("otsExportExcelButton");
-  const exportCsvButton = document.getElementById("otsExportCsvButton");
   const prevPageButton = document.getElementById("otsPrevPage");
   const nextPageButton = document.getElementById("otsNextPage");
   const pageInfo = document.getElementById("otsPageInfo");
@@ -72,8 +70,24 @@
     return option;
   }
 
+  function populateOptionList(select, options, selectedValue) {
+    if (!select) return selectedValue || "";
+    const safeOptions = Array.isArray(options) ? options.filter((option) => option && normalizeText(option.value) !== "") : [];
+    const fallback = safeOptions.some((option) => option.value === selectedValue)
+      ? selectedValue
+      : (safeOptions[0]?.value || "");
+    select.innerHTML = "";
+    safeOptions.forEach((option) => select.appendChild(createOption(option.value, option.label)));
+    select.value = fallback;
+    return fallback;
+  }
+
   function normalizeText(value) {
     return String(value || "").trim();
+  }
+
+  function getWeekClusterController() {
+    return window.__CHROME_WEEK_CLUSTER__ || null;
   }
 
   // Format one OTS value without changing the stored numeric payload.
@@ -86,11 +100,19 @@
   function getVisibleWeeks(payload) {
     const allWeeks = payload.weeks || [];
     if (!allWeeks.length) return [];
-    const startIndex = state.filters.week_from && allWeeks.includes(state.filters.week_from) ? allWeeks.indexOf(state.filters.week_from) : 0;
-    const endIndex = state.filters.week_to && allWeeks.includes(state.filters.week_to) ? allWeeks.indexOf(state.filters.week_to) : allWeeks.length - 1;
-    const from = Math.min(startIndex, endIndex);
-    const to = Math.max(startIndex, endIndex);
-    return allWeeks.slice(from, to + 1);
+    if (state.filters.week_from || state.filters.week_to) {
+      const startIndex = state.filters.week_from && allWeeks.includes(state.filters.week_from) ? allWeeks.indexOf(state.filters.week_from) : 0;
+      const endIndex = state.filters.week_to && allWeeks.includes(state.filters.week_to) ? allWeeks.indexOf(state.filters.week_to) : allWeeks.length - 1;
+      const from = Math.min(startIndex, endIndex);
+      const to = Math.max(startIndex, endIndex);
+      return allWeeks.slice(from, to + 1);
+    }
+    const controller = getWeekClusterController();
+    const scopedWeeks = controller
+      ? controller.getVisibleWeeks(allWeeks, controller.getValue(allWeeks))
+      : allWeeks.slice(Math.max(0, allWeeks.length - 4));
+    if (!scopedWeeks.length) return [];
+    return scopedWeeks.slice();
   }
 
   // Calculate the change label from the latest two visible weeks.
@@ -204,6 +226,12 @@
   // Sync all OTS filters from the newest payload while preserving current selections when possible.
   function syncControls(payload) {
     const filterData = payload.filters || {};
+    const controller = getWeekClusterController();
+    const scopedWeeks = (() => {
+      return controller
+        ? controller.getVisibleWeeks(payload.weeks || [], controller.getValue(payload.weeks || []))
+        : (payload.weeks || []).slice(Math.max(0, (payload.weeks || []).length - 4));
+    })();
     renderMultiSelectOptions(marketOptions, filterData.markets || [], state.filters.markets, "markets");
     renderMultiSelectOptions(channelOptions, filterData.channels || [], state.filters.channels, "channels");
     state.filters.markets = state.filters.markets.filter((value) => (filterData.markets || []).includes(value));
@@ -290,9 +318,21 @@
       tr.appendChild(td);
     });
 
-    weeks.forEach((week) => {
+    weeks.forEach((week, weekIndex) => {
       const td = document.createElement("td");
-      td.textContent = formatOtsValue(record.ots_values?.[week]);
+      const value = record.ots_values?.[week];
+      td.textContent = formatOtsValue(value);
+      if (value === null || value === undefined || value === "") {
+        td.classList.add("ots-change-no_change");
+      } else if (weekIndex > 0) {
+        const previous = record.ots_values?.[weeks[weekIndex - 1]];
+        if (previous !== null && previous !== undefined && previous !== "") {
+          const delta = Number(value) - Number(previous);
+          if (delta > 0) td.classList.add("ots-change-increase");
+          else if (delta < 0) td.classList.add("ots-change-decrease");
+          else td.classList.add("ots-change-no_change");
+        }
+      }
       tr.appendChild(td);
     });
 
@@ -306,6 +346,10 @@
 
   function renderTable(payload) {
     const weeks = payload.visible_weeks || payload.weeks || [];
+    if (state.sortKey !== "market" && state.sortKey !== "channel" && state.sortKey !== "change" && !weeks.includes(state.sortKey)) {
+      state.sortKey = "market";
+      state.sortDirection = "asc";
+    }
     state.pageSize = getPageSize();
     buildHeader(weeks);
     const sortedRecords = sortRecords(payload.table.records || [], weeks);
@@ -493,63 +537,6 @@
     if (!entered) setFullscreen(true);
   }
 
-  function buildExportQuery() {
-    const params = new URLSearchParams();
-    state.filters.markets.forEach((value) => params.append("market", value));
-    state.filters.channels.forEach((value) => params.append("channel", value));
-    if (state.filters.week_from) params.set("week_from", state.filters.week_from);
-    if (state.filters.week_to) params.set("week_to", state.filters.week_to);
-    if (state.filters.change) params.set("change", state.filters.change);
-    if (state.filters.search) params.set("search", state.filters.search);
-    return params.toString();
-  }
-
-  function exportStandaloneCsv() {
-    const payload = state.payload;
-    const weeks = payload.visible_weeks || [];
-    const rows = sortRecords(payload.table.records || [], weeks);
-    const lines = [[ "Market", "Channel", ...weeks, "Change" ]];
-    rows.forEach((record) => {
-      lines.push([
-        record.market,
-        record.channel,
-        ...weeks.map((week) => formatOtsValue(record.ots_values?.[week])),
-        getChangeMeta(record, weeks).text,
-      ]);
-    });
-    const csv = lines
-      .map((row) => row.map((cell) => `"${String(cell ?? "").replace(/"/g, '""')}"`).join(","))
-      .join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "ots_comparison.csv";
-    link.click();
-    URL.revokeObjectURL(link.href);
-  }
-
-  function exportStandaloneExcel() {
-    const payload = state.payload;
-    const weeks = payload.visible_weeks || [];
-    const rows = sortRecords(payload.table.records || [], weeks);
-    const html = `
-      <table>
-        <tr><th>Market</th><th>Channel</th>${weeks.map((week) => `<th>${week}</th>`).join("")}<th>Change</th></tr>
-        ${rows
-          .map(
-            (record) =>
-              `<tr><td>${record.market}</td><td>${record.channel}</td>${weeks.map((week) => `<td>${formatOtsValue(record.ots_values?.[week])}</td>`).join("")}<td>${getChangeMeta(record, weeks).text}</td></tr>`
-          )
-          .join("")}
-      </table>`;
-    const blob = new Blob([html], { type: "application/vnd.ms-excel" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "ots_comparison.xls";
-    link.click();
-    URL.revokeObjectURL(link.href);
-  }
-
   function resetFilters() {
     state.filters = {
       markets: [],
@@ -628,24 +615,6 @@
       }
     });
   }
-  if (exportExcelButton) {
-    exportExcelButton.addEventListener("click", () => {
-      if (state.standalone) {
-        exportStandaloneExcel();
-        return;
-      }
-      window.location.href = `/download/ots/excel?${buildExportQuery()}`;
-    });
-  }
-  if (exportCsvButton) {
-    exportCsvButton.addEventListener("click", () => {
-      if (state.standalone) {
-        exportStandaloneCsv();
-        return;
-      }
-      window.location.href = `/download/ots/csv?${buildExportQuery()}`;
-    });
-  }
   window.addEventListener("resize", () => {
     if (!state.payload) return;
     render(state.payload);
@@ -661,6 +630,10 @@
       fullscreenState.usingNativeFullscreen = false;
       setFullscreen(false);
     }
+  });
+  window.addEventListener("chrome:week-cluster-change", () => {
+    state.page = 1;
+    fetchPayload(false);
   });
 
   if (state.initial) {
