@@ -31,6 +31,8 @@ LEGACY_HISTORY_OTS_CSV = BASE_DIR / "ots_history.csv"
 STYLE_FILE = BASE_DIR / "static" / "style.css"
 NBHD_SCRIPT_FILE = BASE_DIR / "static" / "neighbourhood.js"
 OTS_SCRIPT_FILE = BASE_DIR / "static" / "ots.js"
+COMPARISON_SCRIPT_FILE = BASE_DIR / "static" / "comparison.js"
+NBHD_BENCHMARK_SCRIPT_FILE = BASE_DIR / "static" / "nbhd_benchmark.js"
 
 SOURCE_COLUMNS = [
     "WEEK LABEL",
@@ -93,6 +95,14 @@ OTS_REPORT_CACHE: dict[str, Any] = {
     "signature": None,
     "report": None,
 }
+COMPARISON_REPORT_CACHE: dict[str, Any] = {
+    "signature": None,
+    "report": None,
+}
+NBHD_BENCHMARK_REPORT_CACHE: dict[str, Any] = {
+    "signature": None,
+    "report": None,
+}
 
 
 def ensure_directories() -> None:
@@ -132,6 +142,20 @@ def week_sort_key(label: str) -> tuple[int, str]:
     if match:
         return int(match.group(1)), label
     return 10**9, label
+
+
+def parse_workbook_week(path: Path) -> tuple[int, int] | None:
+    match = re.search(r"wk[-\s_]*(\d{1,2}).*?(20\d{2})", path.stem, re.IGNORECASE)
+    if match:
+        return int(match.group(2)), int(match.group(1))
+    match = re.search(r"(20\d{2}).*?wk[-\s_]*(\d{1,2})", path.stem, re.IGNORECASE)
+    if match:
+        return int(match.group(1)), int(match.group(2))
+    return None
+
+
+def format_week_label(week_number: int, year: int) -> str:
+    return f"Wk-{int(week_number):02d}'{str(year)[-2:]}"
 
 
 def get_signature(files: list[Path]) -> tuple[tuple[str, int, int], ...]:
@@ -221,6 +245,20 @@ def get_ots_week_files() -> list[Path]:
     ensure_directories()
     files = [path for path in get_ots_source_dir().glob("*.xlsx") if not path.name.startswith("~$")]
     return sorted(files, key=lambda path: week_sort_key(path.stem))
+
+
+def get_highlight_week_files() -> list[Path]:
+    ensure_directories()
+    files = [
+        path
+        for pattern in ("*.xlsm", "*.xlsx")
+        for path in DATA_DIR.glob(pattern)
+        if not path.name.startswith("~$")
+    ]
+    return sorted(
+        {path.resolve(): path for path in files}.values(),
+        key=lambda path: parse_workbook_week(path) or (10**9, 10**9),
+    )
 
 
 def empty_nbhd_report(message: str | None = None) -> dict[str, Any]:
@@ -562,6 +600,131 @@ def load_nbhd_report(force: bool = False) -> dict[str, Any]:
     report = build_nbhd_report()
     NBHD_REPORT_CACHE["signature"] = signature
     NBHD_REPORT_CACHE["report"] = report
+    return report
+
+
+def build_nbhd_benchmark_report() -> dict[str, Any]:
+    if history_files_ready():
+        history_path = resolve_history_path(HISTORY_NBHD_CSV, LEGACY_HISTORY_NBHD_CSV)
+        dataframe = read_history_csv(history_path)
+        if dataframe.empty:
+            return {
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "weeks": [],
+                "records": [],
+                "message": "NBHD history CSV is empty.",
+                "source_directory": str(history_path),
+            }
+
+        weeks = sorted(dataframe["Week"].dropna().astype(str).unique().tolist(), key=week_sort_key)
+        merged: dict[str, dict[str, Any]] = {}
+        for row in dataframe.to_dict(orient="records"):
+            week_label = normalize_text(row.get("Week"))
+            market = normalize_text(row.get("Market"))
+            city = normalize_text(row.get("City"))
+            head_end = normalize_text(row.get("Head-End"))
+            channel = normalize_text(row.get("Channel"))
+            if not market or not city or not head_end or not channel or not week_label:
+                continue
+            row_key = comparison_record_key(market, city, head_end, channel)
+            record = merged.setdefault(
+                row_key,
+                {
+                    "market": market,
+                    "city": city,
+                    "head_end": head_end,
+                    "channel": channel,
+                    "frequencies": {},
+                },
+            )
+            record["frequencies"][week_label] = normalize_number(row.get("Frequency"))
+
+        records = list(merged.values())
+        for record in records:
+            for week in weeks:
+                record["frequencies"].setdefault(week, None)
+
+        return {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "weeks": weeks,
+            "records": sorted(
+                records,
+                key=lambda item: (
+                    item["market"].lower(),
+                    item["city"].lower(),
+                    item["head_end"].lower(),
+                    item["channel"].lower(),
+                ),
+            ),
+            "message": "",
+            "source_directory": str(history_path),
+        }
+
+    week_files = get_nbhd_week_files()
+    if not week_files:
+        return {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "weeks": [],
+            "records": [],
+            "message": "Add weekly NBHD files to generate the INDIA TV comparison report.",
+            "source_directory": str(get_nbhd_source_dir()),
+        }
+
+    weekly_data = [prepare_nbhd_week_rows(path) for path in week_files]
+    weeks = [label for label, _ in weekly_data]
+    merged: dict[str, dict[str, Any]] = {}
+
+    for week_label, rows in weekly_data:
+        for row in rows:
+            market = normalize_text(row.get("market"))
+            city = normalize_text(row.get("city"))
+            head_end = normalize_text(row.get("head_end"))
+            channel = normalize_text(row.get("channel"))
+            if not market or not city or not head_end or not channel:
+                continue
+            row_key = comparison_record_key(market, city, head_end, channel)
+            record = merged.setdefault(
+                row_key,
+                {
+                    "market": market,
+                    "city": city,
+                    "head_end": head_end,
+                    "channel": channel,
+                    "frequencies": {},
+                },
+            )
+            record["frequencies"][week_label] = row.get("frequency")
+
+    records = list(merged.values())
+    for record in records:
+        for week in weeks:
+            record["frequencies"].setdefault(week, None)
+
+    return {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "weeks": weeks,
+        "records": sorted(
+            records,
+            key=lambda item: (
+                item["market"].lower(),
+                item["city"].lower(),
+                item["head_end"].lower(),
+                item["channel"].lower(),
+            ),
+        ),
+        "message": "",
+        "source_directory": str(get_nbhd_source_dir()),
+    }
+
+
+def load_nbhd_benchmark_report(force: bool = False) -> dict[str, Any]:
+    signature = get_history_signature() if history_files_ready() else get_signature(get_nbhd_week_files())
+    if not force and NBHD_BENCHMARK_REPORT_CACHE["report"] is not None and NBHD_BENCHMARK_REPORT_CACHE["signature"] == signature:
+        return NBHD_BENCHMARK_REPORT_CACHE["report"]
+
+    report = build_nbhd_benchmark_report()
+    NBHD_BENCHMARK_REPORT_CACHE["signature"] = signature
+    NBHD_BENCHMARK_REPORT_CACHE["report"] = report
     return report
 
 
@@ -934,6 +1097,180 @@ def load_report(force: bool = False) -> dict[str, Any]:
     return report
 
 
+def normalize_frequency_cell(value: Any) -> float | int | None:
+    text = normalize_text(value).upper()
+    if text in {"", "NA", "N/A", "NOT AVAILABLE", "-"}:
+        return None
+    return normalize_number(value)
+
+
+def comparison_record_key(market: str, city: str, head_end: str, channel: str) -> str:
+    return "||".join(
+        (
+            normalize_text(market).upper(),
+            normalize_text(city).upper(),
+            normalize_text(head_end).upper(),
+            normalize_text(channel).upper(),
+        )
+    )
+
+
+def parse_weekly_highlight_sheet(path: Path) -> tuple[str, str, list[dict[str, Any]]]:
+    workbook = load_workbook(path, read_only=True, data_only=True)
+    try:
+        sheet_name = "Weekly Highlights" if "Weekly Highlights" in workbook.sheetnames else "Weekly Highlight"
+        if sheet_name not in workbook.sheetnames:
+            raise ValueError(f"{path.name} does not contain a Weekly Highlights sheet.")
+
+        sheet = workbook[sheet_name]
+        header_row_index = None
+        headers: list[Any] = []
+        for row_index, row in enumerate(sheet.iter_rows(min_row=1, max_row=20, values_only=True), start=1):
+            row_values = list(row)
+            header_keys = [normalize_header_key(value) for value in row_values]
+            if {"MARKET", "CITY", "HEADEND", "CHANNEL"}.issubset(set(header_keys)):
+                if sum(1 for value in row_values if "FREQUENCY" in normalize_text(value).upper()) >= 2:
+                    header_row_index = row_index
+                    headers = row_values
+                    break
+
+        if header_row_index is None:
+            raise ValueError(f"Could not detect Weekly Highlights headers in {path.name}.")
+
+        header_map = {normalize_header_key(value): index for index, value in enumerate(headers)}
+        week_columns: list[tuple[int, int]] = []
+        workbook_week = parse_workbook_week(path)
+        workbook_year = workbook_week[0] if workbook_week else datetime.now().year
+
+        for index, header in enumerate(headers):
+            match = re.search(r"FREQUENCY\s*WK[-\s_]*(\d{1,2})", normalize_text(header), re.IGNORECASE)
+            if match:
+                week_columns.append((index, int(match.group(1))))
+
+        if len(week_columns) < 2:
+            raise ValueError(f"Could not detect two frequency week columns in Weekly Highlights for {path.name}.")
+
+        week_columns = sorted(week_columns[:2], key=lambda item: item[1])
+        previous_week_label = format_week_label(week_columns[0][1], workbook_year)
+        current_week_label = format_week_label(week_columns[1][1], workbook_year)
+
+        rows: list[dict[str, Any]] = []
+        for values in sheet.iter_rows(min_row=header_row_index + 1, values_only=True):
+            market = normalize_text(values[header_map["MARKET"]] if header_map["MARKET"] < len(values) else None)
+            city = normalize_text(values[header_map["CITY"]] if header_map["CITY"] < len(values) else None)
+            head_end = normalize_text(values[header_map["HEADEND"]] if header_map["HEADEND"] < len(values) else None)
+            channel = normalize_text(values[header_map["CHANNEL"]] if header_map["CHANNEL"] < len(values) else None)
+            if not market or not city or not head_end or not channel:
+                continue
+            rows.append(
+                {
+                    "market": market,
+                    "city": city,
+                    "head_end": head_end,
+                    "channel": channel,
+                    "frequency_previous": normalize_frequency_cell(values[week_columns[0][0]] if week_columns[0][0] < len(values) else None),
+                    "frequency_current": normalize_frequency_cell(values[week_columns[1][0]] if week_columns[1][0] < len(values) else None),
+                }
+            )
+
+        deduped: dict[str, dict[str, Any]] = {}
+        for row in rows:
+            deduped.setdefault(
+                comparison_record_key(row["market"], row["city"], row["head_end"], row["channel"]),
+                row,
+            )
+        return previous_week_label, current_week_label, list(deduped.values())
+    finally:
+        workbook.close()
+
+
+def build_comparison_report(report: dict[str, Any] | None = None) -> dict[str, Any]:
+    frequency_report = report if report is not None else load_report(force=True)
+    week_files = get_highlight_week_files()
+    if not week_files:
+        return {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "weeks": frequency_report.get("weeks", []),
+            "pairs": [],
+            "rows_by_pair": {},
+            "message": "Add weekly workbook files to the data folder to generate the comparison table.",
+        }
+
+    rank_index = {
+        comparison_record_key(record["market"], record["city"], record["head_end"], record["channel_name"]): record
+        for record in frequency_report.get("records", [])
+    }
+
+    pairs: list[dict[str, Any]] = []
+    rows_by_pair: dict[str, list[dict[str, Any]]] = {}
+    available_weeks = set(frequency_report.get("weeks", []))
+
+    for path in week_files:
+        try:
+            previous_week, current_week, highlight_rows = parse_weekly_highlight_sheet(path)
+        except Exception:
+            continue
+        if previous_week not in available_weeks or current_week not in available_weeks:
+            continue
+
+        pair_key = f"{previous_week}||{current_week}"
+        merged_rows: list[dict[str, Any]] = []
+        for row in highlight_rows:
+            record = rank_index.get(comparison_record_key(row["market"], row["city"], row["head_end"], row["channel"]))
+            if not record:
+                continue
+            merged_rows.append(
+                {
+                    "market": row["market"],
+                    "city": row["city"],
+                    "head_end": row["head_end"],
+                    "channel": row["channel"],
+                    "frequency_previous": row["frequency_previous"],
+                    "frequency_current": row["frequency_current"],
+                    "rank_previous": record["ranks"].get(previous_week),
+                    "rank_current": record["ranks"].get(current_week),
+                }
+            )
+
+        merged_rows.sort(
+            key=lambda item: (
+                item["market"].lower(),
+                item["city"].lower(),
+                item["head_end"].lower(),
+                item["channel"].lower(),
+            )
+        )
+        rows_by_pair[pair_key] = merged_rows
+        pairs.append(
+            {
+                "pair_key": pair_key,
+                "week_from": previous_week,
+                "week_to": current_week,
+                "row_count": len(merged_rows),
+            }
+        )
+
+    return {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "weeks": frequency_report.get("weeks", []),
+        "pairs": sorted(pairs, key=lambda item: (week_sort_key(item["week_from"]), week_sort_key(item["week_to"]))),
+        "rows_by_pair": rows_by_pair,
+        "message": "",
+    }
+
+
+def load_comparison_report(force: bool = False, report: dict[str, Any] | None = None) -> dict[str, Any]:
+    source_files = get_highlight_week_files()
+    signature = get_signature(source_files) + tuple((f"report::{week}", index, index) for index, week in enumerate((report or load_report(force=False)).get("weeks", [])))
+    if not force and COMPARISON_REPORT_CACHE["report"] is not None and COMPARISON_REPORT_CACHE["signature"] == signature:
+        return COMPARISON_REPORT_CACHE["report"]
+
+    comparison = build_comparison_report(report=report)
+    COMPARISON_REPORT_CACHE["signature"] = signature
+    COMPARISON_REPORT_CACHE["report"] = comparison
+    return comparison
+
+
 def get_view_config(view: str) -> dict[str, str]:
     if view == "rank":
         return {
@@ -1214,6 +1551,18 @@ def read_ots_script() -> str:
     return ""
 
 
+def read_comparison_script() -> str:
+    if COMPARISON_SCRIPT_FILE.exists():
+        return COMPARISON_SCRIPT_FILE.read_text(encoding="utf-8")
+    return ""
+
+
+def read_nbhd_benchmark_script() -> str:
+    if NBHD_BENCHMARK_SCRIPT_FILE.exists():
+        return NBHD_BENCHMARK_SCRIPT_FILE.read_text(encoding="utf-8")
+    return ""
+
+
 def compact_json_text(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
 
@@ -1226,6 +1575,8 @@ def build_dashboard_bundle(report: dict[str, Any] | None = None) -> dict[str, An
     frequency_report = report if report is not None else load_report(force=True)
     return {
         "frequency": frequency_report,
+        "comparison": load_comparison_report(force=True, report=frequency_report),
+        "nbhd_benchmark": load_nbhd_benchmark_report(force=True),
         "nbhd": build_nbhd_api_payload({"market": "", "city": "", "head_end": ""}, "", force_refresh=True),
         "ots": build_ots_api_payload(
             {"markets": [], "channels": [], "week_from": "", "week_to": "", "change": "", "search": ""},
@@ -1246,8 +1597,10 @@ def write_standalone_dashboard(report: dict[str, Any]) -> None:
 
 def create_standalone_dashboard(report: dict[str, Any]) -> str:
     style_text = read_style()
+    nbhd_benchmark_script_text = read_nbhd_benchmark_script()
     nbhd_script_text = read_nbhd_script()
     ots_script_text = read_ots_script()
+    comparison_script_text = read_comparison_script()
 
     html = """<!DOCTYPE html>
 <html lang="en">
@@ -1264,38 +1617,20 @@ __STYLE__
 </head>
 <body>
   <div class="app-shell">
-    <header class="hero">
-      <div class="hero-copy">
-        <h1>Chrome Report</h1>
-      </div>
-      <div class="hero-meta">
-        <article class="meta-card">
-          <span>Generated</span>
-          <strong id="generatedAt">--</strong>
-        </article>
-        <article class="meta-card">
-          <span>Total Records</span>
-          <strong id="totalRecords">0</strong>
-        </article>
-        <div class="hero-actions">
-          <button id="downloadDashboardButton" class="ghost-button" type="button">Download Dashboard</button>
-        </div>
-      </div>
-    </header>
-
     <div class="table1-scope">
       <section class="panel filter-panel">
         <div class="panel-heading"><div><h2>Filter Panel</h2></div></div>
         <div class="filter-grid">
-          <label><span>Market</span><select id="marketFilter"></select></label>
-          <label><span>City</span><select id="cityFilter"></select></label>
-          <label><span>MSO Type</span><select id="msoTypeFilter"></select></label>
-          <label><span>Headend</span><select id="headendFilter"></select></label>
-          <label><span>CRN No</span><select id="crnFilter"></select></label>
-          <label><span>Channel</span><select id="channelFilter"></select></label>
-          <label><span>Band</span><select id="bandFilter"></select></label>
-          <label><span>Week Cluster</span><select id="weekClusterFilter"></select></label>
-          <label><span>Change</span><select id="changeFilter"></select></label>
+          <label class="filter-select-field"><span>Market</span><div class="filter-select"><button id="marketFilter" class="filter-select-button" type="button">All Markets</button><div id="marketFilterMenu" class="filter-select-menu" hidden><input id="marketFilterSearch" class="filter-menu-search" type="text" placeholder="Search market..." autocomplete="off" /><div id="marketFilterOptions" class="filter-options-list"></div></div></div></label>
+          <label class="filter-select-field"><span>City</span><div class="filter-select"><button id="cityFilter" class="filter-select-button" type="button">All Cities</button><div id="cityFilterMenu" class="filter-select-menu" hidden><input id="cityFilterSearch" class="filter-menu-search" type="text" placeholder="Search city..." autocomplete="off" /><div id="cityFilterOptions" class="filter-options-list"></div></div></div></label>
+          <label class="filter-select-field"><span>MSO Type</span><div class="filter-select"><button id="msoTypeFilter" class="filter-select-button" type="button">All MSO Types</button><div id="msoTypeFilterMenu" class="filter-select-menu" hidden><input id="msoTypeFilterSearch" class="filter-menu-search" type="text" placeholder="Search MSO type..." autocomplete="off" /><div id="msoTypeFilterOptions" class="filter-options-list"></div></div></div></label>
+          <label class="filter-select-field"><span>Headend</span><div class="filter-select"><button id="headendFilter" class="filter-select-button" type="button">All Headend</button><div id="headendFilterMenu" class="filter-select-menu" hidden><input id="headendFilterSearch" class="filter-menu-search" type="text" placeholder="Search headend..." autocomplete="off" /><div id="headendFilterOptions" class="filter-options-list"></div></div></div></label>
+          <label class="filter-select-field"><span>CRN No</span><div class="filter-select"><button id="crnFilter" class="filter-select-button" type="button">All CRN No</button><div id="crnFilterMenu" class="filter-select-menu" hidden><input id="crnFilterSearch" class="filter-menu-search" type="text" placeholder="Search CRN..." autocomplete="off" /><div id="crnFilterOptions" class="filter-options-list"></div></div></div></label>
+          <label class="filter-select-field"><span>Channel</span><div class="filter-select"><button id="channelFilter" class="filter-select-button" type="button">All Channels</button><div id="channelFilterMenu" class="filter-select-menu" hidden><input id="channelFilterSearch" class="filter-menu-search" type="text" placeholder="Search channel..." autocomplete="off" /><div id="channelFilterOptions" class="filter-options-list"></div></div></div></label>
+          <label class="filter-select-field"><span>Band</span><div class="filter-select"><button id="bandFilter" class="filter-select-button" type="button">All Bands</button><div id="bandFilterMenu" class="filter-select-menu" hidden><input id="bandFilterSearch" class="filter-menu-search" type="text" placeholder="Search band..." autocomplete="off" /><div id="bandFilterOptions" class="filter-options-list"></div></div></div></label>
+          <label class="filter-select-field"><span>From Week</span><div class="filter-select"><button id="weekFromFilter" class="filter-select-button" type="button">From Week</button><div id="weekFromFilterMenu" class="filter-select-menu" hidden><input id="weekFromFilterSearch" class="filter-menu-search" type="text" placeholder="Search week..." autocomplete="off" /><div id="weekFromFilterOptions" class="filter-options-list"></div></div></div></label>
+          <label class="filter-select-field"><span>To Week</span><div class="filter-select"><button id="weekToFilter" class="filter-select-button" type="button">To Week</button><div id="weekToFilterMenu" class="filter-select-menu" hidden><input id="weekToFilterSearch" class="filter-menu-search" type="text" placeholder="Search week..." autocomplete="off" /><div id="weekToFilterOptions" class="filter-options-list"></div></div></div></label>
+          <label class="filter-select-field"><span>Change</span><div class="filter-select"><button id="changeFilter" class="filter-select-button" type="button">All Changes</button><div id="changeFilterMenu" class="filter-select-menu" hidden><input id="changeFilterSearch" class="filter-menu-search" type="text" placeholder="Search change..." autocomplete="off" /><div id="changeFilterOptions" class="filter-options-list"></div></div></div></label>
           <div class="action-row table1-filter-actions">
             <button id="resetButton" class="ghost-button" type="button">Reset Filters</button>
             <button id="fullscreenButton" class="primary-button" type="button">Full Screen</button>
@@ -1327,16 +1662,8 @@ __STYLE__
         <div class="pagination-bar">
           <button id="prevPage" class="ghost-button" type="button">Previous</button>
           <button id="exitFullscreenButton" class="ghost-button table-exit-fullscreen" type="button" hidden>Exit Full Screen</button>
+          <button id="channelReportToggleButton" class="primary-button" type="button">Show Report</button>
           <button id="nextPage" class="ghost-button" type="button">Next</button>
-        </div>
-      </section>
-
-      <section class="panel channel-report-launcher">
-        <div class="panel-heading table-heading">
-          <div><h2>Channel Report</h2></div>
-          <div class="table-side">
-            <button id="channelReportToggleButton" class="primary-button" type="button">Show Report</button>
-          </div>
         </div>
       </section>
 
@@ -1359,10 +1686,6 @@ __STYLE__
         <div id="channelReportContainer" class="channel-report-stack"></div>
       </section>
 
-      <section class="panel focus-panel">
-        <div class="panel-heading"><div><h2>Channel Summary</h2></div></div>
-        <div id="focusSummary" class="focus-summary"></div>
-      </section>
     </div>
 
     <section class="panel nbhd-panel">
@@ -1372,59 +1695,123 @@ __STYLE__
           <span id="nbhdResultCount">0 rows</span>
         </div>
       </div>
-      <div class="nbhd-toolbar">
-        <label><span>Market</span><select id="nbhdMarketFilter"></select></label>
-        <label><span>City</span><select id="nbhdCityFilter"></select></label>
-        <label><span>Headend</span><select id="nbhdHeadendFilter"></select></label>
-        <label><span>Week Range</span><select id="nbhdWeekRangeFilter"></select></label>
-        <label><span>Change</span><select id="nbhdChangeFilter"></select></label>
-        <div class="action-row nbhd-actions">
-          <button id="nbhdResetButton" class="ghost-button" type="button">Reset Filters</button>
-          <button id="nbhdFullscreenButton" class="primary-button" type="button">Full Screen</button>
-          <button id="nbhdRefreshButton" class="ghost-button" type="button">Refresh</button>
+        <div class="nbhd-toolbar">
+          <label class="filter-select-field"><span>Market</span><div class="filter-select"><button id="nbhdMarketFilter" class="filter-select-button" type="button">All Markets</button><div id="nbhdMarketFilterMenu" class="filter-select-menu" hidden><input id="nbhdMarketFilterSearch" class="filter-menu-search" type="text" placeholder="Search market..." autocomplete="off" /><div id="nbhdMarketFilterOptions" class="filter-options-list"></div></div></div></label>
+          <label class="filter-select-field"><span>City</span><div class="filter-select"><button id="nbhdCityFilter" class="filter-select-button" type="button">All Cities</button><div id="nbhdCityFilterMenu" class="filter-select-menu" hidden><input id="nbhdCityFilterSearch" class="filter-menu-search" type="text" placeholder="Search city..." autocomplete="off" /><div id="nbhdCityFilterOptions" class="filter-options-list"></div></div></div></label>
+          <label class="filter-select-field"><span>Headend</span><div class="filter-select"><button id="nbhdHeadendFilter" class="filter-select-button" type="button">All Headends</button><div id="nbhdHeadendFilterMenu" class="filter-select-menu" hidden><input id="nbhdHeadendFilterSearch" class="filter-menu-search" type="text" placeholder="Search headend..." autocomplete="off" /><div id="nbhdHeadendFilterOptions" class="filter-options-list"></div></div></div></label>
+        <label class="filter-select-field"><span>From Week</span><div class="filter-select"><button id="nbhdWeekFromFilter" class="filter-select-button" type="button">From Week</button><div id="nbhdWeekFromFilterMenu" class="filter-select-menu" hidden><input id="nbhdWeekFromFilterSearch" class="filter-menu-search" type="text" placeholder="Search week..." autocomplete="off" /><div id="nbhdWeekFromFilterOptions" class="filter-options-list"></div></div></div></label>
+          <label class="filter-select-field"><span>To Week</span><div class="filter-select"><button id="nbhdWeekToFilter" class="filter-select-button" type="button">To Week</button><div id="nbhdWeekToFilterMenu" class="filter-select-menu" hidden><input id="nbhdWeekToFilterSearch" class="filter-menu-search" type="text" placeholder="Search week..." autocomplete="off" /><div id="nbhdWeekToFilterOptions" class="filter-options-list"></div></div></div></label>
+          <label class="filter-select-field"><span>Change</span><div class="filter-select"><button id="nbhdChangeFilter" class="filter-select-button" type="button">All Changes</button><div id="nbhdChangeFilterMenu" class="filter-select-menu" hidden><input id="nbhdChangeFilterSearch" class="filter-menu-search" type="text" placeholder="Search change..." autocomplete="off" /><div id="nbhdChangeFilterOptions" class="filter-options-list"></div></div></div></label>
+          <div class="action-row nbhd-actions">
+            <button id="nbhdResetButton" class="ghost-button" type="button">Reset Filters</button>
+            <button id="nbhdFullscreenButton" class="primary-button" type="button">Full Screen</button>
+            <button id="nbhdRefreshButton" class="ghost-button" type="button">Refresh</button>
+          </div>
         </div>
-      </div>
-      <div id="nbhdStatusMessage" class="status-message" hidden></div>
-      <div class="nbhd-table-wrap">
-        <table id="nbhdTable" class="nbhd-table">
-          <thead id="nbhdTableHead"></thead>
-          <tbody id="nbhdTableBody"></tbody>
+        <div id="nbhdStatusMessage" class="status-message" hidden></div>
+        <div class="nbhd-table-wrap">
+          <table id="nbhdTable" class="nbhd-table">
+            <thead id="nbhdTableHead"></thead>
+            <tbody id="nbhdTableBody"></tbody>
         </table>
       </div>
       <div class="pagination-bar nbhd-pagination-bar">
         <button id="nbhdPrevPage" class="ghost-button" type="button">Previous</button>
         <span id="nbhdPageInfo">Page 1 of 1</span>
-        <button id="nbhdNextPage" class="ghost-button" type="button">Next</button>
-        <button id="nbhdExitFullscreenButton" class="ghost-button nbhd-exit-fullscreen" type="button" hidden>Exit Full Screen</button>
-      </div>
-    </section>
+          <button id="nbhdNextPage" class="ghost-button" type="button">Next</button>
+          <button id="nbhdExitFullscreenButton" class="ghost-button nbhd-exit-fullscreen" type="button" hidden>Exit Full Screen</button>
+        </div>
+        <div id="nbhdReportLauncher" class="nbhd-report-launcher">
+          <button id="nbhdReportToggleButton" class="primary-button" type="button">Show Report</button>
+        </div>
+        <section id="nbhdReportPanel" class="panel nbhd-report-panel" hidden>
+          <div class="panel-heading nbhd-report-heading">
+            <div>
+              <h3>NBHD Position Change Report</h3>
+              <p id="nbhdReportMeta" class="panel-subtitle">Compare the selected channels with their previous and current neighbourhood positions.</p>
+            </div>
+            <div class="table-meta">
+              <span id="nbhdReportCount">0 narratives</span>
+            </div>
+          </div>
+          <div class="nbhd-report-toolbar">
+            <label class="ots-multiselect-field">
+              <span>Headend</span>
+              <div class="ots-multiselect">
+                <button id="nbhdReportHeadendFilter" class="ots-select-button" type="button">All Headends</button>
+                <div id="nbhdReportHeadendFilterMenu" class="ots-multiselect-menu" hidden>
+                  <input id="nbhdReportHeadendFilterSearch" class="filter-menu-search" type="text" placeholder="Search headend..." autocomplete="off" />
+                  <div id="nbhdReportHeadendFilterOptions" class="ots-options-list"></div>
+                </div>
+              </div>
+            </label>
+            <label class="ots-multiselect-field">
+              <span>Channel</span>
+              <div class="ots-multiselect">
+                <button id="nbhdReportChannelFilter" class="ots-select-button" type="button">Default 4 Channels</button>
+                <div id="nbhdReportChannelFilterMenu" class="ots-multiselect-menu" hidden>
+                  <input id="nbhdReportChannelFilterSearch" class="filter-menu-search" type="text" placeholder="Search channel..." autocomplete="off" />
+                  <div id="nbhdReportChannelFilterOptions" class="ots-options-list"></div>
+                </div>
+              </div>
+            </label>
+            <label class="filter-select-field">
+              <span>Previous Week</span>
+              <div class="filter-select">
+                <button id="nbhdReportWeekFromFilter" class="filter-select-button" type="button">Previous Week</button>
+                <div id="nbhdReportWeekFromFilterMenu" class="filter-select-menu" hidden>
+                  <input id="nbhdReportWeekFromFilterSearch" class="filter-menu-search" type="text" placeholder="Search week..." autocomplete="off" />
+                  <div id="nbhdReportWeekFromFilterOptions" class="filter-options-list"></div>
+                </div>
+              </div>
+            </label>
+            <label class="filter-select-field">
+              <span>Current Week</span>
+              <div class="filter-select">
+                <button id="nbhdReportWeekToFilter" class="filter-select-button" type="button">Current Week</button>
+                <div id="nbhdReportWeekToFilterMenu" class="filter-select-menu" hidden>
+                  <input id="nbhdReportWeekToFilterSearch" class="filter-menu-search" type="text" placeholder="Search week..." autocomplete="off" />
+                  <div id="nbhdReportWeekToFilterOptions" class="filter-options-list"></div>
+                </div>
+              </div>
+            </label>
+            <div class="action-row nbhd-report-actions">
+              <button id="nbhdReportResetButton" class="ghost-button" type="button">Reset</button>
+              <button id="nbhdReportDownloadButton" class="ghost-button" type="button">Download</button>
+              <button id="nbhdReportPrintButton" class="ghost-button" type="button">Print</button>
+              <button id="nbhdReportHideButton" class="primary-button" type="button">Hide</button>
+            </div>
+          </div>
+          <div id="nbhdReportStatusMessage" class="status-message" hidden></div>
+          <div id="nbhdReportContent" class="nbhd-report-stack"></div>
+        </section>
+      </section>
 
-    <section class="panel ots-panel">
-      <div class="panel-heading ots-heading">
-        <div><h2>OTS Comparison</h2></div>
+      <section class="panel ots-panel">
+        <div class="panel-heading ots-heading">
+          <div><h2>OTS Comparison</h2></div>
         <div class="table-meta">
           <span id="otsResultCount">0 records</span>
         </div>
       </div>
       <div class="ots-toolbar">
-        <label class="ots-search-field"><span>Search</span><input id="otsSearchInput" type="search" placeholder="Search market or channel..." /></label>
         <label class="ots-multiselect-field">
           <span>Market</span>
           <div class="ots-multiselect">
             <button id="otsMarketButton" class="ots-select-button" type="button">All Markets</button>
-            <div id="otsMarketMenu" class="ots-multiselect-menu" hidden><div id="otsMarketOptions" class="ots-options-list"></div></div>
+            <div id="otsMarketMenu" class="ots-multiselect-menu" hidden><input id="otsMarketSearch" class="ots-menu-search" type="text" placeholder="Search market..." autocomplete="off" /><div id="otsMarketOptions" class="ots-options-list"></div></div>
           </div>
         </label>
         <label class="ots-multiselect-field">
           <span>Channel</span>
           <div class="ots-multiselect">
             <button id="otsChannelButton" class="ots-select-button" type="button">All Channels</button>
-            <div id="otsChannelMenu" class="ots-multiselect-menu" hidden><div id="otsChannelOptions" class="ots-options-list"></div></div>
+            <div id="otsChannelMenu" class="ots-multiselect-menu" hidden><input id="otsChannelSearch" class="ots-menu-search" type="text" placeholder="Search channel..." autocomplete="off" /><div id="otsChannelOptions" class="ots-options-list"></div></div>
           </div>
         </label>
-        <label><span>Week From</span><select id="otsWeekFromFilter"></select></label>
-        <label><span>Week To</span><select id="otsWeekToFilter"></select></label>
-        <label><span>Change</span><select id="otsChangeFilter"></select></label>
+        <label class="filter-select-field"><span>Week From</span><div class="filter-select"><button id="otsWeekFromFilter" class="filter-select-button" type="button">From Week</button><div id="otsWeekFromFilterMenu" class="filter-select-menu" hidden><input id="otsWeekFromFilterSearch" class="filter-menu-search" type="text" placeholder="Search week..." autocomplete="off" /><div id="otsWeekFromFilterOptions" class="filter-options-list"></div></div></div></label>
+        <label class="filter-select-field"><span>Week To</span><div class="filter-select"><button id="otsWeekToFilter" class="filter-select-button" type="button">To Week</button><div id="otsWeekToFilterMenu" class="filter-select-menu" hidden><input id="otsWeekToFilterSearch" class="filter-menu-search" type="text" placeholder="Search week..." autocomplete="off" /><div id="otsWeekToFilterOptions" class="filter-options-list"></div></div></div></label>
+        <label class="filter-select-field"><span>Change</span><div class="filter-select"><button id="otsChangeFilter" class="filter-select-button" type="button">All Changes</button><div id="otsChangeFilterMenu" class="filter-select-menu" hidden><input id="otsChangeFilterSearch" class="filter-menu-search" type="text" placeholder="Search change..." autocomplete="off" /><div id="otsChangeFilterOptions" class="filter-options-list"></div></div></div></label>
         <div class="action-row ots-actions">
           <button id="otsResetButton" class="ghost-button" type="button">Reset Filters</button>
           <button id="otsRefreshButton" class="ghost-button" type="button">Refresh</button>
@@ -1444,21 +1831,118 @@ __STYLE__
         <button id="otsNextPage" class="ghost-button" type="button">Next</button>
         <button id="otsExitFullscreenButton" class="ghost-button ots-exit-fullscreen" type="button" hidden>Exit Full Screen</button>
       </div>
+      <div id="otsReportLauncher" class="ots-report-launcher">
+        <button id="otsReportToggleButton" class="primary-button" type="button">Show Report</button>
+      </div>
+      <section id="otsReportPanel" class="panel ots-report-panel" hidden>
+        <div class="panel-heading ots-report-heading">
+          <div>
+            <h3>OTS Change Report</h3>
+            <p id="otsReportMeta" class="panel-subtitle">Compare channel-wise OTS movement between the previous and current visible weeks.</p>
+          </div>
+          <div class="table-meta">
+            <span id="otsReportCount">0 narratives</span>
+          </div>
+        </div>
+        <div class="ots-report-toolbar">
+          <label class="ots-multiselect-field">
+            <span>Market</span>
+            <div class="ots-multiselect">
+              <button id="otsReportMarketFilter" class="ots-select-button" type="button">All Markets</button>
+              <div id="otsReportMarketFilterMenu" class="ots-multiselect-menu" hidden>
+                <input id="otsReportMarketFilterSearch" class="filter-menu-search" type="text" placeholder="Search market..." autocomplete="off" />
+                <div id="otsReportMarketFilterOptions" class="ots-options-list"></div>
+              </div>
+            </div>
+          </label>
+          <label class="ots-multiselect-field">
+            <span>Channel</span>
+            <div class="ots-multiselect">
+              <button id="otsReportChannelFilter" class="ots-select-button" type="button">Default 4 Channels</button>
+              <div id="otsReportChannelFilterMenu" class="ots-multiselect-menu" hidden>
+                <input id="otsReportChannelFilterSearch" class="filter-menu-search" type="text" placeholder="Search channel..." autocomplete="off" />
+                <div id="otsReportChannelFilterOptions" class="ots-options-list"></div>
+              </div>
+            </div>
+          </label>
+          <div class="action-row ots-report-actions">
+            <button id="otsReportResetButton" class="ghost-button" type="button">Reset</button>
+            <button id="otsReportDownloadButton" class="ghost-button" type="button">Download</button>
+            <button id="otsReportPrintButton" class="ghost-button" type="button">Print</button>
+            <button id="otsReportHideButton" class="primary-button" type="button">Hide</button>
+          </div>
+        </div>
+        <div id="otsReportStatusMessage" class="status-message" hidden></div>
+        <div id="otsReportContent" class="ots-report-stack"></div>
+      </section>
+    </section>
+
+    <section class="panel comparison-panel">
+      <div class="panel-heading comparison-heading">
+        <div><h2>Weekly Frequency & Rank Comparison</h2></div>
+        <div class="table-meta">
+          <span id="comparisonResultCount">0 rows</span>
+        </div>
+      </div>
+      <div class="comparison-toolbar">
+        <label class="filter-select-field"><span>Market</span><div class="filter-select"><button id="comparisonMarketFilter" class="filter-select-button" type="button">All Markets</button><div id="comparisonMarketFilterMenu" class="filter-select-menu" hidden><input id="comparisonMarketFilterSearch" class="filter-menu-search" type="text" placeholder="Search market..." autocomplete="off" /><div id="comparisonMarketFilterOptions" class="filter-options-list"></div></div></div></label>
+        <label class="filter-select-field"><span>City</span><div class="filter-select"><button id="comparisonCityFilter" class="filter-select-button" type="button">All Cities</button><div id="comparisonCityFilterMenu" class="filter-select-menu" hidden><input id="comparisonCityFilterSearch" class="filter-menu-search" type="text" placeholder="Search city..." autocomplete="off" /><div id="comparisonCityFilterOptions" class="filter-options-list"></div></div></div></label>
+        <label class="filter-select-field"><span>Headend</span><div class="filter-select"><button id="comparisonHeadendFilter" class="filter-select-button" type="button">All Headends</button><div id="comparisonHeadendFilterMenu" class="filter-select-menu" hidden><input id="comparisonHeadendFilterSearch" class="filter-menu-search" type="text" placeholder="Search headend..." autocomplete="off" /><div id="comparisonHeadendFilterOptions" class="filter-options-list"></div></div></div></label>
+        <label class="filter-select-field"><span>Channel</span><div class="filter-select"><button id="comparisonChannelFilter" class="filter-select-button" type="button">All Channels</button><div id="comparisonChannelFilterMenu" class="filter-select-menu" hidden><input id="comparisonChannelFilterSearch" class="filter-menu-search" type="text" placeholder="Search channel..." autocomplete="off" /><div id="comparisonChannelFilterOptions" class="filter-options-list"></div></div></div></label>
+        <label class="filter-select-field"><span>Week</span><div class="filter-select"><button id="comparisonWeekFilter" class="filter-select-button" type="button">Select Week</button><div id="comparisonWeekFilterMenu" class="filter-select-menu" hidden><input id="comparisonWeekFilterSearch" class="filter-menu-search" type="text" placeholder="Search week..." autocomplete="off" /><div id="comparisonWeekFilterOptions" class="filter-options-list"></div></div></div></label>
+        <div class="action-row comparison-actions">
+          <button id="comparisonResetButton" class="ghost-button" type="button">Reset Filters</button>
+          <button id="comparisonFullscreenButton" class="primary-button" type="button">Full Screen</button>
+        </div>
+      </div>
+      <div id="comparisonStatusMessage" class="status-message" hidden></div>
+      <div class="comparison-table-wrap">
+        <table id="comparisonTable" class="comparison-table">
+          <thead id="comparisonTableHead"></thead>
+          <tbody id="comparisonTableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination-bar comparison-pagination-bar">
+        <button id="comparisonPrevPage" class="ghost-button" type="button">Previous</button>
+        <span id="comparisonPageInfo">Page 1 of 1</span>
+        <button id="comparisonNextPage" class="ghost-button" type="button">Next</button>
+        <button id="comparisonExitFullscreenButton" class="ghost-button comparison-exit-fullscreen" type="button" hidden>Exit Full Screen</button>
+      </div>
     </section>
 
     <section class="kpi-grid bottom-kpis">
       <article class="kpi-card compact-kpi">
-        <span>Total Channels</span>
-        <strong id="kpiTotal">0</strong>
+        <span>Total Rows</span>
+        <strong id="kpiTotalRows">0</strong>
       </article>
       <article class="kpi-card compact-kpi">
-        <span id="kpiLabelOne">Frequency Increased</span>
-        <strong id="kpiIncrease">0</strong>
+        <span>Total Market</span>
+        <strong id="kpiTotalMarket">0</strong>
       </article>
       <article class="kpi-card compact-kpi">
-        <span id="kpiLabelTwo">Frequency Decreased</span>
-        <strong id="kpiDecrease">0</strong>
+        <span>Total City</span>
+        <strong id="kpiTotalCity">0</strong>
       </article>
+      <article class="kpi-card compact-kpi">
+        <span>Total MSO Type</span>
+        <strong id="kpiTotalMsoType">0</strong>
+      </article>
+      <article class="kpi-card compact-kpi">
+        <span>Total Headend</span>
+        <strong id="kpiTotalHeadend">0</strong>
+      </article>
+      <article class="kpi-card compact-kpi">
+        <span>Total Channel</span>
+        <strong id="kpiTotalChannel">0</strong>
+      </article>
+      <article class="kpi-card compact-kpi">
+        <span>Total Band</span>
+        <strong id="kpiTotalBand">0</strong>
+      </article>
+    </section>
+
+    <section class="download-bar">
+      <button id="downloadDashboardButton" class="ghost-button" type="button">Download Dashboard</button>
     </section>
   </div>
 
@@ -1470,6 +1954,8 @@ __STYLE__
   <script>
 const reportBundle = window.__CHROME_REPORT_DATA__ || {
   frequency: { generated_at: "", weeks: [], records: [], message: "Dashboard data file could not be loaded." },
+  comparison: { generated_at: "", weeks: [], pairs: [], rows_by_pair: {}, message: "Comparison data file could not be loaded." },
+  nbhd_benchmark: { generated_at: "", weeks: [], records: [], message: "INDIA TV comparison data file could not be loaded.", source_directory: "" },
   nbhd: { generated_at: "", weeks: [], filters: { markets: [], cities: [], head_ends: [] }, table: { records: [], total_count: 0 }, message: "Neighbourhood data file could not be loaded.", source_directory: "" },
   ots: { generated_at: "", weeks: [], visible_weeks: [], filters: { markets: [], channels: [] }, table: { records: [], total_count: 0 }, message: "OTS data file could not be loaded.", source_directory: "" }
 };
@@ -1477,66 +1963,9 @@ const report = reportBundle.frequency;
 function normalizeWeeks(weeks) {
   return Array.isArray(weeks) ? weeks.filter((week) => String(week || "").trim() !== "") : [];
 }
-window.__CHROME_WEEK_CLUSTER__ = window.__CHROME_WEEK_CLUSTER__ || (() => {
-  let currentValue = "";
-
-  function buildOptions(weeks) {
-    const safeWeeks = normalizeWeeks(weeks);
-    if (!safeWeeks.length) return [{ value: "all", label: "All Weeks", weeks: [] }];
-    const options = [{ value: "all", label: "All Weeks", weeks: safeWeeks.slice() }];
-    for (let index = 0; index < safeWeeks.length; index += 4) {
-      const slice = safeWeeks.slice(index, index + 4);
-      if (!slice.length) continue;
-      options.push({
-        value: `${slice[0]}|||${slice[slice.length - 1]}`,
-        label: slice.length === 1 ? slice[0] : `${slice[0]} to ${slice[slice.length - 1]}`,
-        weeks: slice,
-      });
-    }
-    return options;
-  }
-
-  function resolveValue(weeks, requestedValue = currentValue) {
-    const options = buildOptions(weeks);
-    if (!options.length) return "all";
-    if (requestedValue === "all" && options.some((option) => option.value === "all")) return "all";
-    if (options.some((option) => option.value === requestedValue)) return requestedValue;
-    const clusterOptions = options.filter((option) => option.value !== "all");
-    return clusterOptions.length ? clusterOptions[clusterOptions.length - 1].value : "all";
-  }
-
-  return {
-    getOptions(weeks) {
-      return buildOptions(weeks);
-    },
-    getValue(weeks) {
-      currentValue = resolveValue(weeks, currentValue);
-      return currentValue;
-    },
-    getVisibleWeeks(weeks, requestedValue = currentValue) {
-      const safeWeeks = normalizeWeeks(weeks);
-      if (!safeWeeks.length) return [];
-      const resolvedValue = resolveValue(safeWeeks, requestedValue);
-      if (resolvedValue === "all") return safeWeeks.slice();
-      const option = buildOptions(safeWeeks).find((item) => item.value === resolvedValue);
-      return option ? option.weeks.slice() : safeWeeks.slice(Math.max(0, safeWeeks.length - 4));
-    },
-    setValue(nextValue, weeks) {
-      currentValue = resolveValue(weeks, nextValue);
-      window.dispatchEvent(new CustomEvent("chrome:week-cluster-change", {
-        detail: {
-          value: currentValue,
-          weeks: this.getVisibleWeeks(weeks, currentValue),
-        },
-      }));
-      return currentValue;
-    },
-  };
-})();
-window.__CHROME_WEEK_CLUSTER__.getValue(report.weeks || []);
 const state = {
   view: "frequency",
-  filters: { market: "", city: "", mso_type: "", head_end: "", crn_no: "", channel_name: "", band: "", change: "" },
+  filters: { market: "", city: "", mso_type: "", head_end: "", crn_no: "", channel_name: "", band: "", week_from: "", week_to: "", change: "" },
   sortKey: "flow_order",
   sortDirection: "asc",
   page: 1,
@@ -1550,19 +1979,52 @@ const tableColumns = [
   { key: "crn_no", label: "CRN No." },
   { key: "channel_name", label: "CHANNEL NAME" },
 ];
-const filterOrder = ["market", "city", "mso_type", "head_end", "crn_no", "channel_name", "band", "change"];
+const filterOrder = ["market", "city", "mso_type", "head_end", "crn_no", "channel_name", "band", "week_from", "week_to", "change"];
 const fieldMap = { market: "market", city: "city", mso_type: "mso_type", head_end: "head_end", crn_no: "crn_no", channel_name: "channel_name", band: "band" };
-const filters = {
-  market: document.getElementById("marketFilter"),
-  city: document.getElementById("cityFilter"),
-  mso_type: document.getElementById("msoTypeFilter"),
-  head_end: document.getElementById("headendFilter"),
-  crn_no: document.getElementById("crnFilter"),
-  channel_name: document.getElementById("channelFilter"),
-  band: document.getElementById("bandFilter"),
-  change: document.getElementById("changeFilter"),
+function getSingleSelectControl(id) {
+  return {
+    button: document.getElementById(id),
+    menu: document.getElementById(`${id}Menu`),
+    search: document.getElementById(`${id}Search`),
+    options: document.getElementById(`${id}Options`),
+  };
+}
+const filterPlaceholders = {
+  market: "All Markets",
+  city: "All Cities",
+  mso_type: "All MSO Types",
+  head_end: "All Headend",
+  crn_no: "All CRN No",
+  channel_name: "All Channels",
+  band: "All Bands",
+  week_from: "From Week",
+  week_to: "To Week",
+  change: "All Changes",
 };
-const weekClusterFilter = document.getElementById("weekClusterFilter");
+const filterSearchPlaceholders = {
+  market: "Search market...",
+  city: "Search city...",
+  mso_type: "Search MSO type...",
+  head_end: "Search headend...",
+  crn_no: "Search CRN...",
+  channel_name: "Search channel...",
+  band: "Search band...",
+  week_from: "Search week...",
+  week_to: "Search week...",
+  change: "Search change...",
+};
+const filters = {
+  market: getSingleSelectControl("marketFilter"),
+  city: getSingleSelectControl("cityFilter"),
+  mso_type: getSingleSelectControl("msoTypeFilter"),
+  head_end: getSingleSelectControl("headendFilter"),
+  crn_no: getSingleSelectControl("crnFilter"),
+  channel_name: getSingleSelectControl("channelFilter"),
+  band: getSingleSelectControl("bandFilter"),
+  week_from: getSingleSelectControl("weekFromFilter"),
+  week_to: getSingleSelectControl("weekToFilter"),
+  change: getSingleSelectControl("changeFilter"),
+};
 const viewButtons = {
   frequency: document.getElementById("frequencyViewButton"),
   rank: document.getElementById("rankViewButton"),
@@ -1618,13 +2080,94 @@ function populateOptionList(select, options, selectedValue) {
   select.value = fallback;
   return fallback;
 }
+function updateSingleSelectButton(control, value, placeholder, labels = null) {
+  if (!control?.button) return;
+  control.button.textContent = value ? (labels?.[value] || value) : placeholder;
+}
+function renderSingleSelectOptions(control, values, selectedValue, placeholder, onSelect, labels = null) {
+  if (!control?.options) return;
+  const safeValues = Array.isArray(values) ? values.filter((value) => value !== null && value !== undefined && String(value).trim() !== "") : [];
+  const query = String(control.search?.value || "").trim().toLowerCase();
+  const fragment = document.createDocumentFragment();
+  const options = [{ value: "", label: placeholder }, ...safeValues.map((value) => ({ value, label: labels?.[value] || value }))];
+  options
+    .filter((option) => !query || String(option.label || "").toLowerCase().includes(query))
+    .forEach((option) => {
+      const item = document.createElement("button");
+      item.type = "button";
+      item.className = `filter-option-row${option.value === selectedValue ? " active" : ""}`;
+      item.textContent = option.label;
+      item.addEventListener("click", () => onSelect(option.value));
+      fragment.appendChild(item);
+    });
+  control.options.replaceChildren(fragment);
+}
+function getConstrainedWeekOptions(key) {
+  const weeks = normalizeWeeks(report.weeks || []);
+  if (key === "week_from") {
+    const toIndex = state.filters.week_to && weeks.includes(state.filters.week_to) ? weeks.indexOf(state.filters.week_to) : weeks.length - 1;
+    return weeks.slice(0, toIndex + 1);
+  }
+  if (key === "week_to") {
+    const fromIndex = state.filters.week_from && weeks.includes(state.filters.week_from) ? weeks.indexOf(state.filters.week_from) : 0;
+    return weeks.slice(fromIndex);
+  }
+  return weeks;
+}
+function getControlOptions(key) {
+  if (key === "week_from" || key === "week_to") return getConstrainedWeekOptions(key);
+  return getOptions(key);
+}
+function closeSingleSelectMenus(exceptControl = null) {
+  Object.values(filters).forEach((control) => {
+    if (control !== exceptControl && control?.menu) control.menu.hidden = true;
+  });
+}
+function syncSingleSelect(control, values, placeholder, selectedValue, onSelect, labels = null) {
+  const safeValues = Array.isArray(values) ? values.filter((value) => value !== null && value !== undefined && String(value).trim() !== "") : [];
+  const fallback = safeValues.includes(selectedValue) ? selectedValue : "";
+  updateSingleSelectButton(control, fallback, placeholder, labels);
+  renderSingleSelectOptions(control, safeValues, fallback, placeholder, (value) => {
+    onSelect(value);
+    closeSingleSelectMenus();
+  }, labels);
+  return fallback;
+}
+function bindSingleSelect(control, key, onApply) {
+  if (!control?.button) return;
+  control.button.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const next = control.menu?.hidden ?? false;
+    closeSingleSelectMenus();
+    if (control.menu) control.menu.hidden = !next;
+    if (next && control.search) {
+      control.search.value = "";
+      control.search.dispatchEvent(new Event("input"));
+      requestAnimationFrame(() => control.search?.focus());
+    }
+  });
+  if (control.search) {
+    control.search.placeholder = filterSearchPlaceholders[key] || "Search...";
+    control.search.addEventListener("click", (event) => event.stopPropagation());
+    control.search.addEventListener("input", () => {
+      renderSingleSelectOptions(control, getControlOptions(key), state.filters[key], filterPlaceholders[key], onApply, key === "change" ? { Changed: "Changed", "No Change": "No Change" } : null);
+    });
+  }
+}
 function getVisibleWeeks() {
-  return window.__CHROME_WEEK_CLUSTER__.getVisibleWeeks(report.weeks || [], window.__CHROME_WEEK_CLUSTER__.getValue(report.weeks || []));
+  const weeks = normalizeWeeks(report.weeks || []);
+  if (!weeks.length) return [];
+  if (state.filters.week_from || state.filters.week_to) {
+    const fromIndex = state.filters.week_from && weeks.includes(state.filters.week_from) ? weeks.indexOf(state.filters.week_from) : 0;
+    const toIndex = state.filters.week_to && weeks.includes(state.filters.week_to) ? weeks.indexOf(state.filters.week_to) : weeks.length - 1;
+    const start = Math.min(fromIndex, toIndex);
+    const end = Math.max(fromIndex, toIndex);
+    return weeks.slice(start, end + 1);
+  }
+  return weeks.slice(Math.max(0, weeks.length - 4));
 }
 function formatChannelLabel(value) {
-  return String(value || "")
-    .toLowerCase()
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+  return String(value || "").toUpperCase();
 }
 function getChannelReportWeekPair() {
   const allWeeks = normalizeWeeks(report.weeks || []);
@@ -1793,10 +2336,12 @@ function renderChannelReports() {
     });
 
     const weekRow = document.createElement("tr");
-    [...activeWeeks, ...activeWeeks].forEach((week) => {
+    [...activeWeeks, ...activeWeeks].forEach((week, index, allWeeks) => {
       const th = document.createElement("th");
       th.textContent = week;
-      th.className = "channel-report-subhead";
+      const weekGroupLength = Math.max(activeWeeks.length, 1);
+      const weekIndex = index % weekGroupLength;
+      th.className = `channel-report-subhead${weekIndex === 0 ? " channel-report-group-start" : ""}${weekIndex === weekGroupLength - 1 ? " channel-report-group-end" : ""}`;
       weekRow.appendChild(th);
     });
     thead.append(groupRow, weekRow);
@@ -1813,21 +2358,29 @@ function renderChannelReports() {
     } else {
       rows.forEach((row) => {
         const tr = document.createElement("tr");
-        [row.channel_name, row.market, row.head_end].forEach((value) => {
+        [row.channel_name, row.market, row.head_end].forEach((value, index) => {
           const td = document.createElement("td");
-          td.textContent = value || "";
+          td.textContent = value === row.channel_name ? String(value || "").toUpperCase() : (value || "");
+          td.className = index === 2 ? "channel-report-leading-end" : "channel-report-leading";
           tr.appendChild(td);
         });
         [
           { previous: row.previousFrequency, current: row.currentFrequency },
           { previous: row.previousRank, current: row.currentRank },
-        ].forEach((pair) => {
+        ].forEach((pair, pairIndex) => {
           [pair.previous, pair.current].forEach((value, index) => {
             const td = document.createElement("td");
             td.textContent = value === null || value === undefined || value === "" ? "NA" : String(value);
-            td.className = "channel-report-cell-stable";
-            if (value === null || value === undefined || value === "") td.className = "channel-report-cell-missing";
-            if (index === 1 && pair.previous !== pair.current && value !== null && value !== undefined && value !== "") td.className = "channel-report-cell-changed";
+            const boundaryClass = `${index === 0 ? " channel-report-group-start" : ""}${index === 1 ? " channel-report-group-end" : ""}`;
+            td.className = `channel-report-cell-stable${boundaryClass}${pairIndex === 0 ? " channel-report-freq-cell" : " channel-report-rank-cell"}`;
+            if (value === null || value === undefined || value === "") td.className = `channel-report-cell-missing${boundaryClass}${pairIndex === 0 ? " channel-report-freq-cell" : " channel-report-rank-cell"}`;
+            if (index === 1 && pair.previous !== pair.current && value !== null && value !== undefined && value !== "") {
+              const currentNumber = Number(value);
+              const previousNumber = Number(pair.previous);
+              if (!Number.isNaN(currentNumber) && !Number.isNaN(previousNumber)) {
+                td.className = `${currentNumber > previousNumber ? "channel-report-cell-increase" : "channel-report-cell-decrease"}${boundaryClass}${pairIndex === 0 ? " channel-report-freq-cell" : " channel-report-rank-cell"}`;
+              }
+            }
             tr.appendChild(td);
           });
         });
@@ -1859,10 +2412,33 @@ function resetChannelReports() {
 function getActiveBaseView() {
   return state.view === "report" ? "frequency" : state.view;
 }
+function isMissingValue(value) {
+  return value === null || value === undefined || value === "";
+}
+function getDisplayStatus(record, viewConfig, weeks, weekIndex) {
+  if (weekIndex === 0) return "baseline";
+  const week = weeks[weekIndex];
+  const previousWeek = weeks[weekIndex - 1];
+  const currentValue = record[viewConfig.series]?.[week];
+  const previousValue = record[viewConfig.series]?.[previousWeek];
+  const currentMissing = isMissingValue(currentValue);
+  const previousMissing = isMissingValue(previousValue);
+  if (previousMissing && currentMissing) return "no_change";
+  if (previousMissing && !currentMissing) {
+    return state.view === "rank" ? "improve" : "increase";
+  }
+  if (!previousMissing && currentMissing) {
+    return state.view === "rank" ? "decline" : "decrease";
+  }
+  if (currentMissing) return "missing";
+  return record[viewConfig.changes]?.[week] || "no_change";
+}
+function isChangedStatus(status) {
+  return ["increase", "decrease", "improve", "decline", "change"].includes(status);
+}
 function hasVisibleChange(record, viewConfig, weeks) {
   if (weeks.length <= 1) return false;
-  const changedSet = state.view === "band" ? new Set(["change"]) : new Set(["increase", "decrease", "improve", "decline"]);
-  return weeks.slice(1).some((week) => changedSet.has(record[viewConfig.changes][week]));
+  return weeks.slice(1).some((_week, index) => isChangedStatus(getDisplayStatus(record, viewConfig, weeks, index + 1)));
 }
 function getViewConfig() {
   const activeView = getActiveBaseView();
@@ -1894,6 +2470,7 @@ function filterRecords(ignoreKey = "") {
   });
 }
 function getOptions(key) {
+  if (key === "week_from" || key === "week_to") return getConstrainedWeekOptions(key);
   if (key === "change") return ["Changed", "No Change"];
   const field = fieldMap[key];
   const values = new Set();
@@ -1905,23 +2482,50 @@ function getOptions(key) {
 }
 function populateSelect(select, values, allLabel, selectedValue) {
   const safeValues = values.filter((value) => value !== null && value !== undefined && String(value).trim() !== "");
+  if (select instanceof HTMLSelectElement) {
+    const safeSelectedValue = safeValues.includes(selectedValue) ? selectedValue : "";
+    select.innerHTML = "";
+    select.appendChild(createOption("", allLabel));
+    safeValues.forEach((value) => select.appendChild(createOption(value, value)));
+    select.value = safeSelectedValue;
+    return safeSelectedValue;
+  }
   const safeSelectedValue = safeValues.includes(selectedValue) ? selectedValue : "";
-  select.innerHTML = "";
-  select.appendChild(createOption("", allLabel));
-  safeValues.forEach((value) => select.appendChild(createOption(value, value)));
-  select.value = safeSelectedValue;
-  return safeSelectedValue;
+  return syncSingleSelect(select, safeValues, allLabel, safeSelectedValue, () => {}, null);
+}
+function applyFilterValue(key, value) {
+  state.filters[key] = value;
+  if (key === "week_from" || key === "week_to") {
+    const weeks = normalizeWeeks(report.weeks || []);
+    const fromIndex = state.filters.week_from && weeks.includes(state.filters.week_from) ? weeks.indexOf(state.filters.week_from) : -1;
+    const toIndex = state.filters.week_to && weeks.includes(state.filters.week_to) ? weeks.indexOf(state.filters.week_to) : -1;
+    if (fromIndex >= 0 && toIndex >= 0 && fromIndex > toIndex) {
+      if (key === "week_from") state.filters.week_to = state.filters.week_from;
+      else state.filters.week_from = state.filters.week_to;
+    }
+  }
+  const changedIndex = filterOrder.indexOf(key);
+  if (changedIndex >= 0) filterOrder.slice(changedIndex + 1).forEach((nextKey) => { state.filters[nextKey] = ""; });
+  if (key === "week_from" && value) {
+    state.filters.week_to = state.filters.week_to && getConstrainedWeekOptions("week_to").includes(state.filters.week_to) ? state.filters.week_to : value;
+  }
+  if (key === "week_to" && value) {
+    state.filters.week_from = state.filters.week_from && getConstrainedWeekOptions("week_from").includes(state.filters.week_from) ? state.filters.week_from : value;
+  }
+  state.page = 1;
+  render();
 }
 function syncFilters() {
-  populateOptionList(weekClusterFilter, window.__CHROME_WEEK_CLUSTER__.getOptions(report.weeks || []), window.__CHROME_WEEK_CLUSTER__.getValue(report.weeks || []));
-  state.filters.market = populateSelect(filters.market, getOptions("market"), "All Markets", state.filters.market);
-  state.filters.city = populateSelect(filters.city, getOptions("city"), "All Cities", state.filters.city);
-  state.filters.mso_type = populateSelect(filters.mso_type, getOptions("mso_type"), "All MSO Types", state.filters.mso_type);
-  state.filters.head_end = populateSelect(filters.head_end, getOptions("head_end"), "All Headend", state.filters.head_end);
-  state.filters.crn_no = populateSelect(filters.crn_no, getOptions("crn_no"), "All CRN No", state.filters.crn_no);
-  state.filters.channel_name = populateSelect(filters.channel_name, getOptions("channel_name"), "All Channels", state.filters.channel_name);
-  state.filters.band = populateSelect(filters.band, getOptions("band"), "All Bands", state.filters.band);
-  state.filters.change = populateSelect(filters.change, getOptions("change"), "All Changes", state.filters.change);
+  state.filters.market = syncSingleSelect(filters.market, getOptions("market"), "All Markets", state.filters.market, (value) => applyFilterValue("market", value), null);
+  state.filters.city = syncSingleSelect(filters.city, getOptions("city"), "All Cities", state.filters.city, (value) => applyFilterValue("city", value), null);
+  state.filters.mso_type = syncSingleSelect(filters.mso_type, getOptions("mso_type"), "All MSO Types", state.filters.mso_type, (value) => applyFilterValue("mso_type", value), null);
+  state.filters.head_end = syncSingleSelect(filters.head_end, getOptions("head_end"), "All Headend", state.filters.head_end, (value) => applyFilterValue("head_end", value), null);
+  state.filters.crn_no = syncSingleSelect(filters.crn_no, getOptions("crn_no"), "All CRN No", state.filters.crn_no, (value) => applyFilterValue("crn_no", value), null);
+  state.filters.channel_name = syncSingleSelect(filters.channel_name, getOptions("channel_name"), "All Channels", state.filters.channel_name, (value) => applyFilterValue("channel_name", value), null);
+  state.filters.band = syncSingleSelect(filters.band, getOptions("band"), "All Bands", state.filters.band, (value) => applyFilterValue("band", value), null);
+  state.filters.week_from = syncSingleSelect(filters.week_from, getOptions("week_from"), "From Week", state.filters.week_from, (value) => applyFilterValue("week_from", value), null);
+  state.filters.week_to = syncSingleSelect(filters.week_to, getOptions("week_to"), "To Week", state.filters.week_to, (value) => applyFilterValue("week_to", value), null);
+  state.filters.change = syncSingleSelect(filters.change, getOptions("change"), "All Changes", state.filters.change, (value) => applyFilterValue("change", value), { Changed: "Changed", "No Change": "No Change" });
 }
 function sortValue(record, sortKey, weeks) {
   if (sortKey === "flow_order") {
@@ -2038,10 +2642,12 @@ function buildTableHead() {
     });
 
     const weekRow = document.createElement("tr");
-    [...reportData.weeks, ...reportData.weeks].forEach((week) => {
+    [...reportData.weeks, ...reportData.weeks].forEach((week, index) => {
       const th = document.createElement("th");
       th.textContent = week;
-      th.className = "report-subhead";
+      const weekGroupLength = Math.max(reportData.weeks.length, 1);
+      const weekIndex = index % weekGroupLength;
+      th.className = `report-subhead${weekIndex === 0 ? " report-group-start" : ""}${weekIndex === weekGroupLength - 1 ? " report-group-end" : ""}`;
       weekRow.appendChild(th);
     });
     tableHead.replaceChildren(titleRow, groupRow, weekRow);
@@ -2081,6 +2687,7 @@ function formatWeekValue(value, status, isBaseline) {
 }
 function renderFocusSummary(records) {
   const container = document.getElementById("focusSummary");
+  if (!container) return;
   if (state.view === "report") {
     const reportData = getReportRows(records);
     const notes = buildReportNotes(reportData.rows, reportData.weeks, reportData.channel);
@@ -2096,15 +2703,19 @@ function renderFocusSummary(records) {
     let positive = 0, negative = 0, noChange = 0, latestPositive = 0, latestNegative = 0;
     const latestWeek = visibleWeeks[visibleWeeks.length - 1];
     selected.forEach((record) => {
-      visibleWeeks.slice(1).forEach((week) => {
-        const status = record[viewConfig.changes][week];
+      visibleWeeks.slice(1).forEach((week, index) => {
+        const status = getDisplayStatus(record, viewConfig, visibleWeeks, index + 1);
         if (status === viewConfig.positive) positive += 1;
         else if (status === viewConfig.negative) negative += 1;
+        else if (status === "increase") positive += 1;
+        else if (status === "decrease") negative += 1;
         else if (status === "no_change") noChange += 1;
       });
-      const latestStatus = record[viewConfig.changes][latestWeek];
+      const latestStatus = getDisplayStatus(record, viewConfig, visibleWeeks, visibleWeeks.length - 1);
       if (latestStatus === viewConfig.positive) latestPositive += 1;
       else if (latestStatus === viewConfig.negative) latestNegative += 1;
+      else if (latestStatus === "increase") latestPositive += 1;
+      else if (latestStatus === "decrease") latestNegative += 1;
     });
     const positiveLabel = state.view === "rank" ? "improved" : state.view === "band" ? "changed" : "increased";
     const negativeLabel = state.view === "rank" ? "declined" : state.view === "band" ? "stable" : "decreased";
@@ -2133,27 +2744,30 @@ function renderTable(records) {
         record.channel_name,
         record.market,
         record.head_end,
-      ].forEach((value) => {
+      ].forEach((value, index) => {
         const td = document.createElement("td");
         td.textContent = value || "";
+        td.className = index === 2 ? "report-leading-end" : "report-leading";
         tr.appendChild(td);
       });
-      reportData.weeks.forEach((week) => {
+      reportData.weeks.forEach((week, weekIndex) => {
         const td = document.createElement("td");
         const value = record.frequencies?.[week];
         td.textContent = value === null || value === undefined || value === "" ? "NA" : String(value);
-        td.className = "report-cell-neutral";
-        if (value === null || value === undefined || value === "") td.className = "report-cell-missing";
-        if (week === currentWeek && previousWeek && record.frequencies?.[previousWeek] !== value && value !== null && value !== undefined && value !== "") td.className = "report-cell-latest";
+        const boundaryClass = `${weekIndex === 0 ? " report-group-start" : ""}${weekIndex === reportData.weeks.length - 1 ? " report-group-end" : ""}`;
+        td.className = `report-cell-neutral report-freq-cell${boundaryClass}`;
+        if (value === null || value === undefined || value === "") td.className = `report-cell-missing report-freq-cell${boundaryClass}`;
+        if (week === currentWeek && previousWeek && record.frequencies?.[previousWeek] !== value && value !== null && value !== undefined && value !== "") td.className = `report-cell-latest report-freq-cell${boundaryClass}`;
         tr.appendChild(td);
       });
-      reportData.weeks.forEach((week) => {
+      reportData.weeks.forEach((week, weekIndex) => {
         const td = document.createElement("td");
         const value = record.ranks?.[week];
         td.textContent = value === null || value === undefined || value === "" ? "NA" : String(value);
-        td.className = "report-cell-neutral";
-        if (value === null || value === undefined || value === "") td.className = "report-cell-missing";
-        if (week === currentWeek && previousWeek && record.ranks?.[previousWeek] !== value && value !== null && value !== undefined && value !== "") td.className = "report-cell-latest";
+        const boundaryClass = `${weekIndex === 0 ? " report-group-start" : ""}${weekIndex === reportData.weeks.length - 1 ? " report-group-end" : ""}`;
+        td.className = `report-cell-neutral report-rank-cell${boundaryClass}`;
+        if (value === null || value === undefined || value === "") td.className = `report-cell-missing report-rank-cell${boundaryClass}`;
+        if (week === currentWeek && previousWeek && record.ranks?.[previousWeek] !== value && value !== null && value !== undefined && value !== "") td.className = `report-cell-latest report-rank-cell${boundaryClass}`;
         tr.appendChild(td);
       });
       fragment.appendChild(tr);
@@ -2180,8 +2794,7 @@ function renderTable(records) {
     visibleWeeks.forEach((week, index) => {
       const td = document.createElement("td");
       const value = record[viewConfig.series][week];
-      const rawStatus = index === 0 ? "baseline" : record[viewConfig.changes][week];
-      const status = value === null || value === undefined || value === "" ? "missing" : rawStatus;
+      const status = getDisplayStatus(record, viewConfig, visibleWeeks, index);
       td.classList.add(`status-${status}`);
       td.textContent = formatWeekValue(value, status, index === 0);
       tr.appendChild(td);
@@ -2195,40 +2808,18 @@ function renderTable(records) {
   tableBody.replaceChildren(fragment);
 }
 function updateKpis(records) {
-  if (state.view === "report") {
-    const reportData = getReportRows(records);
-    const [previousWeek, currentWeek] = reportData.weeks;
-    let changedCount = 0;
-    let newCount = 0;
-    reportData.rows.forEach((record) => {
-      const previous = previousWeek ? record.frequencies?.[previousWeek] : null;
-      const current = currentWeek ? record.frequencies?.[currentWeek] : null;
-      const previousMissing = previous === null || previous === undefined || previous === "";
-      const currentMissing = current === null || current === undefined || current === "";
-      if (!previousMissing && !currentMissing && previous !== current) changedCount += 1;
-      if (previousMissing && !currentMissing) newCount += 1;
-    });
-    document.getElementById("kpiTotal").textContent = formatNumber(reportData.rows.length);
-    document.getElementById("kpiLabelOne").textContent = "LCN Changed";
-    document.getElementById("kpiLabelTwo").textContent = "New Availability";
-    document.getElementById("kpiIncrease").textContent = formatNumber(changedCount);
-    document.getElementById("kpiDecrease").textContent = formatNumber(newCount);
-    return;
-  }
-  document.getElementById("kpiTotal").textContent = formatNumber(records.length);
-  const viewConfig = getViewConfig();
-  const visibleWeeks = getVisibleWeeks();
-  let positive = 0, negative = 0;
-  const latestWeek = visibleWeeks[visibleWeeks.length - 1];
-  records.forEach((record) => {
-    const status = record[viewConfig.changes][latestWeek];
-    if (status === viewConfig.positive) positive += 1;
-    if (status === viewConfig.negative) negative += 1;
-  });
-  document.getElementById("kpiLabelOne").textContent = viewConfig.kpiOne;
-  document.getElementById("kpiLabelTwo").textContent = viewConfig.kpiTwo;
-  document.getElementById("kpiIncrease").textContent = formatNumber(positive);
-  document.getElementById("kpiDecrease").textContent = formatNumber(negative);
+  const countDistinct = (key) => new Set(
+    records
+      .map((record) => String(record[key] ?? "").trim())
+      .filter(Boolean)
+  ).size;
+  document.getElementById("kpiTotalRows").textContent = formatNumber(records.length);
+  document.getElementById("kpiTotalMarket").textContent = formatNumber(countDistinct("market"));
+  document.getElementById("kpiTotalCity").textContent = formatNumber(countDistinct("city"));
+  document.getElementById("kpiTotalMsoType").textContent = formatNumber(countDistinct("mso_type"));
+  document.getElementById("kpiTotalHeadend").textContent = formatNumber(countDistinct("head_end"));
+  document.getElementById("kpiTotalChannel").textContent = formatNumber(countDistinct("channel_name"));
+  document.getElementById("kpiTotalBand").textContent = formatNumber(countDistinct("band"));
 }
 function getPageSize() {
   if (!fullscreenState.active) return 30;
@@ -2345,8 +2936,6 @@ function render() {
   const displayCount = reportData ? reportData.rows.length : records.length;
   const totalPages = Math.max(1, Math.ceil(displayCount / state.pageSize));
   if (state.page > totalPages) state.page = totalPages;
-  document.getElementById("generatedAt").textContent = formatTimestamp(report.generated_at);
-  document.getElementById("totalRecords").textContent = formatNumber(displayCount);
   document.getElementById("resultCount").textContent = `${formatNumber(displayCount)} records`;
   document.getElementById("pageInfo").textContent = `Page ${state.page} of ${totalPages}`;
   document.getElementById("prevPage").disabled = state.page <= 1;
@@ -2358,14 +2947,13 @@ function render() {
   renderFocusSummary(records);
   updateKpis(records);
 }
-Object.entries(filters).forEach(([key, select]) => {
-  select.addEventListener("change", () => {
-    state.filters[key] = select.value;
-    const changedIndex = filterOrder.indexOf(key);
-    if (changedIndex >= 0) filterOrder.slice(changedIndex + 1).forEach((nextKey) => { state.filters[nextKey] = ""; });
-    state.page = 1;
-    render();
-  });
+Object.entries(filters).forEach(([key, control]) => {
+  bindSingleSelect(control, key, (value) => applyFilterValue(key, value));
+});
+document.addEventListener("click", (event) => {
+  if (!event.target.closest(".filter-select") && !event.target.closest(".ots-multiselect")) {
+    closeSingleSelectMenus();
+  }
 });
 Object.entries(channelReportControls).forEach(([key, control]) => {
   if (!control || key === "container" || key === "count" || key === "panel" || key === "toggle" || key === "reset" || key === "hide") return;
@@ -2389,13 +2977,8 @@ if (channelReportControls.hide) {
 if (channelReportControls.reset) {
   channelReportControls.reset.addEventListener("click", resetChannelReports);
 }
-if (weekClusterFilter) {
-  weekClusterFilter.addEventListener("change", () => {
-    window.__CHROME_WEEK_CLUSTER__.setValue(weekClusterFilter.value, report.weeks || []);
-  });
-}
 document.getElementById("resetButton").addEventListener("click", () => {
-  state.filters = { market: "", city: "", mso_type: "", head_end: "", crn_no: "", channel_name: "", band: "", change: "" };
+  state.filters = { market: "", city: "", mso_type: "", head_end: "", crn_no: "", channel_name: "", band: "", week_from: "", week_to: "", change: "" };
   state.sortKey = "flow_order";
   state.sortDirection = "asc";
   state.page = 1;
@@ -2449,13 +3032,21 @@ window.addEventListener("resize", () => {
     render();
   }
 });
-window.addEventListener("chrome:week-cluster-change", () => {
-  state.page = 1;
-  render();
-});
 document.getElementById("downloadDashboardButton").addEventListener("click", downloadStandaloneDashboard);
 syncFullscreenButtons();
 render();
+  </script>
+  <script>
+window.__NBHD_BENCHMARK_INITIAL_DATA__ = reportBundle.nbhd_benchmark;
+  </script>
+  <script>
+__NBHD_BENCHMARK_SCRIPT__
+  </script>
+  <script>
+window.__COMPARISON_INITIAL_DATA__ = reportBundle.comparison;
+  </script>
+  <script>
+__COMPARISON_SCRIPT__
   </script>
   <script>
 window.__NBHD_STANDALONE_DATA__ = reportBundle.nbhd;
@@ -2475,6 +3066,8 @@ __OTS_SCRIPT__
 
     return (
         html.replace("__STYLE__", style_text)
+        .replace("__NBHD_BENCHMARK_SCRIPT__", nbhd_benchmark_script_text)
+        .replace("__COMPARISON_SCRIPT__", comparison_script_text)
         .replace("__NBHD_SCRIPT__", nbhd_script_text)
         .replace("__OTS_SCRIPT__", ots_script_text)
     )
@@ -2644,6 +3237,8 @@ def ots_visible_weeks(weeks: list[str], week_from: str, week_to: str) -> list[st
     # Slice dynamic week columns based on the selected from/to boundaries.
     if not weeks:
         return []
+    if not week_from and not week_to:
+        return weeks[max(0, len(weeks) - 8) :]
     start_index = weeks.index(week_from) if week_from in weeks else 0
     end_index = weeks.index(week_to) if week_to in weeks else len(weeks) - 1
     if start_index > end_index:
@@ -2673,6 +3268,16 @@ def ots_change_type(record: dict[str, Any], weeks: list[str]) -> str:
     return "no_change"
 
 
+def ots_matches_change_filter(change_type: str, filter_value: str) -> bool:
+    if not filter_value:
+        return True
+    if filter_value == "changed":
+        return change_type in {"increase", "decrease"}
+    if filter_value == "no_change":
+        return change_type == "no_change"
+    return change_type == filter_value
+
+
 def filter_ots_records(records: list[dict[str, Any]], filters: dict[str, Any], ignore_key: str = "") -> list[dict[str, Any]]:
     # Apply OTS market/channel/search/change filters against the current visible week range.
     visible_weeks = ots_visible_weeks(filters["all_weeks"], filters["week_from"], filters["week_to"])
@@ -2689,7 +3294,7 @@ def filter_ots_records(records: list[dict[str, Any]], filters: dict[str, Any], i
                 continue
         if ignore_key != "change" and filters["change"]:
             change_type = ots_change_type(record, visible_weeks)
-            if filters["change"] != change_type:
+            if not ots_matches_change_filter(change_type, filters["change"]):
                 continue
         filtered.append(record)
     return filtered
@@ -2709,7 +3314,7 @@ def build_ots_filters(records: list[dict[str, Any]], current_filters: dict[str, 
         "markets": values_for("markets", "market"),
         "channels": values_for("channels", "channel"),
         "weeks": current_filters["all_weeks"],
-        "change_options": ["", "increase", "decrease", "no_change"],
+        "change_options": ["", "changed", "no_change", "increase", "decrease"],
     }
 
 

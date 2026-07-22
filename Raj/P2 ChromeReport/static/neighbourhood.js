@@ -1,6 +1,7 @@
 (function () {
   const root = document.getElementById("nbhdTable");
   if (!root) return;
+  const NO_DATA_LABEL = "NA";
 
   const state = {
     payload: null,
@@ -8,7 +9,8 @@
       market: "",
       city: "",
       head_end: "",
-      week_range: "",
+      week_from: "",
+      week_to: "",
       change: "",
     },
     page: 1,
@@ -16,13 +18,54 @@
     loading: false,
     standalone: Boolean(window.__NBHD_STANDALONE_DATA__),
     initial: window.__NBHD_INITIAL_DATA__ || null,
+    report: {
+      open: false,
+      headends: [],
+      channels: [],
+      week_from: "",
+      week_to: "",
+    },
   };
 
-  const marketFilter = document.getElementById("nbhdMarketFilter");
-  const cityFilter = document.getElementById("nbhdCityFilter");
-  const headendFilter = document.getElementById("nbhdHeadendFilter");
-  const weekRangeFilter = document.getElementById("nbhdWeekRangeFilter");
-  const changeFilter = document.getElementById("nbhdChangeFilter");
+  const DEFAULT_REPORT_CHANNEL_KEYS = ["INDIATV", "AAJTAK", "NEWS18INDIA", "REPUBLICBHARAT"];
+
+  function getSingleSelectControl(id) {
+    return {
+      button: document.getElementById(id),
+      menu: document.getElementById(`${id}Menu`),
+      search: document.getElementById(`${id}Search`),
+      options: document.getElementById(`${id}Options`),
+    };
+  }
+  function getMultiSelectControl(id) {
+    return {
+      button: document.getElementById(id),
+      menu: document.getElementById(`${id}Menu`),
+      search: document.getElementById(`${id}Search`),
+      options: document.getElementById(`${id}Options`),
+    };
+  }
+  const marketFilter = getSingleSelectControl("nbhdMarketFilter");
+  const cityFilter = getSingleSelectControl("nbhdCityFilter");
+  const headendFilter = getSingleSelectControl("nbhdHeadendFilter");
+  const weekFromFilter = getSingleSelectControl("nbhdWeekFromFilter");
+  const weekToFilter = getSingleSelectControl("nbhdWeekToFilter");
+  const changeFilter = getSingleSelectControl("nbhdChangeFilter");
+  const reportToggleButton = document.getElementById("nbhdReportToggleButton");
+  const reportLauncher = document.getElementById("nbhdReportLauncher");
+  const reportPanel = document.getElementById("nbhdReportPanel");
+  const reportMeta = document.getElementById("nbhdReportMeta");
+  const reportCount = document.getElementById("nbhdReportCount");
+  const reportStatus = document.getElementById("nbhdReportStatusMessage");
+  const reportContent = document.getElementById("nbhdReportContent");
+  const reportHeadendFilter = getMultiSelectControl("nbhdReportHeadendFilter");
+  const reportChannelFilter = getMultiSelectControl("nbhdReportChannelFilter");
+  const reportWeekFromFilter = getSingleSelectControl("nbhdReportWeekFromFilter");
+  const reportWeekToFilter = getSingleSelectControl("nbhdReportWeekToFilter");
+  const reportResetButton = document.getElementById("nbhdReportResetButton");
+  const reportDownloadButton = document.getElementById("nbhdReportDownloadButton");
+  const reportPrintButton = document.getElementById("nbhdReportPrintButton");
+  const reportHideButton = document.getElementById("nbhdReportHideButton");
   const resultCount = document.getElementById("nbhdResultCount");
   const tableHead = document.getElementById("nbhdTableHead");
   const tableBody = document.getElementById("nbhdTableBody");
@@ -36,7 +79,6 @@
   const pageInfo = document.getElementById("nbhdPageInfo");
   const tableWrap = root.closest(".nbhd-table-wrap");
   const panel = root.closest(".nbhd-panel");
-  const searchInput = document.getElementById("nbhdSearchInput");
   const fullscreenState = {
     active: false,
     windowScrollY: 0,
@@ -45,42 +87,66 @@
     usingNativeFullscreen: false,
   };
 
-  function createOption(value, label) {
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = label;
-    return option;
+  function updateButton(control, value, placeholder) {
+    if (control?.button) control.button.textContent = value || placeholder;
   }
 
-  function getWeekClusterController() {
-    return window.__CHROME_WEEK_CLUSTER__ || null;
+  function closeMenus(exceptControl = null) {
+    [
+      marketFilter,
+      cityFilter,
+      headendFilter,
+      weekFromFilter,
+      weekToFilter,
+      changeFilter,
+      reportHeadendFilter,
+      reportChannelFilter,
+      reportWeekFromFilter,
+      reportWeekToFilter,
+    ].forEach((control) => {
+      if (control !== exceptControl && control?.menu) control.menu.hidden = true;
+    });
   }
 
-  function buildWeekRangeOptions(weeks) {
-    const controller = getWeekClusterController();
-    if (controller) {
-      return controller.getOptions(weeks || []);
+  function renderOptions(control, values, selectedValue, placeholder, onSelect) {
+    if (!control?.options) return;
+    const safeValues = Array.isArray(values) ? values.filter((value) => String(value || "").trim() !== "") : [];
+    const query = String(control.search?.value || "").trim().toLowerCase();
+    const fragment = document.createDocumentFragment();
+    [{ value: "", label: placeholder }, ...safeValues.map((value) => ({ value, label: value }))]
+      .filter((option) => !query || String(option.label).toLowerCase().includes(query))
+      .forEach((option) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `filter-option-row${option.value === selectedValue ? " active" : ""}`;
+        button.textContent = option.label;
+        button.addEventListener("click", () => onSelect(option.value));
+        fragment.appendChild(button);
+      });
+    control.options.replaceChildren(fragment);
+  }
+
+  function getConstrainedWeekOptions(allWeeks, key) {
+    const weeks = Array.isArray(allWeeks) ? allWeeks.filter((value) => String(value || "").trim() !== "") : [];
+    if (key === "week_from") {
+      const toIndex = state.filters.week_to && weeks.includes(state.filters.week_to) ? weeks.indexOf(state.filters.week_to) : weeks.length - 1;
+      return weeks.slice(0, toIndex + 1);
     }
-
-    const safeWeeks = Array.isArray(weeks) ? weeks.filter((week) => String(week || "").trim() !== "") : [];
-    const options = [{ value: "all", label: "All Weeks" }];
-    for (let index = 0; index < safeWeeks.length; index += 4) {
-      const slice = safeWeeks.slice(index, index + 4);
-      if (!slice.length) continue;
-      const label = slice.length === 1 ? slice[0] : `${slice[0]} to ${slice[slice.length - 1]}`;
-      options.push({ value: `${slice[0]}|||${slice[slice.length - 1]}`, label });
+    if (key === "week_to") {
+      const fromIndex = state.filters.week_from && weeks.includes(state.filters.week_from) ? weeks.indexOf(state.filters.week_from) : 0;
+      return weeks.slice(fromIndex);
     }
-    return options;
+    return weeks;
   }
 
-  function populateOptionList(select, options, selectedValue) {
-    const safeOptions = Array.isArray(options) ? options.filter((option) => option && String(option.value || "").trim() !== "") : [];
-    const fallback = safeOptions.some((option) => option.value === selectedValue)
-      ? selectedValue
-      : (safeOptions[0]?.value || "");
-    select.innerHTML = "";
-    safeOptions.forEach((option) => select.appendChild(createOption(option.value, option.label)));
-    select.value = fallback;
+  function populateSearchInput(control, values, placeholder, selectedValue, onSelect) {
+    const safeValues = Array.isArray(values) ? values.filter((value) => String(value || "").trim() !== "") : [];
+    const fallback = safeValues.includes(selectedValue) ? selectedValue : "";
+    updateButton(control, fallback, placeholder);
+    renderOptions(control, safeValues, fallback, placeholder, (value) => {
+      onSelect(value);
+      closeMenus();
+    });
     return fallback;
   }
 
@@ -88,15 +154,24 @@
     if (!fullscreenState.active) {
       return 30;
     }
-    const viewportHeight = window.innerHeight || 900;
-    return Math.max(45, Math.floor((viewportHeight - 280) / 24));
+    const wrapHeight = tableWrap?.clientHeight || Math.max((window.innerHeight || 900) - 220, 320);
+    const headerRows = tableHead?.querySelectorAll("tr") || [];
+    const headerHeight = Array.from(headerRows).reduce((total, row) => total + (row.getBoundingClientRect().height || 0), 0) || 56;
+    const sampleRow = tableBody?.querySelector("tr");
+    const rowHeight = sampleRow?.getBoundingClientRect().height || 24;
+    const usableHeight = Math.max(wrapHeight - headerHeight - 8, rowHeight);
+    return Math.max(30, Math.floor(usableHeight / rowHeight));
   }
 
   function getVisibleWeeks(payload) {
     const allWeeks = payload.weeks || [];
-    const controller = getWeekClusterController();
-    if (controller) {
-      return controller.getVisibleWeeks(allWeeks, state.filters.week_range || controller.getValue(allWeeks));
+    if (!allWeeks.length) return [];
+    if (state.filters.week_from || state.filters.week_to) {
+      const fromIndex = state.filters.week_from && allWeeks.includes(state.filters.week_from) ? allWeeks.indexOf(state.filters.week_from) : 0;
+      const toIndex = state.filters.week_to && allWeeks.includes(state.filters.week_to) ? allWeeks.indexOf(state.filters.week_to) : allWeeks.length - 1;
+      const start = Math.min(fromIndex, toIndex);
+      const end = Math.max(fromIndex, toIndex);
+      return allWeeks.slice(start, end + 1);
     }
     return allWeeks.slice(Math.max(0, allWeeks.length - 4));
   }
@@ -118,14 +193,45 @@
     return false;
   }
 
-  function populateSelect(select, values, label, selectedValue) {
-    const safeValues = Array.isArray(values) ? values.filter((value) => String(value || "").trim() !== "") : [];
-    const safeSelectedValue = safeValues.includes(selectedValue) ? selectedValue : "";
-    select.innerHTML = "";
-    select.appendChild(createOption("", label));
-    safeValues.forEach((value) => select.appendChild(createOption(value, value)));
-    select.value = safeSelectedValue;
-    return safeSelectedValue;
+  function getFrequencyChangeDirection(previousRaw, currentRaw) {
+    const previousMissing = previousRaw === null || previousRaw === undefined || previousRaw === "";
+    const currentMissing = currentRaw === null || currentRaw === undefined || currentRaw === "";
+    if (previousMissing && currentMissing) return "";
+    if (previousMissing && !currentMissing) return "Increase";
+    if (!previousMissing && currentMissing) return "Decrease";
+    const previousValue = Number(previousRaw);
+    const currentValue = Number(currentRaw);
+    if (Number.isNaN(previousValue) || Number.isNaN(currentValue) || currentValue === previousValue) return "";
+    return currentValue < previousValue ? "Increase" : "Decrease";
+  }
+
+  function getRecordChangeMeta(record, weeks) {
+    let changed = false;
+    let hasIncrease = false;
+    let hasDecrease = false;
+    if (weeks.length <= 1) {
+      return { changed, hasIncrease, hasDecrease };
+    }
+    for (let index = 1; index < weeks.length; index += 1) {
+      const previousWeek = weeks[index - 1];
+      const currentWeek = weeks[index];
+      const previousChannel = String(record.channels?.[previousWeek] || "").trim();
+      const currentChannel = String(record.channels?.[currentWeek] || "").trim();
+      const previousGenre = String(record.genres?.[previousWeek] || "").trim();
+      const currentGenre = String(record.genres?.[currentWeek] || "").trim();
+      if (previousChannel !== currentChannel || previousGenre !== currentGenre) {
+        changed = true;
+      }
+      const frequencyDirection = getFrequencyChangeDirection(record.frequencies?.[previousWeek], record.frequencies?.[currentWeek]);
+      if (frequencyDirection) changed = true;
+      if (frequencyDirection === "Increase") hasIncrease = true;
+      if (frequencyDirection === "Decrease") hasDecrease = true;
+    }
+    return { changed, hasIncrease, hasDecrease };
+  }
+
+  function populateSelect(select, values, label, selectedValue, onSelect) {
+    return populateSearchInput(select, values, label, selectedValue, onSelect);
   }
 
   function setLoading(loading) {
@@ -144,13 +250,12 @@
   }
 
   function syncFilters(payload) {
-    state.filters.market = populateSelect(marketFilter, payload.filters.markets, "All Markets", state.filters.market);
-    state.filters.city = populateSelect(cityFilter, payload.filters.cities, "All Cities", state.filters.city);
-    state.filters.head_end = populateSelect(headendFilter, payload.filters.head_ends, "All Headends", state.filters.head_end);
-    const controller = getWeekClusterController();
-    const preferredRange = state.filters.week_range || (controller ? controller.getValue(payload.weeks || []) : "");
-    state.filters.week_range = populateOptionList(weekRangeFilter, buildWeekRangeOptions(payload.weeks || []), preferredRange);
-    state.filters.change = populateSelect(changeFilter, ["Changed", "No Change"], "All Changes", state.filters.change);
+    state.filters.market = populateSelect(marketFilter, payload.filters.markets, "All Markets", state.filters.market, (value) => applyFilter("market", value));
+    state.filters.city = populateSelect(cityFilter, payload.filters.cities, "All Cities", state.filters.city, (value) => applyFilter("city", value));
+    state.filters.head_end = populateSelect(headendFilter, payload.filters.head_ends, "All Headends", state.filters.head_end, (value) => applyFilter("head_end", value));
+    state.filters.week_from = populateSelect(weekFromFilter, getConstrainedWeekOptions(payload.weeks || [], "week_from"), "From Week", state.filters.week_from, (value) => applyFilter("week_from", value));
+    state.filters.week_to = populateSelect(weekToFilter, getConstrainedWeekOptions(payload.weeks || [], "week_to"), "To Week", state.filters.week_to, (value) => applyFilter("week_to", value));
+    state.filters.change = populateSelect(changeFilter, ["Changed", "No Change", "Increase", "Decrease"], "All Changes", state.filters.change, (value) => applyFilter("change", value));
   }
 
   function buildHeader(weeks) {
@@ -190,7 +295,7 @@
         });
       } else {
         const emptyTh = document.createElement("th");
-        emptyTh.textContent = "-";
+        emptyTh.textContent = NO_DATA_LABEL;
         emptyTh.className = `nbhd-week-head ${group.className} nbhd-group-start`;
         rowTwo.appendChild(emptyTh);
       }
@@ -221,7 +326,7 @@
     groups.forEach((groupConfig) => {
       if (!weeks.length) {
         const td = document.createElement("td");
-        td.textContent = "-";
+        td.textContent = NO_DATA_LABEL;
         td.className = "nbhd-group-start";
         tr.appendChild(td);
         return;
@@ -229,7 +334,7 @@
       weeks.forEach((week, weekIndex) => {
         const td = document.createElement("td");
         const value = record[groupConfig.key][week];
-        td.textContent = value === null || value === undefined || value === "" ? "-" : String(value);
+        td.textContent = value === null || value === undefined || value === "" ? NO_DATA_LABEL : String(value);
         const groupEdgeClass = weekIndex === 0 ? "nbhd-group-start" : "";
         td.className = `${groupConfig.className} ${groupEdgeClass}`.trim();
         if (groupConfig.key === "channels") {
@@ -260,7 +365,7 @@
           const currentGenre = String(value || "").trim();
           const previousWeek = weekIndex > 0 ? weeks[weekIndex - 1] : "";
           const previousGenre = previousWeek ? String(record[groupConfig.key][previousWeek] || "").trim() : "";
-          if (!currentGenre || currentGenre === "-") {
+          if (!currentGenre || currentGenre === NO_DATA_LABEL) {
             td.classList.add("nbhd-cell-empty");
           } else if (weekIndex > 0 && previousGenre && currentGenre !== previousGenre) {
             td.classList.add("nbhd-cell-changed");
@@ -361,15 +466,573 @@
     renderStatus(payload);
     resultCount.textContent = `${new Intl.NumberFormat().format(payload.table.total_count)} rows`;
     renderTable(payload);
+    renderReportPanel();
+  }
+
+  function normalizeChannelKey(value) {
+    return normalizeText(value).toUpperCase().replace(/[^A-Z0-9]+/g, "");
+  }
+
+  function formatHeadendContext(record) {
+    const parts = [normalizeText(record.market), normalizeText(record.city)].filter(Boolean);
+    return parts.join(" | ");
+  }
+
+  function getAllSourceRecords() {
+    if (state.standalone) {
+      const source = window.__NBHD_STANDALONE_DATA__;
+      const sourceTable = source?.table || {};
+      return sourceTable.records || source?.records || [];
+    }
+    return state.payload?.table?.records || [];
+  }
+
+  function getReportAvailableWeeks() {
+    const payload = state.payload || window.__NBHD_STANDALONE_DATA__ || { weeks: [] };
+    return Array.isArray(payload.weeks) ? payload.weeks.filter((value) => normalizeText(value) !== "") : [];
+  }
+
+  function getReportConstrainedWeekOptions(key) {
+    const weeks = getReportAvailableWeeks();
+    if (key === "week_from") {
+      const toIndex = state.report.week_to && weeks.includes(state.report.week_to) ? weeks.indexOf(state.report.week_to) : weeks.length - 1;
+      return weeks.slice(0, toIndex + 1);
+    }
+    if (key === "week_to") {
+      const fromIndex = state.report.week_from && weeks.includes(state.report.week_from) ? weeks.indexOf(state.report.week_from) : 0;
+      return weeks.slice(fromIndex);
+    }
+    return weeks;
+  }
+
+  function getReportVisibleWeeks() {
+    const weeks = getReportAvailableWeeks();
+    if (!weeks.length) return [];
+    if (state.report.week_from || state.report.week_to) {
+      const fromIndex = state.report.week_from && weeks.includes(state.report.week_from) ? weeks.indexOf(state.report.week_from) : Math.max(0, weeks.length - 2);
+      const toIndex = state.report.week_to && weeks.includes(state.report.week_to) ? weeks.indexOf(state.report.week_to) : weeks.length - 1;
+      const start = Math.min(fromIndex, toIndex);
+      const end = Math.max(fromIndex, toIndex);
+      const selected = weeks.slice(start, end + 1);
+      return selected.length >= 2 ? [selected[0], selected[selected.length - 1]] : selected;
+    }
+    return weeks.slice(Math.max(0, weeks.length - 2));
+  }
+
+  function getBaseReportRecords() {
+    return getAllSourceRecords();
+  }
+
+  function getReportHeadends(records) {
+    return Array.from(
+      new Set(records.map((record) => normalizeText(record.head_end)).filter(Boolean))
+    ).sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
+  }
+
+  function getAllReportChannels(records) {
+    const values = new Map();
+    records.forEach((record) => {
+      Object.values(record.channels || {}).forEach((value) => {
+        const text = normalizeText(value);
+        if (!text || text === NO_DATA_LABEL) return;
+        const key = normalizeChannelKey(text);
+        if (!values.has(key)) values.set(key, text);
+      });
+    });
+    return Array.from(values.values()).sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
+  }
+
+  function getReportChannelOptions(records) {
+    const reportWeeks = getReportVisibleWeeks();
+    const values = new Map();
+    records.forEach((record) => {
+      reportWeeks.forEach((week) => {
+        const value = normalizeText(record.channels?.[week]);
+        if (!value || value === NO_DATA_LABEL) return;
+        const key = normalizeChannelKey(value);
+        if (!values.has(key)) values.set(key, value);
+      });
+    });
+    return Array.from(values.values()).sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
+  }
+
+  function updateMultiSelectButton(button, selectedValues, allValues, emptyLabel, noun) {
+    if (!button) return;
+    if (!selectedValues.length || selectedValues.length === allValues.length) {
+      button.textContent = emptyLabel;
+      return;
+    }
+    if (selectedValues.length === 1) {
+      button.textContent = selectedValues[0];
+      return;
+    }
+    button.textContent = `${selectedValues.length} ${noun}`;
+  }
+
+  function getDefaultReportChannels(options) {
+    const defaults = options.filter((value) => DEFAULT_REPORT_CHANNEL_KEYS.includes(normalizeChannelKey(value)));
+    return (defaults.length ? defaults : options.slice(0, 4)).slice();
+  }
+
+  function renderMultiSelectOptions(control, values, selectedValues, onToggle) {
+    if (!control?.options) return;
+    const query = normalizeText(control.search?.value || "").toLowerCase();
+    const selected = new Set(selectedValues);
+    const fragment = document.createDocumentFragment();
+    values
+      .filter((value) => !query || value.toLowerCase().includes(query))
+      .forEach((value) => {
+        const label = document.createElement("label");
+        label.className = "ots-option-row";
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = selected.has(value);
+        input.addEventListener("change", () => onToggle(value, input.checked));
+        const text = document.createElement("span");
+        text.textContent = value;
+        label.append(input, text);
+        fragment.appendChild(label);
+      });
+    control.options.replaceChildren(fragment);
+  }
+
+  function syncReportSelections(context) {
+    state.report.headends = state.report.headends.filter((value) => context.headends.includes(value));
+    if (!state.report.headends.length) {
+      state.report.headends = context.headends.slice();
+    }
+
+    state.report.channels = state.report.channels.filter((value) => context.channels.includes(value));
+    if (!state.report.channels.length) {
+      state.report.channels = getDefaultReportChannels(context.channels);
+    }
+
+    const allWeeks = context.allWeeks || [];
+    if (!allWeeks.includes(state.report.week_from)) {
+      state.report.week_from = allWeeks.length >= 2 ? allWeeks[allWeeks.length - 2] : (allWeeks[0] || "");
+    }
+    if (!allWeeks.includes(state.report.week_to)) {
+      state.report.week_to = allWeeks[allWeeks.length - 1] || "";
+    }
+    if (
+      state.report.week_from
+      && state.report.week_to
+      && allWeeks.includes(state.report.week_from)
+      && allWeeks.includes(state.report.week_to)
+      && allWeeks.indexOf(state.report.week_from) > allWeeks.indexOf(state.report.week_to)
+    ) {
+      state.report.week_from = state.report.week_to;
+    }
+  }
+
+  function buildHeadendMaps(records, week) {
+    const byPosition = new Map();
+    const channelPositions = new Map();
+    records.forEach((record) => {
+      const channel = normalizeText(record.channels?.[week]);
+      const position = Number(record.position);
+      if (!channel || Number.isNaN(position)) return;
+      byPosition.set(position, channel);
+      channelPositions.set(normalizeChannelKey(channel), position);
+    });
+    return { byPosition, channelPositions };
+  }
+
+  function neighborAt(mapState, position, offset) {
+    return normalizeText(mapState.byPosition.get(position + offset)) || "NA";
+  }
+
+  function buildReportNarratives() {
+    const weeks = getReportVisibleWeeks();
+    if (weeks.length < 2) {
+      return {
+        weeks,
+        groups: [],
+        items: [],
+        message: "Select at least two visible weeks to generate the NBHD position report.",
+      };
+    }
+
+    const [previousWeek, currentWeek] = weeks;
+    const baseRecords = getBaseReportRecords();
+    const selectedHeadends = state.report.headends.length ? state.report.headends : getReportHeadends(baseRecords);
+    const selectedChannels = state.report.channels.length ? state.report.channels : getDefaultReportChannels(getReportChannelOptions(baseRecords));
+    const grouped = new Map();
+    baseRecords.forEach((record) => {
+      const headend = normalizeText(record.head_end);
+      if (!headend || !selectedHeadends.includes(headend)) return;
+      if (!grouped.has(headend)) {
+        grouped.set(headend, {
+          headend,
+          market: normalizeText(record.market),
+          city: normalizeText(record.city),
+          records: [],
+        });
+      }
+      grouped.get(headend).records.push(record);
+    });
+
+    const groups = [];
+    const items = [];
+    grouped.forEach((group) => {
+      const previousMap = buildHeadendMaps(group.records, previousWeek);
+      const currentMap = buildHeadendMaps(group.records, currentWeek);
+      const narratives = [];
+
+      selectedChannels.forEach((channel) => {
+        const channelKey = normalizeChannelKey(channel);
+        const previousPosition = previousMap.channelPositions.get(channelKey);
+        const currentPosition = currentMap.channelPositions.get(channelKey);
+        if (previousPosition === undefined || currentPosition === undefined) return;
+
+        const previousLower = neighborAt(previousMap, previousPosition, -1);
+        const previousUpper = neighborAt(previousMap, previousPosition, 1);
+        const currentLower = neighborAt(currentMap, currentPosition, -1);
+        const currentUpper = neighborAt(currentMap, currentPosition, 1);
+
+        if (
+          previousLower === currentLower
+          && previousUpper === currentUpper
+          && previousPosition === currentPosition
+        ) {
+          return;
+        }
+
+        const channelLabel = normalizeText(channel);
+        const text = `In ${group.headend}, during the previous week, ${channelLabel} was positioned between ${previousLower} and ${previousUpper}. In the current week, it is positioned between ${currentLower} and ${currentUpper}.`;
+        narratives.push({ channel: channelLabel, text });
+        items.push({ headend: group.headend, channel: channelLabel, text });
+      });
+
+      groups.push({
+        headend: group.headend,
+        context: formatHeadendContext(group),
+        narratives,
+        emptyMessage: narratives.length
+          ? ""
+          : "No position changes were observed for the selected channel(s) in the selected Headend compared to the previous week.",
+      });
+    });
+
+    return {
+      weeks,
+      groups,
+      items,
+      message: groups.length
+        ? ""
+        : "No position changes were observed for the selected channel(s) in the selected Headend(s) compared to the previous week.",
+    };
+  }
+
+  function buildReportContext() {
+    const baseRecords = getBaseReportRecords();
+    const headends = getReportHeadends(baseRecords);
+    const channels = getAllReportChannels(baseRecords);
+    return {
+      weeks: getReportVisibleWeeks(),
+      headends,
+      channels,
+      allWeeks: getReportAvailableWeeks(),
+    };
+  }
+
+  function renderReportStatus(message) {
+    if (!reportStatus) return;
+    if (message) {
+      reportStatus.hidden = false;
+      reportStatus.textContent = message;
+      return;
+    }
+    reportStatus.hidden = true;
+    reportStatus.textContent = "";
+  }
+
+  function setReportVisibility(open) {
+    state.report.open = open;
+    if (reportPanel) {
+      reportPanel.hidden = !open;
+      reportPanel.style.display = open ? "block" : "none";
+    }
+    if (reportLauncher) {
+      reportLauncher.hidden = open;
+      reportLauncher.style.display = open ? "none" : "flex";
+    }
+  }
+
+  function renderReportPanel() {
+    if (!reportPanel || !reportContent) return;
+    setReportVisibility(state.report.open);
+    if (reportToggleButton) reportToggleButton.textContent = "Show Report";
+    if (!state.report.open) return;
+
+    const context = buildReportContext();
+    syncReportSelections(context);
+
+    updateMultiSelectButton(reportHeadendFilter.button, state.report.headends, context.headends, "All Headends", "headends selected");
+    updateMultiSelectButton(reportChannelFilter.button, state.report.channels, context.channels, "Default 4 Channels", "channels selected");
+    state.report.week_from = populateSearchInput(
+      reportWeekFromFilter,
+      getReportConstrainedWeekOptions("week_from"),
+      "Previous Week",
+      state.report.week_from,
+      (value) => {
+        state.report.week_from = value;
+        const weeks = getReportAvailableWeeks();
+        const fromIndex = value && weeks.includes(value) ? weeks.indexOf(value) : -1;
+        const toIndex = state.report.week_to && weeks.includes(state.report.week_to) ? weeks.indexOf(state.report.week_to) : -1;
+        if (fromIndex >= 0 && toIndex >= 0 && fromIndex > toIndex) state.report.week_to = value;
+        renderReportPanel();
+      }
+    );
+    state.report.week_to = populateSearchInput(
+      reportWeekToFilter,
+      getReportConstrainedWeekOptions("week_to"),
+      "Current Week",
+      state.report.week_to,
+      (value) => {
+        state.report.week_to = value;
+        const weeks = getReportAvailableWeeks();
+        const fromIndex = state.report.week_from && weeks.includes(state.report.week_from) ? weeks.indexOf(state.report.week_from) : -1;
+        const toIndex = value && weeks.includes(value) ? weeks.indexOf(value) : -1;
+        if (fromIndex >= 0 && toIndex >= 0 && fromIndex > toIndex) state.report.week_from = value;
+        renderReportPanel();
+      }
+    );
+    renderMultiSelectOptions(reportHeadendFilter, context.headends, state.report.headends, (value, checked) => {
+      const next = new Set(state.report.headends);
+      if (checked) next.add(value);
+      else next.delete(value);
+      state.report.headends = Array.from(next).sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
+      renderReportPanel();
+    });
+    renderMultiSelectOptions(reportChannelFilter, context.channels, state.report.channels, (value, checked) => {
+      const next = new Set(state.report.channels);
+      if (checked) next.add(value);
+      else next.delete(value);
+      state.report.channels = Array.from(next).sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
+      renderReportPanel();
+    });
+
+    const reportData = buildReportNarratives();
+    const [previousWeek, currentWeek] = reportData.weeks;
+    if (reportMeta) {
+        reportMeta.textContent = previousWeek && currentWeek
+        ? `Natural language report for position changes from ${previousWeek} to ${currentWeek}.`
+        : "Select at least two visible weeks to compare neighbourhood positions.";
+    }
+    if (reportCount) {
+      reportCount.textContent = `${reportData.items.length} narrative${reportData.items.length === 1 ? "" : "s"}`;
+    }
+
+    renderReportStatus(reportData.message);
+    if (reportData.message) {
+      reportContent.innerHTML = `<div class="nbhd-report-empty">${reportData.message}</div>`;
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    reportData.groups.forEach((group) => {
+      const section = document.createElement("section");
+      section.className = "nbhd-report-group";
+
+      const header = document.createElement("div");
+      header.className = "nbhd-report-group-header";
+      const title = document.createElement("h4");
+      title.textContent = group.headend;
+      const subtitle = document.createElement("p");
+      subtitle.textContent = group.context || "Selected Headend";
+      header.append(title, subtitle);
+
+      if (group.narratives.length) {
+        const list = document.createElement("ul");
+        list.className = "nbhd-report-list";
+        group.narratives.forEach((narrative) => {
+          const item = document.createElement("li");
+          item.textContent = narrative.text;
+          list.appendChild(item);
+        });
+        section.append(header, list);
+      } else {
+        const empty = document.createElement("div");
+        empty.className = "nbhd-report-empty";
+        empty.textContent = group.emptyMessage;
+        section.append(header, empty);
+      }
+      fragment.appendChild(section);
+    });
+    reportContent.replaceChildren(fragment);
+  }
+
+  function showReportError(message) {
+    setReportVisibility(true);
+    if (reportCount) reportCount.textContent = "0 narratives";
+    renderReportStatus(message);
+    if (reportContent) {
+      reportContent.innerHTML = `<div class="nbhd-report-empty">${message}</div>`;
+    }
+  }
+
+  function resetReportFilters() {
+    const context = buildReportContext();
+    state.report.open = true;
+    state.report.headends = context.headends.slice();
+    state.report.channels = getDefaultReportChannels(context.channels);
+    state.report.week_from = context.allWeeks.length >= 2 ? context.allWeeks[context.allWeeks.length - 2] : (context.allWeeks[0] || "");
+    state.report.week_to = context.allWeeks[context.allWeeks.length - 1] || "";
+    renderReportPanel();
+  }
+
+  function openReportPanel() {
+    state.report.open = true;
+    setReportVisibility(true);
+    const context = buildReportContext();
+    state.report.headends = context.headends.slice();
+    state.report.channels = getDefaultReportChannels(context.channels);
+    state.report.week_from = context.allWeeks.length >= 2 ? context.allWeeks[context.allWeeks.length - 2] : (context.allWeeks[0] || "");
+    state.report.week_to = context.allWeeks[context.allWeeks.length - 1] || "";
+    reportContent.replaceChildren();
+    renderReportStatus("");
+    if (reportCount) reportCount.textContent = "Loading...";
+    requestAnimationFrame(() => {
+      renderReportPanel();
+    });
+    requestAnimationFrame(() => {
+      reportPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  function closeReportPanel() {
+    state.report.open = false;
+    setReportVisibility(false);
+    requestAnimationFrame(() => {
+      reportLauncher?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }
+
+  function buildReportDocument() {
+    const reportData = buildReportNarratives();
+    const [previousWeek, currentWeek] = reportData.weeks;
+      const sections = reportData.groups.map((group) => `
+        <section class="group">
+          <h2>Headend: ${group.headend}</h2>
+          <p class="context">${group.context || ""}</p>
+          <ul>${group.narratives.map((narrative) => `<li>${narrative.text}</li>`).join("")}</ul>
+        </section>
+      `).join("");
+    const emptyState = reportData.message ? `<div class="empty">${reportData.message}</div>` : sections;
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>NBHD Position Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #1e293b; margin: 24px; }
+    h1 { margin: 0 0 6px; font-size: 22px; }
+    .meta { margin-bottom: 18px; color: #64748b; font-size: 13px; }
+    .group { border: 1px solid #dbe4f0; border-radius: 12px; margin-bottom: 14px; overflow: hidden; }
+    .group h2 { margin: 0; padding: 12px 14px 6px; background: #f8fbff; font-size: 16px; }
+    .context { margin: 0; padding: 0 14px 10px; color: #64748b; font-size: 12px; background: #f8fbff; border-bottom: 1px solid #e2e8f0; }
+    ul { margin: 0; padding: 14px 18px 16px 34px; }
+    li { margin: 6px 0; line-height: 1.55; font-size: 14px; }
+    .empty { border: 1px dashed #cbd5e1; border-radius: 12px; padding: 16px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <h1>NBHD Position Report</h1>
+  <div class="meta">${previousWeek && currentWeek ? `Comparison: ${previousWeek} to ${currentWeek}` : "Comparison weeks unavailable"}</div>
+  ${emptyState}
+</body>
+</html>`;
+  }
+
+  function downloadReport() {
+    const html = buildReportDocument();
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "nbhd_position_report.html";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function printReport() {
+    const popup = window.open("", "_blank", "width=1100,height=800");
+    if (!popup) return;
+    popup.document.open();
+    popup.document.write(buildReportDocument());
+    popup.document.close();
+    popup.focus();
+    popup.print();
   }
 
   function matchesRecord(record, filters, weeks) {
+    const changeMeta = getRecordChangeMeta(record, weeks);
     if (filters.market && record.market !== filters.market) return false;
     if (filters.city && record.city !== filters.city) return false;
     if (filters.head_end && record.head_end !== filters.head_end) return false;
-    if (filters.change === "Changed" && !hasChangeInWeeks(record, weeks)) return false;
-    if (filters.change === "No Change" && hasChangeInWeeks(record, weeks)) return false;
+    if (filters.change === "Changed" && !changeMeta.changed) return false;
+    if (filters.change === "No Change" && changeMeta.changed) return false;
+    if (filters.change === "Increase" && !changeMeta.hasIncrease) return false;
+    if (filters.change === "Decrease" && !changeMeta.hasDecrease) return false;
     return true;
+  }
+
+  function groupKey(record) {
+    return `${record.market}||${record.city}||${record.head_end}`;
+  }
+
+  function sortGroupRecords(records) {
+    return records.slice().sort((left, right) => Number(left.position || 0) - Number(right.position || 0));
+  }
+
+  function recordMatchesBaseFilters(record, filters) {
+    if (filters.market && record.market !== filters.market) return false;
+    if (filters.city && record.city !== filters.city) return false;
+    if (filters.head_end && record.head_end !== filters.head_end) return false;
+    return true;
+  }
+
+  function groupMatchesChangeFilter(records, changeFilter, weeks) {
+    if (!changeFilter) return true;
+    if (changeFilter === "No Change") {
+      return records.every((record) => {
+        const changeMeta = getRecordChangeMeta(record, weeks);
+        return !changeMeta.changed && !changeMeta.hasIncrease && !changeMeta.hasDecrease;
+      });
+    }
+    return records.some((record) => {
+      const changeMeta = getRecordChangeMeta(record, weeks);
+      if (changeFilter === "Changed") return changeMeta.changed;
+      if (changeFilter === "Increase") return changeMeta.hasIncrease;
+      if (changeFilter === "Decrease") return changeMeta.hasDecrease;
+      return true;
+    });
+  }
+
+  function filterGroupedRecords(allRecords, filters, weeks) {
+    const baseRecords = allRecords.filter((record) => recordMatchesBaseFilters(record, filters));
+    if (!filters.change) {
+      return baseRecords;
+    }
+
+    const grouped = new Map();
+    baseRecords.forEach((record) => {
+      const key = groupKey(record);
+      if (!grouped.has(key)) grouped.set(key, []);
+      grouped.get(key).push(record);
+    });
+
+    const flattened = [];
+    grouped.forEach((groupRecords) => {
+      const sortedGroup = sortGroupRecords(groupRecords);
+      if (groupMatchesChangeFilter(sortedGroup, filters.change, weeks)) {
+        flattened.push(...sortedGroup);
+      }
+    });
+    return flattened;
   }
 
   function buildStandalonePayload() {
@@ -377,18 +1040,15 @@
     const sourceTable = source.table || {};
     const allRecords = sourceTable.records || source.records || [];
     const visibleWeeks = getVisibleWeeks(source);
-    const filtered = allRecords.filter((record) => matchesRecord(record, state.filters, visibleWeeks));
+    const filtered = filterGroupedRecords(allRecords, state.filters, visibleWeeks);
 
     function optionsFor(key, field) {
       const scopedFilters = { ...state.filters, [key]: "" };
-      return Array.from(
-        new Set(
-          allRecords
-            .filter((record) => matchesRecord(record, scopedFilters, visibleWeeks))
-            .map((record) => record[field])
-            .filter((value) => String(value || "").trim() !== "")
-        )
-      ).sort((left, right) => left.localeCompare(right));
+      return Array.from(new Set(
+        filterGroupedRecords(allRecords, scopedFilters, visibleWeeks)
+          .map((record) => record[field])
+          .filter((value) => String(value || "").trim() !== "")
+      )).sort((left, right) => left.localeCompare(right));
     }
 
     return {
@@ -400,7 +1060,7 @@
         head_ends: optionsFor("head_end", "head_end"),
       },
       summary: {
-        total_headends: filtered.length,
+        total_headends: new Set(filtered.map((record) => groupKey(record))).size,
       },
       table: {
         records: filtered,
@@ -441,12 +1101,84 @@
     }
   }
 
+  function applyFilter(key, value) {
+    state.filters[key] = value;
+    if (key === "week_from" || key === "week_to") {
+      const weeks = state.payload?.weeks || window.__NBHD_STANDALONE_DATA__?.weeks || [];
+      const fromIndex = state.filters.week_from && weeks.includes(state.filters.week_from) ? weeks.indexOf(state.filters.week_from) : -1;
+      const toIndex = state.filters.week_to && weeks.includes(state.filters.week_to) ? weeks.indexOf(state.filters.week_to) : -1;
+      if (fromIndex >= 0 && toIndex >= 0 && fromIndex > toIndex) {
+        if (key === "week_from") state.filters.week_to = state.filters.week_from;
+        else state.filters.week_from = state.filters.week_to;
+      }
+    }
+    state.page = 1;
+    fetchPayload(false);
+  }
+
   function bindSelect(select, key) {
-    select.addEventListener("change", () => {
-      state.filters[key] = select.value;
-      state.page = 1;
-      fetchPayload(false);
+    if (!select?.button) return;
+    select.button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const next = select.menu?.hidden ?? false;
+      closeMenus();
+      if (select.menu) select.menu.hidden = !next;
+      if (next && select.search) {
+        select.search.value = "";
+        select.search.dispatchEvent(new Event("input"));
+        requestAnimationFrame(() => select.search?.focus());
+      }
     });
+    if (select.search) {
+      select.search.addEventListener("click", (event) => event.stopPropagation());
+      select.search.addEventListener("input", () => {
+        const source =
+          key === "market" ? (state.payload?.filters.markets || []) :
+          key === "city" ? (state.payload?.filters.cities || []) :
+          key === "head_end" ? (state.payload?.filters.head_ends || []) :
+          key === "change" ? ["Changed", "No Change", "Increase", "Decrease"] :
+          getConstrainedWeekOptions(state.payload?.weeks || [], key);
+        renderOptions(select, source, state.filters[key], key === "market" ? "All Markets" : key === "city" ? "All Cities" : key === "head_end" ? "All Headends" : key === "change" ? "All Changes" : key === "week_from" ? "From Week" : "To Week", (value) => applyFilter(key, value));
+      });
+    }
+  }
+
+  function bindMultiSelect(control, key) {
+    if (!control?.button) return;
+    control.button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const next = control.menu?.hidden ?? false;
+      closeMenus();
+      if (control.menu) control.menu.hidden = !next;
+      if (next && control.search) {
+        control.search.value = "";
+        control.search.dispatchEvent(new Event("input"));
+        requestAnimationFrame(() => control.search?.focus());
+      }
+    });
+    if (control.search) {
+      control.search.addEventListener("click", (event) => event.stopPropagation());
+      control.search.addEventListener("input", () => renderReportPanel());
+    }
+  }
+
+  function bindReportSelect(control) {
+    if (!control?.button) return;
+    control.button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const next = control.menu?.hidden ?? false;
+      closeMenus();
+      if (control.menu) control.menu.hidden = !next;
+      if (next && control.search) {
+        control.search.value = "";
+        control.search.dispatchEvent(new Event("input"));
+        requestAnimationFrame(() => control.search?.focus());
+      }
+    });
+    if (control.search) {
+      control.search.addEventListener("click", (event) => event.stopPropagation());
+      control.search.addEventListener("input", () => renderReportPanel());
+    }
   }
 
   function syncFullscreenButtons() {
@@ -469,11 +1201,11 @@
       fullscreenState.active = true;
       document.body.classList.add("nbhd-fullscreen-active");
       panel.classList.add("nbhd-panel-fullscreen");
-      state.pageSize = getPageSize();
-      if (state.payload) {
-        render(state.payload);
-      }
       requestAnimationFrame(() => {
+        state.pageSize = getPageSize();
+        if (state.payload) {
+          render(state.payload);
+        }
         tableWrap.scrollTop = fullscreenState.tableScrollTop;
         tableWrap.scrollLeft = fullscreenState.tableScrollLeft;
       });
@@ -483,11 +1215,11 @@
       fullscreenState.active = false;
       document.body.classList.remove("nbhd-fullscreen-active");
       panel.classList.remove("nbhd-panel-fullscreen");
-      state.pageSize = getPageSize();
-      if (state.payload) {
-        render(state.payload);
-      }
       requestAnimationFrame(() => {
+        state.pageSize = getPageSize();
+        if (state.payload) {
+          render(state.payload);
+        }
         window.scrollTo({ top: fullscreenState.windowScrollY, behavior: "auto" });
         tableWrap.scrollTop = fullscreenState.tableScrollTop;
         tableWrap.scrollLeft = fullscreenState.tableScrollLeft;
@@ -547,36 +1279,46 @@
     state.filters.market = "";
     state.filters.city = "";
     state.filters.head_end = "";
-    state.filters.week_range = getWeekClusterController()?.getValue(state.payload?.weeks || []) || "";
+    state.filters.week_from = "";
+    state.filters.week_to = "";
     state.filters.change = "";
     state.page = 1;
-    if (searchInput) {
-      searchInput.value = "";
-    }
     fetchPayload(false);
   }
 
   bindSelect(marketFilter, "market");
   bindSelect(cityFilter, "city");
   bindSelect(headendFilter, "head_end");
-  if (weekRangeFilter) {
-    weekRangeFilter.addEventListener("change", () => {
-      state.filters.week_range = weekRangeFilter.value;
-      state.page = 1;
-      const controller = getWeekClusterController();
-      if (controller) {
-        controller.setValue(state.filters.week_range, state.payload?.weeks || []);
-        return;
-      }
-      fetchPayload(false);
-    });
-  }
+  bindSelect(weekFromFilter, "week_from");
+  bindSelect(weekToFilter, "week_to");
   bindSelect(changeFilter, "change");
+  bindMultiSelect(reportHeadendFilter, "headends");
+  bindMultiSelect(reportChannelFilter, "channels");
+  bindReportSelect(reportWeekFromFilter);
+  bindReportSelect(reportWeekToFilter);
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".filter-select") && !event.target.closest(".ots-multiselect")) closeMenus();
+  });
   if (refreshButton) {
     refreshButton.addEventListener("click", () => fetchPayload(true));
   }
   if (resetButton) {
     resetButton.addEventListener("click", resetFilters);
+  }
+  if (reportToggleButton) {
+    reportToggleButton.addEventListener("click", openReportPanel);
+  }
+  if (reportHideButton) {
+    reportHideButton.addEventListener("click", closeReportPanel);
+  }
+  if (reportResetButton) {
+    reportResetButton.addEventListener("click", resetReportFilters);
+  }
+  if (reportDownloadButton) {
+    reportDownloadButton.addEventListener("click", downloadReport);
+  }
+  if (reportPrintButton) {
+    reportPrintButton.addEventListener("click", printReport);
   }
   if (fullscreenButton) {
     fullscreenButton.addEventListener("click", toggleFullscreen);
@@ -632,12 +1374,6 @@
       setFullscreen(false);
     }
   });
-  window.addEventListener("chrome:week-cluster-change", (event) => {
-    state.filters.week_range = event.detail?.value || "";
-    state.page = 1;
-    fetchPayload(false);
-  });
-
   if (state.initial) {
     render(state.initial);
   }

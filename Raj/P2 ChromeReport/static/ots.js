@@ -10,7 +10,6 @@
       week_from: "",
       week_to: "",
       change: "",
-      search: "",
     },
     page: 1,
     pageSize: 30,
@@ -19,18 +18,55 @@
     loading: false,
     standalone: Boolean(window.__OTS_STANDALONE_DATA__),
     initial: window.__OTS_INITIAL_DATA__ || null,
+    columnWidths: {},
+    report: {
+      open: false,
+      markets: [],
+      channels: [],
+    },
   };
+  const DEFAULT_REPORT_CHANNEL_KEYS = ["INDIATV", "AAJTAK", "NEWS18INDIA", "REPUBLICBHARAT"];
 
   const marketButton = document.getElementById("otsMarketButton");
   const marketMenu = document.getElementById("otsMarketMenu");
+  const marketSearchInput = document.getElementById("otsMarketSearch");
   const marketOptions = document.getElementById("otsMarketOptions");
   const channelButton = document.getElementById("otsChannelButton");
   const channelMenu = document.getElementById("otsChannelMenu");
+  const channelSearchInput = document.getElementById("otsChannelSearch");
   const channelOptions = document.getElementById("otsChannelOptions");
-  const weekFromFilter = document.getElementById("otsWeekFromFilter");
-  const weekToFilter = document.getElementById("otsWeekToFilter");
-  const changeFilter = document.getElementById("otsChangeFilter");
-  const searchInput = document.getElementById("otsSearchInput");
+  function getSingleSelectControl(id) {
+    return {
+      button: document.getElementById(id),
+      menu: document.getElementById(`${id}Menu`),
+      search: document.getElementById(`${id}Search`),
+      options: document.getElementById(`${id}Options`),
+    };
+  }
+  const weekFromFilter = getSingleSelectControl("otsWeekFromFilter");
+  const weekToFilter = getSingleSelectControl("otsWeekToFilter");
+  const changeFilter = getSingleSelectControl("otsChangeFilter");
+  function getMultiSelectControl(id) {
+    return {
+      button: document.getElementById(id),
+      menu: document.getElementById(`${id}Menu`),
+      search: document.getElementById(`${id}Search`),
+      options: document.getElementById(`${id}Options`),
+    };
+  }
+  const reportToggleButton = document.getElementById("otsReportToggleButton");
+  const reportLauncher = document.getElementById("otsReportLauncher");
+  const reportPanel = document.getElementById("otsReportPanel");
+  const reportMeta = document.getElementById("otsReportMeta");
+  const reportCount = document.getElementById("otsReportCount");
+  const reportStatus = document.getElementById("otsReportStatusMessage");
+  const reportContent = document.getElementById("otsReportContent");
+  const reportMarketFilter = getMultiSelectControl("otsReportMarketFilter");
+  const reportChannelFilter = getMultiSelectControl("otsReportChannelFilter");
+  const reportResetButton = document.getElementById("otsReportResetButton");
+  const reportDownloadButton = document.getElementById("otsReportDownloadButton");
+  const reportPrintButton = document.getElementById("otsReportPrintButton");
+  const reportHideButton = document.getElementById("otsReportHideButton");
   const resultCount = document.getElementById("otsResultCount");
   const tableHead = document.getElementById("otsTableHead");
   const tableBody = document.getElementById("otsTableBody");
@@ -44,6 +80,13 @@
   const pageInfo = document.getElementById("otsPageInfo");
   const tableWrap = root.closest(".ots-table-wrap");
   const panel = root.closest(".ots-panel");
+  const MIN_COLUMN_WIDTH = 80;
+  const DEFAULT_COLUMN_WIDTHS = {
+    market: 150,
+    channel: 180,
+    change: 110,
+  };
+  let activeResize = null;
 
   const fullscreenState = {
     active: false,
@@ -63,31 +106,147 @@
     return Math.max(30, Math.floor(usableHeight / rowHeight));
   }
 
-  function createOption(value, label) {
-    const option = document.createElement("option");
-    option.value = value;
-    option.textContent = label;
-    return option;
-  }
-
-  function populateOptionList(select, options, selectedValue) {
-    if (!select) return selectedValue || "";
-    const safeOptions = Array.isArray(options) ? options.filter((option) => option && normalizeText(option.value) !== "") : [];
-    const fallback = safeOptions.some((option) => option.value === selectedValue)
-      ? selectedValue
-      : (safeOptions[0]?.value || "");
-    select.innerHTML = "";
-    safeOptions.forEach((option) => select.appendChild(createOption(option.value, option.label)));
-    select.value = fallback;
-    return fallback;
-  }
-
   function normalizeText(value) {
     return String(value || "").trim();
   }
 
-  function getWeekClusterController() {
-    return window.__CHROME_WEEK_CLUSTER__ || null;
+  function normalizeChannelKey(value) {
+    return normalizeText(value).toUpperCase().replace(/[^A-Z0-9]+/g, "");
+  }
+
+  function formatChannelLabel(value) {
+    return normalizeText(value).toUpperCase();
+  }
+
+  function formatOtsNumber(value) {
+    if (value === null || value === undefined || value === "") return "NA";
+    return Number(value).toFixed(2);
+  }
+
+  function formatDeltaNumber(value) {
+    return Number(Math.abs(value)).toFixed(2);
+  }
+
+  function getColumnDefinitions(weeks) {
+    return [
+      { key: "market", label: "MARKET", className: "sticky-col ots-sticky-market" },
+      { key: "channel", label: "CHANNEL", className: "sticky-col ots-sticky-channel" },
+      ...weeks.map((week) => ({ key: week, label: week })),
+      { key: "change", label: "CHANGE" },
+    ];
+  }
+
+  function getDefaultColumnWidth(key) {
+    if (DEFAULT_COLUMN_WIDTHS[key]) return DEFAULT_COLUMN_WIDTHS[key];
+    if (String(key).startsWith("Wk-")) return 96;
+    return 120;
+  }
+
+  function getColGroup() {
+    let colGroup = root.querySelector("colgroup");
+    if (!colGroup) {
+      colGroup = document.createElement("colgroup");
+      root.insertBefore(colGroup, tableHead);
+    }
+    return colGroup;
+  }
+
+  function updateStickyOffsets() {
+    const marketWidth = state.columnWidths.market || getDefaultColumnWidth("market");
+    root.style.setProperty("--ots-market-width", `${marketWidth}px`);
+  }
+
+  function applyColumnWidths(columns) {
+    const colGroup = getColGroup();
+    const fragment = document.createDocumentFragment();
+    columns.forEach((column) => {
+      const col = document.createElement("col");
+      const width = state.columnWidths[column.key];
+      if (width) col.style.width = `${width}px`;
+      fragment.appendChild(col);
+    });
+    colGroup.replaceChildren(fragment);
+    updateStickyOffsets();
+  }
+
+  function setColumnWidth(columnKey, width) {
+    state.columnWidths[columnKey] = Math.max(MIN_COLUMN_WIDTH, Math.round(width));
+    applyColumnWidths(getColumnDefinitions(state.payload?.visible_weeks || state.payload?.weeks || []));
+  }
+
+  function stopColumnResize() {
+    if (!activeResize) return;
+    activeResize.handle?.classList.remove("active");
+    activeResize = null;
+    document.body.classList.remove("ots-resizing");
+  }
+
+  function handleColumnResize(event) {
+    if (!activeResize) return;
+    const delta = event.clientX - activeResize.startX;
+    setColumnWidth(activeResize.columnKey, activeResize.startWidth + delta);
+  }
+
+  function startColumnResize(event, columnKey, handle) {
+    event.preventDefault();
+    event.stopPropagation();
+    const startWidth = state.columnWidths[columnKey]
+      || handle.closest("th")?.getBoundingClientRect().width
+      || getDefaultColumnWidth(columnKey);
+    activeResize = {
+      columnKey,
+      startX: event.clientX,
+      startWidth,
+      handle,
+    };
+    handle.classList.add("active");
+    document.body.classList.add("ots-resizing");
+  }
+
+  function updateSingleSelectButton(control, value, placeholder, labels = null) {
+    if (control?.button) control.button.textContent = value ? (labels?.[value] || value) : placeholder;
+  }
+
+  function renderSingleSelectOptions(control, values, selectedValue, placeholder, onSelect, labels = null) {
+    if (!control?.options) return;
+    const safeValues = Array.isArray(values) ? values.filter((value) => normalizeText(value) !== "") : [];
+    const query = normalizeText(control.search?.value || "").toLowerCase();
+    const fragment = document.createDocumentFragment();
+    [{ value: "", label: placeholder }, ...safeValues.map((value) => ({ value, label: labels?.[value] || value }))]
+      .filter((option) => !query || String(option.label || "").toLowerCase().includes(query))
+      .forEach((option) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `filter-option-row${option.value === selectedValue ? " active" : ""}`;
+        button.textContent = option.label;
+        button.addEventListener("click", () => onSelect(option.value));
+        fragment.appendChild(button);
+      });
+    control.options.replaceChildren(fragment);
+  }
+
+  function syncSingleSelect(control, values, placeholder, selectedValue, onSelect, labels = null) {
+    const safeValues = Array.isArray(values) ? values.filter((value) => normalizeText(value) !== "") : [];
+    const fallback = safeValues.includes(selectedValue) ? selectedValue : "";
+    updateSingleSelectButton(control, fallback, placeholder, labels);
+    renderSingleSelectOptions(control, safeValues, fallback, placeholder, (value) => {
+      onSelect(value);
+      closeMenus();
+    }, labels);
+    return fallback;
+  }
+
+  function getConstrainedWeekOptions(allWeeks, key) {
+    const weeks = Array.isArray(allWeeks) ? allWeeks.filter((value) => normalizeText(value) !== "") : [];
+    if (key === "week_from") {
+      const toIndex = state.filters.week_to && weeks.includes(state.filters.week_to) ? weeks.indexOf(state.filters.week_to) : weeks.length - 1;
+      return weeks.slice(0, toIndex + 1);
+    }
+    if (key === "week_to") {
+      const fromIndex = state.filters.week_from && weeks.includes(state.filters.week_from) ? weeks.indexOf(state.filters.week_from) : 0;
+      return weeks.slice(fromIndex);
+    }
+    return weeks;
   }
 
   // Format one OTS value without changing the stored numeric payload.
@@ -107,16 +266,11 @@
       const to = Math.max(startIndex, endIndex);
       return allWeeks.slice(from, to + 1);
     }
-    const controller = getWeekClusterController();
-    const scopedWeeks = controller
-      ? controller.getVisibleWeeks(allWeeks, controller.getValue(allWeeks))
-      : allWeeks.slice(Math.max(0, allWeeks.length - 4));
-    if (!scopedWeeks.length) return [];
-    return scopedWeeks.slice();
+    return allWeeks.slice(Math.max(0, allWeeks.length - 8));
   }
 
   // Calculate the change label from the latest two visible weeks.
-  function getChangeMeta(record, weeks) {
+function getChangeMeta(record, weeks) {
     if (weeks.length < 2) {
       return { text: "0%", type: "no_change", delta: null };
     }
@@ -131,16 +285,21 @@
     return { text: "0%", type: "no_change", delta: 0 };
   }
 
+  function matchesChangeFilter(changeType, filterValue) {
+    if (!filterValue) return true;
+    if (filterValue === "changed") return changeType === "increase" || changeType === "decrease";
+    if (filterValue === "no_change") return changeType === "no_change";
+    return changeType === filterValue;
+  }
+
   // Apply the standalone filters locally so exported HTML behaves like the live server.
   function filterStandaloneRecords(records, payload) {
     const visibleWeeks = getVisibleWeeks(payload);
-    const search = normalizeText(state.filters.search).toLowerCase();
     return records.filter((record) => {
       if (state.filters.markets.length && !state.filters.markets.includes(record.market)) return false;
       if (state.filters.channels.length && !state.filters.channels.includes(record.channel)) return false;
-      if (search && !`${record.market} ${record.channel}`.toLowerCase().includes(search)) return false;
       if (state.filters.change) {
-        if (getChangeMeta(record, visibleWeeks).type !== state.filters.change) return false;
+        if (!matchesChangeFilter(getChangeMeta(record, visibleWeeks).type, state.filters.change)) return false;
       }
       return true;
     });
@@ -175,12 +334,15 @@
   }
 
   // Render one checkbox list used by the custom multi-select filters.
-  function renderMultiSelectOptions(container, values, selectedValues, key) {
+  function renderMultiSelectOptions(container, values, selectedValues, key, query = "") {
     if (!container) return;
     const selected = new Set(selectedValues);
     const fragment = document.createDocumentFragment();
+    const normalizedQuery = normalizeText(query).toLowerCase();
 
-    values.forEach((value) => {
+    values
+      .filter((value) => !normalizedQuery || String(value || "").toLowerCase().includes(normalizedQuery))
+      .forEach((value) => {
       const label = document.createElement("label");
       label.className = "ots-option-row";
       const input = document.createElement("input");
@@ -203,53 +365,60 @@
     container.replaceChildren(fragment);
   }
 
-  function populateSelect(select, values, label, selectedValue) {
-    const safeValues = Array.isArray(values) ? values.filter((value) => normalizeText(value) !== "") : [];
-    const fallback = safeValues.includes(selectedValue) ? selectedValue : "";
-    select.innerHTML = "";
-    select.appendChild(createOption("", label));
-    safeValues.forEach((value) => select.appendChild(createOption(value, value)));
-    select.value = fallback;
-    return fallback;
+  function updateReportMultiSelectButton(button, selectedValues, allValues, emptyLabel, noun) {
+    if (!button) return;
+    if (!selectedValues.length || selectedValues.length === allValues.length) {
+      button.textContent = emptyLabel;
+      return;
+    }
+    if (selectedValues.length === 1) {
+      button.textContent = selectedValues[0];
+      return;
+    }
+    button.textContent = `${selectedValues.length} ${noun}`;
   }
 
-  function populateMappedSelect(select, values, labels, placeholder, selectedValue) {
-    const safeValues = Array.isArray(values) ? values.filter((value) => normalizeText(value) !== "") : [];
-    const fallback = safeValues.includes(selectedValue) ? selectedValue : "";
-    select.innerHTML = "";
-    select.appendChild(createOption("", placeholder));
-    safeValues.forEach((value) => select.appendChild(createOption(value, labels[value] || value)));
-    select.value = fallback;
-    return fallback;
+  function renderReportOptions(control, values, selectedValues, onToggle) {
+    if (!control?.options) return;
+    const query = normalizeText(control.search?.value || "").toLowerCase();
+    const selected = new Set(selectedValues);
+    const fragment = document.createDocumentFragment();
+    values
+      .filter((value) => !query || value.toLowerCase().includes(query))
+      .forEach((value) => {
+        const label = document.createElement("label");
+        label.className = "ots-option-row";
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = selected.has(value);
+        input.addEventListener("change", () => onToggle(value, input.checked));
+        const text = document.createElement("span");
+        text.textContent = value;
+        label.append(input, text);
+        fragment.appendChild(label);
+      });
+    control.options.replaceChildren(fragment);
   }
 
   // Sync all OTS filters from the newest payload while preserving current selections when possible.
   function syncControls(payload) {
     const filterData = payload.filters || {};
-    const controller = getWeekClusterController();
-    const scopedWeeks = (() => {
-      return controller
-        ? controller.getVisibleWeeks(payload.weeks || [], controller.getValue(payload.weeks || []))
-        : (payload.weeks || []).slice(Math.max(0, (payload.weeks || []).length - 4));
-    })();
-    renderMultiSelectOptions(marketOptions, filterData.markets || [], state.filters.markets, "markets");
-    renderMultiSelectOptions(channelOptions, filterData.channels || [], state.filters.channels, "channels");
+    renderMultiSelectOptions(marketOptions, filterData.markets || [], state.filters.markets, "markets", marketSearchInput?.value || "");
+    renderMultiSelectOptions(channelOptions, filterData.channels || [], state.filters.channels, "channels", channelSearchInput?.value || "");
     state.filters.markets = state.filters.markets.filter((value) => (filterData.markets || []).includes(value));
     state.filters.channels = state.filters.channels.filter((value) => (filterData.channels || []).includes(value));
     updateMultiSelectButton(marketButton, state.filters.markets, "All Markets", "markets selected");
     updateMultiSelectButton(channelButton, state.filters.channels, "All Channels", "channels selected");
-    state.filters.week_from = populateSelect(weekFromFilter, payload.weeks || [], "From Week", state.filters.week_from);
-    state.filters.week_to = populateSelect(weekToFilter, payload.weeks || [], "To Week", state.filters.week_to);
-    state.filters.change = populateMappedSelect(
+    state.filters.week_from = syncSingleSelect(weekFromFilter, getConstrainedWeekOptions(payload.weeks || [], "week_from"), "From Week", state.filters.week_from, (value) => applySingleFilter("week_from", value));
+    state.filters.week_to = syncSingleSelect(weekToFilter, getConstrainedWeekOptions(payload.weeks || [], "week_to"), "To Week", state.filters.week_to, (value) => applySingleFilter("week_to", value));
+    state.filters.change = syncSingleSelect(
       changeFilter,
-      ["increase", "decrease", "no_change"],
-      { increase: "Increase", decrease: "Decrease", no_change: "No Change" },
+      ["changed", "no_change", "increase", "decrease"],
       "All Changes",
-      state.filters.change
+      state.filters.change,
+      (value) => applySingleFilter("change", value),
+      { changed: "Changed", increase: "Increase", decrease: "Decrease", no_change: "No Change" }
     );
-    if (searchInput) {
-      searchInput.value = state.filters.search;
-    }
   }
 
   function sortRecords(records, weeks) {
@@ -299,6 +468,44 @@
         }
         render(state.payload);
       });
+      tr.appendChild(th);
+    });
+
+    tableHead.replaceChildren(tr);
+  }
+
+  function buildHeader(weeks) {
+    const tr = document.createElement("tr");
+    const columns = getColumnDefinitions(weeks);
+    applyColumnWidths(columns);
+
+    columns.forEach((column) => {
+      const th = document.createElement("th");
+      const isActive = state.sortKey === column.key;
+      const suffix = isActive ? (state.sortDirection === "asc" ? " ▲" : " ▼") : "";
+      th.className = `${column.className || ""} ots-sortable`.trim();
+      th.dataset.columnKey = column.key;
+
+      const label = document.createElement("span");
+      label.className = "ots-header-label";
+      label.textContent = `${column.label}${suffix}`;
+
+      const handle = document.createElement("span");
+      handle.className = "ots-resize-handle";
+      handle.title = "Drag to resize column";
+      handle.addEventListener("mousedown", (event) => startColumnResize(event, column.key, handle));
+
+      th.append(label, handle);
+      th.addEventListener("click", () => {
+        if (state.sortKey === column.key) {
+          state.sortDirection = state.sortDirection === "asc" ? "desc" : "asc";
+        } else {
+          state.sortKey = column.key;
+          state.sortDirection = "asc";
+        }
+        render(state.payload);
+      });
+
       tr.appendChild(th);
     });
 
@@ -383,6 +590,296 @@
     renderStatus(payload);
     resultCount.textContent = `${new Intl.NumberFormat().format(payload.table.total_count || 0)} records`;
     renderTable(payload);
+    renderReportPanel();
+  }
+
+  function getAllSourceRecords() {
+    if (state.standalone) {
+      const source = window.__OTS_STANDALONE_DATA__ || {};
+      return source.table?.records || source.records || [];
+    }
+    return state.payload?.table?.records || [];
+  }
+
+  function getReportVisibleWeeks() {
+    const payload = state.payload || window.__OTS_STANDALONE_DATA__ || { weeks: [] };
+    const visibleWeeks = getVisibleWeeks(payload);
+    return visibleWeeks.length >= 2 ? visibleWeeks.slice(-2) : visibleWeeks;
+  }
+
+  function getReportBaseRecords() {
+    const sourceRecords = getAllSourceRecords();
+    return sourceRecords.filter((record) => {
+      if (state.filters.markets.length && !state.filters.markets.includes(record.market)) return false;
+      if (state.filters.channels.length && !state.filters.channels.includes(record.channel)) return false;
+      return true;
+    });
+  }
+
+  function getReportContext() {
+    const baseRecords = getReportBaseRecords();
+    const markets = Array.from(new Set(baseRecords.map((record) => normalizeText(record.market)).filter(Boolean)))
+      .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
+    const channels = Array.from(new Set(baseRecords.map((record) => normalizeText(record.channel)).filter(Boolean)))
+      .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
+    return {
+      weeks: getReportVisibleWeeks(),
+      markets,
+      channels,
+    };
+  }
+
+  function getDefaultReportChannels(options) {
+    const defaults = options.filter((value) => DEFAULT_REPORT_CHANNEL_KEYS.includes(normalizeChannelKey(value)));
+    return (defaults.length ? defaults : options.slice(0, 4)).slice();
+  }
+
+  function syncReportSelections(context) {
+    state.report.markets = state.report.markets.filter((value) => context.markets.includes(value));
+    if (!state.report.markets.length) state.report.markets = context.markets.slice();
+
+    state.report.channels = state.report.channels.filter((value) => context.channels.includes(value));
+    if (!state.report.channels.length) state.report.channels = getDefaultReportChannels(context.channels);
+  }
+
+  function buildReportNarratives() {
+    const weeks = getReportVisibleWeeks();
+    if (weeks.length < 2) {
+      return {
+        weeks,
+        groups: [],
+        items: [],
+        message: "Select at least two visible weeks to generate the OTS change report.",
+      };
+    }
+
+    const [previousWeek, currentWeek] = weeks;
+    const baseRecords = getReportBaseRecords();
+    const selectedMarkets = state.report.markets.length ? state.report.markets : getReportContext().markets;
+    const selectedChannels = state.report.channels.length ? state.report.channels : getDefaultReportChannels(getReportContext().channels);
+    const groups = [];
+    const items = [];
+
+    selectedChannels.forEach((channel) => {
+      const channelLabel = formatChannelLabel(channel);
+      const narratives = [];
+
+      selectedMarkets.forEach((market) => {
+        const record = baseRecords.find((item) => normalizeText(item.market) === market && normalizeChannelKey(item.channel) === normalizeChannelKey(channel));
+        if (!record) return;
+
+        const previousValue = record.ots_values?.[previousWeek];
+        const currentValue = record.ots_values?.[currentWeek];
+        const previousMissing = previousValue === null || previousValue === undefined || previousValue === "";
+        const currentMissing = currentValue === null || currentValue === undefined || currentValue === "";
+
+        if ((previousMissing && currentMissing) || (!previousMissing && !currentMissing && Number(previousValue) === Number(currentValue))) {
+          return;
+        }
+
+        let direction = "increased";
+        let delta = 0;
+
+        if (previousMissing && !currentMissing) {
+          direction = "increased";
+          delta = Number(currentValue);
+        } else if (!previousMissing && currentMissing) {
+          direction = "decreased";
+          delta = Number(previousValue);
+        } else {
+          delta = Number(currentValue) - Number(previousValue);
+          direction = delta >= 0 ? "increased" : "decreased";
+        }
+
+        const text = `In ${market} market, ${channelLabel} OTS ${direction} by ${formatDeltaNumber(delta)}% from ${previousWeek} to ${currentWeek}, moving from ${formatOtsNumber(previousValue)} to ${formatOtsNumber(currentValue)}.`;
+        narratives.push({ market, text });
+        items.push({ channel: channelLabel, market, text });
+      });
+
+      if (narratives.length) {
+        groups.push({
+          channel: channelLabel,
+          narratives,
+        });
+      }
+    });
+
+    return {
+      weeks,
+      groups,
+      items,
+      message: items.length ? "" : "No OTS changes were observed for the selected channels and markets compared to the previous week.",
+    };
+  }
+
+  function renderReportStatus(message) {
+    if (!reportStatus) return;
+    if (message) {
+      reportStatus.hidden = false;
+      reportStatus.textContent = message;
+      return;
+    }
+    reportStatus.hidden = true;
+    reportStatus.textContent = "";
+  }
+
+  function renderReportPanel() {
+    if (!reportPanel || !reportContent) return;
+    reportPanel.hidden = !state.report.open;
+    reportPanel.style.display = state.report.open ? "block" : "none";
+    if (reportLauncher) {
+      reportLauncher.hidden = state.report.open;
+      reportLauncher.style.display = state.report.open ? "none" : "flex";
+    }
+    if (!state.report.open) return;
+
+    const context = getReportContext();
+    syncReportSelections(context);
+
+    updateReportMultiSelectButton(reportMarketFilter.button, state.report.markets, context.markets, "All Markets", "markets selected");
+    updateReportMultiSelectButton(reportChannelFilter.button, state.report.channels, context.channels, "Default 4 Channels", "channels selected");
+
+    renderReportOptions(reportMarketFilter, context.markets, state.report.markets, (value, checked) => {
+      const next = new Set(state.report.markets);
+      if (checked) next.add(value);
+      else next.delete(value);
+      state.report.markets = Array.from(next).sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
+      renderReportPanel();
+    });
+    renderReportOptions(reportChannelFilter, context.channels, state.report.channels, (value, checked) => {
+      const next = new Set(state.report.channels);
+      if (checked) next.add(value);
+      else next.delete(value);
+      state.report.channels = Array.from(next).sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
+      renderReportPanel();
+    });
+
+    const reportData = buildReportNarratives();
+    const [previousWeek, currentWeek] = reportData.weeks;
+    if (reportMeta) {
+      reportMeta.textContent = previousWeek && currentWeek
+        ? `Channel-wise OTS movement from ${previousWeek} to ${currentWeek}.`
+        : "Select at least two visible weeks to compare OTS movement.";
+    }
+    if (reportCount) {
+      reportCount.textContent = `${reportData.items.length} narrative${reportData.items.length === 1 ? "" : "s"}`;
+    }
+
+    renderReportStatus(reportData.message);
+    if (reportData.message) {
+      reportContent.innerHTML = `<div class="ots-report-empty">${reportData.message}</div>`;
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+    reportData.groups.forEach((group) => {
+      const section = document.createElement("section");
+      section.className = "ots-report-group";
+
+      const header = document.createElement("div");
+      header.className = "ots-report-group-header";
+      const titleWrap = document.createElement("div");
+      const title = document.createElement("h4");
+      title.textContent = group.channel;
+      titleWrap.appendChild(title);
+      header.appendChild(titleWrap);
+
+      const list = document.createElement("ul");
+      list.className = "ots-report-list";
+      group.narratives.forEach((narrative) => {
+        const item = document.createElement("li");
+        item.textContent = narrative.text;
+        list.appendChild(item);
+      });
+
+      section.append(header, list);
+      fragment.appendChild(section);
+    });
+    reportContent.replaceChildren(fragment);
+  }
+
+  function resetReportFilters() {
+    const context = getReportContext();
+    state.report.markets = context.markets.slice();
+    state.report.channels = getDefaultReportChannels(context.channels);
+    renderReportPanel();
+  }
+
+  function openReportPanel() {
+    const context = getReportContext();
+    state.report.open = true;
+    state.report.markets = context.markets.slice();
+    state.report.channels = getDefaultReportChannels(context.channels);
+    renderReportPanel();
+    requestAnimationFrame(() => {
+      reportPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  function closeReportPanel() {
+    state.report.open = false;
+    renderReportPanel();
+    requestAnimationFrame(() => {
+      reportLauncher?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }
+
+  function buildReportDocument() {
+    const reportData = buildReportNarratives();
+    const [previousWeek, currentWeek] = reportData.weeks;
+    const content = reportData.message
+      ? `<div class="empty">${reportData.message}</div>`
+      : reportData.groups.map((group) => `
+        <section class="group">
+          <h2>${group.channel}</h2>
+          <ul>${group.narratives.map((narrative) => `<li>${narrative.text}</li>`).join("")}</ul>
+        </section>
+      `).join("");
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>OTS Change Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; color: #1e293b; margin: 24px; }
+    h1 { margin: 0 0 6px; font-size: 22px; }
+    .meta { margin-bottom: 18px; color: #64748b; font-size: 13px; }
+    .group { border: 1px solid #dbe4f0; border-radius: 12px; margin-bottom: 14px; overflow: hidden; }
+    .group h2 { margin: 0; padding: 12px 14px; background: #f8fbff; font-size: 16px; border-bottom: 1px solid #e2e8f0; }
+    ul { margin: 0; padding: 14px 18px 16px 34px; }
+    li { margin: 6px 0; line-height: 1.55; font-size: 14px; }
+    .empty { border: 1px dashed #cbd5e1; border-radius: 12px; padding: 16px; color: #64748b; }
+  </style>
+</head>
+<body>
+  <h1>OTS Change Report</h1>
+  <div class="meta">${previousWeek && currentWeek ? `Comparison: ${previousWeek} to ${currentWeek}` : "Comparison weeks unavailable"}</div>
+  ${content}
+</body>
+</html>`;
+  }
+
+  function downloadReport() {
+    const html = buildReportDocument();
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "ots_change_report.html";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function printReport() {
+    const popup = window.open("", "_blank", "width=1100,height=800");
+    if (!popup) return;
+    popup.document.open();
+    popup.document.write(buildReportDocument());
+    popup.document.close();
+    popup.focus();
+    popup.print();
   }
 
   function buildStandalonePayload() {
@@ -393,11 +890,9 @@
 
     function optionValues(key) {
       const scoped = allRecords.filter((record) => {
-        const search = normalizeText(state.filters.search).toLowerCase();
-        if (search && !`${record.market} ${record.channel}`.toLowerCase().includes(search)) return false;
         if (key !== "markets" && state.filters.markets.length && !state.filters.markets.includes(record.market)) return false;
         if (key !== "channels" && state.filters.channels.length && !state.filters.channels.includes(record.channel)) return false;
-        if (key !== "change" && state.filters.change && getChangeMeta(record, visibleWeeks).type !== state.filters.change) return false;
+        if (key !== "change" && state.filters.change && !matchesChangeFilter(getChangeMeta(record, visibleWeeks).type, state.filters.change)) return false;
         return true;
       });
       const field = key === "markets" ? "market" : "channel";
@@ -435,7 +930,6 @@
     if (state.filters.week_from) params.set("week_from", state.filters.week_from);
     if (state.filters.week_to) params.set("week_to", state.filters.week_to);
     if (state.filters.change) params.set("change", state.filters.change);
-    if (state.filters.search) params.set("search", state.filters.search);
     if (forceRefresh) params.set("refresh", "1");
 
     setLoading(true);
@@ -453,6 +947,11 @@
   function closeMenus() {
     if (marketMenu) marketMenu.hidden = true;
     if (channelMenu) channelMenu.hidden = true;
+    if (weekFromFilter?.menu) weekFromFilter.menu.hidden = true;
+    if (weekToFilter?.menu) weekToFilter.menu.hidden = true;
+    if (changeFilter?.menu) changeFilter.menu.hidden = true;
+    if (reportMarketFilter?.menu) reportMarketFilter.menu.hidden = true;
+    if (reportChannelFilter?.menu) reportChannelFilter.menu.hidden = true;
   }
 
   function bindMenu(button, menu) {
@@ -463,6 +962,43 @@
       closeMenus();
       menu.hidden = !next;
     });
+  }
+
+  function applySingleFilter(key, value) {
+    state.filters[key] = value;
+    if (key === "week_from" || key === "week_to") {
+      const weeks = state.payload?.weeks || window.__OTS_STANDALONE_DATA__?.weeks || [];
+      const fromIndex = state.filters.week_from && weeks.includes(state.filters.week_from) ? weeks.indexOf(state.filters.week_from) : -1;
+      const toIndex = state.filters.week_to && weeks.includes(state.filters.week_to) ? weeks.indexOf(state.filters.week_to) : -1;
+      if (fromIndex >= 0 && toIndex >= 0 && fromIndex > toIndex) {
+        if (key === "week_from") state.filters.week_to = state.filters.week_from;
+        else state.filters.week_from = state.filters.week_to;
+      }
+    }
+    state.page = 1;
+    fetchPayload(false);
+  }
+
+  function bindSingleSelect(control, key, placeholder, labels = null) {
+    if (!control?.button) return;
+    control.button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const next = control.menu?.hidden ?? false;
+      closeMenus();
+      if (control.menu) control.menu.hidden = !next;
+      if (next && control.search) {
+        control.search.value = "";
+        control.search.dispatchEvent(new Event("input"));
+        requestAnimationFrame(() => control.search?.focus());
+      }
+    });
+    if (control.search) {
+      control.search.addEventListener("click", (event) => event.stopPropagation());
+      control.search.addEventListener("input", () => {
+        const values = key === "change" ? ["changed", "no_change", "increase", "decrease"] : getConstrainedWeekOptions(state.payload?.weeks || [], key);
+        renderSingleSelectOptions(control, values, state.filters[key], placeholder, (value) => applySingleFilter(key, value), labels);
+      });
+    }
   }
 
   function syncFullscreenButtons() {
@@ -544,7 +1080,6 @@
       week_from: "",
       week_to: "",
       change: "",
-      search: "",
     };
     state.page = 1;
     fetchPayload(false);
@@ -552,42 +1087,28 @@
 
   bindMenu(marketButton, marketMenu);
   bindMenu(channelButton, channelMenu);
+  bindMenu(reportMarketFilter?.button, reportMarketFilter?.menu);
+  bindMenu(reportChannelFilter?.button, reportChannelFilter?.menu);
+  bindSingleSelect(weekFromFilter, "week_from", "From Week");
+  bindSingleSelect(weekToFilter, "week_to", "To Week");
+  bindSingleSelect(changeFilter, "change", "All Changes", { changed: "Changed", increase: "Increase", decrease: "Decrease", no_change: "No Change" });
 
   document.addEventListener("click", (event) => {
-    if (!event.target.closest(".ots-multiselect")) closeMenus();
+    if (!event.target.closest(".ots-multiselect") && !event.target.closest(".filter-select")) closeMenus();
   });
 
-  if (weekFromFilter) {
-    weekFromFilter.addEventListener("change", () => {
-      state.filters.week_from = weekFromFilter.value;
-      state.page = 1;
-      fetchPayload(false);
-    });
-  }
-  if (weekToFilter) {
-    weekToFilter.addEventListener("change", () => {
-      state.filters.week_to = weekToFilter.value;
-      state.page = 1;
-      fetchPayload(false);
-    });
-  }
-  if (changeFilter) {
-    changeFilter.addEventListener("change", () => {
-      state.filters.change = changeFilter.value;
-      state.page = 1;
-      fetchPayload(false);
-    });
-  }
-  if (searchInput) {
-    searchInput.addEventListener("input", () => {
-      state.filters.search = searchInput.value;
-      state.page = 1;
-      fetchPayload(false);
-    });
-  }
+  if (marketSearchInput) marketSearchInput.addEventListener("input", () => renderMultiSelectOptions(marketOptions, state.payload?.filters?.markets || [], state.filters.markets, "markets", marketSearchInput.value));
+  if (channelSearchInput) channelSearchInput.addEventListener("input", () => renderMultiSelectOptions(channelOptions, state.payload?.filters?.channels || [], state.filters.channels, "channels", channelSearchInput.value));
+  if (reportMarketFilter?.search) reportMarketFilter.search.addEventListener("input", () => renderReportPanel());
+  if (reportChannelFilter?.search) reportChannelFilter.search.addEventListener("input", () => renderReportPanel());
   if (refreshButton) refreshButton.addEventListener("click", () => fetchPayload(true));
   if (resetButton) resetButton.addEventListener("click", resetFilters);
   if (fullscreenButton) fullscreenButton.addEventListener("click", toggleFullscreen);
+  if (reportToggleButton) reportToggleButton.addEventListener("click", openReportPanel);
+  if (reportHideButton) reportHideButton.addEventListener("click", closeReportPanel);
+  if (reportResetButton) reportResetButton.addEventListener("click", resetReportFilters);
+  if (reportDownloadButton) reportDownloadButton.addEventListener("click", downloadReport);
+  if (reportPrintButton) reportPrintButton.addEventListener("click", printReport);
   if (exitFullscreenButton) {
     exitFullscreenButton.addEventListener("click", async () => {
       if (fullscreenState.usingNativeFullscreen && document.fullscreenElement === panel) {
@@ -631,11 +1152,9 @@
       setFullscreen(false);
     }
   });
-  window.addEventListener("chrome:week-cluster-change", () => {
-    state.page = 1;
-    fetchPayload(false);
-  });
-
+  document.addEventListener("mousemove", handleColumnResize);
+  document.addEventListener("mouseup", stopColumnResize);
+  document.addEventListener("mouseleave", stopColumnResize);
   if (state.initial) {
     render(state.initial);
   }
