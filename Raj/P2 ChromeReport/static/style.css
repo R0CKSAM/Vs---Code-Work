@@ -46,7 +46,7 @@ body.loading::after {
 }
 
 .app-shell {
-  width: min(100vw - 14px, 1920px);
+  width: min(100vw - 8px, 1920px);
   margin: 0 auto;
   padding: 8px 0 12px;
 }
@@ -148,9 +148,9 @@ button:hover {
 
 .primary-button,
 .ghost-button {
-  padding: 4px 8px;
-  min-height: 29px;
-  font-size: 0.71rem;
+  padding: 4px 7px;
+  min-height: 27px;
+  font-size: 0.69rem;
 }
 
 .primary-button {
@@ -208,9 +208,9 @@ button:hover {
 
 .filter-grid {
   display: grid;
-  grid-template-columns: repeat(10, minmax(92px, 1fr)) auto;
+  grid-template-columns: repeat(10, minmax(72px, 1fr)) auto;
   align-items: end;
-  gap: 6px;
+  gap: 5px;
 }
 
 label {
@@ -223,11 +223,11 @@ label {
 select,
 input {
   width: 100%;
-  min-height: 29px;
-  padding: 4px 7px;
+  min-height: 27px;
+  padding: 3px 6px;
   background: #fff;
   color: var(--text);
-  font-size: 0.71rem;
+  font-size: 0.69rem;
   outline: none;
 }
 
@@ -244,12 +244,12 @@ input {
 .filter-select-button,
 .ots-select-button {
   width: 100%;
-  min-height: 29px;
-  padding: 4px 26px 4px 7px;
+  min-height: 27px;
+  padding: 3px 22px 3px 6px;
   text-align: left;
   background: #fff;
   color: var(--text);
-  font-size: 0.71rem;
+  font-size: 0.69rem;
   position: relative;
 }
 
@@ -320,7 +320,7 @@ input:focus {
 
 .action-row {
   justify-content: flex-end;
-  min-width: 96px;
+  min-width: 84px;
   align-self: end;
   flex-wrap: nowrap;
   flex: 0 0 auto;
@@ -556,8 +556,8 @@ input:focus {
 
 .comparison-toolbar {
   display: grid;
-  grid-template-columns: repeat(5, minmax(108px, 1fr)) auto;
-  gap: 6px;
+  grid-template-columns: repeat(5, minmax(92px, 1fr)) auto;
+  gap: 5px;
   align-items: end;
   margin-top: 6px;
 }
@@ -704,22 +704,65 @@ body.comparison-resizing .comparison-resize-handle::after {
   overflow: auto;
 }
 
+.comparison-panel:fullscreen,
+.comparison-panel:-webkit-full-screen {
+  position: fixed;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  max-height: none;
+  border-radius: 0;
+  background: #fbfcff;
+}
+
 .comparison-panel-fullscreen .comparison-heading,
 .comparison-panel-fullscreen .comparison-toolbar,
 .comparison-panel-fullscreen .comparison-pagination-bar {
   padding: 10px 12px 0;
 }
 
+.comparison-panel:fullscreen .comparison-heading,
+.comparison-panel:fullscreen .comparison-toolbar,
+.comparison-panel:fullscreen .comparison-pagination-bar,
+.comparison-panel:-webkit-full-screen .comparison-heading,
+.comparison-panel:-webkit-full-screen .comparison-toolbar,
+.comparison-panel:-webkit-full-screen .comparison-pagination-bar {
+  padding: 10px 12px 0;
+}
+
 .comparison-panel-fullscreen .comparison-table-wrap {
-  flex: 0 1 auto;
-  height: auto;
-  max-height: calc(100vh - 168px);
+  flex: 1 1 auto;
+  height: 100%;
+  max-height: none;
   min-height: 0;
   margin-top: 8px;
   border-radius: 0;
   border-left: 0;
   border-right: 0;
   border-bottom: 0;
+}
+
+.comparison-panel:fullscreen .comparison-table-wrap,
+.comparison-panel:-webkit-full-screen .comparison-table-wrap {
+  flex: 1 1 auto;
+  height: 100%;
+  max-height: none;
+  min-height: 0;
+  margin-top: 8px;
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+}
+
+.comparison-panel-fullscreen .comparison-pagination-bar,
+.comparison-panel:fullscreen .comparison-pagination-bar,
+.comparison-panel:-webkit-full-screen .comparison-pagination-bar {
+  margin-top: auto;
+  padding-bottom: 10px;
 }
 
 body.comparison-fullscreen-active {
@@ -1167,8 +1210,8 @@ tbody tr:hover {
 
 .nbhd-toolbar {
   display: grid;
-  grid-template-columns: repeat(6, minmax(92px, 1fr)) auto;
-  gap: 6px;
+  grid-template-columns: repeat(6, minmax(78px, 1fr)) auto;
+  gap: 5px;
   align-items: end;
 }
 
@@ -1455,7 +1498,7 @@ body.nbhd-fullscreen-active {
 
 .nbhd-report-toolbar {
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr) minmax(180px, 0.8fr) minmax(180px, 0.8fr) auto;
+  grid-template-columns: minmax(220px, 1.2fr) minmax(180px, 0.9fr) minmax(180px, 0.9fr) auto;
   gap: 8px;
   align-items: end;
   margin-top: 6px;
@@ -1464,7 +1507,8 @@ body.nbhd-fullscreen-active {
 .nbhd-report-actions {
   gap: 6px;
   justify-content: flex-end;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .nbhd-report-stack {
@@ -1723,8 +1767,8 @@ body.nbhd-benchmark-fullscreen-active {
 
 .ots-toolbar {
   display: grid;
-  grid-template-columns: repeat(2, minmax(138px, 1.15fr)) repeat(3, minmax(92px, 1fr)) auto;
-  gap: 6px;
+  grid-template-columns: repeat(2, minmax(120px, 1.1fr)) repeat(3, minmax(78px, 1fr)) auto;
+  gap: 5px;
   align-items: end;
 }
 
@@ -1937,39 +1981,69 @@ body.ots-fullscreen-active {
   word-break: break-word;
 }
 
-@media (max-width: 1680px) {
+@media (max-width: 1440px) {
+  .app-shell {
+    width: min(100vw - 6px, 100%);
+  }
+
   .filter-grid {
-    grid-template-columns: repeat(5, minmax(110px, 1fr));
+    grid-template-columns: repeat(10, minmax(64px, 1fr)) auto;
   }
 
   .nbhd-toolbar {
-    grid-template-columns: repeat(4, minmax(140px, 1fr));
+    grid-template-columns: repeat(6, minmax(70px, 1fr)) auto;
   }
 
   .ots-toolbar {
-    grid-template-columns: repeat(4, minmax(140px, 1fr));
+    grid-template-columns: repeat(2, minmax(104px, 1.05fr)) repeat(3, minmax(70px, 1fr)) auto;
+  }
+
+  .comparison-toolbar {
+    grid-template-columns: repeat(5, minmax(84px, 1fr)) auto;
+  }
+
+  label {
+    font-size: 0.65rem;
+  }
+
+  select,
+  input,
+  .filter-select-button,
+  .ots-select-button,
+  .primary-button,
+  .ghost-button {
+    font-size: 0.66rem;
+  }
+
+  select,
+  input,
+  .filter-select-button,
+  .ots-select-button,
+  .primary-button,
+  .ghost-button {
+    min-height: 26px;
   }
 }
 
 @media (max-width: 1280px) {
   .filter-grid {
-    grid-template-columns: repeat(4, minmax(108px, 1fr));
+    grid-template-columns: repeat(10, minmax(58px, 1fr)) auto;
   }
 
   .nbhd-toolbar {
-    grid-template-columns: repeat(3, minmax(150px, 1fr));
+    grid-template-columns: repeat(6, minmax(64px, 1fr)) auto;
   }
 
   .ots-toolbar {
-    grid-template-columns: repeat(3, minmax(150px, 1fr));
+    grid-template-columns: repeat(2, minmax(96px, 1fr)) repeat(3, minmax(64px, 1fr)) auto;
+  }
+
+  .comparison-toolbar {
+    grid-template-columns: repeat(5, minmax(76px, 1fr)) auto;
   }
 
   .channel-report-toolbar {
     grid-template-columns: repeat(2, minmax(180px, 1fr));
-  }
-
-  .comparison-toolbar {
-    grid-template-columns: repeat(3, minmax(170px, 1fr));
   }
 }
 

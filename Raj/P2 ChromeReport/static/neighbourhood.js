@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   const root = document.getElementById("nbhdTable");
   if (!root) return;
   const NO_DATA_LABEL = "NA";
@@ -20,14 +20,19 @@
     initial: window.__NBHD_INITIAL_DATA__ || null,
     report: {
       open: false,
-      headends: [],
-      channels: [],
+      headend: "",
       week_from: "",
       week_to: "",
     },
   };
 
-  const DEFAULT_REPORT_CHANNEL_KEYS = ["INDIATV", "AAJTAK", "NEWS18INDIA", "REPUBLICBHARAT"];
+  const DEFAULT_REPORT_CHANNELS = [
+    { label: "INDIA TV", key: "INDIATV" },
+    { label: "AAJ TAK", key: "AAJTAK" },
+    { label: "NEWS 18 INDIA", key: "NEWS18INDIA" },
+    { label: "REPUBLIC BHARAT", key: "REPUBLICBHARAT" },
+  ];
+  const DEFAULT_REPORT_CHANNEL_KEYS = DEFAULT_REPORT_CHANNELS.map((channel) => channel.key);
 
   function getSingleSelectControl(id) {
     return {
@@ -58,13 +63,10 @@
   const reportCount = document.getElementById("nbhdReportCount");
   const reportStatus = document.getElementById("nbhdReportStatusMessage");
   const reportContent = document.getElementById("nbhdReportContent");
-  const reportHeadendFilter = getMultiSelectControl("nbhdReportHeadendFilter");
-  const reportChannelFilter = getMultiSelectControl("nbhdReportChannelFilter");
+  const reportHeadendFilter = getSingleSelectControl("nbhdReportHeadendFilter");
   const reportWeekFromFilter = getSingleSelectControl("nbhdReportWeekFromFilter");
   const reportWeekToFilter = getSingleSelectControl("nbhdReportWeekToFilter");
   const reportResetButton = document.getElementById("nbhdReportResetButton");
-  const reportDownloadButton = document.getElementById("nbhdReportDownloadButton");
-  const reportPrintButton = document.getElementById("nbhdReportPrintButton");
   const reportHideButton = document.getElementById("nbhdReportHideButton");
   const resultCount = document.getElementById("nbhdResultCount");
   const tableHead = document.getElementById("nbhdTableHead");
@@ -87,6 +89,49 @@
     usingNativeFullscreen: false,
   };
 
+  function normalizeText(value) {
+    return String(value ?? "").replace(/\s+/g, " ").trim();
+  }
+
+  function normalizePayloadShape(payload) {
+    if (!payload || typeof payload !== "object") {
+      return {
+        generated_at: "",
+        weeks: [],
+        filters: { markets: [], cities: [], head_ends: [] },
+        table: { records: [], total_count: 0 },
+        message: "",
+        source_directory: "",
+      };
+    }
+
+    if (payload.table && Array.isArray(payload.table.records)) {
+      return payload;
+    }
+
+    const records = Array.isArray(payload.records) ? payload.records : [];
+    const markets = Array.from(new Set(records.map((record) => record.market).filter((value) => String(value || "").trim() !== "")))
+      .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
+    const cities = Array.from(new Set(records.map((record) => record.city).filter((value) => String(value || "").trim() !== "")))
+      .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
+    const headends = Array.from(new Set(records.map((record) => record.head_end).filter((value) => String(value || "").trim() !== "")))
+      .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
+
+    return {
+      ...payload,
+      weeks: Array.isArray(payload.weeks) ? payload.weeks : [],
+      filters: payload.filters || {
+        markets,
+        cities,
+        head_ends: headends,
+      },
+      table: {
+        records,
+        total_count: typeof payload.total_count === "number" ? payload.total_count : records.length,
+      },
+    };
+  }
+
   function updateButton(control, value, placeholder) {
     if (control?.button) control.button.textContent = value || placeholder;
   }
@@ -100,7 +145,6 @@
       weekToFilter,
       changeFilter,
       reportHeadendFilter,
-      reportChannelFilter,
       reportWeekFromFilter,
       reportWeekToFilter,
     ].forEach((control) => {
@@ -460,12 +504,12 @@
   }
 
   function render(payload) {
-    state.payload = payload;
+    state.payload = normalizePayloadShape(payload);
     state.pageSize = getPageSize();
-    syncFilters(payload);
-    renderStatus(payload);
-    resultCount.textContent = `${new Intl.NumberFormat().format(payload.table.total_count)} rows`;
-    renderTable(payload);
+    syncFilters(state.payload);
+    renderStatus(state.payload);
+    resultCount.textContent = `${new Intl.NumberFormat().format(state.payload.table.total_count)} rows`;
+    renderTable(state.payload);
     renderReportPanel();
   }
 
@@ -480,16 +524,20 @@
 
   function getAllSourceRecords() {
     if (state.standalone) {
-      const source = window.__NBHD_STANDALONE_DATA__;
-      const sourceTable = source?.table || {};
+      const source = normalizePayloadShape(window.__NBHD_STANDALONE_DATA__);
+      const sourceTable = source.table || {};
       return sourceTable.records || source?.records || [];
     }
     return state.payload?.table?.records || [];
   }
 
+  function getCurrentTableRecords() {
+    return state.payload?.table?.records || [];
+  }
+
   function getReportAvailableWeeks() {
-    const payload = state.payload || window.__NBHD_STANDALONE_DATA__ || { weeks: [] };
-    return Array.isArray(payload.weeks) ? payload.weeks.filter((value) => normalizeText(value) !== "") : [];
+    const payload = normalizePayloadShape(state.payload || window.__NBHD_STANDALONE_DATA__ || { weeks: [] });
+    return (payload.weeks || []).filter((value) => normalizeText(value) !== "");
   }
 
   function getReportConstrainedWeekOptions(key) {
@@ -520,7 +568,7 @@
   }
 
   function getBaseReportRecords() {
-    return getAllSourceRecords();
+    return getCurrentTableRecords();
   }
 
   function getReportHeadends(records) {
@@ -569,50 +617,124 @@
     button.textContent = `${selectedValues.length} ${noun}`;
   }
 
-  function getDefaultReportChannels(options) {
-    const defaults = options.filter((value) => DEFAULT_REPORT_CHANNEL_KEYS.includes(normalizeChannelKey(value)));
-    return (defaults.length ? defaults : options.slice(0, 4)).slice();
+  function getPreferredReportHeadend(records, weeks, channels) {
+    const selectedChannels = Array.isArray(channels) && channels.length ? channels : DEFAULT_REPORT_CHANNELS.map((channel) => channel.label);
+    if (!Array.isArray(weeks) || weeks.length < 2) {
+      return "";
+    }
+    const previousWeek = weeks[0];
+    const currentWeek = weeks[weeks.length - 1];
+    const grouped = new Map();
+    records.forEach((record) => {
+      const headend = normalizeText(record.head_end);
+      if (!headend) return;
+      if (!grouped.has(headend)) grouped.set(headend, []);
+      grouped.get(headend).push(record);
+    });
+
+    for (const [headend, groupRecords] of grouped.entries()) {
+      const previousMap = buildHeadendMaps(groupRecords, previousWeek);
+      const currentMap = buildHeadendMaps(groupRecords, currentWeek);
+      for (const channel of selectedChannels) {
+        const channelKey = normalizeChannelKey(channel);
+        const previousPosition = previousMap.channelPositions.get(channelKey);
+        const currentPosition = currentMap.channelPositions.get(channelKey);
+        if (previousPosition === undefined || currentPosition === undefined) continue;
+        const previousLower = neighborAt(previousMap, previousPosition, -1);
+        const previousUpper = neighborAt(previousMap, previousPosition, 1);
+        const currentLower = neighborAt(currentMap, currentPosition, -1);
+        const currentUpper = neighborAt(currentMap, currentPosition, 1);
+        if (previousLower !== currentLower || previousUpper !== currentUpper) {
+          return headend;
+        }
+      }
+    }
+
+    return Array.from(grouped.keys())[0] || "";
   }
 
-  function renderMultiSelectOptions(control, values, selectedValues, onToggle) {
-    if (!control?.options) return;
-    const query = normalizeText(control.search?.value || "").toLowerCase();
-    const selected = new Set(selectedValues);
-    const fragment = document.createDocumentFragment();
-    values
-      .filter((value) => !query || value.toLowerCase().includes(query))
-      .forEach((value) => {
-        const label = document.createElement("label");
-        label.className = "ots-option-row";
-        const input = document.createElement("input");
-        input.type = "checkbox";
-        input.checked = selected.has(value);
-        input.addEventListener("change", () => onToggle(value, input.checked));
-        const text = document.createElement("span");
-        text.textContent = value;
-        label.append(input, text);
-        fragment.appendChild(label);
-      });
-    control.options.replaceChildren(fragment);
+  function getContextReportWeeks(allWeeks) {
+    const weeks = Array.isArray(allWeeks) ? allWeeks.filter((value) => normalizeText(value) !== "") : [];
+    if (!weeks.length) return [];
+    const fallbackFrom = weeks.includes(state.filters.week_from)
+      ? state.filters.week_from
+      : (weeks.length >= 2 ? weeks[weeks.length - 2] : weeks[0]);
+    const fallbackTo = weeks.includes(state.filters.week_to)
+      ? state.filters.week_to
+      : weeks[weeks.length - 1];
+    const weekFrom = weeks.includes(state.report.week_from) ? state.report.week_from : fallbackFrom;
+    const weekTo = weeks.includes(state.report.week_to) ? state.report.week_to : fallbackTo;
+    const fromIndex = weeks.indexOf(weekFrom);
+    const toIndex = weeks.indexOf(weekTo);
+    if (fromIndex < 0 || toIndex < 0) return weeks.slice(Math.max(0, weeks.length - 2));
+    return weeks.slice(Math.min(fromIndex, toIndex), Math.max(fromIndex, toIndex) + 1);
+  }
+
+  function getChangedReportHeadends(records, weeks) {
+    if (!Array.isArray(weeks) || weeks.length < 2) {
+      return getReportHeadends(records);
+    }
+    const previousWeek = weeks[0];
+    const currentWeek = weeks[weeks.length - 1];
+    const grouped = new Map();
+    records.forEach((record) => {
+      const headend = normalizeText(record.head_end);
+      if (!headend) return;
+      if (!grouped.has(headend)) grouped.set(headend, []);
+      grouped.get(headend).push(record);
+    });
+
+    const changedHeadends = [];
+    for (const [headend, groupRecords] of grouped.entries()) {
+      const previousMap = buildHeadendMaps(groupRecords, previousWeek);
+      const currentMap = buildHeadendMaps(groupRecords, currentWeek);
+      let hasChange = false;
+      for (const { key } of DEFAULT_REPORT_CHANNELS) {
+        const previousPosition = previousMap.channelPositions.get(key);
+        const currentPosition = currentMap.channelPositions.get(key);
+        if (previousPosition === undefined || currentPosition === undefined) continue;
+        const previousLower = neighborAt(previousMap, previousPosition, -1);
+        const previousUpper = neighborAt(previousMap, previousPosition, 1);
+        const currentLower = neighborAt(currentMap, currentPosition, -1);
+        const currentUpper = neighborAt(currentMap, currentPosition, 1);
+        if (previousLower !== currentLower || previousUpper !== currentUpper) {
+          hasChange = true;
+          break;
+        }
+      }
+      if (hasChange) {
+        changedHeadends.push(headend);
+      }
+    }
+
+    return changedHeadends.sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
   }
 
   function syncReportSelections(context) {
-    state.report.headends = state.report.headends.filter((value) => context.headends.includes(value));
-    if (!state.report.headends.length) {
-      state.report.headends = context.headends.slice();
-    }
-
-    state.report.channels = state.report.channels.filter((value) => context.channels.includes(value));
-    if (!state.report.channels.length) {
-      state.report.channels = getDefaultReportChannels(context.channels);
+    if (!context.headends.includes(state.report.headend)) {
+      if (state.filters.head_end && context.headends.includes(state.filters.head_end)) {
+        state.report.headend = state.filters.head_end;
+      } else {
+        state.report.headend = getPreferredReportHeadend(getAllSourceRecords(), context.allWeeks, DEFAULT_REPORT_CHANNELS.map((channel) => channel.label))
+          || context.headends[0]
+          || "";
+      }
     }
 
     const allWeeks = context.allWeeks || [];
     if (!allWeeks.includes(state.report.week_from)) {
-      state.report.week_from = allWeeks.length >= 2 ? allWeeks[allWeeks.length - 2] : (allWeeks[0] || "");
+      if (allWeeks.includes(state.filters.week_from)) {
+        state.report.week_from = state.filters.week_from;
+      } else {
+        state.report.week_from = allWeeks.length >= 2 ? allWeeks[allWeeks.length - 2] : (allWeeks[0] || "");
+      }
     }
     if (!allWeeks.includes(state.report.week_to)) {
-      state.report.week_to = allWeeks[allWeeks.length - 1] || "";
+      if (allWeeks.includes(state.filters.week_to)) {
+        state.report.week_to = state.filters.week_to;
+      } else {
+        state.report.week_to = allWeeks[allWeeks.length - 1] || "";
+      }
     }
     if (
       state.report.week_from
@@ -623,6 +745,61 @@
     ) {
       state.report.week_from = state.report.week_to;
     }
+  }
+
+  function buildReportContext() {
+    const records = getAllSourceRecords();
+    const allWeeks = getReportAvailableWeeks();
+    const activeWeeks = getContextReportWeeks(allWeeks);
+    return {
+      headends: getChangedReportHeadends(records, activeWeeks),
+      allWeeks,
+    };
+  }
+
+  function renderReportFilters(context) {
+    state.report.headend = populateSelect(
+      reportHeadendFilter,
+      context.headends,
+      "Select Headend",
+      state.report.headend,
+      (value) => {
+        state.report.headend = value;
+        renderReportPanel();
+      }
+    );
+    state.report.week_from = populateSelect(
+      reportWeekFromFilter,
+      getReportConstrainedWeekOptions("week_from"),
+      "Previous Week",
+      state.report.week_from,
+      (value) => {
+        state.report.week_from = value;
+        const weeks = getReportAvailableWeeks();
+        const fromIndex = weeks.indexOf(state.report.week_from);
+        const toIndex = weeks.indexOf(state.report.week_to);
+        if (fromIndex >= 0 && toIndex >= 0 && fromIndex > toIndex) {
+          state.report.week_to = value;
+        }
+        renderReportPanel();
+      }
+    );
+    state.report.week_to = populateSelect(
+      reportWeekToFilter,
+      getReportConstrainedWeekOptions("week_to"),
+      "Current Week",
+      state.report.week_to,
+      (value) => {
+        state.report.week_to = value;
+        const weeks = getReportAvailableWeeks();
+        const fromIndex = weeks.indexOf(state.report.week_from);
+        const toIndex = weeks.indexOf(state.report.week_to);
+        if (fromIndex >= 0 && toIndex >= 0 && fromIndex > toIndex) {
+          state.report.week_from = value;
+        }
+        renderReportPanel();
+      }
+    );
   }
 
   function buildHeadendMaps(records, week) {
@@ -641,101 +818,6 @@
   function neighborAt(mapState, position, offset) {
     return normalizeText(mapState.byPosition.get(position + offset)) || "NA";
   }
-
-  function buildReportNarratives() {
-    const weeks = getReportVisibleWeeks();
-    if (weeks.length < 2) {
-      return {
-        weeks,
-        groups: [],
-        items: [],
-        message: "Select at least two visible weeks to generate the NBHD position report.",
-      };
-    }
-
-    const [previousWeek, currentWeek] = weeks;
-    const baseRecords = getBaseReportRecords();
-    const selectedHeadends = state.report.headends.length ? state.report.headends : getReportHeadends(baseRecords);
-    const selectedChannels = state.report.channels.length ? state.report.channels : getDefaultReportChannels(getReportChannelOptions(baseRecords));
-    const grouped = new Map();
-    baseRecords.forEach((record) => {
-      const headend = normalizeText(record.head_end);
-      if (!headend || !selectedHeadends.includes(headend)) return;
-      if (!grouped.has(headend)) {
-        grouped.set(headend, {
-          headend,
-          market: normalizeText(record.market),
-          city: normalizeText(record.city),
-          records: [],
-        });
-      }
-      grouped.get(headend).records.push(record);
-    });
-
-    const groups = [];
-    const items = [];
-    grouped.forEach((group) => {
-      const previousMap = buildHeadendMaps(group.records, previousWeek);
-      const currentMap = buildHeadendMaps(group.records, currentWeek);
-      const narratives = [];
-
-      selectedChannels.forEach((channel) => {
-        const channelKey = normalizeChannelKey(channel);
-        const previousPosition = previousMap.channelPositions.get(channelKey);
-        const currentPosition = currentMap.channelPositions.get(channelKey);
-        if (previousPosition === undefined || currentPosition === undefined) return;
-
-        const previousLower = neighborAt(previousMap, previousPosition, -1);
-        const previousUpper = neighborAt(previousMap, previousPosition, 1);
-        const currentLower = neighborAt(currentMap, currentPosition, -1);
-        const currentUpper = neighborAt(currentMap, currentPosition, 1);
-
-        if (
-          previousLower === currentLower
-          && previousUpper === currentUpper
-          && previousPosition === currentPosition
-        ) {
-          return;
-        }
-
-        const channelLabel = normalizeText(channel);
-        const text = `In ${group.headend}, during the previous week, ${channelLabel} was positioned between ${previousLower} and ${previousUpper}. In the current week, it is positioned between ${currentLower} and ${currentUpper}.`;
-        narratives.push({ channel: channelLabel, text });
-        items.push({ headend: group.headend, channel: channelLabel, text });
-      });
-
-      groups.push({
-        headend: group.headend,
-        context: formatHeadendContext(group),
-        narratives,
-        emptyMessage: narratives.length
-          ? ""
-          : "No position changes were observed for the selected channel(s) in the selected Headend compared to the previous week.",
-      });
-    });
-
-    return {
-      weeks,
-      groups,
-      items,
-      message: groups.length
-        ? ""
-        : "No position changes were observed for the selected channel(s) in the selected Headend(s) compared to the previous week.",
-    };
-  }
-
-  function buildReportContext() {
-    const baseRecords = getBaseReportRecords();
-    const headends = getReportHeadends(baseRecords);
-    const channels = getAllReportChannels(baseRecords);
-    return {
-      weeks: getReportVisibleWeeks(),
-      headends,
-      channels,
-      allWeeks: getReportAvailableWeeks(),
-    };
-  }
-
   function renderReportStatus(message) {
     if (!reportStatus) return;
     if (message) {
@@ -758,111 +840,6 @@
       reportLauncher.style.display = open ? "none" : "flex";
     }
   }
-
-  function renderReportPanel() {
-    if (!reportPanel || !reportContent) return;
-    setReportVisibility(state.report.open);
-    if (reportToggleButton) reportToggleButton.textContent = "Show Report";
-    if (!state.report.open) return;
-
-    const context = buildReportContext();
-    syncReportSelections(context);
-
-    updateMultiSelectButton(reportHeadendFilter.button, state.report.headends, context.headends, "All Headends", "headends selected");
-    updateMultiSelectButton(reportChannelFilter.button, state.report.channels, context.channels, "Default 4 Channels", "channels selected");
-    state.report.week_from = populateSearchInput(
-      reportWeekFromFilter,
-      getReportConstrainedWeekOptions("week_from"),
-      "Previous Week",
-      state.report.week_from,
-      (value) => {
-        state.report.week_from = value;
-        const weeks = getReportAvailableWeeks();
-        const fromIndex = value && weeks.includes(value) ? weeks.indexOf(value) : -1;
-        const toIndex = state.report.week_to && weeks.includes(state.report.week_to) ? weeks.indexOf(state.report.week_to) : -1;
-        if (fromIndex >= 0 && toIndex >= 0 && fromIndex > toIndex) state.report.week_to = value;
-        renderReportPanel();
-      }
-    );
-    state.report.week_to = populateSearchInput(
-      reportWeekToFilter,
-      getReportConstrainedWeekOptions("week_to"),
-      "Current Week",
-      state.report.week_to,
-      (value) => {
-        state.report.week_to = value;
-        const weeks = getReportAvailableWeeks();
-        const fromIndex = state.report.week_from && weeks.includes(state.report.week_from) ? weeks.indexOf(state.report.week_from) : -1;
-        const toIndex = value && weeks.includes(value) ? weeks.indexOf(value) : -1;
-        if (fromIndex >= 0 && toIndex >= 0 && fromIndex > toIndex) state.report.week_from = value;
-        renderReportPanel();
-      }
-    );
-    renderMultiSelectOptions(reportHeadendFilter, context.headends, state.report.headends, (value, checked) => {
-      const next = new Set(state.report.headends);
-      if (checked) next.add(value);
-      else next.delete(value);
-      state.report.headends = Array.from(next).sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
-      renderReportPanel();
-    });
-    renderMultiSelectOptions(reportChannelFilter, context.channels, state.report.channels, (value, checked) => {
-      const next = new Set(state.report.channels);
-      if (checked) next.add(value);
-      else next.delete(value);
-      state.report.channels = Array.from(next).sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
-      renderReportPanel();
-    });
-
-    const reportData = buildReportNarratives();
-    const [previousWeek, currentWeek] = reportData.weeks;
-    if (reportMeta) {
-        reportMeta.textContent = previousWeek && currentWeek
-        ? `Natural language report for position changes from ${previousWeek} to ${currentWeek}.`
-        : "Select at least two visible weeks to compare neighbourhood positions.";
-    }
-    if (reportCount) {
-      reportCount.textContent = `${reportData.items.length} narrative${reportData.items.length === 1 ? "" : "s"}`;
-    }
-
-    renderReportStatus(reportData.message);
-    if (reportData.message) {
-      reportContent.innerHTML = `<div class="nbhd-report-empty">${reportData.message}</div>`;
-      return;
-    }
-
-    const fragment = document.createDocumentFragment();
-    reportData.groups.forEach((group) => {
-      const section = document.createElement("section");
-      section.className = "nbhd-report-group";
-
-      const header = document.createElement("div");
-      header.className = "nbhd-report-group-header";
-      const title = document.createElement("h4");
-      title.textContent = group.headend;
-      const subtitle = document.createElement("p");
-      subtitle.textContent = group.context || "Selected Headend";
-      header.append(title, subtitle);
-
-      if (group.narratives.length) {
-        const list = document.createElement("ul");
-        list.className = "nbhd-report-list";
-        group.narratives.forEach((narrative) => {
-          const item = document.createElement("li");
-          item.textContent = narrative.text;
-          list.appendChild(item);
-        });
-        section.append(header, list);
-      } else {
-        const empty = document.createElement("div");
-        empty.className = "nbhd-report-empty";
-        empty.textContent = group.emptyMessage;
-        section.append(header, empty);
-      }
-      fragment.appendChild(section);
-    });
-    reportContent.replaceChildren(fragment);
-  }
-
   function showReportError(message) {
     setReportVisibility(true);
     if (reportCount) reportCount.textContent = "0 narratives";
@@ -871,36 +848,6 @@
       reportContent.innerHTML = `<div class="nbhd-report-empty">${message}</div>`;
     }
   }
-
-  function resetReportFilters() {
-    const context = buildReportContext();
-    state.report.open = true;
-    state.report.headends = context.headends.slice();
-    state.report.channels = getDefaultReportChannels(context.channels);
-    state.report.week_from = context.allWeeks.length >= 2 ? context.allWeeks[context.allWeeks.length - 2] : (context.allWeeks[0] || "");
-    state.report.week_to = context.allWeeks[context.allWeeks.length - 1] || "";
-    renderReportPanel();
-  }
-
-  function openReportPanel() {
-    state.report.open = true;
-    setReportVisibility(true);
-    const context = buildReportContext();
-    state.report.headends = context.headends.slice();
-    state.report.channels = getDefaultReportChannels(context.channels);
-    state.report.week_from = context.allWeeks.length >= 2 ? context.allWeeks[context.allWeeks.length - 2] : (context.allWeeks[0] || "");
-    state.report.week_to = context.allWeeks[context.allWeeks.length - 1] || "";
-    reportContent.replaceChildren();
-    renderReportStatus("");
-    if (reportCount) reportCount.textContent = "Loading...";
-    requestAnimationFrame(() => {
-      renderReportPanel();
-    });
-    requestAnimationFrame(() => {
-      reportPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  }
-
   function closeReportPanel() {
     state.report.open = false;
     setReportVisibility(false);
@@ -908,64 +855,189 @@
       reportLauncher?.scrollIntoView({ behavior: "smooth", block: "center" });
     });
   }
+  function buildReportNarratives() {
+    const payload = normalizePayloadShape(state.payload || window.__NBHD_STANDALONE_DATA__ || { weeks: [] });
+    const allWeeks = payload.weeks || [];
+    const weekFrom = state.report.week_from;
+    const weekTo = state.report.week_to;
+    const fromIndex = allWeeks.includes(weekFrom) ? allWeeks.indexOf(weekFrom) : -1;
+    const toIndex = allWeeks.includes(weekTo) ? allWeeks.indexOf(weekTo) : -1;
+    const weeks = fromIndex >= 0 && toIndex >= 0
+      ? allWeeks.slice(Math.min(fromIndex, toIndex), Math.max(fromIndex, toIndex) + 1)
+      : [];
+    if (weeks.length < 2) {
+      return {
+        weeks,
+        headend: normalizeText(state.report.headend),
+        rows: [],
+        totalRows: 0,
+        message: "Select previous and current week in the report filters to generate the neighbour change report.",
+      };
+    }
 
-  function buildReportDocument() {
-    const reportData = buildReportNarratives();
-    const [previousWeek, currentWeek] = reportData.weeks;
-      const sections = reportData.groups.map((group) => `
-        <section class="group">
-          <h2>Headend: ${group.headend}</h2>
-          <p class="context">${group.context || ""}</p>
-          <ul>${group.narratives.map((narrative) => `<li>${narrative.text}</li>`).join("")}</ul>
-        </section>
+    const previousWeek = weeks[0];
+    const currentWeek = weeks[weeks.length - 1];
+    const baseRecords = getAllSourceRecords();
+    const selectedHeadend = normalizeText(state.report.headend);
+    if (!selectedHeadend) {
+      return {
+        weeks,
+        headend: "",
+        rows: [],
+        totalRows: 0,
+        message: "Select a Headend in the report filters to generate the neighbour change report.",
+      };
+    }
+
+    const groupRecords = baseRecords.filter((record) => normalizeText(record.head_end) === selectedHeadend);
+    if (!groupRecords.length) {
+      return {
+        weeks,
+        headend: selectedHeadend,
+        rows: [],
+        totalRows: 0,
+        message: "No headend data is available for the selected report filters.",
+      };
+    }
+
+    const previousMap = buildHeadendMaps(groupRecords, previousWeek);
+    const currentMap = buildHeadendMaps(groupRecords, currentWeek);
+    const availableChannels = new Map();
+    getReportChannelOptions(groupRecords).forEach((value) => {
+      availableChannels.set(normalizeChannelKey(value), normalizeText(value));
+    });
+    const rows = [];
+
+    DEFAULT_REPORT_CHANNELS.forEach(({ label, key }) => {
+      const channelLabel = availableChannels.get(key) || label;
+      const channelKey = key;
+      const previousPosition = previousMap.channelPositions.get(channelKey);
+      const currentPosition = currentMap.channelPositions.get(channelKey);
+      if (previousPosition === undefined || currentPosition === undefined) return;
+
+      const previousLower = neighborAt(previousMap, previousPosition, -1);
+      const previousUpper = neighborAt(previousMap, previousPosition, 1);
+      const currentLower = neighborAt(currentMap, currentPosition, -1);
+      const currentUpper = neighborAt(currentMap, currentPosition, 1);
+      if (previousLower === currentLower && previousUpper === currentUpper) return;
+
+      rows.push({
+        channel: channelLabel,
+        previous_position: `${previousLower} <- ${channelLabel} -> ${previousUpper}`,
+        current_position: `${currentLower} <- ${channelLabel} -> ${currentUpper}`,
+        status: "Changed",
+        summary: `${channelLabel} moved from between ${previousLower} and ${previousUpper} to between ${currentLower} and ${currentUpper}.`,
+      });
+    });
+
+    return {
+      weeks,
+      headend: selectedHeadend,
+      rows,
+      totalRows: rows.length,
+      message: rows.length ? "" : `No neighbour changes detected for the selected channels in ${selectedHeadend}.`,
+    };
+  }
+
+  function renderReportPanel() {
+    if (!reportPanel || !reportContent) return;
+    setReportVisibility(state.report.open);
+    if (reportToggleButton) reportToggleButton.textContent = "Neighbour Change Report";
+    if (!state.report.open) return;
+    try {
+      const context = buildReportContext();
+      syncReportSelections(context);
+      renderReportFilters(context);
+      const reportData = buildReportNarratives();
+      const previousWeek = reportData.weeks[0];
+      const currentWeek = reportData.weeks[reportData.weeks.length - 1];
+      if (reportMeta) {
+        reportMeta.textContent = previousWeek && currentWeek
+          ? `Neighbour comparison for ${reportData.headend || "the selected headend"} from ${previousWeek} to ${currentWeek}.`
+          : "Select previous and current week to compare neighbourhood positions.";
+      }
+      if (reportCount) {
+        reportCount.textContent = `${reportData.totalRows} narrative${reportData.totalRows === 1 ? "" : "s"}`;
+      }
+
+      renderReportStatus(reportData.message);
+      if (reportData.message) {
+        reportContent.innerHTML = `<div class="nbhd-report-empty">${reportData.message}</div>`;
+        return;
+      }
+
+      const section = document.createElement("section");
+      section.className = "nbhd-report-group";
+
+      const header = document.createElement("div");
+      header.className = "nbhd-report-group-header";
+      const title = document.createElement("h4");
+      title.textContent = reportData.headend || "Selected Headend";
+      header.append(title);
+
+      const tableWrap = document.createElement("div");
+      tableWrap.className = "nbhd-report-table-wrap";
+      const table = document.createElement("table");
+      table.className = "nbhd-report-table";
+      const tbodyRows = reportData.rows.map((row) => `
+        <tr>
+          <td>${row.channel}</td>
+          <td>${row.previous_position}</td>
+          <td>${row.current_position}</td>
+          <td>${row.status}</td>
+        </tr>
       `).join("");
-    const emptyState = reportData.message ? `<div class="empty">${reportData.message}</div>` : sections;
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>NBHD Position Report</title>
-  <style>
-    body { font-family: Arial, sans-serif; color: #1e293b; margin: 24px; }
-    h1 { margin: 0 0 6px; font-size: 22px; }
-    .meta { margin-bottom: 18px; color: #64748b; font-size: 13px; }
-    .group { border: 1px solid #dbe4f0; border-radius: 12px; margin-bottom: 14px; overflow: hidden; }
-    .group h2 { margin: 0; padding: 12px 14px 6px; background: #f8fbff; font-size: 16px; }
-    .context { margin: 0; padding: 0 14px 10px; color: #64748b; font-size: 12px; background: #f8fbff; border-bottom: 1px solid #e2e8f0; }
-    ul { margin: 0; padding: 14px 18px 16px 34px; }
-    li { margin: 6px 0; line-height: 1.55; font-size: 14px; }
-    .empty { border: 1px dashed #cbd5e1; border-radius: 12px; padding: 16px; color: #64748b; }
-  </style>
-</head>
-<body>
-  <h1>NBHD Position Report</h1>
-  <div class="meta">${previousWeek && currentWeek ? `Comparison: ${previousWeek} to ${currentWeek}` : "Comparison weeks unavailable"}</div>
-  ${emptyState}
-</body>
-</html>`;
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>Channel</th>
+            <th>Previous Position</th>
+            <th>Current Position</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>${tbodyRows}</tbody>
+      `;
+      tableWrap.appendChild(table);
+
+      const summaryTitle = document.createElement("h4");
+      summaryTitle.className = "nbhd-report-summary-title";
+      summaryTitle.textContent = "Summary";
+      const summaryList = document.createElement("ul");
+      summaryList.className = "nbhd-report-list";
+      reportData.rows.forEach((row) => {
+        const item = document.createElement("li");
+        item.textContent = row.summary;
+        summaryList.appendChild(item);
+      });
+
+      section.append(header, tableWrap, summaryTitle, summaryList);
+      reportContent.replaceChildren(section);
+    } catch (error) {
+      if (reportCount) reportCount.textContent = "0 narratives";
+      renderReportStatus("Neighbour change report could not be generated.");
+      reportContent.innerHTML = `<div class="nbhd-report-empty">Neighbour change report could not be generated.</div>`;
+      console.error("NBHD report render failed", error);
+    }
   }
 
-  function downloadReport() {
-    const html = buildReportDocument();
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "nbhd_position_report.html";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
+  function resetReportFilters() {
+    state.report.open = true;
+    state.report.headend = "";
+    state.report.week_from = "";
+    state.report.week_to = "";
+    renderReportPanel();
   }
 
-  function printReport() {
-    const popup = window.open("", "_blank", "width=1100,height=800");
-    if (!popup) return;
-    popup.document.open();
-    popup.document.write(buildReportDocument());
-    popup.document.close();
-    popup.focus();
-    popup.print();
+  function openReportPanel() {
+    state.report.open = true;
+    setReportVisibility(true);
+    reportContent.replaceChildren();
+    renderReportStatus("");
+    renderReportPanel();
+    requestAnimationFrame(() => {
+      reportPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   }
 
   function matchesRecord(record, filters, weeks) {
@@ -1143,7 +1215,7 @@
     }
   }
 
-  function bindMultiSelect(control, key) {
+  function bindReportSelect(control, renderOptionsForControl) {
     if (!control?.button) return;
     control.button.addEventListener("click", (event) => {
       event.stopPropagation();
@@ -1152,32 +1224,52 @@
       if (control.menu) control.menu.hidden = !next;
       if (next && control.search) {
         control.search.value = "";
-        control.search.dispatchEvent(new Event("input"));
+        renderOptionsForControl();
         requestAnimationFrame(() => control.search?.focus());
       }
     });
     if (control.search) {
       control.search.addEventListener("click", (event) => event.stopPropagation());
-      control.search.addEventListener("input", () => renderReportPanel());
+      control.search.addEventListener("input", renderOptionsForControl);
     }
   }
 
-  function bindReportSelect(control) {
+  function bindReportWeekSelect(control, key, placeholder) {
     if (!control?.button) return;
+    const renderWeekOptions = () => {
+      const values = getReportConstrainedWeekOptions(key);
+      const selectedValue = state.report[key];
+      renderOptions(control, values, selectedValue, placeholder, (value) => {
+        state.report[key] = value;
+        const weeks = getReportAvailableWeeks();
+        const fromIndex = state.report.week_from && weeks.includes(state.report.week_from) ? weeks.indexOf(state.report.week_from) : -1;
+        const toIndex = state.report.week_to && weeks.includes(state.report.week_to) ? weeks.indexOf(state.report.week_to) : -1;
+        if (fromIndex >= 0 && toIndex >= 0 && fromIndex > toIndex) {
+          if (key === "week_from") state.report.week_to = value;
+          else state.report.week_from = value;
+        }
+        renderReportPanel();
+        closeMenus();
+      });
+    };
+
     control.button.addEventListener("click", (event) => {
       event.stopPropagation();
       const next = control.menu?.hidden ?? false;
       closeMenus();
       if (control.menu) control.menu.hidden = !next;
-      if (next && control.search) {
-        control.search.value = "";
-        control.search.dispatchEvent(new Event("input"));
-        requestAnimationFrame(() => control.search?.focus());
+      if (next) {
+        renderWeekOptions();
+        if (control.search) {
+          control.search.value = "";
+          requestAnimationFrame(() => control.search?.focus());
+        }
       }
     });
+
     if (control.search) {
       control.search.addEventListener("click", (event) => event.stopPropagation());
-      control.search.addEventListener("input", () => renderReportPanel());
+      control.search.addEventListener("input", renderWeekOptions);
     }
   }
 
@@ -1292,10 +1384,21 @@
   bindSelect(weekFromFilter, "week_from");
   bindSelect(weekToFilter, "week_to");
   bindSelect(changeFilter, "change");
-  bindMultiSelect(reportHeadendFilter, "headends");
-  bindMultiSelect(reportChannelFilter, "channels");
-  bindReportSelect(reportWeekFromFilter);
-  bindReportSelect(reportWeekToFilter);
+  bindReportSelect(reportHeadendFilter, () => {
+    renderOptions(
+      reportHeadendFilter,
+      buildReportContext().headends,
+      state.report.headend,
+      "Select Headend",
+      (value) => {
+        state.report.headend = value;
+        renderReportPanel();
+        closeMenus();
+      }
+    );
+  });
+  bindReportWeekSelect(reportWeekFromFilter, "week_from", "Previous Week");
+  bindReportWeekSelect(reportWeekToFilter, "week_to", "Current Week");
   document.addEventListener("click", (event) => {
     if (!event.target.closest(".filter-select") && !event.target.closest(".ots-multiselect")) closeMenus();
   });
@@ -1313,12 +1416,6 @@
   }
   if (reportResetButton) {
     reportResetButton.addEventListener("click", resetReportFilters);
-  }
-  if (reportDownloadButton) {
-    reportDownloadButton.addEventListener("click", downloadReport);
-  }
-  if (reportPrintButton) {
-    reportPrintButton.addEventListener("click", printReport);
   }
   if (fullscreenButton) {
     fullscreenButton.addEventListener("click", toggleFullscreen);
@@ -1375,8 +1472,10 @@
     }
   });
   if (state.initial) {
-    render(state.initial);
+    render(normalizePayloadShape(state.initial));
   }
   syncFullscreenButtons();
   fetchPayload(false);
 })();
+
+

@@ -64,8 +64,6 @@
   const reportMarketFilter = getMultiSelectControl("otsReportMarketFilter");
   const reportChannelFilter = getMultiSelectControl("otsReportChannelFilter");
   const reportResetButton = document.getElementById("otsReportResetButton");
-  const reportDownloadButton = document.getElementById("otsReportDownloadButton");
-  const reportPrintButton = document.getElementById("otsReportPrintButton");
   const reportHideButton = document.getElementById("otsReportHideButton");
   const resultCount = document.getElementById("otsResultCount");
   const tableHead = document.getElementById("otsTableHead");
@@ -824,64 +822,6 @@ function getChangeMeta(record, weeks) {
     });
   }
 
-  function buildReportDocument() {
-    const reportData = buildReportNarratives();
-    const [previousWeek, currentWeek] = reportData.weeks;
-    const content = reportData.message
-      ? `<div class="empty">${reportData.message}</div>`
-      : reportData.groups.map((group) => `
-        <section class="group">
-          <h2>${group.channel}</h2>
-          <ul>${group.narratives.map((narrative) => `<li>${narrative.text}</li>`).join("")}</ul>
-        </section>
-      `).join("");
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>OTS Change Report</title>
-  <style>
-    body { font-family: Arial, sans-serif; color: #1e293b; margin: 24px; }
-    h1 { margin: 0 0 6px; font-size: 22px; }
-    .meta { margin-bottom: 18px; color: #64748b; font-size: 13px; }
-    .group { border: 1px solid #dbe4f0; border-radius: 12px; margin-bottom: 14px; overflow: hidden; }
-    .group h2 { margin: 0; padding: 12px 14px; background: #f8fbff; font-size: 16px; border-bottom: 1px solid #e2e8f0; }
-    ul { margin: 0; padding: 14px 18px 16px 34px; }
-    li { margin: 6px 0; line-height: 1.55; font-size: 14px; }
-    .empty { border: 1px dashed #cbd5e1; border-radius: 12px; padding: 16px; color: #64748b; }
-  </style>
-</head>
-<body>
-  <h1>OTS Change Report</h1>
-  <div class="meta">${previousWeek && currentWeek ? `Comparison: ${previousWeek} to ${currentWeek}` : "Comparison weeks unavailable"}</div>
-  ${content}
-</body>
-</html>`;
-  }
-
-  function downloadReport() {
-    const html = buildReportDocument();
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "ots_change_report.html";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  function printReport() {
-    const popup = window.open("", "_blank", "width=1100,height=800");
-    if (!popup) return;
-    popup.document.open();
-    popup.document.write(buildReportDocument());
-    popup.document.close();
-    popup.focus();
-    popup.print();
-  }
-
   function buildStandalonePayload() {
     const source = window.__OTS_STANDALONE_DATA__;
     const allRecords = source.table?.records || source.records || [];
@@ -1107,8 +1047,6 @@ function getChangeMeta(record, weeks) {
   if (reportToggleButton) reportToggleButton.addEventListener("click", openReportPanel);
   if (reportHideButton) reportHideButton.addEventListener("click", closeReportPanel);
   if (reportResetButton) reportResetButton.addEventListener("click", resetReportFilters);
-  if (reportDownloadButton) reportDownloadButton.addEventListener("click", downloadReport);
-  if (reportPrintButton) reportPrintButton.addEventListener("click", printReport);
   if (exitFullscreenButton) {
     exitFullscreenButton.addEventListener("click", async () => {
       if (fullscreenState.usingNativeFullscreen && document.fullscreenElement === panel) {

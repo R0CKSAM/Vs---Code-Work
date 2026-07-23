@@ -207,10 +207,14 @@ def get_nbhd_input_dir() -> Path:
 
 def get_nbhd_source_dir() -> Path:
     ensure_directories()
-    combined_files = list(DATA_DIR.glob("*.xlsx"))
+    nbhd_input_dir = get_nbhd_input_dir()
+    input_files = [path for path in nbhd_input_dir.glob("*.xlsx") if not path.name.startswith("~$")]
+    if input_files:
+        return nbhd_input_dir
+    combined_files = [path for path in DATA_DIR.glob("*.xlsx") if not path.name.startswith("~$")]
     if combined_files:
         return DATA_DIR
-    return get_nbhd_input_dir()
+    return nbhd_input_dir
 
 
 def get_ots_input_dir() -> Path:
@@ -220,19 +224,26 @@ def get_ots_input_dir() -> Path:
 
 def get_ots_source_dir() -> Path:
     ensure_directories()
-    combined_files = list(DATA_DIR.glob("*.xlsx"))
+    ots_input_dir = get_ots_input_dir()
+    input_files = [path for path in ots_input_dir.glob("*.xlsx") if not path.name.startswith("~$")]
+    if input_files:
+        return ots_input_dir
+    combined_files = [path for path in DATA_DIR.glob("*.xlsx") if not path.name.startswith("~$")]
     if combined_files:
         return DATA_DIR
-    return get_ots_input_dir()
+    return ots_input_dir
 
 
 def get_week_files() -> list[Path]:
     ensure_directories()
     ensure_combined_weekly_workbooks(DATA_DIR, DISTRIBUTION_SUMMARY_DIR, get_nbhd_input_dir(), get_ots_input_dir())
-    return sorted(
-        [path for path in DATA_DIR.glob("*.xlsx") if not path.name.startswith("~$")],
-        key=lambda path: week_sort_key(path.stem),
-    )
+    xlsx_files = [path for path in DATA_DIR.glob("*.xlsx") if not path.name.startswith("~$")]
+    xlsm_files = [path for path in DATA_DIR.glob("*.xlsm") if not path.name.startswith("~$")]
+    if xlsx_files and len(xlsx_files) >= len(xlsm_files):
+        return sorted(xlsx_files, key=lambda path: week_sort_key(path.stem))
+    if xlsm_files:
+        return sorted(xlsm_files, key=lambda path: week_sort_key(path.stem))
+    return sorted(xlsx_files, key=lambda path: week_sort_key(path.stem))
 
 
 def get_nbhd_week_files() -> list[Path]:
@@ -833,7 +844,8 @@ def prepare_week_rows(path: Path, fallback_label: str) -> tuple[str, list[dict[s
     sheet = workbook[workbook.sheetnames[0]]
 
     rows: list[dict[str, Any]] = []
-    week_label = fallback_label
+    parsed_week = parse_workbook_week(path)
+    week_label = format_week_label(*reversed(parsed_week)) if parsed_week else fallback_label
 
     for row_index, values in enumerate(sheet.iter_rows(min_row=1, max_col=16, values_only=True), start=1):
         if row_index == 1:
@@ -844,8 +856,10 @@ def prepare_week_rows(path: Path, fallback_label: str) -> tuple[str, list[dict[s
             for index in range(len(SOURCE_COLUMNS))
         }
 
-        if row_index == 2 and normalize_text(row["WEEK LABEL"]):
-            week_label = normalize_text(row["WEEK LABEL"])
+        if row_index == 2 and not parsed_week:
+            candidate_week_label = normalize_text(row["WEEK LABEL"])
+            if re.search(r"\bweek\b|\bwk\b", candidate_week_label, re.IGNORECASE):
+                week_label = candidate_week_label
 
         normalized = {column: normalize_text(row.get(column)) for column in DISPLAY_COLUMNS if column != "NAME"}
         normalized["NAME"] = normalize_text(row.get("CHANNEL NAME"))
@@ -1722,63 +1736,24 @@ __STYLE__
           <button id="nbhdExitFullscreenButton" class="ghost-button nbhd-exit-fullscreen" type="button" hidden>Exit Full Screen</button>
         </div>
         <div id="nbhdReportLauncher" class="nbhd-report-launcher">
-          <button id="nbhdReportToggleButton" class="primary-button" type="button">Show Report</button>
+          <button id="nbhdReportToggleButton" class="primary-button" type="button">Neighbour Change Report</button>
         </div>
         <section id="nbhdReportPanel" class="panel nbhd-report-panel" hidden>
           <div class="panel-heading nbhd-report-heading">
             <div>
-              <h3>NBHD Position Change Report</h3>
-              <p id="nbhdReportMeta" class="panel-subtitle">Compare the selected channels with their previous and current neighbourhood positions.</p>
+              <h3>Neighbour Change Report</h3>
+              <p id="nbhdReportMeta" class="panel-subtitle">Compare the default channels with their previous and current neighbourhood positions for the selected headend.</p>
             </div>
             <div class="table-meta">
               <span id="nbhdReportCount">0 narratives</span>
             </div>
           </div>
           <div class="nbhd-report-toolbar">
-            <label class="ots-multiselect-field">
-              <span>Headend</span>
-              <div class="ots-multiselect">
-                <button id="nbhdReportHeadendFilter" class="ots-select-button" type="button">All Headends</button>
-                <div id="nbhdReportHeadendFilterMenu" class="ots-multiselect-menu" hidden>
-                  <input id="nbhdReportHeadendFilterSearch" class="filter-menu-search" type="text" placeholder="Search headend..." autocomplete="off" />
-                  <div id="nbhdReportHeadendFilterOptions" class="ots-options-list"></div>
-                </div>
-              </div>
-            </label>
-            <label class="ots-multiselect-field">
-              <span>Channel</span>
-              <div class="ots-multiselect">
-                <button id="nbhdReportChannelFilter" class="ots-select-button" type="button">Default 4 Channels</button>
-                <div id="nbhdReportChannelFilterMenu" class="ots-multiselect-menu" hidden>
-                  <input id="nbhdReportChannelFilterSearch" class="filter-menu-search" type="text" placeholder="Search channel..." autocomplete="off" />
-                  <div id="nbhdReportChannelFilterOptions" class="ots-options-list"></div>
-                </div>
-              </div>
-            </label>
-            <label class="filter-select-field">
-              <span>Previous Week</span>
-              <div class="filter-select">
-                <button id="nbhdReportWeekFromFilter" class="filter-select-button" type="button">Previous Week</button>
-                <div id="nbhdReportWeekFromFilterMenu" class="filter-select-menu" hidden>
-                  <input id="nbhdReportWeekFromFilterSearch" class="filter-menu-search" type="text" placeholder="Search week..." autocomplete="off" />
-                  <div id="nbhdReportWeekFromFilterOptions" class="filter-options-list"></div>
-                </div>
-              </div>
-            </label>
-            <label class="filter-select-field">
-              <span>Current Week</span>
-              <div class="filter-select">
-                <button id="nbhdReportWeekToFilter" class="filter-select-button" type="button">Current Week</button>
-                <div id="nbhdReportWeekToFilterMenu" class="filter-select-menu" hidden>
-                  <input id="nbhdReportWeekToFilterSearch" class="filter-menu-search" type="text" placeholder="Search week..." autocomplete="off" />
-                  <div id="nbhdReportWeekToFilterOptions" class="filter-options-list"></div>
-                </div>
-              </div>
-            </label>
+            <label class="filter-select-field"><span>Headend</span><div class="filter-select"><button id="nbhdReportHeadendFilter" class="filter-select-button" type="button">Select Headend</button><div id="nbhdReportHeadendFilterMenu" class="filter-select-menu" hidden><input id="nbhdReportHeadendFilterSearch" class="filter-menu-search" type="text" placeholder="Search headend..." autocomplete="off" /><div id="nbhdReportHeadendFilterOptions" class="filter-options-list"></div></div></div></label>
+            <label class="filter-select-field"><span>Previous Week</span><div class="filter-select"><button id="nbhdReportWeekFromFilter" class="filter-select-button" type="button">Previous Week</button><div id="nbhdReportWeekFromFilterMenu" class="filter-select-menu" hidden><input id="nbhdReportWeekFromFilterSearch" class="filter-menu-search" type="text" placeholder="Search week..." autocomplete="off" /><div id="nbhdReportWeekFromFilterOptions" class="filter-options-list"></div></div></div></label>
+            <label class="filter-select-field"><span>Current Week</span><div class="filter-select"><button id="nbhdReportWeekToFilter" class="filter-select-button" type="button">Current Week</button><div id="nbhdReportWeekToFilterMenu" class="filter-select-menu" hidden><input id="nbhdReportWeekToFilterSearch" class="filter-menu-search" type="text" placeholder="Search week..." autocomplete="off" /><div id="nbhdReportWeekToFilterOptions" class="filter-options-list"></div></div></div></label>
             <div class="action-row nbhd-report-actions">
               <button id="nbhdReportResetButton" class="ghost-button" type="button">Reset</button>
-              <button id="nbhdReportDownloadButton" class="ghost-button" type="button">Download</button>
-              <button id="nbhdReportPrintButton" class="ghost-button" type="button">Print</button>
               <button id="nbhdReportHideButton" class="primary-button" type="button">Hide</button>
             </div>
           </div>
@@ -1867,8 +1842,6 @@ __STYLE__
           </label>
           <div class="action-row ots-report-actions">
             <button id="otsReportResetButton" class="ghost-button" type="button">Reset</button>
-            <button id="otsReportDownloadButton" class="ghost-button" type="button">Download</button>
-            <button id="otsReportPrintButton" class="ghost-button" type="button">Print</button>
             <button id="otsReportHideButton" class="primary-button" type="button">Hide</button>
           </div>
         </div>
