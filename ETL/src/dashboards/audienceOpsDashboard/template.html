@@ -37,6 +37,8 @@ input[type="date"]:focus,select:focus{border-color:var(--brand2);box-shadow:0 0 
 .mini-field select{width:160px;background:#fff;border:1px solid #c8d4e3;color:var(--ink);border-radius:6px;padding:6px 8px;font:inherit;font-size:12px;font-weight:750;outline:none}
 .mini-field.date input{width:136px}
 .mini-field.wide select{width:210px}
+.mini-field.wide .multi-picker{width:210px;max-width:100%}
+.modal-controls{position:relative;z-index:6;flex:0 0 auto}.modal-controls .multi-picker-menu{z-index:220}
 .chart-note{font-size:11px;color:#64748b;line-height:1.35;margin:0 10px 10px}
 .btn{border:1px solid #c8d4e3;background:#fff;color:var(--ink);border-radius:6px;padding:7px 10px;font-size:12px;font-weight:850;cursor:pointer}
 .btn:hover{background:#f8fafc;border-color:#94a3b8}
@@ -770,8 +772,8 @@ function modalBaseControlsHtml(){
     +"<div class='mini-field date'><label id='modalStartDateLabel'>Date From</label><input id='modalStartDate' type='date' onchange='setModalDateInputs()'/></div>"
     +"<div class='mini-field date' id='modalEndDateField'><label>Date To</label><input id='modalEndDate' type='date' onchange='setModalDateInputs()'/></div>"
     +"<div class='mini-field'><label>Source</label><select id='modalSourceSelect' onchange='setSource(this.value)'></select></div>"
-    +"<div class='mini-field wide' id='modalPlatformField'><label>Platform(s)</label><select id='modalPlatformSelect' multiple size='4' onchange='setPlatformFromElement(this)'></select></div>"
-    +"<div class='mini-field wide'><label>Channel(s)</label><select id='modalChannelSelect' multiple size='4' onchange='setChannelFromElement(this)'></select></div>"
+    +"<div class='mini-field wide' id='modalPlatformField'><label>Platform(s)</label><select id='modalPlatformSelect' class='filter-select-hidden' multiple size='4' onchange='setPlatformFromElement(this)'></select><div class='multi-picker'><button type='button' class='multi-picker-toggle' id='modalPlatformToggle' onclick=\"toggleModalMultiPicker('platform')\"><span>All Platforms</span><span class='picker-caret'>v</span></button><div class='multi-picker-menu' id='modalPlatformMenu'></div></div></div>"
+    +"<div class='mini-field wide'><label>Channel(s)</label><select id='modalChannelSelect' class='filter-select-hidden' multiple size='4' onchange='setChannelFromElement(this)'></select><div class='multi-picker'><button type='button' class='multi-picker-toggle' id='modalChannelToggle' onclick=\"toggleModalMultiPicker('channel')\"><span>All Channels</span><span class='picker-caret'>v</span></button><div class='multi-picker-menu' id='modalChannelMenu'></div></div></div>"
     +"<button class='btn' id='modalPresetYesterday' onclick=\"setPreset('yesterday')\">Yesterday</button>"
     +"<button class='btn' id='modalPreset7' onclick='setPreset(7)'>7D</button>"
     +"<button class='btn' id='modalPreset15' onclick='setPreset(15)'>15D</button>"
@@ -1218,6 +1220,8 @@ function syncModalFilterControls(){
   const modalPlatformField=el("modalPlatformField");
   if(modalPlatformField)modalPlatformField.style.display=hasPlatformFilter()?"":"none";
   if(channel){channel.innerHTML=el("channelSelect").innerHTML;syncMultiSelect(channel,state.channel)}
+  renderModalMultiPicker("platform");
+  renderModalMultiPicker("channel");
   ["modalPresetYesterday","modalPreset7","modalPreset15","modalPreset30","modalPresetAll"].forEach(function(id){const b=el(id);if(b)b.classList.remove("active")});
   if(state.preset==="yesterday"&&el("modalPresetYesterday"))el("modalPresetYesterday").classList.add("active");
   if(state.preset===7&&el("modalPreset7"))el("modalPreset7").classList.add("active");
@@ -1303,6 +1307,26 @@ function ipUaUnavailableNote(){
 }
 function bandwidthUnavailableNote(){
   return "Not available for this selection: bandwidth bytes are not present in the processed mart for this filter/source.";
+}
+function modalMultiPickerMeta(kind){return kind==="platform"?{select:"modalPlatformSelect",toggle:"modalPlatformToggle",menu:"modalPlatformMenu",allLabel:"All Platforms"}:{select:"modalChannelSelect",toggle:"modalChannelToggle",menu:"modalChannelMenu",allLabel:"All Channels"}}
+function toggleModalMultiPicker(kind){const meta=modalMultiPickerMeta(kind),menu=el(meta.menu),toggle=el(meta.toggle);if(!menu||!toggle||toggle.disabled)return;const willOpen=!menu.classList.contains("open");closeMultiPickers("");menu.classList.toggle("open",willOpen)}
+function renderModalMultiPicker(kind){
+  const meta=modalMultiPickerMeta(kind),select=el(meta.select),menu=el(meta.menu),toggle=el(meta.toggle);
+  if(!select||!menu||!toggle)return;
+  const stateValue=kind==="platform"?state.platform:state.channel;
+  const selected=new Set(selectedFilterValues(stateValue));
+  const values=Array.from(select.options).map(function(option){return option.value}).filter(function(value){return value!=="all"});
+  const allSelected=!selected.size;
+  menu.innerHTML="<label class='multi-picker-option all'><input type='checkbox' data-all='1' "+(allSelected?"checked":"")+" onchange=\"changeModalMultiPicker('"+kind+"',this)\"/>"+esc(meta.allLabel)+"</label>"+values.map(function(value){return "<label class='multi-picker-option'><input type='checkbox' data-value='"+esc(value)+"' "+(selected.has(value)?"checked":"")+" onchange=\"changeModalMultiPicker('"+kind+"',this)\"/>"+esc(value)+"</label>"}).join("");
+  const label=allSelected?meta.allLabel:selected.size===1?Array.from(selected)[0]:selected.size+" selected";
+  toggle.querySelector("span").textContent=label;
+  toggle.disabled=select.disabled||!values.length;
+}
+function changeModalMultiPicker(kind,input){
+  const meta=modalMultiPickerMeta(kind),menu=el(meta.menu);
+  if(!menu)return;
+  const values=input.dataset.all?[]:Array.from(menu.querySelectorAll("input[data-value]:checked")).map(function(box){return box.dataset.value});
+  if(kind==="platform")setPlatformValues(values);else setChannelValues(values);
 }
 function amagiMinuteRows(){
   return filterRows(DATA.concurrency_minute||[],{dateKey:"log_date",channel:true})
@@ -1498,11 +1522,90 @@ function renderKpis(){
   ].join("");
 }
 
-function lineConfig(labels,datasets,yTitle){
-  return {type:"line",data:{labels:labels,datasets:datasets},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{position:"bottom",labels:{boxWidth:12,font:{size:11}}},tooltip:{callbacks:{title:function(items){return items.length?String(items[0].label):""}}}},scales:{x:{ticks:{maxRotation:0,autoSkip:true,color:"#667085",font:{size:10}},grid:{color:"#edf2f7"}},y:{title:{display:!!yTitle,text:yTitle},beginAtZero:true,ticks:{color:"#667085"},grid:{color:"#edf2f7"}}}}}
+function movementStyle(values,color){
+  const data=(values||[]).map(n),dense=data.length>90,baseRadius=dense?0:(data.length>45?1:2.4);
+  const radii=[],fills=[],borders=[];
+  data.forEach(function(value,index){
+    const previous=index?data[index-1]:0;
+    const change=previous?((value-previous)/Math.abs(previous)):0;
+    const material=index>0&&Math.abs(change)>=0.1;
+    const large=index>0&&Math.abs(change)>=0.35;
+    const marker=dense?(large?2.1:0):(material?4:baseRadius);
+    radii.push(marker);
+    fills.push(index===0||!material?"#ffffff":(change>0?COLORS[2]:COLORS[5]));
+    borders.push(index===0||!material?color:(change>0?COLORS[2]:COLORS[5]));
+  });
+  return {radii:radii,fills:fills,borders:borders};
 }
+function lineConfig(labels,datasets,yTitle){
+  const styled=(datasets||[]).map(function(dataset){
+    const out=Object.assign({},dataset);
+    if(!/^average$|baseline/i.test(String(out.label||""))){
+      const style=movementStyle(out.data,out.borderColor||COLORS[0]);
+      out.pointRadius=style.radii;
+      out.pointHoverRadius=5;
+      out.pointBackgroundColor=style.fills;
+      out.pointBorderColor=style.borders;
+      out.pointBorderWidth=1.5;
+    }
+    return out;
+  });
+  return {
+    type:"line",
+    data:{labels:labels,datasets:styled},
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      interaction:{mode:"index",intersect:false},
+      plugins:{
+        legend:{position:"bottom",labels:{boxWidth:12,font:{size:11},usePointStyle:true,pointStyle:"line"}},
+        tooltip:{
+          callbacks:{
+            title:function(items){return items.length?String(items[0].label):""},
+            label:function(ctx){return ctx.dataset.label+": "+fmt(ctx.raw,1)},
+            afterLabel:function(ctx){
+              const values=ctx.dataset.data||[],index=ctx.dataIndex;
+              if(!index||/^average$|baseline/i.test(String(ctx.dataset.label||"")))return "";
+              const previous=n(values[index-1]),current=n(values[index]);
+              if(!previous)return "";
+              const change=(current-previous)*100/Math.abs(previous);
+              const direction=change>0?"increase":"drop";
+              const strength=Math.abs(change)>=10?"material":"minor";
+              return "Change vs previous point: "+(change>0?"+":"")+fmt(change,1)+"% ("+strength+" "+direction+")";
+            }
+          }
+        }
+      },
+      scales:{
+        x:{ticks:{maxRotation:0,autoSkip:true,color:"#667085",font:{size:10}},grid:{color:"#edf2f7"}},
+        y:{title:{display:!!yTitle,text:yTitle},beginAtZero:true,ticks:{color:"#667085"},grid:{color:"#edf2f7"}}
+      }
+    }
+  };
+}
+const stakeholderBarLabelPlugin={
+  id:"stakeholderBarLabels",
+  afterDatasetsDraw:function(chart,args,pluginOptions){
+    if(!pluginOptions||!pluginOptions.enabled||chart.config.type!=="bar")return;
+    const meta=chart.getDatasetMeta(0),dataset=chart.data.datasets[0],ctx=chart.ctx,area=chart.chartArea,horizontal=chart.options.indexAxis==="y";
+    if(!meta||!dataset||!horizontal)return;
+    ctx.save();ctx.font="800 10px -apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif";ctx.textBaseline="middle";
+    meta.data.forEach(function(element,index){
+      const value=n(dataset.data[index]);if(!value)return;
+      const text=fmt(value,1),width=ctx.measureText(text).width;
+      const inside=element.x+width+12>area.right;
+      ctx.textAlign=inside?"right":"left";
+      ctx.fillStyle=inside?"#ffffff":"#344256";
+      ctx.fillText(text,inside?element.x-6:element.x+7,element.y);
+    });
+    ctx.restore();
+  }
+};
+if(window.Chart)window.Chart.register(stakeholderBarLabelPlugin);
 function barConfig(labels,data,label,color,axis){
-  return {type:"bar",data:{labels:labels,datasets:[{label:label,data:data,backgroundColor:color||COLORS[0],borderRadius:4,borderSkipped:false}]},options:{indexAxis:axis||"x",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return label+": "+fmt(ctx.raw,1)}}}},scales:{x:{beginAtZero:true,ticks:{color:"#667085",font:{size:10}},grid:{color:"#edf2f7"}},y:{ticks:{color:"#334155",font:{size:10}},grid:{display:false}}}}}
+  const primary=color||COLORS[0],values=(data||[]).map(n),maximum=Math.max.apply(null,values.concat([0]));
+  const colors=values.map(function(value,index){if(index===0)return COLORS[1];return maximum&&value/maximum>=0.55?primary:"#5f98ad"});
+  return {type:"bar",data:{labels:labels,datasets:[{label:label,data:values,backgroundColor:colors,borderRadius:5,borderSkipped:false,barPercentage:.72}]},options:{indexAxis:axis||"x",responsive:true,maintainAspectRatio:false,layout:{padding:{right:(axis||"x")==="y"?56:8}},plugins:{stakeholderBarLabels:{enabled:(axis||"x")==="y"},legend:{display:false},tooltip:{callbacks:{label:function(ctx){return label+": "+fmt(ctx.raw,1)}}}},scales:{x:{beginAtZero:true,ticks:{color:"#667085",font:{size:10}},grid:{color:"#edf2f7"}},y:{ticks:{color:"#334155",font:{size:10}},grid:{display:false}}}}}
 }
 function doughnutConfig(labels,data){
   return {type:"doughnut",data:{labels:labels,datasets:[{data:data,backgroundColor:COLORS,borderColor:"#fff",borderWidth:2,hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,cutout:"58%",plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){const total=ctx.dataset.data.reduce(function(a,b){return a+n(b)},0);const share=total?n(ctx.raw)*100/total:0;return ctx.label+": "+fmtInt(ctx.raw)+" rows ("+pct(share)+")"}}}}}}

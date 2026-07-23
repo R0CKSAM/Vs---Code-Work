@@ -77,8 +77,14 @@ def select_candidates(distinct: pd.DataFrame, combined_cache: pd.DataFrame, args
     if not args.include_malformed:
         candidates = candidates[candidates["malformed_reason"].eq("")].copy()
 
-    cached = set(combined_cache["ua_hash"].astype(str)) if not combined_cache.empty else set()
-    candidates = candidates[~candidates["ua_hash"].astype(str).isin(cached)].copy()
+    # Only a successful API response satisfies full-fill coverage. A prior
+    # timeout/rate-limit row is retryable and must not permanently suppress it.
+    successful = set(
+        combined_cache.loc[
+            combined_cache["api_status"].astype(str).eq("decoded_api"), "ua_hash"
+        ].astype(str)
+    ) if not combined_cache.empty else set()
+    candidates = candidates[~candidates["ua_hash"].astype(str).isin(successful)].copy()
 
     impact = build_impact(args.ua_daily)
     if not impact.empty:
