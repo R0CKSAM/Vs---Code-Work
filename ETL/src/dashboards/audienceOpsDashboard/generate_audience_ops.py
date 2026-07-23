@@ -19,6 +19,15 @@ from zoneinfo import ZoneInfo
 import pandas as pd
 
 
+AMAGI_ROOT = Path(os.getenv("VG_AMAGI_ROOT", r"Z:\Veto Logs Backup\DO NOT DELETE\source=amagi"))
+AMAGI_CHANNEL_MAP = {
+    "India TV Live": "India TV",
+    "India TV Speed News": "India TV SpeedNews",
+    "IndiaTV AapkiAdalat": "India TV Adalat",
+    "IndiaTV Yoga": "India TV Yoga",
+}
+
+
 HERE = Path(__file__).resolve().parent
 SRC_ROOT = HERE.parents[1]
 ETL_ROOT = SRC_ROOT.parent
@@ -916,6 +925,64 @@ def build_latency(latency_dir: Path) -> dict[str, pd.DataFrame]:
     return out
 
 
+def build_amagi_concurrency() -> dict[str, pd.DataFrame]:
+    """Expose Amagi actual viewer counts without manufacturing CDN metrics."""
+    minute_columns = [
+        "log_date", "source", "minute_ist", "platform_name", "channel_name",
+        "unique_viewers", "unique_ua_viewers", "raw_ts_rows", "status_200_ts_rows",
+    ]
+    summary_columns = [
+        "log_date", "source", "platform_name", "channel_name", "minute_count",
+        "avg_unique_viewers", "peak_unique_viewers", "peak_unique_viewers_minute_ist",
+        "p95_unique_viewers", "raw_ts_rows", "status_200_ts_rows",
+    ]
+    empty = {"minute_detail": pd.DataFrame(columns=minute_columns), "summary": pd.DataFrame(columns=summary_columns)}
+    if not AMAGI_ROOT.is_dir():
+        return empty
+    frames: list[pd.DataFrame] = []
+    required = {"channel_name", "platform_name", "timestamp (UTC)", "No. of Concurrent Viewers"}
+    for csv_path in sorted(AMAGI_ROOT.glob("*.csv")):
+        try:
+            frame = pd.read_csv(csv_path, usecols=lambda name: name in required, dtype="string")
+        except (OSError, UnicodeDecodeError, ValueError, pd.errors.ParserError):
+            continue
+        if required.issubset(frame.columns):
+            frames.append(frame)
+    if not frames:
+        return empty
+    amagi = pd.concat(frames, ignore_index=True)
+    amagi["minute_ist"] = pd.to_datetime(amagi["timestamp (UTC)"], errors="coerce", utc=True).dt.tz_convert(IST_ZONE).dt.tz_localize(None)
+    amagi["unique_viewers"] = pd.to_numeric(amagi["No. of Concurrent Viewers"], errors="coerce")
+    amagi["channel_name"] = amagi["channel_name"].fillna("Unknown / NA").astype("string").str.strip().replace(AMAGI_CHANNEL_MAP)
+    amagi["platform_name"] = amagi["platform_name"].fillna("Unknown / NA").astype("string").str.strip()
+    amagi = amagi[amagi["minute_ist"].notna() & amagi["unique_viewers"].notna() & amagi["unique_viewers"].ge(0)].copy()
+    amagi["log_date"] = amagi["minute_ist"].dt.strftime("%Y-%m-%d")
+    amagi["source"] = "amagi"
+    amagi = amagi.drop_duplicates(["minute_ist", "platform_name", "channel_name"], keep="last")
+    minute = amagi.loc[:, ["log_date", "source", "minute_ist", "platform_name", "channel_name", "unique_viewers"]].copy()
+    # These CDN-only fields are deliberately zero: Amagi supplies direct
+    # concurrent viewers, not request, status, or UA observations.
+    minute["unique_ua_viewers"] = 0
+    minute["raw_ts_rows"] = 0
+    minute["status_200_ts_rows"] = 0
+    summary = (
+        minute.groupby(["log_date", "source", "platform_name", "channel_name"], as_index=False)
+        .agg(
+            minute_count=("minute_ist", "size"),
+            avg_unique_viewers=("unique_viewers", "mean"),
+            peak_unique_viewers=("unique_viewers", "max"),
+            p95_unique_viewers=("unique_viewers", lambda values: values.quantile(0.95)),
+            raw_ts_rows=("raw_ts_rows", "sum"),
+            status_200_ts_rows=("status_200_ts_rows", "sum"),
+        )
+    )
+    peak_times = minute.loc[minute.groupby(["log_date", "platform_name", "channel_name"])["unique_viewers"].idxmax(), ["log_date", "platform_name", "channel_name", "minute_ist"]]
+    summary = summary.merge(peak_times, on=["log_date", "platform_name", "channel_name"], how="left", validate="one_to_one").rename(columns={"minute_ist": "peak_unique_viewers_minute_ist"})
+    # Match the existing concurrency mart's JSON-safe timestamp representation.
+    summary["peak_unique_viewers_minute_ist"] = pd.to_datetime(summary["peak_unique_viewers_minute_ist"], errors="coerce").dt.strftime("%Y-%m-%d %H:%M:%S")
+    return {"minute_detail": minute, "summary": summary}
+
+
 def build_concurrency(concurrency_dir: Path) -> dict[str, pd.DataFrame]:
     minute = read_parquet(concurrency_dir / "concurrency_minute.parquet")
     summary = read_parquet(concurrency_dir / "concurrency_summary.parquet")
@@ -1409,6 +1476,19 @@ def build_data(args: argparse.Namespace) -> dict[str, Any]:
     ua_playtime = build_ua_playtime(watch_dir, device_dir)
     latency = build_latency(latency_dir)
     concurrency = build_concurrency(concurrency_dir)
+    amagi_concurrency = build_amagi_concurrency()
+    for name in ("minute_detail", "summary"):
+        concurrency[name] = pd.concat([concurrency[name], amagi_concurrency[name]], ignore_index=True, sort=False)
+    # The daily table only advertises Amagi date coverage. Watch-hour and CDN
+    # request fields stay zero because Amagi does not provide those measures.
+    if not amagi_concurrency["minute_detail"].empty:
+        amagi_daily = (
+            amagi_concurrency["minute_detail"].groupby(["log_date", "source"], as_index=False)
+            .agg(rows=("minute_ist", "size"))
+        )
+        for column in ("raw_watch_hours", "status_200_watch_hours", "raw_ts_rows", "status_200_ts_rows"):
+            amagi_daily[column] = 0
+        daily = pd.concat([daily, amagi_daily], ignore_index=True, sort=False)
     devices = build_device_decode(device_dir)
     identity = build_identity(identity_dir)
     content = build_content(content_dir)
@@ -1763,7 +1843,7 @@ def main() -> None:
     parser.add_argument("--output-root", type=Path, default=DEFAULT_OUTPUT_ROOT)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--title", default="Veto Audience Operations")
-    parser.add_argument("--source", default="all", choices=["fast", "stream", "all"])
+    parser.add_argument("--source", default="all", choices=["fast", "stream", "amagi", "all"])
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 

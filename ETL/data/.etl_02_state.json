@@ -1422,5 +1422,53 @@
     "rows": 66607305,
     "updated_at_utc": "2026-07-21T03:29:35.451583+00:00",
     "elapsed_sec": 669.3
+  },
+  "stream_2026_07_21": {
+    "status": "ok",
+    "signature": "a5126859aa49388b2b3dc62609c6ca7d",
+    "source_id": "stream_2026_07_21",
+    "input_folder": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\stage\\parquet\\source=stream\\year=2026\\month=07\\day=21",
+    "output_file": "stream_2026_07_21_final_clean.parquet",
+    "dedupe_method": "bucketed_32_zstd",
+    "input_rows": 24757770,
+    "rows": 24754524,
+    "updated_at_utc": "2026-07-22T03:20:52.559038+00:00",
+    "elapsed_sec": 106.58
+  },
+  "fast_2026_07_21": {
+    "status": "ok",
+    "signature": "a6665e4783c409e6316af97adaecc11b",
+    "source_id": "fast_2026_07_21",
+    "input_folder": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\stage\\parquet\\source=fast\\year=2026\\month=07\\day=21",
+    "output_file": "fast_2026_07_21_final_clean.parquet",
+    "dedupe_method": "bucketed_32_zstd",
+    "input_rows": 68253232,
+    "rows": 68241612,
+    "updated_at_utc": "2026-07-22T03:35:00.522372+00:00",
+    "elapsed_sec": 847.95
+  },
+  "stream_2026_07_22": {
+    "status": "ok",
+    "signature": "08c1a08d3ebb9ad533637951ea25ab6b",
+    "source_id": "stream_2026_07_22",
+    "input_folder": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\stage\\parquet\\source=stream\\year=2026\\month=07\\day=22",
+    "output_file": "stream_2026_07_22_final_clean.parquet",
+    "dedupe_method": "bucketed_32_zstd",
+    "input_rows": 23776285,
+    "rows": 23768575,
+    "updated_at_utc": "2026-07-23T03:15:34.631823+00:00",
+    "elapsed_sec": 194.5
+  },
+  "fast_2026_07_22": {
+    "status": "ok",
+    "signature": "280f6a343435374dda3a73d50c9b25f3",
+    "source_id": "fast_2026_07_22",
+    "input_folder": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\stage\\parquet\\source=fast\\year=2026\\month=07\\day=22",
+    "output_file": "fast_2026_07_22_final_clean.parquet",
+    "dedupe_method": "bucketed_32_zstd",
+    "input_rows": 71626433,
+    "rows": 71608572,
+    "updated_at_utc": "2026-07-23T03:30:35.203769+00:00",
+    "elapsed_sec": 900.56
   }
 }

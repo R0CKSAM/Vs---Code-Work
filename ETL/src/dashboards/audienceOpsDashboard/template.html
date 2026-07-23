@@ -19,6 +19,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;ba
 .field label{font-size:10px;text-transform:uppercase;letter-spacing:.04em;font-weight:850;color:var(--muted)}
 .field.mode{grid-column:span 2}.field.date{grid-column:span 2}.field.source{grid-column:span 2}.field.platform{grid-column:span 2}.field.channel{grid-column:span 2}.field.actions{grid-column:span 2}
 input[type="date"],select{width:100%;background:#fff;border:1px solid #c8d4e3;color:var(--ink);border-radius:6px;padding:7px 8px;font:inherit;font-size:12px;font-weight:750;outline:none}
+select[multiple]{min-height:70px;padding:4px 6px}
+.filter-select-hidden{display:none}
+.multi-picker{position:relative;min-width:0}
+.multi-picker-toggle{width:100%;min-height:34px;display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid #c8d4e3;border-radius:6px;background:#fff;color:var(--ink);padding:7px 8px;font:inherit;font-size:12px;font-weight:750;text-align:left;cursor:pointer}
+.multi-picker-toggle:hover{border-color:#94a3b8;background:#f8fafc}.multi-picker-toggle:focus-visible{outline:0;border-color:var(--brand2);box-shadow:0 0 0 2px rgba(31,120,151,.14)}.multi-picker-toggle:disabled{cursor:not-allowed;color:#8a97a8;background:#f4f6f8}
+.multi-picker-toggle .picker-caret{color:var(--muted);font-size:10px;flex:0 0 auto}
+.multi-picker-menu{display:none;position:absolute;left:0;right:0;top:calc(100% + 5px);z-index:80;max-height:280px;overflow:auto;border:1px solid #b8c7d9;border-radius:7px;background:#fff;box-shadow:0 12px 26px rgba(15,23,42,.18);padding:5px}
+.multi-picker-menu.open{display:block}.multi-picker-option{display:flex;align-items:center;gap:7px;padding:7px 6px;border-radius:5px;color:#243044;font-size:11px;font-weight:700;cursor:pointer;overflow-wrap:anywhere}.multi-picker-option:hover{background:#f1f6fa}.multi-picker-option.all{border-bottom:1px solid var(--line);font-weight:900}.multi-picker-option input{accent-color:var(--brand2);flex:0 0 auto}
 input[type="date"]:focus,select:focus{border-color:var(--brand2);box-shadow:0 0 0 2px rgba(31,120,151,.14)}
 .preset-row,.action-row{display:flex;gap:6px;flex-wrap:wrap}
 .mini-controls{display:flex;align-items:end;gap:7px;flex-wrap:wrap;padding:10px 12px 0}
@@ -174,12 +182,14 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
         <select id="sourceSelect" onchange="setSource(this.value)"></select>
       </div>
       <div class="field platform" id="platformField">
-        <label>Platform</label>
-        <select id="platformSelect" onchange="setPlatform(this.value)"></select>
+        <label>Platform(s)</label>
+        <select id="platformSelect" class="filter-select-hidden" multiple size="4" onchange="setPlatformFromElement(this)"></select>
+        <div class="multi-picker" id="platformPicker"><button type="button" class="multi-picker-toggle" id="platformToggle" onclick="toggleMultiPicker('platform')"><span>All Platforms</span><span class="picker-caret">v</span></button><div class="multi-picker-menu" id="platformMenu"></div></div>
       </div>
       <div class="field channel">
-        <label>Channel</label>
-        <select id="channelSelect" onchange="setChannel(this.value)"></select>
+        <label>Channel(s)</label>
+        <select id="channelSelect" class="filter-select-hidden" multiple size="4" onchange="setChannelFromElement(this)"></select>
+        <div class="multi-picker" id="channelPicker"><button type="button" class="multi-picker-toggle" id="channelToggle" onclick="toggleMultiPicker('channel')"><span>All Channels</span><span class="picker-caret">v</span></button><div class="multi-picker-menu" id="channelMenu"></div></div>
       </div>
       <div class="field actions">
         <label>Quick Range</label>
@@ -197,13 +207,13 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
 
   <div class="stakeholder-kpis" id="stakeholderKpis"></div>
 
-  <section class="panel identity-guide">
+  <section class="panel identity-guide" id="identityGuideSection">
     <div class="panel-head"><div class="panel-title">Identity Count Guide<small>How device, session, IP, UA, and IP + UA values are calculated</small></div></div>
     <div class="identity-guide-grid" id="identityGuide"></div>
     <div class="identity-guide-note" id="identityGuideNote"></div>
   </section>
 
-  <section class="section" data-render-section="viewership">
+  <section class="section" data-render-section="viewership" id="viewershipSection">
     <div class="section-head">
       <div>
         <h2>Viewership Trend</h2>
@@ -217,7 +227,7 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
     </div>
   </section>
 
-  <section class="section" data-render-section="content">
+  <section class="section" data-render-section="content" id="contentSection">
     <div class="section-head">
       <div>
         <h2>Content Title Analytics</h2>
@@ -240,7 +250,7 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
   <div class="kpis" id="kpis"></div>
 
 
-  <section class="section" data-render-section="traffic">
+  <section class="section" data-render-section="traffic" id="trafficSection">
     <div class="section-head">
       <div>
         <h2>Audience Reach</h2>
@@ -255,7 +265,7 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
     </div>
   </section>
 
-  <section class="section" data-render-section="playtime">
+  <section class="section" data-render-section="playtime" id="playtimeSection">
     <div class="section-head">
       <div>
         <h2>Playtime</h2>
@@ -315,7 +325,7 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
     </div>
     <div class="grid-2">
       <div class="panel">
-        <div class="panel-head"><div class="panel-title">Active Viewer Minute Sum<small>cliIP count summed inside selected interval</small></div><button class="btn" onclick="expandChart('concurrencyChart','Active Viewer Minute Sum')">Expand</button></div>
+        <div class="panel-head"><div class="panel-title"><span id="concurrencyTitle">Active Viewer Minute Sum</span><small id="concurrencySubtitle">cliIP count summed inside selected interval</small></div><button class="btn" onclick="expandChart('concurrencyChart','Active Viewer Minute Sum')">Expand</button></div>
         <div class="mini-controls">
           <button class="btn" id="concInterval1" onclick="setConcurrencyInterval(1)">1 min</button>
           <button class="btn" id="concInterval5" onclick="setConcurrencyInterval(5)">5 min</button>
@@ -323,7 +333,7 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
           <button class="btn" id="concInterval15" onclick="setConcurrencyInterval(15)">15 min</button>
           <button class="btn" id="concInterval30" onclick="setConcurrencyInterval(30)">30 min</button>
           <button class="btn" id="concInterval60" onclick="setConcurrencyInterval(60)">1 hour</button>
-          <div class="mini-field">
+          <div class="mini-field" id="concStatusField">
             <label>Custom min</label>
             <input id="concCustomMinutes" type="number" min="1" max="240" step="1" value="5" onchange="setCustomConcurrencyInterval(this.value)"/>
           </div>
@@ -336,33 +346,33 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
         <div class="chart-note" id="concurrencyNote"></div>
       </div>
       <div class="panel">
-        <div class="panel-head"><div class="panel-title">Platform Leaders<small>Top platforms by selected activity</small></div></div>
+        <div class="panel-head"><div class="panel-title"><span id="platformLeaderTitle">Platform Leaders</span><small id="platformLeaderSubtitle">Top platforms by selected activity</small></div></div>
         <div id="platformTable"></div>
       </div>
     </div>
   </section>
 
-  <section class="section" data-render-section="channels">
+  <section class="section" data-render-section="channels" id="channelsSection">
     <div class="section-head">
       <div>
-        <h2>Channels</h2>
-        <div class="desc">Channel watch-hour ranking and selected channel trends.</div>
+        <h2 id="channelsHeading">Channels</h2>
+        <div class="desc" id="channelsDescription">Channel watch-hour ranking and selected channel trends.</div>
       </div>
     </div>
     <div class="grid-2">
       <div class="panel">
-        <div class="panel-head"><div class="panel-title">Channel Ranking<small>High to low request hours</small></div><button class="btn" onclick="expandChart('channelRankChart','Channel Ranking')">Expand</button></div>
+        <div class="panel-head"><div class="panel-title"><span id="channelRankTitle">Channel Ranking</span><small id="channelRankSubtitle">High to low request hours</small></div><button class="btn" onclick="expandChart('channelRankChart','Channel Ranking')">Expand</button></div>
         <div class="chart-box tall"><canvas id="channelRankChart"></canvas></div>
         <div id="channelTable"></div>
       </div>
       <div class="panel">
-        <div class="panel-head"><div class="panel-title">Channel Trend<small>Top channels or selected channel by day</small></div><button class="btn" onclick="expandChart('channelTrendChart','Channel Trend')">Expand</button></div>
+        <div class="panel-head"><div class="panel-title"><span id="channelTrendTitle">Channel Trend</span><small id="channelTrendSubtitle">Top channels or selected channel by day</small></div><button class="btn" onclick="expandChart('channelTrendChart','Channel Trend')">Expand</button></div>
         <div class="chart-box tall"><canvas id="channelTrendChart"></canvas></div>
       </div>
     </div>
   </section>
 
-  <section class="section" data-render-section="reliability">
+  <section class="section" data-render-section="reliability" id="reliabilitySection">
     <div class="section-head">
       <div>
         <h2>Reliability And Latency</h2>
@@ -386,7 +396,7 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
     </div>
   </section>
 
-  <section class="section" data-render-section="geoDevice">
+  <section class="section" data-render-section="geoDevice" id="geoDeviceSection">
     <div class="section-head">
       <div>
         <h2>Geo And Devices</h2>
@@ -412,7 +422,7 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
     </div>
   </section>
 
-  <section class="section" data-render-section="ops">
+  <section class="section" data-render-section="ops" id="opsSection">
     <div class="section-head">
       <div>
         <h2>Request And Identity Trends</h2>
@@ -545,9 +555,37 @@ function fmtDayStart(s){return s?fmtDateTime(String(s).slice(0,10)+" 00:00:00"):
 function fmtDayEnd(s){return s?fmtDateTime(String(s).slice(0,10)+" 23:59:59"):""}
 function betweenDate(row,key){const d=String(row[key||"log_date"]||"").slice(0,10);return d>=state.start&&d<=state.end}
 function sourceOk(row){return state.source==="all"||String(row.source||"").toLowerCase()===state.source}
-function platformOk(row){return state.platform==="all"||String(row.platform_name||"")===state.platform}
-function channelOk(row){return state.channel==="all"||String(row.channel_name||"")===state.channel}
-function hasPlatformFilter(){return state.source==="fast"}
+const MULTI_FILTER_SEPARATOR="\u001f";
+function selectedFilterValues(value){return value==="all"?[]:String(value||"").split(MULTI_FILTER_SEPARATOR).filter(Boolean)}
+function encodeFilterValues(values){const clean=[...new Set((values||[]).map(String).filter(function(value){return value&&value!=="all"}))].sort();return clean.length?clean.join(MULTI_FILTER_SEPARATOR):"all"}
+function filterLabel(value,allLabel){const values=selectedFilterValues(value);return values.length?values.join(", "):allLabel}
+function syncMultiSelect(select,value){if(!select)return;const selected=new Set(selectedFilterValues(value));for(const option of select.options)option.selected=value==="all"?option.value==="all":selected.has(option.value)}
+function multiPickerMeta(kind){return kind==="platform"?{select:"platformSelect",toggle:"platformToggle",menu:"platformMenu",allLabel:"All Platforms"}:{select:"channelSelect",toggle:"channelToggle",menu:"channelMenu",allLabel:"All Channels"}}
+function closeMultiPickers(exceptKind){const keep=exceptKind?multiPickerMeta(exceptKind).menu:"";document.querySelectorAll(".multi-picker-menu.open").forEach(function(menu){if(menu.id!==keep)menu.classList.remove("open")})}
+function toggleMultiPicker(kind){const meta=multiPickerMeta(kind),menu=el(meta.menu),toggle=el(meta.toggle);if(!menu||!toggle||toggle.disabled)return;const willOpen=!menu.classList.contains("open");closeMultiPickers(kind);menu.classList.toggle("open",willOpen)}
+function renderMultiPicker(kind){
+  const meta=multiPickerMeta(kind),select=el(meta.select),menu=el(meta.menu),toggle=el(meta.toggle);
+  if(!select||!menu||!toggle)return;
+  const stateValue=kind==="platform"?state.platform:state.channel;
+  const selected=new Set(selectedFilterValues(stateValue));
+  const values=Array.from(select.options).map(function(option){return option.value}).filter(function(value){return value!=="all"});
+  const allSelected=!selected.size;
+  menu.innerHTML="<label class='multi-picker-option all'><input type='checkbox' data-all='1' "+(allSelected?"checked":"")+" onchange=\"changeMultiPicker('"+kind+"',this)\"/>"+esc(meta.allLabel)+"</label>"+values.map(function(value){return "<label class='multi-picker-option'><input type='checkbox' data-value='"+esc(value)+"' "+(selected.has(value)?"checked":"")+" onchange=\"changeMultiPicker('"+kind+"',this)\"/>"+esc(value)+"</label>"}).join("");
+  const label=allSelected?meta.allLabel:selected.size===1?Array.from(selected)[0]:selected.size+" selected";
+  toggle.querySelector("span").textContent=label;
+  toggle.disabled=select.disabled||!values.length;
+}
+function changeMultiPicker(kind,input){
+  const meta=multiPickerMeta(kind),menu=el(meta.menu);
+  if(!menu)return;
+  let values=[];
+  if(input.dataset.all){values=[];}else{values=Array.from(menu.querySelectorAll("input[data-value]:checked")).map(function(box){return box.dataset.value});}
+  if(kind==="platform")setPlatformValues(values);else setChannelValues(values);
+}
+document.addEventListener("click",function(event){if(!event.target.closest(".multi-picker"))closeMultiPickers("")});
+function platformOk(row){const selected=selectedFilterValues(state.platform);return !selected.length||selected.indexOf(String(row.platform_name||""))>=0}
+function channelOk(row){const selected=selectedFilterValues(state.channel);return !selected.length||selected.indexOf(String(row.channel_name||""))>=0}
+function hasPlatformFilter(){return state.source==="fast"||state.source==="amagi"}
 function resetFilterCache(){filterCache=new WeakMap()}
 function filterRows(rows,opt){
   rows=rows||[];
@@ -595,13 +633,44 @@ function rollupTop(rows,keyFn,metric,limit){
   return Array.from(m.values()).sort(function(a,b){return n(b[metric])-n(a[metric])}).slice(0,limit);
 }
 function byDate(rows,metrics){return groupSum(rows,function(r){return r.log_date},metrics).sort(function(a,b){return a.key.localeCompare(b.key)})}
-function sourceLabel(){return state.source==="fast"?"FAST":"STREAM"}
+function sourceLabel(){return state.source==="all"?"ALL SOURCES":state.source==="fast"?"FAST":state.source==="amagi"?"AMAGI":"STREAM"}
+function amagiCoverage(){
+  const byDay=new Map();
+  (DATA.concurrency_minute||[]).forEach(function(row){
+    if(String(row.source||"").toLowerCase()!=="amagi")return;
+    const minute=String(row.minute_ist||"").replace("T"," ").slice(0,16);
+    const day=minute.slice(0,10);
+    if(!day||minute.length<16)return;
+    if(!byDay.has(day))byDay.set(day,{first:minute,last:minute});
+    const item=byDay.get(day);
+    if(minute<item.first)item.first=minute;
+    if(minute>item.last)item.last=minute;
+  });
+  const days=Array.from(byDay.keys()).sort();
+  // A UTC extract naturally has partial IST dates at its two edges. Only dates
+  // spanning 00:00 through 23:59 are valid for AMAGI quick/date-range filters.
+  const complete=days.filter(function(day){const item=byDay.get(day);return item.first<=day+" 00:00"&&item.last>=day+" 23:59"});
+  const first=days.length?byDay.get(days[0]).first:"";
+  const last=days.length?byDay.get(days[days.length-1]).last:"";
+  return {days:days,complete:complete,first:first,last:last};
+}
 function sourceRange(){
+  if(state.source==="amagi"){
+    const coverage=amagiCoverage();
+    // Keep every observed IST date selectable. The quick presets below choose
+    // the latest complete day, but users can inspect partial edge dates too.
+    return {min:coverage.days[0]||D.meta.min_date,max:coverage.days[coverage.days.length-1]||D.meta.max_date};
+  }
   const rows=(DATA.daily||[]).filter(function(r){return String(r.source||"").toLowerCase()===state.source});
   const dates=uniq(rows,"log_date").map(function(d){return String(d).slice(0,10)}).filter(Boolean).sort();
   return {min:dates[0]||D.meta.min_date,max:dates[dates.length-1]||D.meta.max_date};
 }
 function sourceTrueRange(){
+  if(state.source==="amagi"){
+    const coverage=amagiCoverage();
+    const range=sourceRange();
+    if(coverage.first&&coverage.last)return {first:coverage.first,last:coverage.last,min:range.min,max:range.max};
+  }
   const ranges=D.meta.source_true_ranges||[];
   const hit=ranges.find(function(r){return String(r.source||"").toLowerCase()===state.source});
   if(hit&&hit.first_ist&&hit.last_ist)return {first:String(hit.first_ist),last:String(hit.last_ist),min:String(hit.min_date||"").slice(0,10),max:String(hit.max_date||"").slice(0,10)};
@@ -701,8 +770,8 @@ function modalBaseControlsHtml(){
     +"<div class='mini-field date'><label id='modalStartDateLabel'>Date From</label><input id='modalStartDate' type='date' onchange='setModalDateInputs()'/></div>"
     +"<div class='mini-field date' id='modalEndDateField'><label>Date To</label><input id='modalEndDate' type='date' onchange='setModalDateInputs()'/></div>"
     +"<div class='mini-field'><label>Source</label><select id='modalSourceSelect' onchange='setSource(this.value)'></select></div>"
-    +"<div class='mini-field wide' id='modalPlatformField'><label>Platform</label><select id='modalPlatformSelect' onchange='setPlatform(this.value)'></select></div>"
-    +"<div class='mini-field wide'><label>Channel</label><select id='modalChannelSelect' onchange='setChannel(this.value)'></select></div>"
+    +"<div class='mini-field wide' id='modalPlatformField'><label>Platform(s)</label><select id='modalPlatformSelect' multiple size='4' onchange='setPlatformFromElement(this)'></select></div>"
+    +"<div class='mini-field wide'><label>Channel(s)</label><select id='modalChannelSelect' multiple size='4' onchange='setChannelFromElement(this)'></select></div>"
     +"<button class='btn' id='modalPresetYesterday' onclick=\"setPreset('yesterday')\">Yesterday</button>"
     +"<button class='btn' id='modalPreset7' onclick='setPreset(7)'>7D</button>"
     +"<button class='btn' id='modalPreset15' onclick='setPreset(15)'>15D</button>"
@@ -738,12 +807,14 @@ function syncConcurrencyControls(){
 }
 function applyPresetRange(p){
   const r=sourceRange();
+  const completedAmagiDates=state.source==="amagi"?amagiCoverage().complete:[];
+  const presetEnd=completedAmagiDates.length?completedAmagiDates[completedAmagiDates.length-1]:r.max;
   state.dateMode=p==="yesterday"?"single":"range";
   if(p==="all"){state.start=r.min;state.end=r.max;return}
-  if(p==="yesterday"){state.start=r.max;state.end=r.max;return}
-  state.start=addIsoDays(r.max,-(Number(p)-1));
+  if(p==="yesterday"){state.start=presetEnd;state.end=presetEnd;return}
+  state.start=addIsoDays(presetEnd,-(Number(p)-1));
   if(state.start<r.min)state.start=r.min;
-  state.end=r.max;
+  state.end=presetEnd;
 }
 function enforceDateMode(){
   if(state.dateMode==="single")state.end=state.start;
@@ -1061,9 +1132,10 @@ function cmcdPlaybackMetricForScope(){
 
 function setupFilters(){
   el("pageTitle").textContent=D.meta.title||"Veto Audience Operations";
-  const sources=uniq(DATA.daily||[],"source").map(function(v){return String(v).toLowerCase()}).filter(function(s){return s==="fast"||s==="stream"});
+  const sources=uniq(DATA.daily||[],"source").map(function(v){return String(v).toLowerCase()}).filter(function(s){return s==="fast"||s==="stream"||s==="amagi"});
   if(sources.indexOf("fast")<0)sources.unshift("fast");
   if(sources.indexOf("stream")<0)sources.push("stream");
+  if(sources.indexOf("amagi")<0)sources.push("amagi");
   el("sourceSelect").innerHTML=sources.map(function(s){return "<option value='"+esc(s)+"'>"+s.toUpperCase()+"</option>"}).join("");
   rebuildPlatformOptions();
   rebuildChannelOptions();
@@ -1075,21 +1147,28 @@ function setDateMode(mode){state.dateMode=mode==="range"?"range":"single";if(sta
 function setDateInputs(){const r=sourceRange();state.start=el("startDate").value||r.min;state.end=state.dateMode==="single"?state.start:(el("endDate").value||r.max);if(state.start>state.end){const t=state.start;state.start=state.end;state.end=t}enforceDateMode();state.preset="custom";syncFilters();renderAll();refreshModalChart()}
 function setModalDateInputs(){const r=sourceRange();state.start=el("modalStartDate").value||r.min;state.end=state.dateMode==="single"?state.start:(el("modalEndDate").value||r.max);if(state.start>state.end){const t=state.start;state.start=state.end;state.end=t}enforceDateMode();state.preset="custom";syncFilters();renderAll();refreshModalChart()}
 function setSource(v){state.source=v;state.platform="all";state.channel="all";rebuildPlatformOptions();rebuildChannelOptions();if(state.preset==="custom"){clampDateRange()}else{applyPresetRange(state.preset)}syncFilters();renderAll();refreshModalChart()}
-function setPlatform(v){state.platform=v;rebuildChannelOptions();syncFilters();renderAll();refreshModalChart()}
-function setChannel(v){state.channel=v;syncFilters();renderAll();refreshModalChart()}
+function setPlatformValues(values){state.platform=encodeFilterValues(values);rebuildChannelOptions();syncFilters();renderAll();refreshModalChart()}
+function setChannelValues(values){state.channel=encodeFilterValues(values);syncFilters();renderAll();refreshModalChart()}
+function setPlatformFromElement(select){setPlatformValues(Array.from(select.selectedOptions).map(function(option){return option.value}))}
+function setChannelFromElement(select){setChannelValues(Array.from(select.selectedOptions).map(function(option){return option.value}))}
+function setPlatform(value){setPlatformValues([value])}
+function setChannel(value){setChannelValues([value])}
 function rebuildPlatformOptions(){
   let platforms=["all"];
-  if(state.source==="fast"){
+  if(state.source==="fast"||state.source==="amagi"){
     platforms=platforms.concat(uniq((DATA.concurrency_summary||[]).filter(function(r){return sourceOk(r)}),"platform_name"));
   }
   el("platformSelect").innerHTML=platforms.map(function(p){return "<option value='"+esc(p)+"'>"+(p==="all"?"All Platforms":esc(p))+"</option>"}).join("");
-  if(platforms.indexOf(state.platform)<0)state.platform="all";
+  const allowedPlatforms=selectedFilterValues(state.platform).filter(function(value){return platforms.indexOf(value)>=0});
+  state.platform=encodeFilterValues(allowedPlatforms);
   if(!hasPlatformFilter())state.platform="all";
   el("platformSelect").disabled=!hasPlatformFilter()||platforms.length<=1;
+  syncMultiSelect(el("platformSelect"),state.platform);
+  renderMultiPicker("platform");
 }
 function rebuildChannelOptions(){
   let rows=[];
-  if(state.source==="fast"){
+  if(state.source==="fast"||state.source==="amagi"){
     rows=(DATA.concurrency_summary||[]).filter(function(r){return sourceOk(r)&&platformOk(r)});
   }else if(state.platform!=="all"){
     rows=(DATA.identity_platform_channel_daily||[]).concat(DATA.content_daily||[]).filter(function(r){return sourceOk(r)&&platformOk(r)});
@@ -1097,13 +1176,15 @@ function rebuildChannelOptions(){
     rows=(DATA.channel_daily||[]).filter(function(r){return sourceOk(r)});
   }
   const channels=["all"].concat(uniq(rows,"channel_name"));
-  if(state.channel!=="all"&&channels.indexOf(state.channel)<0)state.channel="all";
+  state.channel=encodeFilterValues(selectedFilterValues(state.channel).filter(function(value){return channels.indexOf(value)>=0}));
   el("channelSelect").innerHTML=channels.map(function(c){return "<option value='"+esc(c)+"'>"+(c==="all"?"All Channels":esc(c))+"</option>"}).join("");
+  syncMultiSelect(el("channelSelect"),state.channel);
+  renderMultiPicker("channel");
 }
 function syncFilters(){
   syncDateBounds();
   clampDateRange();
-  el("startDate").value=state.start;el("endDate").value=state.end;el("sourceSelect").value=state.source;el("platformSelect").value=state.platform;el("channelSelect").value=state.channel;
+  el("startDate").value=state.start;el("endDate").value=state.end;el("sourceSelect").value=state.source;syncMultiSelect(el("platformSelect"),state.platform);syncMultiSelect(el("channelSelect"),state.channel);renderMultiPicker("platform");renderMultiPicker("channel");
   const platformField=el("platformField");
   if(platformField)platformField.style.display=hasPlatformFilter()?"":"none";
   el("startDateLabel").textContent=state.dateMode==="single"?"Date":"Date From";
@@ -1133,10 +1214,10 @@ function syncModalFilterControls(){
   const platform=el("modalPlatformSelect");
   const channel=el("modalChannelSelect");
   if(source){source.innerHTML=el("sourceSelect").innerHTML;source.value=state.source}
-  if(platform){platform.innerHTML=el("platformSelect").innerHTML;platform.value=state.platform;platform.disabled=el("platformSelect").disabled}
+  if(platform){platform.innerHTML=el("platformSelect").innerHTML;platform.disabled=el("platformSelect").disabled;syncMultiSelect(platform,state.platform)}
   const modalPlatformField=el("modalPlatformField");
   if(modalPlatformField)modalPlatformField.style.display=hasPlatformFilter()?"":"none";
-  if(channel){channel.innerHTML=el("channelSelect").innerHTML;channel.value=state.channel}
+  if(channel){channel.innerHTML=el("channelSelect").innerHTML;syncMultiSelect(channel,state.channel)}
   ["modalPresetYesterday","modalPreset7","modalPreset15","modalPreset30","modalPresetAll"].forEach(function(id){const b=el(id);if(b)b.classList.remove("active")});
   if(state.preset==="yesterday"&&el("modalPresetYesterday"))el("modalPresetYesterday").classList.add("active");
   if(state.preset===7&&el("modalPreset7"))el("modalPreset7").classList.add("active");
@@ -1191,7 +1272,7 @@ function renderIdentityGuide(){
     identityGuideCard("UA Count",uaValue,"COUNT(DISTINCT normalized UA)",uaMetric.note+" UA is device/app/browser evidence, not user count."),
     identityGuideCard("Watch-Hour Basis",".ts rows x 6 sec","SUM(.ts rows) * 6 / 3600","When grouped by an identity key, watch hours inherit that key's confidence: verified for device_id/session_id, approximate for cliIP/IP+UA.")
   ].join("");
-  el("identityGuideNote").textContent="Current selection: "+sourceLabel()+" | "+(state.platform==="all"?"All Platforms":state.platform)+" | "+(state.channel==="all"?"All Channels":state.channel)+". Device/session are verified app identifiers where present; cliIP and IP+UA are estimation signals.";
+  el("identityGuideNote").textContent="Current selection: "+sourceLabel()+" | "+filterLabel(state.platform,"All Platforms")+" | "+filterLabel(state.channel,"All Channels")+". Device/session are verified app identifiers where present; cliIP and IP+UA are estimation signals.";
 }
 function appIdentityUnavailableNote(){
   if(state.source==="fast"){
@@ -1222,6 +1303,41 @@ function ipUaUnavailableNote(){
 }
 function bandwidthUnavailableNote(){
   return "Not available for this selection: bandwidth bytes are not present in the processed mart for this filter/source.";
+}
+function amagiMinuteRows(){
+  return filterRows(DATA.concurrency_minute||[],{dateKey:"log_date",channel:true})
+    .filter(function(row){return String(row.source||"").toLowerCase()==="amagi"});
+}
+function renderAmagiKpis(){
+  const rows=amagiMinuteRows();
+  const minutes=new Map();
+  rows.forEach(function(row){
+    const minute=String(row.minute_ist||"");
+    if(!minute)return;
+    minutes.set(minute,(minutes.get(minute)||0)+n(row.unique_viewers));
+  });
+  const points=Array.from(minutes.entries()).map(function(entry){return {minute:entry[0],viewers:entry[1]}}).sort(function(a,b){return a.minute.localeCompare(b.minute)});
+  const viewerMinutes=points.reduce(function(total,point){return total+point.viewers},0);
+  const peak=points.reduce(function(best,point){return !best||point.viewers>best.viewers?point:best},null);
+  const platforms=uniq(rows,"platform_name").length;
+  const channels=uniq(rows,"channel_name").length;
+  el("stakeholderKpis").innerHTML=[
+    stakeholderKpi("Peak Concurrent Viewers",peak?fmtInt(peak.viewers):"No data",peak?"Highest combined platform-reported viewers at "+fmtDateTime(peak.minute):"No minute values for selected filters","gold"),
+    stakeholderKpi("Average Concurrent Viewers",points.length?fmt(viewerMinutes/points.length,1):"No data","Average of the selected one-minute concurrent-viewer values","gold"),
+    stakeholderKpi("Total Viewer-Minutes",fmtInt(viewerMinutes),"Sum of the platform-reported concurrent viewers across reported minutes","gold"),
+    stakeholderKpi("Reported Minutes",fmtInt(points.length),"Distinct IST minutes with an AMAGI viewer observation","gold"),
+    stakeholderKpi("Platforms / Channels",fmtInt(platforms)+" / "+fmtInt(channels),"Distinct AMAGI platforms and channels in the selected filters","gold")
+  ].join("");
+}
+function updateSourceLayout(){
+  const amagi=state.source==="amagi";
+  ["identityGuideSection","viewershipSection","contentSection","trafficSection","playtimeSection","reliabilitySection","geoDeviceSection","opsSection"].forEach(function(id){
+    const node=el(id);if(node)node.style.display=amagi?"none":"";
+  });
+  const generalKpis=el("kpis");
+  if(generalKpis)generalKpis.style.display=amagi?"none":"";
+  const statusField=el("concStatusField");
+  if(statusField)statusField.style.display=amagi?"none":"";
 }
 function renderStakeholderKpis(){
   const rows=scopedWatchRows();
@@ -1493,6 +1609,10 @@ function renderTraffic(){
 
 function renderConcurrency(){
   syncConcurrencyControls();
+  const isAmagi=state.source==="amagi";
+  if(isAmagi)state.concurrencyStatus="all";
+  el("concurrencyTitle").textContent=isAmagi?"Actual Concurrent Viewer Minute Sum":"Active Viewer Minute Sum";
+  el("concurrencySubtitle").textContent=isAmagi?"Amagi platform-reported viewers summed inside selected interval":"cliIP count summed inside selected interval";
   const box=el("concurrencyBox");box.innerHTML="<canvas id='concurrencyChart'></canvas>";
   const note=el("concurrencyNote");
   if(note)note.textContent="";
@@ -1512,8 +1632,8 @@ function renderConcurrency(){
       const d=String(r.d||"").slice(0,10);
       if(d<state.start||d>state.end)return false;
       if(state.source!=="all"&&String(r.s||"").toLowerCase()!==state.source)return false;
-      if(state.platform!=="all"&&String(r.p||"")!==state.platform)return false;
-      if(state.channel!=="all"&&String(r.c||"")!==state.channel)return false;
+      if(!platformOk({platform_name:r.p}))return false;
+      if(!channelOk({channel_name:r.c}))return false;
       return String(r.code||"")===state.concurrencyStatus;
     }).map(function(r){return {minute:String(r.m||""),value:n(r.uv)}});
   }
@@ -1543,21 +1663,40 @@ function renderConcurrency(){
   const grouped=Array.from(buckets.values()).sort(function(a,b){return a.key.localeCompare(b.key)});
   if(!grouped.length){clearChart("concurrencyChart","No valid minute timestamps for this selection.");return}
   const statusText=state.concurrencyStatus==="all"?"all HTTP statuses":"HTTP status "+state.concurrencyStatus+" only";
-  if(note)note.textContent="Each point is the sum of distinct cliIP active-viewer counts for every minute inside the "+concurrencyIntervalLabel()+" bucket, using "+statusText+". Example: 12:00 to 12:04 equals five one-minute cliIP counts added together."+(statusHistoryNote?" "+statusHistoryNote:"");
+  if(note)note.textContent=isAmagi?"Each point is the sum of Amagi's actual concurrent-viewer values for every minute inside the "+concurrencyIntervalLabel()+" bucket. Example: 12:00 to 12:04 equals five one-minute Amagi viewer values added together.":"Each point is the sum of distinct cliIP active-viewer counts for every minute inside the "+concurrencyIntervalLabel()+" bucket, using "+statusText+". Example: 12:00 to 12:04 equals five one-minute cliIP counts added together."+(statusHistoryNote?" "+statusHistoryNote:"");
   draw("concurrencyChart",lineConfig(grouped.map(function(r){return fmtDateTime(r.key)}),[
-    {label:"Total cliIP viewer-minute count - "+statusText,data:grouped.map(function(r){return n(r.active_cliip_minute_count)}),borderColor:COLORS[0],backgroundColor:"rgba(31,120,151,.12)",tension:.22,pointRadius:0}
-  ],"cliIP minute-sum"));
+    {label:isAmagi?"Actual Amagi viewer-minute sum":"Total cliIP viewer-minute count - "+statusText,data:grouped.map(function(r){return n(r.active_cliip_minute_count)}),borderColor:isAmagi?"#d97706":COLORS[0],backgroundColor:isAmagi?"rgba(217,119,6,.14)":"rgba(31,120,151,.12)",tension:.22,pointRadius:0}
+  ],isAmagi?"actual viewer-minute sum":"cliIP minute-sum"));
 }
 
 function renderPlatforms(){
-  const rows=state.source==="fast"?platformChannelRows():streamContentWatchRows();
+  if(state.source==="amagi"){
+    el("platformLeaderTitle").textContent="Platform Viewer Leaders";
+    el("platformLeaderSubtitle").textContent="Actual AMAGI concurrent-viewer performance";
+    const grouped=new Map();
+    filterRows(DATA.concurrency_summary||[],{channel:true}).filter(function(row){return String(row.source||"").toLowerCase()==="amagi"}).forEach(function(row){
+      const key=row.platform_name||"Unknown";
+      if(!grouped.has(key))grouped.set(key,{key:key,viewerMinutes:0,minuteCount:0,peak:0,channels:new Set()});
+      const item=grouped.get(key), count=n(row.minute_count);
+      item.viewerMinutes+=n(row.avg_unique_viewers)*count;
+      item.minuteCount+=count;
+      item.peak=Math.max(item.peak,n(row.peak_unique_viewers));
+      item.channels.add(row.channel_name||"Unknown");
+    });
+    const ranked=Array.from(grouped.values()).sort(function(a,b){return b.viewerMinutes-a.viewerMinutes||b.peak-a.peak});
+    renderTable("platformTable",["Platform","Peak Viewers","Average Viewers","Viewer-Minutes","Channels"],ranked.map(function(row){return [row.key,fmtInt(row.peak),fmt(row.minuteCount?row.viewerMinutes/row.minuteCount:0,1),fmtInt(row.viewerMinutes),fmtInt(row.channels.size)]}),[1,2,3,4]);
+    return;
+  }
+  el("platformLeaderTitle").textContent="Platform Leaders";
+  el("platformLeaderSubtitle").textContent="Top platforms by selected activity";
+  const rows=state.source==="fast"||state.source==="amagi"?platformChannelRows():streamContentWatchRows();
   const ranked=rollupTop(rows,function(r){return r.platform_name||"Unknown"}, "raw_ts_rows", 20);
   if(!ranked.length){
     renderTable("platformTable",["Platform","Status"],[["Selected filters","Not Available"]],[]);
     return;
   }
-  const audienceLabel=state.source==="fast"?"Peak Active Viewers":"Approx IPs";
-  renderTable("platformTable",["Platform","Raw Request Hours","Status 200 Hours",audienceLabel,"Rows"],ranked.map(function(r){return [r.key,fmt(r.raw_watch_hours,1),fmt(r.status_200_watch_hours,1),fmtInt(state.source==="fast"?r.peak_unique_viewers:r.approx_unique_ips),fmtInt(r.raw_ts_rows)]}),[1,2,3,4]);
+  const audienceLabel=state.source==="amagi"?"Peak Actual Viewers":state.source==="fast"?"Peak Active Viewers":"Approx IPs";
+  renderTable("platformTable",["Platform","Raw Request Hours","Status 200 Hours",audienceLabel,"Rows"],ranked.map(function(r){return [r.key,fmt(r.raw_watch_hours,1),fmt(r.status_200_watch_hours,1),fmtInt(state.source==="amagi"||state.source==="fast"?r.peak_unique_viewers:r.approx_unique_ips),fmtInt(r.raw_ts_rows)]}),[1,2,3,4]);
 }
 
 function geoLabel(r){
@@ -1693,6 +1832,44 @@ function renderPlaytimePies(){
 }
 
 function renderChannels(){
+  if(state.source==="amagi"){
+    el("channelsHeading").textContent="Channel Performance";
+    el("channelsDescription").textContent="Actual AMAGI concurrent-viewer performance for selected filters.";
+    el("channelRankTitle").textContent="Channel Viewer-Minute Ranking";
+    el("channelRankSubtitle").textContent="High to low based on actual concurrent viewers summed over reported minutes";
+    el("channelTrendTitle").textContent="Channel Peak-Concurrency Trend";
+    el("channelTrendSubtitle").textContent="Daily highest reported concurrent viewers";
+    const grouped=new Map();
+    filterRows(DATA.concurrency_summary||[],{channel:true}).filter(function(row){return String(row.source||"").toLowerCase()==="amagi"}).forEach(function(row){
+      const key=row.channel_name||"Unknown";
+      if(!grouped.has(key))grouped.set(key,{key:key,viewerMinutes:0,minuteCount:0,peak:0,platforms:new Set()});
+      const item=grouped.get(key), count=n(row.minute_count);
+      item.viewerMinutes+=n(row.avg_unique_viewers)*count;
+      item.minuteCount+=count;
+      item.peak=Math.max(item.peak,n(row.peak_unique_viewers));
+      item.platforms.add(row.platform_name||"Unknown");
+    });
+    const ranked=Array.from(grouped.values()).sort(function(a,b){return b.viewerMinutes-a.viewerMinutes||b.peak-a.peak});
+    if(!ranked.length){
+      clearChart("channelRankChart","No AMAGI channel rows for selected filters.");
+      clearChart("channelTrendChart","No AMAGI channel trend for selected filters.");
+      renderTable("channelTable",["Channel","Status"],[["Selected filter","No AMAGI channel rows available"]],[]);
+      return;
+    }
+    draw("channelRankChart",barConfig(ranked.map(function(row){return row.key}),ranked.map(function(row){return row.viewerMinutes}),"Viewer-Minutes",COLORS[0],"y"));
+    renderTable("channelTable",["Channel","Peak Viewers","Average Viewers","Viewer-Minutes","Platforms"],ranked.map(function(row){return [row.key,fmtInt(row.peak),fmt(row.minuteCount?row.viewerMinutes/row.minuteCount:0,1),fmtInt(row.viewerMinutes),fmtInt(row.platforms.size)]}),[1,2,3,4]);
+    const rows=filterRows(DATA.concurrency_summary||[],{channel:true}).filter(function(row){return String(row.source||"").toLowerCase()==="amagi"});
+    const dates=uniq(rows,"log_date").map(function(d){return String(d).slice(0,10)}).sort();
+    const datasets=ranked.slice(0,6).map(function(item,index){return {label:item.key,data:dates.map(function(date){return max(rows.filter(function(row){return String(row.log_date).slice(0,10)===date&&row.channel_name===item.key}),"peak_unique_viewers")}),borderColor:COLORS[index%COLORS.length],backgroundColor:"transparent",tension:.25,pointRadius:2}});
+    draw("channelTrendChart",lineConfig(dates.map(fmtDate),datasets,"Peak viewers"));
+    return;
+  }
+  el("channelsHeading").textContent="Channels";
+  el("channelsDescription").textContent="Channel watch-hour ranking and selected channel trends.";
+  el("channelRankTitle").textContent="Channel Ranking";
+  el("channelRankSubtitle").textContent="High to low request hours";
+  el("channelTrendTitle").textContent="Channel Trend";
+  el("channelTrendSubtitle").textContent="Top channels or selected channel by day";
   const rows=state.source==="fast"?platformChannelRows():(state.platform!=="all"?streamContentWatchRows():filterRows(DATA.channel_daily||[],{channel:true,platform:false}));
   const ranked=rollupTop(rows,function(r){return r.channel_name||"Unknown"}, "raw_watch_hours", 15);
   if(!ranked.length){
@@ -1742,7 +1919,7 @@ function renderGeoDevice(){
       const cityRanked=topBy(fastGeo,function(r){return [r.country||"Unknown",r.state||"Unknown",r.city||"Unknown / NA"].join(" / ")}, "raw_watch_hours", 20);
       draw("geoChart",barConfig(ranked.map(function(r){return r.key}),ranked.map(function(r){return n(r.raw_watch_hours)}),"Request Hours",COLORS[2],"y"));
       draw("cityChart",barConfig(cityRanked.map(function(r){return r.key}),cityRanked.map(function(r){return n(r.raw_watch_hours)}),"Request Hours",COLORS[3],"y"));
-      const scopeLabel=(state.platform==="all"?"All Platforms":state.platform)+" / "+(state.channel==="all"?"All Channels":state.channel);
+      const scopeLabel=filterLabel(state.platform,"All Platforms")+" / "+filterLabel(state.channel,"All Channels");
       renderTable("geoTable",["Country / State","Scope","Raw Hours","Status 200 Hours","Approx IPs","Rows"],ranked.map(function(r){return [r.key,scopeLabel,fmt(r.raw_watch_hours,1),fmt(r.status_200_watch_hours,1),fmtInt(r.approx_unique_ips),fmtInt(r.raw_ts_rows)]}),[2,3,4,5]);
       renderTable("cityTable",["Country / State / City","Scope","Raw Hours","Status 200 Hours","Approx IPs","Rows"],cityRanked.map(function(r){return [r.key,scopeLabel,fmt(r.raw_watch_hours,1),fmt(r.status_200_watch_hours,1),fmtInt(r.approx_unique_ips),fmtInt(r.raw_ts_rows)]}),[2,3,4,5]);
       const fastDevices=fastPlatformChannelUaDeviceRows();
@@ -1996,11 +2173,11 @@ function renderTable(id,headers,rows,numCols){
 function renderHeader(){
   const trueRange=sourceTrueRange();
   el("rangeText").textContent="Source: "+sourceLabel()+" | True data range: "+fmtDateTime(trueRange.first)+" \u2192 "+fmtDateTime(trueRange.last)+" | Used range: "+fmtDayStart(state.start)+" to "+fmtDayEnd(state.end);
-  const platformText=hasPlatformFilter()?("Platform: "+(state.platform==="all"?"All Platforms":state.platform)+" | "):"";
-  el("sourceText").textContent=platformText+"Channel: "+(state.channel==="all"?"All Channels":state.channel);
+  const platformText=hasPlatformFilter()?("Platform: "+filterLabel(state.platform,"All Platforms")+" | "):"";
+  el("sourceText").textContent=platformText+"Channel: "+filterLabel(state.channel,"All Channels");
   el("updatedText").textContent="Last updated "+fmtDateTime(D.meta.generated);
-  const platformPill=hasPlatformFilter()?"<span class='pill'><b>Platform</b> "+esc(state.platform==="all"?"All Platforms":state.platform)+"</span>":"";
-  el("selectionContext").innerHTML="<span class='pill'><b>Used Range</b> "+fmtDayStart(state.start)+" to "+fmtDayEnd(state.end)+"</span><span class='pill'><b>Source</b> "+sourceLabel()+"</span>"+platformPill+"<span class='pill'><b>Channel</b> "+esc(state.channel==="all"?"All Channels":state.channel)+"</span>";
+  const platformPill=hasPlatformFilter()?"<span class='pill'><b>Platform</b> "+esc(filterLabel(state.platform,"All Platforms"))+"</span>":"";
+  el("selectionContext").innerHTML="<span class='pill'><b>Used Range</b> "+fmtDayStart(state.start)+" to "+fmtDayEnd(state.end)+"</span><span class='pill'><b>Source</b> "+sourceLabel()+"</span>"+platformPill+"<span class='pill'><b>Channel</b> "+esc(filterLabel(state.channel,"All Channels"))+"</span>";
 }
 
 const SECTION_RENDERERS={
@@ -2101,10 +2278,16 @@ function setupLazySections(){
 function renderAll(){
   resetFilterCache();
   renderVersion+=1;
+  updateSourceLayout();
   renderHeader();
-  renderStakeholderKpis();
-  renderIdentityGuide();
-  renderKpis();
+  if(state.source==="amagi"){
+    renderAmagiKpis();
+    el("kpis").innerHTML="";
+  }else{
+    renderStakeholderKpis();
+    renderIdentityGuide();
+    renderKpis();
+  }
   renderVisibleSections(false);
 }
 function syncModalChartValues(){
@@ -2170,6 +2353,29 @@ document.addEventListener("keydown",function(e){if(e.key==="Escape")closeModal()
 arrangePrioritySections();
 setupLazySections();
 setupFilters();
+const audienceOpsRenderAll=renderAll;
+renderAll=function(){
+  audienceOpsRenderAll();
+  let note=el("amagiScopeNote");
+  if(!note){
+    note=document.createElement("div");
+    note.id="amagiScopeNote";
+    note.style.cssText="display:none;margin:10px 0;padding:9px 11px;border:1px solid #f2c66d;border-left:4px solid #d97706;background:#fff8e8;color:#754400;font-size:12px;border-radius:4px";
+    // The dashboard uses .sticky for its filter container. Guard this
+    // insertion so a future layout change cannot break every filter action.
+    const filterAnchor=document.querySelector(".sticky")||document.querySelector(".wrap");
+    if(!filterAnchor)return;
+    filterAnchor.insertAdjacentElement("afterend",note);
+  }
+  const active=state.source==="amagi";
+  note.style.display=active?"block":"none";
+  if(active){
+    const coverage=amagiCoverage();
+    const complete=coverage.complete.map(fmtDate).join(", ");
+    note.textContent="AMAGI provides actual platform-reported concurrent viewers by minute. Available IST dates include partial edge dates; quick ranges end on the latest complete day"+(complete?" ("+complete+")":"")+". CDN watch hours, HTTP status, device, session, UA, bandwidth, and geography metrics are not present in this source.";
+  }else note.textContent="";
+};
+renderAll();
 </script>
 </body>
 </html>

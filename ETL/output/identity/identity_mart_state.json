@@ -1451,15 +1451,43 @@
       "date": "2026-07-21",
       "lake_root": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
       "partition_path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=07\\day=21",
-      "file_count": 1,
-      "bytes": 70333934,
-      "max_mtime_ns": 1784604744591003400,
+      "file_count": 2,
+      "bytes": 1035338622,
+      "max_mtime_ns": 1784691521556405500,
       "output_counts": {
-        "identity_device_daily": 474,
-        "identity_session_daily": 484,
-        "identity_ipua_daily": 484
+        "identity_device_daily": 16606,
+        "identity_session_daily": 21578,
+        "identity_ipua_daily": 19316
+      }
+    },
+    "stream/2026-07-22": {
+      "source": "stream",
+      "date": "2026-07-22",
+      "lake_root": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
+      "partition_path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=07\\day=22",
+      "file_count": 2,
+      "bytes": 1008284959,
+      "max_mtime_ns": 1784777653384386900,
+      "output_counts": {
+        "identity_device_daily": 16746,
+        "identity_session_daily": 22091,
+        "identity_ipua_daily": 19725
+      }
+    },
+    "stream/2026-07-23": {
+      "source": "stream",
+      "date": "2026-07-23",
+      "lake_root": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
+      "partition_path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=07\\day=23",
+      "file_count": 1,
+      "bytes": 60572706,
+      "max_mtime_ns": 1784777653480286700,
+      "output_counts": {
+        "identity_device_daily": 506,
+        "identity_session_daily": 521,
+        "identity_ipua_daily": 527
       }
     }
   },
-  "updated_at_utc": "2026-07-21T04:42:13.343044+00:00"
+  "updated_at_utc": "2026-07-23T08:13:47.380087+00:00"
 }

@@ -1,22 +1,22 @@
 {
-  "generated_at_utc": "2026-07-21T04:45:46.677600+00:00",
+  "generated_at_utc": "2026-07-23T08:32:49.736773+00:00",
   "lake": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
   "out_dir": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\output\\content",
   "source": "stream",
-  "start": "2026-07-20",
-  "end": "2026-07-21",
+  "start": "2026-07-22",
+  "end": "2026-07-23",
   "table": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\output\\content\\content_daily.parquet",
   "stats": {
-    "rows": 52197,
+    "rows": 54656,
     "min_date": "2026-03-26",
-    "max_date": "2026-07-21",
+    "max_date": "2026-07-23",
     "sources": 1,
-    "source_rows": 91895667,
-    "raw_ts_rows": 346827,
-    "status_200_ts_rows": 343815,
-    "m3u8_rows": 91548694,
-    "raw_watch_hours": 578.0450001156097,
-    "status_200_watch_hours": 573.0250001146055
+    "source_rows": 93542329,
+    "raw_ts_rows": 379511,
+    "status_200_ts_rows": 376221,
+    "m3u8_rows": 93162672,
+    "raw_watch_hours": 632.5183334598371,
+    "status_200_watch_hours": 627.0350001254077
   },
-  "processed_partitions": 119
+  "processed_partitions": 121
 }
