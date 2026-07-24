@@ -1,0 +1,212 @@
+[
+  {
+    "week_from": "2026-01-07",
+    "week_to": "2026-01-13",
+    "file": "./data/comparison/2026-01-07__2026-01-13.json",
+    "record_count": 19
+  },
+  {
+    "week_from": "2026-01-13",
+    "week_to": "2026-02-05",
+    "file": "./data/comparison/2026-01-13__2026-02-05.json",
+    "record_count": 30
+  },
+  {
+    "week_from": "2026-02-05",
+    "week_to": "2026-03-10",
+    "file": "./data/comparison/2026-02-05__2026-03-10.json",
+    "record_count": 51
+  },
+  {
+    "week_from": "2026-03-10",
+    "week_to": "2026-03-17",
+    "file": "./data/comparison/2026-03-10__2026-03-17.json",
+    "record_count": 54
+  },
+  {
+    "week_from": "2026-03-17",
+    "week_to": "2026-04-25",
+    "file": "./data/comparison/2026-03-17__2026-04-25.json",
+    "record_count": 74
+  },
+  {
+    "week_from": "2026-04-25",
+    "week_to": "2026-05-06",
+    "file": "./data/comparison/2026-04-25__2026-05-06.json",
+    "record_count": 149
+  },
+  {
+    "week_from": "2026-05-06",
+    "week_to": "2026-05-15",
+    "file": "./data/comparison/2026-05-06__2026-05-15.json",
+    "record_count": 167
+  },
+  {
+    "week_from": "2026-05-15",
+    "week_to": "2026-05-17",
+    "file": "./data/comparison/2026-05-15__2026-05-17.json",
+    "record_count": 183
+  },
+  {
+    "week_from": "2026-05-17",
+    "week_to": "2026-06-02",
+    "file": "./data/comparison/2026-05-17__2026-06-02.json",
+    "record_count": 153
+  },
+  {
+    "week_from": "2026-06-02",
+    "week_to": "2026-06-08",
+    "file": "./data/comparison/2026-06-02__2026-06-08.json",
+    "record_count": 58
+  },
+  {
+    "week_from": "2026-06-08",
+    "week_to": "2026-06-12",
+    "file": "./data/comparison/2026-06-08__2026-06-12.json",
+    "record_count": 116
+  },
+  {
+    "week_from": "2026-06-12",
+    "week_to": "2026-06-13",
+    "file": "./data/comparison/2026-06-12__2026-06-13.json",
+    "record_count": 134
+  },
+  {
+    "week_from": "2026-06-13",
+    "week_to": "2026-06-16",
+    "file": "./data/comparison/2026-06-13__2026-06-16.json",
+    "record_count": 48
+  },
+  {
+    "week_from": "2026-06-16",
+    "week_to": "2026-06-17",
+    "file": "./data/comparison/2026-06-16__2026-06-17.json",
+    "record_count": 39
+  },
+  {
+    "week_from": "2026-06-17",
+    "week_to": "2026-07-01",
+    "file": "./data/comparison/2026-06-17__2026-07-01.json",
+    "record_count": 114
+  },
+  {
+    "week_from": "2026-07-01",
+    "week_to": "2026-07-02",
+    "file": "./data/comparison/2026-07-01__2026-07-02.json",
+    "record_count": 457
+  },
+  {
+    "week_from": "2026-07-02",
+    "week_to": "2026-07-03",
+    "file": "./data/comparison/2026-07-02__2026-07-03.json",
+    "record_count": 636
+  },
+  {
+    "week_from": "2026-07-03",
+    "week_to": "2026-07-04",
+    "file": "./data/comparison/2026-07-03__2026-07-04.json",
+    "record_count": 308
+  },
+  {
+    "week_from": "2026-07-04",
+    "week_to": "2026-07-05",
+    "file": "./data/comparison/2026-07-04__2026-07-05.json",
+    "record_count": 111
+  },
+  {
+    "week_from": "2026-07-05",
+    "week_to": "2026-07-06",
+    "file": "./data/comparison/2026-07-05__2026-07-06.json",
+    "record_count": 405
+  },
+  {
+    "week_from": "2026-07-06",
+    "week_to": "2026-07-07",
+    "file": "./data/comparison/2026-07-06__2026-07-07.json",
+    "record_count": 558
+  },
+  {
+    "week_from": "2026-07-07",
+    "week_to": "2026-07-08",
+    "file": "./data/comparison/2026-07-07__2026-07-08.json",
+    "record_count": 301
+  },
+  {
+    "week_from": "2026-07-08",
+    "week_to": "2026-07-10",
+    "file": "./data/comparison/2026-07-08__2026-07-10.json",
+    "record_count": 221
+  },
+  {
+    "week_from": "2026-07-10",
+    "week_to": "2026-07-11",
+    "file": "./data/comparison/2026-07-10__2026-07-11.json",
+    "record_count": 158
+  },
+  {
+    "week_from": "2026-07-11",
+    "week_to": "2026-07-13",
+    "file": "./data/comparison/2026-07-11__2026-07-13.json",
+    "record_count": 314
+  },
+  {
+    "week_from": "2026-07-13",
+    "week_to": "2026-07-14",
+    "file": "./data/comparison/2026-07-13__2026-07-14.json",
+    "record_count": 538
+  },
+  {
+    "week_from": "2026-07-14",
+    "week_to": "2026-07-15",
+    "file": "./data/comparison/2026-07-14__2026-07-15.json",
+    "record_count": 1748
+  },
+  {
+    "week_from": "2026-07-15",
+    "week_to": "2026-07-16",
+    "file": "./data/comparison/2026-07-15__2026-07-16.json",
+    "record_count": 3459
+  },
+  {
+    "week_from": "2026-07-16",
+    "week_to": "2026-07-17",
+    "file": "./data/comparison/2026-07-16__2026-07-17.json",
+    "record_count": 5016
+  },
+  {
+    "week_from": "2026-07-17",
+    "week_to": "2026-07-18",
+    "file": "./data/comparison/2026-07-17__2026-07-18.json",
+    "record_count": 5644
+  },
+  {
+    "week_from": "2026-07-18",
+    "week_to": "2026-07-19",
+    "file": "./data/comparison/2026-07-18__2026-07-19.json",
+    "record_count": 2616
+  },
+  {
+    "week_from": "2026-07-19",
+    "week_to": "2026-07-20",
+    "file": "./data/comparison/2026-07-19__2026-07-20.json",
+    "record_count": 9117
+  },
+  {
+    "week_from": "2026-07-20",
+    "week_to": "2026-07-21",
+    "file": "./data/comparison/2026-07-20__2026-07-21.json",
+    "record_count": 18634
+  },
+  {
+    "week_from": "2026-07-21",
+    "week_to": "2026-07-28",
+    "file": "./data/comparison/2026-07-21__2026-07-28.json",
+    "record_count": 9578
+  },
+  {
+    "week_from": "2026-07-28",
+    "week_to": "2027-07-18",
+    "file": "./data/comparison/2026-07-28__2027-07-18.json",
+    "record_count": 61
+  }
+]
