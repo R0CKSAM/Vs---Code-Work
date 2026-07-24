@@ -86,6 +86,10 @@
     .rank-value{text-align:right;color:#173d49;font-size:11px;font-weight:750;white-space:nowrap}.rank-value span{color:var(--muted);font-size:9px;font-weight:650}
     .distribution-note{display:flex;align-items:flex-start;justify-content:space-between;gap:7px;min-height:25px;margin:2px 0 6px;color:var(--muted);font-size:10px;line-height:1.25}
     .distribution-note strong{color:#294955;white-space:nowrap}
+    .list-panel-head{display:flex;align-items:center;justify-content:space-between;gap:7px;min-width:0}.list-panel-head h3{min-width:0}
+    .list-panel-actions{display:flex;align-items:center;gap:5px;flex:0 0 auto}.list-panel-count{color:#526c76;font-size:9px;font-weight:750;white-space:nowrap}
+    .list-panel-expand{border:1px solid #c7d2d8;border-radius:3px;background:#fff;color:#41555e;padding:2px 6px;font-size:9px;font-weight:700}.list-panel-expand:hover{border-color:#80949e;color:#173d49}
+    .os-detail-panel{margin-top:6px}.os-detail-panel .leaderboard{height:auto;max-height:none;overflow:visible}
     .distribution-grid .mini-fill.device{background:#2463a2}
     .distribution-grid .mini-fill.os{background:#23845f}
     .distribution-grid .mini-fill.state{background:#087f78}
@@ -98,27 +102,6 @@
     .guide-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1px;background:var(--line);border-top:1px solid var(--line)}
     .guide-item{background:#fff;padding:7px 9px;color:#596b74;font-size:10px;line-height:1.3}
     .guide-item strong{display:block;color:#263f49;margin-bottom:2px}
-    .directory-tools{display:flex;align-items:center;justify-content:space-between;gap:7px;margin:0 0 6px;color:var(--muted);font-size:10px;line-height:1.25}
-    .directory-actions{display:flex;gap:4px;flex-wrap:wrap}
-    .directory-actions button{border:1px solid #c7d2d8;border-radius:4px;background:#fff;color:#314b57;padding:4px 7px;font-size:10px;font-weight:700}
-    .directory-actions button:hover{border-color:#80949e;color:#173d49}
-    .geo-directory{display:grid;gap:5px;min-width:0}
-    .geo-country,.geo-state{border:1px solid var(--line);border-radius:5px;background:#fff;overflow:hidden}
-    .geo-country>summary,.geo-state>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;cursor:pointer;list-style:none;min-width:0}
-    .geo-country>summary::-webkit-details-marker,.geo-state>summary::-webkit-details-marker{display:none}
-    .geo-country>summary{background:#f7fafb}.geo-state>summary{background:#fbfcfd}
-    .geo-country>summary::before,.geo-state>summary::before{content:"+";display:inline-grid;place-items:center;width:15px;height:15px;border:1px solid #aabac1;border-radius:50%;color:#41606b;font-size:12px;line-height:1;flex:0 0 auto}
-    .geo-country[open]>summary::before,.geo-state[open]>summary::before{content:"-"}
-    .geo-summary-main{display:flex;align-items:center;gap:6px;min-width:0;flex:1}
-    .geo-level{color:#5b737d;font-size:9px;font-weight:800;text-transform:uppercase;white-space:nowrap}
-    .geo-name{color:#173b47;font-size:11px;font-weight:760;overflow-wrap:anywhere}
-    .geo-summary-metrics{display:flex;justify-content:flex-end;gap:8px;color:#4b636d;font-size:10px;font-weight:650;text-align:right;flex-wrap:wrap}
-    .geo-summary-metrics strong{color:#173b47;font-size:11px}
-    .geo-state-list{display:grid;gap:4px;padding:5px 7px 7px;background:#fff}
-    .geo-city-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:4px;padding:5px 7px 7px;border-top:1px solid #edf1f3;background:#fff}
-    .geo-city-row{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;min-width:0;padding:5px 6px;border:1px solid #e2e9ec;border-radius:4px;background:#fbfcfd}
-    .geo-city-name{min-width:0;color:#294651;font-size:10px;font-weight:700;overflow-wrap:anywhere}
-    .geo-city-metrics{flex:0 0 auto;color:#526c76;font-size:9px;line-height:1.25;text-align:right;white-space:nowrap}
     .geo-analysis-controls{padding:8px}
     .geo-filter-bar{display:grid;grid-template-columns:repeat(3,minmax(130px,1fr)) minmax(185px,.8fr);gap:5px;margin:0 0 6px}
     .geo-filter-bar label{display:grid;gap:2px;color:#52636c;font-size:9px;font-weight:750;text-transform:uppercase}
@@ -151,7 +134,7 @@
       .quick-buttons{margin-top:6px}.scope-line{align-items:flex-start;display:block}.scope-line span{display:block;margin-top:2px}
       main{padding:13px 10px 25px}.kpi-grid.viewing,.kpi-grid.audience{grid-template-columns:1fr 1fr}
       .kpi-card{min-height:116px;padding:11px 12px}.kpi-value{font-size:25px}.chart-wrap{height:260px}
-      .directory-tools{align-items:flex-start;flex-direction:column}.geo-country>summary,.geo-state>summary{align-items:flex-start}.geo-summary-metrics{justify-content:flex-start;text-align:left}.geo-city-list{grid-template-columns:1fr}.geo-filter-bar,.geo-analysis-grid,.geo-analysis-grid[data-visible-panels="2"],.geo-analysis-grid[data-visible-panels="1"]{grid-template-columns:1fr}.geo-top-line{max-width:360px}.geo-analysis-controls{padding:10px}.geo-filter-bar select,.geo-filter-bar input,.geo-top-presets button,.geo-multi-picker summary{height:34px;font-size:12px}
+      .geo-filter-bar,.geo-analysis-grid,.geo-analysis-grid[data-visible-panels="2"],.geo-analysis-grid[data-visible-panels="1"]{grid-template-columns:1fr}.geo-top-line{max-width:360px}.geo-analysis-controls{padding:10px}.geo-filter-bar select,.geo-filter-bar input,.geo-top-presets button,.geo-multi-picker summary{height:34px;font-size:12px}
     }
     @media(max-width:430px){.meta{grid-template-columns:1fr}.kpi-grid.viewing,.kpi-grid.audience{grid-template-columns:1fr}.rank-row{grid-template-columns:24px minmax(0,1fr)}.rank-value{grid-column:2;text-align:left}.channel-panel{right:auto;left:0}}
   </style>
@@ -244,7 +227,7 @@
         <div class="chart-wrap"><canvas id="dailyChart" aria-label="Daily watch hours and IP users chart"></canvas><div class="empty" id="chartEmpty" hidden>No matching data for this selection.</div></div>
       </article>
       <article class="panel">
-        <h3>Channel Contribution</h3>
+        <div class="list-panel-head"><h3>Channel Contribution</h3><div class="list-panel-actions"><span class="list-panel-count" id="channelCount"></span><button class="list-panel-expand" type="button" id="channelExpand" hidden>Expand</button></div></div>
         <p class="panel-sub">Channels ranked by watch hours in the selected range</p>
         <div class="leaderboard" id="channelLeaderboard"></div>
       </article>
@@ -254,28 +237,33 @@
       <div class="section-head"><div><h2>Devices &amp; Operating Systems</h2><p>UA-attributed watch hours for the current filters</p></div></div>
       <div class="distribution-grid">
         <article class="panel">
-          <h3>Device Types</h3>
+          <div class="list-panel-head"><h3>Device Types</h3><div class="list-panel-actions"><span class="list-panel-count" id="deviceCount"></span><button class="list-panel-expand" type="button" id="deviceExpand" hidden>Expand</button></div></div>
           <div class="distribution-note"><span id="deviceScopeNote"></span><strong id="uaCoverage"></strong></div>
           <div class="leaderboard" id="deviceLeaderboard"></div>
         </article>
         <article class="panel">
-          <h3>Operating Systems</h3>
+          <div class="list-panel-head"><h3>Operating Systems</h3><div class="list-panel-actions"><span class="list-panel-count" id="osCount"></span><button class="list-panel-expand" type="button" id="osExpand" hidden>Expand</button></div></div>
           <div class="distribution-note"><span id="osScopeNote"></span><strong>All HTTP statuses</strong></div>
           <div class="leaderboard" id="osLeaderboard"></div>
         </article>
       </div>
+      <article class="panel os-detail-panel">
+        <div class="list-panel-head"><h3>OS Versions / Detailed OS</h3><div class="list-panel-actions"><span class="list-panel-count" id="osDetailCount"></span><button class="list-panel-expand" type="button" id="osDetailExpand" hidden>Expand</button></div></div>
+        <div class="distribution-note"><span id="osDetailScopeNote"></span><strong>All HTTP statuses</strong></div>
+        <div class="leaderboard" id="osDetailLeaderboard"></div>
+      </article>
     </section>
 
     <section class="section">
       <div class="section-head"><div><h2>Markets</h2><p>Watch-hour contribution by India state/region and international country</p></div></div>
       <div class="distribution-grid">
         <article class="panel">
-          <h3>India State / Region</h3>
+          <div class="list-panel-head"><h3>India State / Region</h3><div class="list-panel-actions"><span class="list-panel-count" id="stateCount"></span><button class="list-panel-expand" type="button" id="stateExpand" hidden>Expand</button></div></div>
           <div class="distribution-note"><span>Top markets ranked by selected watch hours</span><strong>India</strong></div>
           <div class="leaderboard" id="stateLeaderboard"></div>
         </article>
         <article class="panel">
-          <h3>International Markets</h3>
+          <div class="list-panel-head"><h3>International Markets</h3><div class="list-panel-actions"><span class="list-panel-count" id="countryCount"></span><button class="list-panel-expand" type="button" id="countryExpand" hidden>Expand</button></div></div>
           <div class="distribution-note"><span>Countries outside India; share uses international-only watch hours</span><strong>Country</strong></div>
           <div class="leaderboard" id="countryLeaderboard"></div>
         </article>
@@ -300,7 +288,7 @@
           <div class="geo-multi-picker">Country<details id="geoCountryDetails"><summary id="geoCountrySummary">All countries</summary><div class="geo-multi-panel"><input class="geo-multi-search" id="geoCountrySearch" type="search" placeholder="Search countries"><div class="geo-multi-actions"><button type="button" id="geoCountrySelectAll">Select all</button><button type="button" id="geoCountryClear">Clear</button></div><div id="geoCountryOptions"></div></div></details></div>
           <div class="geo-multi-picker">State / Region<details id="geoStateDetails" data-disabled="true"><summary id="geoStateSummary">Choose country first</summary><div class="geo-multi-panel"><input class="geo-multi-search" id="geoStateSearch" type="search" placeholder="Search states / regions"><div class="geo-multi-actions"><button type="button" id="geoStateSelectAll">Select all</button><button type="button" id="geoStateClear">Clear</button></div><div id="geoStateOptions"></div></div></details></div>
           <label>City contains<input id="geoCitySearch" type="search" placeholder="Search raw city value"></label>
-          <div class="geo-top-control"><span>Show Top</span><div class="geo-top-line"><div class="geo-top-presets" id="geoTopPresets"><button type="button" data-geo-top="10" class="active">10</button><button type="button" data-geo-top="15">15</button><button type="button" data-geo-top="all">All</button></div><input id="geoTopManual" type="number" min="1" max="500" step="1" placeholder="Custom 1-500" aria-label="Custom Top N"></div></div>
+          <div class="geo-top-control"><span>Show Top</span><div class="geo-top-line"><div class="geo-top-presets" id="geoTopPresets"><button type="button" data-geo-top="10">10</button><button type="button" data-geo-top="15">15</button><button type="button" data-geo-top="all" class="active">All</button></div><input id="geoTopManual" type="number" min="1" max="500" step="1" placeholder="Custom 1-500" aria-label="Custom Top N"></div></div>
         </div>
         <div class="geo-analysis-grid">
           <article class="panel" id="geoCountryPanel"><div class="geo-panel-head"><h3>Countries</h3><div class="geo-panel-actions"><span class="geo-panel-count" id="geoCountryCount"></span><button class="geo-panel-expand" type="button" id="geoCountryExpand" hidden>Expand</button></div></div><p class="panel-sub">Raw country values; share uses all selected countries</p><div class="leaderboard" id="geoCountryLeaderboard"></div></article>
@@ -341,7 +329,9 @@
     const initialWeekStart=addDays(initialMax,-6)<initialMin?initialMin:addDays(initialMax,-6);
     const state={source:initialSource,mode:"range",from:initialWeekStart,to:initialMax,channels:null,search:""};
     let dailyChart=null;
-    const geoView={countries:null,states:null,countrySearch:"",stateSearch:"",citySearch:"",limit:10,limitMode:"10"};
+    let renderCache={};
+    const geoView={countries:null,states:null,countrySearch:"",stateSearch:"",citySearch:"",limit:Number.MAX_SAFE_INTEGER,limitMode:"all"};
+    const expandableLists=[["channelLeaderboard","channelExpand",15],["deviceLeaderboard","deviceExpand",15],["osLeaderboard","osExpand",15],["osDetailLeaderboard","osDetailExpand",15],["stateLeaderboard","stateExpand",15],["countryLeaderboard","countryExpand",15],["geoCountryLeaderboard","geoCountryExpand",25],["geoStateLeaderboard","geoStateExpand",25],["geoCityLeaderboard","geoCityExpand",25]];
 
     function el(id){return document.getElementById(id)}
     function num(value){const parsed=Number(value);return Number.isFinite(parsed)?parsed:0}
@@ -365,10 +355,16 @@
     function activeChannels(){return unique((DATA.channel_daily||[]).filter(sourceOk).map(function(row){return String(row.channel_name)})).sort(function(a,b){return a.localeCompare(b)});}
     function channelOk(row){return state.channels===null||state.channels.has(String(row.channel_name))}
     function selectedRows(){
-      const rows=state.channels===null?(DATA.source_daily||[]):(DATA.channel_daily||[]);
-      return rows.filter(function(row){return sourceOk(row)&&dateOk(row)&&(state.channels===null||channelOk(row))});
+      if(!renderCache.selectedRows){
+        const rows=state.channels===null?(DATA.source_daily||[]):(DATA.channel_daily||[]);
+        renderCache.selectedRows=rows.filter(function(row){return sourceOk(row)&&dateOk(row)&&(state.channels===null||channelOk(row))});
+      }
+      return renderCache.selectedRows;
     }
-    function selectedChannelRows(){return (DATA.channel_daily||[]).filter(function(row){return sourceOk(row)&&dateOk(row)&&channelOk(row)});}
+    function selectedChannelRows(){
+      if(!renderCache.selectedChannelRows)renderCache.selectedChannelRows=(DATA.channel_daily||[]).filter(function(row){return sourceOk(row)&&dateOk(row)&&channelOk(row)});
+      return renderCache.selectedChannelRows;
+    }
     function selectedDayCount(rows){return unique(rows.map(function(row){return String(row.log_date).slice(0,10)})).length}
     function setValue(id,value,isAvailable){const node=el(id);node.textContent=isAvailable===false?"Not Available":value;node.classList.toggle("na",isAvailable===false)}
 
@@ -480,13 +476,13 @@
       const hasSessions=rows.some(function(row){return row.total_sessions!==null&&row.total_sessions!==undefined});
       const devices=sum(rows,"total_devices"),sessions=sum(rows,"total_sessions");
       const avg=ips>0?watch*60/ips:null;
-      setValue("watchHours",formatHours(watch),true);el("watchHoursNote").textContent="All-status .ts requests × 6 seconds";
+      setValue("watchHours",formatHours(watch),true);el("watchHoursNote").textContent="All-status .ts requests x 6 seconds";
       setValue("clipsWatched",formatCount(clips),true);el("clipsWatchedNote").textContent="All-status .ts media-segment plays";
       setValue("totalViews",formatCount(views),true);el("totalViewsNote").textContent=".m3u8 playback-manifest requests";
       setValue("ipUsers",formatCount(ips),rows.length>0);el("ipUsersNote").textContent=days>1?"Sum of daily distinct cliIP across "+days+" days"+(custom?"; channel overlap possible":""):"Distinct cliIP for selected day"+(custom?"; channel overlap possible":"");
       setValue("deviceUsers",formatCount(devices),hasDevices);el("deviceUsersNote").textContent=identityNote("device_id",days,custom);
       setValue("sessionUsers",formatCount(sessions),hasSessions);el("sessionUsersNote").textContent=identityNote("session_id",days,custom);
-      setValue("averageWatch",avg===null?"":formatMinutes(avg),avg!==null);el("averageWatchNote").textContent=avg===null?"Matching IP denominator is unavailable":"Watch minutes ÷ selected daily IP total";
+      setValue("averageWatch",avg===null?"":formatMinutes(avg),avg!==null);el("averageWatchNote").textContent=avg===null?"Matching IP denominator is unavailable":"Watch minutes / selected daily IP total";
     }
 
     function groupedByDate(rows){
@@ -507,17 +503,22 @@
     function renderLeaderboard(){
       const rows=selectedChannelRows(),map=new Map();
       rows.forEach(function(row){const name=String(row.channel_name);map.set(name,(map.get(name)||0)+num(row.watch_hours))});
-      const ranked=Array.from(map.entries()).sort(function(a,b){return b[1]-a[1]}).slice(0,12),max=ranked.length?ranked[0][1]:0;
+      const ranked=Array.from(map.entries()).sort(function(a,b){return b[1]-a[1]||a[0].localeCompare(b[0])}),max=ranked.length?ranked[0][1]:0;
       el("channelLeaderboard").innerHTML=ranked.length?ranked.map(function(item,index){const width=max?Math.max(2,item[1]*100/max):0;return '<div class="rank-row"><div class="rank">#'+(index+1)+'</div><div class="rank-main"><div class="rank-name"><span title="'+escapeHtml(item[0])+'">'+escapeHtml(item[0])+'</span></div><div class="mini-track"><div class="mini-fill" style="width:'+width.toFixed(2)+'%"></div></div></div><div class="rank-value">'+formatHours(item[1])+'</div></div>'}).join(""):'<div class="empty">No matching channel data.</div>';
+      el("channelCount").textContent=ranked.length+" channel"+(ranked.length===1?"":"s");
+      capLeaderboardRows("channelLeaderboard","channelExpand",15);
     }
 
-    function scopedDimensionRows(rows,key,value){
+    function scopedDimensionGroups(rows,key,values){
       const sourceScope=state.channels===null;
-      return rows.filter(function(row){
+      const groups={};
+      values.forEach(function(value){groups[value]=[]});
+      rows.forEach(function(row){
         const channelScoped=row.channel_name!==null&&row.channel_name!==undefined;
-        return sourceOk(row)&&dateOk(row)&&row[key]===value&&
-          (sourceScope?!channelScoped:(channelScoped&&channelOk(row)));
+        if(!sourceOk(row)||!dateOk(row)||(sourceScope?channelScoped:(!channelScoped||!channelOk(row))))return;
+        if(groups[row[key]])groups[row[key]].push(row);
       });
+      return groups;
     }
 
     function renderRankedDistribution(targetId,rows,limit,barClass){
@@ -543,21 +544,22 @@
       return total;
     }
 
-    function capGeoLeaderboardRows(leaderboardId,buttonId){
+    function capLeaderboardRows(leaderboardId,buttonId,visibleRowCount){
       const list=el(leaderboardId),button=el(buttonId),rows=Array.from(list.querySelectorAll(".rank-row"));
+      const rowLimit=Math.max(1,Math.round(num(visibleRowCount)||15));
       const expanded=list.dataset.expanded==="true";
-      if(rows.length<=25){list.dataset.expanded="false";list.style.maxHeight="";list.style.overflowY="";button.hidden=true;return}
+      if(rows.length<=rowLimit){list.dataset.expanded="false";list.style.maxHeight="";list.style.overflowY="";button.hidden=true;return}
       button.hidden=false;button.textContent=expanded?"Collapse":"Expand";
       if(expanded){list.style.maxHeight="none";list.style.overflowY="visible";return}
-      // Measure the 25th row after render so the cap stays accurate at every screen size.
-      const lastVisible=rows[24];
+      // Measure the final preview row so the cap remains accurate across responsive layouts.
+      const lastVisible=rows[rowLimit-1];
       list.style.maxHeight=(lastVisible.offsetTop+lastVisible.offsetHeight)+"px";
       list.style.overflowY="auto";
     }
 
     function renderDeviceAndOs(){
-      const deviceRows=scopedDimensionRows(UA_ROWS,"dimension","device");
-      const osRows=scopedDimensionRows(UA_ROWS,"dimension","os");
+      const groups=scopedDimensionGroups(UA_ROWS,"dimension",["device","os","os_detail"]);
+      const deviceRows=groups.device,osRows=groups.os,osDetailRows=groups.os_detail;
       const attributedRows=deviceRows.reduce(function(value,row){return value+num(row.raw_ts_rows)},0);
       const selectedSegments=sum(selectedRows(),"clips_watched");
       const coverage=selectedSegments>0?attributedRows*100/selectedSegments:null;
@@ -565,15 +567,34 @@
       const coarse=state.channels!==null&&(state.source==="stream"||state.source==="all");
       el("deviceScopeNote").textContent=coarse?"FAST decoded UA; STREAM coarse channel UA family":"Decoded incremental UA reference";
       el("osScopeNote").textContent=coarse?"STREAM channel OS is a coarse UA-family inference":"Decoded OS family from UA";
-      renderRankedDistribution("deviceLeaderboard",deviceRows,12,"device");
-      renderRankedDistribution("osLeaderboard",osRows,12,"os");
+      el("osDetailScopeNote").textContent=coarse?"OS version where exposed; STREAM channel scope may remain family-level":"Decoded OS name and version where exposed";
+      const deviceLabels=new Set(deviceRows.map(function(row){return String(row.label||"Unknown / NA")}));
+      const osLabels=new Set(osRows.map(function(row){return String(row.label||"Unknown / NA")}));
+      const detailLabels=new Set(osDetailRows.map(function(row){return String(row.label||"Unknown / NA")}));
+      el("deviceCount").textContent=deviceLabels.size+" value"+(deviceLabels.size===1?"":"s");
+      el("osCount").textContent=osLabels.size+" value"+(osLabels.size===1?"":"s");
+      el("osDetailCount").textContent=detailLabels.size+" detailed OS values";
+      const allRows=Number.MAX_SAFE_INTEGER;
+      renderRankedDistribution("deviceLeaderboard",deviceRows,allRows,"device");
+      renderRankedDistribution("osLeaderboard",osRows,allRows,"os");
+      renderRankedDistribution("osDetailLeaderboard",osDetailRows,allRows,"os");
+      capLeaderboardRows("deviceLeaderboard","deviceExpand",15);
+      capLeaderboardRows("osLeaderboard","osExpand",15);
+      capLeaderboardRows("osDetailLeaderboard","osDetailExpand",15);
     }
 
     function renderMarkets(){
-      const states=scopedDimensionRows(MARKET_ROWS,"market_level","india_state");
-      const countries=scopedDimensionRows(MARKET_ROWS,"market_level","country");
-      renderRankedDistribution("stateLeaderboard",states,12,"state");
-      renderRankedDistribution("countryLeaderboard",countries,10,"country");
+      const groups=scopedDimensionGroups(MARKET_ROWS,"market_level",["india_state","country"]);
+      const states=groups.india_state,countries=groups.country;
+      const allRows=Number.MAX_SAFE_INTEGER;
+      renderRankedDistribution("stateLeaderboard",states,allRows,"state");
+      renderRankedDistribution("countryLeaderboard",countries,allRows,"country");
+      const stateLabels=new Set(states.map(function(row){return String(row.label||"Unknown / NA")}));
+      const countryLabels=new Set(countries.map(function(row){return String(row.label||"Unknown / NA")}));
+      el("stateCount").textContent=stateLabels.size+" region"+(stateLabels.size===1?"":"s");
+      el("countryCount").textContent=countryLabels.size+" countr"+(countryLabels.size===1?"y":"ies");
+      capLeaderboardRows("stateLeaderboard","stateExpand",15);
+      capLeaderboardRows("countryLeaderboard","countryExpand",15);
     }
     function rawGeoValue(value){const text=String(value??"").trim();return text||"Unknown / NA"}
     function hasReportedCity(value){
@@ -586,8 +607,11 @@
       try{const name=countryNameDecoder.of(code);return name&&name!==code?code+" ("+name+")":code}catch(error){return code}
     }
     function rawGeoRows(){
-      const rows=state.channels===null?RAW_GEO_SOURCE_ROWS:RAW_GEO_CHANNEL_ROWS;
-      return rows.filter(function(row){return sourceOk(row)&&dateOk(row)&&(state.channels===null||channelOk(row))});
+      if(!renderCache.rawGeoRows){
+        const rows=state.channels===null?RAW_GEO_SOURCE_ROWS:RAW_GEO_CHANNEL_ROWS;
+        renderCache.rawGeoRows=rows.filter(function(row){return sourceOk(row)&&dateOk(row)&&(state.channels===null||channelOk(row))});
+      }
+      return renderCache.rawGeoRows;
     }
     function groupGeoChartRows(rows,labelFor){
       const values=new Map();
@@ -676,7 +700,7 @@
       function visibleCountText(values){const visible=geoView.limitMode==="all"?values.length:Math.min(geoView.limit,values.length);return geoView.limitMode==="all"?values.length+" values":visible+" of "+values.length}
       el("geoCountryCount").textContent=visibleCountText(countries);el("geoStateCount").textContent=visibleCountText(states);el("geoCityCount").textContent=visibleCountText(cities);
       renderRankedDistribution("geoCountryLeaderboard",countries,limit,"geo-country");renderRankedDistribution("geoStateLeaderboard",states,limit,"geo-state");renderRankedDistribution("geoCityLeaderboard",cities,limit,"geo-city");
-      capGeoLeaderboardRows("geoCountryLeaderboard","geoCountryExpand");capGeoLeaderboardRows("geoStateLeaderboard","geoStateExpand");capGeoLeaderboardRows("geoCityLeaderboard","geoCityExpand");
+      capLeaderboardRows("geoCountryLeaderboard","geoCountryExpand",25);capLeaderboardRows("geoStateLeaderboard","geoStateExpand",25);capLeaderboardRows("geoCityLeaderboard","geoCityExpand",25);
     }
     function groupRawGeo(rows,key){
       const values=new Map();
@@ -700,7 +724,7 @@
       el("scopeDescription").textContent=sourceLabel()+" | "+channelText+" | "+DATA.meta.freshness;
     }
 
-    function renderAll(){renderScope();renderKpis();renderChart();renderLeaderboard();renderDeviceAndOs();renderMarkets();renderGeoAnalysis()}
+    function renderAll(){renderCache={};renderScope();renderKpis();renderChart();renderLeaderboard();renderDeviceAndOs();renderMarkets();renderGeoAnalysis()}
 
     el("singleMode").addEventListener("click",function(){setDateMode("single")});
     el("rangeMode").addEventListener("click",function(){setDateMode("range")});
@@ -717,11 +741,13 @@
     el("geoStateSelectAll").addEventListener("click",function(){geoView.states=null;renderGeoAnalysis()});
     el("geoStateClear").addEventListener("click",function(){geoView.states=new Set();renderGeoAnalysis()});
     el("geoStateDetails").querySelector("summary").addEventListener("click",function(event){if(el("geoStateDetails").dataset.disabled==="true")event.preventDefault()});
-    [["geoCountryLeaderboard","geoCountryExpand"],["geoStateLeaderboard","geoStateExpand"],["geoCityLeaderboard","geoCityExpand"]].forEach(function(pair){el(pair[1]).addEventListener("click",function(){const list=el(pair[0]);list.dataset.expanded=list.dataset.expanded==="true"?"false":"true";capGeoLeaderboardRows(pair[0],pair[1])})});
+    expandableLists.forEach(function(item){el(item[1]).addEventListener("click",function(){const list=el(item[0]);list.dataset.expanded=list.dataset.expanded==="true"?"false":"true";capLeaderboardRows(item[0],item[1],item[2])})});
     el("geoCitySearch").addEventListener("input",function(){geoView.citySearch=this.value;renderGeoAnalysis()});
     el("geoTopPresets").querySelectorAll("button").forEach(function(button){button.addEventListener("click",function(){geoView.limitMode=this.dataset.geoTop;if(geoView.limitMode!=="all")geoView.limit=Number(geoView.limitMode);renderGeoAnalysis()})});
     el("geoTopManual").addEventListener("change",function(){const value=Math.round(num(this.value));if(value>0){geoView.limit=Math.min(500,value);geoView.limitMode="custom";renderGeoAnalysis()}else{this.value=""}});
     document.addEventListener("click",function(event){const details=el("channelDetails");if(details.open&&!details.contains(event.target))details.removeAttribute("open")});
+    let resizeTimer=null;
+    window.addEventListener("resize",function(){clearTimeout(resizeTimer);resizeTimer=setTimeout(function(){expandableLists.forEach(function(item){capLeaderboardRows(item[0],item[1],item[2])})},120)});
 
     renderMetadata();renderSourceButtons();syncDateControls();renderChannelOptions();renderAll();
   </script>

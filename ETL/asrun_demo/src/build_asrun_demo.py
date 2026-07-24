@@ -196,7 +196,9 @@ def build_amagi_minute_mart(events: pd.DataFrame) -> dict[str, Any]:
 
     frames: list[pd.DataFrame] = []
     skipped: list[str] = []
-    for csv_path in sorted(AMAGI_ROOT.glob("*.csv")):
+    # Amagi exports may later be organised into date folders; discover the
+    # complete source tree rather than silently limiting a refresh to root CSVs.
+    for csv_path in sorted(AMAGI_ROOT.rglob("*.csv")):
         try:
             frame = pd.read_csv(csv_path, dtype="string")
         except (OSError, UnicodeDecodeError, pd.errors.ParserError) as exc:
@@ -223,9 +225,9 @@ def build_amagi_minute_mart(events: pd.DataFrame) -> dict[str, Any]:
     amagi = amagi[amagi["concurrent_viewers"].ge(0)]
     amagi["log_date"] = amagi["minute_ist"].dt.strftime("%Y-%m-%d")
 
-    start = ads["on_air_start_ist"].min().normalize()
-    end = ads["on_air_end_ist"].max().normalize() + pd.Timedelta(days=1)
-    amagi = amagi[amagi["minute_ist"].between(start, end, inclusive="left")]
+    # Keep every available Amagi minute in the embedded mart. The dashboard
+    # applies its ASRUN event-date filter when rendering delivered-ad context;
+    # clipping here would silently discard newer Amagi source data.
     # A repeated export minute is a collector retry; use the latest source row.
     amagi = amagi.drop_duplicates(["minute_ist", "platform_name", "channel_raw"], keep="last")
     minute = (

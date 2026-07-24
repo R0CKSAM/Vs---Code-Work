@@ -356,6 +356,21 @@ def canonical_os_labels(series: pd.Series) -> pd.Series:
     return labels
 
 
+def granular_os_labels(names: pd.Series, versions: pd.Series) -> pd.Series:
+    """Combine decoded OS name and version without inventing missing detail."""
+    clean_name = names.fillna("").astype(str).str.strip()
+    clean_version = versions.fillna("").astype(str).str.strip()
+    labels = clean_name.copy()
+    last_name_token = clean_name.str.lower().str.split().str[-1].fillna("")
+    append_version = clean_name.ne("") & clean_version.ne("") & ~last_name_token.eq(clean_version.str.lower())
+    labels.loc[append_version] = clean_name.loc[append_version] + " " + clean_version.loc[append_version]
+    unknown = clean_name.eq("") | clean_name.str.lower().isin(
+        {"unknown", "unknown / na", "os not exposed in ua", "os family not exposed in ua", "n/a"}
+    )
+    labels.loc[unknown] = UNKNOWN_LABEL
+    return labels.str.replace(r"\s+", " ", regex=True).str.strip()
+
+
 def normalize_channel_names(series: pd.Series) -> pd.Series:
     return series.fillna("Other / Unknown").astype(str).str.strip().replace("", "Other / Unknown")
 
@@ -406,9 +421,11 @@ def build_ua_daily(
         "decode_status",
         "device_type",
         "os_name",
+        "os_version",
         "os_family",
         "api_device_type",
         "api_os_name",
+        "api_os_version",
     ]
     lookup = read_parquet(input_files["ua_lookup"], lookup_columns)
     lookup["ua_hash"] = lookup["ua_hash"].fillna("").astype(str)
@@ -424,10 +441,14 @@ def build_ua_daily(
         coalesce_text(ua_keys, ["device_type", "api_device_type"])
     )
     ua_keys["os_label"] = canonical_os_labels(coalesce_text(ua_keys, ["os_name", "api_os_name", "os_family"]))
-    ua_keys.loc[status.eq("malformed"), ["device_label", "os_label"]] = "Malformed / Noise"
-    ua_keys.loc[status.isin({"unknown", "not_in_lookup"}), ["device_label", "os_label"]] = UNKNOWN_LABEL
+    ua_keys["os_detail_label"] = granular_os_labels(
+        coalesce_text(ua_keys, ["os_name", "api_os_name", "os_family"]),
+        coalesce_text(ua_keys, ["os_version", "api_os_version"]),
+    )
+    ua_keys.loc[status.eq("malformed"), ["device_label", "os_label", "os_detail_label"]] = "Malformed / Noise"
+    ua_keys.loc[status.isin({"unknown", "not_in_lookup"}), ["device_label", "os_label", "os_detail_label"]] = UNKNOWN_LABEL
     ua = ua.merge(
-        ua_keys[["userAgent", "device_label", "os_label"]],
+        ua_keys[["userAgent", "device_label", "os_label", "os_detail_label"]],
         on="userAgent",
         how="left",
         validate="many_to_one",
@@ -435,7 +456,8 @@ def build_ua_daily(
 
     source_device = dimension_rows(ua, ["log_date", "source"], "device", ua["device_label"])
     source_os = dimension_rows(ua, ["log_date", "source"], "os", ua["os_label"])
-    source_daily = pd.concat([source_device, source_os], ignore_index=True)
+    source_os_detail = dimension_rows(ua, ["log_date", "source"], "os_detail", ua["os_detail_label"])
+    source_daily = pd.concat([source_device, source_os, source_os_detail], ignore_index=True)
     source_daily["scope"] = "source"
     source_daily["channel_name"] = None
 
@@ -485,6 +507,17 @@ def build_ua_daily(
             "os",
             fast_os_labels,
         )
+        fast_os_detail_labels = rich_fast["os_label"].fillna("").astype(str).str.strip()
+        fast_os_detail_labels = fast_os_detail_labels.replace(
+            {"": UNKNOWN_LABEL, "OS Not Exposed In UA": UNKNOWN_LABEL, "Unknown / NA": UNKNOWN_LABEL}
+        )
+        fast_os_detail_labels.loc[fast_status.eq("malformed")] = "Malformed / Noise"
+        fast_os_detail = dimension_rows(
+            rich_fast,
+            ["log_date", "source", "channel_name"],
+            "os_detail",
+            fast_os_detail_labels,
+        )
     else:
         fast_coarse = coarse[coarse["source"].eq("fast")].copy()
         fast_device = dimension_rows(
@@ -497,6 +530,12 @@ def build_ua_daily(
             fast_coarse,
             ["log_date", "source", "channel_name"],
             "os",
+            fast_coarse["device_type"].fillna("").astype(str).str.lower().map(STREAM_OS_LABELS).fillna(UNKNOWN_LABEL),
+        )
+        fast_os_detail = dimension_rows(
+            fast_coarse,
+            ["log_date", "source", "channel_name"],
+            "os_detail",
             fast_coarse["device_type"].fillna("").astype(str).str.lower().map(STREAM_OS_LABELS).fillna(UNKNOWN_LABEL),
         )
 
@@ -514,8 +553,17 @@ def build_ua_daily(
         "os",
         stream_key.map(STREAM_OS_LABELS).fillna(UNKNOWN_LABEL),
     )
+    stream_os_detail = dimension_rows(
+        stream_coarse,
+        ["log_date", "source", "channel_name"],
+        "os_detail",
+        stream_key.map(STREAM_OS_LABELS).fillna(UNKNOWN_LABEL),
+    )
 
-    channel_daily = pd.concat([fast_device, fast_os, stream_device, stream_os], ignore_index=True)
+    channel_daily = pd.concat(
+        [fast_device, fast_os, fast_os_detail, stream_device, stream_os, stream_os_detail],
+        ignore_index=True,
+    )
     channel_daily["scope"] = "channel"
     columns = ["log_date", "source", "scope", "channel_name", "dimension", "label", "raw_ts_rows", "watch_hours"]
     daily = pd.concat([source_daily[columns], channel_daily[columns]], ignore_index=True)
