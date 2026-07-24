@@ -371,6 +371,52 @@ def granular_os_labels(names: pd.Series, versions: pd.Series) -> pd.Series:
     return labels.str.replace(r"\s+", " ", regex=True).str.strip()
 
 
+def granular_device_model_labels(
+    brands: pd.Series,
+    models: pd.Series,
+    model_codes: pd.Series,
+    product_families: pd.Series,
+    generations: pd.Series,
+) -> pd.Series:
+    """Build a truthful brand/model label without inventing absent UA detail."""
+    unknown_values = {
+        "",
+        "unknown",
+        "unknown / na",
+        "unknown / needs review",
+        "brand not exposed in ua",
+        "model not exposed in ua",
+        "model code not exposed in ua",
+        "product family not exposed in ua",
+        "generation not exposed in ua",
+        "n/a",
+        "none",
+        "null",
+    }
+
+    def clean(series: pd.Series) -> pd.Series:
+        values = series.fillna("").astype(str).str.replace(r"\s+", " ", regex=True).str.strip()
+        return values.mask(values.str.lower().isin(unknown_values), "")
+
+    brand = clean(brands)
+    model = clean(models)
+    model_code = clean(model_codes)
+    family = clean(product_families)
+    generation = clean(generations)
+    identity = model.where(model.ne(""), family.where(family.ne(""), model_code))
+    labels = identity.copy()
+
+    identity_first_token = identity.str.lower().str.split(r"[\s/]+", regex=True).str[0].fillna("")
+    add_brand = brand.ne("") & identity.ne("") & ~identity_first_token.eq(brand.str.lower())
+    labels.loc[add_brand] = brand.loc[add_brand] + " " + identity.loc[add_brand]
+
+    # Decoder model names normally include generation already. Append it only
+    # when the best available identity is a family/code fallback.
+    add_generation = labels.ne("") & generation.ne("") & model.eq("")
+    labels.loc[add_generation] = labels.loc[add_generation] + " (" + generation.loc[add_generation] + ")"
+    return labels.mask(labels.eq(""), UNKNOWN_LABEL)
+
+
 def normalize_channel_names(series: pd.Series) -> pd.Series:
     return series.fillna("Other / Unknown").astype(str).str.strip().replace("", "Other / Unknown")
 
@@ -420,10 +466,17 @@ def build_ua_daily(
         "ua_hash",
         "decode_status",
         "device_type",
+        "brand",
+        "model",
+        "model_code",
+        "product_family",
+        "generation",
         "os_name",
         "os_version",
         "os_family",
         "api_device_type",
+        "api_brand",
+        "api_model",
         "api_os_name",
         "api_os_version",
     ]
@@ -445,19 +498,28 @@ def build_ua_daily(
         coalesce_text(ua_keys, ["os_name", "api_os_name", "os_family"]),
         coalesce_text(ua_keys, ["os_version", "api_os_version"]),
     )
-    ua_keys.loc[status.eq("malformed"), ["device_label", "os_label", "os_detail_label"]] = "Malformed / Noise"
-    ua_keys.loc[status.isin({"unknown", "not_in_lookup"}), ["device_label", "os_label", "os_detail_label"]] = UNKNOWN_LABEL
+    ua_keys["model_label"] = granular_device_model_labels(
+        coalesce_text(ua_keys, ["brand", "api_brand"]),
+        coalesce_text(ua_keys, ["model", "api_model"]),
+        coalesce_text(ua_keys, ["model_code"]),
+        coalesce_text(ua_keys, ["product_family"]),
+        coalesce_text(ua_keys, ["generation"]),
+    )
+    decoded_columns = ["device_label", "model_label", "os_label", "os_detail_label"]
+    ua_keys.loc[status.eq("malformed"), decoded_columns] = "Malformed / Noise"
+    ua_keys.loc[status.isin({"unknown", "not_in_lookup"}), decoded_columns] = UNKNOWN_LABEL
     ua = ua.merge(
-        ua_keys[["userAgent", "device_label", "os_label", "os_detail_label"]],
+        ua_keys[["userAgent", "device_label", "model_label", "os_label", "os_detail_label"]],
         on="userAgent",
         how="left",
         validate="many_to_one",
     )
 
     source_device = dimension_rows(ua, ["log_date", "source"], "device", ua["device_label"])
+    source_model = dimension_rows(ua, ["log_date", "source"], "model", ua["model_label"])
     source_os = dimension_rows(ua, ["log_date", "source"], "os", ua["os_label"])
     source_os_detail = dimension_rows(ua, ["log_date", "source"], "os_detail", ua["os_detail_label"])
-    source_daily = pd.concat([source_device, source_os, source_os_detail], ignore_index=True)
+    source_daily = pd.concat([source_device, source_model, source_os, source_os_detail], ignore_index=True)
     source_daily["scope"] = "source"
     source_daily["channel_name"] = None
 
@@ -481,6 +543,11 @@ def build_ua_daily(
             "channel_name",
             "decode_status",
             "device_type_label",
+            "brand_label",
+            "model_label",
+            "model_code_label",
+            "product_family_label",
+            "generation_label",
             "os_label",
             "os_family_label",
             "raw_ts_rows",
@@ -500,6 +567,21 @@ def build_ua_daily(
             ["log_date", "source", "channel_name"],
             "device",
             fast_device_labels,
+        )
+        fast_model_labels = granular_device_model_labels(
+            rich_fast["brand_label"],
+            rich_fast["model_label"],
+            rich_fast["model_code_label"],
+            rich_fast["product_family_label"],
+            rich_fast["generation_label"],
+        )
+        fast_model_labels.loc[fast_status.eq("malformed")] = "Malformed / Noise"
+        fast_model_labels.loc[fast_status.isin({"unknown", "not_in_lookup"})] = UNKNOWN_LABEL
+        fast_model = dimension_rows(
+            rich_fast,
+            ["log_date", "source", "channel_name"],
+            "model",
+            fast_model_labels,
         )
         fast_os = dimension_rows(
             rich_fast,
@@ -526,6 +608,12 @@ def build_ua_daily(
             "device",
             canonical_device_labels(fast_coarse["device_type"]),
         )
+        fast_model = dimension_rows(
+            fast_coarse,
+            ["log_date", "source", "channel_name"],
+            "model",
+            pd.Series(UNKNOWN_LABEL, index=fast_coarse.index, dtype="object"),
+        )
         fast_os = dimension_rows(
             fast_coarse,
             ["log_date", "source", "channel_name"],
@@ -547,6 +635,12 @@ def build_ua_daily(
         "device",
         stream_key.map(STREAM_DEVICE_LABELS).fillna(UNKNOWN_LABEL),
     )
+    stream_model = dimension_rows(
+        stream_coarse,
+        ["log_date", "source", "channel_name"],
+        "model",
+        pd.Series(UNKNOWN_LABEL, index=stream_coarse.index, dtype="object"),
+    )
     stream_os = dimension_rows(
         stream_coarse,
         ["log_date", "source", "channel_name"],
@@ -561,7 +655,7 @@ def build_ua_daily(
     )
 
     channel_daily = pd.concat(
-        [fast_device, fast_os, fast_os_detail, stream_device, stream_os, stream_os_detail],
+        [fast_device, fast_model, fast_os, fast_os_detail, stream_device, stream_model, stream_os, stream_os_detail],
         ignore_index=True,
     )
     channel_daily["scope"] = "channel"
@@ -681,6 +775,151 @@ def build_raw_geo_hierarchy_daily(
         ["log_date", "source", "channel_name", "country", "state", "city"]
     ).reset_index(drop=True)
     return source, channel, {name: str(path.resolve()) for name, path in input_files.items()}
+
+
+def normalize_asn_series(values: pd.Series) -> pd.Series:
+    """Normalize mixed ASN values while preserving source-reported ASN chains."""
+    text = values.fillna("").astype(str).str.strip().str.upper()
+    text = text.str.replace(r"^AS", "", regex=True).str.replace(r"\.0$", "", regex=True)
+    return text.str.findall(r"\d+").map(":".join)
+
+
+def build_asn_daily(
+    output_root: Path,
+    ranges: list[dict[str, str]],
+) -> tuple[pd.DataFrame, dict[str, str]]:
+    """Build the source/date ASN mart enriched with the portable decoder reference."""
+    columns = [
+        "log_date",
+        "source",
+        "asn",
+        "as_name",
+        "as_country",
+        "as_domain",
+        "asn_type",
+        "lookup_status",
+        "raw_ts_rows",
+        "approx_unique_ips",
+        "distinct_hosts",
+    ]
+    asn_path = output_root / "watch_hours" / "daily_tables" / "asn_daily.parquet"
+    decoded_path = Path(
+        os.getenv(
+            "VG_ASN_DECODED_CSV",
+            str(ETL_ROOT / "data" / "asn" / "asnDecoded.csv"),
+        )
+    ).expanduser().resolve()
+    if not asn_path.exists():
+        warn(f"Optional ASN daily parquet not found: {asn_path}")
+        return pd.DataFrame(columns=columns), {}
+
+    input_files = {"asn_daily": str(asn_path.resolve())}
+    values = ["raw_ts_rows", "approx_unique_ips", "distinct_hosts"]
+    daily = filter_to_ranges(
+        prepare_dates(
+            numeric(
+                read_parquet(
+                    asn_path,
+                    ["log_date", "source", "asn", *values],
+                ),
+                values,
+            )
+        ),
+        ranges,
+    )
+    daily["asn"] = normalize_asn_series(daily["asn"])
+    daily.loc[daily["asn"].eq(""), "asn"] = "0"
+
+    decoded_columns = [
+        "asn",
+        "as_name",
+        "as_country",
+        "as_domain",
+        "asn_type",
+        "lookup_status",
+    ]
+    if decoded_path.exists():
+        try:
+            decoded = pd.read_csv(decoded_path, dtype=str)
+        except (OSError, ValueError, TypeError, UnicodeError) as exc:
+            raise MasterDashboardError(
+                f"Could not read ASN decoder reference {decoded_path}: {exc}"
+            ) from exc
+        if "asn" not in decoded.columns:
+            raise MasterDashboardError(
+                f"ASN decoder reference has no 'asn' column: {decoded_path}"
+            )
+        decoded["asn"] = normalize_asn_series(decoded["asn"])
+        if decoded["asn"].duplicated().any():
+            duplicate_count = int(decoded["asn"].duplicated(keep=False).sum())
+            raise MasterDashboardError(
+                f"ASN decoder reference contains {duplicate_count:,} duplicate ASN rows"
+            )
+        for column in decoded_columns:
+            if column not in decoded.columns:
+                decoded[column] = ""
+        decoded = decoded[decoded_columns]
+        input_files["asn_decoded"] = str(decoded_path)
+        decoder = decoded.set_index("asn").to_dict(orient="index")
+
+        def decode_asn_path(asn_path: str) -> dict[str, str]:
+            records = [decoder.get(part, {}) for part in asn_path.split(":")]
+            names = [
+                str(record.get("as_name", "")).strip()
+                for record in records
+            ]
+            known = [
+                bool(name) and name.casefold() != "unknown"
+                for name in names
+            ]
+
+            def joined(column: str, separator: str = " / ") -> str:
+                values = []
+                for record in records:
+                    value = str(record.get(column, "")).strip()
+                    if value and value.casefold() != "unknown" and value not in values:
+                        values.append(value)
+                return separator.join(values)
+
+            return {
+                "asn": asn_path,
+                "as_name": " -> ".join(
+                    name if is_known else UNKNOWN_LABEL
+                    for name, is_known in zip(names, known)
+                ),
+                "as_country": joined("as_country"),
+                "as_domain": joined("as_domain"),
+                "asn_type": joined("asn_type"),
+                "lookup_status": (
+                    "ok"
+                    if all(known)
+                    else "partial"
+                    if any(known)
+                    else "unmapped"
+                ),
+            }
+
+        decoded_paths = pd.DataFrame(
+            [decode_asn_path(asn) for asn in daily["asn"].drop_duplicates()]
+        )
+        daily = daily.merge(decoded_paths, on="asn", how="left", validate="many_to_one")
+    else:
+        warn(f"Optional ASN decoder reference not found: {decoded_path}")
+        for column in decoded_columns[1:]:
+            daily[column] = ""
+
+    for column in decoded_columns[1:]:
+        daily[column] = daily[column].fillna("").astype(str).str.strip()
+    unresolved = daily["as_name"].eq("") | daily["as_name"].str.casefold().eq("unknown")
+    daily.loc[unresolved, "as_name"] = UNKNOWN_LABEL
+    daily.loc[daily["as_country"].eq(""), "as_country"] = UNKNOWN_LABEL
+    daily.loc[daily["asn_type"].eq(""), "asn_type"] = UNKNOWN_LABEL
+    daily.loc[daily["lookup_status"].eq(""), "lookup_status"] = "unmapped"
+
+    daily = daily[columns].sort_values(["log_date", "source", "asn"]).reset_index(drop=True)
+    if daily.duplicated(["log_date", "source", "asn"]).any():
+        raise MasterDashboardError("ASN daily mart contains duplicate date/source/ASN keys")
+    return daily, input_files
 
 
 def compact_payload(
@@ -853,14 +1092,101 @@ def dataframe_records(frame: pd.DataFrame) -> list[dict[str, Any]]:
     return clean.to_dict(orient="records")
 
 
+def top_n_rows(frame: pd.DataFrame, n: int, sort_col: str) -> pd.DataFrame:
+    """Return a stable descending Top-N view without mutating the input frame."""
+    if sort_col not in frame.columns:
+        raise KeyError(f"Missing Top-N sort column: {sort_col}")
+    if n <= 0 or frame.empty:
+        return frame.iloc[0:0].copy()
+    return (
+        frame.sort_values(sort_col, ascending=False, na_position="last", kind="stable")
+        .head(n)
+        .reset_index(drop=True)
+    )
+
+
+def compute_trend(
+    daily_frame: pd.DataFrame,
+    metric_col: str,
+    days_back: int = 7,
+) -> dict[str, Any]:
+    """Compare the latest daily period with the equally sized preceding period."""
+    if days_back <= 0:
+        raise ValueError("days_back must be greater than zero")
+    if "log_date" not in daily_frame.columns:
+        raise KeyError("Missing trend date column: log_date")
+    if metric_col not in daily_frame.columns:
+        raise KeyError(f"Missing trend metric column: {metric_col}")
+
+    work = daily_frame[["log_date", metric_col]].copy()
+    work["log_date"] = pd.to_datetime(work["log_date"], errors="coerce")
+    work[metric_col] = pd.to_numeric(work[metric_col], errors="coerce")
+    work = work.dropna(subset=["log_date"])
+    daily = (
+        work.groupby("log_date", as_index=False, observed=True)[metric_col]
+        .sum(min_count=1)
+        .fillna({metric_col: 0})
+        .sort_values("log_date")
+        .reset_index(drop=True)
+    )
+
+    empty_result = {
+        "pct_change": None,
+        "direction": "unavailable",
+        "delta": None,
+        "current_total": None,
+        "previous_total": None,
+        "period_days": 0,
+        "current_start": None,
+        "current_end": None,
+        "previous_start": None,
+        "previous_end": None,
+    }
+    if len(daily) < 2:
+        return empty_result
+
+    # Equal windows avoid comparing a complete week with a shorter partial period.
+    period_days = min(days_back, len(daily) // 2)
+    if period_days == 0:
+        return empty_result
+    current = daily.tail(period_days)
+    previous = daily.iloc[-(period_days * 2) : -period_days]
+    current_total = float(current[metric_col].sum())
+    previous_total = float(previous[metric_col].sum())
+    delta = current_total - previous_total
+    if previous_total == 0:
+        pct_change = 0.0 if current_total == 0 else None
+    else:
+        pct_change = (delta / previous_total) * 100
+    direction = "up" if delta > 0 else "down" if delta < 0 else "flat"
+
+    def iso_date(value: Any) -> str:
+        return pd.Timestamp(value).date().isoformat()
+
+    return {
+        "pct_change": round(pct_change, 2) if pct_change is not None else None,
+        "direction": direction,
+        "delta": round(delta, 2),
+        "current_total": round(current_total, 2),
+        "previous_total": round(previous_total, 2),
+        "period_days": period_days,
+        "current_start": iso_date(current["log_date"].iloc[0]),
+        "current_end": iso_date(current["log_date"].iloc[-1]),
+        "previous_start": iso_date(previous["log_date"].iloc[0]),
+        "previous_end": iso_date(previous["log_date"].iloc[-1]),
+    }
+
+
 def build_data(output_root: Path, title: str) -> tuple[dict[str, Any], pd.DataFrame, pd.DataFrame]:
     source_daily, channel_daily, ranges, input_files = build_master_frames(output_root)
     ua_daily, ua_input_files = build_ua_daily(output_root, ranges)
     market_daily, market_input_files = build_market_daily(output_root, ranges)
     geo_source_daily, geo_channel_daily, geo_input_files = build_raw_geo_hierarchy_daily(output_root, ranges)
+    asn_daily, asn_input_files = build_asn_daily(output_root, ranges)
     input_files.update(ua_input_files)
     input_files.update(market_input_files)
     input_files.update(geo_input_files)
+    input_files.update(asn_input_files)
 
     created = datetime.now(IST_ZONE)
     combined_min = min(row["min_date"] for row in ranges)
@@ -886,24 +1212,151 @@ def build_data(output_root: Path, title: str) -> tuple[dict[str, Any], pd.DataFr
         ["log_date", "source", "channel_name", "country", "state", "city"],
         ["raw_ts_rows", "approx_unique_ips"],
     )
+    asn_payload = compact_payload(
+        asn_daily,
+        [
+            "log_date",
+            "source",
+            "asn",
+            "as_name",
+            "as_country",
+            "as_domain",
+            "asn_type",
+            "lookup_status",
+        ],
+        ["raw_ts_rows", "approx_unique_ips", "distinct_hosts"],
+    )
+    source_daily_records = dataframe_records(source_daily)
+    channel_daily_records = dataframe_records(channel_daily)
+    latest_completed = (created.date() - timedelta(days=1)).isoformat()
+
+    metric_columns = ["watch_hours", "clips_watched", "ip_users", "total_views"]
+    source_metrics = source_daily[metric_columns].apply(pd.to_numeric, errors="coerce")
+    total_watch_hours = float(source_metrics["watch_hours"].sum())
+    total_clips_watched = int(round(source_metrics["clips_watched"].sum()))
+    total_ip_users = int(round(source_metrics["ip_users"].sum()))
+    total_views = int(round(source_metrics["total_views"].sum()))
+    watch_hours_trend = compute_trend(source_daily, "watch_hours")
+
+    trend_points = (
+        source_daily.groupby("log_date", as_index=False, observed=True)[metric_columns]
+        .sum(min_count=1)
+        .fillna(0)
+        .sort_values("log_date")
+        .reset_index(drop=True)
+    )
+    channel_totals = (
+        channel_daily.groupby("channel_name", as_index=False, observed=True)[metric_columns]
+        .sum(min_count=1)
+        .fillna(0)
+    )
+    top_channels = top_n_rows(channel_totals, 8, "watch_hours")
+    watch_by_source = (
+        source_daily.groupby("source", as_index=False, observed=True)[metric_columns]
+        .sum(min_count=1)
+        .fillna(0)
+        .sort_values("watch_hours", ascending=False, kind="stable")
+        .reset_index(drop=True)
+    )
+
+    def metrics_for_source(source_name: str) -> dict[str, Any]:
+        scoped = source_daily[source_daily["source"].astype(str).str.casefold().eq(source_name.casefold())]
+        numeric_metrics = scoped[metric_columns].apply(pd.to_numeric, errors="coerce")
+        watch_hours = float(numeric_metrics["watch_hours"].sum())
+        ip_users = int(round(numeric_metrics["ip_users"].sum()))
+        result: dict[str, Any] = {
+            "source": source_name,
+            "total_watch_hours": watch_hours,
+            "total_clips_watched": int(round(numeric_metrics["clips_watched"].sum())),
+            "total_ip_users": ip_users,
+            "total_views": int(round(numeric_metrics["total_views"].sum())),
+            "average_watch_minutes_per_ip": round(watch_hours * 60 / ip_users, 2) if ip_users else None,
+        }
+        for column, output_name in (
+            ("total_devices", "total_device_users"),
+            ("total_sessions", "total_session_users"),
+        ):
+            if column not in scoped.columns:
+                result[output_name] = None
+                continue
+            values = pd.to_numeric(scoped[column], errors="coerce")
+            result[output_name] = int(round(values.sum())) if values.notna().any() else None
+        return result
+
+    source_market_rows = market_daily[market_daily["scope"].eq("source")]
+    state_totals = (
+        source_market_rows[source_market_rows["market_level"].eq("india_state")]
+        .groupby("label", as_index=False, observed=True)[["raw_ts_rows", "watch_hours"]]
+        .sum()
+    )
+    country_totals = (
+        source_market_rows[source_market_rows["market_level"].eq("country")]
+        .groupby("label", as_index=False, observed=True)[["raw_ts_rows", "watch_hours"]]
+        .sum()
+    )
+
+    summary = {
+        "total_watch_hours": round(total_watch_hours, 2),
+        "total_clips_watched": total_clips_watched,
+        # Keep the shorter stakeholder key requested by the new contract.
+        "total_clips": total_clips_watched,
+        "total_ip_users": total_ip_users,
+        "total_views": total_views,
+        "watch_hours_trend": watch_hours_trend,
+        "latest_completed": latest_completed,
+    }
+    sections = {
+        "overview": {
+            "source_daily_records": source_daily_records,
+            "top_channels": dataframe_records(top_channels),
+            "watch_by_source": dataframe_records(watch_by_source),
+            "trend_points": dataframe_records(trend_points),
+        },
+        "by_source": {
+            "stream_metrics": metrics_for_source("stream"),
+            "fast_metrics": metrics_for_source("fast"),
+        },
+        "by_channel": {
+            "channels": channels,
+            "channel_daily_records": channel_daily_records,
+        },
+        "devices": {
+            "ua_daily": ua_payload,
+        },
+        "networks": {
+            "asn_daily": asn_payload,
+            "channel_attribution_available": False,
+        },
+        "geography": {
+            "market_daily": market_payload,
+            "geo_source_daily": geo_source_payload,
+            "geo_channel_daily": geo_channel_payload,
+            "top_states": dataframe_records(top_n_rows(state_totals, 8, "watch_hours")),
+            "top_countries": dataframe_records(top_n_rows(country_totals, 8, "watch_hours")),
+        },
+    }
     data = {
         "meta": {
             "title": title,
             "created_at_ist": created.strftime("%d/%m/%y %I:%M:%S %p IST"),
             "data_min_date": combined_min,
             "data_max_date": combined_max,
-            "latest_completed_date": (created.date() - timedelta(days=1)).isoformat(),
+            "latest_completed_date": latest_completed,
             "freshness": "Latest completed ETL data",
             "sources": [row["source"] for row in ranges],
             "source_ranges": ranges,
             "segment_seconds": SECONDS_PER_MEDIA_SEGMENT,
         },
-        "source_daily": dataframe_records(source_daily),
-        "channel_daily": dataframe_records(channel_daily),
+        "summary": summary,
+        "sections": sections,
+        # Compatibility aliases keep the current dashboard and downstream tools working.
+        "source_daily": source_daily_records,
+        "channel_daily": channel_daily_records,
         "ua_daily": ua_payload,
         "market_daily": market_payload,
         "geo_source_daily": geo_source_payload,
         "geo_channel_daily": geo_channel_payload,
+        "asn_daily": asn_payload,
         "channels": channels,
         "definitions": {
             "watch_hours": "All-status .ts media-segment requests multiplied by 6 seconds.",
@@ -913,7 +1366,8 @@ def build_data(output_root: Path, title: str) -> tuple[dict[str, Any], pd.DataFr
             "clips_watched": "All-status .ts media-segment request count; each segment represents the 6-second watch-hour basis.",
             "total_views": "Channel-aware .m3u8 playback-manifest request count.",
             "average_watch": "Selected watch minutes divided by the matching daily distinct cliIP total.",
-            "device_os": "UA-attributed .ts watch hours grouped by decoded device type and operating system. STREAM channel OS is a coarse UA-family inference.",
+            "device_os": "UA-attributed .ts watch hours grouped by decoded device type, brand/model, and operating system. STREAM channel-level model detail is not exposed and remains Unknown / NA.",
+            "asn": "Source/date-level CDN ASN watch hours enriched with the local decoded network reference. Approximate IP activity is a sum of daily ASN IP estimates, not a multi-day distinct-user count. Channel-level ASN attribution is not available in the current mart.",
             "markets": "India state/region and international country watch hours from channel-aware CDN geography marts.",
             "raw_geography": "Raw CDN country, state, and city values shown as a country-to-state-to-city directory. No geographic labels or mappings are applied; blank source values display as Unknown / NA.",
         },
@@ -968,6 +1422,7 @@ def main() -> None:
         print(f"[dry-run] Channel rows: {len(channel_daily):,}")
         print(f"[dry-run] UA rows: {len(data['ua_daily']['rows']):,}")
         print(f"[dry-run] Market rows: {len(data['market_daily']['rows']):,}")
+        print(f"[dry-run] ASN rows: {len(data['asn_daily']['rows']):,}")
         print(f"[dry-run] Raw geography source rows: {len(data['geo_source_daily']['rows']):,}")
         print(f"[dry-run] Raw geography channel rows: {len(data['geo_channel_daily']['rows']):,}")
         print(f"[dry-run] Coverage: {data['meta']['data_min_date']} to {data['meta']['data_max_date']}")
@@ -977,6 +1432,7 @@ def main() -> None:
     data_dir = output_root / "master" / "data"
     ua_daily = expand_compact_payload(data["ua_daily"])
     market_daily = expand_compact_payload(data["market_daily"])
+    asn_daily = expand_compact_payload(data["asn_daily"])
     geo_source_daily = expand_compact_payload(data["geo_source_daily"])
     geo_channel_daily = expand_compact_payload(data["geo_channel_daily"])
     for frame in (ua_daily, market_daily):
@@ -986,6 +1442,7 @@ def main() -> None:
     atomic_write_parquet(data_dir / "master_channel_daily.parquet", channel_daily)
     atomic_write_parquet(data_dir / "master_ua_daily.parquet", ua_daily)
     atomic_write_parquet(data_dir / "master_market_daily.parquet", market_daily)
+    atomic_write_parquet(data_dir / "master_asn_daily.parquet", asn_daily)
     atomic_write_parquet(data_dir / "master_geo_source_daily.parquet", geo_source_daily)
     atomic_write_parquet(data_dir / "master_geo_channel_daily.parquet", geo_channel_daily)
     manifest = {
@@ -995,6 +1452,7 @@ def main() -> None:
         "channel_rows": len(channel_daily),
         "ua_rows": len(ua_daily),
         "market_rows": len(market_daily),
+        "asn_rows": len(asn_daily),
         "geo_source_rows": len(geo_source_daily),
         "geo_channel_rows": len(geo_channel_daily),
         "inputs": data["input_files"],
@@ -1003,10 +1461,23 @@ def main() -> None:
 
     chartjs_cache = output_root / "cache" / "chartjs" / "chart.umd.min.js"
     chartjs = load_chartjs(chartjs_cache, fallback="window.Chart=null;")
+    # The Python API retains compatibility aliases, while the browser receives each
+    # large mart once under sections to keep the self-contained HTML compact.
+    render_data = dict(data)
+    for legacy_key in (
+        "source_daily",
+        "channel_daily",
+        "ua_daily",
+        "market_daily",
+        "asn_daily",
+        "geo_source_daily",
+        "geo_channel_daily",
+    ):
+        render_data.pop(legacy_key, None)
     html = render_template(
         Path(__file__).resolve().parent / "template.html",
         CHARTJS_TAG=chartjs_script(chartjs),
-        DATA_BLOB=json_blob(data),
+        DATA_BLOB=json_blob(render_data),
     )
     atomic_write_text(out, html)
     print(f"Master dashboard written: {out}")

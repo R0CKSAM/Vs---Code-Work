@@ -18,7 +18,7 @@ def main() -> None:
 
     chart_match = re.search(r"(<script>[\s\S]*?</script>)\s*</head>", existing)
     data_match = re.search(
-        r"const DATA=(\{[\s\S]*?\});\s*\n\s*function unpackCompact",
+        r"const DATA=(\{[\s\S]*?\});\s*\n\s*(?:const SECTIONS=|function unpackCompact)",
         existing,
     )
     if chart_match is None or data_match is None:

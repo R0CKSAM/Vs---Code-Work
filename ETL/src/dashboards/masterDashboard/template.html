@@ -6,43 +6,50 @@
   <title>Veto Master Dashboard</title>
   <style>
     :root{
-      --bg:#f4f7f8;--surface:#fff;--ink:#17252d;--muted:#60717a;--line:#d8e1e5;
-      --teal:#087f78;--blue:#2463a2;--green:#23845f;--gold:#b27712;--red:#b43c32;
-      --shadow:0 8px 24px rgba(24,45,55,.09);--header-height:0px;
+      --bg:#f6f8fa;--surface:#fff;--ink:#17252d;--muted:#647282;--line:#dce4e8;
+      --accent:#2563eb;--teal:#087f78;--blue:#2463a2;--green:#16805a;--gold:#b27712;--red:#c2413a;
+      --success-bg:#eaf8f1;--warning-bg:#fff6df;--danger-bg:#fff0ef;
+      --shadow:0 6px 18px rgba(24,45,55,.08);--header-height:0px;
     }
     *{box-sizing:border-box;letter-spacing:0}
+    [hidden]{display:none!important}
     html{scroll-behavior:smooth;background:var(--bg)}
     body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Segoe UI",Arial,sans-serif;overflow-x:hidden}
     button,input,select{font:inherit}
     button{cursor:pointer}
-    .top-shell{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.98);border-bottom:1px solid var(--line);box-shadow:0 5px 18px rgba(24,45,55,.08)}
-    .top-inner{width:min(1600px,100%);margin:0 auto;padding:8px clamp(10px,1.5vw,22px) 7px}
-    .title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;min-width:0}
-    .title-block{min-width:0}
-    h1{margin:0;font-size:clamp(18px,1.7vw,25px);line-height:1.1;font-weight:750;color:#102f3a}
-    .meta{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px 12px;color:var(--muted);font-size:10px;line-height:1.25;text-align:right}
-    .meta strong{display:block;color:var(--ink);font-size:11px;font-weight:700}
-    .filter-row{display:grid;grid-template-columns:minmax(330px,1.45fr) minmax(205px,.8fr) minmax(230px,1fr);gap:6px;margin-top:6px;align-items:stretch}
-    .filter-group{min-width:0;border:1px solid var(--line);background:#f8fafb;padding:6px;border-radius:5px}
-    .filter-label{display:block;margin:0 0 3px;color:#52636c;font-size:9px;font-weight:750;text-transform:uppercase}
-    .date-line,.source-line{display:flex;align-items:center;gap:4px;flex-wrap:wrap;min-width:0}
+    .top-shell{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.98);border-bottom:1px solid var(--line);box-shadow:0 4px 14px rgba(24,45,55,.07);backdrop-filter:blur(10px)}
+    .top-inner{width:100%;margin:0;padding:3px 8px 0}
+    .title-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;max-height:90px;opacity:1;overflow:hidden;transition:max-height .18s ease,opacity .15s ease,margin .18s ease}
+    .top-shell.scrolled .title-row{max-height:0;opacity:0;pointer-events:none}
+    .top-shell.scrolled .filter-row{margin-top:0}
+    .title-block{display:flex;align-items:baseline;gap:7px;min-width:0;white-space:nowrap}
+    h1{margin:0;font-size:15px;line-height:1;font-weight:720;color:#102f3a}
+    .title-sub{margin:0;color:var(--muted);font-size:8px}
+    .meta{display:flex;flex-wrap:nowrap;justify-content:flex-end;gap:8px;color:var(--muted);font-size:8px;line-height:1.1;text-align:right;min-width:0}
+    .meta>div{display:flex;align-items:baseline;gap:3px;min-width:0;white-space:nowrap}.meta>div:last-child{overflow:hidden}
+    .meta strong{display:inline;color:var(--ink);font-size:9px;font-weight:700;white-space:nowrap}.meta>div:last-child strong{overflow:hidden;text-overflow:ellipsis}
+    .filter-row{display:grid;grid-template-columns:minmax(500px,1.6fr) minmax(175px,.55fr) minmax(205px,.75fr);gap:4px;margin-top:3px;align-items:stretch}
+    .mobile-filter-toggle{display:none}
+    .filter-group{display:flex;align-items:center;gap:4px;min-width:0;min-height:27px;border:1px solid var(--line);background:#f8fafb;padding:2px 4px;border-radius:4px}
+    .filter-label{display:block;margin:0;color:#52636c;font-size:8px;font-weight:750;text-transform:uppercase;white-space:nowrap}
+    .date-line,.source-line{display:flex;align-items:center;gap:4px;flex-wrap:nowrap;min-width:0}
     .segmented{display:inline-flex;border:1px solid #c7d2d8;border-radius:5px;overflow:hidden;background:#fff;flex:0 0 auto}
-    .segmented button{min-height:26px;border:0;border-right:1px solid #d4dde1;background:#fff;color:#465961;padding:4px 8px;font-size:10px;font-weight:650;white-space:nowrap}
+    .segmented button{min-height:21px;border:0;border-right:1px solid #d4dde1;background:#fff;color:#465961;padding:2px 6px;font-size:9px;font-weight:650;white-space:nowrap}
     .segmented button:last-child{border-right:0}
     .segmented button.active{background:#153f4d;color:#fff}
     .date-inputs{display:flex;align-items:center;gap:4px;flex:1 1 220px;min-width:0}
-    .date-inputs input{height:28px;min-width:115px;max-width:150px;flex:1;border:1px solid #c7d2d8;border-radius:4px;background:#fff;color:var(--ink);padding:4px 6px;font-size:11px}
-    .date-separator{color:var(--muted);font-size:10px;font-weight:700}
-    .quick-buttons{display:flex;gap:3px;flex-wrap:wrap}
-    .quick-buttons button{height:26px;border:1px solid #c7d2d8;border-radius:4px;background:#fff;color:#41555e;padding:3px 7px;font-size:10px;font-weight:650}
+    .date-inputs input{height:22px;min-width:104px;max-width:125px;flex:1;border:1px solid #c7d2d8;border-radius:3px;background:#fff;color:var(--ink);padding:2px 4px;font-size:9px}
+    .date-separator{color:var(--muted);font-size:8px;font-weight:700}
+    .quick-buttons{display:flex;gap:3px;flex-wrap:nowrap}
+    .quick-buttons button{height:22px;border:1px solid #c7d2d8;border-radius:3px;background:#fff;color:#41555e;padding:2px 5px;font-size:9px;font-weight:650}
     .quick-buttons button:hover{border-color:#80949e;color:#173d49}.quick-buttons button.active{background:#153f4d;border-color:#153f4d;color:#fff}
     .channel-picker{position:relative;min-width:0}
     .channel-picker details{position:relative}
-    .channel-picker summary{height:28px;display:flex;align-items:center;justify-content:space-between;gap:6px;list-style:none;border:1px solid #c7d2d8;border-radius:4px;background:#fff;padding:4px 8px;font-size:11px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .channel-picker details{min-width:0;flex:1}.channel-picker summary{height:22px;display:flex;align-items:center;justify-content:space-between;gap:6px;list-style:none;border:1px solid #c7d2d8;border-radius:3px;background:#fff;padding:2px 6px;font-size:9px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .channel-picker summary::-webkit-details-marker{display:none}
     .channel-picker summary::after{content:"▾";flex:0 0 auto;color:#5d7079}
     .channel-picker details[open] summary::after{content:"▴"}
-    .channel-panel{position:absolute;right:0;top:32px;width:min(420px,calc(100vw - 24px));max-height:min(420px,70vh);display:flex;flex-direction:column;background:#fff;border:1px solid #c7d2d8;border-radius:6px;box-shadow:var(--shadow);z-index:80;overflow:hidden}
+    .channel-panel{position:absolute;right:0;top:25px;width:min(420px,calc(100vw - 24px));max-height:min(420px,70vh);display:flex;flex-direction:column;background:#fff;border:1px solid #c7d2d8;border-radius:6px;box-shadow:var(--shadow);z-index:80;overflow:hidden}
     .channel-tools{padding:9px;border-bottom:1px solid var(--line);background:#f8fafb}
     .channel-tools input{width:100%;height:34px;border:1px solid #c7d2d8;border-radius:5px;padding:6px 9px}
     .channel-actions{display:flex;gap:6px;margin-top:7px}
@@ -51,26 +58,35 @@
     .channel-option{display:flex;align-items:center;gap:8px;padding:7px 10px;font-size:12px;cursor:pointer}
     .channel-option:hover{background:#eef5f6}
     .channel-option input{width:16px;height:16px;accent-color:var(--teal);flex:0 0 auto}
-    .scope-line{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:5px;color:#53666f;font-size:10px;line-height:1.25}
+    .scope-line{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:1px;color:#53666f;font-size:8px;line-height:1.1}
     .scope-line strong{color:#183c49}
     .scope-error{color:var(--red);font-weight:700}
-    main{width:min(1600px,100%);margin:0 auto;padding:11px clamp(10px,1.5vw,22px) 22px}
-    .section{margin-bottom:11px;min-width:0}
-    .section-head{display:flex;align-items:end;justify-content:space-between;gap:10px;margin:0 0 6px}
-    .section-head h2{margin:0;font-size:14px;line-height:1.15;color:#163946}
+    main{width:100%;margin:0;padding:13px 8px 24px}
+    .section{margin-bottom:14px;min-width:0;scroll-margin-top:150px}
+    .section-head{display:flex;align-items:end;justify-content:space-between;gap:10px;margin:0 0 7px;padding-bottom:5px;border-bottom:1px solid #e8edef}
+    .section-head h2{margin:0;font-size:15px;line-height:1.15;color:#163946}
     .section-head p{margin:1px 0 0;color:var(--muted);font-size:10px}
     .kpi-grid{display:grid;gap:6px;min-width:0}
-    .kpi-grid.viewing{grid-template-columns:repeat(3,minmax(0,1fr))}
-    .kpi-grid.audience{grid-template-columns:repeat(4,minmax(0,1fr))}
-    .kpi-card{position:relative;min-width:0;min-height:96px;background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:9px 10px 8px;overflow:hidden}
+    .kpi-grid.viewing{grid-template-columns:repeat(7,minmax(0,1fr))}
+    .kpi-card{position:relative;min-width:0;min-height:106px;background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:10px 11px 9px;overflow:hidden;box-shadow:0 1px 2px rgba(24,45,55,.03)}
     .kpi-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent,var(--teal))}
     .kpi-label{color:#4d626c;font-size:10px;font-weight:700;line-height:1.2;overflow-wrap:anywhere}
     .kpi-value{margin:6px 0 4px;color:#102f3a;font-size:clamp(20px,1.8vw,29px);font-weight:760;line-height:1;white-space:normal;overflow-wrap:anywhere}
     .kpi-value.na{font-size:18px;color:#718087}
     .kpi-note{color:var(--muted);font-size:9px;line-height:1.25;overflow-wrap:anywhere}
+    .kpi-trend{display:inline-flex;align-items:center;gap:4px;max-width:100%;margin-top:1px;padding:2px 5px;border-radius:4px;background:#f0f4f6;color:#63757e;font-size:9px;font-weight:750;line-height:1.2}
+    .kpi-trend.up{background:var(--success-bg);color:#08734d}.kpi-trend.down{background:var(--danger-bg);color:#b43630}.kpi-trend.flat{background:var(--warning-bg);color:#946611}
+    .source-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:6px;margin-top:6px}
+    .source-card{display:grid;grid-template-columns:minmax(75px,.7fr) repeat(4,minmax(72px,1fr));gap:7px;align-items:center;min-width:0;border:1px solid var(--line);border-radius:7px;background:#fff;padding:7px 9px}
+    .source-name{color:#183c49;font-size:11px;font-weight:800}.source-metric{min-width:0}.source-metric span{display:block;color:#74838a;font-size:8px;font-weight:700;text-transform:uppercase}.source-metric strong{display:block;margin-top:1px;color:#1f3d48;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .analysis-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,.85fr);gap:6px;min-width:0}
+    .channel-geo-filter-bar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:4px 0 6px}
+    .channel-geo-filter-bar label{display:grid;gap:2px;color:#52636c;font-size:8px;font-weight:750;text-transform:uppercase;min-width:0}
+    .channel-geo-filter-bar select,.channel-geo-filter-bar input{width:100%;height:25px;min-width:0;border:1px solid #c7d2d8;border-radius:4px;background:#fff;color:var(--ink);padding:3px 5px;font-size:9px;font-weight:600}
+    .channel-geo-filter-bar select:disabled{color:#84939a;background:#f2f5f6}
     .distribution-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;min-width:0}
-    .panel{min-width:0;background:#fff;border:1px solid var(--line);border-radius:5px;padding:9px}
+    .device-distribution-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .panel{min-width:0;background:#fff;border:1px solid var(--line);border-radius:7px;padding:10px;box-shadow:0 1px 2px rgba(24,45,55,.025)}
     .panel h3{margin:0;color:#173a46;font-size:12px}
     .panel-sub{margin:2px 0 6px;color:var(--muted);font-size:10px}
     .chart-wrap{position:relative;width:100%;height:240px;min-width:0}
@@ -89,11 +105,11 @@
     .list-panel-head{display:flex;align-items:center;justify-content:space-between;gap:7px;min-width:0}.list-panel-head h3{min-width:0}
     .list-panel-actions{display:flex;align-items:center;gap:5px;flex:0 0 auto}.list-panel-count{color:#526c76;font-size:9px;font-weight:750;white-space:nowrap}
     .list-panel-expand{border:1px solid #c7d2d8;border-radius:3px;background:#fff;color:#41555e;padding:2px 6px;font-size:9px;font-weight:700}.list-panel-expand:hover{border-color:#80949e;color:#173d49}
-    .os-detail-panel{margin-top:6px}.os-detail-panel .leaderboard{height:auto;max-height:none;overflow:visible}
+    .os-detail-panel .leaderboard{height:auto;max-height:none;overflow:visible}
     .distribution-grid .mini-fill.device{background:#2463a2}
+    .distribution-grid .mini-fill.model{background:#7a4ca3}
     .distribution-grid .mini-fill.os{background:#23845f}
-    .distribution-grid .mini-fill.state{background:#087f78}
-    .distribution-grid .mini-fill.country{background:#b27712}
+    .asn-controls{display:grid;grid-template-columns:minmax(220px,1fr) auto;gap:6px;align-items:end;margin:4px 0 7px}.asn-controls label{display:grid;gap:2px;color:#52636c;font-size:8px;font-weight:750;text-transform:uppercase}.asn-controls input{width:100%;height:27px;border:1px solid #c7d2d8;border-radius:4px;background:#fff;color:var(--ink);padding:3px 7px;font-size:10px}.asn-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:0 0 7px}.asn-summary-item{border:1px solid var(--line);border-radius:5px;background:#f8fafb;padding:6px 8px;min-width:0}.asn-summary-item span{display:block;color:#6b7b83;font-size:8px;font-weight:700;text-transform:uppercase}.asn-summary-item strong{display:block;margin-top:2px;color:#183c49;font-size:13px;overflow-wrap:anywhere}.asn-rank-row{grid-template-columns:24px minmax(180px,1fr) minmax(100px,.36fr)}.asn-meta{margin-top:2px;color:#6b7b83;font-size:9px;font-weight:600;white-space:normal;overflow-wrap:anywhere}.mini-fill.asn{background:#b27712}
     .coverage-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:6px}
     .coverage-item{border:1px solid var(--line);background:#fff;border-radius:5px;padding:7px 9px;color:#53656e;font-size:10px;line-height:1.3}
     .coverage-item strong{display:block;color:#173b47;font-size:11px;margin-bottom:1px}
@@ -103,40 +119,39 @@
     .guide-item{background:#fff;padding:7px 9px;color:#596b74;font-size:10px;line-height:1.3}
     .guide-item strong{display:block;color:#263f49;margin-bottom:2px}
     .geo-analysis-controls{padding:8px}
-    .geo-filter-bar{display:grid;grid-template-columns:repeat(3,minmax(130px,1fr)) minmax(185px,.8fr);gap:5px;margin:0 0 6px}
+    .geo-filter-bar{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:5px;margin:0 0 6px}
     .geo-filter-bar label{display:grid;gap:2px;color:#52636c;font-size:9px;font-weight:750;text-transform:uppercase}
     .geo-filter-bar select,.geo-filter-bar input{width:100%;height:27px;border:1px solid #c7d2d8;border-radius:4px;background:#fff;color:var(--ink);padding:3px 6px;font-size:10px;font-weight:600}
     .geo-filter-bar select:disabled{color:#84939a;background:#f2f5f6}
     .geo-multi-picker{display:grid;gap:2px;color:#52636c;font-size:9px;font-weight:750;text-transform:uppercase;min-width:0}.geo-multi-picker details{position:relative;min-width:0}.geo-multi-picker summary{height:27px;display:flex;align-items:center;justify-content:space-between;gap:5px;border:1px solid #c7d2d8;border-radius:4px;background:#fff;color:var(--ink);padding:3px 6px;font-size:10px;font-weight:600;list-style:none;text-transform:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.geo-multi-picker summary::-webkit-details-marker{display:none}.geo-multi-picker summary::after{content:"▾";color:#5d7079;flex:0 0 auto}.geo-multi-picker details[data-disabled="true"] summary{color:#84939a;background:#f2f5f6;cursor:not-allowed}.geo-multi-panel{position:absolute;top:31px;left:0;width:min(290px,calc(100vw - 30px));max-height:min(320px,52vh);overflow:auto;z-index:30;background:#fff;border:1px solid #c7d2d8;border-radius:5px;box-shadow:var(--shadow);padding:6px}.geo-multi-search{width:100%;height:25px;border:1px solid #c7d2d8;border-radius:4px;padding:3px 6px;font-size:10px}.geo-multi-actions{display:flex;gap:4px;margin-top:4px;padding:0 0 4px;border-bottom:1px solid #edf1f3}.geo-multi-actions button{height:23px;border:1px solid #c7d2d8;border-radius:3px;background:#fff;color:#41555e;padding:2px 6px;font-size:9px;font-weight:700}.geo-multi-option{display:flex;align-items:center;gap:5px;padding:4px 2px;color:#294651;font-size:10px;font-weight:600;text-transform:none;white-space:nowrap;min-width:0}.geo-multi-option input{width:13px;height:13px;margin:0;accent-color:var(--teal);flex:0 0 auto}.geo-multi-option span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .geo-filter-bar .geo-multi-picker:last-child .geo-multi-panel,.channel-geo-filter-bar .geo-multi-picker:last-child .geo-multi-panel{left:auto;right:0}
     .geo-analysis-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;min-width:0}
     .geo-analysis-grid[data-visible-panels="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}.geo-analysis-grid[data-visible-panels="1"]{grid-template-columns:minmax(0,1fr)}.geo-analysis-grid [hidden]{display:none!important}
     .geo-analysis-grid .panel{padding:8px}
     .geo-panel-head{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0}.geo-panel-head h3{min-width:0;font-size:12px;overflow-wrap:anywhere}.geo-panel-actions{display:flex;align-items:center;gap:5px;flex:0 0 auto}.geo-panel-count{color:#526c76;font-size:9px;font-weight:750;white-space:nowrap}.geo-panel-expand{border:1px solid #c7d2d8;border-radius:3px;background:#fff;color:#41555e;padding:2px 5px;font-size:9px;font-weight:700}.geo-panel-expand:hover{border-color:#80949e;color:#173d49}
     .geo-analysis-grid .panel-sub{margin:2px 0 5px;font-size:9px}
-    .geo-top-control{display:grid;gap:2px;color:#52636c;font-size:9px;font-weight:750;text-transform:uppercase}
-    .geo-top-line{display:flex;align-items:center;gap:4px;min-width:0}
-    .geo-top-presets{display:inline-flex;border:1px solid #c7d2d8;border-radius:5px;overflow:hidden;background:#fff;flex:0 0 auto}
-    .geo-top-presets button{height:27px;border:0;border-right:1px solid #d4dde1;background:#fff;color:#465961;padding:3px 7px;font-size:10px;font-weight:700}
-    .geo-top-presets button:last-child{border-right:0}.geo-top-presets button.active{background:#153f4d;color:#fff}
-    .geo-top-line input{min-width:0;flex:1}
     .geo-analysis-grid .panel{display:flex;flex-direction:column}.geo-analysis-grid .leaderboard{gap:4px;overflow-y:auto;padding-right:2px}.geo-analysis-grid .rank-row{grid-template-columns:20px minmax(72px,1fr) minmax(68px,.45fr);gap:5px}.geo-analysis-grid .rank,.geo-analysis-grid .rank-value{font-size:9px}.geo-analysis-grid .rank-name{font-size:10px}.geo-analysis-grid .mini-bar{height:4px}
     .mini-fill.geo-country{background:#b27712}.mini-fill.geo-state{background:#087f78}.mini-fill.geo-city{background:#2463a2}
     .noscript{margin:15px;padding:12px;background:#fff4d9;border:1px solid #e3c474;color:#6e5012}
     @media(max-width:1050px){
       .title-row{display:block}.meta{justify-content:flex-start;text-align:left;margin-top:7px}
       .filter-row{grid-template-columns:1fr 1fr}.filter-group:first-child{grid-column:1/-1}
-      .kpi-grid.audience{grid-template-columns:repeat(2,minmax(0,1fr))}.analysis-grid,.distribution-grid{grid-template-columns:1fr}
+      .kpi-grid.viewing{grid-template-columns:repeat(4,minmax(0,1fr))}.analysis-grid,.distribution-grid{grid-template-columns:1fr}
     }
     @media(max-width:680px){
-      .top-inner{padding:9px 10px}.meta{display:grid;grid-template-columns:1fr 1fr;gap:5px 10px}
+      .top-inner{padding:9px 10px}.title-row{max-height:240px}.meta{display:grid;grid-template-columns:1fr 1fr;gap:5px 10px}
+      .mobile-filter-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;height:30px;margin-top:5px;border:1px solid #c7d2d8;border-radius:5px;background:#f8fafb;color:#254550;padding:4px 8px;font-size:10px;font-weight:800}.mobile-filter-toggle span:last-child{color:#657881;font-size:9px}
+      .top-shell.mobile-filters-collapsed .filter-row{display:none}.top-shell.mobile-filters-collapsed .scope-line span{display:none}
       .filter-row{grid-template-columns:1fr}.filter-group:first-child{grid-column:auto}
       .date-line{display:block}.segmented{margin-bottom:6px}.date-inputs{width:100%}.date-inputs input{max-width:none}
-      .quick-buttons{margin-top:6px}.scope-line{align-items:flex-start;display:block}.scope-line span{display:block;margin-top:2px}
-      main{padding:13px 10px 25px}.kpi-grid.viewing,.kpi-grid.audience{grid-template-columns:1fr 1fr}
+      .quick-buttons{margin-top:6px;flex-wrap:wrap}.scope-line{align-items:flex-start;display:block}.scope-line span{display:block;margin-top:2px}
+      .asn-controls{grid-template-columns:1fr}.asn-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.asn-rank-row{grid-template-columns:22px minmax(120px,1fr) minmax(76px,.35fr)}
+      main{padding:13px 10px 25px}.kpi-grid.viewing{grid-template-columns:1fr 1fr}
       .kpi-card{min-height:116px;padding:11px 12px}.kpi-value{font-size:25px}.chart-wrap{height:260px}
-      .geo-filter-bar,.geo-analysis-grid,.geo-analysis-grid[data-visible-panels="2"],.geo-analysis-grid[data-visible-panels="1"]{grid-template-columns:1fr}.geo-top-line{max-width:360px}.geo-analysis-controls{padding:10px}.geo-filter-bar select,.geo-filter-bar input,.geo-top-presets button,.geo-multi-picker summary{height:34px;font-size:12px}
+      .source-summary{grid-template-columns:minmax(0,1fr)}.source-card{grid-template-columns:repeat(2,minmax(0,1fr))}.source-name{grid-column:1/-1}
+      .channel-geo-filter-bar,.geo-filter-bar,.geo-analysis-grid,.geo-analysis-grid[data-visible-panels="2"],.geo-analysis-grid[data-visible-panels="1"]{grid-template-columns:1fr}.geo-analysis-controls{padding:10px}.channel-geo-filter-bar select,.channel-geo-filter-bar input,.geo-filter-bar select,.geo-filter-bar input,.geo-multi-picker summary{height:34px;font-size:12px}
     }
-    @media(max-width:430px){.meta{grid-template-columns:1fr}.kpi-grid.viewing,.kpi-grid.audience{grid-template-columns:1fr}.rank-row{grid-template-columns:24px minmax(0,1fr)}.rank-value{grid-column:2;text-align:left}.channel-panel{right:auto;left:0}}
+    @media(max-width:430px){.meta{grid-template-columns:1fr}.kpi-grid.viewing{grid-template-columns:1fr}.rank-row{grid-template-columns:24px minmax(0,1fr)}.rank-value{grid-column:2;text-align:left}.channel-panel{right:auto;left:0}}
   </style>
   $CHARTJS_TAG
 </head>
@@ -144,13 +159,14 @@
   <div class="top-shell">
     <div class="top-inner">
       <div class="title-row">
-        <div class="title-block"><h1 id="dashboardTitle">Veto Master Dashboard</h1></div>
+        <div class="title-block"><h1 id="dashboardTitle">Veto Master Dashboard</h1><p class="title-sub">Unified streaming audience and content performance</p></div>
         <div class="meta">
           <div><span>Created</span><strong id="createdAt"></strong></div>
           <div><span>Truth Sources</span><strong id="truthSources"></strong></div>
           <div><span>Data Coverage</span><strong id="coverageDates"></strong></div>
         </div>
       </div>
+      <button class="mobile-filter-toggle" type="button" id="mobileFilterToggle" aria-expanded="true"><span>Filters</span><span id="mobileFilterState">Hide</span></button>
       <div class="filter-row" aria-label="Dashboard filters">
         <div class="filter-group">
           <span class="filter-label">Date</span>
@@ -165,7 +181,7 @@
               <input id="dateTo" type="date" aria-label="Date to" hidden>
             </div>
             <div class="quick-buttons" id="quickButtons" aria-label="Quick date ranges">
-              <button type="button" data-range="latest">Latest</button>
+              <button type="button" data-range="latest">Yesterday</button>
               <button type="button" data-range="7">7D</button>
               <button type="button" data-range="30">30D</button>
               <button type="button" data-range="all">All</button>
@@ -201,75 +217,108 @@
   </div>
 
   <main>
-    <section class="section">
-      <div class="section-head"><div><h2>Viewing</h2><p>Selected content consumption across all HTTP statuses</p></div></div>
+    <section class="section" id="overview" data-dashboard-section>
+      <div class="section-head"><div><h2>Key Metrics</h2><p>Stakeholder summary for the current Date, Source, and Channel filters</p></div></div>
       <div class="kpi-grid viewing">
-        <article class="kpi-card" style="--accent:var(--teal)"><div class="kpi-label">Total Watch Hours</div><div class="kpi-value" id="watchHours">0</div><div class="kpi-note" id="watchHoursNote"></div></article>
-        <article class="kpi-card" style="--accent:var(--blue)"><div class="kpi-label">Total Clips Watched</div><div class="kpi-value" id="clipsWatched">0</div><div class="kpi-note" id="clipsWatchedNote"></div></article>
-        <article class="kpi-card" style="--accent:var(--gold)"><div class="kpi-label">Total Views</div><div class="kpi-value" id="totalViews">0</div><div class="kpi-note" id="totalViewsNote"></div></article>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-head"><div><h2>Audience &amp; Engagement</h2><p>Identity availability follows the selected truth source</p></div></div>
-      <div class="kpi-grid audience">
-        <article class="kpi-card" style="--accent:var(--green)"><div class="kpi-label">Total Users (IP Address)</div><div class="kpi-value" id="ipUsers">0</div><div class="kpi-note" id="ipUsersNote"></div></article>
+        <article class="kpi-card" style="--accent:var(--teal)"><div class="kpi-label">Total Watch Hours</div><div class="kpi-value" id="watchHours">0</div><div class="kpi-note" id="watchHoursNote"></div><div class="kpi-trend" id="watchHoursTrend"></div></article>
+        <article class="kpi-card" style="--accent:var(--blue)"><div class="kpi-label">Total Clips Watched</div><div class="kpi-value" id="clipsWatched">0</div><div class="kpi-note" id="clipsWatchedNote"></div><div class="kpi-trend" id="clipsTrend"></div></article>
+        <article class="kpi-card" style="--accent:var(--gold)"><div class="kpi-label">Total Views</div><div class="kpi-value" id="totalViews">0</div><div class="kpi-note" id="totalViewsNote"></div><div class="kpi-trend" id="viewsTrend"></div></article>
+        <article class="kpi-card" style="--accent:var(--green)"><div class="kpi-label">Total Users (IP Address)</div><div class="kpi-value" id="ipUsers">0</div><div class="kpi-note" id="ipUsersNote"></div><div class="kpi-trend" id="ipUsersTrend"></div></article>
         <article class="kpi-card" style="--accent:var(--blue)"><div class="kpi-label">Total Users (Device ID)</div><div class="kpi-value" id="deviceUsers">0</div><div class="kpi-note" id="deviceUsersNote"></div></article>
         <article class="kpi-card" style="--accent:var(--gold)"><div class="kpi-label">Total Users (Session ID)</div><div class="kpi-value" id="sessionUsers">0</div><div class="kpi-note" id="sessionUsersNote"></div></article>
         <article class="kpi-card" style="--accent:var(--red)"><div class="kpi-label">Average Watch Time per User</div><div class="kpi-value" id="averageWatch">0</div><div class="kpi-note" id="averageWatchNote"></div></article>
       </div>
+      <div class="source-summary" id="sourceSummary" aria-label="Source contribution summary"></div>
     </section>
 
-    <section class="section analysis-grid">
-      <article class="panel">
-        <h3>Daily Performance</h3>
-        <p class="panel-sub">Watch hours and IP audience for the current filters</p>
-        <div class="chart-wrap"><canvas id="dailyChart" aria-label="Daily watch hours and IP users chart"></canvas><div class="empty" id="chartEmpty" hidden>No matching data for this selection.</div></div>
-      </article>
-      <article class="panel">
-        <div class="list-panel-head"><h3>Channel Contribution</h3><div class="list-panel-actions"><span class="list-panel-count" id="channelCount"></span><button class="list-panel-expand" type="button" id="channelExpand" hidden>Expand</button></div></div>
-        <p class="panel-sub">Channels ranked by watch hours in the selected range</p>
-        <div class="leaderboard" id="channelLeaderboard"></div>
-      </article>
-    </section>
-
-    <section class="section">
-      <div class="section-head"><div><h2>Devices &amp; Operating Systems</h2><p>UA-attributed watch hours for the current filters</p></div></div>
-      <div class="distribution-grid">
+    <section class="section" id="performance" data-dashboard-section>
+      <div class="section-head"><div><h2>Content Performance</h2><p>Daily movement and complete channel contribution for the current filters</p></div></div>
+      <div class="analysis-grid">
         <article class="panel">
-          <div class="list-panel-head"><h3>Device Types</h3><div class="list-panel-actions"><span class="list-panel-count" id="deviceCount"></span><button class="list-panel-expand" type="button" id="deviceExpand" hidden>Expand</button></div></div>
+          <h3>Daily Performance</h3>
+          <p class="panel-sub">Watch hours and IP audience for the current filters</p>
+          <div class="chart-wrap"><canvas id="dailyChart" aria-label="Daily watch hours and IP users chart"></canvas><div class="empty" id="chartEmpty" hidden>No matching data for this selection.</div></div>
+        </article>
+        <article class="panel">
+          <div class="list-panel-head"><h3>Channel Contribution</h3><div class="list-panel-actions"><span class="list-panel-count" id="channelCount"></span><button class="list-panel-expand" type="button" id="channelExpand" hidden>Expand All</button></div></div>
+          <div class="channel-geo-filter-bar" aria-label="Channel contribution geography filters">
+            <div class="geo-multi-picker">Country<details id="channelGeoCountryDetails"><summary id="channelGeoCountrySummary">All countries</summary><div class="geo-multi-panel"><input class="geo-multi-search" id="channelGeoCountrySearch" type="search" placeholder="Search countries"><div class="geo-multi-actions"><button type="button" id="channelGeoCountrySelectAll">Select all</button><button type="button" id="channelGeoCountryClear">Clear</button></div><div id="channelGeoCountryOptions"></div></div></details></div>
+            <div class="geo-multi-picker">State / Region<details id="channelGeoStateDetails" data-disabled="true"><summary id="channelGeoStateSummary">Choose country first</summary><div class="geo-multi-panel"><input class="geo-multi-search" id="channelGeoStateSearch" type="search" placeholder="Search states / regions"><div class="geo-multi-actions"><button type="button" id="channelGeoStateSelectAll">Select all</button><button type="button" id="channelGeoStateClear">Clear</button></div><div id="channelGeoStateOptions"></div></div></details></div>
+            <div class="geo-multi-picker">City<details id="channelGeoCityDetails"><summary id="channelGeoCitySummary">All cities</summary><div class="geo-multi-panel"><input class="geo-multi-search" id="channelGeoCitySearch" type="search" placeholder="Search cities"><div class="geo-multi-actions"><button type="button" id="channelGeoCitySelectAll">Select all</button><button type="button" id="channelGeoCityClear">Clear</button></div><div id="channelGeoCityOptions"></div></div></details></div>
+          </div>
+          <p class="panel-sub" id="channelLeaderboardNote">All matching channels ranked by watch hours</p>
+          <div class="leaderboard" id="channelLeaderboard"></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="devices" data-dashboard-section>
+      <div class="section-head"><div><h2>Devices &amp; Operating Systems</h2><p>UA-attributed watch hours for the current filters</p></div></div>
+      <div class="distribution-grid device-distribution-grid">
+        <article class="panel">
+          <div class="list-panel-head"><h3>Device Types</h3><div class="list-panel-actions"><span class="list-panel-count" id="deviceCount"></span><button class="list-panel-expand" type="button" id="deviceExpand" hidden>Expand All</button></div></div>
           <div class="distribution-note"><span id="deviceScopeNote"></span><strong id="uaCoverage"></strong></div>
           <div class="leaderboard" id="deviceLeaderboard"></div>
         </article>
         <article class="panel">
-          <div class="list-panel-head"><h3>Operating Systems</h3><div class="list-panel-actions"><span class="list-panel-count" id="osCount"></span><button class="list-panel-expand" type="button" id="osExpand" hidden>Expand</button></div></div>
+          <div class="list-panel-head"><h3>Device Models</h3><div class="list-panel-actions"><span class="list-panel-count" id="modelCount"></span><button class="list-panel-expand" type="button" id="modelExpand" hidden>Expand All</button></div></div>
+          <div class="distribution-note"><span id="modelScopeNote"></span><strong>Brand + model</strong></div>
+          <div class="leaderboard" id="modelLeaderboard"></div>
+        </article>
+        <article class="panel">
+          <div class="list-panel-head"><h3>Operating Systems</h3><div class="list-panel-actions"><span class="list-panel-count" id="osCount"></span><button class="list-panel-expand" type="button" id="osExpand" hidden>Expand All</button></div></div>
           <div class="distribution-note"><span id="osScopeNote"></span><strong>All HTTP statuses</strong></div>
           <div class="leaderboard" id="osLeaderboard"></div>
         </article>
+        <article class="panel os-detail-panel">
+          <div class="list-panel-head"><h3>OS Versions / Detailed OS</h3><div class="list-panel-actions"><span class="list-panel-count" id="osDetailCount"></span><button class="list-panel-expand" type="button" id="osDetailExpand" hidden>Expand All</button></div></div>
+          <div class="distribution-note"><span id="osDetailScopeNote"></span><strong>All HTTP statuses</strong></div>
+          <div class="leaderboard" id="osDetailLeaderboard"></div>
+        </article>
       </div>
-      <article class="panel os-detail-panel">
-        <div class="list-panel-head"><h3>OS Versions / Detailed OS</h3><div class="list-panel-actions"><span class="list-panel-count" id="osDetailCount"></span><button class="list-panel-expand" type="button" id="osDetailExpand" hidden>Expand</button></div></div>
-        <div class="distribution-note"><span id="osDetailScopeNote"></span><strong>All HTTP statuses</strong></div>
-        <div class="leaderboard" id="osDetailLeaderboard"></div>
+    </section>
+
+    <section class="section" id="networks" data-dashboard-section>
+      <div class="section-head"><div><h2>Networks &amp; ASNs</h2><p>Decoded internet service providers and networks for the current Date and Source filters</p></div></div>
+      <article class="panel">
+        <div class="list-panel-head"><h3>ASN Network Ranking</h3><div class="list-panel-actions"><span class="list-panel-count" id="asnCount"></span><button class="list-panel-expand" type="button" id="asnExpand" hidden>Expand All</button></div></div>
+        <div class="asn-controls">
+          <label>Search ASN or network<input id="asnSearch" type="search" placeholder="AS number, provider, domain, country, or network type"></label>
+          <div class="segmented" id="asnModeButtons" aria-label="ASN mapping status">
+            <button type="button" data-asn-mode="all" class="active">All ASNs</button>
+            <button type="button" data-asn-mode="decoded">Decoded</button>
+            <button type="button" data-asn-mode="unresolved">Unresolved</button>
+          </div>
+        </div>
+        <div class="asn-summary">
+          <div class="asn-summary-item"><span>Decoded Coverage</span><strong id="asnCoverage">0%</strong></div>
+          <div class="asn-summary-item"><span>Decoded ASNs</span><strong id="asnDecodedCount">0</strong></div>
+          <div class="asn-summary-item"><span>Unresolved ASNs</span><strong id="asnUnresolvedCount">0</strong></div>
+          <div class="asn-summary-item"><span>Selected Watch Hours</span><strong id="asnWatchHours">0 h</strong></div>
+        </div>
+        <p class="panel-sub" id="asnScopeNote">Source/date ASN attribution; all HTTP statuses</p>
+        <div class="leaderboard" id="asnLeaderboard"></div>
       </article>
     </section>
 
-    <section class="section">
-      <div class="section-head"><div><h2>Markets</h2><p>Watch-hour contribution by India state/region and international country</p></div></div>
-      <div class="distribution-grid">
-        <article class="panel">
-          <div class="list-panel-head"><h3>India State / Region</h3><div class="list-panel-actions"><span class="list-panel-count" id="stateCount"></span><button class="list-panel-expand" type="button" id="stateExpand" hidden>Expand</button></div></div>
-          <div class="distribution-note"><span>Top markets ranked by selected watch hours</span><strong>India</strong></div>
-          <div class="leaderboard" id="stateLeaderboard"></div>
-        </article>
-        <article class="panel">
-          <div class="list-panel-head"><h3>International Markets</h3><div class="list-panel-actions"><span class="list-panel-count" id="countryCount"></span><button class="list-panel-expand" type="button" id="countryExpand" hidden>Expand</button></div></div>
-          <div class="distribution-note"><span>Countries outside India; share uses international-only watch hours</span><strong>Country</strong></div>
-          <div class="leaderboard" id="countryLeaderboard"></div>
-        </article>
-      </div>
+    <section class="section" id="geography" data-dashboard-section>
+      <div class="section-head"><div><h2>Raw Geography Analysis</h2><p>Ranked source geography for the current dashboard filters</p></div></div>
+      <article class="panel geo-analysis-controls">
+        <div class="geo-filter-bar" aria-label="Raw geography chart filters">
+          <div class="geo-multi-picker">Channel<details id="geoChannelDetails"><summary id="geoChannelSummary">All channels</summary><div class="geo-multi-panel"><input class="geo-multi-search" id="geoChannelSearch" type="search" placeholder="Search channels"><div class="geo-multi-actions"><button type="button" id="geoChannelSelectAll">Select all</button><button type="button" id="geoChannelClear">Clear</button></div><div id="geoChannelOptions"></div></div></details></div>
+          <div class="geo-multi-picker">Country<details id="geoCountryDetails"><summary id="geoCountrySummary">All countries</summary><div class="geo-multi-panel"><input class="geo-multi-search" id="geoCountrySearch" type="search" placeholder="Search countries"><div class="geo-multi-actions"><button type="button" id="geoCountrySelectAll">Select all</button><button type="button" id="geoCountryClear">Clear</button></div><div id="geoCountryOptions"></div></div></details></div>
+          <div class="geo-multi-picker">State / Region<details id="geoStateDetails" data-disabled="true"><summary id="geoStateSummary">Choose country first</summary><div class="geo-multi-panel"><input class="geo-multi-search" id="geoStateSearch" type="search" placeholder="Search states / regions"><div class="geo-multi-actions"><button type="button" id="geoStateSelectAll">Select all</button><button type="button" id="geoStateClear">Clear</button></div><div id="geoStateOptions"></div></div></details></div>
+          <div class="geo-multi-picker">City<details id="geoCityDetails"><summary id="geoCitySummary">All cities</summary><div class="geo-multi-panel"><input class="geo-multi-search" id="geoCitySearch" type="search" placeholder="Search cities"><div class="geo-multi-actions"><button type="button" id="geoCitySelectAll">Select all</button><button type="button" id="geoCityClear">Clear</button></div><div id="geoCityOptions"></div></div></details></div>
+        </div>
+        <div class="geo-analysis-grid">
+          <article class="panel" id="geoCountryPanel"><div class="geo-panel-head"><h3>Countries</h3><div class="geo-panel-actions"><span class="geo-panel-count" id="geoCountryCount"></span><button class="geo-panel-expand" type="button" id="geoCountryExpand" hidden>Expand All</button></div></div><p class="panel-sub">Raw country values; share uses all selected countries</p><div class="leaderboard" id="geoCountryLeaderboard"></div></article>
+          <article class="panel" id="geoStatePanel"><div class="geo-panel-head"><h3>State / Region</h3><div class="geo-panel-actions"><span class="geo-panel-count" id="geoStateCount"></span><button class="geo-panel-expand" type="button" id="geoStateExpand" hidden>Expand All</button></div></div><p class="panel-sub" id="geoStateChartNote"></p><div class="leaderboard" id="geoStateLeaderboard"></div></article>
+          <article class="panel"><div class="geo-panel-head"><h3>Cities</h3><div class="geo-panel-actions"><span class="geo-panel-count" id="geoCityCount"></span><button class="geo-panel-expand" type="button" id="geoCityExpand" hidden>Expand All</button></div></div><p class="panel-sub" id="geoCityChartNote"></p><div class="leaderboard" id="geoCityLeaderboard"></div></article>
+        </div>
+      </article>
     </section>
-    <section class="section">
+
+    <section class="section" id="coverage">
       <div class="section-head"><div><h2>Coverage</h2><p>Completed-day ranges used by this dashboard</p></div></div>
       <div class="coverage-strip" id="coverageStrip"></div>
     </section>
@@ -280,28 +329,19 @@
         <div class="guide-grid" id="guideGrid"></div>
       </details>
     </section>
-
-    <section class="section">
-      <div class="section-head"><div><h2>Raw Geography Analysis</h2><p>Ranked source geography for the current dashboard filters</p></div></div>
-      <article class="panel geo-analysis-controls">
-        <div class="geo-filter-bar" aria-label="Raw geography chart filters">
-          <div class="geo-multi-picker">Country<details id="geoCountryDetails"><summary id="geoCountrySummary">All countries</summary><div class="geo-multi-panel"><input class="geo-multi-search" id="geoCountrySearch" type="search" placeholder="Search countries"><div class="geo-multi-actions"><button type="button" id="geoCountrySelectAll">Select all</button><button type="button" id="geoCountryClear">Clear</button></div><div id="geoCountryOptions"></div></div></details></div>
-          <div class="geo-multi-picker">State / Region<details id="geoStateDetails" data-disabled="true"><summary id="geoStateSummary">Choose country first</summary><div class="geo-multi-panel"><input class="geo-multi-search" id="geoStateSearch" type="search" placeholder="Search states / regions"><div class="geo-multi-actions"><button type="button" id="geoStateSelectAll">Select all</button><button type="button" id="geoStateClear">Clear</button></div><div id="geoStateOptions"></div></div></details></div>
-          <label>City contains<input id="geoCitySearch" type="search" placeholder="Search raw city value"></label>
-          <div class="geo-top-control"><span>Show Top</span><div class="geo-top-line"><div class="geo-top-presets" id="geoTopPresets"><button type="button" data-geo-top="10">10</button><button type="button" data-geo-top="15">15</button><button type="button" data-geo-top="all" class="active">All</button></div><input id="geoTopManual" type="number" min="1" max="500" step="1" placeholder="Custom 1-500" aria-label="Custom Top N"></div></div>
-        </div>
-        <div class="geo-analysis-grid">
-          <article class="panel" id="geoCountryPanel"><div class="geo-panel-head"><h3>Countries</h3><div class="geo-panel-actions"><span class="geo-panel-count" id="geoCountryCount"></span><button class="geo-panel-expand" type="button" id="geoCountryExpand" hidden>Expand</button></div></div><p class="panel-sub">Raw country values; share uses all selected countries</p><div class="leaderboard" id="geoCountryLeaderboard"></div></article>
-          <article class="panel" id="geoStatePanel"><div class="geo-panel-head"><h3>State / Region</h3><div class="geo-panel-actions"><span class="geo-panel-count" id="geoStateCount"></span><button class="geo-panel-expand" type="button" id="geoStateExpand" hidden>Expand</button></div></div><p class="panel-sub" id="geoStateChartNote"></p><div class="leaderboard" id="geoStateLeaderboard"></div></article>
-          <article class="panel"><div class="geo-panel-head"><h3>Cities</h3><div class="geo-panel-actions"><span class="geo-panel-count" id="geoCityCount"></span><button class="geo-panel-expand" type="button" id="geoCityExpand" hidden>Expand</button></div></div><p class="panel-sub" id="geoCityChartNote"></p><div class="leaderboard" id="geoCityLeaderboard"></div></article>
-        </div>
-      </article>
-    </section>
   </main>
   <noscript><div class="noscript">JavaScript is required to use the dashboard filters.</div></noscript>
 
   <script>
     const DATA=$DATA_BLOB;
+    const SECTIONS=DATA.sections||{};
+    const OVERVIEW_SECTION=SECTIONS.overview||{};
+    const CHANNEL_SECTION=SECTIONS.by_channel||{};
+    const DEVICE_SECTION=SECTIONS.devices||{};
+    const NETWORK_SECTION=SECTIONS.networks||{};
+    const GEOGRAPHY_SECTION=SECTIONS.geography||{};
+    const SOURCE_DAILY=OVERVIEW_SECTION.source_daily_records||DATA.source_daily||[];
+    const CHANNEL_DAILY=CHANNEL_SECTION.channel_daily_records||DATA.channel_daily||[];
     function unpackCompact(payload){
       if(!payload||!Array.isArray(payload.rows))return [];
       const columns=payload.columns||[],dictionaries=payload.dictionaries||{};
@@ -314,10 +354,10 @@
         return row;
       });
     }
-    const UA_ROWS=unpackCompact(DATA.ua_daily);
-    const MARKET_ROWS=unpackCompact(DATA.market_daily);
-    const RAW_GEO_SOURCE_ROWS=unpackCompact(DATA.geo_source_daily);
-    const RAW_GEO_CHANNEL_ROWS=unpackCompact(DATA.geo_channel_daily);
+    const UA_ROWS=unpackCompact(DEVICE_SECTION.ua_daily||DATA.ua_daily);
+    const ASN_ROWS=unpackCompact(NETWORK_SECTION.asn_daily||DATA.asn_daily);
+    const RAW_GEO_SOURCE_ROWS=unpackCompact(GEOGRAPHY_SECTION.geo_source_daily||DATA.geo_source_daily);
+    const RAW_GEO_CHANNEL_ROWS=unpackCompact(GEOGRAPHY_SECTION.geo_channel_daily||DATA.geo_channel_daily);
     const nf0=new Intl.NumberFormat("en-IN",{maximumFractionDigits:0});
     const nf1=new Intl.NumberFormat("en-IN",{minimumFractionDigits:1,maximumFractionDigits:1});
     const countryNameDecoder=typeof Intl.DisplayNames==="function"?new Intl.DisplayNames(["en"],{type:"region"}):null;
@@ -330,8 +370,12 @@
     const state={source:initialSource,mode:"range",from:initialWeekStart,to:initialMax,channels:null,search:""};
     let dailyChart=null;
     let renderCache={};
-    const geoView={countries:null,states:null,countrySearch:"",stateSearch:"",citySearch:"",limit:Number.MAX_SAFE_INTEGER,limitMode:"all"};
-    const expandableLists=[["channelLeaderboard","channelExpand",15],["deviceLeaderboard","deviceExpand",15],["osLeaderboard","osExpand",15],["osDetailLeaderboard","osDetailExpand",15],["stateLeaderboard","stateExpand",15],["countryLeaderboard","countryExpand",15],["geoCountryLeaderboard","geoCountryExpand",25],["geoStateLeaderboard","geoStateExpand",25],["geoCityLeaderboard","geoCityExpand",25]];
+    const geoView={channels:null,channelSearch:"",countries:null,states:null,cities:null,countrySearch:"",stateSearch:"",citySearch:""};
+    const channelGeoView={countries:null,states:null,cities:null,countrySearch:"",stateSearch:"",citySearch:""};
+    const asnView={mode:"all",search:""};
+    const WATCH_HOURS_PER_TS_ROW=6/3600;
+    const DEFAULT_PREVIEW_ROWS=10;
+    const expandableLists=[["channelLeaderboard","channelExpand",DEFAULT_PREVIEW_ROWS],["deviceLeaderboard","deviceExpand",DEFAULT_PREVIEW_ROWS],["modelLeaderboard","modelExpand",DEFAULT_PREVIEW_ROWS],["osLeaderboard","osExpand",DEFAULT_PREVIEW_ROWS],["osDetailLeaderboard","osDetailExpand",DEFAULT_PREVIEW_ROWS],["asnLeaderboard","asnExpand",DEFAULT_PREVIEW_ROWS],["geoCountryLeaderboard","geoCountryExpand",DEFAULT_PREVIEW_ROWS],["geoStateLeaderboard","geoStateExpand",DEFAULT_PREVIEW_ROWS],["geoCityLeaderboard","geoCityExpand",DEFAULT_PREVIEW_ROWS]];
 
     function el(id){return document.getElementById(id)}
     function num(value){const parsed=Number(value);return Number.isFinite(parsed)?parsed:0}
@@ -352,18 +396,38 @@
     }
     function sourceOk(row){return state.source==="all"||String(row.source)===state.source}
     function dateOk(row){const value=String(row.log_date||"").slice(0,10);return value>=state.from&&value<=state.to}
-    function activeChannels(){return unique((DATA.channel_daily||[]).filter(sourceOk).map(function(row){return String(row.channel_name)})).sort(function(a,b){return a.localeCompare(b)});}
+    function activeChannels(){return unique(CHANNEL_DAILY.filter(sourceOk).map(function(row){return String(row.channel_name)})).sort(function(a,b){return a.localeCompare(b)});}
     function channelOk(row){return state.channels===null||state.channels.has(String(row.channel_name))}
     function selectedRows(){
       if(!renderCache.selectedRows){
-        const rows=state.channels===null?(DATA.source_daily||[]):(DATA.channel_daily||[]);
+        const rows=state.channels===null?SOURCE_DAILY:CHANNEL_DAILY;
         renderCache.selectedRows=rows.filter(function(row){return sourceOk(row)&&dateOk(row)&&(state.channels===null||channelOk(row))});
       }
       return renderCache.selectedRows;
     }
     function selectedChannelRows(){
-      if(!renderCache.selectedChannelRows)renderCache.selectedChannelRows=(DATA.channel_daily||[]).filter(function(row){return sourceOk(row)&&dateOk(row)&&channelOk(row)});
+      if(!renderCache.selectedChannelRows)renderCache.selectedChannelRows=CHANNEL_DAILY.filter(function(row){return sourceOk(row)&&dateOk(row)&&channelOk(row)});
       return renderCache.selectedChannelRows;
+    }
+    function rowsForWindow(from,to){
+      const rows=state.channels===null?SOURCE_DAILY:CHANNEL_DAILY;
+      return rows.filter(function(row){
+        const value=String(row.log_date||"").slice(0,10);
+        return sourceOk(row)&&value>=from&&value<=to&&(state.channels===null||channelOk(row));
+      });
+    }
+    function periodDayCount(from,to){
+      const start=new Date(String(from).slice(0,10)+"T00:00:00Z");
+      const end=new Date(String(to).slice(0,10)+"T00:00:00Z");
+      return Math.max(1,Math.round((end-start)/86400000)+1);
+    }
+    function previousPeriodRows(){
+      if(renderCache.previousPeriodRows)return renderCache.previousPeriodRows;
+      const days=periodDayCount(state.from,state.to);
+      const previousTo=addDays(state.from,-1),previousFrom=addDays(state.from,-days);
+      const bounds=rangeForSource();
+      renderCache.previousPeriodRows=previousFrom<bounds.min?[]:rowsForWindow(previousFrom,previousTo);
+      return renderCache.previousPeriodRows;
     }
     function selectedDayCount(rows){return unique(rows.map(function(row){return String(row.log_date).slice(0,10)})).length}
     function setValue(id,value,isAvailable){const node=el(id);node.textContent=isAvailable===false?"Not Available":value;node.classList.toggle("na",isAvailable===false)}
@@ -376,8 +440,8 @@
       const ranges=availableRanges().map(function(row){return row.source.toUpperCase()+" "+formatDate(row.min_date)+" to "+formatDate(row.max_date)});
       el("coverageDates").textContent=ranges.join(" | ");
       el("coverageStrip").innerHTML=availableRanges().map(function(row){return '<div class="coverage-item"><strong>'+escapeHtml(row.source.toUpperCase())+'</strong>'+formatDate(row.min_date)+' to '+formatDate(row.max_date)+'<br>Latest completed ETL data</div>'}).join("");
-      const labels={watch_hours:"Watch Hours",ip_users:"IP Users",device_users:"Device ID Users",session_users:"Session ID Users",clips_watched:"Clips Watched",total_views:"Total Views",average_watch:"Average Watch Time",device_os:"Devices & OS",markets:"Markets"};
-      el("guideGrid").innerHTML=Object.keys(DATA.definitions||{}).map(function(key){return '<div class="guide-item"><strong>'+escapeHtml(labels[key]||key)+'</strong>'+escapeHtml(DATA.definitions[key])+'</div>'}).join("");
+      const labels={watch_hours:"Watch Hours",ip_users:"IP Users",device_users:"Device ID Users",session_users:"Session ID Users",clips_watched:"Clips Watched",total_views:"Total Views",average_watch:"Average Watch Time",device_os:"Devices & OS",asn:"Networks & ASNs"};
+      el("guideGrid").innerHTML=Object.keys(DATA.definitions||{}).filter(function(key){return key!=="markets"}).map(function(key){return '<div class="guide-item"><strong>'+escapeHtml(labels[key]||key)+'</strong>'+escapeHtml(DATA.definitions[key])+'</div>'}).join("");
     }
 
     function renderSourceButtons(){
@@ -467,8 +531,53 @@
       return text;
     }
 
+    function metricTrend(currentRows,previousRows,key){
+      const currentDays=selectedDayCount(currentRows),previousDays=selectedDayCount(previousRows);
+      if(!currentRows.length||!previousRows.length||currentDays!==previousDays)return null;
+      const current=sum(currentRows,key),previous=sum(previousRows,key),delta=current-previous;
+      return {
+        pct:previous===0?(current===0?0:null):(delta*100/previous),
+        delta:delta,
+        direction:delta>0?"up":delta<0?"down":"flat",
+        days:currentDays
+      };
+    }
+
+    function renderTrend(id,trend){
+      const node=el(id);
+      node.className="kpi-trend";
+      if(!trend){node.textContent="No comparable prior period";return}
+      node.classList.add(trend.direction);
+      const period=trend.days===1?"previous day":"previous "+trend.days+"D";
+      if(trend.pct===null){
+        node.textContent=(trend.delta>0?"+":"")+nf1.format(trend.delta)+" vs "+period;
+        return;
+      }
+      node.textContent=(trend.pct>0?"+":"")+nf1.format(trend.pct)+"% vs "+period;
+    }
+
+    function renderSourceSummary(rows){
+      const totals=new Map();
+      rows.forEach(function(row){
+        const source=String(row.source||"unknown").toUpperCase();
+        const item=totals.get(source)||{watch_hours:0,clips_watched:0,ip_users:0,total_views:0};
+        item.watch_hours+=num(row.watch_hours);item.clips_watched+=num(row.clips_watched);
+        item.ip_users+=num(row.ip_users);item.total_views+=num(row.total_views);
+        totals.set(source,item);
+      });
+      const ranked=Array.from(totals.entries()).sort(function(a,b){return b[1].watch_hours-a[1].watch_hours||a[0].localeCompare(b[0])});
+      el("sourceSummary").innerHTML=ranked.length?ranked.map(function(item){
+        return '<article class="source-card"><div class="source-name">'+escapeHtml(item[0])+'</div>'+
+          '<div class="source-metric"><span>Watch Hours</span><strong>'+formatHours(item[1].watch_hours)+'</strong></div>'+
+          '<div class="source-metric"><span>Clips</span><strong>'+formatCount(item[1].clips_watched)+'</strong></div>'+
+          '<div class="source-metric"><span>IP Users</span><strong>'+formatCount(item[1].ip_users)+'</strong></div>'+
+          '<div class="source-metric"><span>Views</span><strong>'+formatCount(item[1].total_views)+'</strong></div></article>';
+      }).join(""):'<div class="empty">No matching source data.</div>';
+    }
+
     function renderKpis(){
       const rows=selectedRows();
+      const previousRows=previousPeriodRows();
       const days=selectedDayCount(rows);
       const custom=state.channels!==null;
       const watch=sum(rows,"watch_hours"),clips=sum(rows,"clips_watched"),views=sum(rows,"total_views"),ips=sum(rows,"ip_users");
@@ -483,11 +592,16 @@
       setValue("deviceUsers",formatCount(devices),hasDevices);el("deviceUsersNote").textContent=identityNote("device_id",days,custom);
       setValue("sessionUsers",formatCount(sessions),hasSessions);el("sessionUsersNote").textContent=identityNote("session_id",days,custom);
       setValue("averageWatch",avg===null?"":formatMinutes(avg),avg!==null);el("averageWatchNote").textContent=avg===null?"Matching IP denominator is unavailable":"Watch minutes / selected daily IP total";
+      renderTrend("watchHoursTrend",metricTrend(rows,previousRows,"watch_hours"));
+      renderTrend("clipsTrend",metricTrend(rows,previousRows,"clips_watched"));
+      renderTrend("ipUsersTrend",metricTrend(rows,previousRows,"ip_users"));
+      renderTrend("viewsTrend",metricTrend(rows,previousRows,"total_views"));
+      renderSourceSummary(rows);
     }
 
     function groupedByDate(rows){
       const map=new Map();
-      rows.forEach(function(row){const date=String(row.log_date).slice(0,10);if(!map.has(date))map.set(date,{date:date,watch_hours:0,ip_users:0});const item=map.get(date);item.watch_hours+=num(row.watch_hours);item.ip_users+=num(row.ip_users)});
+      rows.forEach(function(row){const date=String(row.log_date).slice(0,10);if(!map.has(date))map.set(date,{date:date,watch_hours:0,ip_users:0,clips_watched:0,total_views:0});const item=map.get(date);item.watch_hours+=num(row.watch_hours);item.ip_users+=num(row.ip_users);item.clips_watched+=num(row.clips_watched);item.total_views+=num(row.total_views)});
       return Array.from(map.values()).sort(function(a,b){return a.date.localeCompare(b.date)});
     }
 
@@ -500,13 +614,106 @@
       dailyChart=new Chart(canvas,{type:"line",data:{labels:rows.map(function(row){return formatDate(row.date)}),datasets:[{label:"Watch Hours",data:rows.map(function(row){return row.watch_hours}),borderColor:"#087f78",backgroundColor:"rgba(8,127,120,.10)",borderWidth:2,pointRadius:rows.length>45?0:2,tension:.22,yAxisID:"y"},{label:"IP Users",data:rows.map(function(row){return row.ip_users}),borderColor:"#2463a2",backgroundColor:"rgba(36,99,162,.08)",borderWidth:2,pointRadius:rows.length>45?0:2,tension:.22,yAxisID:"y1"}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{position:"bottom",labels:{boxWidth:10,usePointStyle:true,font:{size:11}}},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+": "+(ctx.dataset.yAxisID==="y"?nf1.format(ctx.parsed.y)+" h":formatCount(ctx.parsed.y))}}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:10,font:{size:10}}},y:{beginAtZero:true,position:"left",title:{display:true,text:"Watch Hours",font:{size:10}},ticks:{font:{size:10}}},y1:{beginAtZero:true,position:"right",title:{display:true,text:"IP Users",font:{size:10}},grid:{drawOnChartArea:false},ticks:{font:{size:10}}}}}});
     }
 
+    function scopedGeoChannelRows(){
+      return RAW_GEO_CHANNEL_ROWS.filter(function(row){return sourceOk(row)&&dateOk(row)&&channelOk(row)});
+    }
+
+    function syncChannelGeoFilters(rows){
+      const countries=unique(rows.map(function(row){return rawGeoValue(row.country)})).sort(function(a,b){return rawCountryLabel(a).localeCompare(rawCountryLabel(b))});
+      const availableCountries=new Set(countries);
+      if(channelGeoView.countries!==null){
+        channelGeoView.countries=new Set(Array.from(channelGeoView.countries).filter(function(value){return availableCountries.has(value)}));
+        if(channelGeoView.countries.size===countries.length)channelGeoView.countries=null;
+      }
+      el("channelGeoCountrySummary").textContent=selectedGeoCount(channelGeoView.countries,"countries");
+      el("channelGeoCountrySearch").value=channelGeoView.countrySearch;
+      const countryNeedle=channelGeoView.countrySearch.trim().toLowerCase();
+      const visibleCountries=countries.filter(function(value){return !countryNeedle||rawCountryLabel(value).toLowerCase().includes(countryNeedle)||value.toLowerCase().includes(countryNeedle)});
+      el("channelGeoCountryOptions").innerHTML=visibleCountries.map(function(value){const checked=channelGeoView.countries===null||channelGeoView.countries.has(value);return '<label class="geo-multi-option"><input type="checkbox" data-channel-geo-country="'+escapeHtml(value)+'" '+(checked?"checked":"")+'><span>'+escapeHtml(rawCountryLabel(value))+'</span></label>'}).join("");
+      el("channelGeoCountryOptions").querySelectorAll("input").forEach(function(input){input.addEventListener("change",function(){
+        if(channelGeoView.countries===null)channelGeoView.countries=new Set(countries);
+        if(input.checked)channelGeoView.countries.add(input.dataset.channelGeoCountry);else channelGeoView.countries.delete(input.dataset.channelGeoCountry);
+        if(channelGeoView.countries.size===countries.length)channelGeoView.countries=null;
+        channelGeoView.states=null;channelGeoView.cities=null;renderLeaderboard();
+      })});
+
+      const stateDetails=el("channelGeoStateDetails");
+      if(channelGeoView.countries===null||!channelGeoView.countries.size){
+        channelGeoView.states=null;stateDetails.dataset.disabled="true";stateDetails.removeAttribute("open");
+        el("channelGeoStateSummary").textContent="Choose country first";el("channelGeoStateOptions").innerHTML="";
+      }else{
+        const options=Array.from(rows.filter(function(row){return channelGeoView.countries.has(rawGeoValue(row.country))}).reduce(function(map,row){
+          const country=rawGeoValue(row.country),stateName=rawGeoValue(row.state),key=geoStateKey(country,stateName);
+          if(!map.has(key))map.set(key,{key:key,label:rawCountryLabel(country)+" / "+stateName});return map;
+        },new Map()).values()).sort(function(a,b){return a.label.localeCompare(b.label)});
+        const optionKeys=new Set(options.map(function(item){return item.key}));
+        if(channelGeoView.states!==null){
+          channelGeoView.states=new Set(Array.from(channelGeoView.states).filter(function(value){return optionKeys.has(value)}));
+          if(channelGeoView.states.size===options.length)channelGeoView.states=null;
+        }
+        stateDetails.dataset.disabled="false";
+        el("channelGeoStateSummary").textContent=selectedGeoCount(channelGeoView.states,"states / regions");
+        el("channelGeoStateSearch").value=channelGeoView.stateSearch;
+        const stateNeedle=channelGeoView.stateSearch.trim().toLowerCase();
+        const visibleStates=options.filter(function(item){return !stateNeedle||item.label.toLowerCase().includes(stateNeedle)});
+        el("channelGeoStateOptions").innerHTML=visibleStates.map(function(item){const checked=channelGeoView.states===null||channelGeoView.states.has(item.key);return '<label class="geo-multi-option"><input type="checkbox" data-channel-geo-state="'+escapeHtml(item.key)+'" '+(checked?"checked":"")+'><span>'+escapeHtml(item.label)+'</span></label>'}).join("");
+        el("channelGeoStateOptions").querySelectorAll("input").forEach(function(input){input.addEventListener("change",function(){
+          if(channelGeoView.states===null)channelGeoView.states=new Set(options.map(function(item){return item.key}));
+          if(input.checked)channelGeoView.states.add(input.dataset.channelGeoState);else channelGeoView.states.delete(input.dataset.channelGeoState);
+          if(channelGeoView.states.size===options.length)channelGeoView.states=null;
+          channelGeoView.cities=null;renderLeaderboard();
+        })});
+      }
+      const cityDetails=el("channelGeoCityDetails");
+      const cityOptions=Array.from(rows.filter(function(row){
+        return (channelGeoView.countries===null||channelGeoView.countries.has(rawGeoValue(row.country)))&&
+          (channelGeoView.states===null||channelGeoView.states.has(geoStateKeyForRow(row)))&&hasReportedCity(row.city);
+      }).reduce(function(map,row){
+        const country=rawGeoValue(row.country),stateName=rawGeoValue(row.state),city=rawGeoValue(row.city),key=geoCityKey(country,stateName,city);
+        if(!map.has(key))map.set(key,{key:key,label:rawCountryLabel(country)+" / "+stateName+" / "+city});
+        return map;
+      },new Map()).values()).sort(function(a,b){return a.label.localeCompare(b.label)});
+      const cityKeys=new Set(cityOptions.map(function(item){return item.key}));
+      if(channelGeoView.cities!==null){
+        channelGeoView.cities=new Set(Array.from(channelGeoView.cities).filter(function(value){return cityKeys.has(value)}));
+        if(channelGeoView.cities.size===cityOptions.length)channelGeoView.cities=null;
+      }
+      cityDetails.dataset.disabled=cityOptions.length?"false":"true";
+      if(!cityOptions.length)cityDetails.removeAttribute("open");
+      el("channelGeoCitySummary").textContent=cityOptions.length?selectedGeoCount(channelGeoView.cities,"cities"):"No cities available";
+      el("channelGeoCitySearch").value=channelGeoView.citySearch;
+      const cityNeedle=channelGeoView.citySearch.trim().toLowerCase();
+      const visibleCities=cityOptions.filter(function(item){return !cityNeedle||item.label.toLowerCase().includes(cityNeedle)});
+      el("channelGeoCityOptions").innerHTML=visibleCities.map(function(item){const checked=channelGeoView.cities===null||channelGeoView.cities.has(item.key);return '<label class="geo-multi-option"><input type="checkbox" data-channel-geo-city="'+escapeHtml(item.key)+'" '+(checked?"checked":"")+'><span>'+escapeHtml(item.label)+'</span></label>'}).join("");
+      el("channelGeoCityOptions").querySelectorAll("input").forEach(function(input){input.addEventListener("change",function(){
+        if(channelGeoView.cities===null)channelGeoView.cities=new Set(cityOptions.map(function(item){return item.key}));
+        if(input.checked)channelGeoView.cities.add(input.dataset.channelGeoCity);else channelGeoView.cities.delete(input.dataset.channelGeoCity);
+        if(channelGeoView.cities.size===cityOptions.length)channelGeoView.cities=null;
+        renderLeaderboard();
+      })});
+    }
+
+    function channelGeoMatches(row){
+      return (channelGeoView.countries===null||channelGeoView.countries.has(rawGeoValue(row.country)))&&
+        (channelGeoView.states===null||channelGeoView.states.has(geoStateKeyForRow(row)))&&
+        (channelGeoView.cities===null||channelGeoView.cities.has(geoCityKeyForRow(row)));
+    }
+
     function renderLeaderboard(){
-      const rows=selectedChannelRows(),map=new Map();
-      rows.forEach(function(row){const name=String(row.channel_name);map.set(name,(map.get(name)||0)+num(row.watch_hours))});
+      const geoRows=scopedGeoChannelRows();
+      syncChannelGeoFilters(geoRows);
+      const geoFiltered=channelGeoView.countries!==null||channelGeoView.states!==null||channelGeoView.cities!==null;
+      const map=new Map();
+      if(geoFiltered){
+        geoRows.filter(channelGeoMatches).forEach(function(row){const name=String(row.channel_name);map.set(name,(map.get(name)||0)+num(row.raw_ts_rows)*WATCH_HOURS_PER_TS_ROW)});
+      }else{
+        selectedChannelRows().forEach(function(row){const name=String(row.channel_name);map.set(name,(map.get(name)||0)+num(row.watch_hours))});
+      }
       const ranked=Array.from(map.entries()).sort(function(a,b){return b[1]-a[1]||a[0].localeCompare(b[0])}),max=ranked.length?ranked[0][1]:0;
       el("channelLeaderboard").innerHTML=ranked.length?ranked.map(function(item,index){const width=max?Math.max(2,item[1]*100/max):0;return '<div class="rank-row"><div class="rank">#'+(index+1)+'</div><div class="rank-main"><div class="rank-name"><span title="'+escapeHtml(item[0])+'">'+escapeHtml(item[0])+'</span></div><div class="mini-track"><div class="mini-fill" style="width:'+width.toFixed(2)+'%"></div></div></div><div class="rank-value">'+formatHours(item[1])+'</div></div>'}).join(""):'<div class="empty">No matching channel data.</div>';
       el("channelCount").textContent=ranked.length+" channel"+(ranked.length===1?"":"s");
-      capLeaderboardRows("channelLeaderboard","channelExpand",15);
+      el("channelLeaderboardNote").textContent=geoFiltered?"Channels ranked by all-status watch hours within the selected geography":"All matching channels ranked by watch hours";
+      capLeaderboardRows("channelLeaderboard","channelExpand",DEFAULT_PREVIEW_ROWS);
     }
 
     function scopedDimensionGroups(rows,key,values){
@@ -546,56 +753,107 @@
 
     function capLeaderboardRows(leaderboardId,buttonId,visibleRowCount){
       const list=el(leaderboardId),button=el(buttonId),rows=Array.from(list.querySelectorAll(".rank-row"));
-      const rowLimit=Math.max(1,Math.round(num(visibleRowCount)||15));
+      const rowLimit=Math.max(1,Math.round(num(visibleRowCount)||DEFAULT_PREVIEW_ROWS));
       const expanded=list.dataset.expanded==="true";
       if(rows.length<=rowLimit){list.dataset.expanded="false";list.style.maxHeight="";list.style.overflowY="";button.hidden=true;return}
-      button.hidden=false;button.textContent=expanded?"Collapse":"Expand";
+      button.hidden=false;button.textContent=expanded?"Collapse":"Expand All";
       if(expanded){list.style.maxHeight="none";list.style.overflowY="visible";return}
-      // Measure the final preview row so the cap remains accurate across responsive layouts.
-      const lastVisible=rows[rowLimit-1];
-      list.style.maxHeight=(lastVisible.offsetTop+lastVisible.offsetHeight)+"px";
+      // Sum row heights instead of using offsetTop, which may be relative to a parent panel.
+      const style=getComputedStyle(list),gap=parseFloat(style.rowGap||style.gap)||0;
+      const visibleHeight=rows.slice(0,rowLimit).reduce(function(total,row){return total+row.getBoundingClientRect().height},0)+gap*(rowLimit-1);
+      list.scrollTop=0;
+      list.style.maxHeight=Math.ceil(visibleHeight)+"px";
       list.style.overflowY="auto";
     }
 
     function renderDeviceAndOs(){
-      const groups=scopedDimensionGroups(UA_ROWS,"dimension",["device","os","os_detail"]);
-      const deviceRows=groups.device,osRows=groups.os,osDetailRows=groups.os_detail;
+      const groups=scopedDimensionGroups(UA_ROWS,"dimension",["device","model","os","os_detail"]);
+      const deviceRows=groups.device,modelRows=groups.model,osRows=groups.os,osDetailRows=groups.os_detail;
       const attributedRows=deviceRows.reduce(function(value,row){return value+num(row.raw_ts_rows)},0);
       const selectedSegments=sum(selectedRows(),"clips_watched");
       const coverage=selectedSegments>0?attributedRows*100/selectedSegments:null;
       el("uaCoverage").textContent=coverage===null?"No playback":"UA coverage "+nf1.format(coverage)+"%";
       const coarse=state.channels!==null&&(state.source==="stream"||state.source==="all");
       el("deviceScopeNote").textContent=coarse?"FAST decoded UA; STREAM coarse channel UA family":"Decoded incremental UA reference";
+      el("modelScopeNote").textContent=coarse?"FAST decoded models; STREAM channel model is not exposed":"Decoded brand and model from incremental UA reference";
       el("osScopeNote").textContent=coarse?"STREAM channel OS is a coarse UA-family inference":"Decoded OS family from UA";
       el("osDetailScopeNote").textContent=coarse?"OS version where exposed; STREAM channel scope may remain family-level":"Decoded OS name and version where exposed";
       const deviceLabels=new Set(deviceRows.map(function(row){return String(row.label||"Unknown / NA")}));
+      const modelLabels=new Set(modelRows.map(function(row){return String(row.label||"Unknown / NA")}));
       const osLabels=new Set(osRows.map(function(row){return String(row.label||"Unknown / NA")}));
       const detailLabels=new Set(osDetailRows.map(function(row){return String(row.label||"Unknown / NA")}));
       el("deviceCount").textContent=deviceLabels.size+" value"+(deviceLabels.size===1?"":"s");
+      el("modelCount").textContent=modelLabels.size+" model"+(modelLabels.size===1?"":"s");
       el("osCount").textContent=osLabels.size+" value"+(osLabels.size===1?"":"s");
       el("osDetailCount").textContent=detailLabels.size+" detailed OS values";
       const allRows=Number.MAX_SAFE_INTEGER;
       renderRankedDistribution("deviceLeaderboard",deviceRows,allRows,"device");
+      renderRankedDistribution("modelLeaderboard",modelRows,allRows,"model");
       renderRankedDistribution("osLeaderboard",osRows,allRows,"os");
       renderRankedDistribution("osDetailLeaderboard",osDetailRows,allRows,"os");
-      capLeaderboardRows("deviceLeaderboard","deviceExpand",15);
-      capLeaderboardRows("osLeaderboard","osExpand",15);
-      capLeaderboardRows("osDetailLeaderboard","osDetailExpand",15);
+      capLeaderboardRows("deviceLeaderboard","deviceExpand",DEFAULT_PREVIEW_ROWS);
+      capLeaderboardRows("modelLeaderboard","modelExpand",DEFAULT_PREVIEW_ROWS);
+      capLeaderboardRows("osLeaderboard","osExpand",DEFAULT_PREVIEW_ROWS);
+      capLeaderboardRows("osDetailLeaderboard","osDetailExpand",DEFAULT_PREVIEW_ROWS);
     }
 
-    function renderMarkets(){
-      const groups=scopedDimensionGroups(MARKET_ROWS,"market_level",["india_state","country"]);
-      const states=groups.india_state,countries=groups.country;
-      const allRows=Number.MAX_SAFE_INTEGER;
-      renderRankedDistribution("stateLeaderboard",states,allRows,"state");
-      renderRankedDistribution("countryLeaderboard",countries,allRows,"country");
-      const stateLabels=new Set(states.map(function(row){return String(row.label||"Unknown / NA")}));
-      const countryLabels=new Set(countries.map(function(row){return String(row.label||"Unknown / NA")}));
-      el("stateCount").textContent=stateLabels.size+" region"+(stateLabels.size===1?"":"s");
-      el("countryCount").textContent=countryLabels.size+" countr"+(countryLabels.size===1?"y":"ies");
-      capLeaderboardRows("stateLeaderboard","stateExpand",15);
-      capLeaderboardRows("countryLeaderboard","countryExpand",15);
+    function asnIsDecoded(row){
+      const name=String(row.as_name||"").trim().toLowerCase();
+      const status=String(row.lookup_status||"").trim().toLowerCase();
+      return !!name&&name!=="unknown"&&name!=="unknown / na"&&status!=="unknown"&&status!=="unmapped";
     }
+
+    function renderNetworks(){
+      el("asnSearch").value=asnView.search;
+      el("asnModeButtons").querySelectorAll("button").forEach(function(button){button.classList.toggle("active",button.dataset.asnMode===asnView.mode)});
+      if(state.channels!==null){
+        el("asnCoverage").textContent="Not Available";
+        el("asnDecodedCount").textContent="Not Available";
+        el("asnUnresolvedCount").textContent="Not Available";
+        el("asnWatchHours").textContent="Not Available";
+        el("asnCount").textContent="0 ASNs";
+        el("asnScopeNote").textContent="Channel-level ASN attribution is not available in the current source mart. Select All Channels to view source/date network evidence.";
+        el("asnLeaderboard").innerHTML='<div class="empty">ASN network evidence is unavailable for a channel-filtered selection.</div>';
+        capLeaderboardRows("asnLeaderboard","asnExpand",DEFAULT_PREVIEW_ROWS);
+        return;
+      }
+      const totals=new Map();
+      ASN_ROWS.filter(function(row){return sourceOk(row)&&dateOk(row)}).forEach(function(row){
+        const asn=String(row.asn||"0"),item=totals.get(asn)||{
+          asn:asn,as_name:String(row.as_name||"Unknown / NA"),as_country:String(row.as_country||"Unknown / NA"),
+          as_domain:String(row.as_domain||""),asn_type:String(row.asn_type||"Unknown / NA"),
+          lookup_status:String(row.lookup_status||"unmapped"),raw_ts_rows:0,approx_unique_ips:0
+        };
+        item.raw_ts_rows+=num(row.raw_ts_rows);item.approx_unique_ips+=num(row.approx_unique_ips);totals.set(asn,item);
+      });
+      const allRows=Array.from(totals.values());
+      const totalSegments=allRows.reduce(function(total,row){return total+row.raw_ts_rows},0);
+      const decodedRows=allRows.filter(asnIsDecoded);
+      const decodedSegments=decodedRows.reduce(function(total,row){return total+row.raw_ts_rows},0);
+      const needle=asnView.search.trim().toLowerCase();
+      const ranked=allRows.filter(function(row){
+        const decoded=asnIsDecoded(row);
+        const modeOk=asnView.mode==="all"||(asnView.mode==="decoded"&&decoded)||(asnView.mode==="unresolved"&&!decoded);
+        const haystack=["AS"+row.asn,row.as_name,row.as_country,row.as_domain,row.asn_type].join(" ").toLowerCase();
+        return modeOk&&(!needle||haystack.includes(needle));
+      }).sort(function(a,b){return b.raw_ts_rows-a.raw_ts_rows||a.as_name.localeCompare(b.as_name)});
+      const max=ranked.length?ranked[0].raw_ts_rows:0;
+      el("asnCoverage").textContent=totalSegments?nf1.format(decodedSegments*100/totalSegments)+"%":"No playback";
+      el("asnDecodedCount").textContent=formatCount(decodedRows.length);
+      el("asnUnresolvedCount").textContent=formatCount(allRows.length-decodedRows.length);
+      el("asnWatchHours").textContent=formatHours(totalSegments*WATCH_HOURS_PER_TS_ROW);
+      el("asnCount").textContent=ranked.length+" of "+allRows.length+" ASN"+(allRows.length===1?"":"s");
+      el("asnScopeNote").textContent="Source/date ASN attribution across all HTTP statuses. IP activity is the sum of daily approximate ASN IP counts.";
+      el("asnLeaderboard").innerHTML=ranked.length?ranked.map(function(row,index){
+        const hours=row.raw_ts_rows*WATCH_HOURS_PER_TS_ROW,width=max?Math.max(2,row.raw_ts_rows*100/max):0;
+        const decodedName=asnIsDecoded(row)?row.as_name:"Unknown / NA";
+        const network="AS"+escapeHtml(row.asn)+" - "+escapeHtml(decodedName);
+        const metadata=[row.as_country,row.asn_type,row.as_domain].filter(function(value){return value&&value!=="Unknown / NA"}).map(escapeHtml).join(" | ")||"Decoder mapping unavailable";
+        return '<div class="rank-row asn-rank-row"><div class="rank">#'+(index+1)+'</div><div class="rank-main"><div class="rank-name"><span title="'+network+'">'+network+'</span></div><div class="asn-meta">'+metadata+'</div><div class="mini-track"><div class="mini-fill asn" style="width:'+width.toFixed(2)+'%"></div></div></div><div class="rank-value">'+formatHours(hours)+'<br><span>'+formatCount(row.approx_unique_ips)+' IP-day activity</span></div></div>';
+      }).join(""):'<div class="empty">No matching ASN data for this selection.</div>';
+      capLeaderboardRows("asnLeaderboard","asnExpand",DEFAULT_PREVIEW_ROWS);
+    }
+
     function rawGeoValue(value){const text=String(value??"").trim();return text||"Unknown / NA"}
     function hasReportedCity(value){
       const text=String(value??"").trim().toLowerCase();
@@ -606,10 +864,30 @@
       if(!/^[A-Z]{2}$/.test(code)||!countryNameDecoder)return code;
       try{const name=countryNameDecoder.of(code);return name&&name!==code?code+" ("+name+")":code}catch(error){return code}
     }
+    function syncGeoChannelFilter(){
+      const channels=unique(RAW_GEO_CHANNEL_ROWS.filter(function(row){return sourceOk(row)&&dateOk(row)&&channelOk(row)}).map(function(row){return String(row.channel_name)})).sort(function(a,b){return a.localeCompare(b)});
+      const availableChannels=new Set(channels);
+      if(geoView.channels!==null){
+        geoView.channels=new Set(Array.from(geoView.channels).filter(function(value){return availableChannels.has(value)}));
+        if(geoView.channels.size===channels.length)geoView.channels=null;
+      }
+      el("geoChannelSummary").textContent=selectedGeoCount(geoView.channels,"channels");
+      el("geoChannelSearch").value=geoView.channelSearch;
+      const needle=geoView.channelSearch.trim().toLowerCase();
+      const visibleChannels=channels.filter(function(value){return !needle||value.toLowerCase().includes(needle)});
+      el("geoChannelOptions").innerHTML=visibleChannels.map(function(value){const checked=geoView.channels===null||geoView.channels.has(value);return '<label class="geo-multi-option"><input type="checkbox" data-geo-channel="'+escapeHtml(value)+'" '+(checked?"checked":"")+'><span>'+escapeHtml(value)+'</span></label>'}).join("");
+      el("geoChannelOptions").querySelectorAll("input").forEach(function(input){input.addEventListener("change",function(){
+        if(geoView.channels===null)geoView.channels=new Set(channels);
+        if(input.checked)geoView.channels.add(input.dataset.geoChannel);else geoView.channels.delete(input.dataset.geoChannel);
+        if(geoView.channels.size===channels.length)geoView.channels=null;
+        geoView.countries=null;geoView.states=null;geoView.cities=null;delete renderCache.rawGeoRows;renderGeoAnalysis();
+      })});
+    }
     function rawGeoRows(){
       if(!renderCache.rawGeoRows){
-        const rows=state.channels===null?RAW_GEO_SOURCE_ROWS:RAW_GEO_CHANNEL_ROWS;
-        renderCache.rawGeoRows=rows.filter(function(row){return sourceOk(row)&&dateOk(row)&&(state.channels===null||channelOk(row))});
+        const channelScoped=state.channels!==null||geoView.channels!==null;
+        const rows=channelScoped?RAW_GEO_CHANNEL_ROWS:RAW_GEO_SOURCE_ROWS;
+        renderCache.rawGeoRows=rows.filter(function(row){return sourceOk(row)&&dateOk(row)&&(state.channels===null||channelOk(row))&&(geoView.channels===null||geoView.channels.has(String(row.channel_name)))});
       }
       return renderCache.rawGeoRows;
     }
@@ -626,9 +904,12 @@
     }
     function geoStateKey(country,stateName){return encodeURIComponent(country)+"|"+encodeURIComponent(stateName)}
     function geoStateKeyForRow(row){return geoStateKey(rawGeoValue(row.country),rawGeoValue(row.state))}
+    function geoCityKey(country,stateName,city){return geoStateKey(country,stateName)+"|"+encodeURIComponent(city)}
+    function geoCityKeyForRow(row){return geoCityKey(rawGeoValue(row.country),rawGeoValue(row.state),rawGeoValue(row.city))}
     function selectedGeoCount(values,label){return values===null?"All "+label:(values.size?values.size+" selected":"No "+label)}
     function countryMatches(row){return geoView.countries===null||geoView.countries.has(rawGeoValue(row.country))}
     function stateMatches(row){return geoView.states===null||geoView.states.has(geoStateKeyForRow(row))}
+    function cityMatches(row){return geoView.cities===null||geoView.cities.has(geoCityKeyForRow(row))}
     function syncGeoFilters(rows){
       const countries=groupRawGeo(rows,"country");
       const availableCountries=new Set(countries.map(function(item){return item.label}));
@@ -644,7 +925,7 @@
         if(geoView.countries===null)geoView.countries=new Set(countries.map(function(item){return item.label}));
         if(input.checked)geoView.countries.add(input.dataset.geoCountry);else geoView.countries.delete(input.dataset.geoCountry);
         if(geoView.countries.size===countries.length)geoView.countries=null;
-        geoView.states=null;renderGeoAnalysis();
+        geoView.states=null;geoView.cities=null;renderGeoAnalysis();
       })});
       const stateDetails=el("geoStateDetails");
       if(geoView.countries===null||!geoView.countries.size){
@@ -670,37 +951,58 @@
           if(geoView.states===null)geoView.states=new Set(options.map(function(item){return item.key}));
           if(input.checked)geoView.states.add(input.dataset.geoState);else geoView.states.delete(input.dataset.geoState);
           if(geoView.states.size===options.length)geoView.states=null;
-          renderGeoAnalysis();
+          geoView.cities=null;renderGeoAnalysis();
         })});
       }
+      const cityDetails=el("geoCityDetails");
+      const cityRows=rows.filter(countryMatches).filter(stateMatches).filter(function(row){return hasReportedCity(row.city)});
+      const cityOptions=Array.from(cityRows.reduce(function(map,row){
+        const country=rawGeoValue(row.country),stateName=rawGeoValue(row.state),city=rawGeoValue(row.city),key=geoCityKey(country,stateName,city);
+        if(!map.has(key))map.set(key,{key:key,label:rawCountryLabel(country)+" / "+stateName+" / "+city});
+        return map;
+      },new Map()).values()).sort(function(a,b){return a.label.localeCompare(b.label)});
+      const cityKeys=new Set(cityOptions.map(function(item){return item.key}));
+      if(geoView.cities!==null){
+        geoView.cities=new Set(Array.from(geoView.cities).filter(function(value){return cityKeys.has(value)}));
+        if(geoView.cities.size===cityOptions.length)geoView.cities=null;
+      }
+      cityDetails.dataset.disabled=cityOptions.length?"false":"true";
+      if(!cityOptions.length)cityDetails.removeAttribute("open");
+      el("geoCitySummary").textContent=cityOptions.length?selectedGeoCount(geoView.cities,"cities"):"No cities available";
       el("geoCitySearch").value=geoView.citySearch;
-      el("geoTopManual").value=geoView.limitMode==="custom"?String(geoView.limit):"";
-      el("geoTopPresets").querySelectorAll("button").forEach(function(button){button.classList.toggle("active",button.dataset.geoTop===geoView.limitMode)});
+      const cityNeedle=geoView.citySearch.trim().toLowerCase();
+      const visibleCities=cityOptions.filter(function(item){return !cityNeedle||item.label.toLowerCase().includes(cityNeedle)});
+      el("geoCityOptions").innerHTML=visibleCities.map(function(item){const checked=geoView.cities===null||geoView.cities.has(item.key);return '<label class="geo-multi-option"><input type="checkbox" data-geo-city="'+escapeHtml(item.key)+'" '+(checked?"checked":"")+'><span>'+escapeHtml(item.label)+'</span></label>'}).join("");
+      el("geoCityOptions").querySelectorAll("input").forEach(function(input){input.addEventListener("change",function(){
+        if(geoView.cities===null)geoView.cities=new Set(cityOptions.map(function(item){return item.key}));
+        if(input.checked)geoView.cities.add(input.dataset.geoCity);else geoView.cities.delete(input.dataset.geoCity);
+        if(geoView.cities.size===cityOptions.length)geoView.cities=null;
+        renderGeoAnalysis();
+      })});
     }
     function renderGeoAnalysis(){
+      syncGeoChannelFilter();
       const rows=rawGeoRows();
       syncGeoFilters(rows);
       const countries=groupGeoChartRows(rows,function(row){return rawCountryLabel(rawGeoValue(row.country))});
       const countryRows=rows.filter(countryMatches);
       const states=groupGeoChartRows(countryRows,function(row){return geoView.countries===null||geoView.countries.size!==1?rawCountryLabel(rawGeoValue(row.country))+" / "+rawGeoValue(row.state):rawGeoValue(row.state)});
-      const cityScope=countryRows.filter(stateMatches);
-      const cityNeedle=geoView.citySearch.trim().toLowerCase();
-      const cities=groupGeoChartRows(cityScope.filter(function(row){return hasReportedCity(row.city)&&(!cityNeedle||rawGeoValue(row.city).toLowerCase().includes(cityNeedle))}),function(row){
+      const cityScope=countryRows.filter(stateMatches).filter(cityMatches);
+      const cities=groupGeoChartRows(cityScope.filter(function(row){return hasReportedCity(row.city)}),function(row){
         const cityLabel=rawGeoValue(row.city);
         if(geoView.states!==null&&geoView.states.size===1)return cityLabel;
         return geoView.countries!==null&&geoView.countries.size===1?rawGeoValue(row.state)+" / "+cityLabel:rawCountryLabel(rawGeoValue(row.country))+" / "+rawGeoValue(row.state)+" / "+cityLabel;
       });
       el("geoStateChartNote").textContent=geoView.countries===null?"Choose country to drill into states.":"Selected country scope";
-      el("geoCityChartNote").textContent=(geoView.states!==null?"Known cities within selected states.":"Known city values only; blank/unknown cities excluded.")+(cityNeedle?" | matching "+geoView.citySearch:"");
+      el("geoCityChartNote").textContent=geoView.cities!==null?"Selected known cities; blank/unknown cities excluded.":(geoView.states!==null?"Known cities within selected states.":"Known city values only; blank/unknown cities excluded.");
       const panels=geoView.states!==null?1:(geoView.countries!==null?2:3);
       el("geoCountryPanel").hidden=geoView.countries!==null;
       el("geoStatePanel").hidden=geoView.states!==null;
       el("geoCountryPanel").parentElement.dataset.visiblePanels=String(panels);
-      const limit=geoView.limitMode==="all"?Math.max(countries.length,states.length,cities.length):geoView.limit;
-      function visibleCountText(values){const visible=geoView.limitMode==="all"?values.length:Math.min(geoView.limit,values.length);return geoView.limitMode==="all"?values.length+" values":visible+" of "+values.length}
+      function visibleCountText(values){return values.length+" value"+(values.length===1?"":"s")}
       el("geoCountryCount").textContent=visibleCountText(countries);el("geoStateCount").textContent=visibleCountText(states);el("geoCityCount").textContent=visibleCountText(cities);
-      renderRankedDistribution("geoCountryLeaderboard",countries,limit,"geo-country");renderRankedDistribution("geoStateLeaderboard",states,limit,"geo-state");renderRankedDistribution("geoCityLeaderboard",cities,limit,"geo-city");
-      capLeaderboardRows("geoCountryLeaderboard","geoCountryExpand",25);capLeaderboardRows("geoStateLeaderboard","geoStateExpand",25);capLeaderboardRows("geoCityLeaderboard","geoCityExpand",25);
+      renderRankedDistribution("geoCountryLeaderboard",countries,countries.length,"geo-country");renderRankedDistribution("geoStateLeaderboard",states,states.length,"geo-state");renderRankedDistribution("geoCityLeaderboard",cities,cities.length,"geo-city");
+      capLeaderboardRows("geoCountryLeaderboard","geoCountryExpand",DEFAULT_PREVIEW_ROWS);capLeaderboardRows("geoStateLeaderboard","geoStateExpand",DEFAULT_PREVIEW_ROWS);capLeaderboardRows("geoCityLeaderboard","geoCityExpand",DEFAULT_PREVIEW_ROWS);
     }
     function groupRawGeo(rows,key){
       const values=new Map();
@@ -724,7 +1026,7 @@
       el("scopeDescription").textContent=sourceLabel()+" | "+channelText+" | "+DATA.meta.freshness;
     }
 
-    function renderAll(){renderCache={};renderScope();renderKpis();renderChart();renderLeaderboard();renderDeviceAndOs();renderMarkets();renderGeoAnalysis()}
+    function renderAll(){renderCache={};renderScope();renderKpis();renderChart();renderLeaderboard();renderDeviceAndOs();renderNetworks();renderGeoAnalysis()}
 
     el("singleMode").addEventListener("click",function(){setDateMode("single")});
     el("rangeMode").addEventListener("click",function(){setDateMode("range")});
@@ -734,22 +1036,56 @@
     el("channelSearch").addEventListener("input",function(){state.search=this.value;renderChannelOptions()});
     el("selectAllChannels").addEventListener("click",function(){state.channels=null;renderChannelOptions();renderAll()});
     el("clearChannels").addEventListener("click",function(){state.channels=new Set();renderChannelOptions();renderAll()});
+    el("channelGeoCountrySearch").addEventListener("input",function(){channelGeoView.countrySearch=this.value;renderLeaderboard()});
+    el("channelGeoStateSearch").addEventListener("input",function(){channelGeoView.stateSearch=this.value;renderLeaderboard()});
+    el("channelGeoCountrySelectAll").addEventListener("click",function(){channelGeoView.countries=null;channelGeoView.states=null;channelGeoView.cities=null;renderLeaderboard()});
+    el("channelGeoCountryClear").addEventListener("click",function(){channelGeoView.countries=new Set();channelGeoView.states=null;channelGeoView.cities=null;renderLeaderboard()});
+    el("channelGeoStateSelectAll").addEventListener("click",function(){channelGeoView.states=null;channelGeoView.cities=null;renderLeaderboard()});
+    el("channelGeoStateClear").addEventListener("click",function(){channelGeoView.states=new Set();channelGeoView.cities=null;renderLeaderboard()});
+    el("channelGeoStateDetails").querySelector("summary").addEventListener("click",function(event){if(el("channelGeoStateDetails").dataset.disabled==="true")event.preventDefault()});
+    el("channelGeoCitySearch").addEventListener("input",function(){channelGeoView.citySearch=this.value;renderLeaderboard()});
+    el("channelGeoCitySelectAll").addEventListener("click",function(){channelGeoView.cities=null;renderLeaderboard()});
+    el("channelGeoCityClear").addEventListener("click",function(){channelGeoView.cities=new Set();renderLeaderboard()});
+    el("channelGeoCityDetails").querySelector("summary").addEventListener("click",function(event){if(el("channelGeoCityDetails").dataset.disabled==="true")event.preventDefault()});
+    el("geoChannelSearch").addEventListener("input",function(){geoView.channelSearch=this.value;syncGeoChannelFilter()});
+    el("geoChannelSelectAll").addEventListener("click",function(){geoView.channels=null;geoView.countries=null;geoView.states=null;geoView.cities=null;delete renderCache.rawGeoRows;renderGeoAnalysis()});
+    el("geoChannelClear").addEventListener("click",function(){geoView.channels=new Set();geoView.countries=null;geoView.states=null;geoView.cities=null;delete renderCache.rawGeoRows;renderGeoAnalysis()});
     el("geoCountrySearch").addEventListener("input",function(){geoView.countrySearch=this.value;renderGeoAnalysis()});
     el("geoStateSearch").addEventListener("input",function(){geoView.stateSearch=this.value;renderGeoAnalysis()});
-    el("geoCountrySelectAll").addEventListener("click",function(){geoView.countries=null;geoView.states=null;renderGeoAnalysis()});
-    el("geoCountryClear").addEventListener("click",function(){geoView.countries=new Set();geoView.states=null;renderGeoAnalysis()});
-    el("geoStateSelectAll").addEventListener("click",function(){geoView.states=null;renderGeoAnalysis()});
-    el("geoStateClear").addEventListener("click",function(){geoView.states=new Set();renderGeoAnalysis()});
+    el("geoCountrySelectAll").addEventListener("click",function(){geoView.countries=null;geoView.states=null;geoView.cities=null;renderGeoAnalysis()});
+    el("geoCountryClear").addEventListener("click",function(){geoView.countries=new Set();geoView.states=null;geoView.cities=null;renderGeoAnalysis()});
+    el("geoStateSelectAll").addEventListener("click",function(){geoView.states=null;geoView.cities=null;renderGeoAnalysis()});
+    el("geoStateClear").addEventListener("click",function(){geoView.states=new Set();geoView.cities=null;renderGeoAnalysis()});
     el("geoStateDetails").querySelector("summary").addEventListener("click",function(event){if(el("geoStateDetails").dataset.disabled==="true")event.preventDefault()});
-    expandableLists.forEach(function(item){el(item[1]).addEventListener("click",function(){const list=el(item[0]);list.dataset.expanded=list.dataset.expanded==="true"?"false":"true";capLeaderboardRows(item[0],item[1],item[2])})});
     el("geoCitySearch").addEventListener("input",function(){geoView.citySearch=this.value;renderGeoAnalysis()});
-    el("geoTopPresets").querySelectorAll("button").forEach(function(button){button.addEventListener("click",function(){geoView.limitMode=this.dataset.geoTop;if(geoView.limitMode!=="all")geoView.limit=Number(geoView.limitMode);renderGeoAnalysis()})});
-    el("geoTopManual").addEventListener("change",function(){const value=Math.round(num(this.value));if(value>0){geoView.limit=Math.min(500,value);geoView.limitMode="custom";renderGeoAnalysis()}else{this.value=""}});
+    el("geoCitySelectAll").addEventListener("click",function(){geoView.cities=null;renderGeoAnalysis()});
+    el("geoCityClear").addEventListener("click",function(){geoView.cities=new Set();renderGeoAnalysis()});
+    el("geoCityDetails").querySelector("summary").addEventListener("click",function(event){if(el("geoCityDetails").dataset.disabled==="true")event.preventDefault()});
+    el("asnSearch").addEventListener("input",function(){asnView.search=this.value;renderNetworks()});
+    el("asnModeButtons").querySelectorAll("button").forEach(function(button){button.addEventListener("click",function(){asnView.mode=button.dataset.asnMode;renderNetworks()})});
+    expandableLists.forEach(function(item){el(item[1]).addEventListener("click",function(){const list=el(item[0]);list.dataset.expanded=list.dataset.expanded==="true"?"false":"true";capLeaderboardRows(item[0],item[1],item[2])})});
     document.addEventListener("click",function(event){const details=el("channelDetails");if(details.open&&!details.contains(event.target))details.removeAttribute("open")});
     let resizeTimer=null;
-    window.addEventListener("resize",function(){clearTimeout(resizeTimer);resizeTimer=setTimeout(function(){expandableLists.forEach(function(item){capLeaderboardRows(item[0],item[1],item[2])})},120)});
+    window.addEventListener("resize",function(){clearTimeout(resizeTimer);resizeTimer=setTimeout(function(){expandableLists.forEach(function(item){capLeaderboardRows(item[0],item[1],item[2])});syncScrollUi()},120)});
+    const topShell=document.querySelector(".top-shell");
+    const mobileFilterToggle=el("mobileFilterToggle");
+    let mobileFiltersMode="auto";
+    function syncScrollUi(){
+      topShell.classList.toggle("scrolled",window.scrollY>36);
+      const mobile=window.innerWidth<=680;
+      const filtersCollapsed=mobile&&(mobileFiltersMode==="closed"||(mobileFiltersMode==="auto"&&window.scrollY>36));
+      topShell.classList.toggle("mobile-filters-collapsed",filtersCollapsed);
+      mobileFilterToggle.setAttribute("aria-expanded",filtersCollapsed?"false":"true");
+      el("mobileFilterState").textContent=filtersCollapsed?"Show":"Hide";
+    }
+    mobileFilterToggle.addEventListener("click",function(){
+      mobileFiltersMode=topShell.classList.contains("mobile-filters-collapsed")?"open":"closed";
+      syncScrollUi();
+    });
+    let scrollFrame=null;
+    window.addEventListener("scroll",function(){if(scrollFrame!==null)return;scrollFrame=requestAnimationFrame(function(){scrollFrame=null;syncScrollUi()})},{passive:true});
 
-    renderMetadata();renderSourceButtons();syncDateControls();renderChannelOptions();renderAll();
+    renderMetadata();renderSourceButtons();syncDateControls();renderChannelOptions();renderAll();syncScrollUi();
   </script>
 </body>
 </html>

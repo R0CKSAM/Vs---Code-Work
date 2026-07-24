@@ -1,6 +1,6 @@
 # ETL Dashboard Data Catalog
 
-Originally generated from a deep scan of `ETL/src`, `ETL/data`, and `ETL/output` on 2026-06-19. Last updated on 2026-07-15 after adding the Veto Master Dashboard and its reusable marts.
+Originally generated from a deep scan of `ETL/src`, `ETL/data`, and `ETL/output` on 2026-06-19. Last updated on 2026-07-24 after adding decoded ASN/network analysis to the Veto Master Dashboard.
 
 This file is the first place to check before building a new dashboard. It lists the reusable parquet, CSV, Excel, JSON, and HTML artifacts already produced by the ETL, what each artifact means, and which dashboard currently uses it.
 
@@ -184,6 +184,7 @@ These compact tables are rebuilt quickly from existing marts; they do not rescan
 | `master_channel_daily.parquet` | date + source + channel | The same metrics at channel grain; view-only channels are retained even when no `.ts` playback follows the manifest request | Veto Master Dashboard |
 | `master_ua_daily.parquet` | date + source + source/channel scope + device/OS label | UA-attributed all-status watch hours. FAST channel rows use decoded UA detail; STREAM channel rows use the available coarse UA family. | Veto Master Dashboard |
 | `master_market_daily.parquet` | date + source + source/channel scope + India state or other country | Channel-aware market watch hours with India state aliases normalized and invalid India-state labels surfaced as Unknown / NA | Veto Master Dashboard |
+| `master_asn_daily.parquet` | date + source + source-reported ASN or ASN chain | All-status ASN watch-hour basis and daily approximate IP activity enriched with decoded network/provider name, country, domain, and network type. Channel attribution is not available at this mart grain. | Veto Master Dashboard |
 | `master_dashboard_manifest.json` | generation run | Creation time, source coverage, row counts, and upstream mart paths | Pipeline/debug |
 
 For multi-day selections, IP/device/session cards are sums of daily distinct values and can count a returning identity on more than one day. FAST does not currently expose app `device_id` or `session_id`, so those metrics remain unavailable for FAST rather than being represented as zero.

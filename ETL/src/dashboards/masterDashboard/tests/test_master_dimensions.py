@@ -100,3 +100,85 @@ def test_raw_geo_hierarchy_preserves_source_values_without_labels(tmp_path: Path
     assert source.loc[0, "state"] == "Chattisgarh"
     assert source.loc[0, "city"] == "NEWDELHI"
     assert channel.loc[0, "channel_name"] == "India TV"
+
+
+def test_asn_daily_joins_decoded_network_names(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    watch_dir = tmp_path / "watch_hours" / "daily_tables"
+    watch_dir.mkdir(parents=True)
+    pd.DataFrame(
+        [
+            {
+                "log_date": "2026-07-14",
+                "source": "stream",
+                "asn": "AS24560",
+                "raw_ts_rows": 600,
+                "approx_unique_ips": 12,
+                "distinct_hosts": 2,
+            },
+            {
+                "log_date": "2026-07-14",
+                "source": "stream",
+                "asn": "999999.0",
+                "raw_ts_rows": 60,
+                "approx_unique_ips": 1,
+                "distinct_hosts": 1,
+            },
+            {
+                "log_date": "2026-07-14",
+                "source": "stream",
+                "asn": "5607:206067",
+                "raw_ts_rows": 30,
+                "approx_unique_ips": 1,
+                "distinct_hosts": 1,
+            },
+        ]
+    ).to_parquet(watch_dir / "asn_daily.parquet", index=False)
+    decoded = tmp_path / "asnDecoded.csv"
+    pd.DataFrame(
+        [
+            {
+                "asn": "24560",
+                "as_name": "Bharti Airtel Ltd. Telemedia Services",
+                "as_country": "India",
+                "as_domain": "airtel.in",
+                "asn_type": "Fixed Line ISP",
+                "lookup_status": "ok",
+            },
+            {
+                "asn": "5607",
+                "as_name": "SKY UK Limited",
+                "as_country": "United Kingdom",
+                "as_domain": "sky.com",
+                "asn_type": "Fixed Line ISP",
+                "lookup_status": "ok",
+            },
+            {
+                "asn": "206067",
+                "as_name": "Hutchison 3G UK Limited",
+                "as_country": "United Kingdom",
+                "as_domain": "ericsson.com",
+                "asn_type": "Mobile ISP",
+                "lookup_status": "ok",
+            },
+        ]
+    ).to_csv(decoded, index=False)
+    monkeypatch.setenv("VG_ASN_DECODED_CSV", str(decoded))
+
+    result, inputs = MODULE.build_asn_daily(
+        tmp_path,
+        [{"source": "stream", "min_date": "2026-07-14", "max_date": "2026-07-14"}],
+    )
+
+    mapped = result.loc[result["asn"].eq("24560")].iloc[0]
+    unmapped = result.loc[result["asn"].eq("999999")].iloc[0]
+    chained = result.loc[result["asn"].eq("5607:206067")].iloc[0]
+    assert mapped["as_name"] == "Bharti Airtel Ltd. Telemedia Services"
+    assert mapped["as_domain"] == "airtel.in"
+    assert unmapped["as_name"] == "Unknown / NA"
+    assert unmapped["lookup_status"] == "unmapped"
+    assert chained["as_name"] == "SKY UK Limited -> Hutchison 3G UK Limited"
+    assert chained["lookup_status"] == "ok"
+    assert set(inputs) == {"asn_daily", "asn_decoded"}
