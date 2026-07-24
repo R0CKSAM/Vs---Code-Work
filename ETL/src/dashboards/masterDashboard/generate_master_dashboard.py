@@ -598,6 +598,43 @@ def build_market_daily(
     return daily, {name: str(path.resolve()) for name, path in input_files.items()}
 
 
+def build_raw_geo_hierarchy_daily(
+    output_root: Path,
+    ranges: list[dict[str, str]],
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, str]]:
+    """Load the source-reported country/state/city hierarchy without normalization."""
+    watch_dir = output_root / "watch_hours" / "daily_tables"
+    input_files = {
+        "geo_hierarchy_source": watch_dir / "geo_daily.parquet",
+        "geo_hierarchy_channel": watch_dir / "channel_geo_daily.parquet",
+    }
+    value_columns = ["raw_ts_rows", "approx_unique_ips"]
+    geo_columns = ["log_date", "source", "country", "state", "city", *value_columns]
+    channel_columns = ["log_date", "source", "channel_name", "country", "state", "city", *value_columns]
+
+    source = filter_to_ranges(
+        prepare_dates(numeric(read_parquet(input_files["geo_hierarchy_source"], geo_columns), value_columns)),
+        ranges,
+    )
+    channel = filter_to_ranges(
+        prepare_dates(numeric(read_parquet(input_files["geo_hierarchy_channel"], channel_columns), value_columns)),
+        ranges,
+    )
+
+    # Do not apply country/state/city labels here. This directory is intentionally
+    # a direct view of the values supplied by the CDN geography source.
+    for frame in (source, channel):
+        for column in ("country", "state", "city"):
+            frame[column] = frame[column].fillna("").astype(str).str.strip()
+    channel["channel_name"] = normalize_channel_names(channel["channel_name"])
+
+    source = source[geo_columns].sort_values(["log_date", "source", "country", "state", "city"]).reset_index(drop=True)
+    channel = channel[channel_columns].sort_values(
+        ["log_date", "source", "channel_name", "country", "state", "city"]
+    ).reset_index(drop=True)
+    return source, channel, {name: str(path.resolve()) for name, path in input_files.items()}
+
+
 def compact_payload(
     frame: pd.DataFrame,
     category_columns: list[str],
@@ -772,8 +809,10 @@ def build_data(output_root: Path, title: str) -> tuple[dict[str, Any], pd.DataFr
     source_daily, channel_daily, ranges, input_files = build_master_frames(output_root)
     ua_daily, ua_input_files = build_ua_daily(output_root, ranges)
     market_daily, market_input_files = build_market_daily(output_root, ranges)
+    geo_source_daily, geo_channel_daily, geo_input_files = build_raw_geo_hierarchy_daily(output_root, ranges)
     input_files.update(ua_input_files)
     input_files.update(market_input_files)
+    input_files.update(geo_input_files)
 
     created = datetime.now(IST_ZONE)
     combined_min = min(row["min_date"] for row in ranges)
@@ -788,6 +827,16 @@ def build_data(output_root: Path, title: str) -> tuple[dict[str, Any], pd.DataFr
         market_daily,
         ["log_date", "source", "channel_name", "market_level", "label"],
         ["raw_ts_rows"],
+    )
+    geo_source_payload = compact_payload(
+        geo_source_daily,
+        ["log_date", "source", "country", "state", "city"],
+        ["raw_ts_rows", "approx_unique_ips"],
+    )
+    geo_channel_payload = compact_payload(
+        geo_channel_daily,
+        ["log_date", "source", "channel_name", "country", "state", "city"],
+        ["raw_ts_rows", "approx_unique_ips"],
     )
     data = {
         "meta": {
@@ -805,6 +854,8 @@ def build_data(output_root: Path, title: str) -> tuple[dict[str, Any], pd.DataFr
         "channel_daily": dataframe_records(channel_daily),
         "ua_daily": ua_payload,
         "market_daily": market_payload,
+        "geo_source_daily": geo_source_payload,
+        "geo_channel_daily": geo_channel_payload,
         "channels": channels,
         "definitions": {
             "watch_hours": "All-status .ts media-segment requests multiplied by 6 seconds.",
@@ -816,6 +867,7 @@ def build_data(output_root: Path, title: str) -> tuple[dict[str, Any], pd.DataFr
             "average_watch": "Selected watch minutes divided by the matching daily distinct cliIP total.",
             "device_os": "UA-attributed .ts watch hours grouped by decoded device type and operating system. STREAM channel OS is a coarse UA-family inference.",
             "markets": "India state/region and international country watch hours from channel-aware CDN geography marts.",
+            "raw_geography": "Raw CDN country, state, and city values shown as a country-to-state-to-city directory. No geographic labels or mappings are applied; blank source values display as Unknown / NA.",
         },
         "input_files": input_files,
     }
@@ -868,6 +920,8 @@ def main() -> None:
         print(f"[dry-run] Channel rows: {len(channel_daily):,}")
         print(f"[dry-run] UA rows: {len(data['ua_daily']['rows']):,}")
         print(f"[dry-run] Market rows: {len(data['market_daily']['rows']):,}")
+        print(f"[dry-run] Raw geography source rows: {len(data['geo_source_daily']['rows']):,}")
+        print(f"[dry-run] Raw geography channel rows: {len(data['geo_channel_daily']['rows']):,}")
         print(f"[dry-run] Coverage: {data['meta']['data_min_date']} to {data['meta']['data_max_date']}")
         print(f"[dry-run] Would write: {out}")
         return
@@ -875,6 +929,8 @@ def main() -> None:
     data_dir = output_root / "master" / "data"
     ua_daily = expand_compact_payload(data["ua_daily"])
     market_daily = expand_compact_payload(data["market_daily"])
+    geo_source_daily = expand_compact_payload(data["geo_source_daily"])
+    geo_channel_daily = expand_compact_payload(data["geo_channel_daily"])
     for frame in (ua_daily, market_daily):
         frame["scope"] = frame["channel_name"].notna().map({True: "channel", False: "source"})
         frame["watch_hours"] = pd.to_numeric(frame["raw_ts_rows"], errors="coerce").fillna(0) * HOURS_PER_MEDIA_SEGMENT
@@ -882,6 +938,8 @@ def main() -> None:
     atomic_write_parquet(data_dir / "master_channel_daily.parquet", channel_daily)
     atomic_write_parquet(data_dir / "master_ua_daily.parquet", ua_daily)
     atomic_write_parquet(data_dir / "master_market_daily.parquet", market_daily)
+    atomic_write_parquet(data_dir / "master_geo_source_daily.parquet", geo_source_daily)
+    atomic_write_parquet(data_dir / "master_geo_channel_daily.parquet", geo_channel_daily)
     manifest = {
         "created_at_ist": data["meta"]["created_at_ist"],
         "source_ranges": data["meta"]["source_ranges"],
@@ -889,6 +947,8 @@ def main() -> None:
         "channel_rows": len(channel_daily),
         "ua_rows": len(ua_daily),
         "market_rows": len(market_daily),
+        "geo_source_rows": len(geo_source_daily),
+        "geo_channel_rows": len(geo_channel_daily),
         "inputs": data["input_files"],
     }
     atomic_write_text(data_dir / "master_dashboard_manifest.json", json.dumps(manifest, indent=2))

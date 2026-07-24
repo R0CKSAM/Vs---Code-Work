@@ -1479,15 +1479,29 @@
       "date": "2026-07-23",
       "lake_root": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
       "partition_path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=07\\day=23",
-      "file_count": 1,
-      "bytes": 60572706,
-      "max_mtime_ns": 1784777653480286700,
+      "file_count": 2,
+      "bytes": 762607229,
+      "max_mtime_ns": 1784861918293406300,
       "output_counts": {
-        "identity_device_daily": 506,
-        "identity_session_daily": 521,
-        "identity_ipua_daily": 527
+        "identity_device_daily": 14491,
+        "identity_session_daily": 17808,
+        "identity_ipua_daily": 16342
+      }
+    },
+    "stream/2026-07-24": {
+      "source": "stream",
+      "date": "2026-07-24",
+      "lake_root": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
+      "partition_path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=07\\day=24",
+      "file_count": 1,
+      "bytes": 70120490,
+      "max_mtime_ns": 1784861918296149200,
+      "output_counts": {
+        "identity_device_daily": 629,
+        "identity_session_daily": 651,
+        "identity_ipua_daily": 660
       }
     }
   },
-  "updated_at_utc": "2026-07-23T08:13:47.380087+00:00"
+  "updated_at_utc": "2026-07-24T03:40:16.283575+00:00"
 }

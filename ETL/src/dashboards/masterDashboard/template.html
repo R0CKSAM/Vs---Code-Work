@@ -16,33 +16,33 @@
     button,input,select{font:inherit}
     button{cursor:pointer}
     .top-shell{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.98);border-bottom:1px solid var(--line);box-shadow:0 5px 18px rgba(24,45,55,.08)}
-    .top-inner{width:min(1600px,100%);margin:0 auto;padding:12px clamp(12px,2vw,28px) 10px}
-    .title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;min-width:0}
+    .top-inner{width:min(1600px,100%);margin:0 auto;padding:8px clamp(10px,1.5vw,22px) 7px}
+    .title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;min-width:0}
     .title-block{min-width:0}
-    h1{margin:0;font-size:clamp(20px,2vw,30px);line-height:1.15;font-weight:750;color:#102f3a}
-    .meta{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:7px 16px;color:var(--muted);font-size:12px;line-height:1.35;text-align:right}
-    .meta strong{display:block;color:var(--ink);font-size:12px;font-weight:700}
-    .filter-row{display:grid;grid-template-columns:minmax(360px,1.45fr) minmax(230px,.8fr) minmax(260px,1fr);gap:10px;margin-top:10px;align-items:stretch}
-    .filter-group{min-width:0;border:1px solid var(--line);background:#f8fafb;padding:8px;border-radius:6px}
-    .filter-label{display:block;margin:0 0 6px;color:#52636c;font-size:11px;font-weight:750;text-transform:uppercase}
-    .date-line,.source-line{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}
+    h1{margin:0;font-size:clamp(18px,1.7vw,25px);line-height:1.1;font-weight:750;color:#102f3a}
+    .meta{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px 12px;color:var(--muted);font-size:10px;line-height:1.25;text-align:right}
+    .meta strong{display:block;color:var(--ink);font-size:11px;font-weight:700}
+    .filter-row{display:grid;grid-template-columns:minmax(330px,1.45fr) minmax(205px,.8fr) minmax(230px,1fr);gap:6px;margin-top:6px;align-items:stretch}
+    .filter-group{min-width:0;border:1px solid var(--line);background:#f8fafb;padding:6px;border-radius:5px}
+    .filter-label{display:block;margin:0 0 3px;color:#52636c;font-size:9px;font-weight:750;text-transform:uppercase}
+    .date-line,.source-line{display:flex;align-items:center;gap:4px;flex-wrap:wrap;min-width:0}
     .segmented{display:inline-flex;border:1px solid #c7d2d8;border-radius:5px;overflow:hidden;background:#fff;flex:0 0 auto}
-    .segmented button{min-height:32px;border:0;border-right:1px solid #d4dde1;background:#fff;color:#465961;padding:6px 10px;font-size:12px;font-weight:650;white-space:nowrap}
+    .segmented button{min-height:26px;border:0;border-right:1px solid #d4dde1;background:#fff;color:#465961;padding:4px 8px;font-size:10px;font-weight:650;white-space:nowrap}
     .segmented button:last-child{border-right:0}
     .segmented button.active{background:#153f4d;color:#fff}
-    .date-inputs{display:flex;align-items:center;gap:6px;flex:1 1 240px;min-width:0}
-    .date-inputs input{height:34px;min-width:125px;max-width:165px;flex:1;border:1px solid #c7d2d8;border-radius:5px;background:#fff;color:var(--ink);padding:5px 8px}
-    .date-separator{color:var(--muted);font-size:12px;font-weight:700}
-    .quick-buttons{display:flex;gap:4px;flex-wrap:wrap}
-    .quick-buttons button{height:30px;border:1px solid #c7d2d8;border-radius:5px;background:#fff;color:#41555e;padding:4px 8px;font-size:11px;font-weight:650}
-    .quick-buttons button:hover{border-color:#80949e;color:#173d49}
+    .date-inputs{display:flex;align-items:center;gap:4px;flex:1 1 220px;min-width:0}
+    .date-inputs input{height:28px;min-width:115px;max-width:150px;flex:1;border:1px solid #c7d2d8;border-radius:4px;background:#fff;color:var(--ink);padding:4px 6px;font-size:11px}
+    .date-separator{color:var(--muted);font-size:10px;font-weight:700}
+    .quick-buttons{display:flex;gap:3px;flex-wrap:wrap}
+    .quick-buttons button{height:26px;border:1px solid #c7d2d8;border-radius:4px;background:#fff;color:#41555e;padding:3px 7px;font-size:10px;font-weight:650}
+    .quick-buttons button:hover{border-color:#80949e;color:#173d49}.quick-buttons button.active{background:#153f4d;border-color:#153f4d;color:#fff}
     .channel-picker{position:relative;min-width:0}
     .channel-picker details{position:relative}
-    .channel-picker summary{height:34px;display:flex;align-items:center;justify-content:space-between;gap:8px;list-style:none;border:1px solid #c7d2d8;border-radius:5px;background:#fff;padding:5px 10px;font-size:12px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .channel-picker summary{height:28px;display:flex;align-items:center;justify-content:space-between;gap:6px;list-style:none;border:1px solid #c7d2d8;border-radius:4px;background:#fff;padding:4px 8px;font-size:11px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .channel-picker summary::-webkit-details-marker{display:none}
     .channel-picker summary::after{content:"▾";flex:0 0 auto;color:#5d7079}
     .channel-picker details[open] summary::after{content:"▴"}
-    .channel-panel{position:absolute;right:0;top:39px;width:min(420px,calc(100vw - 24px));max-height:min(460px,70vh);display:flex;flex-direction:column;background:#fff;border:1px solid #c7d2d8;border-radius:6px;box-shadow:var(--shadow);z-index:80;overflow:hidden}
+    .channel-panel{position:absolute;right:0;top:32px;width:min(420px,calc(100vw - 24px));max-height:min(420px,70vh);display:flex;flex-direction:column;background:#fff;border:1px solid #c7d2d8;border-radius:6px;box-shadow:var(--shadow);z-index:80;overflow:hidden}
     .channel-tools{padding:9px;border-bottom:1px solid var(--line);background:#f8fafb}
     .channel-tools input{width:100%;height:34px;border:1px solid #c7d2d8;border-radius:5px;padding:6px 9px}
     .channel-actions{display:flex;gap:6px;margin-top:7px}
@@ -51,53 +51,93 @@
     .channel-option{display:flex;align-items:center;gap:8px;padding:7px 10px;font-size:12px;cursor:pointer}
     .channel-option:hover{background:#eef5f6}
     .channel-option input{width:16px;height:16px;accent-color:var(--teal);flex:0 0 auto}
-    .scope-line{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;color:#53666f;font-size:11px;line-height:1.35}
+    .scope-line{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:5px;color:#53666f;font-size:10px;line-height:1.25}
     .scope-line strong{color:#183c49}
     .scope-error{color:var(--red);font-weight:700}
-    main{width:min(1600px,100%);margin:0 auto;padding:18px clamp(12px,2vw,28px) 34px}
-    .section{margin-bottom:18px;min-width:0}
-    .section-head{display:flex;align-items:end;justify-content:space-between;gap:14px;margin:0 0 9px}
-    .section-head h2{margin:0;font-size:16px;line-height:1.2;color:#163946}
-    .section-head p{margin:2px 0 0;color:var(--muted);font-size:11px}
-    .kpi-grid{display:grid;gap:10px;min-width:0}
+    main{width:min(1600px,100%);margin:0 auto;padding:11px clamp(10px,1.5vw,22px) 22px}
+    .section{margin-bottom:11px;min-width:0}
+    .section-head{display:flex;align-items:end;justify-content:space-between;gap:10px;margin:0 0 6px}
+    .section-head h2{margin:0;font-size:14px;line-height:1.15;color:#163946}
+    .section-head p{margin:1px 0 0;color:var(--muted);font-size:10px}
+    .kpi-grid{display:grid;gap:6px;min-width:0}
     .kpi-grid.viewing{grid-template-columns:repeat(3,minmax(0,1fr))}
     .kpi-grid.audience{grid-template-columns:repeat(4,minmax(0,1fr))}
-    .kpi-card{position:relative;min-width:0;min-height:126px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:13px 14px 12px;overflow:hidden}
+    .kpi-card{position:relative;min-width:0;min-height:96px;background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:9px 10px 8px;overflow:hidden}
     .kpi-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--accent,var(--teal))}
-    .kpi-label{color:#4d626c;font-size:12px;font-weight:700;line-height:1.3;overflow-wrap:anywhere}
-    .kpi-value{margin:9px 0 7px;color:#102f3a;font-size:clamp(23px,2.2vw,36px);font-weight:760;line-height:1;white-space:normal;overflow-wrap:anywhere}
-    .kpi-value.na{font-size:22px;color:#718087}
-    .kpi-note{color:var(--muted);font-size:11px;line-height:1.35;overflow-wrap:anywhere}
-    .analysis-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,.85fr);gap:10px;min-width:0}
-    .distribution-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;min-width:0}
-    .panel{min-width:0;background:#fff;border:1px solid var(--line);border-radius:6px;padding:13px}
-    .panel h3{margin:0;color:#173a46;font-size:14px}
-    .panel-sub{margin:3px 0 10px;color:var(--muted);font-size:11px}
-    .chart-wrap{position:relative;width:100%;height:300px;min-width:0}
-    .empty{height:220px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:13px}
-    .leaderboard{display:grid;gap:7px}
-    .rank-row{display:grid;grid-template-columns:28px minmax(100px,1fr) minmax(90px,.5fr);align-items:center;gap:8px;min-width:0}
-    .rank{color:#687b84;font-size:11px;font-weight:750;text-align:center}
+    .kpi-label{color:#4d626c;font-size:10px;font-weight:700;line-height:1.2;overflow-wrap:anywhere}
+    .kpi-value{margin:6px 0 4px;color:#102f3a;font-size:clamp(20px,1.8vw,29px);font-weight:760;line-height:1;white-space:normal;overflow-wrap:anywhere}
+    .kpi-value.na{font-size:18px;color:#718087}
+    .kpi-note{color:var(--muted);font-size:9px;line-height:1.25;overflow-wrap:anywhere}
+    .analysis-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,.85fr);gap:6px;min-width:0}
+    .distribution-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;min-width:0}
+    .panel{min-width:0;background:#fff;border:1px solid var(--line);border-radius:5px;padding:9px}
+    .panel h3{margin:0;color:#173a46;font-size:12px}
+    .panel-sub{margin:2px 0 6px;color:var(--muted);font-size:10px}
+    .chart-wrap{position:relative;width:100%;height:240px;min-width:0}
+    .empty{height:180px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:11px}
+    .leaderboard{display:grid;gap:4px}
+    .rank-row{display:grid;grid-template-columns:22px minmax(90px,1fr) minmax(78px,.5fr);align-items:center;gap:5px;min-width:0}
+    .rank{color:#687b84;font-size:10px;font-weight:750;text-align:center}
     .rank-main{min-width:0}
-    .rank-name{display:flex;justify-content:space-between;gap:8px;color:#263f49;font-size:12px;font-weight:650;min-width:0}
+    .rank-name{display:flex;justify-content:space-between;gap:6px;color:#263f49;font-size:11px;font-weight:650;min-width:0}
     .rank-name span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .mini-track{height:5px;margin-top:5px;background:#edf1f3;border-radius:3px;overflow:hidden}
+    .mini-track{height:4px;margin-top:3px;background:#edf1f3;border-radius:3px;overflow:hidden}
     .mini-fill{height:100%;background:var(--teal);border-radius:3px}
-    .rank-value{text-align:right;color:#173d49;font-size:12px;font-weight:750;white-space:nowrap}.rank-value span{color:var(--muted);font-size:10px;font-weight:650}
-    .distribution-note{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;min-height:31px;margin:3px 0 10px;color:var(--muted);font-size:11px;line-height:1.35}
+    .rank-value{text-align:right;color:#173d49;font-size:11px;font-weight:750;white-space:nowrap}.rank-value span{color:var(--muted);font-size:9px;font-weight:650}
+    .distribution-note{display:flex;align-items:flex-start;justify-content:space-between;gap:7px;min-height:25px;margin:2px 0 6px;color:var(--muted);font-size:10px;line-height:1.25}
     .distribution-note strong{color:#294955;white-space:nowrap}
     .distribution-grid .mini-fill.device{background:#2463a2}
     .distribution-grid .mini-fill.os{background:#23845f}
     .distribution-grid .mini-fill.state{background:#087f78}
     .distribution-grid .mini-fill.country{background:#b27712}
-    .coverage-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
-    .coverage-item{border:1px solid var(--line);background:#fff;border-radius:6px;padding:10px 12px;color:#53656e;font-size:11px;line-height:1.4}
-    .coverage-item strong{display:block;color:#173b47;font-size:12px;margin-bottom:2px}
-    .guide{background:#fff;border:1px solid var(--line);border-radius:6px;overflow:hidden}
-    .guide summary{padding:11px 13px;cursor:pointer;color:#173b47;font-size:13px;font-weight:750}
+    .coverage-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:6px}
+    .coverage-item{border:1px solid var(--line);background:#fff;border-radius:5px;padding:7px 9px;color:#53656e;font-size:10px;line-height:1.3}
+    .coverage-item strong{display:block;color:#173b47;font-size:11px;margin-bottom:1px}
+    .guide{background:#fff;border:1px solid var(--line);border-radius:5px;overflow:hidden}
+    .guide summary{padding:8px 10px;cursor:pointer;color:#173b47;font-size:11px;font-weight:750}
     .guide-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1px;background:var(--line);border-top:1px solid var(--line)}
-    .guide-item{background:#fff;padding:10px 12px;color:#596b74;font-size:11px;line-height:1.4}
-    .guide-item strong{display:block;color:#263f49;margin-bottom:3px}
+    .guide-item{background:#fff;padding:7px 9px;color:#596b74;font-size:10px;line-height:1.3}
+    .guide-item strong{display:block;color:#263f49;margin-bottom:2px}
+    .directory-tools{display:flex;align-items:center;justify-content:space-between;gap:7px;margin:0 0 6px;color:var(--muted);font-size:10px;line-height:1.25}
+    .directory-actions{display:flex;gap:4px;flex-wrap:wrap}
+    .directory-actions button{border:1px solid #c7d2d8;border-radius:4px;background:#fff;color:#314b57;padding:4px 7px;font-size:10px;font-weight:700}
+    .directory-actions button:hover{border-color:#80949e;color:#173d49}
+    .geo-directory{display:grid;gap:5px;min-width:0}
+    .geo-country,.geo-state{border:1px solid var(--line);border-radius:5px;background:#fff;overflow:hidden}
+    .geo-country>summary,.geo-state>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;cursor:pointer;list-style:none;min-width:0}
+    .geo-country>summary::-webkit-details-marker,.geo-state>summary::-webkit-details-marker{display:none}
+    .geo-country>summary{background:#f7fafb}.geo-state>summary{background:#fbfcfd}
+    .geo-country>summary::before,.geo-state>summary::before{content:"+";display:inline-grid;place-items:center;width:15px;height:15px;border:1px solid #aabac1;border-radius:50%;color:#41606b;font-size:12px;line-height:1;flex:0 0 auto}
+    .geo-country[open]>summary::before,.geo-state[open]>summary::before{content:"-"}
+    .geo-summary-main{display:flex;align-items:center;gap:6px;min-width:0;flex:1}
+    .geo-level{color:#5b737d;font-size:9px;font-weight:800;text-transform:uppercase;white-space:nowrap}
+    .geo-name{color:#173b47;font-size:11px;font-weight:760;overflow-wrap:anywhere}
+    .geo-summary-metrics{display:flex;justify-content:flex-end;gap:8px;color:#4b636d;font-size:10px;font-weight:650;text-align:right;flex-wrap:wrap}
+    .geo-summary-metrics strong{color:#173b47;font-size:11px}
+    .geo-state-list{display:grid;gap:4px;padding:5px 7px 7px;background:#fff}
+    .geo-city-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:4px;padding:5px 7px 7px;border-top:1px solid #edf1f3;background:#fff}
+    .geo-city-row{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;min-width:0;padding:5px 6px;border:1px solid #e2e9ec;border-radius:4px;background:#fbfcfd}
+    .geo-city-name{min-width:0;color:#294651;font-size:10px;font-weight:700;overflow-wrap:anywhere}
+    .geo-city-metrics{flex:0 0 auto;color:#526c76;font-size:9px;line-height:1.25;text-align:right;white-space:nowrap}
+    .geo-analysis-controls{padding:8px}
+    .geo-filter-bar{display:grid;grid-template-columns:repeat(3,minmax(130px,1fr)) minmax(185px,.8fr);gap:5px;margin:0 0 6px}
+    .geo-filter-bar label{display:grid;gap:2px;color:#52636c;font-size:9px;font-weight:750;text-transform:uppercase}
+    .geo-filter-bar select,.geo-filter-bar input{width:100%;height:27px;border:1px solid #c7d2d8;border-radius:4px;background:#fff;color:var(--ink);padding:3px 6px;font-size:10px;font-weight:600}
+    .geo-filter-bar select:disabled{color:#84939a;background:#f2f5f6}
+    .geo-multi-picker{display:grid;gap:2px;color:#52636c;font-size:9px;font-weight:750;text-transform:uppercase;min-width:0}.geo-multi-picker details{position:relative;min-width:0}.geo-multi-picker summary{height:27px;display:flex;align-items:center;justify-content:space-between;gap:5px;border:1px solid #c7d2d8;border-radius:4px;background:#fff;color:var(--ink);padding:3px 6px;font-size:10px;font-weight:600;list-style:none;text-transform:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.geo-multi-picker summary::-webkit-details-marker{display:none}.geo-multi-picker summary::after{content:"▾";color:#5d7079;flex:0 0 auto}.geo-multi-picker details[data-disabled="true"] summary{color:#84939a;background:#f2f5f6;cursor:not-allowed}.geo-multi-panel{position:absolute;top:31px;left:0;width:min(290px,calc(100vw - 30px));max-height:min(320px,52vh);overflow:auto;z-index:30;background:#fff;border:1px solid #c7d2d8;border-radius:5px;box-shadow:var(--shadow);padding:6px}.geo-multi-search{width:100%;height:25px;border:1px solid #c7d2d8;border-radius:4px;padding:3px 6px;font-size:10px}.geo-multi-actions{display:flex;gap:4px;margin-top:4px;padding:0 0 4px;border-bottom:1px solid #edf1f3}.geo-multi-actions button{height:23px;border:1px solid #c7d2d8;border-radius:3px;background:#fff;color:#41555e;padding:2px 6px;font-size:9px;font-weight:700}.geo-multi-option{display:flex;align-items:center;gap:5px;padding:4px 2px;color:#294651;font-size:10px;font-weight:600;text-transform:none;white-space:nowrap;min-width:0}.geo-multi-option input{width:13px;height:13px;margin:0;accent-color:var(--teal);flex:0 0 auto}.geo-multi-option span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .geo-analysis-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;min-width:0}
+    .geo-analysis-grid[data-visible-panels="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}.geo-analysis-grid[data-visible-panels="1"]{grid-template-columns:minmax(0,1fr)}.geo-analysis-grid [hidden]{display:none!important}
+    .geo-analysis-grid .panel{padding:8px}
+    .geo-panel-head{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0}.geo-panel-head h3{min-width:0;font-size:12px;overflow-wrap:anywhere}.geo-panel-actions{display:flex;align-items:center;gap:5px;flex:0 0 auto}.geo-panel-count{color:#526c76;font-size:9px;font-weight:750;white-space:nowrap}.geo-panel-expand{border:1px solid #c7d2d8;border-radius:3px;background:#fff;color:#41555e;padding:2px 5px;font-size:9px;font-weight:700}.geo-panel-expand:hover{border-color:#80949e;color:#173d49}
+    .geo-analysis-grid .panel-sub{margin:2px 0 5px;font-size:9px}
+    .geo-top-control{display:grid;gap:2px;color:#52636c;font-size:9px;font-weight:750;text-transform:uppercase}
+    .geo-top-line{display:flex;align-items:center;gap:4px;min-width:0}
+    .geo-top-presets{display:inline-flex;border:1px solid #c7d2d8;border-radius:5px;overflow:hidden;background:#fff;flex:0 0 auto}
+    .geo-top-presets button{height:27px;border:0;border-right:1px solid #d4dde1;background:#fff;color:#465961;padding:3px 7px;font-size:10px;font-weight:700}
+    .geo-top-presets button:last-child{border-right:0}.geo-top-presets button.active{background:#153f4d;color:#fff}
+    .geo-top-line input{min-width:0;flex:1}
+    .geo-analysis-grid .panel{display:flex;flex-direction:column}.geo-analysis-grid .leaderboard{gap:4px;overflow-y:auto;padding-right:2px}.geo-analysis-grid .rank-row{grid-template-columns:20px minmax(72px,1fr) minmax(68px,.45fr);gap:5px}.geo-analysis-grid .rank,.geo-analysis-grid .rank-value{font-size:9px}.geo-analysis-grid .rank-name{font-size:10px}.geo-analysis-grid .mini-bar{height:4px}
+    .mini-fill.geo-country{background:#b27712}.mini-fill.geo-state{background:#087f78}.mini-fill.geo-city{background:#2463a2}
     .noscript{margin:15px;padding:12px;background:#fff4d9;border:1px solid #e3c474;color:#6e5012}
     @media(max-width:1050px){
       .title-row{display:block}.meta{justify-content:flex-start;text-align:left;margin-top:7px}
@@ -111,6 +151,7 @@
       .quick-buttons{margin-top:6px}.scope-line{align-items:flex-start;display:block}.scope-line span{display:block;margin-top:2px}
       main{padding:13px 10px 25px}.kpi-grid.viewing,.kpi-grid.audience{grid-template-columns:1fr 1fr}
       .kpi-card{min-height:116px;padding:11px 12px}.kpi-value{font-size:25px}.chart-wrap{height:260px}
+      .directory-tools{align-items:flex-start;flex-direction:column}.geo-country>summary,.geo-state>summary{align-items:flex-start}.geo-summary-metrics{justify-content:flex-start;text-align:left}.geo-city-list{grid-template-columns:1fr}.geo-filter-bar,.geo-analysis-grid,.geo-analysis-grid[data-visible-panels="2"],.geo-analysis-grid[data-visible-panels="1"]{grid-template-columns:1fr}.geo-top-line{max-width:360px}.geo-analysis-controls{padding:10px}.geo-filter-bar select,.geo-filter-bar input,.geo-top-presets button,.geo-multi-picker summary{height:34px;font-size:12px}
     }
     @media(max-width:430px){.meta{grid-template-columns:1fr}.kpi-grid.viewing,.kpi-grid.audience{grid-template-columns:1fr}.rank-row{grid-template-columns:24px minmax(0,1fr)}.rank-value{grid-column:2;text-align:left}.channel-panel{right:auto;left:0}}
   </style>
@@ -140,7 +181,7 @@
               <span class="date-separator" id="dateSeparator" hidden>to</span>
               <input id="dateTo" type="date" aria-label="Date to" hidden>
             </div>
-            <div class="quick-buttons" aria-label="Quick date ranges">
+            <div class="quick-buttons" id="quickButtons" aria-label="Quick date ranges">
               <button type="button" data-range="latest">Latest</button>
               <button type="button" data-range="7">7D</button>
               <button type="button" data-range="30">30D</button>
@@ -235,7 +276,7 @@
         </article>
         <article class="panel">
           <h3>International Markets</h3>
-          <div class="distribution-note"><span>Countries outside India ranked by watch hours</span><strong>Country</strong></div>
+          <div class="distribution-note"><span>Countries outside India; share uses international-only watch hours</span><strong>Country</strong></div>
           <div class="leaderboard" id="countryLeaderboard"></div>
         </article>
       </div>
@@ -250,6 +291,23 @@
         <summary>Metric Guide</summary>
         <div class="guide-grid" id="guideGrid"></div>
       </details>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><div><h2>Raw Geography Analysis</h2><p>Ranked source geography for the current dashboard filters</p></div></div>
+      <article class="panel geo-analysis-controls">
+        <div class="geo-filter-bar" aria-label="Raw geography chart filters">
+          <div class="geo-multi-picker">Country<details id="geoCountryDetails"><summary id="geoCountrySummary">All countries</summary><div class="geo-multi-panel"><input class="geo-multi-search" id="geoCountrySearch" type="search" placeholder="Search countries"><div class="geo-multi-actions"><button type="button" id="geoCountrySelectAll">Select all</button><button type="button" id="geoCountryClear">Clear</button></div><div id="geoCountryOptions"></div></div></details></div>
+          <div class="geo-multi-picker">State / Region<details id="geoStateDetails" data-disabled="true"><summary id="geoStateSummary">Choose country first</summary><div class="geo-multi-panel"><input class="geo-multi-search" id="geoStateSearch" type="search" placeholder="Search states / regions"><div class="geo-multi-actions"><button type="button" id="geoStateSelectAll">Select all</button><button type="button" id="geoStateClear">Clear</button></div><div id="geoStateOptions"></div></div></details></div>
+          <label>City contains<input id="geoCitySearch" type="search" placeholder="Search raw city value"></label>
+          <div class="geo-top-control"><span>Show Top</span><div class="geo-top-line"><div class="geo-top-presets" id="geoTopPresets"><button type="button" data-geo-top="10" class="active">10</button><button type="button" data-geo-top="15">15</button><button type="button" data-geo-top="all">All</button></div><input id="geoTopManual" type="number" min="1" max="500" step="1" placeholder="Custom 1-500" aria-label="Custom Top N"></div></div>
+        </div>
+        <div class="geo-analysis-grid">
+          <article class="panel" id="geoCountryPanel"><div class="geo-panel-head"><h3>Countries</h3><div class="geo-panel-actions"><span class="geo-panel-count" id="geoCountryCount"></span><button class="geo-panel-expand" type="button" id="geoCountryExpand" hidden>Expand</button></div></div><p class="panel-sub">Raw country values; share uses all selected countries</p><div class="leaderboard" id="geoCountryLeaderboard"></div></article>
+          <article class="panel" id="geoStatePanel"><div class="geo-panel-head"><h3>State / Region</h3><div class="geo-panel-actions"><span class="geo-panel-count" id="geoStateCount"></span><button class="geo-panel-expand" type="button" id="geoStateExpand" hidden>Expand</button></div></div><p class="panel-sub" id="geoStateChartNote"></p><div class="leaderboard" id="geoStateLeaderboard"></div></article>
+          <article class="panel"><div class="geo-panel-head"><h3>Cities</h3><div class="geo-panel-actions"><span class="geo-panel-count" id="geoCityCount"></span><button class="geo-panel-expand" type="button" id="geoCityExpand" hidden>Expand</button></div></div><p class="panel-sub" id="geoCityChartNote"></p><div class="leaderboard" id="geoCityLeaderboard"></div></article>
+        </div>
+      </article>
     </section>
   </main>
   <noscript><div class="noscript">JavaScript is required to use the dashboard filters.</div></noscript>
@@ -270,10 +328,20 @@
     }
     const UA_ROWS=unpackCompact(DATA.ua_daily);
     const MARKET_ROWS=unpackCompact(DATA.market_daily);
+    const RAW_GEO_SOURCE_ROWS=unpackCompact(DATA.geo_source_daily);
+    const RAW_GEO_CHANNEL_ROWS=unpackCompact(DATA.geo_channel_daily);
     const nf0=new Intl.NumberFormat("en-IN",{maximumFractionDigits:0});
     const nf1=new Intl.NumberFormat("en-IN",{minimumFractionDigits:1,maximumFractionDigits:1});
-    const state={source:"all",mode:"single",from:DATA.meta.data_max_date,to:DATA.meta.data_max_date,channels:null,search:""};
+    const countryNameDecoder=typeof Intl.DisplayNames==="function"?new Intl.DisplayNames(["en"],{type:"region"}):null;
+    const initialSource=(DATA.meta.sources||[]).find(function(value){return String(value).toLowerCase()==="stream"})||(DATA.meta.sources||[])[0]||"all";
+    const initialRange=(DATA.meta.source_ranges||[]).find(function(row){return row.source===initialSource});
+    const initialMax=(initialRange&&initialRange.max_date)||DATA.meta.data_max_date;
+    const initialMin=(initialRange&&initialRange.min_date)||DATA.meta.data_min_date;
+    // The dashboard opens on the latest completed STREAM week, not on a mixed-source single day.
+    const initialWeekStart=addDays(initialMax,-6)<initialMin?initialMin:addDays(initialMax,-6);
+    const state={source:initialSource,mode:"range",from:initialWeekStart,to:initialMax,channels:null,search:""};
     let dailyChart=null;
+    const geoView={countries:null,states:null,countrySearch:"",stateSearch:"",citySearch:"",limit:10,limitMode:"10"};
 
     function el(id){return document.getElementById(id)}
     function num(value){const parsed=Number(value);return Number.isFinite(parsed)?parsed:0}
@@ -351,6 +419,22 @@
       el("dateFrom").value=state.from;el("dateTo").value=state.to;
       el("dateTo").hidden=state.mode==="single";el("dateSeparator").hidden=state.mode==="single";
       el("singleMode").classList.toggle("active",state.mode==="single");el("rangeMode").classList.toggle("active",state.mode==="range");
+      renderQuickRangeButtons();
+    }
+
+    function renderQuickRangeButtons(){
+      const bounds=rangeForSource();
+      let active="";
+      if(state.mode==="single"&&state.from===bounds.max&&state.to===bounds.max)active="latest";
+      else if(state.mode==="range"&&state.from===bounds.min&&state.to===bounds.max)active="all";
+      else if(state.mode==="range"){
+        ["7","30"].some(function(value){
+          const start=addDays(bounds.max,-(Number(value)-1));
+          if(state.to===bounds.max&&state.from===(start<bounds.min?bounds.min:start)){active=value;return true}
+          return false;
+        });
+      }
+      el("quickButtons").querySelectorAll("button").forEach(function(button){button.classList.toggle("active",button.dataset.range===active)});
     }
 
     function setQuickRange(value){
@@ -459,6 +543,18 @@
       return total;
     }
 
+    function capGeoLeaderboardRows(leaderboardId,buttonId){
+      const list=el(leaderboardId),button=el(buttonId),rows=Array.from(list.querySelectorAll(".rank-row"));
+      const expanded=list.dataset.expanded==="true";
+      if(rows.length<=25){list.dataset.expanded="false";list.style.maxHeight="";list.style.overflowY="";button.hidden=true;return}
+      button.hidden=false;button.textContent=expanded?"Collapse":"Expand";
+      if(expanded){list.style.maxHeight="none";list.style.overflowY="visible";return}
+      // Measure the 25th row after render so the cap stays accurate at every screen size.
+      const lastVisible=rows[24];
+      list.style.maxHeight=(lastVisible.offsetTop+lastVisible.offsetHeight)+"px";
+      list.style.overflowY="auto";
+    }
+
     function renderDeviceAndOs(){
       const deviceRows=scopedDimensionRows(UA_ROWS,"dimension","device");
       const osRows=scopedDimensionRows(UA_ROWS,"dimension","os");
@@ -479,6 +575,123 @@
       renderRankedDistribution("stateLeaderboard",states,12,"state");
       renderRankedDistribution("countryLeaderboard",countries,10,"country");
     }
+    function rawGeoValue(value){const text=String(value??"").trim();return text||"Unknown / NA"}
+    function hasReportedCity(value){
+      const text=String(value??"").trim().toLowerCase();
+      return !!text&&!['unknown','unknown / na','unknown region','na','n/a','null','none','other','others','unmapped','-'].includes(text);
+    }
+    function rawCountryLabel(value){
+      const code=rawGeoValue(value);
+      if(!/^[A-Z]{2}$/.test(code)||!countryNameDecoder)return code;
+      try{const name=countryNameDecoder.of(code);return name&&name!==code?code+" ("+name+")":code}catch(error){return code}
+    }
+    function rawGeoRows(){
+      const rows=state.channels===null?RAW_GEO_SOURCE_ROWS:RAW_GEO_CHANNEL_ROWS;
+      return rows.filter(function(row){return sourceOk(row)&&dateOk(row)&&(state.channels===null||channelOk(row))});
+    }
+    function groupGeoChartRows(rows,labelFor){
+      const values=new Map();
+      rows.forEach(function(row){
+        const label=labelFor(row);
+        const item=values.get(label)||{label:label,raw_ts_rows:0,approx_unique_ips:0};
+        item.raw_ts_rows+=num(row.raw_ts_rows);
+        item.approx_unique_ips=Math.max(item.approx_unique_ips,num(row.approx_unique_ips));
+        values.set(label,item);
+      });
+      return Array.from(values.values()).sort(function(a,b){return b.raw_ts_rows-a.raw_ts_rows||a.label.localeCompare(b.label)});
+    }
+    function geoStateKey(country,stateName){return encodeURIComponent(country)+"|"+encodeURIComponent(stateName)}
+    function geoStateKeyForRow(row){return geoStateKey(rawGeoValue(row.country),rawGeoValue(row.state))}
+    function selectedGeoCount(values,label){return values===null?"All "+label:(values.size?values.size+" selected":"No "+label)}
+    function countryMatches(row){return geoView.countries===null||geoView.countries.has(rawGeoValue(row.country))}
+    function stateMatches(row){return geoView.states===null||geoView.states.has(geoStateKeyForRow(row))}
+    function syncGeoFilters(rows){
+      const countries=groupRawGeo(rows,"country");
+      const availableCountries=new Set(countries.map(function(item){return item.label}));
+      if(geoView.countries!==null){
+        geoView.countries=new Set(Array.from(geoView.countries).filter(function(value){return availableCountries.has(value)}));
+      }
+      el("geoCountrySummary").textContent=selectedGeoCount(geoView.countries,"countries");
+      el("geoCountrySearch").value=geoView.countrySearch;
+      const countryNeedle=geoView.countrySearch.trim().toLowerCase();
+      const visibleCountries=countries.filter(function(item){return !countryNeedle||rawCountryLabel(item.label).toLowerCase().includes(countryNeedle)||item.label.toLowerCase().includes(countryNeedle)});
+      el("geoCountryOptions").innerHTML=visibleCountries.map(function(item){const checked=geoView.countries===null||geoView.countries.has(item.label);return '<label class="geo-multi-option"><input type="checkbox" data-geo-country="'+escapeHtml(item.label)+'" '+(checked?"checked":"")+'><span>'+escapeHtml(rawCountryLabel(item.label))+'</span></label>'}).join("");
+      el("geoCountryOptions").querySelectorAll("input").forEach(function(input){input.addEventListener("change",function(){
+        if(geoView.countries===null)geoView.countries=new Set(countries.map(function(item){return item.label}));
+        if(input.checked)geoView.countries.add(input.dataset.geoCountry);else geoView.countries.delete(input.dataset.geoCountry);
+        if(geoView.countries.size===countries.length)geoView.countries=null;
+        geoView.states=null;renderGeoAnalysis();
+      })});
+      const stateDetails=el("geoStateDetails");
+      if(geoView.countries===null||!geoView.countries.size){
+        geoView.states=null;stateDetails.dataset.disabled="true";stateDetails.removeAttribute("open");
+        el("geoStateSummary").textContent="Choose country first";el("geoStateOptions").innerHTML="";
+      }else{
+        const scopedRows=rows.filter(countryMatches);
+        const options=Array.from(scopedRows.reduce(function(map,row){
+          const country=rawGeoValue(row.country),stateName=rawGeoValue(row.state),key=geoStateKey(country,stateName);
+          if(!map.has(key))map.set(key,{key:key,label:rawCountryLabel(country)+" / "+stateName});return map;
+        },new Map()).values()).sort(function(a,b){return a.label.localeCompare(b.label)});
+        const optionKeys=new Set(options.map(function(item){return item.key}));
+        if(geoView.states!==null){
+          geoView.states=new Set(Array.from(geoView.states).filter(function(value){return optionKeys.has(value)}));
+        }
+        stateDetails.dataset.disabled="false";
+        el("geoStateSummary").textContent=selectedGeoCount(geoView.states,"states / regions");
+        el("geoStateSearch").value=geoView.stateSearch;
+        const stateNeedle=geoView.stateSearch.trim().toLowerCase();
+        const visibleStates=options.filter(function(item){return !stateNeedle||item.label.toLowerCase().includes(stateNeedle)});
+        el("geoStateOptions").innerHTML=visibleStates.map(function(item){const checked=geoView.states===null||geoView.states.has(item.key);return '<label class="geo-multi-option"><input type="checkbox" data-geo-state="'+escapeHtml(item.key)+'" '+(checked?"checked":"")+'><span>'+escapeHtml(item.label)+'</span></label>'}).join("");
+        el("geoStateOptions").querySelectorAll("input").forEach(function(input){input.addEventListener("change",function(){
+          if(geoView.states===null)geoView.states=new Set(options.map(function(item){return item.key}));
+          if(input.checked)geoView.states.add(input.dataset.geoState);else geoView.states.delete(input.dataset.geoState);
+          if(geoView.states.size===options.length)geoView.states=null;
+          renderGeoAnalysis();
+        })});
+      }
+      el("geoCitySearch").value=geoView.citySearch;
+      el("geoTopManual").value=geoView.limitMode==="custom"?String(geoView.limit):"";
+      el("geoTopPresets").querySelectorAll("button").forEach(function(button){button.classList.toggle("active",button.dataset.geoTop===geoView.limitMode)});
+    }
+    function renderGeoAnalysis(){
+      const rows=rawGeoRows();
+      syncGeoFilters(rows);
+      const countries=groupGeoChartRows(rows,function(row){return rawCountryLabel(rawGeoValue(row.country))});
+      const countryRows=rows.filter(countryMatches);
+      const states=groupGeoChartRows(countryRows,function(row){return geoView.countries===null||geoView.countries.size!==1?rawCountryLabel(rawGeoValue(row.country))+" / "+rawGeoValue(row.state):rawGeoValue(row.state)});
+      const cityScope=countryRows.filter(stateMatches);
+      const cityNeedle=geoView.citySearch.trim().toLowerCase();
+      const cities=groupGeoChartRows(cityScope.filter(function(row){return hasReportedCity(row.city)&&(!cityNeedle||rawGeoValue(row.city).toLowerCase().includes(cityNeedle))}),function(row){
+        const cityLabel=rawGeoValue(row.city);
+        if(geoView.states!==null&&geoView.states.size===1)return cityLabel;
+        return geoView.countries!==null&&geoView.countries.size===1?rawGeoValue(row.state)+" / "+cityLabel:rawCountryLabel(rawGeoValue(row.country))+" / "+rawGeoValue(row.state)+" / "+cityLabel;
+      });
+      el("geoStateChartNote").textContent=geoView.countries===null?"Choose country to drill into states.":"Selected country scope";
+      el("geoCityChartNote").textContent=(geoView.states!==null?"Known cities within selected states.":"Known city values only; blank/unknown cities excluded.")+(cityNeedle?" | matching "+geoView.citySearch:"");
+      const panels=geoView.states!==null?1:(geoView.countries!==null?2:3);
+      el("geoCountryPanel").hidden=geoView.countries!==null;
+      el("geoStatePanel").hidden=geoView.states!==null;
+      el("geoCountryPanel").parentElement.dataset.visiblePanels=String(panels);
+      const limit=geoView.limitMode==="all"?Math.max(countries.length,states.length,cities.length):geoView.limit;
+      function visibleCountText(values){const visible=geoView.limitMode==="all"?values.length:Math.min(geoView.limit,values.length);return geoView.limitMode==="all"?values.length+" values":visible+" of "+values.length}
+      el("geoCountryCount").textContent=visibleCountText(countries);el("geoStateCount").textContent=visibleCountText(states);el("geoCityCount").textContent=visibleCountText(cities);
+      renderRankedDistribution("geoCountryLeaderboard",countries,limit,"geo-country");renderRankedDistribution("geoStateLeaderboard",states,limit,"geo-state");renderRankedDistribution("geoCityLeaderboard",cities,limit,"geo-city");
+      capGeoLeaderboardRows("geoCountryLeaderboard","geoCountryExpand");capGeoLeaderboardRows("geoStateLeaderboard","geoStateExpand");capGeoLeaderboardRows("geoCityLeaderboard","geoCityExpand");
+    }
+    function groupRawGeo(rows,key){
+      const values=new Map();
+      rows.forEach(function(row){
+        const label=rawGeoValue(row[key]);
+        const item=values.get(label)||{label:label,raw_ts_rows:0,approx_unique_ips:0,rows:[]};
+        item.raw_ts_rows+=num(row.raw_ts_rows);
+        // The input mart has daily approximate IP values. Max avoids claiming a
+        // false multi-day distinct total while still showing the available signal.
+        item.approx_unique_ips=Math.max(item.approx_unique_ips,num(row.approx_unique_ips));
+        item.rows.push(row);
+        values.set(label,item);
+      });
+      return Array.from(values.values()).sort(function(a,b){return b.raw_ts_rows-a.raw_ts_rows||a.label.localeCompare(b.label)});
+    }
     function renderScope(){
       const invalid=!state.from||!state.to||state.from>state.to;
       el("usedRange").classList.toggle("scope-error",invalid);
@@ -487,16 +700,27 @@
       el("scopeDescription").textContent=sourceLabel()+" | "+channelText+" | "+DATA.meta.freshness;
     }
 
-    function renderAll(){renderScope();renderKpis();renderChart();renderLeaderboard();renderDeviceAndOs();renderMarkets()}
+    function renderAll(){renderScope();renderKpis();renderChart();renderLeaderboard();renderDeviceAndOs();renderMarkets();renderGeoAnalysis()}
 
     el("singleMode").addEventListener("click",function(){setDateMode("single")});
     el("rangeMode").addEventListener("click",function(){setDateMode("range")});
     el("dateFrom").addEventListener("change",function(){state.from=this.value;if(state.mode==="single")state.to=state.from;syncDateControls();renderAll()});
-    el("dateTo").addEventListener("change",function(){state.to=this.value;renderAll()});
+    el("dateTo").addEventListener("change",function(){state.to=this.value;syncDateControls();renderAll()});
     document.querySelectorAll("[data-range]").forEach(function(button){button.addEventListener("click",function(){setQuickRange(button.dataset.range)})});
     el("channelSearch").addEventListener("input",function(){state.search=this.value;renderChannelOptions()});
     el("selectAllChannels").addEventListener("click",function(){state.channels=null;renderChannelOptions();renderAll()});
     el("clearChannels").addEventListener("click",function(){state.channels=new Set();renderChannelOptions();renderAll()});
+    el("geoCountrySearch").addEventListener("input",function(){geoView.countrySearch=this.value;renderGeoAnalysis()});
+    el("geoStateSearch").addEventListener("input",function(){geoView.stateSearch=this.value;renderGeoAnalysis()});
+    el("geoCountrySelectAll").addEventListener("click",function(){geoView.countries=null;geoView.states=null;renderGeoAnalysis()});
+    el("geoCountryClear").addEventListener("click",function(){geoView.countries=new Set();geoView.states=null;renderGeoAnalysis()});
+    el("geoStateSelectAll").addEventListener("click",function(){geoView.states=null;renderGeoAnalysis()});
+    el("geoStateClear").addEventListener("click",function(){geoView.states=new Set();renderGeoAnalysis()});
+    el("geoStateDetails").querySelector("summary").addEventListener("click",function(event){if(el("geoStateDetails").dataset.disabled==="true")event.preventDefault()});
+    [["geoCountryLeaderboard","geoCountryExpand"],["geoStateLeaderboard","geoStateExpand"],["geoCityLeaderboard","geoCityExpand"]].forEach(function(pair){el(pair[1]).addEventListener("click",function(){const list=el(pair[0]);list.dataset.expanded=list.dataset.expanded==="true"?"false":"true";capGeoLeaderboardRows(pair[0],pair[1])})});
+    el("geoCitySearch").addEventListener("input",function(){geoView.citySearch=this.value;renderGeoAnalysis()});
+    el("geoTopPresets").querySelectorAll("button").forEach(function(button){button.addEventListener("click",function(){geoView.limitMode=this.dataset.geoTop;if(geoView.limitMode!=="all")geoView.limit=Number(geoView.limitMode);renderGeoAnalysis()})});
+    el("geoTopManual").addEventListener("change",function(){const value=Math.round(num(this.value));if(value>0){geoView.limit=Math.min(500,value);geoView.limitMode="custom";renderGeoAnalysis()}else{this.value=""}});
     document.addEventListener("click",function(event){const details=el("channelDetails");if(details.open&&!details.contains(event.target))details.removeAttribute("open")});
 
     renderMetadata();renderSourceButtons();syncDateControls();renderChannelOptions();renderAll();

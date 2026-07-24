@@ -71,3 +71,32 @@ def test_device_and_os_labels_are_stakeholder_readable() -> None:
 
     assert devices.tolist() == ["Smart TV", "Smartphone", "Unknown / NA"]
     assert systems.tolist() == ["Tizen", "Android TV", "Unknown / NA"]
+
+
+def test_raw_geo_hierarchy_preserves_source_values_without_labels(tmp_path: Path) -> None:
+    watch_dir = tmp_path / "watch_hours" / "daily_tables"
+    watch_dir.mkdir(parents=True)
+    source_rows = [
+        {
+            "log_date": "2026-07-14",
+            "source": "stream",
+            "country": "IN",
+            "state": "Chattisgarh",
+            "city": "NEWDELHI",
+            "raw_ts_rows": 60,
+            "approx_unique_ips": 4,
+        }
+    ]
+    channel_rows = [{**source_rows[0], "channel_name": "India TV"}]
+    pd.DataFrame(source_rows).to_parquet(watch_dir / "geo_daily.parquet", index=False)
+    pd.DataFrame(channel_rows).to_parquet(watch_dir / "channel_geo_daily.parquet", index=False)
+
+    source, channel, _ = MODULE.build_raw_geo_hierarchy_daily(
+        tmp_path,
+        [{"source": "stream", "min_date": "2026-07-14", "max_date": "2026-07-14"}],
+    )
+
+    assert source.loc[0, "country"] == "IN"
+    assert source.loc[0, "state"] == "Chattisgarh"
+    assert source.loc[0, "city"] == "NEWDELHI"
+    assert channel.loc[0, "channel_name"] == "India TV"

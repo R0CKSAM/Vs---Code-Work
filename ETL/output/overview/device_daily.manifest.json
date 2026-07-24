@@ -1630,6 +1630,20 @@
         "fast",
         "stream"
       ]
+    },
+    "2026-07-23": {
+      "bytes": 6973609130,
+      "files": 4,
+      "mtime_ns_max": 1784861918293406300,
+      "mtime_ns_sum": 7139279089426677600,
+      "roots": [
+        "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
+      ],
+      "rows": 69823972,
+      "sources": [
+        "fast",
+        "stream"
+      ]
     }
   },
   "signature_basis": "parquet files grouped by lake year/month/day, using count, bytes, mtimes, and source-aware device_daily schema",

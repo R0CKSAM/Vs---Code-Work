@@ -11,6 +11,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import pandas as pd
 
@@ -52,6 +53,7 @@ AMAGI_ROOT = Path(
 )
 YOUTUBE_COLUMNS = ["date", "time", "video_id", "title", "concurrent_viewers", "status"]
 CHARTJS_CACHE = DEMO_ROOT.parent / "output" / "cache" / "chartjs" / "chart.umd.min.js"
+IST_ZONE = ZoneInfo("Asia/Kolkata")
 
 # These labels have an explicit name match only; Samsung variants remain separate
 # until a stakeholder confirms whether they are distinct linear feeds or aliases.
@@ -321,6 +323,24 @@ def build_youtube_marts() -> dict[str, Any]:
         ["timestamp_ist", "video_id"], keep="last"
     )
     live = youtube.loc[youtube["status"].eq("is_live")].copy()
+    if live.empty:
+        # Readable collector files without live rows are a valid degraded state,
+        # not a NaT.strftime() failure while writing the manifest below.
+        return {
+            "available": False,
+            "reason": "No live YouTube viewer minutes were found in readable completed files.",
+            "completed_files": len(completed_files),
+            "partial_files": len(partial_files),
+            "skipped_files": skipped,
+            "minute": empty_minute,
+            "video_daily": empty_video_daily,
+            "video_5min": empty_video_5min,
+            "video_minute": empty_video_minute,
+            "true_start": "",
+            "true_end": "",
+            "full_start": "",
+            "full_end": "",
+        }
     live["log_date"] = live["timestamp_ist"].dt.strftime("%Y-%m-%d")
 
     minute = (
@@ -430,15 +450,21 @@ def build_payload(events: pd.DataFrame, viewer_minute: pd.DataFrame, youtube: di
     unmapped = creative.loc[~creative["event_id"].isin(
         events.loc[events["brand"].notna(), "event_id"]
     )]
+    if ads.empty:
+        true_range = {"start": "No classified ad events", "end": "No classified ad events"}
+    else:
+        true_range = {
+            "start": ads["on_air_start_ist"].min().strftime("%d-%m-%y %I:%M:%S %p IST"),
+            "end": ads["on_air_end_ist"].max().strftime("%d-%m-%y %I:%M:%S %p IST"),
+        }
     return {
-        "generated_at_ist": datetime.now().astimezone().strftime("%d/%m/%y %I:%M:%S %p IST"),
+        # Never label host-local time as IST; the dashboard timestamp is an
+        # operational datum and must be stable across machines.
+        "generated_at_ist": datetime.now(IST_ZONE).strftime("%d/%m/%y %I:%M:%S %p IST"),
         "source_files": sorted(events["source_file"].dropna().unique().tolist()),
         "channels": sorted(events["channel_name"].dropna().unique().tolist()),
         # This is an ad-delivery dashboard, so coverage must exclude non-ad ASRUN control events.
-        "true_range": {
-            "start": ads["on_air_start_ist"].min().strftime("%d-%m-%y %I:%M:%S %p IST"),
-            "end": ads["on_air_end_ist"].max().strftime("%d-%m-%y %I:%M:%S %p IST"),
-        },
+        "true_range": true_range,
         "kpis": {
             "all_events": int(len(events)),
             "ad_plays": int(len(ads)),

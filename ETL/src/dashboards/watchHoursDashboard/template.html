@@ -324,6 +324,11 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
       <div class="panel"><h2>Mapping QA Summary<span class="count-chip" id="querySummaryCount"></span></h2><div class="metric-strip" id="mappingMetrics"></div><div class="table-wrap" id="querySummaryTable"></div></div>
       <div class="panel"><h2>QueryStr Mismatches<span class="count-chip" id="queryNonOkCount"></span></h2><div class="table-wrap" id="queryNonOkTable"></div></div>
     </div>
+    <div class="panel">
+      <h2>Geography Source QA<span class="count-chip" id="geoQualityCount"></span></h2>
+      <div class="metric-strip" id="geoQualityMetrics"></div>
+      <div class="table-wrap" id="geoQualityTable"></div>
+    </div>
     <div class="grid-2">
       <div class="panel grid-span-all"><h2>Video Quality Detection Coverage<span class="count-chip" id="qualityCoverageCount"></span></h2><div class="metric-strip" id="qualityCoverageMetrics"></div><div class="table-wrap" id="qualityCoverageTable"></div></div>
     </div>
@@ -703,6 +708,77 @@ function isUnknownGeo(value){
   const t=String(value||'').trim().toLowerCase();
   return !t||['unknown','unknown / na','unknown region','na','n/a','null','none','other','others','unmapped','-'].includes(t);
 }
+// Raw CDN geography is retained in every row. These display helpers only prevent
+// demonstrably contradictory city/state combinations from looking like valid cities.
+const GEO_STATE_DISPLAY_ALIASES=Object.freeze({
+  'CHATTISGARH':'Chhattisgarh',
+  'ORISSA':'Odisha'
+});
+const GEO_CITY_DISPLAY_ALIASES=Object.freeze({
+  'NEWDELHI':'New Delhi'
+});
+// These values were observed under India state rows but are not India cities.
+// Keep the raw evidence in Mapping QA; suppress them from stakeholder city lists.
+const NON_INDIA_CITY_TOKENS=new Set(['BELGRADE','BRISBANE','JAKARTA','JOHANNESBURG','MELBOURNE','SINGAPORE','SYDNEY']);
+const MIN_VISIBLE_CITY_HOURS=0.05;
+function geoToken(value){return decodeText(value).toUpperCase().replace(/[^A-Z0-9]/g,'');}
+function geoDisplayLabel(value,aliases){
+  const text=geoText(value,'Unknown / NA');
+  return aliases[geoToken(text)]||text;
+}
+function buildCityStateReference(){
+  const buckets=new Map();
+  // DAILY_TABLES is populated only after source/date initialization. Use the
+  // inflated raw store here so this reference is stable for every filter state.
+  (DAILY_TABLES_RAW.geo_daily||[]).forEach(row=>{
+    const country=String(row?.country||'').trim().toUpperCase();
+    const city=geoToken(row?.city);
+    const state=geoToken(row?.state);
+    if(country!=='IN'||!city||!state||isUnknownGeo(row?.city)||isUnknownGeo(row?.state))return;
+    const key=`${country}|${city}`;
+    const states=buckets.get(key)||new Map();
+    states.set(state,(states.get(state)||0)+Number(row?.raw_watch_hours||0));
+    buckets.set(key,states);
+  });
+  const reference=new Map();
+  buckets.forEach((states,key)=>{
+    const ranked=[...states.entries()].sort((a,b)=>b[1]-a[1]);
+    const total=ranked.reduce((acc,entry)=>acc+entry[1],0);
+    const [state,hours]=ranked[0]||[];
+    // A stable reference requires meaningful volume and an unambiguous dominant state.
+    if(state&&hours>=1&&hours/Math.max(total,1)>=0.99)reference.set(key,state);
+  });
+  return reference;
+}
+const CITY_STATE_REFERENCE=buildCityStateReference();
+function canonicalGeoRow(row){
+  const countryCode=String(row?.country||'').trim().toUpperCase();
+  const rawState=geoText(row?.state,'Unknown / NA');
+  const rawCity=geoText(row?.city,'Unknown / NA');
+  const cityToken=geoToken(rawCity);
+  const stateToken=geoToken(rawState);
+  const expectedState=CITY_STATE_REFERENCE.get(`${countryCode}|${cityToken}`);
+  const isForeignCity=countryCode==='IN'&&NON_INDIA_CITY_TOKENS.has(cityToken);
+  const contradictsReference=countryCode==='IN'&&expectedState&&!isUnknownGeo(rawState)&&stateToken!==expectedState;
+  const inconsistent=isForeignCity||contradictsReference;
+  return {
+    ...row,
+    country_code:countryCode,
+    country_label:countryLabel(row?.country),
+    raw_country:countryCode||'Unknown / NA',
+    raw_state:rawState,
+    raw_city:rawCity,
+    state_region:geoDisplayLabel(rawState,GEO_STATE_DISPLAY_ALIASES),
+    city_name:inconsistent?'Unknown / NA':geoDisplayLabel(rawCity,GEO_CITY_DISPLAY_ALIASES),
+    geo_quality:inconsistent?'inconsistent':'reported',
+    geo_quality_reason:isForeignCity
+      ? 'City value is not an India city for this India state row.'
+      : (contradictsReference?'City conflicts with its stable state association in the raw CDN data.':'')
+  };
+}
+function visibleCityRows(rows){
+  return (rows||[]).filter(row=>isUnknownGeo(row?.city_name)||Number(row?.raw_watch_hours||row?.watch_hours||0)>=MIN_VISIBLE_CITY_HOURS);
+}
 function statusMeaning(value){
   const code=String(value??'').replace(/\.0$/,'');
   return (D.status_meanings||{})[code]||'Status code was present in logs but is not in the built-in reference list.';
@@ -923,12 +999,8 @@ function aggregateUsageDropRows(){
 function channelGeoRowsForDateList(dateList,channelName=null){
   const dates=new Set(dateList||[]);
   const wanted=channelName==null?null:String(channelName);
-  return (DAILY_TABLES.channel_geo_daily||[]).filter(r=>dates.has(String(r.log_date))).map(r=>({
+  return (DAILY_TABLES.channel_geo_daily||[]).filter(r=>dates.has(String(r.log_date))).map(r=>canonicalGeoRow({
     ...r,
-    country_code:String(r.country||'').trim().toUpperCase(),
-    country_label:countryLabel(r.country),
-    state_region:geoText(r.state,'Unknown / NA'),
-    city_name:geoText(r.city,'Unknown / NA'),
     channel_name:decodeText(r.channel_name||'Unknown'),
     raw_watch_hours:Number(r.raw_watch_hours||0),
     status_200_watch_hours:Number(r.status_200_watch_hours||0),
@@ -1463,6 +1535,23 @@ function deviceProfileWindow(){
 }
 function aggregateMappingQuality(){ return getAgg('mqual',()=>topRows(groupRows(rowsForDates(DAILY_TABLES.mapping_quality_daily),['reqHost','candidate_id','channel_name','quality_bucket'],['rows','raw_ts_chunks','status_200_ts_chunks','raw_watch_hours','status_200_watch_hours'],['approx_unique_ips'],['sample_reqPath']),'raw_watch_hours',40)); }
 function aggregateUnmapped() { return getAgg('unmapped', ()=>topRows(groupRows(rowsForDates(DAILY_TABLES.unmapped_candidates_daily),['reqHost','candidate_id'],['rows','raw_ts_chunks','status_200_ts_chunks','raw_watch_hours','status_200_watch_hours'],['approx_unique_ips'],['sample_reqPath']),'raw_ts_chunks',50)); }
+function geoQualityForDaily(dailyRows=viewDaily){
+  const rows=rowsForDates(DAILY_TABLES.geo_daily,dailyRows).map(r=>canonicalGeoRow(r));
+  const inconsistent=groupRows(
+    rows.filter(r=>r.geo_quality==='inconsistent'),
+    ['source','raw_country','raw_state','raw_city','geo_quality_reason'],
+    ['raw_watch_hours','raw_ts_rows'],
+    ['approx_unique_ips']
+  ).map(r=>({...r,source:sourceLabel(sourceOf(r))}))
+    .sort((a,b)=>Number(b.raw_watch_hours||0)-Number(a.raw_watch_hours||0));
+  const missingStateHours=sum(rows.filter(r=>!isUnknownGeo(r.raw_city)&&isUnknownGeo(r.raw_state)),'raw_watch_hours');
+  return {
+    inconsistent,
+    inconsistentHours:sum(inconsistent,'raw_watch_hours'),
+    inconsistentRows:sum(inconsistent,'raw_ts_rows'),
+    missingStateHours
+  };
+}
 function aggregateQualityCoverage(){
   return getAgg('qualityCoverage',()=>{
     const rows=groupRows(rowsForDates(DAILY_TABLES.mapping_quality_daily),['source','quality_bucket'],['rows','raw_ts_chunks','status_200_ts_chunks','raw_watch_hours','status_200_watch_hours'],['approx_unique_ips']);
@@ -1486,7 +1575,7 @@ function aggregateQueryMChannel(){ return getAgg('qmchannel',()=>{ const rows=gr
 function aggregateCmcd()     { return getAgg('cmcd',     ()=>oneDailyRow(DAILY_TABLES.cmcd_daily,['rows_with_cmcd','br_rows','duration_rows','measured_throughput_rows','object_type_rows','streaming_format_rows','session_id_rows','stream_type_rows','top_bitrate_rows'],['sample_cmcd'])); }
 
 function buildGeoBreakdownForDaily(dailyRows) {
-  const base=rowsForDates(DAILY_TABLES.geo_daily, dailyRows || viewDaily).map(r=>({...r,country_code:String(r.country||'').trim().toUpperCase(),country_label:countryLabel(r.country),state_region:geoText(r.state,'Unknown / NA'),city_name:geoText(r.city,'Unknown / NA')}));
+  const base=rowsForDates(DAILY_TABLES.geo_daily, dailyRows || viewDaily).map(r=>canonicalGeoRow(r));
   const totalHours=sum(base,'raw_watch_hours');
   const india=base.filter(r=>r.country_code==='IN');
   const other=base.filter(r=>r.country_code!=='IN');
@@ -1495,9 +1584,9 @@ function buildGeoBreakdownForDaily(dailyRows) {
   return {
     country_split:countrySplit,
     india_regions:finish(groupRows(india,['state_region'],['raw_watch_hours'],['approx_unique_ips']),sum(india,'raw_watch_hours'),30),
-      india_cities:finish(groupRows(india,['city_name','state_region'],['raw_watch_hours'],['approx_unique_ips']),sum(india,'raw_watch_hours')),
+      india_cities:finish(visibleCityRows(groupRows(india,['city_name','state_region'],['raw_watch_hours'],['approx_unique_ips'])),sum(india,'raw_watch_hours')),
     other_regions:finish(groupRows(other,['country_label','state_region'],['raw_watch_hours'],['approx_unique_ips']),sum(other,'raw_watch_hours'),40),
-      other_cities:finish(groupRows(other,['country_label','city_name','state_region'],['raw_watch_hours'],['approx_unique_ips']),sum(other,'raw_watch_hours'))
+      other_cities:finish(visibleCityRows(groupRows(other,['country_label','city_name','state_region'],['raw_watch_hours'],['approx_unique_ips'])),sum(other,'raw_watch_hours'))
   };
 }
 
@@ -1506,12 +1595,8 @@ function buildGeoBreakdown() {
 }
 
 function channelGeoRowsForDaily(dailyRows) {
-  return rowsForDates(DAILY_TABLES.channel_geo_daily||[], dailyRows||viewDaily).map(r=>({
+  return rowsForDates(DAILY_TABLES.channel_geo_daily||[], dailyRows||viewDaily).map(r=>canonicalGeoRow({
     ...r,
-    country_code:String(r.country||'').trim().toUpperCase(),
-    country_label:countryLabel(r.country),
-    state_region:geoText(r.state,'Unknown / NA'),
-    city_name:geoText(r.city,'Unknown / NA'),
     channel_name:decodeText(r.channel_name||'Unknown'),
     raw_watch_hours:Number(r.raw_watch_hours||0),
     status_200_watch_hours:Number(r.status_200_watch_hours||0),
@@ -1544,12 +1629,12 @@ function channelGeoData(channelName,dailyRows=null) {
     String(a.country_label).localeCompare(String(b.country_label)) ||
     String(a.state_region).localeCompare(String(b.state_region))
   );
-  const cityRows=groupRows(
+  const cityRows=visibleCityRows(groupRows(
     rows,
     ['country_code','country_label','state_region','city_name'],
     ['raw_watch_hours','status_200_watch_hours','raw_ts_rows','status_200_ts_rows'],
     ['approx_unique_ips']
-  ).map(r=>({...r,share_pct:percent(r.raw_watch_hours,totalHours)}))
+  ).map(r=>({...r,share_pct:percent(r.raw_watch_hours,totalHours)})))
     .sort((a,b)=>Number(b.raw_watch_hours||0)-Number(a.raw_watch_hours||0));
   return {channelName:name,rows,totalHours,regionRows,cityRows};
 }
@@ -1675,19 +1760,19 @@ function regionDrilldownData(stateName) {
       merged.avg_hours_per_device=avgOrNull(merged.raw_watch_hours,merged.approx_devices);
       return merged;
     });
-  const cityRows=groupRows(rows,['city_name'],['raw_watch_hours','status_200_watch_hours','raw_ts_rows','status_200_ts_rows'],['approx_unique_ips'])
+  const cityRows=visibleCityRows(groupRows(rows,['city_name'],['raw_watch_hours','status_200_watch_hours','raw_ts_rows','status_200_ts_rows'],['approx_unique_ips'])
     .sort((a,b)=>Number(b.raw_watch_hours||0)-Number(a.raw_watch_hours||0))
-    .map(r=>({...r,share_pct:percent(r.raw_watch_hours,totalHours)}));
-  const cityChannelRows=groupRows(rows,['city_name','channel_name'],['raw_watch_hours','status_200_watch_hours','raw_ts_rows','status_200_ts_rows'],['approx_unique_ips'])
+    .map(r=>({...r,share_pct:percent(r.raw_watch_hours,totalHours)})));
+  const cityChannelRows=visibleCityRows(groupRows(rows,['city_name','channel_name'],['raw_watch_hours','status_200_watch_hours','raw_ts_rows','status_200_ts_rows'],['approx_unique_ips'])
     .sort((a,b)=>Number(b.raw_watch_hours||0)-Number(a.raw_watch_hours||0))
-    .map(r=>({...r,share_pct:percent(r.raw_watch_hours,totalHours)}));
+    .map(r=>({...r,share_pct:percent(r.raw_watch_hours,totalHours)})));
   return {rows,totalHours,channelRows,cityRows,cityChannelRows};
 }
 
 function regionChannelDetailData(stateName, channelName, regionData=null) {
   const base=regionData||regionDrilldownData(stateName);
   const channelRow=(base.channelRows||[]).find(r=>r.channel_name===channelName)||null;
-  const cityRows=(base.cityChannelRows||[]).filter(r=>r.channel_name===channelName)
+  const cityRows=visibleCityRows((base.cityChannelRows||[]).filter(r=>r.channel_name===channelName))
     .sort((a,b)=>Number(b.raw_watch_hours||0)-Number(a.raw_watch_hours||0));
   const deviceBase=aggregateRegionChannelDevice().filter(r=>r.country_code==='IN'&&r.state_region===stateName&&r.channel_name===channelName);
   const deviceRows=groupRows(deviceBase,['device_type'],['raw_ts_rows','status_200_ts_rows','raw_watch_hours','status_200_watch_hours'],['approx_unique_ips'])
@@ -2892,17 +2977,19 @@ function renderRegionInsightCards(rows,cities=[],countryRows=[]){
     cityByRegion.get(key).push(c);
   });
   cityByRegion.forEach(list=>list.sort((a,b)=>Number(b.watch_hours||0)-Number(a.watch_hours||0)));
+  const knownCities=(cities||[]).filter(c=>!isUnknownGeo(c.city_name));
   const countryCard=insightCard('Country: India',[
     insightStat('Watch Hours',fmtH(india.watch_hours)),
     insightStat('India Share',fmtPct(india.share_pct)),
     insightStat('States / Regions',fmt(regions.length)),
-    insightStat('City Options',fmt((cities||[]).length))
+    insightStat('City Options',fmt(knownCities.length))
   ],'State cards below include available city options; missing values are marked Unknown / NA.','violet');
   const stateCards=regions.map(r=>{
     const stateName=r.state_region||'Unknown / NA';
     const stateArg=encodeURIComponent(stateName);
     const selected=selectedRegion===stateName?' selected':'';
     const cityRows=cityByRegion.get(stateName)||[];
+    const knownCityRows=cityRows.filter(c=>!isUnknownGeo(c.city_name));
     const topCities=cityRows.slice(0,6);
     const chips=topCities.map(c=>{
       const city=c.city_name||'Unknown / NA';
@@ -2914,7 +3001,7 @@ function renderRegionInsightCards(rows,cities=[],countryRows=[]){
         insightStat('Watch Hours',fmtH(r.watch_hours)),
         insightStat('India Share',fmtPct(r.share_pct)),
         insightStat('Approx IPs',fmt(r.approx_unique_ips)),
-        insightStat('Cities',fmt(cityRows.length||0))
+        insightStat('Cities',fmt(knownCityRows.length||0))
       ].join('')+
       `</div><div class="region-city-list">${chips||'<span class="region-city-chip na">Unknown / NA</span>'}</div></article>`;
   }).join('');
@@ -3275,6 +3362,7 @@ function renderTables(){
   const mqRows=aggregateMappingQuality();
   const qualityCoverageRows=aggregateQualityCoverage();
   const geo=buildGeoBreakdown();
+  const geoQuality=geoQualityForDaily(viewDaily);
   const deviceRows=aggregateDevice();
   const asnRows=aggregateAsn();
   const uaRows=aggregateUa();
@@ -3427,6 +3515,24 @@ function renderTables(){
   document.getElementById('mappingMetrics').innerHTML=[mini('Unmapped Candidates',fmt(s.unmapped_candidates)),mini('Mapped Coverage',fmtPct(s.mapped_coverage_pct)),mini('Rows With QueryStr',fmt(qp.rows_with_querystr||0)),mini('Rows With CMCD',fmt(cmcd.rows_with_cmcd||0))].join('');
   document.getElementById('querySummaryTable').innerHTML=table(D.query_summary,[{key:'review_status',label:'Status'},{key:'rows',label:'Rows'},{key:'requests',label:'Requests'},{key:'sessions',label:'Sessions'},{key:'devices',label:'Devices'}],{rows:n,requests:n,sessions:n,devices:n});
   document.getElementById('queryNonOkTable').innerHTML=table(D.query_non_ok,[{key:'review_status',label:'Status'},{key:'pure_channel',label:'Pure Channel'},{key:'mapped_channel',label:'Mapped Channel'},{key:'reqHost',label:'Host'},{key:'candidate_id',label:'Candidate'},{key:'requests',label:'Requests'},{key:'sample_reqPath',label:'Sample Path'}],{requests:n});
+  document.getElementById('geoQualityMetrics').innerHTML=[
+    mini('Inconsistent City Hours',fmtH(geoQuality.inconsistentHours)),
+    mini('Inconsistent .ts Rows',fmt(geoQuality.inconsistentRows)),
+    mini('Raw City / Missing State Hours',fmtH(geoQuality.missingStateHours)),
+    mini('Affected Raw Combinations',fmt(geoQuality.inconsistent.length))
+  ].join('');
+  document.getElementById('geoQualityTable').innerHTML=geoQuality.inconsistent.length
+    ? table(geoQuality.inconsistent,[
+      {key:'source',label:'Source'},
+      {key:'raw_country',label:'Raw Country'},
+      {key:'raw_state',label:'Raw State'},
+      {key:'raw_city',label:'Raw City'},
+      {key:'geo_quality_reason',label:'Display Treatment'},
+      {key:'raw_watch_hours',label:'Raw Watch Hours'},
+      {key:'raw_ts_rows',label:'.ts Rows'},
+      {key:'approx_unique_ips',label:'Approx IPs'}
+    ],{raw_watch_hours:wh,raw_ts_rows:n,approx_unique_ips:n})
+    : '<div style="padding:14px;color:#64748b;font-size:12px">No contradictory city/state combinations in the selected range.</div>';
   const unknownQualityRows=qualityCoverageRows.filter(r=>String(r.quality_bucket||'').toLowerCase()==='unknown');
   const totalQualityHours=sum(qualityCoverageRows,'raw_watch_hours');
   const unknownQualityHours=sum(unknownQualityRows,'raw_watch_hours');
@@ -3574,7 +3680,7 @@ function renderTables(){
   document.getElementById('queryParamTable').innerHTML=oneRowTable(qp,{rows_with_querystr:'Rows with queryStr',channel_rows:'channel rows',channel_name_rows:'channel_name rows',content_title_rows:'content_title rows',category_name_rows:'category_name rows',session_rows:'session rows',device_id_rows:'device_id rows',platform_rows:'platform rows',device_rows:'device rows',m_rows:'m rows',cmcd_query_rows:'queryStr cmcd rows',hdnts_rows:'hdnts rows',token_rows:'token rows'});
   document.getElementById('cmcdTable').innerHTML=oneRowTable(cmcd,{rows_with_cmcd:'Rows with CMCD',br_rows:'Bitrate rows',duration_rows:'Duration rows',measured_throughput_rows:'Measured throughput rows',session_id_rows:'Session ID rows'});
 
-  setCount('channelCount',viewChannels);setCount('channelCardsCount',channelAudienceRows,'channels');setCount('channelInsightCount',channelAudienceRows,'channels');setCount('fastPlatformCount',fastPlatformRows,'rows');setCount('regionCardsCount',geo.india_regions,'regions');setCount('regionInsightCount',geo.india_regions,'regions');setCount('regionCountryCount',geo.country_split,'groups');setCount('querySummaryCount',D.query_summary);setCount('queryNonOkCount',D.query_non_ok);setCount('qualityCoverageCount',qualityCoverageRows,'buckets');setCount('queryParamKeysCount',qkeyRows);setCount('queryMChannelCount',qmRows);setCount('unmappedCount',unmappedRows);setCount('mappingQualityCount',mqRows);
+  setCount('channelCount',viewChannels);setCount('channelCardsCount',channelAudienceRows,'channels');setCount('channelInsightCount',channelAudienceRows,'channels');setCount('fastPlatformCount',fastPlatformRows,'rows');setCount('regionCardsCount',geo.india_regions,'regions');setCount('regionInsightCount',geo.india_regions,'regions');setCount('regionCountryCount',geo.country_split,'groups');setCount('querySummaryCount',D.query_summary);setCount('queryNonOkCount',D.query_non_ok);setCount('geoQualityCount',geoQuality.inconsistent,'raw combinations');setCount('qualityCoverageCount',qualityCoverageRows,'buckets');setCount('queryParamKeysCount',qkeyRows);setCount('queryMChannelCount',qmRows);setCount('unmappedCount',unmappedRows);setCount('mappingQualityCount',mqRows);
   setCount('concurrencySummaryCount',concurrencySummaryTableRows,'pairs');setCount('concurrencyPeakCount',concurrencyPeakRows,'minutes');
   setCount('geoCountryCount',geo.country_split);setCount('deviceCount',deviceRows);setCount('geoIndiaRegionCount',geo.india_regions);setCount('geoIndiaCityCount',geo.india_cities);
   setCount('geoOtherRegionCount',geo.other_regions);setCount('geoOtherCityCount',geo.other_cities);setCount('asnCount',asnRows);setCount('uaCount',uaRows);
