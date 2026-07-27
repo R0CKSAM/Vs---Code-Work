@@ -1493,15 +1493,57 @@
       "date": "2026-07-24",
       "lake_root": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
       "partition_path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=07\\day=24",
-      "file_count": 1,
-      "bytes": 70120490,
-      "max_mtime_ns": 1784861918296149200,
+      "file_count": 2,
+      "bytes": 1036476390,
+      "max_mtime_ns": 1784949860087558200,
       "output_counts": {
-        "identity_device_daily": 629,
-        "identity_session_daily": 651,
-        "identity_ipua_daily": 660
+        "identity_device_daily": 17534,
+        "identity_session_daily": 21066,
+        "identity_ipua_daily": 19511
+      }
+    },
+    "stream/2026-07-25": {
+      "source": "stream",
+      "date": "2026-07-25",
+      "lake_root": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
+      "partition_path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=07\\day=25",
+      "file_count": 2,
+      "bytes": 988661745,
+      "max_mtime_ns": 1785036204609075800,
+      "output_counts": {
+        "identity_device_daily": 17889,
+        "identity_session_daily": 23658,
+        "identity_ipua_daily": 20989
+      }
+    },
+    "stream/2026-07-26": {
+      "source": "stream",
+      "date": "2026-07-26",
+      "lake_root": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
+      "partition_path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=07\\day=26",
+      "file_count": 2,
+      "bytes": 831170372,
+      "max_mtime_ns": 1785121862731898300,
+      "output_counts": {
+        "identity_device_daily": 16495,
+        "identity_session_daily": 20647,
+        "identity_ipua_daily": 18967
+      }
+    },
+    "stream/2026-07-27": {
+      "source": "stream",
+      "date": "2026-07-27",
+      "lake_root": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
+      "partition_path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=07\\day=27",
+      "file_count": 1,
+      "bytes": 59938210,
+      "max_mtime_ns": 1785121862757395600,
+      "output_counts": {
+        "identity_device_daily": 512,
+        "identity_session_daily": 534,
+        "identity_ipua_daily": 566
       }
     }
   },
-  "updated_at_utc": "2026-07-24T03:40:16.283575+00:00"
+  "updated_at_utc": "2026-07-27T04:01:47.926130+00:00"
 }

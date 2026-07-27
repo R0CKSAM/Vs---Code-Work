@@ -1644,6 +1644,48 @@
         "fast",
         "stream"
       ]
+    },
+    "2026-07-24": {
+      "bytes": 9283203280,
+      "files": 4,
+      "mtime_ns_max": 1784949860087558200,
+      "mtime_ns_sum": 7139623503520808000,
+      "roots": [
+        "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
+      ],
+      "rows": 92179369,
+      "sources": [
+        "fast",
+        "stream"
+      ]
+    },
+    "2026-07-25": {
+      "bytes": 9102921618,
+      "files": 4,
+      "mtime_ns_max": 1785036204609075800,
+      "mtime_ns_sum": 7139972067725362100,
+      "roots": [
+        "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
+      ],
+      "rows": 92047554,
+      "sources": [
+        "fast",
+        "stream"
+      ]
+    },
+    "2026-07-26": {
+      "bytes": 7514676573,
+      "files": 4,
+      "mtime_ns_max": 1785121862731898300,
+      "mtime_ns_sum": 7140316077214256500,
+      "roots": [
+        "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
+      ],
+      "rows": 76037701,
+      "sources": [
+        "fast",
+        "stream"
+      ]
     }
   },
   "signature_basis": "parquet files grouped by lake year/month/day, using count, bytes, mtimes, and source-aware device_daily schema",
