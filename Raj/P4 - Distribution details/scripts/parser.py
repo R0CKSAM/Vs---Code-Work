@@ -168,6 +168,7 @@ STATE_NORMALIZATION = build_normalization_map(
         "All India": "All India",
         "ANDHRA PRADESH": "Andhra Pradesh",
         "AP": "Andhra Pradesh",
+        "Arunachal Pradesh": "Arunachal Pradesh",
         "Asaam": "Assam",
         "Assam": "Assam",
         "Bihar": "Bihar",
@@ -202,6 +203,17 @@ STATE_NORMALIZATION = build_normalization_map(
         "Uk": "Uttarakhand",
         "West Bengal": "West Bengal",
     }
+)
+
+AMBIGUOUS_STATE_KEYS = {
+    normalize_lookup_key(value)
+    for value in {"AP", "A.P.", "UP", "U.P.", "UK", "U.K.", "MP", "M.P.", "CG", "C.G.", "WB", "W.B."}
+}
+
+CANONICAL_STATE_NAMES = sorted(
+    {canonical for canonical in STATE_NORMALIZATION.values() if canonical not in {UNMAPPED_REVIEW}},
+    key=len,
+    reverse=True,
 )
 
 STATE_CONTEXTUAL_KEYS = {
@@ -418,6 +430,19 @@ def sheet_state_from_context(sheet_name: str | None) -> str | None:
     return SHEET_STATE_NORMALIZATION.get(normalize_lookup_key(sheet_name))
 
 
+def state_from_headend_location(headend_location: str | None) -> str | None:
+    location_text = clean_text(headend_location)
+    if location_text is None:
+        return None
+
+    normalized_location = normalize_lookup_key(location_text)
+    for canonical_state in CANONICAL_STATE_NAMES:
+        canonical_key = normalize_lookup_key(canonical_state)
+        if canonical_key and canonical_key in normalized_location:
+            return canonical_state
+    return None
+
+
 def normalize_state(
     raw_value: Any,
     *,
@@ -427,19 +452,28 @@ def normalize_state(
 ) -> str:
     raw_text = clean_text(raw_value)
     sheet_state = sheet_state_from_context(sheet_name)
+    location_state = state_from_headend_location(headend_location)
 
     if raw_text is None:
-        return sheet_state or UNMAPPED_REVIEW
+        return location_state or sheet_state or UNMAPPED_REVIEW
 
     lookup_key = normalize_lookup_key(raw_text)
     if lookup_key in STATE_NORMALIZATION:
-        return STATE_NORMALIZATION[lookup_key]
+        normalized_state = STATE_NORMALIZATION[lookup_key]
+        if location_state and location_state != normalized_state and lookup_key in AMBIGUOUS_STATE_KEYS:
+          return location_state
+        return normalized_state
 
     if lookup_key in STATE_CONTEXTUAL_KEYS or lookup_key.startswith("district "):
+        if location_state:
+            return location_state
         if sheet_state:
             return sheet_state
         record_unmatched(counters, "state", raw_text)
         return UNMAPPED_REVIEW
+
+    if location_state and lookup_key in AMBIGUOUS_STATE_KEYS:
+        return location_state
 
     record_unmatched(counters, "state", raw_text)
     return smart_title_case(raw_text) or UNMAPPED_REVIEW

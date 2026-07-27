@@ -97,7 +97,7 @@
     .metric {
       border: 1px solid var(--card-border);
       border-radius: 14px;
-      padding: 14px;
+      padding: 11px 13px;
       background: var(--card);
     }
 
@@ -119,12 +119,13 @@
       text-transform: uppercase;
       letter-spacing: 0.12em;
       color: var(--muted);
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .metric-value {
-      font-size: 1.6rem;
+      font-size: 1.42rem;
       font-weight: 800;
+      line-height: 1.05;
     }
 
     .metric-text {
@@ -143,12 +144,7 @@
       border: 1px solid var(--card-border);
       border-radius: 16px;
       box-shadow: var(--shadow);
-      padding: 16px 18px;
-      margin-bottom: 16px;
-    }
-
-    .kpi-section {
-      padding: 18px;
+      padding: 12px 16px 14px;
       margin-bottom: 16px;
     }
 
@@ -157,17 +153,18 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .kpi-grid {
       grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 8px;
     }
 
     .toolbar-title {
-      margin: 0 0 10px;
+      margin: 0;
       color: var(--muted);
-      font-size: 0.78rem;
+      font-size: 0.72rem;
       font-weight: 700;
       letter-spacing: 0.12em;
       text-transform: uppercase;
@@ -245,7 +242,7 @@
       margin-bottom: 0;
       flex: 1;
       max-width: none;
-      grid-template-columns: 1fr 1fr 1.9fr 1.2fr 0.9fr 0.9fr auto auto;
+      grid-template-columns: 1fr 1fr 1.7fr 1.2fr 0.9fr 0.9fr 1fr auto auto;
       padding: 8px 10px;
       gap: 8px;
     }
@@ -685,6 +682,12 @@
       font-style: italic;
     }
 
+    #headendTable th:nth-child(2),
+    #headendTable td:nth-child(2) {
+      width: 340px;
+      max-width: 340px;
+    }
+
     .channel-highlight-india-tv {
       background: #ffe6bf;
       color: #7c4400;
@@ -698,6 +701,63 @@
     .channel-highlight-abp {
       background: #dbe9ff;
       color: #174a9c;
+    }
+
+    #headendTable {
+      min-width: 1220px;
+    }
+
+    #headendTable th,
+    #headendTable td {
+      font-size: 0.78rem;
+      padding: 7px 9px;
+      line-height: 1.2;
+    }
+
+    #headendTable th {
+      font-size: 0.74rem;
+    }
+
+    #channelTable {
+      min-width: 1180px;
+    }
+
+    #channelTable th,
+    #channelTable td {
+      font-size: 0.76rem;
+      padding: 6px 9px;
+      line-height: 1.18;
+    }
+
+    #channelTable th {
+      font-size: 0.73rem;
+    }
+
+    #channelTable .subhead-row th {
+      font-size: 0.67rem;
+      padding-top: 6px;
+      padding-bottom: 6px;
+    }
+
+    #channelTable .week-group-header {
+      font-size: 0.75rem;
+      min-width: 180px;
+    }
+
+    #channelTable .channel-column {
+      min-width: 150px;
+    }
+
+    #channelTable .date-column {
+      min-width: 116px;
+    }
+
+    #channelTable .channel-value {
+      padding: 1px 5px;
+    }
+
+    #channelTable .date-value {
+      font-size: 0.74rem;
     }
 
     #channelTable tbody td {
@@ -921,6 +981,16 @@
               <select id="weekToFilter"></select>
             </div>
             <div class="field compact-filter">
+              <label for="changeStatusFilter">Change Status</label>
+              <select id="changeStatusFilter">
+                <option value="">All Status</option>
+                <option value="Same">Same</option>
+                <option value="Changed">Changed</option>
+                <option value="Added">Added</option>
+                <option value="Removed">Removed</option>
+              </select>
+            </div>
+            <div class="field compact-filter">
               <label>Reset</label>
               <div class="actions compact-actions">
                 <button class="btn-primary compact-btn" id="resetTable2Filters">Reset</button>
@@ -1009,6 +1079,7 @@
         headend_location: "",
         network_name: "",
       },
+      activeHeadendFilter: "",
       headendSort: { key: "state", direction: "asc" },
       channelSort: { key: "lcn_no", direction: "asc" },
     };
@@ -1034,6 +1105,7 @@
       table2ChannelFilter: document.getElementById("table2ChannelFilter"),
       weekFromFilter: document.getElementById("weekFromFilter"),
       weekToFilter: document.getElementById("weekToFilter"),
+      changeStatusFilter: document.getElementById("changeStatusFilter"),
       resetTable2Filters: document.getElementById("resetTable2Filters"),
       table2FullscreenBtn: document.getElementById("table2FullscreenBtn"),
       table1BarLabel: document.getElementById("table1BarLabel"),
@@ -1067,6 +1139,7 @@
         table2Channel: elements.table2ChannelFilter.value,
         weekFrom: elements.weekFromFilter.value,
         weekTo: elements.weekToFilter.value,
+        changeStatus: elements.changeStatusFilter.value,
         selectedHeadendId: state.selectedHeadendId,
       };
     }
@@ -1093,6 +1166,7 @@
       elements.table2ChannelFilter.value = sharedState.table2Channel || "";
       elements.weekFromFilter.value = sharedState.weekFrom || "";
       elements.weekToFilter.value = sharedState.weekTo || "";
+      elements.changeStatusFilter.value = sharedState.changeStatus || "";
       state.selectedHeadendId = sharedState.selectedHeadendId || null;
     }
 
@@ -1188,6 +1262,16 @@
       );
     }
 
+    function rowsMatchingSpecificFilters(filterKeys, excludedKey = "") {
+      return state.headendRows.filter(row =>
+        filterKeys.every(key => {
+          if (key === excludedKey) return true;
+          const selectedValues = state.headendFilterSelections[key];
+          return !selectedValues.length || selectedValues.includes(row[key]);
+        })
+      );
+    }
+
     function filterKeyLabel(key) {
       return {
         state: "States",
@@ -1215,23 +1299,19 @@
       }[key];
     }
 
-    function selectedSummary(key) {
+    function selectedSummary(key, availableValues = []) {
       const values = state.headendFilterSelections[key];
       if (!values.length) return `All ${filterKeyLabel(key)}`;
+      if (availableValues.length && values.length === availableValues.length) {
+        return `All ${filterKeyLabel(key)}`;
+      }
       if (values.length === 1) return values[0];
-      return `${values.length} selected`;
+      if (values.length <= 2) return values.join(", ");
+      return `${values.slice(0, 2).join(", ")} +${values.length - 2}`;
     }
 
-    function normalizeFilterSelection(selectedValues, availableValues) {
-      if (!selectedValues.length) {
-        return [];
-      }
-
-      const hasEveryAvailableValue =
-        selectedValues.length === availableValues.length &&
-        availableValues.every(value => selectedValues.includes(value));
-
-      return hasEveryAvailableValue ? [] : selectedValues;
+    function normalizeFilterSelection(selectedValues) {
+      return [...selectedValues];
     }
 
     function renderFilterControl(key, values) {
@@ -1242,7 +1322,7 @@
       const filteredValues = values.filter(value => value.toLowerCase().includes(searchValue.toLowerCase()));
 
       container.innerHTML = `
-        <button type="button" class="multiselect-trigger">${selectedSummary(key)}</button>
+        <button type="button" class="multiselect-trigger">${selectedSummary(key, values)}</button>
         <div class="multiselect-panel">
           <input class="multiselect-search" type="search" value="${searchValue.replace(/"/g, "&quot;")}" placeholder="Search ${filterKeyLabel(key).toLowerCase()}">
           <div class="multiselect-actions">
@@ -1265,6 +1345,10 @@
       const searchInput = container.querySelector(".multiselect-search");
       const optionsContainer = container.querySelector(".multiselect-options");
       const optionLabels = Array.from(container.querySelectorAll(".multiselect-option"));
+
+      if (state.activeHeadendFilter === key) {
+        container.classList.add("open");
+      }
 
       function applySearchFilter() {
         const query = (searchInput.value || "").trim().toLowerCase();
@@ -1298,6 +1382,7 @@
           if (item !== container) item.classList.remove("open");
         });
         container.classList.toggle("open");
+        state.activeHeadendFilter = container.classList.contains("open") ? key : "";
         if (container.classList.contains("open")) {
           searchInput.focus();
         }
@@ -1311,20 +1396,23 @@
       container.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
         checkbox.addEventListener("change", () => {
           const checkedValues = Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(input => input.value);
-          state.headendFilterSelections[key] = normalizeFilterSelection(checkedValues, values);
+          state.activeHeadendFilter = key;
+          state.headendFilterSelections[key] = normalizeFilterSelection(checkedValues);
           updateDependentHeadendFilters();
           renderHeadendTable();
         });
       });
 
       panel.querySelector('[data-action="select-all"]').addEventListener("click", () => {
-        state.headendFilterSelections[key] = [];
+        state.activeHeadendFilter = key;
+        state.headendFilterSelections[key] = [...values];
         state.headendFilterSearch[key] = "";
         updateDependentHeadendFilters();
         renderHeadendTable();
       });
 
       panel.querySelector('[data-action="clear-all"]').addEventListener("click", () => {
+        state.activeHeadendFilter = key;
         state.headendFilterSelections[key] = [];
         state.headendFilterSearch[key] = "";
         updateDependentHeadendFilters();
@@ -1423,6 +1511,31 @@
       select.value = values.includes(selectedValue) ? selectedValue : "";
     }
 
+    function sanitizeWeekRange(changedField = "") {
+      const weekFrom = elements.weekFromFilter.value;
+      const weekTo = elements.weekToFilter.value;
+
+      if (!weekFrom || !weekTo) {
+        return;
+      }
+
+      if (compareWeekLabels(weekFrom, weekTo) <= 0) {
+        return;
+      }
+
+      if (changedField === "weekFrom") {
+        elements.weekToFilter.value = weekFrom;
+        return;
+      }
+
+      if (changedField === "weekTo") {
+        elements.weekFromFilter.value = weekTo;
+        return;
+      }
+
+      elements.weekToFilter.value = weekFrom;
+    }
+
     function normalizeChannelName(value) {
       return String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
     }
@@ -1462,6 +1575,58 @@
       return state.headendRows.filter(row => channelHeadends.has(row.headend_id));
     }
 
+    function allowedTable2HeadendIds() {
+      const metaByHeadend = new Map(state.headendRows.map(row => [row.headend_id, row]));
+      const selectedState = elements.table2StateFilter.value;
+      const selectedCity = elements.table2CityFilter.value;
+      const selectedHeadend = elements.table2HeadendFilter.value;
+
+      if (selectedHeadend) {
+        return [selectedHeadend];
+      }
+
+      return [...new Set(state.channelRows.map(row => row.headend_id))].filter(headendId => {
+        const meta = metaByHeadend.get(headendId);
+        if (!meta) return false;
+        if (!selectedState && !selectedCity) {
+          return state.table2DefaultHeadends.includes(headendId);
+        }
+        if (selectedState && meta.state !== selectedState) return false;
+        if (selectedCity && meta.headend_location !== selectedCity) return false;
+        return true;
+      });
+    }
+
+    function normalizedComparisonValue(value) {
+      const display = displayValue(value);
+      return display === "NA" ? "" : normalizeChannelName(display);
+    }
+
+    function comparisonWeeks() {
+      sanitizeWeekRange();
+      let weekFrom = elements.weekFromFilter.value;
+      let weekTo = elements.weekToFilter.value;
+      if (!weekFrom || !weekTo) {
+        return null;
+      }
+      return { weekFrom, weekTo };
+    }
+
+    function rowChangeStatus(row, weekFrom, weekTo) {
+      if (!weekFrom || !weekTo) {
+        return "";
+      }
+
+      const fromValue = normalizedComparisonValue(row.weeks?.[weekFrom]?.channel_name);
+      const toValue = normalizedComparisonValue(row.weeks?.[weekTo]?.channel_name);
+
+      if (!fromValue && !toValue) return "Same";
+      if (!fromValue && toValue) return "Added";
+      if (fromValue && !toValue) return "Removed";
+      if (fromValue === toValue) return "Same";
+      return "Changed";
+    }
+
     function updateTable2FilterOptions() {
       const metaRows = table2MetaRows();
       const selectedState = elements.table2StateFilter.value;
@@ -1495,8 +1660,14 @@
       const weeks = allWeekColumns();
       fillWeekSelect(elements.weekFromFilter, weeks, "All Weeks", selectedWeekFrom);
       fillWeekSelect(elements.weekToFilter, weeks, "All Weeks", selectedWeekTo);
+      sanitizeWeekRange();
+      const comparison = comparisonWeeks();
+      if (!comparison) {
+        elements.changeStatusFilter.value = "";
+      }
+      elements.changeStatusFilter.disabled = !comparison;
 
-      const eligibleHeadendIds = new Set(headendRows.map(row => row.headend_id));
+      const eligibleHeadendIds = new Set(allowedTable2HeadendIds());
       const baseRows = state.channelRows.filter(row => eligibleHeadendIds.has(row.headend_id));
       const visibleWeeks = availableWeeksForSelectedRows(baseRows);
       const channelOptions = extractChannelOptions(baseRows, visibleWeeks);
@@ -1556,22 +1727,27 @@
     }
 
     function availableWeeksForSelectedRows(rows) {
-      const weekSet = new Set();
-      let weekFrom = elements.weekFromFilter.value;
-      let weekTo = elements.weekToFilter.value;
+      const allWeeks = allWeekColumns();
+      sanitizeWeekRange();
+      const weekFrom = elements.weekFromFilter.value;
+      const weekTo = elements.weekToFilter.value;
 
-      if (weekFrom && weekTo && compareWeekLabels(weekFrom, weekTo) > 0) {
-        [weekFrom, weekTo] = [weekTo, weekFrom];
+      if (weekFrom || weekTo) {
+        return allWeeks.filter(week => {
+          if (weekFrom && compareWeekLabels(week, weekFrom) < 0) {
+            return false;
+          }
+          if (weekTo && compareWeekLabels(week, weekTo) > 0) {
+            return false;
+          }
+          return true;
+        });
       }
+
+      const weekSet = new Set();
 
       rows.forEach(row => {
         Object.keys(row.weeks || {}).forEach(week => {
-          if (weekFrom && compareWeekLabels(week, weekFrom) < 0) {
-            return;
-          }
-          if (weekTo && compareWeekLabels(week, weekTo) > 0) {
-            return;
-          }
           weekSet.add(week);
         });
       });
@@ -1580,33 +1756,24 @@
     }
 
     function filteredChannelRows() {
-      const metaByHeadend = new Map(state.headendRows.map(row => [row.headend_id, row]));
-      const selectedState = elements.table2StateFilter.value;
-      const selectedCity = elements.table2CityFilter.value;
-      const selectedHeadend = elements.table2HeadendFilter.value;
       const selectedChannel = elements.table2ChannelFilter.value;
+      const selectedStatus = elements.changeStatusFilter.disabled ? "" : elements.changeStatusFilter.value;
+      const allowedHeadends = allowedTable2HeadendIds();
 
-      const allowedHeadends = selectedHeadend
-        ? [selectedHeadend]
-        : [...new Set(state.channelRows.map(row => row.headend_id))].filter(headendId => {
-            const meta = metaByHeadend.get(headendId);
-            if (!meta) return false;
-            if (!selectedState && !selectedCity) {
-              return state.table2DefaultHeadends.includes(headendId);
-            }
-            if (selectedState && meta.state !== selectedState) return false;
-            if (selectedCity && meta.headend_location !== selectedCity) return false;
-            return true;
-          });
-
-      const rows = state.channelRows.filter(row => allowedHeadends.includes(row.headend_id));
-      if (!selectedChannel) {
-        return sortRows(rows, state.channelSort);
+      let rows = state.channelRows.filter(row => allowedHeadends.includes(row.headend_id));
+      if (selectedChannel) {
+        const visibleWeeks = availableWeeksForSelectedRows(rows);
+        rows = rows.filter(row => visibleWeeks.some(week => displayValue(row.weeks?.[week]?.channel_name || "") === selectedChannel));
       }
 
-      const visibleWeeks = availableWeeksForSelectedRows(rows);
-      const filteredRows = rows.filter(row => visibleWeeks.some(week => displayValue(row.weeks?.[week]?.channel_name || "") === selectedChannel));
-      return sortRows(filteredRows, state.channelSort);
+      if (selectedStatus) {
+        const comparison = comparisonWeeks();
+        if (comparison) {
+          rows = rows.filter(row => rowChangeStatus(row, comparison.weekFrom, comparison.weekTo) === selectedStatus);
+        }
+      }
+
+      return sortRows(rows, state.channelSort);
     }
 
     function renderChannelValueCell(row, week) {
@@ -1774,6 +1941,7 @@
         state.headendFilterSelections[key] = [];
         state.headendFilterSearch[key] = "";
       });
+      state.activeHeadendFilter = "";
       updateDependentHeadendFilters();
       renderHeadendTable();
     }
@@ -1786,6 +1954,7 @@
       elements.table2ChannelFilter.value = "";
       elements.weekFromFilter.value = "";
       elements.weekToFilter.value = "";
+      elements.changeStatusFilter.value = "";
       updateTable2FilterOptions();
       renderHeadendTable();
       renderChannelTable();
@@ -1881,11 +2050,16 @@
         renderHeadendTable();
         renderChannelTable();
       });
-      [elements.weekFromFilter, elements.weekToFilter].forEach(element => {
-        element.addEventListener("change", () => {
-          updateTable2FilterOptions();
-          renderChannelTable();
-        });
+      elements.changeStatusFilter.addEventListener("change", renderChannelTable);
+      elements.weekFromFilter.addEventListener("change", () => {
+        sanitizeWeekRange("weekFrom");
+        updateTable2FilterOptions();
+        renderChannelTable();
+      });
+      elements.weekToFilter.addEventListener("change", () => {
+        sanitizeWeekRange("weekTo");
+        updateTable2FilterOptions();
+        renderChannelTable();
       });
       elements.table2FullscreenBtn.addEventListener("click", () => {
         togglePanelFullscreen(elements.table2Panel, elements.table2FullscreenBtn);
@@ -1908,6 +2082,7 @@
       document.querySelectorAll(".multiselect.open").forEach(container => {
         if (!container.contains(event.target)) {
           container.classList.remove("open");
+          state.activeHeadendFilter = "";
         }
       });
     });
