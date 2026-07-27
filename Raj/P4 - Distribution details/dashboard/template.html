@@ -245,7 +245,7 @@
       margin-bottom: 0;
       flex: 1;
       max-width: none;
-      grid-template-columns: auto auto auto auto auto auto auto;
+      grid-template-columns: 1fr 1fr 1.9fr 1.2fr 0.9fr 0.9fr auto auto;
       padding: 8px 10px;
       gap: 8px;
     }
@@ -473,18 +473,40 @@
       min-width: 148px;
     }
 
-    .table-panel-fullscreen {
-      position: fixed;
-      inset: 12px;
-      z-index: 1000;
-      margin: 0;
-      background: var(--card);
-      max-height: calc(100vh - 24px);
-      overflow: auto;
+    body.fullscreen-active {
+      overflow: hidden;
     }
 
-    .table-panel-fullscreen .table-wrap {
-      max-height: calc(100vh - 220px);
+    .table-panel-fullscreen,
+    .panel:fullscreen {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      margin: 0;
+      width: 100vw;
+      height: 100vh;
+      max-width: none;
+      max-height: none;
+      padding: 10px 12px 12px;
+      border-radius: 0;
+      background: var(--card);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: none;
+    }
+
+    .table-panel-fullscreen .table-wrap,
+    .panel:fullscreen .table-wrap {
+      flex: 1 1 auto;
+      min-height: 0;
+      height: auto;
+      max-height: none;
+    }
+
+    .table-panel-fullscreen .table-titlebar,
+    .panel:fullscreen .table-titlebar {
+      margin-top: 8px;
     }
 
     button {
@@ -546,6 +568,7 @@
     th, td {
       padding: 10px 12px;
       border-bottom: 1px solid rgba(46, 107, 94, 0.08);
+      border-right: 1px solid rgba(46, 107, 94, 0.08);
       text-align: left;
       vertical-align: top;
       white-space: nowrap;
@@ -553,6 +576,11 @@
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       font-weight: 400;
       color: #18332d;
+    }
+
+    th:last-child,
+    td:last-child {
+      border-right: none;
     }
 
     th {
@@ -565,6 +593,10 @@
       cursor: pointer;
       position: sticky;
       user-select: none;
+    }
+
+    thead tr:first-child th {
+      box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.12);
     }
 
     th.resizable {
@@ -603,13 +635,16 @@
       font-weight: 600;
       background: #f2f7f5;
       color: #45655c;
-      border-bottom: 1px solid var(--line);
+      border-bottom: 1px solid rgba(46, 107, 94, 0.16);
+      border-right: 1px solid rgba(46, 107, 94, 0.12);
       position: sticky;
       top: 41px;
       z-index: 1;
       text-align: center;
       letter-spacing: 0.02em;
       white-space: nowrap;
+      padding-top: 8px;
+      padding-bottom: 8px;
     }
 
     .week-group-header {
@@ -617,30 +652,61 @@
       font-size: 0.8rem;
       letter-spacing: 0.03em;
       min-width: 220px;
+      border-left: 1px solid rgba(255, 255, 255, 0.12);
+      border-right: 1px solid rgba(255, 255, 255, 0.12);
     }
 
     .channel-column {
-      min-width: 150px;
+      min-width: 180px;
     }
 
     .date-column {
-      min-width: 120px;
+      min-width: 132px;
+      text-align: center;
     }
 
     .channel-value {
       font-weight: 500;
       color: #102923;
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 8px;
     }
 
     .date-value {
       color: #355149;
       font-size: 0.82rem;
+      font-variant-numeric: tabular-nums;
     }
 
     .date-value.na-value,
     .channel-value.na-value {
       color: #5d766e;
       font-style: italic;
+    }
+
+    .channel-highlight-india-tv {
+      background: #ffe6bf;
+      color: #7c4400;
+    }
+
+    .channel-highlight-aaj-tak {
+      background: #ffd9d9;
+      color: #8f1f1f;
+    }
+
+    .channel-highlight-abp {
+      background: #dbe9ff;
+      color: #174a9c;
+    }
+
+    #channelTable tbody td {
+      background-clip: padding-box;
+    }
+
+    #channelTable tbody td:nth-child(3n + 4),
+    #channelTable tbody td:nth-child(3n + 5) {
+      background: rgba(46, 107, 94, 0.015);
     }
 
     .pill {
@@ -843,6 +909,10 @@
               <select id="table2HeadendFilter"></select>
             </div>
             <div class="field compact-filter">
+              <label for="table2ChannelFilter">Channel</label>
+              <select id="table2ChannelFilter"></select>
+            </div>
+            <div class="field compact-filter">
               <label for="weekFromFilter">Week From</label>
               <select id="weekFromFilter"></select>
             </div>
@@ -961,6 +1031,7 @@
       table2Panel: document.getElementById("table2Panel"),
       table2StateFilter: document.getElementById("table2StateFilter"),
       table2CityFilter: document.getElementById("table2CityFilter"),
+      table2ChannelFilter: document.getElementById("table2ChannelFilter"),
       weekFromFilter: document.getElementById("weekFromFilter"),
       weekToFilter: document.getElementById("weekToFilter"),
       resetTable2Filters: document.getElementById("resetTable2Filters"),
@@ -972,7 +1043,7 @@
       channelTableBody: document.getElementById("channelTableBody"),
     };
 
-    const RESERVED_CHANNEL_KEYS = new Set(["headend_id", "lcn_no"]);
+    const RESERVED_CHANNEL_KEYS = new Set(["headend_id", "lcn_no", "weeks"]);
     const HEADEND_FILTER_KEYS = ["state", "barc_market", "headend_location", "network_name"];
 
     function uniqueValues(rows, key) {
@@ -993,6 +1064,7 @@
         table2State: elements.table2StateFilter.value,
         table2City: elements.table2CityFilter.value,
         table2Headend: elements.table2HeadendFilter.value,
+        table2Channel: elements.table2ChannelFilter.value,
         weekFrom: elements.weekFromFilter.value,
         weekTo: elements.weekToFilter.value,
         selectedHeadendId: state.selectedHeadendId,
@@ -1017,6 +1089,8 @@
       elements.table2CityFilter.value = sharedState.table2City || "";
       updateTable2FilterOptions();
       elements.table2HeadendFilter.value = sharedState.table2Headend || "";
+      updateTable2FilterOptions();
+      elements.table2ChannelFilter.value = sharedState.table2Channel || "";
       elements.weekFromFilter.value = sharedState.weekFrom || "";
       elements.weekToFilter.value = sharedState.weekTo || "";
       state.selectedHeadendId = sharedState.selectedHeadendId || null;
@@ -1273,23 +1347,41 @@
       });
     }
 
+    function weekSortValue(label) {
+      const match = String(label || "").match(/week\W*(\d{1,2})/i);
+      if (match) {
+        return { group: 0, value: Number(match[1]) };
+      }
+      return { group: 1, value: String(label || "").toLowerCase() };
+    }
+
+    function compareWeekLabels(left, right) {
+      const a = weekSortValue(left);
+      const b = weekSortValue(right);
+      if (a.group !== b.group) {
+        return a.group - b.group;
+      }
+      if (typeof a.value === "number" && typeof b.value === "number") {
+        return a.value - b.value;
+      }
+      return String(a.value).localeCompare(String(b.value), undefined, { numeric: true, sensitivity: "base" });
+    }
+
     function allWeekColumns() {
       const weekSet = new Set();
       state.channelRows.forEach(row => {
-        Object.keys(row).forEach(key => {
-          if (!RESERVED_CHANNEL_KEYS.has(key)) {
-            weekSet.add(key);
-          }
-        });
-      });
-      (state.processedLog.processed_files || []).forEach(file => {
-        (file.weeks_found || []).forEach(week => {
+        Object.keys(row.weeks || {}).forEach(week => {
           if (week) {
             weekSet.add(week);
           }
         });
       });
-      return [...weekSet].sort();
+      (state.processedLog.processed_files || []).forEach(file => {
+        if (file.week_label) {
+          weekSet.add(file.week_label);
+        }
+      });
+      return [...weekSet].sort(compareWeekLabels);
     }
 
     function fillSelectSimple(select, values, placeholder, selectedValue = "") {
@@ -1307,35 +1399,12 @@
       select.value = values.includes(selectedValue) ? selectedValue : "";
     }
 
-    function getIsoWeekNumber(dateText) {
-      const parsed = new Date(`${dateText}T00:00:00`);
-      if (Number.isNaN(parsed.getTime())) {
-        return null;
-      }
-
-      const date = new Date(Date.UTC(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()));
-      const dayNum = date.getUTCDay() || 7;
-      date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-      const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-      return Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+    function formatWeekLabel(weekLabel) {
+      return weekLabel;
     }
 
-    function formatWeekLabel(dateText) {
-      const weekNumber = getIsoWeekNumber(dateText);
-      if (weekNumber == null) {
-        return dateText;
-      }
-      return `W${String(weekNumber).padStart(2, "0")} | ${dateText}`;
-    }
-
-    function formatWeekCompact(dateText) {
-      const parsed = new Date(`${dateText}T00:00:00`);
-      const weekNumber = getIsoWeekNumber(dateText);
-      if (weekNumber == null || Number.isNaN(parsed.getTime())) {
-        return dateText;
-      }
-      const shortYear = String(parsed.getFullYear()).slice(-2);
-      return `Wk-${String(weekNumber).padStart(2, "0")}'${shortYear}`;
+    function formatWeekCompact(weekLabel) {
+      return weekLabel;
     }
 
     function fillWeekSelect(select, values, placeholder, selectedValue = "") {
@@ -1354,6 +1423,40 @@
       select.value = values.includes(selectedValue) ? selectedValue : "";
     }
 
+    function normalizeChannelName(value) {
+      return String(value || "").trim().toLowerCase().replace(/\s+/g, " ");
+    }
+
+    function extractChannelOptions(rows, weeks) {
+      const values = new Set();
+      rows.forEach(row => {
+        weeks.forEach(week => {
+          const channel = displayValue(row.weeks?.[week]?.channel_name || "");
+          if (channel !== "NA") {
+            values.add(channel);
+          }
+        });
+      });
+      return [...values].sort((a, b) => a.localeCompare(b));
+    }
+
+    function channelHighlightClass(value) {
+      const normalized = normalizeChannelName(value);
+      if (!normalized || normalized === "na") {
+        return "";
+      }
+      if (normalized.includes("india tv")) {
+        return "channel-highlight-india-tv";
+      }
+      if (normalized.includes("aaj tak") || normalized.includes("ajj tak")) {
+        return "channel-highlight-aaj-tak";
+      }
+      if (normalized.includes("abp")) {
+        return "channel-highlight-abp";
+      }
+      return "";
+    }
+
     function table2MetaRows() {
       const channelHeadends = new Set(state.channelRows.map(row => row.headend_id));
       return state.headendRows.filter(row => channelHeadends.has(row.headend_id));
@@ -1364,6 +1467,7 @@
       const selectedState = elements.table2StateFilter.value;
       const selectedCity = elements.table2CityFilter.value;
       const selectedHeadend = elements.table2HeadendFilter.value;
+      const selectedChannel = elements.table2ChannelFilter.value;
       const selectedWeekFrom = elements.weekFromFilter.value;
       const selectedWeekTo = elements.weekToFilter.value;
 
@@ -1391,6 +1495,12 @@
       const weeks = allWeekColumns();
       fillWeekSelect(elements.weekFromFilter, weeks, "All Weeks", selectedWeekFrom);
       fillWeekSelect(elements.weekToFilter, weeks, "All Weeks", selectedWeekTo);
+
+      const eligibleHeadendIds = new Set(headendRows.map(row => row.headend_id));
+      const baseRows = state.channelRows.filter(row => eligibleHeadendIds.has(row.headend_id));
+      const visibleWeeks = availableWeeksForSelectedRows(baseRows);
+      const channelOptions = extractChannelOptions(baseRows, visibleWeeks);
+      fillSelectSimple(elements.table2ChannelFilter, channelOptions, "All Channels", selectedChannel);
     }
 
     function syncTable2FiltersToHeadend(headendId) {
@@ -1405,6 +1515,7 @@
       elements.table2CityFilter.value = matchedRow.headend_location || "";
       updateTable2FilterOptions();
       elements.table2HeadendFilter.value = headendId;
+      updateTable2FilterOptions();
     }
 
     function renderHeadendTable() {
@@ -1449,28 +1560,23 @@
       let weekFrom = elements.weekFromFilter.value;
       let weekTo = elements.weekToFilter.value;
 
-      if (weekFrom && weekTo && weekFrom > weekTo) {
+      if (weekFrom && weekTo && compareWeekLabels(weekFrom, weekTo) > 0) {
         [weekFrom, weekTo] = [weekTo, weekFrom];
       }
 
       rows.forEach(row => {
-        Object.keys(row).forEach(key => {
-          if (RESERVED_CHANNEL_KEYS.has(key)) {
+        Object.keys(row.weeks || {}).forEach(week => {
+          if (weekFrom && compareWeekLabels(week, weekFrom) < 0) {
             return;
           }
-          if (weekFrom && key < weekFrom) {
+          if (weekTo && compareWeekLabels(week, weekTo) > 0) {
             return;
           }
-          if (weekTo && key > weekTo) {
-            return;
-          }
-          if (!RESERVED_CHANNEL_KEYS.has(key)) {
-            weekSet.add(key);
-          }
+          weekSet.add(week);
         });
       });
 
-      return [...weekSet].sort();
+      return [...weekSet].sort(compareWeekLabels);
     }
 
     function filteredChannelRows() {
@@ -1478,6 +1584,7 @@
       const selectedState = elements.table2StateFilter.value;
       const selectedCity = elements.table2CityFilter.value;
       const selectedHeadend = elements.table2HeadendFilter.value;
+      const selectedChannel = elements.table2ChannelFilter.value;
 
       const allowedHeadends = selectedHeadend
         ? [selectedHeadend]
@@ -1493,22 +1600,25 @@
           });
 
       const rows = state.channelRows.filter(row => allowedHeadends.includes(row.headend_id));
+      if (!selectedChannel) {
+        return sortRows(rows, state.channelSort);
+      }
 
-      return sortRows(rows, state.channelSort);
-    }
-
-    function renderChannelCell(row, week) {
-      return displayValue(row[week] || "");
+      const visibleWeeks = availableWeeksForSelectedRows(rows);
+      const filteredRows = rows.filter(row => visibleWeeks.some(week => displayValue(row.weeks?.[week]?.channel_name || "") === selectedChannel));
+      return sortRows(filteredRows, state.channelSort);
     }
 
     function renderChannelValueCell(row, week) {
-      const value = displayValue(row[week] || "");
-      const className = value === "NA" ? "channel-value na-value" : "channel-value";
+      const value = displayValue(row.weeks?.[week]?.channel_name || "");
+      const className = [value === "NA" ? "channel-value na-value" : "channel-value", channelHighlightClass(value)]
+        .filter(Boolean)
+        .join(" ");
       return `<span class="${className}">${value}</span>`;
     }
 
-    function renderRecordedDateCell(week) {
-      const value = displayValue(week);
+    function renderRecordedDateCell(row, week) {
+      const value = displayValue(row.weeks?.[week]?.date_posted || "NA");
       const className = value === "NA" ? "date-value na-value" : "date-value";
       return `<span class="${className}">${value}</span>`;
     }
@@ -1532,7 +1642,7 @@
             <th></th>
             <th></th>
             <th></th>
-            ${weeks.map(() => `<th class="channel-column">Channel</th><th class="date-column">Date Recorded</th>`).join("")}
+            ${weeks.map(() => `<th class="channel-column">Channel</th><th class="date-column">Date Posted</th>`).join("")}
           </tr>
         `;
         elements.channelTableBody.innerHTML = `<tr><td colspan="${3 + (weeks.length * 2)}" class="table-empty">No week-wise channel rows match the current filters.</td></tr>`;
@@ -1550,7 +1660,7 @@
           <th></th>
           <th></th>
           <th></th>
-          ${weeks.map(() => `<th class="channel-column">Channel</th><th class="date-column">Date Recorded</th>`).join("")}
+          ${weeks.map(() => `<th class="channel-column">Channel</th><th class="date-column">Date Posted</th>`).join("")}
         </tr>
       `;
 
@@ -1559,7 +1669,7 @@
           <td>${displayValue(row.headend_id)}</td>
           <td>${displayValue(metaByHeadend.get(row.headend_id)?.headend_location)}</td>
           <td>${displayValue(row.lcn_no)}</td>
-          ${weeks.map(week => `<td class="channel-column">${renderChannelValueCell(row, week)}</td><td class="date-column">${renderRecordedDateCell(week)}</td>`).join("")}
+          ${weeks.map(week => `<td class="channel-column">${renderChannelValueCell(row, week)}</td><td class="date-column">${renderRecordedDateCell(row, week)}</td>`).join("")}
         </tr>
       `).join("");
 
@@ -1673,6 +1783,7 @@
       elements.table2StateFilter.value = "";
       elements.table2CityFilter.value = "";
       elements.table2HeadendFilter.value = "";
+      elements.table2ChannelFilter.value = "";
       elements.weekFromFilter.value = "";
       elements.weekToFilter.value = "";
       updateTable2FilterOptions();
@@ -1691,12 +1802,58 @@
     function exportVisibleChannels() {
       const rows = filteredChannelRows();
       const weeks = availableWeeksForSelectedRows(rows);
-      const headers = ["headend_id", "lcn_no", ...weeks];
+      const headers = ["headend_id", "lcn_no", ...weeks.flatMap(week => [`${week} Channel`, `${week} Date Posted`])];
       downloadCsv("channel_weekly_filtered.csv", rows.map(row => {
         const payload = { headend_id: row.headend_id, lcn_no: row.lcn_no };
-        weeks.forEach(week => { payload[week] = row[week] || ""; });
+        weeks.forEach(week => {
+          payload[`${week} Channel`] = row.weeks?.[week]?.channel_name || "";
+          payload[`${week} Date Posted`] = row.weeks?.[week]?.date_posted || "NA";
+        });
         return payload;
       }), headers);
+    }
+
+    function updateFullscreenState(panel, button, active) {
+      panel.classList.toggle("table-panel-fullscreen", active);
+      button.textContent = active ? "Exit Full Screen" : "Full Screen";
+      document.body.classList.toggle("fullscreen-active", Boolean(document.fullscreenElement) || active);
+    }
+
+    async function togglePanelFullscreen(panel, button) {
+      const isActive = document.fullscreenElement === panel || panel.classList.contains("table-panel-fullscreen");
+
+      if (isActive) {
+        if (document.fullscreenElement === panel && document.exitFullscreen) {
+          await document.exitFullscreen();
+        }
+        updateFullscreenState(panel, button, false);
+        return;
+      }
+
+      [elements.table1Panel, elements.table2Panel].forEach(otherPanel => {
+        if (otherPanel !== panel) {
+          otherPanel.classList.remove("table-panel-fullscreen");
+        }
+      });
+      [elements.table1FullscreenBtn, elements.table2FullscreenBtn].forEach(otherButton => {
+        if (otherButton !== button) {
+          otherButton.textContent = "Full Screen";
+        }
+      });
+
+      if (document.fullscreenElement && document.exitFullscreen) {
+        await document.exitFullscreen();
+      }
+
+      updateFullscreenState(panel, button, true);
+
+      if (panel.requestFullscreen) {
+        try {
+          await panel.requestFullscreen();
+        } catch (error) {
+          console.warn("Fullscreen request was blocked; using viewport fallback.", error);
+        }
+      }
     }
 
     function bindEvents() {
@@ -1704,9 +1861,7 @@
       elements.resetTable2Filters.addEventListener("click", clearHeadendSelection);
       elements.downloadDashboardBtn.addEventListener("click", downloadDashboardSnapshot);
       elements.table1FullscreenBtn.addEventListener("click", () => {
-        const panel = elements.table1Panel;
-        const isFullscreen = panel.classList.toggle("table-panel-fullscreen");
-        elements.table1FullscreenBtn.textContent = isFullscreen ? "Exit Full Screen" : "Full Screen";
+        togglePanelFullscreen(elements.table1Panel, elements.table1FullscreenBtn);
       });
       [elements.table2StateFilter, elements.table2CityFilter].forEach(element => {
         element.addEventListener("change", () => {
@@ -1718,16 +1873,27 @@
       });
       elements.table2HeadendFilter.addEventListener("change", () => {
         state.selectedHeadendId = elements.table2HeadendFilter.value || null;
+        updateTable2FilterOptions();
+        renderHeadendTable();
+        renderChannelTable();
+      });
+      elements.table2ChannelFilter.addEventListener("change", () => {
         renderHeadendTable();
         renderChannelTable();
       });
       [elements.weekFromFilter, elements.weekToFilter].forEach(element => {
-        element.addEventListener("change", renderChannelTable);
+        element.addEventListener("change", () => {
+          updateTable2FilterOptions();
+          renderChannelTable();
+        });
       });
       elements.table2FullscreenBtn.addEventListener("click", () => {
-        const panel = elements.table2Panel;
-        const isFullscreen = panel.classList.toggle("table-panel-fullscreen");
-        elements.table2FullscreenBtn.textContent = isFullscreen ? "Exit Full Screen" : "Full Screen";
+        togglePanelFullscreen(elements.table2Panel, elements.table2FullscreenBtn);
+      });
+      document.addEventListener("fullscreenchange", () => {
+        const fullscreenElement = document.fullscreenElement;
+        updateFullscreenState(elements.table1Panel, elements.table1FullscreenBtn, fullscreenElement === elements.table1Panel);
+        updateFullscreenState(elements.table2Panel, elements.table2FullscreenBtn, fullscreenElement === elements.table2Panel);
       });
     }
 

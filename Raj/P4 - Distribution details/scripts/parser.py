@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import json
 import logging
 import re
 from collections import Counter
 from dataclasses import dataclass
 from datetime import date, datetime
+from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
 
@@ -13,6 +15,8 @@ import openpyxl
 from headend_id import generate_headend_id
 
 LOGGER = logging.getLogger(__name__)
+SCRIPT_DIR = Path(__file__).resolve().parent
+CHANNEL_NORMALIZATION_PATH = SCRIPT_DIR / "channel_normalization.json"
 
 LABEL_ALIASES = {
     "date": "date",
@@ -44,6 +48,7 @@ class ParsedWorkbook:
     distribution_rows: list[dict[str, Any]]
     channel_rows: list[dict[str, Any]]
     week_dates: list[str]
+    week_label: str
     normalization_warnings: dict[str, dict[str, int]]
 
 
@@ -110,6 +115,13 @@ def normalize_lookup_key(value: Any) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
+def derive_week_label(workbook_path: Path) -> str:
+    match = re.search(r"week\W*([0-9]{1,2})", workbook_path.stem, flags=re.IGNORECASE)
+    if match:
+        return f"Week {int(match.group(1))}"
+    return workbook_path.stem.strip() or "Unknown Week"
+
+
 def smart_title_case(value: str | None) -> str | None:
     if value is None:
         return None
@@ -129,6 +141,25 @@ def smart_title_case(value: str | None) -> str | None:
 
 def build_normalization_map(raw_mapping: dict[str, str]) -> dict[str, str]:
     return {normalize_lookup_key(raw): canonical for raw, canonical in raw_mapping.items()}
+
+
+def load_channel_normalization_map() -> dict[str, str]:
+    if not CHANNEL_NORMALIZATION_PATH.exists():
+        return {}
+
+    with CHANNEL_NORMALIZATION_PATH.open("r", encoding="utf-8") as file:
+        raw_mapping = json.load(file)
+
+    if not isinstance(raw_mapping, dict):
+        return {}
+
+    normalized_map: dict[str, str] = {}
+    for raw_value, canonical in raw_mapping.items():
+        base_value = base_normalize_channel_name(raw_value)
+        canonical_value = base_normalize_channel_name(canonical)
+        if base_value and canonical_value:
+            normalized_map[normalize_lookup_key(base_value)] = canonical_value
+    return normalized_map
 
 
 STATE_NORMALIZATION = build_normalization_map(
@@ -320,6 +351,15 @@ BARC_MARKET_NORMALIZATION = build_normalization_map(
     }
 )
 
+CHANNEL_NORMALIZATION: dict[str, str] = {}
+PROTECTED_CHANNEL_TOKENS = {
+    "AP", "AR", "AS", "BR", "CG", "DL", "DELHI", "GJ", "GOA", "HP", "HR", "JH", "JK", "JAMMU",
+    "KA", "KARNATAKA", "KERALA", "KL", "KOLKATA", "MH", "MP", "MUMBAI", "NE", "NORTHEAST", "OD",
+    "ODISHA", "ORISSA", "PB", "PUNJAB", "RJ", "SIKKIM", "TG", "TELANGANA", "TN", "TR", "TRIPURA",
+    "UK", "UP", "URBAN", "UTTAR", "UTTARAKHAND", "UTTARPRADESH", "WESTBENGAL", "WB", "RURAL",
+    "HD", "SD", "FHD", "4K",
+}
+
 
 def workbook_to_rows(workbook_path: Path) -> dict[str, list[list[Any]]]:
     workbook = openpyxl.load_workbook(workbook_path, read_only=True, data_only=True)
@@ -431,10 +471,98 @@ def normalize_barc_market(raw_value: Any, *, counters: dict[str, Counter[str]]) 
     return smart_title_case(raw_text)
 
 
+def base_normalize_channel_name(raw_value: Any) -> str | None:
+    raw_text = clean_text(raw_value)
+    if raw_text is None:
+        return None
+
+    text = raw_text.strip()
+    text = re.sub(r"\.{2,}", ".", text)
+    text = re.sub(r"-{2,}", "-", text)
+    text = re.sub(r"\s+", " ", text)
+    text = re.sub(r"[\s.\-–—]+$", "", text)
+    text = re.sub(r"^[\s.\-–—]+", "", text)
+    if not text:
+        return None
+    return smart_title_case(text.lower())
+
+
+def normalize_channel_name(raw_value: Any) -> str | None:
+    base_value = base_normalize_channel_name(raw_value)
+    if base_value is None:
+        return None
+
+    lookup_key = normalize_lookup_key(base_value)
+    return CHANNEL_NORMALIZATION.get(lookup_key, base_value)
+
+
+def protected_channel_signature(name: str) -> tuple[str, ...]:
+    tokens = re.findall(r"[A-Z0-9]+", name.upper())
+    return tuple(sorted(token for token in tokens if token in PROTECTED_CHANNEL_TOKENS))
+
+
+def channel_similarity_key(name: str) -> str:
+    return re.sub(r"[^A-Z0-9]+", "", name.upper())
+
+
+def channel_bucket_key(name: str) -> tuple[tuple[str, ...], str]:
+    similarity_key = channel_similarity_key(name)
+    primary_token = similarity_key[:8]
+    return (protected_channel_signature(name), primary_token)
+
+
+def build_channel_review_suggestions(channel_names: list[str], threshold: float = 0.92) -> list[dict[str, Any]]:
+    unique_names = sorted({name for name in channel_names if name and name != "NA"})
+    suggestions: list[dict[str, Any]] = []
+    grouped_names: set[str] = set()
+    buckets: dict[tuple[tuple[str, ...], str], list[str]] = {}
+
+    for name in unique_names:
+        buckets.setdefault(channel_bucket_key(name), []).append(name)
+
+    for bucket_names in buckets.values():
+        for index, name in enumerate(bucket_names):
+            if name in grouped_names:
+                continue
+
+            matches = [name]
+            name_key = channel_similarity_key(name)
+            if not name_key:
+                continue
+
+            for other in bucket_names[index + 1:]:
+                if other in grouped_names:
+                    continue
+
+                other_key = channel_similarity_key(other)
+                if abs(len(name_key) - len(other_key)) > 4:
+                    continue
+
+                similarity = SequenceMatcher(None, name_key, other_key).ratio()
+                if similarity >= threshold:
+                    matches.append(other)
+
+            if len(matches) > 1:
+                grouped_names.update(matches)
+                suggestions.append(
+                    {
+                        "group": matches,
+                        "suggested_canonical": matches[0],
+                    }
+                )
+
+    return suggestions
+
+
+CHANNEL_NORMALIZATION = load_channel_normalization_map()
+
+
 def parse_sheet(
     sheet_name: str,
     rows: list[list[Any]],
     counters: dict[str, Counter[str]],
+    week_label: str,
+    workbook_name: str,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     if len(rows) < 11:
         return [], []
@@ -496,12 +624,14 @@ def parse_sheet(
                 "barker_1": barker_1,
                 "barker_2": barker_2,
                 "source_sheet": sheet_name,
+                "source_workbook": workbook_name,
+                "week_label": week_label,
             }
         )
 
         for row_index in range(lcn_header_row + 1, len(rows)):
             lcn_no = clean_text(get_cell(rows, row_index, block_start))
-            channel_name = clean_text(get_cell(rows, row_index, block_start + 1))
+            channel_name = normalize_channel_name(get_cell(rows, row_index, block_start + 1))
 
             if not lcn_no and not channel_name:
                 continue
@@ -522,6 +652,8 @@ def parse_sheet(
                     "barc_market": barc_market,
                     "lcn_no": lcn_no,
                     "channel_name": channel_name,
+                    "week_label": week_label,
+                    "source_workbook": workbook_name,
                 }
             )
 
@@ -534,10 +666,17 @@ def parse_workbook(workbook_path: Path) -> ParsedWorkbook:
     distribution_rows: list[dict[str, Any]] = []
     channel_rows: list[dict[str, Any]] = []
     counters = create_warning_counters()
+    week_label = derive_week_label(workbook_path)
 
     for sheet_name, rows in workbook_rows.items():
         LOGGER.info("Parsing sheet: %s", sheet_name)
-        sheet_distribution, sheet_channels = parse_sheet(sheet_name, rows, counters)
+        sheet_distribution, sheet_channels = parse_sheet(
+            sheet_name,
+            rows,
+            counters,
+            week_label=week_label,
+            workbook_name=workbook_path.name,
+        )
         distribution_rows.extend(sheet_distribution)
         channel_rows.extend(sheet_channels)
 
@@ -577,6 +716,7 @@ def parse_workbook(workbook_path: Path) -> ParsedWorkbook:
         distribution_rows=distribution_rows,
         channel_rows=channel_rows,
         week_dates=week_dates,
+        week_label=week_label,
         normalization_warnings={
             field: dict(counter.most_common())
             for field, counter in counters.items()

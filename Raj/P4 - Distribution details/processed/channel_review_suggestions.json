@@ -1,0 +1,5853 @@
+[
+  {
+    "group": [
+      "! S News",
+      "S News"
+    ],
+    "suggested_canonical": "! S News"
+  },
+  {
+    "group": [
+      "& Flix",
+      "&Flix"
+    ],
+    "suggested_canonical": "& Flix"
+  },
+  {
+    "group": [
+      "& Flix Hd",
+      "&Flix Hd"
+    ],
+    "suggested_canonical": "& Flix Hd"
+  },
+  {
+    "group": [
+      "& Picture",
+      "&Picture"
+    ],
+    "suggested_canonical": "& Picture"
+  },
+  {
+    "group": [
+      "& Picture Hd",
+      "&Picture Hd"
+    ],
+    "suggested_canonical": "& Picture Hd"
+  },
+  {
+    "group": [
+      "& Pictures",
+      "&Pictures"
+    ],
+    "suggested_canonical": "& Pictures"
+  },
+  {
+    "group": [
+      "& Prive Hd",
+      "&Prive Hd"
+    ],
+    "suggested_canonical": "& Prive Hd"
+  },
+  {
+    "group": [
+      "& Tv",
+      "&Tv",
+      "Tv"
+    ],
+    "suggested_canonical": "& Tv"
+  },
+  {
+    "group": [
+      "& Tv Hd",
+      "&Tv Hd"
+    ],
+    "suggested_canonical": "& Tv Hd"
+  },
+  {
+    "group": [
+      "& Xplor Hd",
+      "&Xplor Hd",
+      "Xplor Hd"
+    ],
+    "suggested_canonical": "& Xplor Hd"
+  },
+  {
+    "group": [
+      "& Xplore Hd",
+      "&Xplore Hd",
+      "X Plore Hd"
+    ],
+    "suggested_canonical": "& Xplore Hd"
+  },
+  {
+    "group": [
+      "1 St India",
+      "1st India"
+    ],
+    "suggested_canonical": "1 St India"
+  },
+  {
+    "group": [
+      "10 Tv",
+      "10tv"
+    ],
+    "suggested_canonical": "10 Tv"
+  },
+  {
+    "group": [
+      "10 Tv News",
+      "10tv News"
+    ],
+    "suggested_canonical": "10 Tv News"
+  },
+  {
+    "group": [
+      "4 Tv",
+      "4tv"
+    ],
+    "suggested_canonical": "4 Tv"
+  },
+  {
+    "group": [
+      "4 Tv News",
+      "4tv News",
+      "4tvnews"
+    ],
+    "suggested_canonical": "4 Tv News"
+  },
+  {
+    "group": [
+      "4 Tv News Urdu",
+      "4tv News Urdu"
+    ],
+    "suggested_canonical": "4 Tv News Urdu"
+  },
+  {
+    "group": [
+      "6 Tv",
+      "6tv"
+    ],
+    "suggested_canonical": "6 Tv"
+  },
+  {
+    "group": [
+      "6 Tv Telangana",
+      "6tv Telangana"
+    ],
+    "suggested_canonical": "6 Tv Telangana"
+  },
+  {
+    "group": [
+      "7 S Music",
+      "7s Music"
+    ],
+    "suggested_canonical": "7 S Music"
+  },
+  {
+    "group": [
+      "99 Tv",
+      "99% Tv"
+    ],
+    "suggested_canonical": "99 Tv"
+  },
+  {
+    "group": [
+      "99 Tv Telugu",
+      "99tv Telugu"
+    ],
+    "suggested_canonical": "99 Tv Telugu"
+  },
+  {
+    "group": [
+      "9x Jalwa",
+      "9xjalwa"
+    ],
+    "suggested_canonical": "9x Jalwa"
+  },
+  {
+    "group": [
+      "9x Jhakaas",
+      "9xjhakaas"
+    ],
+    "suggested_canonical": "9x Jhakaas"
+  },
+  {
+    "group": [
+      "9x M",
+      "9xm"
+    ],
+    "suggested_canonical": "9x M"
+  },
+  {
+    "group": [
+      "A Tv",
+      "Atv"
+    ],
+    "suggested_canonical": "A Tv"
+  },
+  {
+    "group": [
+      "A1 Tv",
+      "A1tv"
+    ],
+    "suggested_canonical": "A1 Tv"
+  },
+  {
+    "group": [
+      "Aaj Ki Khabar",
+      "Aaj Ki Khabr"
+    ],
+    "suggested_canonical": "Aaj Ki Khabar"
+  },
+  {
+    "group": [
+      "Aaj Tak",
+      "Aajtak"
+    ],
+    "suggested_canonical": "Aaj Tak"
+  },
+  {
+    "group": [
+      "Aaj Tak Hd",
+      "Aaj Tak- Hd",
+      "Aajtak Hd"
+    ],
+    "suggested_canonical": "Aaj Tak Hd"
+  },
+  {
+    "group": [
+      "Aakaash (Bangla)",
+      "Aakaash Bangla"
+    ],
+    "suggested_canonical": "Aakaash (Bangla)"
+  },
+  {
+    "group": [
+      "Aaseervatham",
+      "Aaseervatham Tv"
+    ],
+    "suggested_canonical": "Aaseervatham"
+  },
+  {
+    "group": [
+      "Abc Australia",
+      "Abc Australia Tv"
+    ],
+    "suggested_canonical": "Abc Australia"
+  },
+  {
+    "group": [
+      "Abn Andhra Jyothi",
+      "Abn Andhra Jyothy",
+      "Abn Andhrajyoti"
+    ],
+    "suggested_canonical": "Abn Andhra Jyothi"
+  },
+  {
+    "group": [
+      "Abp Anand",
+      "Abp Ananda",
+      "Abp Anando"
+    ],
+    "suggested_canonical": "Abp Anand"
+  },
+  {
+    "group": [
+      "Abp Ashmita",
+      "Abp Ashmitha"
+    ],
+    "suggested_canonical": "Abp Ashmita"
+  },
+  {
+    "group": [
+      "Abp News",
+      "﻿﻿﻿﻿﻿abp News"
+    ],
+    "suggested_canonical": "Abp News"
+  },
+  {
+    "group": [
+      "Abzy Cool",
+      "﻿﻿﻿﻿﻿abzy Cool"
+    ],
+    "suggested_canonical": "Abzy Cool"
+  },
+  {
+    "group": [
+      "Abzy Movies",
+      "﻿﻿﻿﻿﻿abzy Movies"
+    ],
+    "suggested_canonical": "Abzy Movies"
+  },
+  {
+    "group": [
+      "Airtel News Home 1",
+      "Airtel News Home4"
+    ],
+    "suggested_canonical": "Airtel News Home 1"
+  },
+  {
+    "group": [
+      "Al Jazeer",
+      "Al Jazeera",
+      "Al-Jazeera",
+      "Aljazeera"
+    ],
+    "suggested_canonical": "Al Jazeer"
+  },
+  {
+    "group": [
+      "Al Jazeera Englesh",
+      "Al Jazeera English",
+      "Aljazeera English"
+    ],
+    "suggested_canonical": "Al Jazeera Englesh"
+  },
+  {
+    "group": [
+      "Al Jazeera Hd",
+      "Aljazeera Hd"
+    ],
+    "suggested_canonical": "Al Jazeera Hd"
+  },
+  {
+    "group": [
+      "All Time Movie",
+      "All Time Movies"
+    ],
+    "suggested_canonical": "All Time Movie"
+  },
+  {
+    "group": [
+      "Animal Planet",
+      "Animal Pleanet",
+      "Animalplanet",
+      "﻿﻿﻿﻿﻿animal Planet"
+    ],
+    "suggested_canonical": "Animal Planet"
+  },
+  {
+    "group": [
+      "Anmol Cinema",
+      "Anmol Cinema 2",
+      "Anmol Cinema2"
+    ],
+    "suggested_canonical": "Anmol Cinema"
+  },
+  {
+    "group": [
+      "Ary Q Tv",
+      "Ary Qtv"
+    ],
+    "suggested_canonical": "Ary Q Tv"
+  },
+  {
+    "group": [
+      "Aryan Tv Nation",
+      "Aryan Tv National"
+    ],
+    "suggested_canonical": "Aryan Tv Nation"
+  },
+  {
+    "group": [
+      "Asianet Middel East",
+      "Asianet Middle East"
+    ],
+    "suggested_canonical": "Asianet Middel East"
+  },
+  {
+    "group": [
+      "Assam Talk",
+      "Assam Talks"
+    ],
+    "suggested_canonical": "Assam Talk"
+  },
+  {
+    "group": [
+      "Atrangii",
+      "﻿﻿﻿﻿﻿atrangii"
+    ],
+    "suggested_canonical": "Atrangii"
+  },
+  {
+    "group": [
+      "Ayush Tv",
+      "﻿﻿﻿﻿﻿ayush Tv"
+    ],
+    "suggested_canonical": "Ayush Tv"
+  },
+  {
+    "group": [
+      "Ayush Tv (Free)",
+      "Ayush Tv Free"
+    ],
+    "suggested_canonical": "Ayush Tv (Free)"
+  },
+  {
+    "group": [
+      "B Flix",
+      "Bflix",
+      "Bflix+",
+      "﻿﻿﻿﻿﻿bflix"
+    ],
+    "suggested_canonical": "B Flix"
+  },
+  {
+    "group": [
+      "B Flix Movies",
+      "Bflix + Movies",
+      "Bflix Movies"
+    ],
+    "suggested_canonical": "B Flix Movies"
+  },
+  {
+    "group": [
+      "B Tv News",
+      "Btv News"
+    ],
+    "suggested_canonical": "B Tv News"
+  },
+  {
+    "group": [
+      "B4u Kadak",
+      "﻿﻿﻿﻿﻿b4u Kadak"
+    ],
+    "suggested_canonical": "B4u Kadak"
+  },
+  {
+    "group": [
+      "B4u Movies",
+      "﻿﻿﻿﻿﻿b4u Movies"
+    ],
+    "suggested_canonical": "B4u Movies"
+  },
+  {
+    "group": [
+      "B4u Music",
+      "B4umusic",
+      "﻿﻿﻿﻿﻿b4u Music"
+    ],
+    "suggested_canonical": "B4u Music"
+  },
+  {
+    "group": [
+      "Bangla Time",
+      "Bangla Times"
+    ],
+    "suggested_canonical": "Bangla Time"
+  },
+  {
+    "group": [
+      "Bansal N Ews",
+      "Bansal News",
+      "`bansal News"
+    ],
+    "suggested_canonical": "Bansal N Ews"
+  },
+  {
+    "group": [
+      "Bhakthi Sagar",
+      "Bhakthi Sagar 2"
+    ],
+    "suggested_canonical": "Bhakthi Sagar"
+  },
+  {
+    "group": [
+      "Bhakti Sagar",
+      "Bhakti Sagar 2",
+      "Bhakti Sagar2",
+      "Bhakti Sangar",
+      "Bhaktisagar2"
+    ],
+    "suggested_canonical": "Bhakti Sagar"
+  },
+  {
+    "group": [
+      "Bharat 24",
+      "Bharat24"
+    ],
+    "suggested_canonical": "Bharat 24"
+  },
+  {
+    "group": [
+      "Bharat Samachar",
+      "Bharat Samchar"
+    ],
+    "suggested_canonical": "Bharat Samachar"
+  },
+  {
+    "group": [
+      "Bharath Today",
+      "Bhar﻿﻿﻿﻿﻿ath Today"
+    ],
+    "suggested_canonical": "Bharath Today"
+  },
+  {
+    "group": [
+      "Bhojapuri Cinema",
+      "Bhojapuri Cinema Tv"
+    ],
+    "suggested_canonical": "Bhojapuri Cinema"
+  },
+  {
+    "group": [
+      "Bhojpuri Cinema",
+      "Bhojpuri Cinema Tv"
+    ],
+    "suggested_canonical": "Bhojpuri Cinema"
+  },
+  {
+    "group": [
+      "Bs Tv",
+      "Bstv"
+    ],
+    "suggested_canonical": "Bs Tv"
+  },
+  {
+    "group": [
+      "Calvary",
+      "Calva﻿﻿﻿﻿﻿ry"
+    ],
+    "suggested_canonical": "Calvary"
+  },
+  {
+    "group": [
+      "Cartoon Network",
+      "﻿﻿﻿﻿﻿cartoon Network"
+    ],
+    "suggested_canonical": "Cartoon Network"
+  },
+  {
+    "group": [
+      "Cartoon Network Hd",
+      "Cartoon Network Hd+"
+    ],
+    "suggested_canonical": "Cartoon Network Hd"
+  },
+  {
+    "group": [
+      "Channel 2",
+      "Channel-2"
+    ],
+    "suggested_canonical": "Channel 2"
+  },
+  {
+    "group": [
+      "Channel News Asia",
+      "Channel News Assia"
+    ],
+    "suggested_canonical": "Channel News Asia"
+  },
+  {
+    "group": [
+      "Channel No 1",
+      "Channel No.1"
+    ],
+    "suggested_canonical": "Channel No 1"
+  },
+  {
+    "group": [
+      "Channel Win",
+      "Channelwin"
+    ],
+    "suggested_canonical": "Channel Win"
+  },
+  {
+    "group": [
+      "Chardikala Time",
+      "Chardikala Time Tv"
+    ],
+    "suggested_canonical": "Chardikala Time"
+  },
+  {
+    "group": [
+      "Chardikla Time",
+      "Chardikla Time Tv"
+    ],
+    "suggested_canonical": "Chardikla Time"
+  },
+  {
+    "group": [
+      "Chintu Tv",
+      "Chintutv"
+    ],
+    "suggested_canonical": "Chintu Tv"
+  },
+  {
+    "group": [
+      "Cinema Tv",
+      "﻿﻿﻿﻿﻿cinema Tv"
+    ],
+    "suggested_canonical": "Cinema Tv"
+  },
+  {
+    "group": [
+      "Cnbc Aawaaz",
+      "Cnbc Aawaz"
+    ],
+    "suggested_canonical": "Cnbc Aawaaz"
+  },
+  {
+    "group": [
+      "Cnbc Awaz",
+      "Cnbc Awazz"
+    ],
+    "suggested_canonical": "Cnbc Awaz"
+  },
+  {
+    "group": [
+      "Cnbc Bajaar",
+      "Cnbc Bajar"
+    ],
+    "suggested_canonical": "Cnbc Bajaar"
+  },
+  {
+    "group": [
+      "Cnbc Bazaar",
+      "Cnbc Bazar"
+    ],
+    "suggested_canonical": "Cnbc Bazaar"
+  },
+  {
+    "group": [
+      "Cnbc News 18",
+      "Cnbc News18"
+    ],
+    "suggested_canonical": "Cnbc News 18"
+  },
+  {
+    "group": [
+      "Cnbc Tv 18",
+      "Cnbc Tv18"
+    ],
+    "suggested_canonical": "Cnbc Tv 18"
+  },
+  {
+    "group": [
+      "Cnbc Tv 18 Prim",
+      "Cnbc Tv 18 Prime",
+      "Cnbc Tv18 Prime"
+    ],
+    "suggested_canonical": "Cnbc Tv 18 Prim"
+  },
+  {
+    "group": [
+      "Cnbc Tv 18 Hd",
+      "Cnbc Tv18 Hd"
+    ],
+    "suggested_canonical": "Cnbc Tv 18 Hd"
+  },
+  {
+    "group": [
+      "Cnbc Tv 18 Prime Hd",
+      "Cnbc Tv18 Prime Hd"
+    ],
+    "suggested_canonical": "Cnbc Tv 18 Prime Hd"
+  },
+  {
+    "group": [
+      "Cnn Internation",
+      "Cnn International"
+    ],
+    "suggested_canonical": "Cnn Internation"
+  },
+  {
+    "group": [
+      "Cnn News 18",
+      "Cnn News18"
+    ],
+    "suggested_canonical": "Cnn News 18"
+  },
+  {
+    "group": [
+      "Colors Cinepelx",
+      "Colors Cineplex"
+    ],
+    "suggested_canonical": "Colors Cinepelx"
+  },
+  {
+    "group": [
+      "Colors Cineplex Bollywod",
+      "Colors Cineplex Bollywood",
+      "Colors Cineplex Bolywood",
+      "Colors Ciniplex Bollywood"
+    ],
+    "suggested_canonical": "Colors Cineplex Bollywod"
+  },
+  {
+    "group": [
+      "Colors Hd",
+      "Colors Hd +1"
+    ],
+    "suggested_canonical": "Colors Hd"
+  },
+  {
+    "group": [
+      "Colors Infinety",
+      "Colors Infinity",
+      "Colors Infinty"
+    ],
+    "suggested_canonical": "Colors Infinety"
+  },
+  {
+    "group": [
+      "Colors Infinety Hd",
+      "Colors Infinity Hd"
+    ],
+    "suggested_canonical": "Colors Infinety Hd"
+  },
+  {
+    "group": [
+      "Colors Rishtey",
+      "﻿﻿﻿﻿﻿colors Risthey"
+    ],
+    "suggested_canonical": "Colors Rishtey"
+  },
+  {
+    "group": [
+      "Colors Superhit",
+      "Colors Superhits"
+    ],
+    "suggested_canonical": "Colors Superhit"
+  },
+  {
+    "group": [
+      "Customer Support",
+      "Customer Supports"
+    ],
+    "suggested_canonical": "Customer Support"
+  },
+  {
+    "group": [
+      "Cvr Health",
+      "﻿﻿﻿﻿﻿cvr Health"
+    ],
+    "suggested_canonical": "Cvr Health"
+  },
+  {
+    "group": [
+      "Cvr News",
+      "﻿﻿﻿﻿﻿cvr News"
+    ],
+    "suggested_canonical": "Cvr News"
+  },
+  {
+    "group": [
+      "Cvr Om",
+      "﻿﻿﻿﻿﻿cvr Om"
+    ],
+    "suggested_canonical": "Cvr Om"
+  },
+  {
+    "group": [
+      "Cvr Spiritual",
+      "Cvr Spiritual Om"
+    ],
+    "suggested_canonical": "Cvr Spiritual"
+  },
+  {
+    "group": [
+      "D.d. News",
+      "Dd News",
+      "Ddnews"
+    ],
+    "suggested_canonical": "D.d. News"
+  },
+  {
+    "group": [
+      "D.d. Rajasthan",
+      "Dd Rajastan",
+      "Dd Rajastha",
+      "Dd Rajasthan",
+      "﻿﻿﻿﻿﻿dd Rajasthan"
+    ],
+    "suggested_canonical": "D.d. Rajasthan"
+  },
+  {
+    "group": [
+      "Dabangg",
+      "﻿﻿﻿﻿﻿dabangg"
+    ],
+    "suggested_canonical": "Dabangg"
+  },
+  {
+    "group": [
+      "Dangal",
+      "﻿﻿﻿﻿﻿dangal"
+    ],
+    "suggested_canonical": "Dangal"
+  },
+  {
+    "group": [
+      "Dangal 2",
+      "Dangal2",
+      "﻿﻿﻿﻿﻿dangal 2"
+    ],
+    "suggested_canonical": "Dangal 2"
+  },
+  {
+    "group": [
+      "Dangal Tv",
+      "Dangal Tv 2"
+    ],
+    "suggested_canonical": "Dangal Tv"
+  },
+  {
+    "group": [
+      "Darshan 24 (Free)",
+      "Darshan 24 Free"
+    ],
+    "suggested_canonical": "Darshan 24 (Free)"
+  },
+  {
+    "group": [
+      "Day Star",
+      "Daystar"
+    ],
+    "suggested_canonical": "Day Star"
+  },
+  {
+    "group": [
+      "Dd 1 Hd",
+      "Dd1 Hd"
+    ],
+    "suggested_canonical": "Dd 1 Hd"
+  },
+  {
+    "group": [
+      "Dd 9",
+      "Dd9"
+    ],
+    "suggested_canonical": "Dd 9"
+  },
+  {
+    "group": [
+      "Dd A.p",
+      "﻿﻿﻿﻿﻿dd A.p"
+    ],
+    "suggested_canonical": "Dd A.p"
+  },
+  {
+    "group": [
+      "Dd Andhra Pradesh",
+      "Dd Andhrapradesh"
+    ],
+    "suggested_canonical": "Dd Andhra Pradesh"
+  },
+  {
+    "group": [
+      "Dd Arun Prabha",
+      "Dd Arunprabha"
+    ],
+    "suggested_canonical": "Dd Arun Prabha"
+  },
+  {
+    "group": [
+      "Dd Arunapraba",
+      "Dd Arunaprabha"
+    ],
+    "suggested_canonical": "Dd Arunapraba"
+  },
+  {
+    "group": [
+      "Dd Bharath (Free)",
+      "Dd Bharati Free"
+    ],
+    "suggested_canonical": "Dd Bharath (Free)"
+  },
+  {
+    "group": [
+      "Dd Bharathi",
+      "Dd Bharati"
+    ],
+    "suggested_canonical": "Dd Bharathi"
+  },
+  {
+    "group": [
+      "Dd Bihar",
+      "﻿﻿﻿﻿﻿dd Bihar"
+    ],
+    "suggested_canonical": "Dd Bihar"
+  },
+  {
+    "group": [
+      "Dd Chandan",
+      "Dd Chandana"
+    ],
+    "suggested_canonical": "Dd Chandan"
+  },
+  {
+    "group": [
+      "Dd Chattis Garh",
+      "Dd Chattisgadh",
+      "Dd Chattisgarh"
+    ],
+    "suggested_canonical": "Dd Chattis Garh"
+  },
+  {
+    "group": [
+      "Dd Gujarat",
+      "Dd Gujarati"
+    ],
+    "suggested_canonical": "Dd Gujarat"
+  },
+  {
+    "group": [
+      "Dd Gyan Darshan",
+      "Dd Gyan Darshan2",
+      "Dd Gyandarshan",
+      "Dd Gyandarshan 1"
+    ],
+    "suggested_canonical": "Dd Gyan Darshan"
+  },
+  {
+    "group": [
+      "Dd India (Free)",
+      "Dd India Free"
+    ],
+    "suggested_canonical": "Dd India (Free)"
+  },
+  {
+    "group": [
+      "Dd Lok Sabha",
+      "Dd Loksabha"
+    ],
+    "suggested_canonical": "Dd Lok Sabha"
+  },
+  {
+    "group": [
+      "Dd Madhya Pradesh",
+      "Dd Madhyapradesh",
+      "﻿﻿﻿﻿﻿dd Madhya Pradesh"
+    ],
+    "suggested_canonical": "Dd Madhya Pradesh"
+  },
+  {
+    "group": [
+      "Dd Malayalam",
+      "Dd Malayalm"
+    ],
+    "suggested_canonical": "Dd Malayalam"
+  },
+  {
+    "group": [
+      "Dd Malayalam (Free)",
+      "Dd Malayalam Free"
+    ],
+    "suggested_canonical": "Dd Malayalam (Free)"
+  },
+  {
+    "group": [
+      "Dd National",
+      "Dd National H"
+    ],
+    "suggested_canonical": "Dd National"
+  },
+  {
+    "group": [
+      "Dd National (Free)",
+      "Dd National Free"
+    ],
+    "suggested_canonical": "Dd National (Free)"
+  },
+  {
+    "group": [
+      "Dd News (Free)",
+      "Dd News Free"
+    ],
+    "suggested_canonical": "Dd News (Free)"
+  },
+  {
+    "group": [
+      "Dd Port Blair",
+      "Dd Portblair"
+    ],
+    "suggested_canonical": "Dd Port Blair"
+  },
+  {
+    "group": [
+      "Dd Rajya Sabha",
+      "Dd Rajyasabha"
+    ],
+    "suggested_canonical": "Dd Rajya Sabha"
+  },
+  {
+    "group": [
+      "Dd Sansad Rajyasabha",
+      "Dd Sansad Tv Rajyasabha"
+    ],
+    "suggested_canonical": "Dd Sansad Rajyasabha"
+  },
+  {
+    "group": [
+      "Dd Sansad Tv Rajsabha",
+      "Dd Sansad Tv Rajysabha"
+    ],
+    "suggested_canonical": "Dd Sansad Tv Rajsabha"
+  },
+  {
+    "group": [
+      "Dd Sansad Tv 1 Hd",
+      "Dd Sansad Tv 2 Hd",
+      "Dd Sansad Tv Hd"
+    ],
+    "suggested_canonical": "Dd Sansad Tv 1 Hd"
+  },
+  {
+    "group": [
+      "Dd Sports",
+      "﻿﻿﻿﻿﻿dd Sports"
+    ],
+    "suggested_canonical": "Dd Sports"
+  },
+  {
+    "group": [
+      "Dd Spotrs",
+      "Dd Spotrs F"
+    ],
+    "suggested_canonical": "Dd Spotrs"
+  },
+  {
+    "group": [
+      "Dd Telangana",
+      "﻿﻿﻿﻿﻿dd Telangana"
+    ],
+    "suggested_canonical": "Dd Telangana"
+  },
+  {
+    "group": [
+      "Dd U.p",
+      "Ddup"
+    ],
+    "suggested_canonical": "Dd U.p"
+  },
+  {
+    "group": [
+      "Dd Uttar Pradesh",
+      "﻿﻿﻿﻿﻿dd Uttar Pradesh"
+    ],
+    "suggested_canonical": "Dd Uttar Pradesh"
+  },
+  {
+    "group": [
+      "Dhamaal",
+      "Dhamaal +",
+      "﻿﻿﻿﻿﻿dhamaal"
+    ],
+    "suggested_canonical": "Dhamaal"
+  },
+  {
+    "group": [
+      "Dhinchaak",
+      "Dhinchaak 2",
+      "Dhinchaak2",
+      "﻿﻿﻿﻿﻿dhinchaak 2"
+    ],
+    "suggested_canonical": "Dhinchaak"
+  },
+  {
+    "group": [
+      "Dhinchak",
+      "Dhinchak 2",
+      "Dhinchak2"
+    ],
+    "suggested_canonical": "Dhinchak"
+  },
+  {
+    "group": [
+      "Digvijay News",
+      "﻿﻿﻿﻿﻿digvijay News"
+    ],
+    "suggested_canonical": "Digvijay News"
+  },
+  {
+    "group": [
+      "Dil Se Movies",
+      "Dilse Movies"
+    ],
+    "suggested_canonical": "Dil Se Movies"
+  },
+  {
+    "group": [
+      "Discovery Cahnnel",
+      "Discovery Channel",
+      "﻿﻿﻿﻿﻿discovery Channel"
+    ],
+    "suggested_canonical": "Discovery Cahnnel"
+  },
+  {
+    "group": [
+      "Discovery Kid",
+      "Discovery Kids"
+    ],
+    "suggested_canonical": "Discovery Kid"
+  },
+  {
+    "group": [
+      "Discovery Science",
+      "Discovery Scince"
+    ],
+    "suggested_canonical": "Discovery Science"
+  },
+  {
+    "group": [
+      "Dishum (Free)",
+      "Dishum Free"
+    ],
+    "suggested_canonical": "Dishum (Free)"
+  },
+  {
+    "group": [
+      "Divya",
+      "﻿﻿﻿﻿﻿divya"
+    ],
+    "suggested_canonical": "Divya"
+  },
+  {
+    "group": [
+      "Divya Vani",
+      "Divyavani"
+    ],
+    "suggested_canonical": "Divya Vani"
+  },
+  {
+    "group": [
+      "Dy 365",
+      "Dy365"
+    ],
+    "suggested_canonical": "Dy 365"
+  },
+  {
+    "group": [
+      "E - Vidya 5",
+      "E Vidya 5"
+    ],
+    "suggested_canonical": "E - Vidya 5"
+  },
+  {
+    "group": [
+      "E - Vidya 6",
+      "E Vidya 6"
+    ],
+    "suggested_canonical": "E - Vidya 6"
+  },
+  {
+    "group": [
+      "E - Vidya 9",
+      "E Vidya 9"
+    ],
+    "suggested_canonical": "E - Vidya 9"
+  },
+  {
+    "group": [
+      "E 24",
+      "E24"
+    ],
+    "suggested_canonical": "E 24"
+  },
+  {
+    "group": [
+      "E Tv Abhiruchi",
+      "Etv Abhiruchi",
+      "﻿﻿﻿﻿﻿etv Abhiruchi"
+    ],
+    "suggested_canonical": "E Tv Abhiruchi"
+  },
+  {
+    "group": [
+      "E Tv Ap",
+      "Etv Ap"
+    ],
+    "suggested_canonical": "E Tv Ap"
+  },
+  {
+    "group": [
+      "E Tv Balbharath",
+      "Etv Bal Bharat",
+      "Etv Bal Bharath",
+      "Etv Balbharat",
+      "﻿﻿﻿﻿﻿etv Bal Bharat"
+    ],
+    "suggested_canonical": "E Tv Balbharath"
+  },
+  {
+    "group": [
+      "Etv Bal Bharat Kannada",
+      "Etv Balbharat Kannada"
+    ],
+    "suggested_canonical": "Etv Bal Bharat Kannada"
+  },
+  {
+    "group": [
+      "Etv Bal Bharat Telugu",
+      "Etv Balbharat Telugu"
+    ],
+    "suggested_canonical": "Etv Bal Bharat Telugu"
+  },
+  {
+    "group": [
+      "E Tv Balbharath Hd",
+      "Etv Bal Bharat Hd",
+      "Etv Balbharat Hd"
+    ],
+    "suggested_canonical": "E Tv Balbharath Hd"
+  },
+  {
+    "group": [
+      "E Tv Cinema",
+      "Etv Cinema",
+      "﻿﻿﻿﻿﻿etv Cinema"
+    ],
+    "suggested_canonical": "E Tv Cinema"
+  },
+  {
+    "group": [
+      "E Tv Cinema Hd",
+      "Etv Cinema Hd"
+    ],
+    "suggested_canonical": "E Tv Cinema Hd"
+  },
+  {
+    "group": [
+      "E Tv Life",
+      "Etv Life",
+      "﻿﻿﻿﻿﻿etv Life"
+    ],
+    "suggested_canonical": "E Tv Life"
+  },
+  {
+    "group": [
+      "E Tv Plus",
+      "Etv Plus",
+      "﻿﻿﻿﻿﻿etv Plus"
+    ],
+    "suggested_canonical": "E Tv Plus"
+  },
+  {
+    "group": [
+      "E Tv Plus Hd",
+      "Etv Plus Hd"
+    ],
+    "suggested_canonical": "E Tv Plus Hd"
+  },
+  {
+    "group": [
+      "E Tv Telangana",
+      "Etv Telangana"
+    ],
+    "suggested_canonical": "E Tv Telangana"
+  },
+  {
+    "group": [
+      "E Tv Telugu",
+      "Etv Telugu",
+      "﻿﻿﻿﻿﻿etv Telugu"
+    ],
+    "suggested_canonical": "E Tv Telugu"
+  },
+  {
+    "group": [
+      "Enter 10 Bangla",
+      "Enter10 Bangla"
+    ],
+    "suggested_canonical": "Enter 10 Bangla"
+  },
+  {
+    "group": [
+      "Enter 10 Movies",
+      "Enter10 Movies"
+    ],
+    "suggested_canonical": "Enter 10 Movies"
+  },
+  {
+    "group": [
+      "Enter 10 Rangeela",
+      "Enter10 Rangeela"
+    ],
+    "suggested_canonical": "Enter 10 Rangeela"
+  },
+  {
+    "group": [
+      "Enterr 10",
+      "Enterr10"
+    ],
+    "suggested_canonical": "Enterr 10"
+  },
+  {
+    "group": [
+      "Enterr 10 Bangla",
+      "Enterr10 Bangla"
+    ],
+    "suggested_canonical": "Enterr 10 Bangla"
+  },
+  {
+    "group": [
+      "Enterr 10 Movies",
+      "Enterr10 Movie"
+    ],
+    "suggested_canonical": "Enterr 10 Movies"
+  },
+  {
+    "group": [
+      "Enterr 10 Rangeela",
+      "Enterr10 Rangeela"
+    ],
+    "suggested_canonical": "Enterr 10 Rangeela"
+  },
+  {
+    "group": [
+      "Et Now",
+      "Etnow"
+    ],
+    "suggested_canonical": "Et Now"
+  },
+  {
+    "group": [
+      "Et Now Swaadesh",
+      "Et Now Swadesh"
+    ],
+    "suggested_canonical": "Et Now Swaadesh"
+  },
+  {
+    "group": [
+      "Etv A.p",
+      "﻿﻿﻿﻿﻿etvap"
+    ],
+    "suggested_canonical": "Etv A.p"
+  },
+  {
+    "group": [
+      "Euro News",
+      "Euronews"
+    ],
+    "suggested_canonical": "Euro News"
+  },
+  {
+    "group": [
+      "Euro News Asia",
+      "Euronews Asia",
+      "Euronews-Asia"
+    ],
+    "suggested_canonical": "Euro News Asia"
+  },
+  {
+    "group": [
+      "Euro Sport",
+      "Euro Sports",
+      "Eurosport",
+      "Eurosports"
+    ],
+    "suggested_canonical": "Euro Sport"
+  },
+  {
+    "group": [
+      "Euro Sports Hd",
+      "Eurosport Hd",
+      "Eurosports Hd"
+    ],
+    "suggested_canonical": "Euro Sports Hd"
+  },
+  {
+    "group": [
+      "Ez Mall",
+      "Ezmall"
+    ],
+    "suggested_canonical": "Ez Mall"
+  },
+  {
+    "group": [
+      "F Tv",
+      "Ftv"
+    ],
+    "suggested_canonical": "F Tv"
+  },
+  {
+    "group": [
+      "F Tv Hd",
+      "Ftv Hd"
+    ],
+    "suggested_canonical": "F Tv Hd"
+  },
+  {
+    "group": [
+      "Fakt Marathi",
+      "Fakt Marati"
+    ],
+    "suggested_canonical": "Fakt Marathi"
+  },
+  {
+    "group": [
+      "Filmachi Bhojapuri",
+      "Filmachi Bhojpuri"
+    ],
+    "suggested_canonical": "Filmachi Bhojapuri"
+  },
+  {
+    "group": [
+      "Food Food",
+      "Foodfood"
+    ],
+    "suggested_canonical": "Food Food"
+  },
+  {
+    "group": [
+      "Food Xp",
+      "Foodxp"
+    ],
+    "suggested_canonical": "Food Xp"
+  },
+  {
+    "group": [
+      "France 24",
+      "France24"
+    ],
+    "suggested_canonical": "France 24"
+  },
+  {
+    "group": [
+      "G Sky Shopping",
+      "Gsky Shopping"
+    ],
+    "suggested_canonical": "G Sky Shopping"
+  },
+  {
+    "group": [
+      "Gangaur",
+      "﻿﻿﻿﻿﻿gangaur"
+    ],
+    "suggested_canonical": "Gangaur"
+  },
+  {
+    "group": [
+      "Gemini Comedy",
+      "﻿﻿﻿﻿﻿gemini Comedy"
+    ],
+    "suggested_canonical": "Gemini Comedy"
+  },
+  {
+    "group": [
+      "Gemini Life",
+      "﻿﻿﻿﻿﻿gemini Life"
+    ],
+    "suggested_canonical": "Gemini Life"
+  },
+  {
+    "group": [
+      "Gemini Movies",
+      "﻿﻿﻿﻿﻿gemini Movies"
+    ],
+    "suggested_canonical": "Gemini Movies"
+  },
+  {
+    "group": [
+      "Gemini Music",
+      "﻿﻿﻿﻿﻿gemini Music"
+    ],
+    "suggested_canonical": "Gemini Music"
+  },
+  {
+    "group": [
+      "Gemini Tv",
+      "﻿﻿﻿﻿﻿gemini Tv"
+    ],
+    "suggested_canonical": "Gemini Tv"
+  },
+  {
+    "group": [
+      "Gold Mines",
+      "Goldmines",
+      "Goldmines 1",
+      "﻿﻿﻿﻿﻿goldmines"
+    ],
+    "suggested_canonical": "Gold Mines"
+  },
+  {
+    "group": [
+      "Gold Mines Bhojpuri",
+      "Goldmine Bojpuri",
+      "Goldmines Bhojapuri",
+      "Goldmines Bhojpuri"
+    ],
+    "suggested_canonical": "Gold Mines Bhojpuri"
+  },
+  {
+    "group": [
+      "Gold Mines Bollywood",
+      "Goldmine Bollywod",
+      "Goldmines Bollywood",
+      "Goldmines Bowllywood",
+      "﻿﻿﻿﻿﻿goldmines Bollywood"
+    ],
+    "suggested_canonical": "Gold Mines Bollywood"
+  },
+  {
+    "group": [
+      "Goldmine Movies",
+      "Goldmines Movies"
+    ],
+    "suggested_canonical": "Goldmine Movies"
+  },
+  {
+    "group": [
+      "Good Ness",
+      "Goodness"
+    ],
+    "suggested_canonical": "Good Ness"
+  },
+  {
+    "group": [
+      "Good Ness Tv",
+      "Goodness Tv"
+    ],
+    "suggested_canonical": "Good Ness Tv"
+  },
+  {
+    "group": [
+      "Goodness (Free)",
+      "Goodness Free"
+    ],
+    "suggested_canonical": "Goodness (Free)"
+  },
+  {
+    "group": [
+      "Good News",
+      "Goodnews"
+    ],
+    "suggested_canonical": "Good News"
+  },
+  {
+    "group": [
+      "Good News Today",
+      "Goodnews Today"
+    ],
+    "suggested_canonical": "Good News Today"
+  },
+  {
+    "group": [
+      "Good News Tv",
+      "Goodnews Tv"
+    ],
+    "suggested_canonical": "Good News Tv"
+  },
+  {
+    "group": [
+      "Good Times",
+      "Goodtimes"
+    ],
+    "suggested_canonical": "Good Times"
+  },
+  {
+    "group": [
+      "Green Chilies",
+      "Green Chillies"
+    ],
+    "suggested_canonical": "Green Chilies"
+  },
+  {
+    "group": [
+      "Gs Tv",
+      "Gstv"
+    ],
+    "suggested_canonical": "Gs Tv"
+  },
+  {
+    "group": [
+      "Gulista News",
+      "Gulistan News"
+    ],
+    "suggested_canonical": "Gulista News"
+  },
+  {
+    "group": [
+      "Gyan Darshan",
+      "Gyandarshan",
+      "Gyandarshan 1"
+    ],
+    "suggested_canonical": "Gyan Darshan"
+  },
+  {
+    "group": [
+      "Gyan Vani",
+      "Gyanvani"
+    ],
+    "suggested_canonical": "Gyan Vani"
+  },
+  {
+    "group": [
+      "Hanuman Mahaveer Temple",
+      "Hanuman Mahavir Temple"
+    ],
+    "suggested_canonical": "Hanuman Mahaveer Temple"
+  },
+  {
+    "group": [
+      "Hare Krishana",
+      "Hare Krishna"
+    ],
+    "suggested_canonical": "Hare Krishana"
+  },
+  {
+    "group": [
+      "Hare Krsha",
+      "Hare Krshna"
+    ],
+    "suggested_canonical": "Hare Krsha"
+  },
+  {
+    "group": [
+      "Haryana Total",
+      "Haryana Total Tv"
+    ],
+    "suggested_canonical": "Haryana Total"
+  },
+  {
+    "group": [
+      "Hd & Flix",
+      "Hd &Flix"
+    ],
+    "suggested_canonical": "Hd & Flix"
+  },
+  {
+    "group": [
+      "Hd & Picture",
+      "Hd & Pictures",
+      "Hd& Pictures"
+    ],
+    "suggested_canonical": "Hd & Picture"
+  },
+  {
+    "group": [
+      "Hd & Prime",
+      "Hd Prime"
+    ],
+    "suggested_canonical": "Hd & Prime"
+  },
+  {
+    "group": [
+      "Hd & Prive",
+      "Hd &Prive"
+    ],
+    "suggested_canonical": "Hd & Prive"
+  },
+  {
+    "group": [
+      "Hd & Tv",
+      "Hd &Tv",
+      "Hd Tv"
+    ],
+    "suggested_canonical": "Hd & Tv"
+  },
+  {
+    "group": [
+      "Hd & Xplore",
+      "Hd &Xplore",
+      "Hd Xplore"
+    ],
+    "suggested_canonical": "Hd & Xplore"
+  },
+  {
+    "group": [
+      "Hd Aaj Tak",
+      "Hd Aajtak"
+    ],
+    "suggested_canonical": "Hd Aaj Tak"
+  },
+  {
+    "group": [
+      "Hd Al Jazeera",
+      "Hd Aljazeera"
+    ],
+    "suggested_canonical": "Hd Al Jazeera"
+  },
+  {
+    "group": [
+      "Hd Cnbc Tv 18 Prime",
+      "Hd Cnbc Tv18 Prime"
+    ],
+    "suggested_canonical": "Hd Cnbc Tv 18 Prime"
+  },
+  {
+    "group": [
+      "Hd Colors Infinity",
+      "Hd Colors Infinty",
+      "Hd Colors Inifinity"
+    ],
+    "suggested_canonical": "Hd Colors Infinity"
+  },
+  {
+    "group": [
+      "Hd Dd 1",
+      "Hd Dd1"
+    ],
+    "suggested_canonical": "Hd Dd 1"
+  },
+  {
+    "group": [
+      "Hd Etv Bal Bharat",
+      "Hd Etv Bal Bharath",
+      "Hd Etv Bala Bharath",
+      "Hd Etv Balbharat"
+    ],
+    "suggested_canonical": "Hd Etv Bal Bharat"
+  },
+  {
+    "group": [
+      "Hd Etv Cinema",
+      "﻿﻿﻿﻿﻿hd Etv Cinema"
+    ],
+    "suggested_canonical": "Hd Etv Cinema"
+  },
+  {
+    "group": [
+      "Hd Etv Telugu",
+      "﻿﻿﻿﻿﻿hd Etv Telugu"
+    ],
+    "suggested_canonical": "Hd Etv Telugu"
+  },
+  {
+    "group": [
+      "Hd Euro Sports",
+      "Hd Eurosports"
+    ],
+    "suggested_canonical": "Hd Euro Sports"
+  },
+  {
+    "group": [
+      "Hd History Tv 18",
+      "Hd History Tv18"
+    ],
+    "suggested_canonical": "Hd History Tv 18"
+  },
+  {
+    "group": [
+      "Hd K Tv",
+      "Hd Ktv"
+    ],
+    "suggested_canonical": "Hd K Tv"
+  },
+  {
+    "group": [
+      "Hd Mn +",
+      "Hd Mn+"
+    ],
+    "suggested_canonical": "Hd Mn +"
+  },
+  {
+    "group": [
+      "Hd Mnx",
+      "﻿﻿﻿﻿﻿hd Mnx"
+    ],
+    "suggested_canonical": "Hd Mnx"
+  },
+  {
+    "group": [
+      "Hd Movies Now",
+      "﻿﻿﻿﻿hd ﻿movies Now"
+    ],
+    "suggested_canonical": "Hd Movies Now"
+  },
+  {
+    "group": [
+      "Hd Mtv",
+      "Hd Mtv +"
+    ],
+    "suggested_canonical": "Hd Mtv"
+  },
+  {
+    "group": [
+      "Hd Nick",
+      "Hd Nick+"
+    ],
+    "suggested_canonical": "Hd Nick"
+  },
+  {
+    "group": [
+      "Hd Pravah Picture",
+      "Hd Pravah Pictures"
+    ],
+    "suggested_canonical": "Hd Pravah Picture"
+  },
+  {
+    "group": [
+      "Hd Sansad Tv",
+      "Hd Sansad Tv 1",
+      "Hd Sansad Tv 2",
+      "Hd Sansad Tv1",
+      "Hd Sansad Tv2"
+    ],
+    "suggested_canonical": "Hd Sansad Tv"
+  },
+  {
+    "group": [
+      "Hd Sony Sports Ten 1",
+      "Hd Sony Sports Ten 2",
+      "Hd Sony Sports Ten 3",
+      "Hd Sony Sports Ten 5",
+      "Hd Sony Sports Ten1",
+      "Hd Sony Sports Ten2",
+      "Hd Sony Sports Ten3",
+      "Hd Sony Sports Ten4",
+      "Hd Sony Sports Ten5"
+    ],
+    "suggested_canonical": "Hd Sony Sports Ten 1"
+  },
+  {
+    "group": [
+      "Hd Sony Ten 1",
+      "Hd Sony Ten1"
+    ],
+    "suggested_canonical": "Hd Sony Ten 1"
+  },
+  {
+    "group": [
+      "Hd Sony Ten 2",
+      "Hd Sony Ten2"
+    ],
+    "suggested_canonical": "Hd Sony Ten 2"
+  },
+  {
+    "group": [
+      "Hd Sony Ten 3",
+      "Hd Sony Ten3"
+    ],
+    "suggested_canonical": "Hd Sony Ten 3"
+  },
+  {
+    "group": [
+      "Hd Sony Ten 5",
+      "Hd Sony Ten5"
+    ],
+    "suggested_canonical": "Hd Sony Ten 5"
+  },
+  {
+    "group": [
+      "Hd Speed News India Tv",
+      "Hd Speed News Indiatv"
+    ],
+    "suggested_canonical": "Hd Speed News India Tv"
+  },
+  {
+    "group": [
+      "Hd Sports 18",
+      "Hd Sports 18 1",
+      "Hd Sports18",
+      "Hd Sports18 1"
+    ],
+    "suggested_canonical": "Hd Sports 18"
+  },
+  {
+    "group": [
+      "Hd Star Bharat",
+      "Hd Star Bharath"
+    ],
+    "suggested_canonical": "Hd Star Bharat"
+  },
+  {
+    "group": [
+      "Hd Star Gold",
+      "Hd Star Gold 2",
+      "Hd Star Gold2"
+    ],
+    "suggested_canonical": "Hd Star Gold"
+  },
+  {
+    "group": [
+      "Hd Star Jalsa Movies",
+      "Hd Star Jalsha Movies"
+    ],
+    "suggested_canonical": "Hd Star Jalsa Movies"
+  },
+  {
+    "group": [
+      "Hd Star Pravah Picture",
+      "Hd Starpravah Picture"
+    ],
+    "suggested_canonical": "Hd Star Pravah Picture"
+  },
+  {
+    "group": [
+      "Hd Star Sport 1",
+      "Hd Star Sports 1",
+      "Hd Star Sports1"
+    ],
+    "suggested_canonical": "Hd Star Sport 1"
+  },
+  {
+    "group": [
+      "Hd Star Sport 1 Hindi",
+      "Hd Star Sport 2 Hindi",
+      "Hd Star Sports 1 Hindi",
+      "Hd Star Sports Hindi",
+      "Hd Star Sports1 Hindi"
+    ],
+    "suggested_canonical": "Hd Star Sport 1 Hindi"
+  },
+  {
+    "group": [
+      "Hd Star Sport 2",
+      "Hd Star Sports 2",
+      "Hd Star Sports2"
+    ],
+    "suggested_canonical": "Hd Star Sport 2"
+  },
+  {
+    "group": [
+      "Hd Star Sports 2 Hindi",
+      "Hd Star Sports2 Hindi"
+    ],
+    "suggested_canonical": "Hd Star Sports 2 Hindi"
+  },
+  {
+    "group": [
+      "Hd Star Sports 2 Tamil",
+      "Hd Star Sports1 Tamil",
+      "Hd Star Sports2 Tamil"
+    ],
+    "suggested_canonical": "Hd Star Sports 2 Tamil"
+  },
+  {
+    "group": [
+      "Hd Star Sports 2 Telgu",
+      "Hd Star Sports2 Telugu"
+    ],
+    "suggested_canonical": "Hd Star Sports 2 Telgu"
+  },
+  {
+    "group": [
+      "Hd Star Sports Select 1",
+      "Hd Star Sports Select 2",
+      "Hd Star Sports Select1",
+      "Hd Star Sports Select2"
+    ],
+    "suggested_canonical": "Hd Star Sports Select 1"
+  },
+  {
+    "group": [
+      "Hd Star Vijay Super",
+      "Hd Star Vijaya Super"
+    ],
+    "suggested_canonical": "Hd Star Vijay Super"
+  },
+  {
+    "group": [
+      "Hd Times Now Navabharat",
+      "Hd Times Now Navabharath",
+      "Hd Times Now Navbharat"
+    ],
+    "suggested_canonical": "Hd Times Now Navabharat"
+  },
+  {
+    "group": [
+      "Hd Unite8 Sports 1",
+      "Hd Unite8 Sports 2"
+    ],
+    "suggested_canonical": "Hd Unite8 Sports 1"
+  },
+  {
+    "group": [
+      "Hd United 8 Sports 1",
+      "Hd United 8 Sports 2"
+    ],
+    "suggested_canonical": "Hd United 8 Sports 1"
+  },
+  {
+    "group": [
+      "Hd Zee Cafe",
+      "Hd Zee Café"
+    ],
+    "suggested_canonical": "Hd Zee Cafe"
+  },
+  {
+    "group": [
+      "Hindu Dharam",
+      "Hindu Dharmam",
+      "Hindudharm"
+    ],
+    "suggested_canonical": "Hindu Dharam"
+  },
+  {
+    "group": [
+      "Hindu Dharma",
+      "﻿﻿﻿﻿﻿hindu Dharma"
+    ],
+    "suggested_canonical": "Hindu Dharma"
+  },
+  {
+    "group": [
+      "History Tv 18",
+      "History Tv18"
+    ],
+    "suggested_canonical": "History Tv 18"
+  },
+  {
+    "group": [
+      "History Tv 18 Hd",
+      "History Tv18 Hd"
+    ],
+    "suggested_canonical": "History Tv 18 Hd"
+  },
+  {
+    "group": [
+      "Hm Tv",
+      "Hmtv"
+    ],
+    "suggested_canonical": "Hm Tv"
+  },
+  {
+    "group": [
+      "Hnn 24x7",
+      "Hnn24x7"
+    ],
+    "suggested_canonical": "Hnn 24x7"
+  },
+  {
+    "group": [
+      "House Full Movies",
+      "Housefull Movies"
+    ],
+    "suggested_canonical": "House Full Movies"
+  },
+  {
+    "group": [
+      "I Love",
+      "Ilove"
+    ],
+    "suggested_canonical": "I Love"
+  },
+  {
+    "group": [
+      "I Love Tv",
+      "Ilove Tv"
+    ],
+    "suggested_canonical": "I Love Tv"
+  },
+  {
+    "group": [
+      "I News",
+      "Inews"
+    ],
+    "suggested_canonical": "I News"
+  },
+  {
+    "group": [
+      "I Plus Tv",
+      "Iplus Tv"
+    ],
+    "suggested_canonical": "I Plus Tv"
+  },
+  {
+    "group": [
+      "Ibc 24",
+      "Ibc24",
+      "﻿﻿﻿﻿﻿ibc24"
+    ],
+    "suggested_canonical": "Ibc 24"
+  },
+  {
+    "group": [
+      "Imayam Tv (Free)",
+      "Imayam Tv Free"
+    ],
+    "suggested_canonical": "Imayam Tv (Free)"
+  },
+  {
+    "group": [
+      "In Sync",
+      "Insync"
+    ],
+    "suggested_canonical": "In Sync"
+  },
+  {
+    "group": [
+      "Ind 24",
+      "Ind24"
+    ],
+    "suggested_canonical": "Ind 24"
+  },
+  {
+    "group": [
+      "India Ahead",
+      "India Ahed"
+    ],
+    "suggested_canonical": "India Ahead"
+  },
+  {
+    "group": [
+      "India Daily",
+      "India Daily 2"
+    ],
+    "suggested_canonical": "India Daily"
+  },
+  {
+    "group": [
+      "India Daily 24 X 7",
+      "India Daily 24*7"
+    ],
+    "suggested_canonical": "India Daily 24 X 7"
+  },
+  {
+    "group": [
+      "India News",
+      "India News 1",
+      "India_news"
+    ],
+    "suggested_canonical": "India News"
+  },
+  {
+    "group": [
+      "India News Gujarat",
+      "India News Gujrat",
+      "India News Gujrati"
+    ],
+    "suggested_canonical": "India News Gujarat"
+  },
+  {
+    "group": [
+      "India News Hariyana",
+      "India News Haryan",
+      "India News Haryana"
+    ],
+    "suggested_canonical": "India News Hariyana"
+  },
+  {
+    "group": [
+      "India News Rajastan",
+      "India News Rajasthan"
+    ],
+    "suggested_canonical": "India News Rajastan"
+  },
+  {
+    "group": [
+      "India News Mp Cg",
+      "India News Mp/Cg"
+    ],
+    "suggested_canonical": "India News Mp Cg"
+  },
+  {
+    "group": [
+      "India News Up Uk",
+      "India News Up/Uk"
+    ],
+    "suggested_canonical": "India News Up Uk"
+  },
+  {
+    "group": [
+      "India Super Fast Tv",
+      "India Superfast"
+    ],
+    "suggested_canonical": "India Super Fast Tv"
+  },
+  {
+    "group": [
+      "India Tv S.n Hd",
+      "India Tv Sn Hd"
+    ],
+    "suggested_canonical": "India Tv S.n Hd"
+  },
+  {
+    "group": [
+      "India Tv Speed News Hd",
+      "India Tv Spped News Hd"
+    ],
+    "suggested_canonical": "India Tv Speed News Hd"
+  },
+  {
+    "group": [
+      "India Voice",
+      "Indiavoice"
+    ],
+    "suggested_canonical": "India Voice"
+  },
+  {
+    "group": [
+      "Indra Dhanu",
+      "Indradhanu"
+    ],
+    "suggested_canonical": "Indra Dhanu"
+  },
+  {
+    "group": [
+      "Information Channel",
+      "Informational Channel"
+    ],
+    "suggested_canonical": "Information Channel"
+  },
+  {
+    "group": [
+      "Inh 24",
+      "Inh24"
+    ],
+    "suggested_canonical": "Inh 24"
+  },
+  {
+    "group": [
+      "Inh 24 *7",
+      "Inh 24* 7",
+      "Inh 24*7",
+      "Inh24*7"
+    ],
+    "suggested_canonical": "Inh 24 *7"
+  },
+  {
+    "group": [
+      "Inh 24 X 7",
+      "Inh 24x 7",
+      "Inh 24x7",
+      "Inh24x7"
+    ],
+    "suggested_canonical": "Inh 24 X 7"
+  },
+  {
+    "group": [
+      "Ishaara Tv",
+      "Ishaaratv"
+    ],
+    "suggested_canonical": "Ishaara Tv"
+  },
+  {
+    "group": [
+      "Ishwar Bhakati",
+      "Ishwar Bhakthi",
+      "Ishwar Bhakti"
+    ],
+    "suggested_canonical": "Ishwar Bhakati"
+  },
+  {
+    "group": [
+      "J K 24 7",
+      "J&K 24*7"
+    ],
+    "suggested_canonical": "J K 24 7"
+  },
+  {
+    "group": [
+      "J K 24x7 News",
+      "Jk24x7 News"
+    ],
+    "suggested_canonical": "J K 24x7 News"
+  },
+  {
+    "group": [
+      "Jai Hind",
+      "Jaihind"
+    ],
+    "suggested_canonical": "Jai Hind"
+  },
+  {
+    "group": [
+      "Jai Hind News",
+      "Jaihind News"
+    ],
+    "suggested_canonical": "Jai Hind News"
+  },
+  {
+    "group": [
+      "Jai Hind Tv",
+      "Jaihind Tv"
+    ],
+    "suggested_canonical": "Jai Hind Tv"
+  },
+  {
+    "group": [
+      "Jai Maharashatra",
+      "Jai Maharashtra",
+      "Jai Maharasshtra",
+      "Jai Maharastra"
+    ],
+    "suggested_canonical": "Jai Maharashatra"
+  },
+  {
+    "group": [
+      "Jai Maharasthra",
+      "Jai Maharatra"
+    ],
+    "suggested_canonical": "Jai Maharasthra"
+  },
+  {
+    "group": [
+      "Jan Tantra",
+      "Jantantra"
+    ],
+    "suggested_canonical": "Jan Tantra"
+  },
+  {
+    "group": [
+      "Jan Tantra News",
+      "Jantantra News"
+    ],
+    "suggested_canonical": "Jan Tantra News"
+  },
+  {
+    "group": [
+      "Jan Tantra Tv",
+      "Jantantra Tv"
+    ],
+    "suggested_canonical": "Jan Tantra Tv"
+  },
+  {
+    "group": [
+      "Jan Tv",
+      "Jantv"
+    ],
+    "suggested_canonical": "Jan Tv"
+  },
+  {
+    "group": [
+      "Janam (Free)",
+      "Janam Free"
+    ],
+    "suggested_canonical": "Janam (Free)"
+  },
+  {
+    "group": [
+      "Jay Jaganath",
+      "Jay Jagannath"
+    ],
+    "suggested_canonical": "Jay Jaganath"
+  },
+  {
+    "group": [
+      "Jinvani (Free)",
+      "Jinvani Free"
+    ],
+    "suggested_canonical": "Jinvani (Free)"
+  },
+  {
+    "group": [
+      "Jk 24 7 News",
+      "Jk 24*7 News"
+    ],
+    "suggested_canonical": "Jk 24 7 News"
+  },
+  {
+    "group": [
+      "Jk 24 X 7",
+      "Jk 24x7"
+    ],
+    "suggested_canonical": "Jk 24 X 7"
+  },
+  {
+    "group": [
+      "Jk 24 X 7 News",
+      "Jk 24x7 News"
+    ],
+    "suggested_canonical": "Jk 24 X 7 News"
+  },
+  {
+    "group": [
+      "Jk 24*7",
+      "Jk 24+7"
+    ],
+    "suggested_canonical": "Jk 24*7"
+  },
+  {
+    "group": [
+      "Jk News 24 X 7",
+      "Jk News 24*7",
+      "Jk News 24x7"
+    ],
+    "suggested_canonical": "Jk News 24 X 7"
+  },
+  {
+    "group": [
+      "Jkl 24 X 7",
+      "Jkl 24x7"
+    ],
+    "suggested_canonical": "Jkl 24 X 7"
+  },
+  {
+    "group": [
+      "Jkl 24 X 7 News",
+      "Jkl 24x7 News"
+    ],
+    "suggested_canonical": "Jkl 24 X 7 News"
+  },
+  {
+    "group": [
+      "K News",
+      "Knews"
+    ],
+    "suggested_canonical": "K News"
+  },
+  {
+    "group": [
+      "K Tv",
+      "Ktv"
+    ],
+    "suggested_canonical": "K Tv"
+  },
+  {
+    "group": [
+      "K Tv Hd",
+      "Ktv Hd"
+    ],
+    "suggested_canonical": "K Tv Hd"
+  },
+  {
+    "group": [
+      "Kabren Abhi Tak",
+      "Kabren Abhitak"
+    ],
+    "suggested_canonical": "Kabren Abhi Tak"
+  },
+  {
+    "group": [
+      "Kairali",
+      "﻿﻿﻿﻿﻿kairali"
+    ],
+    "suggested_canonical": "Kairali"
+  },
+  {
+    "group": [
+      "Kairali Arabia",
+      "Kairali Arabia 2",
+      "Kairali Arabik",
+      "Kairali Aribia",
+      "Kairaliarabia"
+    ],
+    "suggested_canonical": "Kairali Arabia"
+  },
+  {
+    "group": [
+      "Kairali Tv Arabia",
+      "Kairali Tv Arabian"
+    ],
+    "suggested_canonical": "Kairali Tv Arabia"
+  },
+  {
+    "group": [
+      "Kalaignar Chithiram",
+      "Kalaignar Chithram"
+    ],
+    "suggested_canonical": "Kalaignar Chithiram"
+  },
+  {
+    "group": [
+      "Kalaignar Chithiram (Free)",
+      "Kalaignar Chithiram Free"
+    ],
+    "suggested_canonical": "Kalaignar Chithiram (Free)"
+  },
+  {
+    "group": [
+      "Kalaignar Isai Aruvi",
+      "Kalaignar Isaiaruvi"
+    ],
+    "suggested_canonical": "Kalaignar Isai Aruvi"
+  },
+  {
+    "group": [
+      "Kalaignar Murasu",
+      "Kalaignar Murusu"
+    ],
+    "suggested_canonical": "Kalaignar Murasu"
+  },
+  {
+    "group": [
+      "Kalaignar Seithigal",
+      "Kalaignar Sethigal"
+    ],
+    "suggested_canonical": "Kalaignar Seithigal"
+  },
+  {
+    "group": [
+      "Kalaignar Siripoli",
+      "Kalaignar Sirippoli"
+    ],
+    "suggested_canonical": "Kalaignar Siripoli"
+  },
+  {
+    "group": [
+      "Kalaignar Sirippoli (Free)",
+      "Kalaignar Sirippoli Free"
+    ],
+    "suggested_canonical": "Kalaignar Sirippoli (Free)"
+  },
+  {
+    "group": [
+      "Kalaignar Tv",
+      "﻿﻿﻿﻿﻿kalaignar Tv"
+    ],
+    "suggested_canonical": "Kalaignar Tv"
+  },
+  {
+    "group": [
+      "Kalaignar Tv (Free)",
+      "Kalaignar Tv Free"
+    ],
+    "suggested_canonical": "Kalaignar Tv (Free)"
+  },
+  {
+    "group": [
+      "Kalaingar Chithiram",
+      "Kalaingar Chitram"
+    ],
+    "suggested_canonical": "Kalaingar Chithiram"
+  },
+  {
+    "group": [
+      "Kappa Tv",
+      "﻿﻿﻿﻿﻿kappa Tv"
+    ],
+    "suggested_canonical": "Kappa Tv"
+  },
+  {
+    "group": [
+      "Karabian Abhitak",
+      "Karabian Abitak"
+    ],
+    "suggested_canonical": "Karabian Abhitak"
+  },
+  {
+    "group": [
+      "Kasthuri Gold",
+      "Kasthuri Tv Gold"
+    ],
+    "suggested_canonical": "Kasthuri Gold"
+  },
+  {
+    "group": [
+      "Kasthuri News 24",
+      "Kasthuri Newz 24"
+    ],
+    "suggested_canonical": "Kasthuri News 24"
+  },
+  {
+    "group": [
+      "Khabar Farst",
+      "Khabar Fast"
+    ],
+    "suggested_canonical": "Khabar Farst"
+  },
+  {
+    "group": [
+      "Khabrain Abhi Tak",
+      "Khabrain Abhitak"
+    ],
+    "suggested_canonical": "Khabrain Abhi Tak"
+  },
+  {
+    "group": [
+      "Khabre Abhi Tak",
+      "Khabre Abhitak"
+    ],
+    "suggested_canonical": "Khabre Abhi Tak"
+  },
+  {
+    "group": [
+      "Khabrein Abhi Tak",
+      "Khabrein Abhintak",
+      "Khabrein Abhitak",
+      "Khabreintabhitak"
+    ],
+    "suggested_canonical": "Khabrein Abhi Tak"
+  },
+  {
+    "group": [
+      "Khabren Abhi Tak",
+      "Khabren Abhitak"
+    ],
+    "suggested_canonical": "Khabren Abhi Tak"
+  },
+  {
+    "group": [
+      "Khabrey Abhi Tak",
+      "Khabrey Abhitak"
+    ],
+    "suggested_canonical": "Khabrey Abhi Tak"
+  },
+  {
+    "group": [
+      "Khabrien Abhi Tak",
+      "Khabrien Abhitak"
+    ],
+    "suggested_canonical": "Khabrien Abhi Tak"
+  },
+  {
+    "group": [
+      "Khushboo Bangla",
+      "Khushboo Tv Bangla"
+    ],
+    "suggested_canonical": "Khushboo Bangla"
+  },
+  {
+    "group": [
+      "Kishore Manch Channel",
+      "Kishore Munch Channel"
+    ],
+    "suggested_canonical": "Kishore Manch Channel"
+  },
+  {
+    "group": [
+      "Kushi Tv",
+      "﻿﻿﻿﻿﻿kushi Tv"
+    ],
+    "suggested_canonical": "Kushi Tv"
+  },
+  {
+    "group": [
+      "Live Time",
+      "Live Times"
+    ],
+    "suggested_canonical": "Live Time"
+  },
+  {
+    "group": [
+      "Living Food",
+      "Living Foods",
+      "Living Foodz"
+    ],
+    "suggested_canonical": "Living Food"
+  },
+  {
+    "group": [
+      "Local - Informational Channel 1",
+      "Local - Informational Channel 2"
+    ],
+    "suggested_canonical": "Local - Informational Channel 1"
+  },
+  {
+    "group": [
+      "Local- Das Bollywood",
+      "Local- Dashollywood"
+    ],
+    "suggested_canonical": "Local- Das Bollywood"
+  },
+  {
+    "group": [
+      "Local -Hindi Music Rsc Shamgarh 2",
+      "Local- Hindi Music Rsc Shamgarh 3"
+    ],
+    "suggested_canonical": "Local -Hindi Music Rsc Shamgarh 2"
+  },
+  {
+    "group": [
+      "Local -Hindi Music Vinayak Sva 2",
+      "Local- Hindi Music Vinayak Sva 1"
+    ],
+    "suggested_canonical": "Local -Hindi Music Vinayak Sva 2"
+  },
+  {
+    "group": [
+      "Local Hindi Music",
+      "Local Hindi Music 2"
+    ],
+    "suggested_canonical": "Local Hindi Music"
+  },
+  {
+    "group": [
+      "Local- Hindi Movie Vinayak 3 Bollywood",
+      "Local- Hindi Movie Vinayak Hollywood"
+    ],
+    "suggested_canonical": "Local- Hindi Movie Vinayak 3 Bollywood"
+  },
+  {
+    "group": [
+      "Local 2",
+      "Local2"
+    ],
+    "suggested_canonical": "Local 2"
+  },
+  {
+    "group": [
+      "Local 7",
+      "Local7"
+    ],
+    "suggested_canonical": "Local 7"
+  },
+  {
+    "group": [
+      "Local Anathagiri",
+      "Local Anathagiri 2"
+    ],
+    "suggested_canonical": "Local Anathagiri"
+  },
+  {
+    "group": [
+      "Local Avishkaar Tv",
+      "Local Avishkar Tv"
+    ],
+    "suggested_canonical": "Local Avishkaar Tv"
+  },
+  {
+    "group": [
+      "Local Bhathukamma",
+      "Local Bhathukamma Tv"
+    ],
+    "suggested_canonical": "Local Bhathukamma"
+  },
+  {
+    "group": [
+      "Local Channel 2",
+      "Local Channel 3"
+    ],
+    "suggested_canonical": "Local Channel 2"
+  },
+  {
+    "group": [
+      "Local Channel 3 Udupi",
+      "Local Channel 4 Udupi",
+      "Local Channel 5 Udupi"
+    ],
+    "suggested_canonical": "Local Channel 3 Udupi"
+  },
+  {
+    "group": [
+      "Local D Jay",
+      "Local Djay"
+    ],
+    "suggested_canonical": "Local D Jay"
+  },
+  {
+    "group": [
+      "Local D Jay Retro",
+      "Local Djay Retro"
+    ],
+    "suggested_canonical": "Local D Jay Retro"
+  },
+  {
+    "group": [
+      "Local Darsanam",
+      "Local Darshanam"
+    ],
+    "suggested_canonical": "Local Darsanam"
+  },
+  {
+    "group": [
+      "Local Gmr Bollywood",
+      "Local Gmr Hollywood"
+    ],
+    "suggested_canonical": "Local Gmr Bollywood"
+  },
+  {
+    "group": [
+      "Local Gmr Movies",
+      "Local Gmr Movies 2"
+    ],
+    "suggested_canonical": "Local Gmr Movies"
+  },
+  {
+    "group": [
+      "Local H Flicks 1",
+      "Local H Flicks 2",
+      "Local Hflicks-1",
+      "Local Hflicks-6"
+    ],
+    "suggested_canonical": "Local H Flicks 1"
+  },
+  {
+    "group": [
+      "Local H Mart",
+      "Local H Mart 2",
+      "Local H Mart 4",
+      "Local H Mart 5",
+      "Local Hmart",
+      "Local Hmart 2",
+      "Local Hmart 3",
+      "Local Hmart 4",
+      "Local Hmart 5",
+      "Local Hmart 6",
+      "Local Hmart 7",
+      "Local Hmart 8",
+      "Local Hmart 9",
+      "Local Hmart3"
+    ],
+    "suggested_canonical": "Local H Mart"
+  },
+  {
+    "group": [
+      "Local H Siti Movies",
+      "Local Hsiti Movies"
+    ],
+    "suggested_canonical": "Local H Siti Movies"
+  },
+  {
+    "group": [
+      "Local Home Theatre",
+      "Local Home Thetre"
+    ],
+    "suggested_canonical": "Local Home Theatre"
+  },
+  {
+    "group": [
+      "Local Inchara",
+      "Local Inchara Tv"
+    ],
+    "suggested_canonical": "Local Inchara"
+  },
+  {
+    "group": [
+      "Local Leo Bhakthi",
+      "Local Leo Bhakti"
+    ],
+    "suggested_canonical": "Local Leo Bhakthi"
+  },
+  {
+    "group": [
+      "Local Leo Block Buster",
+      "Local Leo Blockbuster"
+    ],
+    "suggested_canonical": "Local Leo Block Buster"
+  },
+  {
+    "group": [
+      "Local Leo Janaapadalu",
+      "Local Leo Janapadalu"
+    ],
+    "suggested_canonical": "Local Leo Janaapadalu"
+  },
+  {
+    "group": [
+      "Local Metro Music",
+      "Local Metro Music 1"
+    ],
+    "suggested_canonical": "Local Metro Music"
+  },
+  {
+    "group": [
+      "Local Mubarak Bollywood",
+      "Local Mubarak Hollywood",
+      "Local Mubarak Tollywood"
+    ],
+    "suggested_canonical": "Local Mubarak Bollywood"
+  },
+  {
+    "group": [
+      "Local Nakshatra",
+      "Local Nakshatra Tv"
+    ],
+    "suggested_canonical": "Local Nakshatra"
+  },
+  {
+    "group": [
+      "Local Namma Kudla Live1",
+      "Local Namma Kudla Live2"
+    ],
+    "suggested_canonical": "Local Namma Kudla Live1"
+  },
+  {
+    "group": [
+      "Local Nks Tv 4",
+      "Local Nkstv 4"
+    ],
+    "suggested_canonical": "Local Nks Tv 4"
+  },
+  {
+    "group": [
+      "Local Nxt Studio 1",
+      "Local Nxt Studio 2",
+      "Local Nxt Studio 3",
+      "Local Nxt Studio 4",
+      "Local Nxt Studio 5",
+      "Local Nxt Studio 6",
+      "Local Nxt Studio 7",
+      "Local Nxt Studio 8"
+    ],
+    "suggested_canonical": "Local Nxt Studio 1"
+  },
+  {
+    "group": [
+      "Local Pradana",
+      "Local Pradhana"
+    ],
+    "suggested_canonical": "Local Pradana"
+  },
+  {
+    "group": [
+      "Local Promotion",
+      "Local Promotions"
+    ],
+    "suggested_canonical": "Local Promotion"
+  },
+  {
+    "group": [
+      "Local S Gold",
+      "Local S Gold 2"
+    ],
+    "suggested_canonical": "Local S Gold"
+  },
+  {
+    "group": [
+      "Local S Music",
+      "Local S Music 2"
+    ],
+    "suggested_canonical": "Local S Music"
+  },
+  {
+    "group": [
+      "Local S Tv",
+      "Local Stv"
+    ],
+    "suggested_canonical": "Local S Tv"
+  },
+  {
+    "group": [
+      "Local Samagra Tv",
+      "Local Samarga Tv"
+    ],
+    "suggested_canonical": "Local Samagra Tv"
+  },
+  {
+    "group": [
+      "Local Samruddhi Tv",
+      "Local Samrudh Tv",
+      "Local Samrudhi Tv"
+    ],
+    "suggested_canonical": "Local Samruddhi Tv"
+  },
+  {
+    "group": [
+      "Local Shiva Music",
+      "Local Shiva Music 2"
+    ],
+    "suggested_canonical": "Local Shiva Music"
+  },
+  {
+    "group": [
+      "Local Shreya Tv",
+      "Local Shreyas Tv"
+    ],
+    "suggested_canonical": "Local Shreya Tv"
+  },
+  {
+    "group": [
+      "Local Siti - Ezmall",
+      "Local Siti Ez Mall"
+    ],
+    "suggested_canonical": "Local Siti - Ezmall"
+  },
+  {
+    "group": [
+      "Local Siti 24*7",
+      "Local Siti 24x7"
+    ],
+    "suggested_canonical": "Local Siti 24*7"
+  },
+  {
+    "group": [
+      "Local Siti Bhakthi",
+      "Local Siti Bhakti"
+    ],
+    "suggested_canonical": "Local Siti Bhakthi"
+  },
+  {
+    "group": [
+      "Local Siti Bollywood",
+      "Local Siti Hollywood"
+    ],
+    "suggested_canonical": "Local Siti Bollywood"
+  },
+  {
+    "group": [
+      "Local Siti Channel",
+      "Local Siti Channel 2"
+    ],
+    "suggested_canonical": "Local Siti Channel"
+  },
+  {
+    "group": [
+      "Local Siti H Movies",
+      "Local Siti Movies"
+    ],
+    "suggested_canonical": "Local Siti H Movies"
+  },
+  {
+    "group": [
+      "Local Siti Music",
+      "Local Siti Music 1"
+    ],
+    "suggested_canonical": "Local Siti Music"
+  },
+  {
+    "group": [
+      "Local Siti Salaam",
+      "Local Siti Salama"
+    ],
+    "suggested_canonical": "Local Siti Salaam"
+  },
+  {
+    "group": [
+      "Local Ssc",
+      "Local Ssc 2"
+    ],
+    "suggested_canonical": "Local Ssc"
+  },
+  {
+    "group": [
+      "Local Vee D 5 Kannada Movie",
+      "Local Vee D 5 Kannada Old Movie"
+    ],
+    "suggested_canonical": "Local Vee D 5 Kannada Movie"
+  },
+  {
+    "group": [
+      "Local Vee D 5 Kannada Music",
+      "Local Vee D 5 Kannada Old Music"
+    ],
+    "suggested_canonical": "Local Vee D 5 Kannada Music"
+  },
+  {
+    "group": [
+      "Lok Sabha",
+      "Loksabha"
+    ],
+    "suggested_canonical": "Lok Sabha"
+  },
+  {
+    "group": [
+      "Lord Shri Vittal",
+      "Lord Shri Vitthal"
+    ],
+    "suggested_canonical": "Lord Shri Vittal"
+  },
+  {
+    "group": [
+      "Ls Tv",
+      "Lstv"
+    ],
+    "suggested_canonical": "Ls Tv"
+  },
+  {
+    "group": [
+      "M Tune",
+      "M Tune+"
+    ],
+    "suggested_canonical": "M Tune"
+  },
+  {
+    "group": [
+      "M Tunes",
+      "M Tunes +",
+      "M Tunes+",
+      "Mtunes +",
+      "Mtunes+"
+    ],
+    "suggested_canonical": "M Tunes"
+  },
+  {
+    "group": [
+      "M Tunes Plus",
+      "Mtunes Plus"
+    ],
+    "suggested_canonical": "M Tunes Plus"
+  },
+  {
+    "group": [
+      "M Tv",
+      "Mtv",
+      "Mtv﻿﻿﻿﻿﻿"
+    ],
+    "suggested_canonical": "M Tv"
+  },
+  {
+    "group": [
+      "M Tv Beats",
+      "Mtv Beats"
+    ],
+    "suggested_canonical": "M Tv Beats"
+  },
+  {
+    "group": [
+      "M Tv Beats Hd",
+      "Mtv Beats Hd"
+    ],
+    "suggested_canonical": "M Tv Beats Hd"
+  },
+  {
+    "group": [
+      "M Tv Hd",
+      "Mtv Hd"
+    ],
+    "suggested_canonical": "M Tv Hd"
+  },
+  {
+    "group": [
+      "Maa Movies",
+      "﻿﻿﻿﻿﻿maa Movies"
+    ],
+    "suggested_canonical": "Maa Movies"
+  },
+  {
+    "group": [
+      "Maa Music",
+      "﻿﻿﻿﻿﻿maa Music"
+    ],
+    "suggested_canonical": "Maa Music"
+  },
+  {
+    "group": [
+      "Maha Movie",
+      "Maha Movies"
+    ],
+    "suggested_canonical": "Maha Movie"
+  },
+  {
+    "group": [
+      "Mahaa News",
+      "﻿﻿﻿﻿﻿mahaa News"
+    ],
+    "suggested_canonical": "Mahaa News"
+  },
+  {
+    "group": [
+      "Maharashatra 1",
+      "Maharashtra 1"
+    ],
+    "suggested_canonical": "Maharashatra 1"
+  },
+  {
+    "group": [
+      "Mahaveer Tv",
+      "Mahaveera Tv"
+    ],
+    "suggested_canonical": "Mahaveer Tv"
+  },
+  {
+    "group": [
+      "Mai Boli",
+      "Maiboli",
+      "﻿﻿﻿﻿﻿maiboli"
+    ],
+    "suggested_canonical": "Mai Boli"
+  },
+  {
+    "group": [
+      "Makkal Tv (Free)",
+      "Makkal Tv Free"
+    ],
+    "suggested_canonical": "Makkal Tv (Free)"
+  },
+  {
+    "group": [
+      "Malai Murasu Seithigal",
+      "Malai Murasu Seithikal",
+      "Malai Murusu Seithigal"
+    ],
+    "suggested_canonical": "Malai Murasu Seithigal"
+  },
+  {
+    "group": [
+      "Manoranjan",
+      "Manoranjan M"
+    ],
+    "suggested_canonical": "Manoranjan"
+  },
+  {
+    "group": [
+      "Manoranjan Grand",
+      "﻿﻿﻿﻿﻿manoranjan Grand"
+    ],
+    "suggested_canonical": "Manoranjan Grand"
+  },
+  {
+    "group": [
+      "Manoranjan Movie",
+      "Manoranjan Movies"
+    ],
+    "suggested_canonical": "Manoranjan Movie"
+  },
+  {
+    "group": [
+      "Manoranjan Tv",
+      "﻿﻿﻿﻿﻿manoranjan Tv"
+    ],
+    "suggested_canonical": "Manoranjan Tv"
+  },
+  {
+    "group": [
+      "Mantavya 24 X 7",
+      "Mantavya 24*7",
+      "Mantavya 24x7"
+    ],
+    "suggested_canonical": "Mantavya 24 X 7"
+  },
+  {
+    "group": [
+      "Mastiii",
+      "﻿﻿﻿﻿﻿mastiii"
+    ],
+    "suggested_canonical": "Mastiii"
+  },
+  {
+    "group": [
+      "Mh One Shraddha Free",
+      "Mh One Shraddha Vi Free"
+    ],
+    "suggested_canonical": "Mh One Shraddha Free"
+  },
+  {
+    "group": [
+      "Mh1 Shraddha",
+      "Mh1 Shradha"
+    ],
+    "suggested_canonical": "Mh1 Shraddha"
+  },
+  {
+    "group": [
+      "Mk Six",
+      "﻿﻿﻿﻿﻿mk Six"
+    ],
+    "suggested_canonical": "Mk Six"
+  },
+  {
+    "group": [
+      "Mk Tunes",
+      "﻿﻿﻿﻿﻿mk Tunes"
+    ],
+    "suggested_canonical": "Mk Tunes"
+  },
+  {
+    "group": [
+      "Mn + Hd",
+      "Mn+ Hd",
+      "Mn+hd"
+    ],
+    "suggested_canonical": "Mn + Hd"
+  },
+  {
+    "group": [
+      "Mn+",
+      "﻿﻿﻿﻿﻿mn+"
+    ],
+    "suggested_canonical": "Mn+"
+  },
+  {
+    "group": [
+      "Moon Tv",
+      "﻿﻿﻿﻿﻿moon Tv"
+    ],
+    "suggested_canonical": "Moon Tv"
+  },
+  {
+    "group": [
+      "Moon Tv (Free)",
+      "Moon Tv Free"
+    ],
+    "suggested_canonical": "Moon Tv (Free)"
+  },
+  {
+    "group": [
+      "Movie Plus",
+      "﻿﻿﻿﻿﻿movie Plus"
+    ],
+    "suggested_canonical": "Movie Plus"
+  },
+  {
+    "group": [
+      "Movies Now Hd",
+      "Moviesnow Hd"
+    ],
+    "suggested_canonical": "Movies Now Hd"
+  },
+  {
+    "group": [
+      "Multiplex",
+      "﻿﻿﻿﻿﻿multiplex"
+    ],
+    "suggested_canonical": "Multiplex"
+  },
+  {
+    "group": [
+      "Music India",
+      "Music﻿﻿﻿﻿﻿ India"
+    ],
+    "suggested_canonical": "Music India"
+  },
+  {
+    "group": [
+      "N G C",
+      "Ngc",
+      "﻿﻿﻿﻿﻿ngc"
+    ],
+    "suggested_canonical": "N G C"
+  },
+  {
+    "group": [
+      "N Tv",
+      "Ntv"
+    ],
+    "suggested_canonical": "N Tv"
+  },
+  {
+    "group": [
+      "N Tv News",
+      "Ntv News"
+    ],
+    "suggested_canonical": "N Tv News"
+  },
+  {
+    "group": [
+      "Naaptol Telugu",
+      "﻿naaptol Telugu"
+    ],
+    "suggested_canonical": "Naaptol Telugu"
+  },
+  {
+    "group": [
+      "Nakshatra Tv",
+      "Nakshatraa Tv"
+    ],
+    "suggested_canonical": "Nakshatra Tv"
+  },
+  {
+    "group": [
+      "Nandighosa Tv",
+      "Nandighosha Tv"
+    ],
+    "suggested_canonical": "Nandighosa Tv"
+  },
+  {
+    "group": [
+      "Nat Geo Wild",
+      "﻿﻿﻿﻿﻿nat Geo Wild"
+    ],
+    "suggested_canonical": "Nat Geo Wild"
+  },
+  {
+    "group": [
+      "Nation 27",
+      "Nation27"
+    ],
+    "suggested_canonical": "Nation 27"
+  },
+  {
+    "group": [
+      "Nav Bharat Hd",
+      "Navbharat Hd"
+    ],
+    "suggested_canonical": "Nav Bharat Hd"
+  },
+  {
+    "group": [
+      "Nav Bharat Sd",
+      "Navbharat Sd"
+    ],
+    "suggested_canonical": "Nav Bharat Sd"
+  },
+  {
+    "group": [
+      "Nd 24",
+      "Nd24"
+    ],
+    "suggested_canonical": "Nd 24"
+  },
+  {
+    "group": [
+      "Nd 24news",
+      "Nd24 News"
+    ],
+    "suggested_canonical": "Nd 24news"
+  },
+  {
+    "group": [
+      "Nd Tv 24*7",
+      "Ndtv 24*7",
+      "Ndtv24*7"
+    ],
+    "suggested_canonical": "Nd Tv 24*7"
+  },
+  {
+    "group": [
+      "Nd Tv India",
+      "Ndtv India"
+    ],
+    "suggested_canonical": "Nd Tv India"
+  },
+  {
+    "group": [
+      "Ndtv India 24 X 7",
+      "Ndtv India 24x7"
+    ],
+    "suggested_canonical": "Ndtv India 24 X 7"
+  },
+  {
+    "group": [
+      "Ndtv 24 X 7",
+      "Ndtv 24x7",
+      "Ndtv24x7"
+    ],
+    "suggested_canonical": "Ndtv 24 X 7"
+  },
+  {
+    "group": [
+      "Ndtv Mp Cg",
+      "Ndtv Mp/Cg"
+    ],
+    "suggested_canonical": "Ndtv Mp Cg"
+  },
+  {
+    "group": [
+      "Ndtv Profit Prime",
+      "Ndtv Profit/Prime"
+    ],
+    "suggested_canonical": "Ndtv Profit Prime"
+  },
+  {
+    "group": [
+      "Nepal 1",
+      "Nepal-1",
+      "Nepal1"
+    ],
+    "suggested_canonical": "Nepal 1"
+  },
+  {
+    "group": [
+      "Network 10",
+      "Network10"
+    ],
+    "suggested_canonical": "Network 10"
+  },
+  {
+    "group": [
+      "News 1",
+      "News1"
+    ],
+    "suggested_canonical": "News 1"
+  },
+  {
+    "group": [
+      "News 1 India",
+      "News1 India"
+    ],
+    "suggested_canonical": "News 1 India"
+  },
+  {
+    "group": [
+      "News 11",
+      "News11"
+    ],
+    "suggested_canonical": "News 11"
+  },
+  {
+    "group": [
+      "News 11 Bharat",
+      "News 11bharat",
+      "News11 Bharat"
+    ],
+    "suggested_canonical": "News 11 Bharat"
+  },
+  {
+    "group": [
+      "News 18 Aasam",
+      "News18 Aasam"
+    ],
+    "suggested_canonical": "News 18 Aasam"
+  },
+  {
+    "group": [
+      "News 18 Assam",
+      "News18 Assam",
+      "News18 Assame"
+    ],
+    "suggested_canonical": "News 18 Assam"
+  },
+  {
+    "group": [
+      "News 18 Bh/Jh",
+      "News18 Bh/Jh"
+    ],
+    "suggested_canonical": "News 18 Bh/Jh"
+  },
+  {
+    "group": [
+      "News 18 Bihar",
+      "News18 Bihar"
+    ],
+    "suggested_canonical": "News 18 Bihar"
+  },
+  {
+    "group": [
+      "News 18 Bihar & Jharkhand",
+      "News 18 Bihar Jharkhand",
+      "News 18 Bihar/Jharkhand",
+      "News18 Bihar Jharkhand",
+      "News18 Bihar/Jharkhand"
+    ],
+    "suggested_canonical": "News 18 Bihar & Jharkhand"
+  },
+  {
+    "group": [
+      "News18 Bih/Jha",
+      "News18 Bihar/Jha"
+    ],
+    "suggested_canonical": "News18 Bih/Jha"
+  },
+  {
+    "group": [
+      "News18 Bihar Jhr",
+      "News18 Bihar/Jhar",
+      "News18 Bihar/Jhr"
+    ],
+    "suggested_canonical": "News18 Bihar Jhr"
+  },
+  {
+    "group": [
+      "News 18 Br/Jh",
+      "News18 Br/Jh"
+    ],
+    "suggested_canonical": "News 18 Br/Jh"
+  },
+  {
+    "group": [
+      "News 18 Gujarati",
+      "News18 Gujarati",
+      "News18 Gujrati"
+    ],
+    "suggested_canonical": "News 18 Gujarati"
+  },
+  {
+    "group": [
+      "News 18 India",
+      "News18 India"
+    ],
+    "suggested_canonical": "News 18 India"
+  },
+  {
+    "group": [
+      "News 18 Jammu",
+      "News18 Jammu"
+    ],
+    "suggested_canonical": "News 18 Jammu"
+  },
+  {
+    "group": [
+      "News 18 Jk",
+      "News18 Jk"
+    ],
+    "suggested_canonical": "News 18 Jk"
+  },
+  {
+    "group": [
+      "News 18 Jk Hp",
+      "News18 Jk/Hp"
+    ],
+    "suggested_canonical": "News 18 Jk Hp"
+  },
+  {
+    "group": [
+      "News 18 Jklh",
+      "News 18 Jklhp",
+      "News18 Jklh",
+      "News18 Jklhp"
+    ],
+    "suggested_canonical": "News 18 Jklh"
+  },
+  {
+    "group": [
+      "News 18 Kannada",
+      "News18 Kannada"
+    ],
+    "suggested_canonical": "News 18 Kannada"
+  },
+  {
+    "group": [
+      "News 18 Lokmat",
+      "News18 Lokmat"
+    ],
+    "suggested_canonical": "News 18 Lokmat"
+  },
+  {
+    "group": [
+      "News 18 Mp",
+      "News18 Mp"
+    ],
+    "suggested_canonical": "News 18 Mp"
+  },
+  {
+    "group": [
+      "News 18 Mp & Chattisgarh",
+      "News18 Mp Chhatisgarh",
+      "News18 Mp Chhattisgarh"
+    ],
+    "suggested_canonical": "News 18 Mp & Chattisgarh"
+  },
+  {
+    "group": [
+      "News 18 Mp Cg",
+      "News 18 Mp/Cg",
+      "News18 Mp Cg",
+      "News18 Mp/Cg"
+    ],
+    "suggested_canonical": "News 18 Mp Cg"
+  },
+  {
+    "group": [
+      "News 18 Mpcg",
+      "News18 Mpcg"
+    ],
+    "suggested_canonical": "News 18 Mpcg"
+  },
+  {
+    "group": [
+      "News 18 North East",
+      "News18 North East"
+    ],
+    "suggested_canonical": "News 18 North East"
+  },
+  {
+    "group": [
+      "News 18 Pb/Hr",
+      "News18 Pb/Hr"
+    ],
+    "suggested_canonical": "News 18 Pb/Hr"
+  },
+  {
+    "group": [
+      "News 18 Ph",
+      "News 18 Phh",
+      "News18 P/H",
+      "News18 P/H/H",
+      "News18 Ph",
+      "News18 Phh"
+    ],
+    "suggested_canonical": "News 18 Ph"
+  },
+  {
+    "group": [
+      "News 18 Pun/Hr",
+      "News18 Pu/Hr",
+      "News18 Pun/Hr"
+    ],
+    "suggested_canonical": "News 18 Pun/Hr"
+  },
+  {
+    "group": [
+      "News 18 Punjab",
+      "News18 Punjab"
+    ],
+    "suggested_canonical": "News 18 Punjab"
+  },
+  {
+    "group": [
+      "News 18 Punjabi",
+      "News18 Punjabi"
+    ],
+    "suggested_canonical": "News 18 Punjabi"
+  },
+  {
+    "group": [
+      "News 18 Rahasthan",
+      "News 18 Rajasthan",
+      "News18 Rajasthan"
+    ],
+    "suggested_canonical": "News 18 Rahasthan"
+  },
+  {
+    "group": [
+      "News 18 Raj",
+      "News18 Raj"
+    ],
+    "suggested_canonical": "News 18 Raj"
+  },
+  {
+    "group": [
+      "News 18 Rajashthan",
+      "News 18 Rajsthan",
+      "News18 Rajaasthan",
+      "News18 Rajastan",
+      "News18 Rajsthan"
+    ],
+    "suggested_canonical": "News 18 Rajashthan"
+  },
+  {
+    "group": [
+      "News 18 Up",
+      "News18 Up"
+    ],
+    "suggested_canonical": "News 18 Up"
+  },
+  {
+    "group": [
+      "News 18 Up Uk",
+      "News 18 Up/Uk",
+      "News18 Up Uk",
+      "News18 Up/Uk"
+    ],
+    "suggested_canonical": "News 18 Up Uk"
+  },
+  {
+    "group": [
+      "News 18 Upuk",
+      "News18 Upuk"
+    ],
+    "suggested_canonical": "News 18 Upuk"
+  },
+  {
+    "group": [
+      "News 18 Urdu",
+      "News18 Urdu"
+    ],
+    "suggested_canonical": "News 18 Urdu"
+  },
+  {
+    "group": [
+      "News 24",
+      "News24"
+    ],
+    "suggested_canonical": "News 24"
+  },
+  {
+    "group": [
+      "News 24 Mp",
+      "News24 Mp"
+    ],
+    "suggested_canonical": "News 24 Mp"
+  },
+  {
+    "group": [
+      "News 24 Mp Cg",
+      "News 24 Mp/Cg",
+      "News24 Mp/Cg"
+    ],
+    "suggested_canonical": "News 24 Mp Cg"
+  },
+  {
+    "group": [
+      "News 24 Mpcg",
+      "News24 Mpcg"
+    ],
+    "suggested_canonical": "News 24 Mpcg"
+  },
+  {
+    "group": [
+      "News 7",
+      "News7"
+    ],
+    "suggested_canonical": "News 7"
+  },
+  {
+    "group": [
+      "News 7 Tamil",
+      "News7 Tamil"
+    ],
+    "suggested_canonical": "News 7 Tamil"
+  },
+  {
+    "group": [
+      "News 9",
+      "News9"
+    ],
+    "suggested_canonical": "News 9"
+  },
+  {
+    "group": [
+      "News 9 Today",
+      "News9 Today"
+    ],
+    "suggested_canonical": "News 9 Today"
+  },
+  {
+    "group": [
+      "News India",
+      "News India 1"
+    ],
+    "suggested_canonical": "News India"
+  },
+  {
+    "group": [
+      "News India 24",
+      "News India 24*7",
+      "News India24*7"
+    ],
+    "suggested_canonical": "News India 24"
+  },
+  {
+    "group": [
+      "News India 24 X 7",
+      "News India 24x7"
+    ],
+    "suggested_canonical": "News India 24 X 7"
+  },
+  {
+    "group": [
+      "News J",
+      "Newsj"
+    ],
+    "suggested_canonical": "News J"
+  },
+  {
+    "group": [
+      "News State Bihar & Jharkhand",
+      "News State Bihar Jharkhan",
+      "News State Bihar Jharkhand",
+      "News State Bihar/Jharkhand"
+    ],
+    "suggested_canonical": "News State Bihar & Jharkhand"
+  },
+  {
+    "group": [
+      "News State Mpcg",
+      "News States Mpcg"
+    ],
+    "suggested_canonical": "News State Mpcg"
+  },
+  {
+    "group": [
+      "News State Ph/Har",
+      "News State Phh"
+    ],
+    "suggested_canonical": "News State Ph/Har"
+  },
+  {
+    "group": [
+      "News State Bh/Jh",
+      "News State Bih/Jh"
+    ],
+    "suggested_canonical": "News State Bh/Jh"
+  },
+  {
+    "group": [
+      "News State Mp & Cg",
+      "News State Mp Cg",
+      "News State Mp/Cg"
+    ],
+    "suggested_canonical": "News State Mp & Cg"
+  },
+  {
+    "group": [
+      "News State Up & Uk",
+      "News State Up Uk",
+      "News State Up/Uk"
+    ],
+    "suggested_canonical": "News State Up & Uk"
+  },
+  {
+    "group": [
+      "News Tamil 24*7",
+      "News Tamil 24x7"
+    ],
+    "suggested_canonical": "News Tamil 24*7"
+  },
+  {
+    "group": [
+      "News X",
+      "Newsx"
+    ],
+    "suggested_canonical": "News X"
+  },
+  {
+    "group": [
+      "News18 Assam Ne",
+      "News18 Assam/Ne"
+    ],
+    "suggested_canonical": "News18 Assam Ne"
+  },
+  {
+    "group": [
+      "News18 Bihar Jh",
+      "News18 Bihar/Jh"
+    ],
+    "suggested_canonical": "News18 Bihar Jh"
+  },
+  {
+    "group": [
+      "News18 Tamil Nadu",
+      "News18 Tamilnadu"
+    ],
+    "suggested_canonical": "News18 Tamil Nadu"
+  },
+  {
+    "group": [
+      "Nick + Hd",
+      "Nick Hd",
+      "Nick Hd +",
+      "Nick Hd+",
+      "Nick+ Hd"
+    ],
+    "suggested_canonical": "Nick + Hd"
+  },
+  {
+    "group": [
+      "No 1 News",
+      "No1 News"
+    ],
+    "suggested_canonical": "No 1 News"
+  },
+  {
+    "group": [
+      "Non Stop Samacahar",
+      "Non Stop Samachar",
+      "Non-Stop Samachar"
+    ],
+    "suggested_canonical": "Non Stop Samacahar"
+  },
+  {
+    "group": [
+      "Non Stop Samachar India",
+      "Nonstop Samachar India"
+    ],
+    "suggested_canonical": "Non Stop Samachar India"
+  },
+  {
+    "group": [
+      "Nvod 1 Bollywood 1 Hd",
+      "Nvod 1 Bollywood 2 Hd",
+      "Nvod 1 Bollywood 3 Hd",
+      "Nvod 1 Bollywood 4 Hd"
+    ],
+    "suggested_canonical": "Nvod 1 Bollywood 1 Hd"
+  },
+  {
+    "group": [
+      "Nxt K Pop",
+      "Nxt K-Pop"
+    ],
+    "suggested_canonical": "Nxt K Pop"
+  },
+  {
+    "group": [
+      "Nxt Taran",
+      "Nxt Tarang"
+    ],
+    "suggested_canonical": "Nxt Taran"
+  },
+  {
+    "group": [
+      "O Tv",
+      "Otv"
+    ],
+    "suggested_canonical": "O Tv"
+  },
+  {
+    "group": [
+      "Oscar Movies Bhojapuri",
+      "Oscar Movies Bhojpuri"
+    ],
+    "suggested_canonical": "Oscar Movies Bhojapuri"
+  },
+  {
+    "group": [
+      "P T Express",
+      "Pt Express"
+    ],
+    "suggested_canonical": "P T Express"
+  },
+  {
+    "group": [
+      "Paras Gold (Free)",
+      "Paras Gold Free"
+    ],
+    "suggested_canonical": "Paras Gold (Free)"
+  },
+  {
+    "group": [
+      "Peace Of Mind (Free)",
+      "Peace Of Mind Free"
+    ],
+    "suggested_canonical": "Peace Of Mind (Free)"
+  },
+  {
+    "group": [
+      "People Tv",
+      "Peopletv"
+    ],
+    "suggested_canonical": "People Tv"
+  },
+  {
+    "group": [
+      "Peppers (Free)",
+      "Peppers Free"
+    ],
+    "suggested_canonical": "Peppers (Free)"
+  },
+  {
+    "group": [
+      "Pitaara",
+      "﻿﻿﻿﻿﻿pitaara"
+    ],
+    "suggested_canonical": "Pitaara"
+  },
+  {
+    "group": [
+      "Pitaara (Free)",
+      "Pitaara Free"
+    ],
+    "suggested_canonical": "Pitaara (Free)"
+  },
+  {
+    "group": [
+      "Pogo",
+      "﻿﻿﻿﻿﻿pogo"
+    ],
+    "suggested_canonical": "Pogo"
+  },
+  {
+    "group": [
+      "Power Vision",
+      "Powervision"
+    ],
+    "suggested_canonical": "Power Vision"
+  },
+  {
+    "group": [
+      "Pratham Khabar 24*7",
+      "Pratham Khabar 24x7"
+    ],
+    "suggested_canonical": "Pratham Khabar 24*7"
+  },
+  {
+    "group": [
+      "Pravah Picture Hd",
+      "Pravah Pictures Hd"
+    ],
+    "suggested_canonical": "Pravah Picture Hd"
+  },
+  {
+    "group": [
+      "Prime 9 News",
+      "Prime9 News"
+    ],
+    "suggested_canonical": "Prime 9 News"
+  },
+  {
+    "group": [
+      "Promo Channel",
+      "Promo Channel 1",
+      "Promo Channel 2",
+      "Promo Channel 3"
+    ],
+    "suggested_canonical": "Promo Channel"
+  },
+  {
+    "group": [
+      "Protidin Time",
+      "Protidin Times"
+    ],
+    "suggested_canonical": "Protidin Time"
+  },
+  {
+    "group": [
+      "Ptc Chak De",
+      "Ptc Chakde"
+    ],
+    "suggested_canonical": "Ptc Chak De"
+  },
+  {
+    "group": [
+      "Public Movies",
+      "Public Moviess",
+      "﻿﻿﻿﻿﻿public Movies"
+    ],
+    "suggested_canonical": "Public Movies"
+  },
+  {
+    "group": [
+      "Public Movies (Free)",
+      "Public Movies Free"
+    ],
+    "suggested_canonical": "Public Movies (Free)"
+  },
+  {
+    "group": [
+      "Public Music",
+      "﻿﻿﻿﻿﻿public Music"
+    ],
+    "suggested_canonical": "Public Music"
+  },
+  {
+    "group": [
+      "Public Music (Free)",
+      "Public Music Free"
+    ],
+    "suggested_canonical": "Public Music (Free)"
+  },
+  {
+    "group": [
+      "Public Tv",
+      "﻿﻿﻿﻿﻿public Tv"
+    ],
+    "suggested_canonical": "Public Tv"
+  },
+  {
+    "group": [
+      "Puthiya Talaimurai",
+      "Puthiya Thalaimurai",
+      "Puthiya Thalamurai"
+    ],
+    "suggested_canonical": "Puthiya Talaimurai"
+  },
+  {
+    "group": [
+      "Puthu Yugam",
+      "Puthuyugam"
+    ],
+    "suggested_canonical": "Puthu Yugam"
+  },
+  {
+    "group": [
+      "Puthu Yugam Tv",
+      "Puthuyugam Tv"
+    ],
+    "suggested_canonical": "Puthu Yugam Tv"
+  },
+  {
+    "group": [
+      "R 9",
+      "R9"
+    ],
+    "suggested_canonical": "R 9"
+  },
+  {
+    "group": [
+      "R 9 Tv",
+      "R9 Tv"
+    ],
+    "suggested_canonical": "R 9 Tv"
+  },
+  {
+    "group": [
+      "R Bangla",
+      "R.bangla"
+    ],
+    "suggested_canonical": "R Bangla"
+  },
+  {
+    "group": [
+      "R Bharat",
+      "R. Bharat",
+      "R.bharat"
+    ],
+    "suggested_canonical": "R Bharat"
+  },
+  {
+    "group": [
+      "R T",
+      "Rt"
+    ],
+    "suggested_canonical": "R T"
+  },
+  {
+    "group": [
+      "R Tv",
+      "Rtv"
+    ],
+    "suggested_canonical": "R Tv"
+  },
+  {
+    "group": [
+      "R. Kannada",
+      "R.kannada"
+    ],
+    "suggested_canonical": "R. Kannada"
+  },
+  {
+    "group": [
+      "R.bharat - A La Carte",
+      "R.bharat(Alacarte",
+      "R.bharat(Alacarte)"
+    ],
+    "suggested_canonical": "R.bharat - A La Carte"
+  },
+  {
+    "group": [
+      "Raj Music Malayalam",
+      "Raj Music Malyalam"
+    ],
+    "suggested_canonical": "Raj Music Malayalam"
+  },
+  {
+    "group": [
+      "Raj Parivaar",
+      "Raj Parivar"
+    ],
+    "suggested_canonical": "Raj Parivaar"
+  },
+  {
+    "group": [
+      "Rajya Sabha",
+      "Rajyasabha"
+    ],
+    "suggested_canonical": "Rajya Sabha"
+  },
+  {
+    "group": [
+      "Rajya Sabha Tv",
+      "Rajyasabha Tv"
+    ],
+    "suggested_canonical": "Rajya Sabha Tv"
+  },
+  {
+    "group": [
+      "Republic Bharat",
+      "Republic Bharath",
+      "Republic Tv Bharat"
+    ],
+    "suggested_canonical": "Republic Bharat"
+  },
+  {
+    "group": [
+      "Republic Kannada",
+      "Republic Tv Kannada"
+    ],
+    "suggested_canonical": "Republic Kannada"
+  },
+  {
+    "group": [
+      "Republic Tv",
+      "﻿﻿﻿﻿﻿republic Tv"
+    ],
+    "suggested_canonical": "Republic Tv"
+  },
+  {
+    "group": [
+      "Romedy Now",
+      "﻿﻿﻿﻿﻿romedy Now"
+    ],
+    "suggested_canonical": "Romedy Now"
+  },
+  {
+    "group": [
+      "Rongeen Tv",
+      "﻿﻿﻿﻿﻿rongeen Tv"
+    ],
+    "suggested_canonical": "Rongeen Tv"
+  },
+  {
+    "group": [
+      "S S Select Hd",
+      "Ss Select 1 Hd",
+      "Ss Select 2 Hd",
+      "Ss Select Hd",
+      "Ss Select Hd 1",
+      "Ss Select Hd 2"
+    ],
+    "suggested_canonical": "S S Select Hd"
+  },
+  {
+    "group": [
+      "S S1 Hd",
+      "Ss1 Hd"
+    ],
+    "suggested_canonical": "S S1 Hd"
+  },
+  {
+    "group": [
+      "S Tv Haryana",
+      "Stv Haryana"
+    ],
+    "suggested_canonical": "S Tv Haryana"
+  },
+  {
+    "group": [
+      "Sach Bedhad",
+      "Sach Bedhadk"
+    ],
+    "suggested_canonical": "Sach Bedhad"
+  },
+  {
+    "group": [
+      "Sadhana",
+      "Sadhana +"
+    ],
+    "suggested_canonical": "Sadhana"
+  },
+  {
+    "group": [
+      "Sadhana Bhakat",
+      "Sadhana Bhakti"
+    ],
+    "suggested_canonical": "Sadhana Bhakat"
+  },
+  {
+    "group": [
+      "Sadhana Nation",
+      "Sadhana National"
+    ],
+    "suggested_canonical": "Sadhana Nation"
+  },
+  {
+    "group": [
+      "Sadhna News Mp Cg",
+      "Sadhna News Mp/Cg"
+    ],
+    "suggested_canonical": "Sadhna News Mp Cg"
+  },
+  {
+    "group": [
+      "Safari",
+      "﻿﻿﻿﻿﻿safari"
+    ],
+    "suggested_canonical": "Safari"
+  },
+  {
+    "group": [
+      "Sahara Nation",
+      "Sahara National"
+    ],
+    "suggested_canonical": "Sahara Nation"
+  },
+  {
+    "group": [
+      "Sahara Rajaasthan",
+      "Sahara Rajasthan"
+    ],
+    "suggested_canonical": "Sahara Rajaasthan"
+  },
+  {
+    "group": [
+      "Sahara Samay",
+      "Sahara Samay N"
+    ],
+    "suggested_canonical": "Sahara Samay"
+  },
+  {
+    "group": [
+      "Sai Ram Tv",
+      "Sairam Tv"
+    ],
+    "suggested_canonical": "Sai Ram Tv"
+  },
+  {
+    "group": [
+      "Sakshi Tv",
+      "﻿﻿﻿﻿﻿sakshi Tv"
+    ],
+    "suggested_canonical": "Sakshi Tv"
+  },
+  {
+    "group": [
+      "Samachar Plus Rajaasthan",
+      "Samachar Plus Rajasthan"
+    ],
+    "suggested_canonical": "Samachar Plus Rajaasthan"
+  },
+  {
+    "group": [
+      "Sangeet Bangala",
+      "Sangeet Bangla"
+    ],
+    "suggested_canonical": "Sangeet Bangala"
+  },
+  {
+    "group": [
+      "Sangeet Bhojapuri",
+      "Sangeet Bhojpuri"
+    ],
+    "suggested_canonical": "Sangeet Bhojapuri"
+  },
+  {
+    "group": [
+      "Sangeeth Bhojapuri",
+      "Sangeeth Bhojpuri"
+    ],
+    "suggested_canonical": "Sangeeth Bhojapuri"
+  },
+  {
+    "group": [
+      "Sangeeth Marathi",
+      "Sangeeth Marati"
+    ],
+    "suggested_canonical": "Sangeeth Marathi"
+  },
+  {
+    "group": [
+      "Sansad Tv",
+      "Sansad Tv 1",
+      "Sansad Tv 2",
+      "Sansad Tv1",
+      "Sansad Tv2",
+      "﻿﻿﻿﻿﻿sansad Tv"
+    ],
+    "suggested_canonical": "Sansad Tv"
+  },
+  {
+    "group": [
+      "Sansad Tv -Rajya Sabha",
+      "Sansad Tv -Rajyasabha",
+      "Sansad Tv Rajya Sabha",
+      "Sansad Tv Rajyasabha",
+      "Sansad Tv Rajyashabha",
+      "Sansad Tv Rajysabha",
+      "Sansad Tv Rajyshabha"
+    ],
+    "suggested_canonical": "Sansad Tv -Rajya Sabha"
+  },
+  {
+    "group": [
+      "Sansad Tv Lokhsabha",
+      "Sansad Tv Loksabha"
+    ],
+    "suggested_canonical": "Sansad Tv Lokhsabha"
+  },
+  {
+    "group": [
+      "Sansad Tv -2 Sd",
+      "Sansad Tv 2 Sd",
+      "Sansad Tv Sd",
+      "Sansad Tv2 Sd"
+    ],
+    "suggested_canonical": "Sansad Tv -2 Sd"
+  },
+  {
+    "group": [
+      "Sansad Tv 1 Sd",
+      "Sansad Tv1 Sd"
+    ],
+    "suggested_canonical": "Sansad Tv 1 Sd"
+  },
+  {
+    "group": [
+      "Sansad Tv 1 Hd",
+      "Sansad Tv Hd",
+      "Sansad Tv1 Hd"
+    ],
+    "suggested_canonical": "Sansad Tv 1 Hd"
+  },
+  {
+    "group": [
+      "Sansad Tv 2 Hd",
+      "Sansad Tv2 Hd"
+    ],
+    "suggested_canonical": "Sansad Tv 2 Hd"
+  },
+  {
+    "group": [
+      "Sanskriti 24*7",
+      "Sanskriti 24x7"
+    ],
+    "suggested_canonical": "Sanskriti 24*7"
+  },
+  {
+    "group": [
+      "Sant Wani",
+      "Santwani"
+    ],
+    "suggested_canonical": "Sant Wani"
+  },
+  {
+    "group": [
+      "Santha Vani",
+      "Santhavani"
+    ],
+    "suggested_canonical": "Santha Vani"
+  },
+  {
+    "group": [
+      "Sarv Dharam Sangam",
+      "Sarv Dharm Sangam",
+      "Sarv Dharma Sangam"
+    ],
+    "suggested_canonical": "Sarv Dharam Sangam"
+  },
+  {
+    "group": [
+      "Sarv Dharm Sangam (Free)",
+      "Sarv Dharm Sangam Free"
+    ],
+    "suggested_canonical": "Sarv Dharm Sangam (Free)"
+  },
+  {
+    "group": [
+      "Sarva Dharm",
+      "Sarvadharma"
+    ],
+    "suggested_canonical": "Sarva Dharm"
+  },
+  {
+    "group": [
+      "Saudi Quaran",
+      "Saudi Quarn"
+    ],
+    "suggested_canonical": "Saudi Quaran"
+  },
+  {
+    "group": [
+      "Saudi Sunna",
+      "Saudi Sunnah"
+    ],
+    "suggested_canonical": "Saudi Sunna"
+  },
+  {
+    "group": [
+      "Shalom Tv (Free)",
+      "Shalom Tv Free"
+    ],
+    "suggested_canonical": "Shalom Tv (Free)"
+  },
+  {
+    "group": [
+      "Shekinah (Free)",
+      "Shekinah Free"
+    ],
+    "suggested_canonical": "Shekinah (Free)"
+  },
+  {
+    "group": [
+      "Shemaroo",
+      "﻿﻿﻿﻿﻿shemaroo"
+    ],
+    "suggested_canonical": "Shemaroo"
+  },
+  {
+    "group": [
+      "Shemaroo Marathi",
+      "Shemaroo Marathiba"
+    ],
+    "suggested_canonical": "Shemaroo Marathi"
+  },
+  {
+    "group": [
+      "Shemaroo Marathi Bana",
+      "Shemaroo Marathiban",
+      "Shemaroo Marathibana"
+    ],
+    "suggested_canonical": "Shemaroo Marathi Bana"
+  },
+  {
+    "group": [
+      "Show Box",
+      "Showbox"
+    ],
+    "suggested_canonical": "Show Box"
+  },
+  {
+    "group": [
+      "Shubhsandesh",
+      "Shubhsandesh Tv"
+    ],
+    "suggested_canonical": "Shubhsandesh"
+  },
+  {
+    "group": [
+      "Siri Kannada",
+      "Siri Kannda"
+    ],
+    "suggested_canonical": "Siri Kannada"
+  },
+  {
+    "group": [
+      "Siti Shoping",
+      "Siti Shopping"
+    ],
+    "suggested_canonical": "Siti Shoping"
+  },
+  {
+    "group": [
+      "Sonic",
+      "﻿﻿﻿﻿﻿sonic"
+    ],
+    "suggested_canonical": "Sonic"
+  },
+  {
+    "group": [
+      "Sony Bbc Eartgh Hd",
+      "Sony Bbc Earth Hd"
+    ],
+    "suggested_canonical": "Sony Bbc Eartgh Hd"
+  },
+  {
+    "group": [
+      "Sony Bbc Earth",
+      "﻿﻿﻿﻿﻿sony Bbc Earth"
+    ],
+    "suggested_canonical": "Sony Bbc Earth"
+  },
+  {
+    "group": [
+      "Sony Marathi",
+      "Sony Marati"
+    ],
+    "suggested_canonical": "Sony Marathi"
+  },
+  {
+    "group": [
+      "Sony Max 2",
+      "Sony Max2",
+      "﻿﻿﻿﻿﻿sony Max 2"
+    ],
+    "suggested_canonical": "Sony Max 2"
+  },
+  {
+    "group": [
+      "Sony Sport 1 Hd",
+      "Sony Sports 1 Hd"
+    ],
+    "suggested_canonical": "Sony Sport 1 Hd"
+  },
+  {
+    "group": [
+      "Sony Sport Ten Hd",
+      "Sony Sports Ten 1 Hd",
+      "Sony Sports Ten 2 Hd",
+      "Sony Sports Ten 3 Hd",
+      "Sony Sports Ten 4 Hd",
+      "Sony Sports Ten 5 Hd",
+      "Sony Sports Ten Hd",
+      "Sony Sports Ten1 Hd",
+      "Sony Sports Ten2 Hd",
+      "Sony Sports Ten3 Hd",
+      "Sony Sports Ten5 Hd"
+    ],
+    "suggested_canonical": "Sony Sport Ten Hd"
+  },
+  {
+    "group": [
+      "Sony Sports Ten 1",
+      "Sony Sports Ten 2",
+      "Sony Sports Ten 3",
+      "Sony Sports Ten 4",
+      "Sony Sports Ten 5",
+      "Sony Sports Ten1",
+      "Sony Sports Ten2",
+      "Sony Sports Ten3",
+      "Sony Sports Ten4",
+      "Sony Sports Ten5",
+      "﻿﻿﻿﻿﻿sony Sports Ten1",
+      "﻿﻿﻿﻿﻿sony Sports Ten2",
+      "﻿﻿﻿﻿﻿sony Sports Ten3",
+      "﻿﻿﻿﻿﻿sony Sports Ten4"
+    ],
+    "suggested_canonical": "Sony Sports Ten 1"
+  },
+  {
+    "group": [
+      "Sony Ten 1",
+      "Sony Ten1"
+    ],
+    "suggested_canonical": "Sony Ten 1"
+  },
+  {
+    "group": [
+      "Sony Ten 2",
+      "Sony Ten2"
+    ],
+    "suggested_canonical": "Sony Ten 2"
+  },
+  {
+    "group": [
+      "Sony Ten 3",
+      "Sony Ten3"
+    ],
+    "suggested_canonical": "Sony Ten 3"
+  },
+  {
+    "group": [
+      "Sony Wah",
+      "﻿﻿﻿﻿﻿sony Wah"
+    ],
+    "suggested_canonical": "Sony Wah"
+  },
+  {
+    "group": [
+      "Sony Yay",
+      "Sony Yay!",
+      "﻿﻿﻿﻿﻿sony Yay"
+    ],
+    "suggested_canonical": "Sony Yay"
+  },
+  {
+    "group": [
+      "Sports 18",
+      "Sports 18 1",
+      "Sports 18 3",
+      "Sports18",
+      "Sports18 1",
+      "Sports18 2",
+      "Sports18 3"
+    ],
+    "suggested_canonical": "Sports 18"
+  },
+  {
+    "group": [
+      "Sports 18 1 Hd",
+      "Sports 18 Hd",
+      "Sports18 1 Hd"
+    ],
+    "suggested_canonical": "Sports 18 1 Hd"
+  },
+  {
+    "group": [
+      "Srisaila Tv",
+      "Srisailam Tv"
+    ],
+    "suggested_canonical": "Srisaila Tv"
+  },
+  {
+    "group": [
+      "Sri Sankara",
+      "﻿﻿﻿﻿﻿sri Sankara"
+    ],
+    "suggested_canonical": "Sri Sankara"
+  },
+  {
+    "group": [
+      "Sri Venkateshwara Bhakti",
+      "Sri Venkateshwara Bhakti 2",
+      "Sri Venkateshwara Bhakti 3",
+      "Sri Venkateshwara Bhakti 4"
+    ],
+    "suggested_canonical": "Sri Venkateshwara Bhakti"
+  },
+  {
+    "group": [
+      "Star Bharat",
+      "Star Bharath"
+    ],
+    "suggested_canonical": "Star Bharat"
+  },
+  {
+    "group": [
+      "Star Bharat Hd",
+      "Star Bharath Hd"
+    ],
+    "suggested_canonical": "Star Bharat Hd"
+  },
+  {
+    "group": [
+      "Star Gold",
+      "Star Gold 2",
+      "Star Gold2",
+      "﻿﻿﻿﻿﻿star Gold"
+    ],
+    "suggested_canonical": "Star Gold"
+  },
+  {
+    "group": [
+      "Star Gold Thrills",
+      "Star Gold Trills"
+    ],
+    "suggested_canonical": "Star Gold Thrills"
+  },
+  {
+    "group": [
+      "Star Gold 2 Hd",
+      "Star Gold Hd"
+    ],
+    "suggested_canonical": "Star Gold 2 Hd"
+  },
+  {
+    "group": [
+      "Star Jalsa",
+      "Star Jalsha"
+    ],
+    "suggested_canonical": "Star Jalsa"
+  },
+  {
+    "group": [
+      "Star Jalsa Hd",
+      "Star Jalsha Hd"
+    ],
+    "suggested_canonical": "Star Jalsa Hd"
+  },
+  {
+    "group": [
+      "Star Jalsa Movies Hd",
+      "Star Jalsha Movies Hd"
+    ],
+    "suggested_canonical": "Star Jalsa Movies Hd"
+  },
+  {
+    "group": [
+      "Star Life",
+      "Starlife"
+    ],
+    "suggested_canonical": "Star Life"
+  },
+  {
+    "group": [
+      "Star Maa",
+      "Star ﻿﻿﻿﻿﻿maa"
+    ],
+    "suggested_canonical": "Star Maa"
+  },
+  {
+    "group": [
+      "Star Plus",
+      "﻿﻿﻿﻿﻿star Plus"
+    ],
+    "suggested_canonical": "Star Plus"
+  },
+  {
+    "group": [
+      "Star Plus Hd",
+      "Star Plus Hd +1"
+    ],
+    "suggested_canonical": "Star Plus Hd"
+  },
+  {
+    "group": [
+      "Star Pravah Picture",
+      "Star Pravah Pictures"
+    ],
+    "suggested_canonical": "Star Pravah Picture"
+  },
+  {
+    "group": [
+      "Star Pravah Picture Hd",
+      "Star Pravah Pictures Hd"
+    ],
+    "suggested_canonical": "Star Pravah Picture Hd"
+  },
+  {
+    "group": [
+      "Star Promo",
+      "Star Promo 1",
+      "Star Promo 2"
+    ],
+    "suggested_canonical": "Star Promo"
+  },
+  {
+    "group": [
+      "Star Sports",
+      "Star Sports 1",
+      "Star Sports 2",
+      "Star Sports 3",
+      "Star Sports1",
+      "Star Sports2",
+      "Star Sports3",
+      "Star Sports4"
+    ],
+    "suggested_canonical": "Star Sports"
+  },
+  {
+    "group": [
+      "Star Sports 1 English",
+      "Star Sports1 English"
+    ],
+    "suggested_canonical": "Star Sports 1 English"
+  },
+  {
+    "group": [
+      "Star Sports 1 Hindi",
+      "Star Sports Hindi",
+      "Star Sports Hindi 1",
+      "Star Sports1 Hindi",
+      "Star Sports2 Hindi"
+    ],
+    "suggested_canonical": "Star Sports 1 Hindi"
+  },
+  {
+    "group": [
+      "Star Sports 1 Kannada",
+      "Star Sports Kannada",
+      "Star Sports Kannada 1",
+      "Star Sports1 Kannada",
+      "Star Sports2 Kannada"
+    ],
+    "suggested_canonical": "Star Sports 1 Kannada"
+  },
+  {
+    "group": [
+      "Star Sports 1 Select",
+      "Star Sports Select 1",
+      "Star Sports Select 2",
+      "Star Sports Select1",
+      "Star Sports Select2"
+    ],
+    "suggested_canonical": "Star Sports 1 Select"
+  },
+  {
+    "group": [
+      "Star Sports 1 Tamil",
+      "Star Sports Tamil",
+      "Star Sports1 Tamil",
+      "Star Sports2 Tamil"
+    ],
+    "suggested_canonical": "Star Sports 1 Tamil"
+  },
+  {
+    "group": [
+      "Star Sports 1 Telugu",
+      "Star Sports Telugu",
+      "Star Sports1 Telugu",
+      "Star Sports2 Telugu"
+    ],
+    "suggested_canonical": "Star Sports 1 Telugu"
+  },
+  {
+    "group": [
+      "Star Sports 2 (6:00)",
+      "Star Sports 3 (2:00)"
+    ],
+    "suggested_canonical": "Star Sports 2 (6:00)"
+  },
+  {
+    "group": [
+      "Star Sports First",
+      "Star Sports Frist"
+    ],
+    "suggested_canonical": "Star Sports First"
+  },
+  {
+    "group": [
+      "Star Sports Hd1",
+      "Star Sports Hd2"
+    ],
+    "suggested_canonical": "Star Sports Hd1"
+  },
+  {
+    "group": [
+      "Star Sports Promo",
+      "Star Sports Promo3",
+      "Star Sports Promo4"
+    ],
+    "suggested_canonical": "Star Sports Promo"
+  },
+  {
+    "group": [
+      "Star Sports Select 1 Hindi",
+      "Star Sports Select1 Hindi"
+    ],
+    "suggested_canonical": "Star Sports Select 1 Hindi"
+  },
+  {
+    "group": [
+      "Star Sports Select Hd1",
+      "Star Sports Select Hd2"
+    ],
+    "suggested_canonical": "Star Sports Select Hd1"
+  },
+  {
+    "group": [
+      "Star Sports 1 Hd",
+      "Star Sports 2 Hd",
+      "Star Sports Hd",
+      "Star Sports Hd 1",
+      "Star Sports Hd 2",
+      "Star Sports1 Hd"
+    ],
+    "suggested_canonical": "Star Sports 1 Hd"
+  },
+  {
+    "group": [
+      "Star Sports 1 Hindi Hd",
+      "Star Sports 2 Hindi Hd",
+      "Star Sports Hindi 1 Hd",
+      "Star Sports1 Hindi Hd"
+    ],
+    "suggested_canonical": "Star Sports 1 Hindi Hd"
+  },
+  {
+    "group": [
+      "Star Sports 1 Tamil Hd",
+      "Star Sports 2 Tamil Hd"
+    ],
+    "suggested_canonical": "Star Sports 1 Tamil Hd"
+  },
+  {
+    "group": [
+      "Star Sports 1 Telugu Hd",
+      "Star Sports 2 Telugu Hd"
+    ],
+    "suggested_canonical": "Star Sports 1 Telugu Hd"
+  },
+  {
+    "group": [
+      "Star Sports Select 1 Hd",
+      "Star Sports Select 2 Hd",
+      "Star Sports Select Hd 1",
+      "Star Sports Select Hd 2",
+      "Star Sports Select1 Hd",
+      "Star Sports Select2 Hd"
+    ],
+    "suggested_canonical": "Star Sports Select 1 Hd"
+  },
+  {
+    "group": [
+      "Star Suvarana Hd",
+      "Star Suvarna Hd"
+    ],
+    "suggested_canonical": "Star Suvarana Hd"
+  },
+  {
+    "group": [
+      "Star Vijay",
+      "Star Vijaya"
+    ],
+    "suggested_canonical": "Star Vijay"
+  },
+  {
+    "group": [
+      "Studio One",
+      "Studio One +",
+      "Studio One+",
+      "﻿﻿﻿﻿﻿studio One"
+    ],
+    "suggested_canonical": "Studio One"
+  },
+  {
+    "group": [
+      "Studio Yuva",
+      "﻿﻿﻿﻿﻿studio Yuva"
+    ],
+    "suggested_canonical": "Studio Yuva"
+  },
+  {
+    "group": [
+      "Subha Vaartha",
+      "Subhavaartha",
+      "Subhavaartha Tv"
+    ],
+    "suggested_canonical": "Subha Vaartha"
+  },
+  {
+    "group": [
+      "Subhavartha",
+      "Subhav﻿﻿﻿﻿﻿artha"
+    ],
+    "suggested_canonical": "Subhavartha"
+  },
+  {
+    "group": [
+      "Subharathi (Free)",
+      "Subharati Free"
+    ],
+    "suggested_canonical": "Subharathi (Free)"
+  },
+  {
+    "group": [
+      "Sudarsh News",
+      "Sudarshn News"
+    ],
+    "suggested_canonical": "Sudarsh News"
+  },
+  {
+    "group": [
+      "Surya Bhakthi",
+      "Surya Bhakthi Tv"
+    ],
+    "suggested_canonical": "Surya Bhakthi"
+  },
+  {
+    "group": [
+      "Surya Bhojapuri",
+      "Surya Bhojpuri"
+    ],
+    "suggested_canonical": "Surya Bhojapuri"
+  },
+  {
+    "group": [
+      "Surya Movie",
+      "Surya Movies"
+    ],
+    "suggested_canonical": "Surya Movie"
+  },
+  {
+    "group": [
+      "Svbc 3 Kannada",
+      "Svbc 3kannada"
+    ],
+    "suggested_canonical": "Svbc 3 Kannada"
+  },
+  {
+    "group": [
+      "Svbc Hindi",
+      "Svbc- Hindi"
+    ],
+    "suggested_canonical": "Svbc Hindi"
+  },
+  {
+    "group": [
+      "Svbc Ttd 2",
+      "Svbc Ttd2"
+    ],
+    "suggested_canonical": "Svbc Ttd 2"
+  },
+  {
+    "group": [
+      "Swaraj Expess",
+      "Swaraj Exppress",
+      "Swaraj Express",
+      "Swaraj Expresss"
+    ],
+    "suggested_canonical": "Swaraj Expess"
+  },
+  {
+    "group": [
+      "Swaraj Exprees",
+      "Swaraj Expres"
+    ],
+    "suggested_canonical": "Swaraj Exprees"
+  },
+  {
+    "group": [
+      "Swatantra",
+      "﻿﻿﻿﻿﻿swatantra"
+    ],
+    "suggested_canonical": "Swatantra"
+  },
+  {
+    "group": [
+      "Swayam Prabha -1",
+      "Swayam Prabha -10",
+      "Swayam Prabha -11",
+      "Swayam Prabha -12",
+      "Swayam Prabha -13",
+      "Swayam Prabha -14",
+      "Swayam Prabha -15",
+      "Swayam Prabha -16",
+      "Swayam Prabha -17",
+      "Swayam Prabha -18",
+      "Swayam Prabha -19",
+      "Swayam Prabha -2",
+      "Swayam Prabha -21",
+      "Swayam Prabha -3",
+      "Swayam Prabha -31",
+      "Swayam Prabha -4",
+      "Swayam Prabha -5",
+      "Swayam Prabha -6",
+      "Swayam Prabha -7",
+      "Swayam Prabha -8",
+      "Swayam Prabha -9",
+      "Swayam Prabha 10",
+      "Swayam Prabha 11",
+      "Swayam Prabha 12",
+      "Swayam Prabha 13",
+      "Swayam Prabha 14",
+      "Swayam Prabha 15",
+      "Swayam Prabha 16",
+      "Swayam Prabha 17",
+      "Swayam Prabha 18",
+      "Swayam Prabha 19",
+      "Swayam Prabha 21",
+      "Swayam Prabha 31",
+      "Swayam Prabha 5",
+      "Swayam Prabha 6",
+      "Swayam Prabha 7",
+      "Swayam Prabha 8",
+      "Swayam Prabha 9"
+    ],
+    "suggested_canonical": "Swayam Prabha -1"
+  },
+  {
+    "group": [
+      "Swayam Prabha -20",
+      "Swayam Prabha -22",
+      "Swayam Prabha -23",
+      "Swayam Prabha -24",
+      "Swayam Prabha -25",
+      "Swayam Prabha -26",
+      "Swayam Prabha -27",
+      "Swayam Prabha -28",
+      "Swayam Prabha -29",
+      "Swayam Prabha -30",
+      "Swayam Prabha -32",
+      "Swayam Prabha 20",
+      "Swayam Prabha 22",
+      "Swayam Prabha 23",
+      "Swayam Prabha 24",
+      "Swayam Prabha 25",
+      "Swayam Prabha 26",
+      "Swayam Prabha 27",
+      "Swayam Prabha 28",
+      "Swayam Prabha 29"
+    ],
+    "suggested_canonical": "Swayam Prabha -20"
+  },
+  {
+    "group": [
+      "T N Navbharat",
+      "T.n Navbharat",
+      "T.n.navbharat"
+    ],
+    "suggested_canonical": "T N Navbharat"
+  },
+  {
+    "group": [
+      "T.n.navbharat (Alacarte)",
+      "T.n.navbharat(Alacarte)"
+    ],
+    "suggested_canonical": "T.n.navbharat (Alacarte)"
+  },
+  {
+    "group": [
+      "T N Navbharat Hd",
+      "T.n.navbharat Hd"
+    ],
+    "suggested_canonical": "T N Navbharat Hd"
+  },
+  {
+    "group": [
+      "T-Sat Disha",
+      "Tsat Disha"
+    ],
+    "suggested_canonical": "T-Sat Disha"
+  },
+  {
+    "group": [
+      "T-Sat Nipuna",
+      "Tsat Nipuna"
+    ],
+    "suggested_canonical": "T-Sat Nipuna"
+  },
+  {
+    "group": [
+      "T-Sat Vidya",
+      "Tsat Vidya"
+    ],
+    "suggested_canonical": "T-Sat Vidya"
+  },
+  {
+    "group": [
+      "Tamilian Television",
+      "Tamilian Telvision"
+    ],
+    "suggested_canonical": "Tamilian Television"
+  },
+  {
+    "group": [
+      "Teleshopping 3",
+      "Teleshopping 4"
+    ],
+    "suggested_canonical": "Teleshopping 3"
+  },
+  {
+    "group": [
+      "The History Channel",
+      "﻿﻿﻿﻿﻿the History Channel"
+    ],
+    "suggested_canonical": "The History Channel"
+  },
+  {
+    "group": [
+      "The Q",
+      "﻿﻿﻿﻿﻿the Q"
+    ],
+    "suggested_canonical": "The Q"
+  },
+  {
+    "group": [
+      "Times Now Nababharat",
+      "Times Now Nabhabharat",
+      "Times Now Navabharat"
+    ],
+    "suggested_canonical": "Times Now Nababharat"
+  },
+  {
+    "group": [
+      "Times Now Nav Bharat",
+      "Times Now Navabharath",
+      "Times Now Navbhaat",
+      "Times Now Navbharat",
+      "Times Now Navbharath",
+      "Times Now Navbhart",
+      "Times Nownavbharat",
+      "Timesnow Navbharat"
+    ],
+    "suggested_canonical": "Times Now Nav Bharat"
+  },
+  {
+    "group": [
+      "Times Now Navbharat Hd",
+      "Times Now Navbharat(Hd)",
+      "Times Now Navnharat Hd",
+      "Timesnow Navbharat Hd"
+    ],
+    "suggested_canonical": "Times Now Navbharat Hd"
+  },
+  {
+    "group": [
+      "Times Now Wld Hd",
+      "Times Now World Hd"
+    ],
+    "suggested_canonical": "Times Now Wld Hd"
+  },
+  {
+    "group": [
+      "Times Now Navbharat Sd",
+      "Times Now Navbharat(Sd)"
+    ],
+    "suggested_canonical": "Times Now Navbharat Sd"
+  },
+  {
+    "group": [
+      "Total Hariyana",
+      "Total Haryana"
+    ],
+    "suggested_canonical": "Total Hariyana"
+  },
+  {
+    "group": [
+      "Travel Xp Tamil",
+      "Travelxp Tamil"
+    ],
+    "suggested_canonical": "Travel Xp Tamil"
+  },
+  {
+    "group": [
+      "Travel Xp Hd",
+      "Travelxp Hd"
+    ],
+    "suggested_canonical": "Travel Xp Hd"
+  },
+  {
+    "group": [
+      "Travel Xp Sd",
+      "Travelxp Sd"
+    ],
+    "suggested_canonical": "Travel Xp Sd"
+  },
+  {
+    "group": [
+      "Tulaja Bhavani Temple",
+      "Tulajabhavani Temple"
+    ],
+    "suggested_canonical": "Tulaja Bhavani Temple"
+  },
+  {
+    "group": [
+      "Tv 1",
+      "Tv1"
+    ],
+    "suggested_canonical": "Tv 1"
+  },
+  {
+    "group": [
+      "Tv 100",
+      "Tv100"
+    ],
+    "suggested_canonical": "Tv 100"
+  },
+  {
+    "group": [
+      "Tv 24",
+      "Tv24"
+    ],
+    "suggested_canonical": "Tv 24"
+  },
+  {
+    "group": [
+      "Tv 27 News",
+      "Tv27 News"
+    ],
+    "suggested_canonical": "Tv 27 News"
+  },
+  {
+    "group": [
+      "Tv 5",
+      "Tv5"
+    ],
+    "suggested_canonical": "Tv 5"
+  },
+  {
+    "group": [
+      "Tv 5 Kannada",
+      "Tv5 Kannada"
+    ],
+    "suggested_canonical": "Tv 5 Kannada"
+  },
+  {
+    "group": [
+      "Tv 5 Kannada News",
+      "Tv5 Kannada News"
+    ],
+    "suggested_canonical": "Tv 5 Kannada News"
+  },
+  {
+    "group": [
+      "Tv 5 Monde",
+      "Tv5 Monde"
+    ],
+    "suggested_canonical": "Tv 5 Monde"
+  },
+  {
+    "group": [
+      "Tv 5 Monde Asie",
+      "Tv5 Monde Asie"
+    ],
+    "suggested_canonical": "Tv 5 Monde Asie"
+  },
+  {
+    "group": [
+      "Tv 5 Munday",
+      "Tv5 Munday"
+    ],
+    "suggested_canonical": "Tv 5 Munday"
+  },
+  {
+    "group": [
+      "Tv 5 News",
+      "Tv5 News"
+    ],
+    "suggested_canonical": "Tv 5 News"
+  },
+  {
+    "group": [
+      "Tv 5 Telugu",
+      "Tv5 Telugu"
+    ],
+    "suggested_canonical": "Tv 5 Telugu"
+  },
+  {
+    "group": [
+      "Tv 9 Bangla",
+      "Tv9 Bangla"
+    ],
+    "suggested_canonical": "Tv 9 Bangla"
+  },
+  {
+    "group": [
+      "Tv 9 Bharat Varsh",
+      "Tv 9 Bharathvarsh",
+      "Tv 9 Bharatvarash",
+      "Tv 9 Bharatvars",
+      "Tv 9 Bharatvarsh",
+      "Tv 9 Bharatwarsh",
+      "Tv9 Bharat Varsh",
+      "Tv9 Bharathvarsh",
+      "Tv9 Bharatvar",
+      "Tv9 Bharatvars",
+      "Tv9 Bharatvarsh",
+      "Tv9 Bharatvarsha",
+      "Tv9 Bharatvasrh",
+      "Tv9 Bharatvrash",
+      "Tv9bharatvarsh",
+      "﻿﻿﻿﻿﻿tv9 Bharat Varsh"
+    ],
+    "suggested_canonical": "Tv 9 Bharat Varsh"
+  },
+  {
+    "group": [
+      "Tv 9 Bhartvarsh",
+      "Tv9 Bhartvarsh"
+    ],
+    "suggested_canonical": "Tv 9 Bhartvarsh"
+  },
+  {
+    "group": [
+      "Tv 9 Gujarat",
+      "Tv 9 Gujarati",
+      "Tv9 Gujarati"
+    ],
+    "suggested_canonical": "Tv 9 Gujarat"
+  },
+  {
+    "group": [
+      "Tv 9 Gujrati",
+      "Tv9 Gujrathi",
+      "Tv9 Gujrati"
+    ],
+    "suggested_canonical": "Tv 9 Gujrati"
+  },
+  {
+    "group": [
+      "Tv 9 Kannada",
+      "Tv9 Kannada",
+      "﻿﻿﻿﻿﻿tv9 Kannada"
+    ],
+    "suggested_canonical": "Tv 9 Kannada"
+  },
+  {
+    "group": [
+      "Tv 9 Marathi",
+      "Tv9 Marathi",
+      "Tv9 Marati",
+      "﻿﻿﻿﻿﻿tv9 Marathi"
+    ],
+    "suggested_canonical": "Tv 9 Marathi"
+  },
+  {
+    "group": [
+      "Tv 9 Mumbai",
+      "Tv9 Mumbai"
+    ],
+    "suggested_canonical": "Tv 9 Mumbai"
+  },
+  {
+    "group": [
+      "Tv 9 Tamil",
+      "Tv9 Tamil"
+    ],
+    "suggested_canonical": "Tv 9 Tamil"
+  },
+  {
+    "group": [
+      "Tv 9 Telugu",
+      "Tv9 Telugu"
+    ],
+    "suggested_canonical": "Tv 9 Telugu"
+  },
+  {
+    "group": [
+      "Tv9 Telugu News",
+      "Tv9 Telugunews"
+    ],
+    "suggested_canonical": "Tv9 Telugu News"
+  },
+  {
+    "group": [
+      "Twenty Four",
+      "Twentyfour"
+    ],
+    "suggested_canonical": "Twenty Four"
+  },
+  {
+    "group": [
+      "Unite8 Sports 1 Hd",
+      "Unite8 Sports 2 Hd"
+    ],
+    "suggested_canonical": "Unite8 Sports 1 Hd"
+  },
+  {
+    "group": [
+      "Utv Bindas",
+      "Utv Bindass"
+    ],
+    "suggested_canonical": "Utv Bindas"
+  },
+  {
+    "group": [
+      "V 6 News",
+      "V6 News",
+      "﻿﻿﻿﻿﻿v6 News"
+    ],
+    "suggested_canonical": "V 6 News"
+  },
+  {
+    "group": [
+      "V Tv Gujarati",
+      "Vtv Gujarati"
+    ],
+    "suggested_canonical": "V Tv Gujarati"
+  },
+  {
+    "group": [
+      "V Tv News",
+      "Vtv News"
+    ],
+    "suggested_canonical": "V Tv News"
+  },
+  {
+    "group": [
+      "Valicham Plus (Free)",
+      "Valicham Plus Free"
+    ],
+    "suggested_canonical": "Valicham Plus (Free)"
+  },
+  {
+    "group": [
+      "Vanitha",
+      "﻿﻿﻿﻿﻿vanitha"
+    ],
+    "suggested_canonical": "Vanitha"
+  },
+  {
+    "group": [
+      "Vasanth Tv (Free)",
+      "Vasanth Tv Free"
+    ],
+    "suggested_canonical": "Vasanth Tv (Free)"
+  },
+  {
+    "group": [
+      "Vendhar Tv (Free)",
+      "Vendhar Tv Free"
+    ],
+    "suggested_canonical": "Vendhar Tv (Free)"
+  },
+  {
+    "group": [
+      "Vh 1",
+      "Vh1"
+    ],
+    "suggested_canonical": "Vh 1"
+  },
+  {
+    "group": [
+      "Vh 1 Hd",
+      "Vh1 Hd"
+    ],
+    "suggested_canonical": "Vh 1 Hd"
+  },
+  {
+    "group": [
+      "Vidhya Channe 5",
+      "Vidhya Channe 6",
+      "Vidhya Channe 7"
+    ],
+    "suggested_canonical": "Vidhya Channe 5"
+  },
+  {
+    "group": [
+      "Wow Cinema",
+      "﻿﻿﻿﻿﻿wow Cinema"
+    ],
+    "suggested_canonical": "Wow Cinema"
+  },
+  {
+    "group": [
+      "Y One Tv",
+      "Yonetv"
+    ],
+    "suggested_canonical": "Y One Tv"
+  },
+  {
+    "group": [
+      "Zee 24 Kalaak",
+      "Zee 24 Kalak",
+      "Zee 24kalak"
+    ],
+    "suggested_canonical": "Zee 24 Kalaak"
+  },
+  {
+    "group": [
+      "Zee 24 Tas",
+      "Zee 24 Tass",
+      "Zee24 Tas"
+    ],
+    "suggested_canonical": "Zee 24 Tas"
+  },
+  {
+    "group": [
+      "Zee Action",
+      "﻿﻿﻿﻿﻿zee Action"
+    ],
+    "suggested_canonical": "Zee Action"
+  },
+  {
+    "group": [
+      "Zee Anmol Cinema",
+      "Zee Anmol Cinema 2"
+    ],
+    "suggested_canonical": "Zee Anmol Cinema"
+  },
+  {
+    "group": [
+      "Zee Bharart",
+      "Zee Bharat"
+    ],
+    "suggested_canonical": "Zee Bharart"
+  },
+  {
+    "group": [
+      "Zee Bihar & Jharkhand",
+      "Zee Bihar Jarkhand",
+      "Zee Bihar Jharkand",
+      "Zee Bihar Jharkhand"
+    ],
+    "suggested_canonical": "Zee Bihar & Jharkhand"
+  },
+  {
+    "group": [
+      "Zee Bihar Jha",
+      "Zee Bihar/Jha",
+      "Zee Bihar/Jhar"
+    ],
+    "suggested_canonical": "Zee Bihar Jha"
+  },
+  {
+    "group": [
+      "Zee Bihar Jhr",
+      "Zee Bihar/Jhr"
+    ],
+    "suggested_canonical": "Zee Bihar Jhr"
+  },
+  {
+    "group": [
+      "Zee Bihar Jh",
+      "Zee Bihar/Jh"
+    ],
+    "suggested_canonical": "Zee Bihar Jh"
+  },
+  {
+    "group": [
+      "Zee Biskope",
+      "Zee Biskopee"
+    ],
+    "suggested_canonical": "Zee Biskope"
+  },
+  {
+    "group": [
+      "Zee Br &Jh",
+      "Zee Br/Jh"
+    ],
+    "suggested_canonical": "Zee Br &Jh"
+  },
+  {
+    "group": [
+      "Zee Busines",
+      "Zee Business"
+    ],
+    "suggested_canonical": "Zee Busines"
+  },
+  {
+    "group": [
+      "Zee Busniess",
+      "Zee Busniss"
+    ],
+    "suggested_canonical": "Zee Busniess"
+  },
+  {
+    "group": [
+      "Zee Bussines",
+      "Zee Bussiness"
+    ],
+    "suggested_canonical": "Zee Bussines"
+  },
+  {
+    "group": [
+      "Zee Cinema Hd",
+      "Zee Cinema Hd +1"
+    ],
+    "suggested_canonical": "Zee Cinema Hd"
+  },
+  {
+    "group": [
+      "Zee Cinemaalu Hd",
+      "Zee Cinemalu Hd"
+    ],
+    "suggested_canonical": "Zee Cinemaalu Hd"
+  },
+  {
+    "group": [
+      "Zee Delhi Ncr",
+      "Zee Delhi/Ncr"
+    ],
+    "suggested_canonical": "Zee Delhi Ncr"
+  },
+  {
+    "group": [
+      "Zee Delhi Ncr Hr",
+      "Zee Delhi Ncr/ Hr"
+    ],
+    "suggested_canonical": "Zee Delhi Ncr Hr"
+  },
+  {
+    "group": [
+      "Zee Hindustain",
+      "Zee Hindustan",
+      "Zee Hindusthan",
+      "Zee Hindustion",
+      "﻿﻿﻿﻿﻿zee Hindustan"
+    ],
+    "suggested_canonical": "Zee Hindustain"
+  },
+  {
+    "group": [
+      "Zee Kannaa",
+      "Zee Kannada"
+    ],
+    "suggested_canonical": "Zee Kannaa"
+  },
+  {
+    "group": [
+      "Zee Kannad News",
+      "Zee Kannada News"
+    ],
+    "suggested_canonical": "Zee Kannad News"
+  },
+  {
+    "group": [
+      "Zee Mp Cg",
+      "Zee Mp/Cg"
+    ],
+    "suggested_canonical": "Zee Mp Cg"
+  },
+  {
+    "group": [
+      "Zee News",
+      "﻿﻿﻿﻿﻿zee News"
+    ],
+    "suggested_canonical": "Zee News"
+  },
+  {
+    "group": [
+      "Zee News Rajastha",
+      "Zee News Rajasthan",
+      "Zee News Rajsthan"
+    ],
+    "suggested_canonical": "Zee News Rajastha"
+  },
+  {
+    "group": [
+      "Zee News Mp Cg",
+      "Zee News Mp+cg",
+      "Zee News Mp/Cg"
+    ],
+    "suggested_canonical": "Zee News Mp Cg"
+  },
+  {
+    "group": [
+      "Zee News Up Uk",
+      "Zee News Up/Uk"
+    ],
+    "suggested_canonical": "Zee News Up Uk"
+  },
+  {
+    "group": [
+      "Zee Pichar",
+      "Zee Pichars"
+    ],
+    "suggested_canonical": "Zee Pichar"
+  },
+  {
+    "group": [
+      "Zee Pun /Har",
+      "Zee Pun/Har"
+    ],
+    "suggested_canonical": "Zee Pun /Har"
+  },
+  {
+    "group": [
+      "Zee Pun/Har/Hi",
+      "Zee Pun/Har/Him"
+    ],
+    "suggested_canonical": "Zee Pun/Har/Hi"
+  },
+  {
+    "group": [
+      "Zee Punjab & Haryana",
+      "Zee Punjab Hariyana",
+      "Zee Punjab Haryana"
+    ],
+    "suggested_canonical": "Zee Punjab & Haryana"
+  },
+  {
+    "group": [
+      "Zee Punjabi Harayana",
+      "Zee Punjabi Haryana"
+    ],
+    "suggested_canonical": "Zee Punjabi Harayana"
+  },
+  {
+    "group": [
+      "Zee Rajastahan News",
+      "Zee Rajasthan News"
+    ],
+    "suggested_canonical": "Zee Rajastahan News"
+  },
+  {
+    "group": [
+      "Zee Rajastan",
+      "Zee Rajasthan"
+    ],
+    "suggested_canonical": "Zee Rajastan"
+  },
+  {
+    "group": [
+      "Zee Telugu",
+      "﻿﻿﻿﻿﻿zee Telugu"
+    ],
+    "suggested_canonical": "Zee Telugu"
+  },
+  {
+    "group": [
+      "Zee Up Uk",
+      "Zee Up-Uk",
+      "Zee Up/ Uk",
+      "Zee Up/Uk"
+    ],
+    "suggested_canonical": "Zee Up Uk"
+  },
+  {
+    "group": [
+      "Zee Wion",
+      "﻿﻿﻿﻿﻿zee Wion"
+    ],
+    "suggested_canonical": "Zee Wion"
+  },
+  {
+    "group": [
+      "Zee Zest",
+      "﻿﻿﻿﻿﻿zee Zest"
+    ],
+    "suggested_canonical": "Zee Zest"
+  },
+  {
+    "group": [
+      "Zoom",
+      "﻿﻿﻿﻿﻿zoom"
+    ],
+    "suggested_canonical": "Zoom"
+  }
+]

@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+import argparse
 import json
 import logging
+import re
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from parser import parse_workbook
+from parser import CHANNEL_NORMALIZATION_PATH, build_channel_review_suggestions, parse_workbook
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW_DIR = ROOT / "data" / "raw"
@@ -15,6 +17,7 @@ PROCESSED_DIR = ROOT / "processed"
 DISTRIBUTION_PATH = PROCESSED_DIR / "distribution_master.json"
 CHANNEL_WEEKLY_PATH = PROCESSED_DIR / "channel_weekly.json"
 PROCESSED_LOG_PATH = PROCESSED_DIR / "_processed_log.json"
+CHANNEL_REVIEW_SUGGESTIONS_PATH = PROCESSED_DIR / "channel_review_suggestions.json"
 
 logging.basicConfig(
     level=logging.INFO,
@@ -49,6 +52,13 @@ def list_unprocessed_files(processed_log: dict[str, Any]) -> list[Path]:
     ]
 
 
+def week_sort_key(label: str) -> tuple[int, int | str]:
+    match = re.search(r"week\W*([0-9]{1,2})", label, flags=re.IGNORECASE)
+    if match:
+        return (0, int(match.group(1)))
+    return (1, label.lower())
+
+
 def upsert_distribution(
     existing_rows: list[dict[str, Any]],
     new_rows: list[dict[str, Any]],
@@ -79,10 +89,26 @@ def merge_channel_weekly(
 
     for row in existing_rows:
         key = (row["headend_id"], str(row["lcn_no"]))
-        by_key[key] = row
+        if "weeks" in row and isinstance(row["weeks"], dict):
+            by_key[key] = row
+            continue
+
+        migrated_entry = {
+            "headend_id": row["headend_id"],
+            "lcn_no": str(row["lcn_no"]),
+            "weeks": {},
+        }
+        for field, value in row.items():
+            if field in {"headend_id", "lcn_no"}:
+                continue
+            migrated_entry["weeks"][field] = {
+                "channel_name": value,
+                "date_posted": field,
+            }
+        by_key[key] = migrated_entry
 
     for row in new_rows:
-        week = row.get("date") or "NA"
+        week = row.get("week_label") or row.get("date") or "Unknown Week"
 
         key = (row["headend_id"], str(row["lcn_no"]))
         entry = by_key.get(
@@ -90,10 +116,20 @@ def merge_channel_weekly(
             {
                 "headend_id": row["headend_id"],
                 "lcn_no": str(row["lcn_no"]),
+                "weeks": {},
             },
         )
-        entry[week] = row["channel_name"]
+        entry["weeks"][week] = {
+            "channel_name": row["channel_name"],
+            "date_posted": row.get("date") or "NA",
+        }
         by_key[key] = entry
+
+    for entry in by_key.values():
+        entry["weeks"] = {
+            label: entry["weeks"][label]
+            for label in sorted(entry["weeks"], key=week_sort_key)
+        }
 
     def sort_key(item: dict[str, Any]) -> tuple[str, int | str]:
         lcn_value = str(item.get("lcn_no") or "")
@@ -107,6 +143,7 @@ def merge_channel_weekly(
 def update_processed_log(
     processed_log: dict[str, Any],
     file_path: Path,
+    week_label: str,
     week_dates: list[str],
     headend_count: int,
     channel_count: int,
@@ -115,6 +152,7 @@ def update_processed_log(
     processed_files.append(
         {
             "filename": file_path.name,
+            "week_label": week_label,
             "processed_at": datetime.now().isoformat(timespec="seconds"),
             "weeks_found": week_dates,
             "headend_snapshots": headend_count,
@@ -138,7 +176,7 @@ def log_normalization_warnings(aggregate: dict[str, Counter[str]]) -> None:
         return
 
     LOGGER.warning("Unrecognized values this run - add to normalization map if valid:")
-    for field in ("state", "headend_location", "barc_market"):
+    for field in ("state", "headend_location", "barc_market", "channel_name"):
         counter = active_fields.get(field)
         if not counter:
             continue
@@ -147,32 +185,79 @@ def log_normalization_warnings(aggregate: dict[str, Counter[str]]) -> None:
             LOGGER.warning("    %s (%s rows)", raw_value, count)
 
 
+def extract_channel_names(channel_weekly_rows: list[dict[str, Any]]) -> set[str]:
+    names: set[str] = set()
+    for row in channel_weekly_rows:
+        if "weeks" in row and isinstance(row["weeks"], dict):
+            for week_payload in row["weeks"].values():
+                value = (week_payload or {}).get("channel_name")
+                if value and str(value).strip() and str(value).strip().upper() != "NA":
+                    names.add(str(value).strip())
+            continue
+
+        for key, value in row.items():
+            if key in {"headend_id", "lcn_no"}:
+                continue
+            if value and str(value).strip() and str(value).strip().upper() != "NA":
+                names.add(str(value).strip())
+    return names
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Process weekly workbook snapshots into dashboard JSON.")
+    parser.add_argument("--rebuild", action="store_true", help="Rebuild processed outputs from all files in data/raw.")
+    return parser.parse_args()
+
+
 def main() -> int:
+    args = parse_args()
     ensure_directories()
-    distribution_master = load_json(DISTRIBUTION_PATH, [])
-    channel_weekly = load_json(CHANNEL_WEEKLY_PATH, [])
-    processed_log = load_json(PROCESSED_LOG_PATH, {"processed_files": []})
+    if args.rebuild:
+        distribution_master = []
+        channel_weekly = []
+        processed_log = {"processed_files": []}
+        pending_files = [
+            path
+            for path in sorted(RAW_DIR.glob("*.xlsx"))
+            if not path.name.startswith("~$")
+        ]
+    else:
+        distribution_master = load_json(DISTRIBUTION_PATH, [])
+        channel_weekly = load_json(CHANNEL_WEEKLY_PATH, [])
+        processed_log = load_json(PROCESSED_LOG_PATH, {"processed_files": []})
+        pending_files = list_unprocessed_files(processed_log)
 
     normalization_warnings: dict[str, Counter[str]] = {
         "state": Counter(),
         "headend_location": Counter(),
         "barc_market": Counter(),
+        "channel_name": Counter(),
     }
-
-    pending_files = list_unprocessed_files(processed_log)
+    known_channel_names = extract_channel_names(channel_weekly)
     if not pending_files:
+        write_json(
+            CHANNEL_REVIEW_SUGGESTIONS_PATH,
+            build_channel_review_suggestions(sorted(extract_channel_names(channel_weekly))),
+        )
         LOGGER.info("No new Excel files found in %s.", RAW_DIR)
+        LOGGER.info("Updated %s", CHANNEL_REVIEW_SUGGESTIONS_PATH)
         return 0
 
     for workbook_path in pending_files:
         LOGGER.info("Processing workbook: %s", workbook_path.name)
         parsed = parse_workbook(workbook_path)
+        for row in parsed.channel_rows:
+            channel_name = row.get("channel_name")
+            if channel_name and channel_name not in known_channel_names:
+                normalization_warnings["channel_name"][channel_name] += 1
+                known_channel_names.add(channel_name)
         distribution_master = upsert_distribution(distribution_master, parsed.distribution_rows)
         channel_weekly = merge_channel_weekly(channel_weekly, parsed.channel_rows)
         merge_normalization_warnings(normalization_warnings, parsed.normalization_warnings)
         processed_log = update_processed_log(
             processed_log=processed_log,
             file_path=workbook_path,
+            week_label=parsed.week_label,
             week_dates=parsed.week_dates,
             headend_count=len(parsed.distribution_rows),
             channel_count=len(parsed.channel_rows),
@@ -181,19 +266,25 @@ def main() -> int:
     write_json(DISTRIBUTION_PATH, distribution_master)
     write_json(CHANNEL_WEEKLY_PATH, channel_weekly)
     write_json(PROCESSED_LOG_PATH, processed_log)
+    write_json(
+        CHANNEL_REVIEW_SUGGESTIONS_PATH,
+        build_channel_review_suggestions(sorted(extract_channel_names(channel_weekly))),
+    )
 
     all_weeks = sorted(
         {
-            key
+            week_label
             for row in channel_weekly
-            for key in row.keys()
-            if key not in {"headend_id", "lcn_no"}
-        }
+            for week_label in (row.get("weeks") or {}).keys()
+        },
+        key=week_sort_key,
     )
 
     LOGGER.info("Updated %s", DISTRIBUTION_PATH)
     LOGGER.info("Updated %s", CHANNEL_WEEKLY_PATH)
     LOGGER.info("Updated %s", PROCESSED_LOG_PATH)
+    LOGGER.info("Updated %s", CHANNEL_REVIEW_SUGGESTIONS_PATH)
+    LOGGER.info("Approved channel normalization map: %s", CHANNEL_NORMALIZATION_PATH)
     LOGGER.info("Total headends: %s", len(distribution_master))
     LOGGER.info("Total channel rows: %s", len(channel_weekly))
     LOGGER.info("Available week columns: %s", len(all_weeks))
