@@ -195,13 +195,13 @@
     "week_from": "2026-07-20",
     "week_to": "2026-07-21",
     "file": "./data/comparison/2026-07-20__2026-07-21.json",
-    "record_count": 18634
+    "record_count": 52756
   },
   {
     "week_from": "2026-07-21",
     "week_to": "2026-07-28",
     "file": "./data/comparison/2026-07-21__2026-07-28.json",
-    "record_count": 9578
+    "record_count": 43700
   },
   {
     "week_from": "2026-07-28",

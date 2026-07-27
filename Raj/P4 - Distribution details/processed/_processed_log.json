@@ -2,7 +2,7 @@
   "processed_files": [
     {
       "filename": "Vertical mapping -21-July-26.xlsx",
-      "processed_at": "2026-07-24T12:26:27",
+      "processed_at": "2026-07-24T18:48:53",
       "weeks_found": [
         "2026-01-07",
         "2026-01-13",
@@ -41,7 +41,7 @@
         "2026-07-28",
         "2027-07-18"
       ],
-      "headend_snapshots": 687,
+      "headend_snapshots": 686,
       "channel_rows": 65016
     }
   ]

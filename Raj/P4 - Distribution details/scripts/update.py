@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -81,9 +82,7 @@ def merge_channel_weekly(
         by_key[key] = row
 
     for row in new_rows:
-        week = row.get("date")
-        if not week:
-            continue
+        week = row.get("date") or "NA"
 
         key = (row["headend_id"], str(row["lcn_no"]))
         entry = by_key.get(
@@ -125,12 +124,40 @@ def update_processed_log(
     return processed_log
 
 
+def merge_normalization_warnings(
+    aggregate: dict[str, Counter[str]],
+    current: dict[str, dict[str, int]],
+) -> None:
+    for field, values in current.items():
+        aggregate.setdefault(field, Counter()).update(values)
+
+
+def log_normalization_warnings(aggregate: dict[str, Counter[str]]) -> None:
+    active_fields = {field: counter for field, counter in aggregate.items() if counter}
+    if not active_fields:
+        return
+
+    LOGGER.warning("Unrecognized values this run - add to normalization map if valid:")
+    for field in ("state", "headend_location", "barc_market"):
+        counter = active_fields.get(field)
+        if not counter:
+            continue
+        LOGGER.warning("  %s:", field)
+        for raw_value, count in counter.most_common():
+            LOGGER.warning("    %s (%s rows)", raw_value, count)
+
+
 def main() -> int:
     ensure_directories()
-
     distribution_master = load_json(DISTRIBUTION_PATH, [])
     channel_weekly = load_json(CHANNEL_WEEKLY_PATH, [])
     processed_log = load_json(PROCESSED_LOG_PATH, {"processed_files": []})
+
+    normalization_warnings: dict[str, Counter[str]] = {
+        "state": Counter(),
+        "headend_location": Counter(),
+        "barc_market": Counter(),
+    }
 
     pending_files = list_unprocessed_files(processed_log)
     if not pending_files:
@@ -142,6 +169,7 @@ def main() -> int:
         parsed = parse_workbook(workbook_path)
         distribution_master = upsert_distribution(distribution_master, parsed.distribution_rows)
         channel_weekly = merge_channel_weekly(channel_weekly, parsed.channel_rows)
+        merge_normalization_warnings(normalization_warnings, parsed.normalization_warnings)
         processed_log = update_processed_log(
             processed_log=processed_log,
             file_path=workbook_path,
@@ -169,6 +197,7 @@ def main() -> int:
     LOGGER.info("Total headends: %s", len(distribution_master))
     LOGGER.info("Total channel rows: %s", len(channel_weekly))
     LOGGER.info("Available week columns: %s", len(all_weeks))
+    log_normalization_warnings(normalization_warnings)
     return 0
 
 

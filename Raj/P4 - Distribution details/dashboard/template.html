@@ -552,6 +552,7 @@
       font-size: 0.9rem;
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       font-weight: 400;
+      color: #18332d;
     }
 
     th {
@@ -595,6 +596,51 @@
       padding: 22px;
       text-align: center;
       color: var(--muted);
+    }
+
+    .subhead-row th {
+      font-size: 0.72rem;
+      font-weight: 600;
+      background: #f2f7f5;
+      color: #45655c;
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 41px;
+      z-index: 1;
+      text-align: center;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    .week-group-header {
+      text-align: center;
+      font-size: 0.8rem;
+      letter-spacing: 0.03em;
+      min-width: 220px;
+    }
+
+    .channel-column {
+      min-width: 150px;
+    }
+
+    .date-column {
+      min-width: 120px;
+    }
+
+    .channel-value {
+      font-weight: 500;
+      color: #102923;
+    }
+
+    .date-value {
+      color: #355149;
+      font-size: 0.82rem;
+    }
+
+    .date-value.na-value,
+    .channel-value.na-value {
+      color: #5d766e;
+      font-style: italic;
     }
 
     .pill {
@@ -902,9 +948,6 @@
       locationFilterControl: document.getElementById("locationFilterControl"),
       stateFilterControl: document.getElementById("stateFilterControl"),
       marketFilterControl: document.getElementById("marketFilterControl"),
-      stateSegments: document.getElementById("stateSegments"),
-      marketSegments: document.getElementById("marketSegments"),
-      quickStateSegments: document.getElementById("quickStateSegments"),
       headendTableBody: document.getElementById("headendTableBody"),
       totalHeadends: document.getElementById("totalHeadends"),
       totalStbs: document.getElementById("totalStbs"),
@@ -968,7 +1011,6 @@
       }
 
       updateDependentHeadendFilters();
-      renderSegmentFilters();
 
       elements.table2StateFilter.value = sharedState.table2State || "";
       updateTable2FilterOptions();
@@ -982,14 +1024,28 @@
 
     function downloadDashboardSnapshot() {
       const payload = JSON.stringify(getShareableState());
-      const serializer = new XMLSerializer();
       const clonedDocument = document.documentElement.cloneNode(true);
       const sharedScript = clonedDocument.querySelector("#shared-dashboard-state");
       if (sharedScript) {
         sharedScript.textContent = `window.__DASHBOARD_SHARED_STATE__ = ${payload};`;
       }
+      clonedDocument.querySelectorAll(".multiselect.open").forEach(element => {
+        element.classList.remove("open");
+      });
+      clonedDocument.querySelectorAll("[data-resizing]").forEach(element => {
+        element.removeAttribute("data-resizing");
+      });
+      clonedDocument.querySelectorAll(".col-resizer.active").forEach(element => {
+        element.classList.remove("active");
+      });
+      clonedDocument.querySelectorAll(".table-panel-fullscreen").forEach(element => {
+        element.classList.remove("table-panel-fullscreen");
+      });
+      clonedDocument.querySelectorAll("#table1FullscreenBtn, #table2FullscreenBtn").forEach(button => {
+        button.textContent = "Full Screen";
+      });
 
-      const html = "<!DOCTYPE html>\n" + serializer.serializeToString(clonedDocument);
+      const html = "<!DOCTYPE html>\n" + clonedDocument.outerHTML.replace(/\sxmlns="http:\/\/www\.w3\.org\/1999\/xhtml"/, "");
       const blob = new Blob([html], { type: "text/html;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -997,27 +1053,6 @@
       link.download = "channel_distribution_dashboard_shared.html";
       link.click();
       URL.revokeObjectURL(url);
-    }
-
-    function renderSegmentGroup(container, values, selectedValue, labelPrefix, onSelect) {
-      const limitedValues = values.slice(0, 12);
-      container.innerHTML = "";
-
-      const allButton = document.createElement("button");
-      allButton.type = "button";
-      allButton.className = `segment-btn ${selectedValue ? "" : "active"}`;
-      allButton.textContent = `All ${labelPrefix}`;
-      allButton.addEventListener("click", () => onSelect(""));
-      container.appendChild(allButton);
-
-      limitedValues.forEach(value => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = `segment-btn ${selectedValue === value ? "active" : ""}`;
-        button.textContent = value;
-        button.addEventListener("click", () => onSelect(value));
-        container.appendChild(button);
-      });
     }
 
     function latestProcessedEntry() {
@@ -1113,6 +1148,18 @@
       return `${values.length} selected`;
     }
 
+    function normalizeFilterSelection(selectedValues, availableValues) {
+      if (!selectedValues.length) {
+        return [];
+      }
+
+      const hasEveryAvailableValue =
+        selectedValues.length === availableValues.length &&
+        availableValues.every(value => selectedValues.includes(value));
+
+      return hasEveryAvailableValue ? [] : selectedValues;
+    }
+
     function renderFilterControl(key, values) {
       const container = filterContainerByKey(key);
       const selectedValues = state.headendFilterSelections[key].filter(value => values.includes(value));
@@ -1142,6 +1189,34 @@
       const trigger = container.querySelector(".multiselect-trigger");
       const panel = container.querySelector(".multiselect-panel");
       const searchInput = container.querySelector(".multiselect-search");
+      const optionsContainer = container.querySelector(".multiselect-options");
+      const optionLabels = Array.from(container.querySelectorAll(".multiselect-option"));
+
+      function applySearchFilter() {
+        const query = (searchInput.value || "").trim().toLowerCase();
+        let visibleCount = 0;
+
+        optionLabels.forEach(label => {
+          const text = label.textContent.toLowerCase();
+          const isVisible = !query || text.includes(query);
+          label.style.display = isVisible ? "" : "none";
+          if (isVisible) {
+            visibleCount += 1;
+          }
+        });
+
+        let emptyState = optionsContainer.querySelector(".multiselect-empty");
+        if (!visibleCount) {
+          if (!emptyState) {
+            emptyState = document.createElement("div");
+            emptyState.className = "multiselect-empty";
+            emptyState.textContent = "No options found.";
+            optionsContainer.appendChild(emptyState);
+          }
+        } else if (emptyState) {
+          emptyState.remove();
+        }
+      }
 
       trigger.addEventListener("click", event => {
         event.stopPropagation();
@@ -1156,32 +1231,33 @@
 
       searchInput.addEventListener("input", () => {
         state.headendFilterSearch[key] = searchInput.value;
-        updateDependentHeadendFilters();
+        applySearchFilter();
       });
 
       container.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
         checkbox.addEventListener("change", () => {
           const checkedValues = Array.from(container.querySelectorAll('input[type="checkbox"]:checked')).map(input => input.value);
-          state.headendFilterSelections[key] = checkedValues;
+          state.headendFilterSelections[key] = normalizeFilterSelection(checkedValues, values);
           updateDependentHeadendFilters();
-          renderSegmentFilters();
           renderHeadendTable();
         });
       });
 
       panel.querySelector('[data-action="select-all"]').addEventListener("click", () => {
-        state.headendFilterSelections[key] = [...values];
+        state.headendFilterSelections[key] = [];
+        state.headendFilterSearch[key] = "";
         updateDependentHeadendFilters();
-        renderSegmentFilters();
         renderHeadendTable();
       });
 
       panel.querySelector('[data-action="clear-all"]').addEventListener("click", () => {
         state.headendFilterSelections[key] = [];
+        state.headendFilterSearch[key] = "";
         updateDependentHeadendFilters();
-        renderSegmentFilters();
         renderHeadendTable();
       });
+
+      applySearchFilter();
     }
 
     function updateDependentHeadendFilters() {
@@ -1203,6 +1279,13 @@
         Object.keys(row).forEach(key => {
           if (!RESERVED_CHANNEL_KEYS.has(key)) {
             weekSet.add(key);
+          }
+        });
+      });
+      (state.processedLog.processed_files || []).forEach(file => {
+        (file.weeks_found || []).forEach(week => {
+          if (week) {
+            weekSet.add(week);
           }
         });
       });
@@ -1243,6 +1326,16 @@
         return dateText;
       }
       return `W${String(weekNumber).padStart(2, "0")} | ${dateText}`;
+    }
+
+    function formatWeekCompact(dateText) {
+      const parsed = new Date(`${dateText}T00:00:00`);
+      const weekNumber = getIsoWeekNumber(dateText);
+      if (weekNumber == null || Number.isNaN(parsed.getTime())) {
+        return dateText;
+      }
+      const shortYear = String(parsed.getFullYear()).slice(-2);
+      return `Wk-${String(weekNumber).padStart(2, "0")}'${shortYear}`;
     }
 
     function fillWeekSelect(select, values, placeholder, selectedValue = "") {
@@ -1300,37 +1393,18 @@
       fillWeekSelect(elements.weekToFilter, weeks, "All Weeks", selectedWeekTo);
     }
 
-    function renderSegmentFilters() {
-      const states = uniqueValues(state.headendRows, "state");
-      const markets = uniqueValues(state.headendRows, "barc_market");
-
-      if (elements.stateSegments) {
-        renderSegmentGroup(elements.stateSegments, states, state.headendFilterSelections.state[0] || "", "States", value => {
-          state.headendFilterSelections.state = value ? [value] : [];
-          renderSegmentFilters();
-          updateDependentHeadendFilters();
-          renderHeadendTable();
-        });
+    function syncTable2FiltersToHeadend(headendId) {
+      const matchedRow = state.headendRows.find(row => row.headend_id === headendId);
+      if (!matchedRow) {
+        return;
       }
 
-      if (elements.quickStateSegments) {
-        renderSegmentGroup(elements.quickStateSegments, states, state.headendFilterSelections.state[0] || "", "States", value => {
-          state.headendFilterSelections.state = value ? [value] : [];
-          renderSegmentFilters();
-          updateDependentHeadendFilters();
-          renderHeadendTable();
-        });
-      }
-
-      if (elements.marketSegments) {
-        renderSegmentGroup(elements.marketSegments, markets, state.headendFilterSelections.barc_market[0] || "", "Markets", value => {
-          state.headendFilterSelections.barc_market = value ? [value] : [];
-          renderSegmentFilters();
-          updateDependentHeadendFilters();
-          renderHeadendTable();
-        });
-      }
-
+      state.selectedHeadendId = headendId;
+      elements.table2StateFilter.value = matchedRow.state || "";
+      updateTable2FilterOptions();
+      elements.table2CityFilter.value = matchedRow.headend_location || "";
+      updateTable2FilterOptions();
+      elements.table2HeadendFilter.value = headendId;
     }
 
     function renderHeadendTable() {
@@ -1361,8 +1435,7 @@
 
       elements.headendTableBody.querySelectorAll("tr[data-headend-id]").forEach(row => {
         row.addEventListener("click", () => {
-          state.selectedHeadendId = row.dataset.headendId;
-          elements.table2HeadendFilter.value = state.selectedHeadendId || "";
+          syncTable2FiltersToHeadend(row.dataset.headendId);
           renderHeadendTable();
           renderChannelTable();
         });
@@ -1373,8 +1446,12 @@
 
     function availableWeeksForSelectedRows(rows) {
       const weekSet = new Set();
-      const weekFrom = elements.weekFromFilter.value;
-      const weekTo = elements.weekToFilter.value;
+      let weekFrom = elements.weekFromFilter.value;
+      let weekTo = elements.weekToFilter.value;
+
+      if (weekFrom && weekTo && weekFrom > weekTo) {
+        [weekFrom, weekTo] = [weekTo, weekFrom];
+      }
 
       rows.forEach(row => {
         Object.keys(row).forEach(key => {
@@ -1420,51 +1497,69 @@
       return sortRows(rows, state.channelSort);
     }
 
-    function renderChannelCell(row, week, weeks, index) {
-      const value = row[week] || "";
-      const previousWeek = index > 0 ? weeks[index - 1] : null;
-      const previousValue = previousWeek ? (row[previousWeek] || "") : "";
+    function renderChannelCell(row, week) {
+      return displayValue(row[week] || "");
+    }
 
-      if (!previousWeek || !value || value === previousValue) {
-        return displayValue(value);
-      }
+    function renderChannelValueCell(row, week) {
+      const value = displayValue(row[week] || "");
+      const className = value === "NA" ? "channel-value na-value" : "channel-value";
+      return `<span class="${className}">${value}</span>`;
+    }
 
-      if (!previousValue && value) {
-        return displayValue(value);
-      }
-
-      if (previousValue && !value) {
-        return "Removed";
-      }
-
-      return displayValue(value);
+    function renderRecordedDateCell(week) {
+      const value = displayValue(week);
+      const className = value === "NA" ? "date-value na-value" : "date-value";
+      return `<span class="${className}">${value}</span>`;
     }
 
     function renderChannelTable() {
       const rows = filteredChannelRows();
       const weeks = availableWeeksForSelectedRows(rows);
+      const metaByHeadend = new Map(state.headendRows.map(row => [row.headend_id, row]));
       elements.selectedHeadendRows.textContent = rows.length.toLocaleString();
       elements.table2BarLabel.textContent = `${rows.length.toLocaleString()} LCN rows`;
 
       if (!rows.length) {
-        elements.channelTableHead.innerHTML = `<tr><th>Headend ID</th><th>LCN</th></tr>`;
-        elements.channelTableBody.innerHTML = '<tr><td colspan="2" class="table-empty">No week-wise channel rows match the current filters.</td></tr>';
+        elements.channelTableHead.innerHTML = `
+          <tr>
+            <th>Headend ID</th>
+            <th>Headend Name</th>
+            <th>LCN</th>
+            ${weeks.map(week => `<th colspan="2" class="week-group-header">${formatWeekCompact(week)}</th>`).join("")}
+          </tr>
+          <tr class="subhead-row">
+            <th></th>
+            <th></th>
+            <th></th>
+            ${weeks.map(() => `<th class="channel-column">Channel</th><th class="date-column">Date Recorded</th>`).join("")}
+          </tr>
+        `;
+        elements.channelTableBody.innerHTML = `<tr><td colspan="${3 + (weeks.length * 2)}" class="table-empty">No week-wise channel rows match the current filters.</td></tr>`;
         return;
       }
 
       elements.channelTableHead.innerHTML = `
         <tr>
           <th data-table="channels" data-key="headend_id">Headend ID</th>
+          <th>Headend Name</th>
           <th data-table="channels" data-key="lcn_no">LCN</th>
-          ${weeks.map(week => `<th data-table="channels" data-key="${week}">${formatWeekLabel(week)}</th>`).join("")}
+          ${weeks.map(week => `<th colspan="2" class="week-group-header">${formatWeekCompact(week)}</th>`).join("")}
+        </tr>
+        <tr class="subhead-row">
+          <th></th>
+          <th></th>
+          <th></th>
+          ${weeks.map(() => `<th class="channel-column">Channel</th><th class="date-column">Date Recorded</th>`).join("")}
         </tr>
       `;
 
       elements.channelTableBody.innerHTML = rows.map(row => `
         <tr>
           <td>${displayValue(row.headend_id)}</td>
+          <td>${displayValue(metaByHeadend.get(row.headend_id)?.headend_location)}</td>
           <td>${displayValue(row.lcn_no)}</td>
-          ${weeks.map((week, index) => `<td>${renderChannelCell(row, week, weeks, index)}</td>`).join("")}
+          ${weeks.map(week => `<td class="channel-column">${renderChannelValueCell(row, week)}</td><td class="date-column">${renderRecordedDateCell(week)}</td>`).join("")}
         </tr>
       `).join("");
 
@@ -1562,7 +1657,6 @@
     function initializeFilters() {
       updateTable2FilterOptions();
       updateDependentHeadendFilters();
-      renderSegmentFilters();
     }
 
     function resetHeadendFilters() {
@@ -1571,7 +1665,6 @@
         state.headendFilterSearch[key] = "";
       });
       updateDependentHeadendFilters();
-      renderSegmentFilters();
       renderHeadendTable();
     }
 
@@ -1617,11 +1710,18 @@
       });
       [elements.table2StateFilter, elements.table2CityFilter].forEach(element => {
         element.addEventListener("change", () => {
+          state.selectedHeadendId = null;
           updateTable2FilterOptions();
+          renderHeadendTable();
           renderChannelTable();
         });
       });
-      [elements.table2HeadendFilter, elements.weekFromFilter, elements.weekToFilter].forEach(element => {
+      elements.table2HeadendFilter.addEventListener("change", () => {
+        state.selectedHeadendId = elements.table2HeadendFilter.value || null;
+        renderHeadendTable();
+        renderChannelTable();
+      });
+      [elements.weekFromFilter, elements.weekToFilter].forEach(element => {
         element.addEventListener("change", renderChannelTable);
       });
       elements.table2FullscreenBtn.addEventListener("click", () => {
