@@ -1244,13 +1244,23 @@
       "source": "stream",
       "date": "2026-07-27",
       "file_count": 1,
-      "bytes": 59938210,
-      "max_mtime_ns": 1785121862757395600,
+      "bytes": 862285724,
+      "max_mtime_ns": 1785208449601601500,
       "output_counts": {
-        "rows": 170
+        "rows": 1128
+      }
+    },
+    "stream/2026-07-28": {
+      "source": "stream",
+      "date": "2026-07-28",
+      "file_count": 1,
+      "bytes": 70980211,
+      "max_mtime_ns": 1785208449636712300,
+      "output_counts": {
+        "rows": 179
       }
     }
   },
-  "updated_at_utc": "2026-07-27T04:04:55.758204+00:00",
+  "updated_at_utc": "2026-07-28T04:28:24.089291+00:00",
   "mart_version": 3
 }

@@ -1,11 +1,11 @@
 {
-  "generated_at_utc": "2026-07-27T03:49:03.966707+00:00",
+  "generated_at_utc": "2026-07-28T03:58:48.031118+00:00",
   "source": "fast",
   "lake": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
   "output": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\output\\watch_hours\\concurrency\\fast_platform_channel_cmcd_daily.parquet",
   "date_range_replaced": {
-    "start": "2026-07-26",
-    "end": "2026-07-27"
+    "start": "2026-07-27",
+    "end": "2026-07-28"
   },
   "metric_notes": {
     "distinct_cmcd_sessions": "Approximate daily distinct CMCD sid values on FAST .ts rows, using DuckDB approx_count_distinct to keep large-day ETL memory-safe. This is playback-session telemetry, not app queryStr session_id.",

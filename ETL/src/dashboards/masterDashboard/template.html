@@ -709,8 +709,8 @@
       }else{
         selectedChannelRows().forEach(function(row){const name=String(row.channel_name);map.set(name,(map.get(name)||0)+num(row.watch_hours))});
       }
-      const ranked=Array.from(map.entries()).sort(function(a,b){return b[1]-a[1]||a[0].localeCompare(b[0])}),max=ranked.length?ranked[0][1]:0;
-      el("channelLeaderboard").innerHTML=ranked.length?ranked.map(function(item,index){const width=max?Math.max(2,item[1]*100/max):0;return '<div class="rank-row"><div class="rank">#'+(index+1)+'</div><div class="rank-main"><div class="rank-name"><span title="'+escapeHtml(item[0])+'">'+escapeHtml(item[0])+'</span></div><div class="mini-track"><div class="mini-fill" style="width:'+width.toFixed(2)+'%"></div></div></div><div class="rank-value">'+formatHours(item[1])+'</div></div>'}).join(""):'<div class="empty">No matching channel data.</div>';
+      const ranked=Array.from(map.entries()).sort(function(a,b){return b[1]-a[1]||a[0].localeCompare(b[0])}),max=ranked.length?ranked[0][1]:0,total=ranked.reduce(function(sum,item){return sum+item[1]},0);
+      el("channelLeaderboard").innerHTML=ranked.length?ranked.map(function(item,index){const width=max?Math.max(2,item[1]*100/max):0,share=total?item[1]*100/total:0;return '<div class="rank-row"><div class="rank">#'+(index+1)+'</div><div class="rank-main"><div class="rank-name"><span title="'+escapeHtml(item[0])+'">'+escapeHtml(item[0])+'</span></div><div class="mini-track"><div class="mini-fill" style="width:'+width.toFixed(2)+'%"></div></div></div><div class="rank-value">'+formatHours(item[1])+'<br><span>'+nf1.format(share)+'%</span></div></div>'}).join(""):'<div class="empty">No matching channel data.</div>';
       el("channelCount").textContent=ranked.length+" channel"+(ranked.length===1?"":"s");
       el("channelLeaderboardNote").textContent=geoFiltered?"Channels ranked by all-status watch hours within the selected geography":"All matching channels ranked by watch hours";
       capLeaderboardRows("channelLeaderboard","channelExpand",DEFAULT_PREVIEW_ROWS);
