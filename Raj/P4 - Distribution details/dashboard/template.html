@@ -242,7 +242,7 @@
       margin-bottom: 0;
       flex: 1;
       max-width: none;
-      grid-template-columns: 1fr 1fr 1.7fr 1.2fr 0.9fr 0.9fr 1fr auto auto;
+      grid-template-columns: 1fr 1fr 1.2fr 0.9fr 0.9fr 1fr auto auto;
       padding: 8px 10px;
       gap: 8px;
     }
@@ -630,7 +630,7 @@
     .subhead-row th {
       font-size: 0.72rem;
       font-weight: 600;
-      background: #f2f7f5;
+      background: #e3f1eb;
       color: #45655c;
       border-bottom: 1px solid rgba(46, 107, 94, 0.16);
       border-right: 1px solid rgba(46, 107, 94, 0.12);
@@ -703,6 +703,21 @@
       color: #174a9c;
     }
 
+    .channel-highlight-ndtv {
+      background: #e0f4ff;
+      color: #0f5673;
+    }
+
+    .channel-highlight-news18 {
+      background: #efe4ff;
+      color: #5a2a8f;
+    }
+
+    .channel-highlight-republic {
+      background: #ffe3e8;
+      color: #8b1e36;
+    }
+
     #headendTable {
       min-width: 1220px;
     }
@@ -733,10 +748,20 @@
       font-size: 0.73rem;
     }
 
+    #channelTable thead tr:first-child th {
+      height: 36px;
+      vertical-align: middle;
+    }
+
     #channelTable .subhead-row th {
       font-size: 0.67rem;
+      background: #dcefe6;
+      color: #2f6d5d;
+      top: 36px;
       padding-top: 6px;
       padding-bottom: 6px;
+      height: 32px;
+      vertical-align: middle;
     }
 
     #channelTable .week-group-header {
@@ -961,12 +986,8 @@
               <select id="table2StateFilter"></select>
             </div>
             <div class="field compact-filter">
-              <label for="table2CityFilter">City</label>
+              <label for="table2CityFilter">Headend Location</label>
               <select id="table2CityFilter"></select>
-            </div>
-            <div class="field compact-filter">
-              <label for="table2HeadendFilter">Headend</label>
-              <select id="table2HeadendFilter"></select>
             </div>
             <div class="field compact-filter">
               <label for="table2ChannelFilter">Channel</label>
@@ -1110,17 +1131,12 @@
       table2FullscreenBtn: document.getElementById("table2FullscreenBtn"),
       table1BarLabel: document.getElementById("table1BarLabel"),
       table2BarLabel: document.getElementById("table2BarLabel"),
-      table2HeadendFilter: document.getElementById("table2HeadendFilter"),
       channelTableHead: document.getElementById("channelTableHead"),
       channelTableBody: document.getElementById("channelTableBody"),
     };
 
     const RESERVED_CHANNEL_KEYS = new Set(["headend_id", "lcn_no", "weeks"]);
     const HEADEND_FILTER_KEYS = ["state", "barc_market", "headend_location", "network_name"];
-
-    function uniqueValues(rows, key) {
-      return [...new Set(rows.map(row => row[key]).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
-    }
 
     function formatNumber(value) {
       return Number(value || 0).toLocaleString();
@@ -1130,12 +1146,20 @@
       return value == null || String(value).trim() === "" ? "NA" : value;
     }
 
+    function filterComparableValue(value) {
+      return displayValue(value);
+    }
+
+    function uniqueValues(rows, key) {
+      return [...new Set(rows.map(row => filterComparableValue(row[key])))]
+        .sort((a, b) => String(a).localeCompare(String(b)));
+    }
+
     function getShareableState() {
       return {
         headendFilterSelections: state.headendFilterSelections,
         table2State: elements.table2StateFilter.value,
         table2City: elements.table2CityFilter.value,
-        table2Headend: elements.table2HeadendFilter.value,
         table2Channel: elements.table2ChannelFilter.value,
         weekFrom: elements.weekFromFilter.value,
         weekTo: elements.weekToFilter.value,
@@ -1160,8 +1184,6 @@
       elements.table2StateFilter.value = sharedState.table2State || "";
       updateTable2FilterOptions();
       elements.table2CityFilter.value = sharedState.table2City || "";
-      updateTable2FilterOptions();
-      elements.table2HeadendFilter.value = sharedState.table2Headend || "";
       updateTable2FilterOptions();
       elements.table2ChannelFilter.value = sharedState.table2Channel || "";
       elements.weekFromFilter.value = sharedState.weekFrom || "";
@@ -1245,7 +1267,7 @@
       const rows = state.headendRows.filter(row => {
         return HEADEND_FILTER_KEYS.every(key => {
           const selectedValues = state.headendFilterSelections[key];
-          return !selectedValues.length || selectedValues.includes(row[key]);
+          return !selectedValues.length || selectedValues.includes(filterComparableValue(row[key]));
         });
       });
 
@@ -1257,7 +1279,7 @@
         HEADEND_FILTER_KEYS.every(key => {
           if (key === excludedKey) return true;
           const selectedValues = state.headendFilterSelections[key];
-          return !selectedValues.length || selectedValues.includes(row[key]);
+          return !selectedValues.length || selectedValues.includes(filterComparableValue(row[key]));
         })
       );
     }
@@ -1267,7 +1289,7 @@
         filterKeys.every(key => {
           if (key === excludedKey) return true;
           const selectedValues = state.headendFilterSelections[key];
-          return !selectedValues.length || selectedValues.includes(row[key]);
+          return !selectedValues.length || selectedValues.includes(filterComparableValue(row[key]));
         })
       );
     }
@@ -1567,6 +1589,15 @@
       if (normalized.includes("abp")) {
         return "channel-highlight-abp";
       }
+      if (normalized.includes("ndtv")) {
+        return "channel-highlight-ndtv";
+      }
+      if (normalized.includes("news18 india")) {
+        return "channel-highlight-news18";
+      }
+      if (normalized.includes("republic bharat")) {
+        return "channel-highlight-republic";
+      }
       return "";
     }
 
@@ -1579,7 +1610,7 @@
       const metaByHeadend = new Map(state.headendRows.map(row => [row.headend_id, row]));
       const selectedState = elements.table2StateFilter.value;
       const selectedCity = elements.table2CityFilter.value;
-      const selectedHeadend = elements.table2HeadendFilter.value;
+      const selectedHeadend = state.selectedHeadendId;
 
       if (selectedHeadend) {
         return [selectedHeadend];
@@ -1631,7 +1662,6 @@
       const metaRows = table2MetaRows();
       const selectedState = elements.table2StateFilter.value;
       const selectedCity = elements.table2CityFilter.value;
-      const selectedHeadend = elements.table2HeadendFilter.value;
       const selectedChannel = elements.table2ChannelFilter.value;
       const selectedWeekFrom = elements.weekFromFilter.value;
       const selectedWeekTo = elements.weekToFilter.value;
@@ -1642,20 +1672,6 @@
       const cityRows = metaRows.filter(row => !elements.table2StateFilter.value || row.state === elements.table2StateFilter.value);
       const cityOptions = uniqueValues(cityRows, "headend_location");
       fillSelectSimple(elements.table2CityFilter, cityOptions, "All Cities", selectedCity);
-
-      const headendRows = cityRows.filter(row => !elements.table2CityFilter.value || row.headend_location === elements.table2CityFilter.value);
-      elements.table2HeadendFilter.innerHTML = "";
-      const defaultOption = document.createElement("option");
-      defaultOption.value = "";
-      defaultOption.textContent = "All Default Headends";
-      elements.table2HeadendFilter.appendChild(defaultOption);
-      sortRows(headendRows, { key: "headend_location", direction: "asc" }).forEach(row => {
-        const option = document.createElement("option");
-        option.value = row.headend_id;
-        option.textContent = `${row.network_name || "Unknown"} | ${row.headend_id}`;
-        elements.table2HeadendFilter.appendChild(option);
-      });
-      elements.table2HeadendFilter.value = headendRows.some(row => row.headend_id === selectedHeadend) ? selectedHeadend : "";
 
       const weeks = allWeekColumns();
       fillWeekSelect(elements.weekFromFilter, weeks, "All Weeks", selectedWeekFrom);
@@ -1685,8 +1701,6 @@
       updateTable2FilterOptions();
       elements.table2CityFilter.value = matchedRow.headend_location || "";
       updateTable2FilterOptions();
-      elements.table2HeadendFilter.value = headendId;
-      updateTable2FilterOptions();
     }
 
     function renderHeadendTable() {
@@ -1707,10 +1721,10 @@
           <td>${displayValue(row.state)}</td>
           <td>${displayValue(row.barc_market)}</td>
           <td>${displayValue(row.stbs)}</td>
-          <td>${displayValue(row.landing_channel_1)}</td>
-          <td>${displayValue(row.landing_channel_2)}</td>
-          <td>${displayValue(row.barker_1)}</td>
-          <td>${displayValue(row.barker_2)}</td>
+          <td>${renderStaticHighlightedChannelValue(row.landing_channel_1)}</td>
+          <td>${renderStaticHighlightedChannelValue(row.landing_channel_2)}</td>
+          <td>${renderStaticHighlightedChannelValue(row.barker_1)}</td>
+          <td>${renderStaticHighlightedChannelValue(row.barker_2)}</td>
           <td>${displayValue(row.date)}</td>
         </tr>
       `).join("");
@@ -1784,6 +1798,14 @@
       return `<span class="${className}">${value}</span>`;
     }
 
+    function renderStaticHighlightedChannelValue(value) {
+      const display = displayValue(value);
+      const className = [display === "NA" ? "channel-value na-value" : "channel-value", channelHighlightClass(display)]
+        .filter(Boolean)
+        .join(" ");
+      return `<span class="${className}">${display}</span>`;
+    }
+
     function renderRecordedDateCell(row, week) {
       const value = displayValue(row.weeks?.[week]?.date_posted || "NA");
       const className = value === "NA" ? "date-value na-value" : "date-value";
@@ -1809,7 +1831,7 @@
             <th></th>
             <th></th>
             <th></th>
-            ${weeks.map(() => `<th class="channel-column">Channel</th><th class="date-column">Date Posted</th>`).join("")}
+            ${weeks.map(() => `<th class="channel-column">Channel</th><th class="date-column">Date Of Collected</th>`).join("")}
           </tr>
         `;
         elements.channelTableBody.innerHTML = `<tr><td colspan="${3 + (weeks.length * 2)}" class="table-empty">No week-wise channel rows match the current filters.</td></tr>`;
@@ -1819,7 +1841,7 @@
       elements.channelTableHead.innerHTML = `
         <tr>
           <th data-table="channels" data-key="headend_id">Headend ID</th>
-          <th>Headend Name</th>
+          <th>Headend Location</th>
           <th data-table="channels" data-key="lcn_no">LCN</th>
           ${weeks.map(week => `<th colspan="2" class="week-group-header">${formatWeekCompact(week)}</th>`).join("")}
         </tr>
@@ -1827,7 +1849,7 @@
           <th></th>
           <th></th>
           <th></th>
-          ${weeks.map(() => `<th class="channel-column">Channel</th><th class="date-column">Date Posted</th>`).join("")}
+          ${weeks.map(() => `<th class="channel-column">Channel</th><th class="date-column">Date Of Collected</th>`).join("")}
         </tr>
       `;
 
@@ -1950,7 +1972,6 @@
       state.selectedHeadendId = null;
       elements.table2StateFilter.value = "";
       elements.table2CityFilter.value = "";
-      elements.table2HeadendFilter.value = "";
       elements.table2ChannelFilter.value = "";
       elements.weekFromFilter.value = "";
       elements.weekToFilter.value = "";
@@ -2039,12 +2060,6 @@
           renderHeadendTable();
           renderChannelTable();
         });
-      });
-      elements.table2HeadendFilter.addEventListener("change", () => {
-        state.selectedHeadendId = elements.table2HeadendFilter.value || null;
-        updateTable2FilterOptions();
-        renderHeadendTable();
-        renderChannelTable();
       });
       elements.table2ChannelFilter.addEventListener("change", () => {
         renderHeadendTable();
