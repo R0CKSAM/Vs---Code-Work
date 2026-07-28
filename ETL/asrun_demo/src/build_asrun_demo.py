@@ -56,6 +56,20 @@ FCT_ROOT = Path(
     os.getenv("VG_ASRUN_FCT_ROOT", r"Z:\Veto Logs Backup\DO NOT DELETE\source=FCT")
 )
 YOUTUBE_COLUMNS = ["date", "time", "video_id", "title", "concurrent_viewers", "status"]
+YOUTUBE_FILENAME = re.compile(
+    r"^(?P<collector>.+?)_\d{2}-\d{2}-\d{4}_\d{2}-\d{2}_[^.]+\.parquet$",
+    re.IGNORECASE,
+)
+YOUTUBE_CHANNEL_LABELS = {
+    "aajtak": "Aaj Tak",
+    "abpnews": "ABP News",
+    "cnnnews18": "CNN-News18",
+    "indiatv": "India TV",
+    "ndtvindia": "NDTV India",
+    "republicbharat": "Republic Bharat",
+    "tv9bharatvarsh": "TV9 Bharatvarsh",
+    "zeenews": "Zee News",
+}
 CHARTJS_CACHE = DEMO_ROOT.parent / "output" / "cache" / "chartjs" / "chart.umd.min.js"
 IST_ZONE = ZoneInfo("Asia/Kolkata")
 FCT_FILENAME_RANGE = re.compile(
@@ -636,19 +650,62 @@ def build_fct_ad_mart() -> dict[str, Any]:
 
 
 
+def youtube_channel_from_path(parquet_path: Path) -> tuple[str, str]:
+    """Return the stable collector key and stakeholder-facing channel name."""
+    match = YOUTUBE_FILENAME.match(parquet_path.name)
+    if match is None:
+        return "unknown", "Unknown / NA"
+    key = match.group("collector").strip()
+    label = YOUTUBE_CHANNEL_LABELS.get(key.casefold())
+    if label is None:
+        # Preserve an unseen collector instead of silently attributing it to India TV.
+        label = re.sub(r"[_-]+", " ", key).strip() or "Unknown / NA"
+    return key, label
+
+
 def build_youtube_marts() -> dict[str, Any]:
     """Build compact, reusable YouTube concurrency marts for the ASRUN demo."""
     empty_minute = pd.DataFrame(
-        columns=["timestamp_ist", "log_date", "total_concurrent_viewers", "live_videos", "peak_video_concurrent"]
+        columns=[
+            "timestamp_ist",
+            "log_date",
+            "total_concurrent_viewers",
+            "live_channels",
+            "live_videos",
+            "peak_video_concurrent",
+        ]
     )
     empty_video_daily = pd.DataFrame(
-        columns=["log_date", "video_id", "title", "peak_concurrent_viewers", "avg_concurrent_viewers", "viewer_minutes", "live_minutes"]
+        columns=[
+            "log_date",
+            "youtube_channel",
+            "video_id",
+            "title",
+            "peak_concurrent_viewers",
+            "avg_concurrent_viewers",
+            "viewer_minutes",
+            "live_minutes",
+        ]
     )
     empty_video_5min = pd.DataFrame(
-        columns=["bucket_ist", "log_date", "video_id", "avg_concurrent_viewers", "peak_concurrent_viewers"]
+        columns=[
+            "bucket_ist",
+            "log_date",
+            "youtube_channel",
+            "video_id",
+            "avg_concurrent_viewers",
+            "peak_concurrent_viewers",
+        ]
     )
     empty_video_minute = pd.DataFrame(
-        columns=["timestamp_ist", "log_date", "video_id", "title", "concurrent_viewers"]
+        columns=[
+            "timestamp_ist",
+            "log_date",
+            "youtube_channel",
+            "video_id",
+            "title",
+            "concurrent_viewers",
+        ]
     )
     if not YOUTUBE_ROOT.is_dir():
         return {
@@ -660,6 +717,7 @@ def build_youtube_marts() -> dict[str, Any]:
             "video_daily": empty_video_daily,
             "video_5min": empty_video_5min,
             "video_minute": empty_video_minute,
+            "channels": [],
             "true_start": "",
             "true_end": "",
             "full_start": "",
@@ -676,6 +734,9 @@ def build_youtube_marts() -> dict[str, Any]:
         except (OSError, ValueError, KeyError) as exc:
             skipped.append(f"{parquet_path.name}: {exc}")
             continue
+        collector_key, youtube_channel = youtube_channel_from_path(parquet_path)
+        frame["youtube_collector_key"] = collector_key
+        frame["youtube_channel"] = youtube_channel
         frames.append(frame)
 
     if not frames:
@@ -689,6 +750,7 @@ def build_youtube_marts() -> dict[str, Any]:
             "video_daily": empty_video_daily,
             "video_5min": empty_video_5min,
             "video_minute": empty_video_minute,
+            "channels": [],
             "true_start": "",
             "true_end": "",
             "full_start": "",
@@ -700,6 +762,12 @@ def build_youtube_marts() -> dict[str, Any]:
         youtube["date"].astype("string") + " " + youtube["time"].astype("string"),
         format="%Y-%m-%d %H:%M:%S",
         errors="coerce",
+    ).dt.floor("min")
+    youtube["youtube_collector_key"] = (
+        youtube["youtube_collector_key"].fillna("unknown").astype("string").str.strip()
+    )
+    youtube["youtube_channel"] = (
+        youtube["youtube_channel"].fillna("Unknown / NA").astype("string").str.strip()
     )
     youtube["video_id"] = youtube["video_id"].fillna("").astype("string").str.strip()
     youtube["title"] = youtube["title"].fillna("").astype("string").str.strip()
@@ -711,9 +779,10 @@ def build_youtube_marts() -> dict[str, Any]:
         & youtube["concurrent_viewers"].notna()
     ].copy()
     youtube["concurrent_viewers"] = youtube["concurrent_viewers"].clip(lower=0)
-    # A repeated timestamp/video is a collector retry. Keep its latest record.
+    # Collectors begin at different seconds; minute-normalization above aligns
+    # simultaneous channel observations before aggregation.
     youtube = youtube.sort_values("timestamp_ist").drop_duplicates(
-        ["timestamp_ist", "video_id"], keep="last"
+        ["timestamp_ist", "youtube_collector_key", "video_id"], keep="last"
     )
     live = youtube.loc[youtube["status"].eq("is_live")].copy()
     if live.empty:
@@ -729,6 +798,7 @@ def build_youtube_marts() -> dict[str, Any]:
             "video_daily": empty_video_daily,
             "video_5min": empty_video_5min,
             "video_minute": empty_video_minute,
+            "channels": [],
             "true_start": "",
             "true_end": "",
             "full_start": "",
@@ -740,6 +810,7 @@ def build_youtube_marts() -> dict[str, Any]:
         live.groupby("timestamp_ist", as_index=False)
         .agg(
             total_concurrent_viewers=("concurrent_viewers", "sum"),
+            live_channels=("youtube_channel", "nunique"),
             live_videos=("video_id", "nunique"),
             peak_video_concurrent=("concurrent_viewers", "max"),
         )
@@ -751,34 +822,63 @@ def build_youtube_marts() -> dict[str, Any]:
     title_daily = (
         live.loc[live["title"].ne("")]
         .sort_values("timestamp_ist")
-        .drop_duplicates(["log_date", "video_id"], keep="last")
-        [["log_date", "video_id", "title"]]
+        .drop_duplicates(["log_date", "youtube_channel", "video_id"], keep="last")
+        [["log_date", "youtube_channel", "video_id", "title"]]
     )
     video_minute = (
-        live[["timestamp_ist", "log_date", "video_id", "concurrent_viewers"]]
-        .merge(title_daily, on=["log_date", "video_id"], how="left", validate="many_to_one")
-        .sort_values(["timestamp_ist", "video_id"])
+        live[
+            [
+                "timestamp_ist",
+                "log_date",
+                "youtube_channel",
+                "video_id",
+                "concurrent_viewers",
+            ]
+        ]
+        .merge(
+            title_daily,
+            on=["log_date", "youtube_channel", "video_id"],
+            how="left",
+            validate="many_to_one",
+        )
+        .sort_values(["timestamp_ist", "youtube_channel", "video_id"])
     )
     video_daily = (
-        live.groupby(["log_date", "video_id"], as_index=False)
+        live.groupby(["log_date", "youtube_channel", "video_id"], as_index=False)
         .agg(
             peak_concurrent_viewers=("concurrent_viewers", "max"),
             avg_concurrent_viewers=("concurrent_viewers", "mean"),
             viewer_minutes=("concurrent_viewers", "sum"),
             live_minutes=("timestamp_ist", "size"),
         )
-        .merge(title_daily, on=["log_date", "video_id"], how="left", validate="one_to_one")
-        .sort_values(["log_date", "peak_concurrent_viewers"], ascending=[True, False])
+        .merge(
+            title_daily,
+            on=["log_date", "youtube_channel", "video_id"],
+            how="left",
+            validate="one_to_one",
+        )
+        .sort_values(
+            ["log_date", "peak_concurrent_viewers", "youtube_channel"],
+            ascending=[True, False, True],
+        )
     )
     video_5min = live.assign(bucket_ist=live["timestamp_ist"].dt.floor("5min"))
     video_5min = (
-        video_5min.groupby(["bucket_ist", "log_date", "video_id"], as_index=False)
+        video_5min.groupby(
+            ["bucket_ist", "log_date", "youtube_channel", "video_id"],
+            as_index=False,
+        )
         .agg(
             avg_concurrent_viewers=("concurrent_viewers", "mean"),
             peak_concurrent_viewers=("concurrent_viewers", "max"),
         )
-        .merge(title_daily, on=["log_date", "video_id"], how="left", validate="many_to_one")
-        .sort_values(["bucket_ist", "video_id"])
+        .merge(
+            title_daily,
+            on=["log_date", "youtube_channel", "video_id"],
+            how="left",
+            validate="many_to_one",
+        )
+        .sort_values(["bucket_ist", "youtube_channel", "video_id"])
     )
 
     PARSED_DIR.mkdir(parents=True, exist_ok=True)
@@ -793,6 +893,7 @@ def build_youtube_marts() -> dict[str, Any]:
         "completed_files": len(completed_files),
         "partial_files": len(partial_files),
         "skipped_files": skipped,
+        "channels": sorted(live["youtube_channel"].dropna().unique().tolist()),
         "true_start": minute["timestamp_ist"].min().strftime("%Y-%m-%d %H:%M:%S"),
         "true_end": minute["timestamp_ist"].max().strftime("%Y-%m-%d %H:%M:%S"),
         "full_start": min(full_days) if full_days else "",
@@ -809,6 +910,7 @@ def build_youtube_marts() -> dict[str, Any]:
         "video_daily": video_daily,
         "video_5min": video_5min,
         "video_minute": video_minute,
+        "channels": manifest["channels"],
         "true_start": manifest["true_start"],
         "true_end": manifest["true_end"],
         "full_start": manifest["full_start"],
@@ -1032,22 +1134,53 @@ def build_payload(
             "true_end": youtube["true_end"],
             "full_start": youtube["full_start"],
             "full_end": youtube["full_end"],
+            "channels": youtube.get("channels", []),
             "minute": records(
                 youtube["minute"],
-                ["timestamp_ist", "log_date", "total_concurrent_viewers", "live_videos", "peak_video_concurrent"],
+                [
+                    "timestamp_ist",
+                    "log_date",
+                    "total_concurrent_viewers",
+                    "live_channels",
+                    "live_videos",
+                    "peak_video_concurrent",
+                ],
             ),
             "video_daily": records(
                 youtube["video_daily"],
-                ["log_date", "video_id", "title", "peak_concurrent_viewers", "avg_concurrent_viewers", "viewer_minutes", "live_minutes"],
+                [
+                    "log_date",
+                    "youtube_channel",
+                    "video_id",
+                    "title",
+                    "peak_concurrent_viewers",
+                    "avg_concurrent_viewers",
+                    "viewer_minutes",
+                    "live_minutes",
+                ],
             ),
             "video_5min": records(
                 youtube["video_5min"],
-                ["bucket_ist", "log_date", "video_id", "title", "avg_concurrent_viewers", "peak_concurrent_viewers"],
+                [
+                    "bucket_ist",
+                    "log_date",
+                    "youtube_channel",
+                    "video_id",
+                    "title",
+                    "avg_concurrent_viewers",
+                    "peak_concurrent_viewers",
+                ],
             ),
             "video_minute": records(
                 youtube["video_minute"],
                 # Titles repeat per minute; resolve them from video_daily in browser instead.
-                ["timestamp_ist", "log_date", "video_id", "concurrent_viewers"],
+                [
+                    "timestamp_ist",
+                    "log_date",
+                    "youtube_channel",
+                    "video_id",
+                    "concurrent_viewers",
+                ],
             ),
         },
     }
@@ -1223,6 +1356,58 @@ main { padding: 16px 0 24px; }
 .youtube-chart-shell { position: relative; height: 270px; margin-bottom: 16px; border: 1px solid var(--line); border-radius: 5px; background: #ffffff; }
 .youtube-chart-shell canvas { display: block; width: 100%; height: 100%; }
 .youtube-chart-empty { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; color: var(--muted); font-size: 12px; }
+body.youtube-chart-expanded { overflow: hidden; }
+.youtube-chart-modal[hidden] { display: none; }
+.youtube-chart-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  padding: 14px;
+  background: rgba(15, 23, 42, .68);
+}
+.youtube-chart-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(1500px, 100%);
+  height: min(94vh, 980px);
+  overflow: hidden;
+  border: 1px solid #aebdca;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, .35);
+}
+.youtube-chart-modal-head {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.youtube-chart-modal-head h2 { margin: 0; font-size: 16px; }
+.youtube-chart-modal-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  overflow: auto;
+  padding: 12px;
+}
+.youtube-chart-modal-body .youtube-filter-bar,
+.youtube-chart-modal-body .youtube-controls {
+  flex: 0 0 auto;
+  margin: 0;
+}
+.youtube-chart-modal-body .youtube-chart-shell {
+  flex: 1 1 auto;
+  min-height: 420px;
+  height: auto;
+  margin: 0;
+}
 .youtube-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 16px; }
 .youtube-subsection { min-width: 0; }
 .youtube-subsection h3 { margin: 0 0 7px; font-size: 13px; }
@@ -1281,6 +1466,16 @@ main { padding: 16px 0 24px; }
   .combined-columns, .combined-line { grid-template-columns: 88px 78px minmax(0, 1fr); gap: 6px; }
   .combined-columns .duration, .combined-line .duration { display: none; }
   .combined-columns .fast-col, .combined-columns .stream-col, .combined-columns .youtube-col, .combined-columns .total-col, .combined-line .fast-col, .combined-line .stream-col, .combined-line .youtube-col, .combined-line .total-col { grid-column: 3; text-align: left; }
+  .youtube-chart-modal { padding: 0; }
+  .youtube-chart-dialog {
+    width: 100%;
+    height: 100dvh;
+    border: 0;
+    border-radius: 0;
+  }
+  .youtube-chart-modal-head { padding: 10px; }
+  .youtube-chart-modal-body { padding: 8px; }
+  .youtube-chart-modal-body .youtube-chart-shell { min-height: 360px; }
 }
 @media (max-width: 460px) {
   .title-group { display: block; }
@@ -1388,6 +1583,66 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
 :root { --amagi: #c2410c; }
 .amagi-tag { background: var(--amagi); color: #ffffff; }
 .amagi-panel { border-top: 3px solid var(--amagi); }
+.youtube-filter-bar {
+  grid-template-columns:
+    minmax(190px, .9fr)
+    repeat(2, minmax(142px, .65fr))
+    minmax(185px, .9fr)
+    minmax(245px, 1.35fr)
+    auto;
+}
+.youtube-date-mode {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.youtube-date-mode-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+.youtube-date-mode-buttons button {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #f0a5a0;
+  background: #ffffff;
+  color: #9f1d17;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.youtube-date-mode-buttons button.active {
+  border-color: #b91c1c;
+  background: #b91c1c;
+  color: #ffffff;
+}
+.youtube-filter-bar input:disabled {
+  border-color: #d8dee6;
+  background: #f1f5f9;
+  color: #475569;
+  opacity: 1;
+}
+.youtube-date-help {
+  grid-column: 1 / -1;
+  min-height: 15px;
+  margin: -4px 0 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+.youtube-date-help.error { color: #b91c1c; font-weight: 700; }
+.youtube-chart-interval-controls {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+  align-items: end;
+}
+.youtube-chart-interval-controls .filter-label[hidden] { display: none; }
+.youtube-chart-interval-controls .filter-label { min-width: 130px; }
+.youtube-chart-interval-controls input { width: 105px; }
+.youtube-channel-label {
+  display: block;
+  color: #b91c1c;
+  font-weight: 700;
+}
 :root { --fct: #374151; }
 .fct-tag { background: var(--fct); color: #ffffff; }
 .fct-panel { border-top: 3px solid var(--fct); }
@@ -1434,7 +1689,16 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
 .scope-table th { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .03em; }
 .scope-table td:nth-child(4) { text-align: right; font-variant-numeric: tabular-nums; }
 .scope-muted { color: var(--muted); }
+@media (max-width: 1220px) {
+  .youtube-filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .youtube-filter-actions { grid-column: 1 / -1; }
+}
 @media (max-width: 680px) {
+  .youtube-filter-bar { grid-template-columns: 1fr; }
+  .youtube-chart-interval-controls {
+    width: 100%;
+    flex-wrap: wrap;
+  }
   .combined-columns, .combined-line {
     grid-template-columns: 88px 78px minmax(0, 1fr);
     gap: 6px;
@@ -1496,7 +1760,7 @@ function filterKey(){return [$('from').value,$('to').value,[...selectedMulti('sp
 function filtered(){const key=filterKey();if(filterCache.key===key&&filterCache.value)return filterCache.value;const result=[...sectionFilteredRows('Spot','spot'),...sectionFilteredRows('L-band','lband')].sort((a,b)=>String(a.on_air_start_ist).localeCompare(String(b.on_air_start_ist)));filterCache={key,value:result};return result;}
 function resetDashboardFilters(){showLoading('Resetting dashboard...');$('from').value=minDate;$('to').value=maxDate;setDateMode('range',false);fctClassMode='Commercial';for(const id of ['spotAdId','spotCreative','lbandAdId','lbandCreative','fastPlatform','fastChannel','streamChannel','amagiPlatform','amagiChannel','fctFeed','fctLanguage','fctBrand','fctCategory','fctCompany']){const menu=$(id+'Menu');if(menu)menu.innerHTML='';}multiInitialized.clear();clearFilterCache();refreshDependentOptions();refreshAudienceFilters();updatePeriodMeta();scheduleRender();}
 document.addEventListener('change',event=>{if(event.target.closest('.filters,.rank-controls,.audience-controls,.fct-class-filter,.youtube-filter-bar,.youtube-controls'))showLoading('Updating dashboard...')},true);
-document.addEventListener('click',event=>{if(event.target.closest('[data-date-mode],[data-fct-class],[data-youtube-range],#reset'))showLoading('Updating dashboard...')},true);
+document.addEventListener('click',event=>{if(event.target.closest('[data-date-mode],[data-youtube-date-mode],[data-fct-class],[data-youtube-range],#reset'))showLoading('Updating dashboard...')},true);
 function refreshAmagiFilters(){const rows=(AMAGI.minute||[]).filter(r=>String(r.log_date)>=String($('from').value)&&String(r.log_date)<=String($('to').value)),platforms=[...new Set(rows.map(r=>String(r.platform_name)))].sort();buildMulti('amagiPlatform',platforms,'platforms',platforms,()=>{refreshAmagiFilters();render()});const selectedPlatforms=selectedMulti('amagiPlatform'),channels=[...new Set(rows.filter(r=>!selectedPlatforms.size||selectedPlatforms.has(String(r.platform_name))).map(r=>String(r.channel_name)))].sort();buildMulti('amagiChannel',channels,'channels',channels,render);}
 function amagiMinuteMap(){const platforms=selectedMulti('amagiPlatform'),channels=selectedMulti('amagiChannel'),map=new Map();for(const row of (AMAGI.minute||[])){if(!platforms.has(String(row.platform_name))||!channels.has(String(row.channel_name)))continue;const key=minuteKey(row.minute_ist);map.set(key,(map.get(key)||0)+Number(row.concurrent_viewers||0));}return {map};}
 function ensureAmagiPanel(){if($('amagiRows'))return;const grid=document.querySelector('.audience-grid');grid.insertAdjacentHTML('beforeend','<div class="panel audience-panel amagi-panel"><div class="panel-head"><div><h2>AMAGI Delivered Ad Events</h2><small>Actual platform-reported concurrent viewers</small></div><span class="source-tag amagi-tag">AMAGI</span></div><div class="audience-controls"><label class="filter-label">Platform<span class="multi-select"><button id="amagiPlatformToggle" class="multi-toggle" type="button">All platforms</button><span id="amagiPlatformMenu" class="multi-menu"></span></span></label><label class="filter-label">Channel<span class="multi-select"><button id="amagiChannelToggle" class="multi-toggle" type="button">All channels</button><span id="amagiChannelMenu" class="multi-menu"></span></span></label></div><div class="event-columns"><span>On-air IST</span><span>Ad ID / Type</span><span>Creative title</span><span class="duration">Duration</span><span class="metric">Concurrency</span></div><div class="audience-list" id="amagiRows"></div><div class="audience-note" id="amagiNote"></div></div>');const header=document.querySelector('.combined-columns');header.querySelector('.youtube-col').insertAdjacentHTML('beforebegin','<span class="amagi-col">AMAGI</span>');document.querySelector('.combined-panel .panel-head small').textContent='FAST + STREAM selected 5-minute concurrency | Amagi actual 5-minute concurrency | YouTube minute concurrency';document.querySelector('.combined-panel .combined-tag').textContent='FAST + STREAM + AMAGI';}
@@ -1532,11 +1796,810 @@ function sourceBounds(rows,startKey,endKey){if(!rows.length)return null;const st
 function scopeRangeText(bounds){return bounds?formatIst(bounds.start)+' to '+formatIst(bounds.end):'No matching data';}
 function selectedViewerRows(source){const channels=selectedMulti(source==='fast'?'fastChannel':'streamChannel'),platforms=source==='fast'?selectedMulti('fastPlatform'):null;return viewerScope(source).filter(row=>(!platforms||platforms.has(String(row.platform_name)))&&channels.has(String(row.channel_name)));}
 function selectedAmagiRows(){const platforms=selectedMulti('amagiPlatform'),channels=selectedMulti('amagiChannel'),from=$('from').value,to=$('to').value;return (AMAGI.minute||[]).filter(row=>String(row.log_date)>=from&&String(row.log_date)<=to&&platforms.has(String(row.platform_name))&&channels.has(String(row.channel_name)));}
-function selectedYoutubeRows(){const youtube=DATA.youtube||{},from=$('youtubeFrom').value,to=$('youtubeTo').value,daily=youtubeRowsForDate(youtube.video_daily,from,to),ids=[...new Set(daily.map(row=>String(row.video_id)))],selected=youtubeSelectedVideoIds(),all=youtubeSelectionIsAll(ids,selected);return youtubeRowsForDate(youtube.video_minute,from,to).filter(row=>all||selected.has(String(row.video_id)));}
+let youtubeDateMode='independent';
+let youtubeDateOverlap=true;
+function ensureYoutubeDateModeControls(){
+  if($('youtubeDateMode'))return;
+  const bar=document.querySelector('.youtube-filter-bar');
+  bar.insertAdjacentHTML(
+    'afterbegin',
+    '<div class="youtube-date-mode" id="youtubeDateMode">'
+    +'<span>Date scope</span><div class="youtube-date-mode-buttons" role="group" '
+    +'aria-label="YouTube date relationship">'
+    +'<button type="button" data-youtube-date-mode="independent">Independent</button>'
+    +'<button type="button" data-youtube-date-mode="follow">Follow Main</button>'
+    +'</div></div>'
+  );
+  bar.insertAdjacentHTML(
+    'beforeend',
+    '<div class="youtube-date-help" id="youtubeDateHelp" aria-live="polite"></div>'
+  );
+  document.querySelectorAll('[data-youtube-date-mode]').forEach(button=>
+    button.addEventListener('click',()=>setYoutubeDateMode(button.dataset.youtubeDateMode))
+  );
+  for(const id of ['youtubeFrom','youtubeTo']){
+    $(id).addEventListener('change',()=>{
+      if(youtubeDateMode!=='independent')return;
+      youtubeDateOverlap=true;
+      updateYoutubeDateHelp();
+    },true);
+  }
+}
+function youtubeMainOverlapRange(){
+  const bounds=youtubeTrueBounds();
+  const start=$('from').value>bounds.start?$('from').value:bounds.start;
+  const end=$('to').value<bounds.end?$('to').value:bounds.end;
+  return {start,end,valid:Boolean(start&&end&&start<=end),bounds};
+}
+function updateYoutubeDateHelp(){
+  const help=$('youtubeDateHelp');
+  if(!help)return;
+  help.classList.toggle('error',youtubeDateMode==='follow'&&!youtubeDateOverlap);
+  if(youtubeDateMode==='independent'){
+    help.textContent='Independent YouTube range; main dashboard dates do not change this section.';
+  }else if(youtubeDateOverlap){
+    help.textContent='Following main dashboard dates, clipped to available YouTube data.';
+  }else{
+    help.textContent='No YouTube data overlaps the selected main dashboard dates.';
+  }
+}
+function applyYoutubeMainDate(renderNow=true){
+  const overlap=youtubeMainOverlapRange();
+  youtubeDateOverlap=overlap.valid;
+  if(overlap.valid){
+    $('youtubeFrom').value=overlap.start;
+    $('youtubeTo').value=overlap.end;
+  }else{
+    const anchor=$('to').value<overlap.bounds.start
+      ?overlap.bounds.start
+      :overlap.bounds.end;
+    $('youtubeFrom').value=anchor;
+    $('youtubeTo').value=anchor;
+  }
+  refreshYoutubeDateLimits();
+  updateYoutubeRangeButtons('');
+  updateYoutubeDateHelp();
+  if(renderNow)renderYoutube();
+}
+function setYoutubeDateMode(mode,renderNow=true){
+  youtubeDateMode=mode==='follow'?'follow':'independent';
+  document.querySelectorAll('[data-youtube-date-mode]').forEach(button=>
+    button.classList.toggle('active',button.dataset.youtubeDateMode===youtubeDateMode)
+  );
+  const follow=youtubeDateMode==='follow';
+  $('youtubeFrom').disabled=follow;
+  $('youtubeTo').disabled=follow;
+  if(follow){
+    applyYoutubeMainDate(renderNow);
+    return;
+  }
+  youtubeDateOverlap=true;
+  updateYoutubeDateHelp();
+  if(renderNow)renderYoutube();
+}
+function initializeYoutubeDates(){
+  const overlap=youtubeMainOverlapRange(),bounds=overlap.bounds;
+  if(overlap.valid){
+    $('youtubeFrom').value=overlap.start;
+    $('youtubeTo').value=overlap.end;
+  }else{
+    $('youtubeFrom').value=bounds.end;
+    $('youtubeTo').value=bounds.end;
+  }
+  refreshYoutubeDateLimits();
+}
+function ensureYoutubeChartIntervalControls(){
+  if($('youtubeChartInterval'))return;
+  $('youtubeSelectionNote').insertAdjacentHTML(
+    'beforebegin',
+    '<div class="youtube-chart-interval-controls">'
+    +'<label class="filter-label">Chart interval'
+    +'<select id="youtubeChartInterval">'
+    +'<option value="1">1 minute</option>'
+    +'<option value="5" selected>5 minutes</option>'
+    +'<option value="15">15 minutes</option>'
+    +'<option value="30">30 minutes</option>'
+    +'<option value="60">1 hour</option>'
+    +'<option value="custom">Custom minutes</option>'
+    +'</select></label>'
+    +'<label class="filter-label" id="youtubeCustomIntervalLabel" hidden>'
+    +'Custom minutes<input id="youtubeCustomInterval" type="number" '
+    +'min="1" max="1440" step="1" value="120"></label></div>'
+  );
+  $('youtubeChartInterval').addEventListener('change',()=>{
+    const custom=$('youtubeChartInterval').value==='custom';
+    $('youtubeCustomIntervalLabel').hidden=!custom;
+    showLoading('Updating YouTube chart interval...');
+    renderYoutube();
+  });
+  $('youtubeCustomInterval').addEventListener('change',()=>{
+    const value=Math.min(1440,Math.max(1,Number($('youtubeCustomInterval').value)||1));
+    $('youtubeCustomInterval').value=String(Math.round(value));
+    showLoading('Updating YouTube chart interval...');
+    renderYoutube();
+  });
+}
+let youtubeChartRestoreState=[];
+let youtubeChartPreviousFocus=null;
+function resizeYoutubeTrendChart(){
+  requestAnimationFrame(()=>{
+    if(youtubeTrendChart)youtubeTrendChart.resize();
+  });
+}
+function openYoutubeChart(){
+  const modal=$('youtubeChartModal'),body=$('youtubeChartModalBody');
+  if(!modal||!modal.hidden)return;
+  closeMultiMenus('');
+  youtubeChartPreviousFocus=document.activeElement;
+  const nodes=[
+    document.querySelector('#youtubePanel .youtube-filter-bar'),
+    document.querySelector('#youtubePanel .youtube-controls'),
+    document.querySelector('#youtubePanel .youtube-chart-shell'),
+  ].filter(Boolean);
+  youtubeChartRestoreState=nodes.map(node=>({
+    node,
+    parent:node.parentNode,
+    nextSibling:node.nextSibling,
+  }));
+  for(const entry of youtubeChartRestoreState)body.appendChild(entry.node);
+  modal.hidden=false;
+  document.body.classList.add('youtube-chart-expanded');
+  $('expandYoutubeChart').setAttribute('aria-expanded','true');
+  $('closeYoutubeChart').focus();
+  resizeYoutubeTrendChart();
+}
+function closeYoutubeChart(){
+  const modal=$('youtubeChartModal');
+  if(!modal||modal.hidden)return;
+  closeMultiMenus('');
+  for(const entry of youtubeChartRestoreState.slice().reverse()){
+    entry.parent.insertBefore(entry.node,entry.nextSibling);
+  }
+  youtubeChartRestoreState=[];
+  modal.hidden=true;
+  document.body.classList.remove('youtube-chart-expanded');
+  $('expandYoutubeChart').setAttribute('aria-expanded','false');
+  if(youtubeChartPreviousFocus&&document.contains(youtubeChartPreviousFocus)){
+    youtubeChartPreviousFocus.focus();
+  }
+  youtubeChartPreviousFocus=null;
+  resizeYoutubeTrendChart();
+}
+function ensureYoutubeChartExpand(){
+  if($('expandYoutubeChart'))return;
+  const panel=$('youtubePanel'),tag=panel.querySelector('.youtube-tag');
+  const actions=document.createElement('div');
+  actions.className='panel-actions';
+  actions.innerHTML='<button id="expandYoutubeChart" type="button" '
+    +'aria-expanded="false" aria-controls="youtubeChartModal">Expand chart</button>';
+  tag.before(actions);
+  actions.appendChild(tag);
+  document.body.insertAdjacentHTML(
+    'beforeend',
+    '<div id="youtubeChartModal" class="youtube-chart-modal" hidden '
+    +'role="dialog" aria-modal="true" aria-labelledby="youtubeChartModalTitle">'
+    +'<div class="youtube-chart-dialog">'
+    +'<div class="youtube-chart-modal-head">'
+    +'<h2 id="youtubeChartModalTitle">YouTube Channel Concurrency</h2>'
+    +'<button id="closeYoutubeChart" type="button">Close</button>'
+    +'</div><div id="youtubeChartModalBody" class="youtube-chart-modal-body"></div>'
+    +'</div></div>'
+  );
+  $('expandYoutubeChart').addEventListener('click',openYoutubeChart);
+  $('closeYoutubeChart').addEventListener('click',closeYoutubeChart);
+  $('youtubeChartModal').addEventListener('click',event=>{
+    if(event.target===$('youtubeChartModal'))closeYoutubeChart();
+  });
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape'&&!$('youtubeChartModal').hidden)closeYoutubeChart();
+  });
+}
+function youtubeChartIntervalMinutes(){
+  const selected=$('youtubeChartInterval')?.value||'5';
+  if(selected!=='custom')return Number(selected);
+  return Math.min(1440,Math.max(1,Math.round(Number($('youtubeCustomInterval').value)||1)));
+}
+function youtubeIntervalLabel(minutes){
+  if(minutes===1)return '1-minute';
+  if(minutes===60)return '1-hour';
+  if(minutes%60===0)return (minutes/60)+'-hour';
+  return minutes+'-minute';
+}
+setYoutubeRange=function(kind){
+  setYoutubeDateMode('independent',false);
+  const bounds=youtubeTrueBounds(),end=new Date(bounds.end+'T00:00:00Z');
+  if(kind==='all'){
+    $('youtubeFrom').value=bounds.start;
+    $('youtubeTo').value=bounds.end;
+  }else{
+    const days=kind==='latest'?1:Number(kind);
+    end.setUTCDate(end.getUTCDate()-(days-1));
+    $('youtubeFrom').value=[end.toISOString().slice(0,10),bounds.start].sort().at(-1);
+    $('youtubeTo').value=bounds.end;
+  }
+  syncYoutubeDates('from');
+  updateYoutubeRangeButtons(kind);
+  updateYoutubeDateHelp();
+  renderYoutube();
+};
+syncYoutubeDates=function(changed){
+  const fromInput=$('youtubeFrom'),toInput=$('youtubeTo');
+  let adjusted=false;
+  if(fromInput.value>toInput.value){
+    if(changed==='from')toInput.value=fromInput.value;
+    else fromInput.value=toInput.value;
+    adjusted=true;
+  }
+  refreshYoutubeDateLimits();
+  if(adjusted&&$('youtubeDateHelp')){
+    $('youtubeDateHelp').textContent=changed==='from'
+      ?'End date moved to match the later start date.'
+      :'Start date moved to match the earlier end date.';
+  }
+};
+function ensureYoutubeChannelFilter(){
+  if($('youtubeChannelToggle'))return;
+  const videoLabel=$('youtubeVideoToggle').closest('.filter-label');
+  videoLabel.insertAdjacentHTML(
+    'beforebegin',
+    '<label class="filter-label">YouTube channels'
+    +'<span class="multi-select"><button id="youtubeChannelToggle" '
+    +'class="multi-toggle" type="button">All channels</button>'
+    +'<span id="youtubeChannelMenu" class="multi-menu"></span></span></label>'
+  );
+}
+function youtubeChannels(){
+  const youtube=DATA.youtube||{},declared=(youtube.channels||[]).map(String);
+  const derived=(youtube.video_daily||[]).map(row=>String(row.youtube_channel||'Unknown / NA'));
+  return [...new Set([...declared,...derived].filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+}
+function youtubeSelectedChannels(){return selectedMulti('youtubeChannel');}
+function youtubeRowInChannels(row,channels){
+  return channels.has(String(row.youtube_channel||'Unknown / NA'));
+}
+function youtubeTrueBounds(){
+  const youtube=DATA.youtube||{};
+  return {
+    start:String(youtube.true_start||youtube.full_start||'').slice(0,10),
+    end:String(youtube.true_end||youtube.full_end||'').slice(0,10),
+  };
+}
+youtubeBounds=function(){return youtubeTrueBounds();};
+function refreshYoutubeDateLimits(){
+  const bounds=youtubeTrueBounds();
+  for(const id of ['youtubeFrom','youtubeTo']){
+    $(id).min=bounds.start;
+    $(id).max=bounds.end;
+  }
+}
+let youtubeVideoSelectAll=true;
+function youtubeVideoMetaMap(rows){
+  const meta=new Map();
+  for(const row of rows.slice().sort((a,b)=>String(a.log_date).localeCompare(String(b.log_date)))){
+    meta.set(String(row.video_id),{
+      title:String(row.title||'Untitled live video'),
+      channel:String(row.youtube_channel||'Unknown / NA'),
+    });
+  }
+  return meta;
+}
+function youtubeVideoMultiSummary(videoIds,selected){
+  const button=$('youtubeVideoToggle');
+  if(!selected.size){button.textContent='No live videos selected';return;}
+  button.textContent=youtubeSelectionIsAll(videoIds,selected)
+    ?'All videos in selected channels'
+    :selected.size===1?'1 live video selected':selected.size+' live videos selected';
+}
+function buildYoutubeVideoMultiChannel(videoIds,meta){
+  const menu=$('youtubeVideoMenu'),old=youtubeSelectedVideoIds(),allowed=new Set(videoIds);
+  const selected=youtubeVideoSelectAll
+    ?new Set(videoIds)
+    :new Set([...old].filter(id=>allowed.has(id)));
+  const allChecked=youtubeSelectionIsAll(videoIds,selected);
+  const items=videoIds.map(id=>({id,...(meta.get(id)||{
+    title:'Untitled live video',
+    channel:'Unknown / NA',
+  })}));
+  menu.innerHTML='<input id="youtubeVideoSearch" class="multi-search" type="search" '
+    +'placeholder="Search channel, video ID, or title...">'
+    +'<label class="multi-option multi-all"><input type="checkbox" data-all '
+    +(allChecked?'checked':'')+'>All videos in selected channels</label>'
+    +items.map(item=>'<label class="multi-option" data-video-option data-search="'
+      +esc((item.channel+' '+item.id+' '+item.title).toLowerCase())+'">'
+      +'<input type="checkbox" data-video="'+esc(item.id)+'" '
+      +(selected.has(item.id)?'checked':'')+'>'
+      +'<span><strong class="youtube-channel-label">'+esc(item.channel)+'</strong>'
+      +'<small>'+esc(item.id)+' · '+esc(item.title)+'</small></span></label>').join('');
+  youtubeVideoMultiSummary(videoIds,selected);
+  $('youtubeVideoToggle').onclick=event=>{
+    event.stopPropagation();
+    const open=!menu.classList.contains('open');
+    closeMultiMenus('youtubeVideo');
+    menu.classList.toggle('open',open);
+    if(open)$('youtubeVideoSearch').focus();
+  };
+  $('youtubeVideoSearch').oninput=event=>{
+    const term=event.target.value.trim().toLowerCase();
+    for(const option of menu.querySelectorAll('[data-video-option]')){
+      option.style.display=!term||option.dataset.search.includes(term)?'flex':'none';
+    }
+  };
+  menu.onchange=event=>{
+    const all=menu.querySelector('input[data-all]');
+    if(event.target.hasAttribute('data-all')){
+      for(const input of menu.querySelectorAll('input[data-video]')){
+        input.checked=event.target.checked;
+      }
+    }else{
+      all.checked=[...menu.querySelectorAll('input[data-video]')].every(input=>input.checked);
+    }
+    youtubeVideoSelectAll=all.checked;
+    youtubeVideoMultiSummary(videoIds,youtubeSelectedVideoIds());
+    renderYoutube();
+  };
+}
+function youtubeMinuteStats(rows){
+  const stats=new Map();
+  for(const row of rows){
+    const key=youtubeMinuteKey(row.timestamp_ist);
+    const current=stats.get(key)||{total:0,peak:0,videos:new Set(),channels:new Set()};
+    const value=Number(row.concurrent_viewers||0);
+    current.total+=value;
+    current.peak=Math.max(current.peak,value);
+    current.videos.add(String(row.video_id));
+    current.channels.add(String(row.youtube_channel||'Unknown / NA'));
+    stats.set(key,current);
+  }
+  return stats;
+}
+const youtubeChannelColors={
+  'Aaj Tak':'#e11d48',
+  'ABP News':'#f59e0b',
+  'CNN-News18':'#2563eb',
+  'India TV':'#7c3aed',
+  'NDTV India':'#0891b2',
+  'Republic Bharat':'#dc2626',
+  'TV9 Bharatvarsh':'#16a34a',
+  'Zee News':'#db2777',
+  'Unknown / NA':'#64748b',
+};
+const youtubeFallbackColors=[
+  '#0f766e','#9333ea','#ea580c','#0369a1','#4d7c0f','#be123c','#4338ca','#a16207',
+];
+function youtubeChannelChartData(rows,selectedChannels,intervalMinutes){
+  const byChannelMinute=new Map();
+  for(const row of rows){
+    const channel=String(row.youtube_channel||'Unknown / NA');
+    if(!byChannelMinute.has(channel))byChannelMinute.set(channel,new Map());
+    const minute=youtubeMinuteKey(row.timestamp_ist),series=byChannelMinute.get(channel);
+    series.set(minute,(series.get(minute)||0)+Number(row.concurrent_viewers||0));
+  }
+  const intervalMs=intervalMinutes*60000,byChannel=new Map(),allBuckets=new Set();
+  for(const [channel,minutes] of byChannelMinute){
+    const buckets=new Map();
+    for(const [minute,value] of minutes){
+      const bucketMillis=Math.floor(naiveMillis(minute)/intervalMs)*intervalMs;
+      const bucket=new Date(bucketMillis).toISOString().slice(0,16)+':00';
+      const current=buckets.get(bucket)||{sum:0,count:0,peak:0};
+      current.sum+=value;
+      current.count++;
+      current.peak=Math.max(current.peak,value);
+      buckets.set(bucket,current);
+      allBuckets.add(bucket);
+    }
+    byChannel.set(channel,buckets);
+  }
+  const rawBuckets=[...allBuckets].sort(),maxChartPoints=6000;
+  const displayStep=Math.max(1,Math.ceil(rawBuckets.length/maxChartPoints));
+  const visualBuckets=[];
+  for(let index=0;index<rawBuckets.length;index+=displayStep){
+    visualBuckets.push(rawBuckets.slice(index,index+displayStep));
+  }
+  const displayMinutes=intervalMinutes*displayStep;
+  const labels=visualBuckets.map(group=>{
+    const start=group[0];
+    if(displayMinutes===1)return formatIst(start);
+    const endMillis=naiveMillis(group.at(-1))+(intervalMinutes-1)*60000;
+    const end=new Date(endMillis).toISOString().slice(0,16)+':00';
+    return formatIst(start)+' to '+formatIst(end);
+  });
+  const ordered=[...selectedChannels].filter(channel=>byChannel.has(channel))
+    .sort((a,b)=>a.localeCompare(b));
+  const datasets=ordered.map((channel,index)=>{
+    const series=byChannel.get(channel);
+    return {
+      label:channel,
+      data:visualBuckets.map(group=>{
+        let sum=0,count=0;
+        for(const bucket of group){
+          const value=series.get(bucket);
+          if(!value)continue;
+          sum+=value.sum;
+          count+=value.count;
+        }
+        return count?sum/count:null;
+      }),
+      borderColor:youtubeChannelColors[channel]
+        ||youtubeFallbackColors[index%youtubeFallbackColors.length],
+      backgroundColor:'transparent',
+      fill:false,
+      spanGaps:false,
+      tension:.16,
+      pointRadius:0,
+      pointHoverRadius:5,
+      pointHitRadius:10,
+      borderWidth:1.8,
+    };
+  });
+  return {
+    labels,
+    datasets,
+    intervalMinutes,
+    displayMinutes,
+    condensed:displayStep>1,
+  };
+}
+function renderYoutubeChannelTrend(rows,selectedChannels){
+  const canvas=$('youtubeTrend'),empty=$('youtubeChartEmpty');
+  const chartData=youtubeChannelChartData(
+    rows,
+    selectedChannels,
+    youtubeChartIntervalMinutes(),
+  );
+  if(!chartData.labels.length||!chartData.datasets.length){
+    canvas.style.display='none';
+    empty.style.display='flex';
+    empty.textContent='No YouTube live-concurrency data for the selected channels and videos.';
+    if(youtubeTrendChart){
+      youtubeTrendChart.data={labels:[],datasets:[]};
+      youtubeTrendChart.update('none');
+    }
+    return chartData;
+  }
+  canvas.style.display='block';
+  empty.style.display='none';
+  const data={labels:chartData.labels,datasets:chartData.datasets};
+  const yTitle=chartData.intervalMinutes===1
+    ?'Live concurrent viewers by channel'
+    :'Average concurrent viewers by channel';
+  if(youtubeTrendChart){
+    youtubeTrendChart.data=data;
+    youtubeTrendChart.options.scales.y.title.text=yTitle;
+    youtubeTrendChart.update('none');
+    return chartData;
+  }
+  youtubeTrendChart=new Chart(canvas,{
+    type:'line',
+    data,
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      normalized:true,
+      animation:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{
+          display:true,
+          position:'bottom',
+          labels:{usePointStyle:true,pointStyle:'line',boxWidth:18,font:{size:10}},
+        },
+        tooltip:{
+          backgroundColor:'#1f2937',
+          borderColor:'#475569',
+          borderWidth:1,
+          titleColor:'#f8fafc',
+          bodyColor:'#f8fafc',
+          padding:10,
+          displayColors:true,
+          filter:context=>Number.isFinite(Number(context.parsed.y)),
+          itemSort:(left,right)=>Number(right.parsed.y)-Number(left.parsed.y),
+          callbacks:{label:context=>context.dataset.label+': '+fmt(context.parsed.y)},
+        },
+      },
+      scales:{
+        x:{
+          title:{display:true,text:'IST time',font:{size:11,weight:'700'}},
+          ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:18,font:{size:10},color:'#5b6b7a'},
+          grid:{color:'#edf2f7'},
+        },
+        y:{
+          title:{
+            display:true,
+            text:yTitle,
+            font:{size:11,weight:'700'},
+          },
+          beginAtZero:true,
+          ticks:{color:'#5b6b7a',callback:value=>fmt(value)},
+          grid:{color:'#edf2f7'},
+        },
+      },
+    },
+  });
+  return chartData;
+}
+function renderYoutubeChannelTable(chartData){
+  const table=$('youtubeTrendTable').closest('table');
+  const valueLabel=chartData.intervalMinutes===1
+    ?'Live concurrency'
+    :youtubeIntervalLabel(chartData.displayMinutes)+' average concurrency';
+  table.querySelector('thead').innerHTML='<tr><th>IST time</th>'
+    +'<th>YouTube channel</th><th>'+esc(valueLabel)+'</th></tr>';
+  const possible=chartData.labels.length*Math.max(1,chartData.datasets.length);
+  const step=Math.max(1,Math.ceil(possible/600)),rows=[];
+  for(let index=0;index<chartData.labels.length;index+=step){
+    for(const dataset of chartData.datasets){
+      const value=dataset.data[index];
+      if(value===null||value===undefined)continue;
+      rows.push('<tr><td>'+esc(chartData.labels[index])+'</td><td>'
+        +esc(dataset.label)+'</td><td>'+fmt(value)+'</td></tr>');
+    }
+  }
+  $('youtubeTrendTable').innerHTML=rows.length
+    ?rows.join('')
+    :'<tr><td colspan="3">No values for this selection.</td></tr>';
+}
+function youtubeSelectedVideoMinuteRows(youtube,from,to){
+  if(youtubeDateMode==='follow'&&!youtubeDateOverlap)return [];
+  const channels=youtubeSelectedChannels(),videos=youtubeSelectedVideoIds();
+  return youtubeRowsForDate(youtube.video_minute,from,to).filter(row=>
+    youtubeRowInChannels(row,channels)&&videos.has(String(row.video_id))
+  );
+}
+function renderYoutubeChannelAware(){
+  const youtube=DATA.youtube||{};
+  if(!youtube.available){
+    $('youtubeMeta').textContent=youtube.reason||'YouTube source data is not available.';
+    $('youtubeMetrics').innerHTML='';
+    $('youtubeVideoRanking').innerHTML='<div class="audience-empty">'
+      +'YouTube live-audience data is unavailable.</div>';
+    $('youtubeEventContext').innerHTML='';
+    $('youtubeSelectionNote').textContent='';
+    renderYoutubeChannelTable(renderYoutubeChannelTrend([],new Set()));
+    return;
+  }
+  ensureYoutubeChannelFilter();
+  refreshYoutubeDateLimits();
+  const from=$('youtubeFrom').value,to=$('youtubeTo').value;
+  const channels=youtubeChannels();
+  buildMulti('youtubeChannel',channels,'channels',channels,()=>{
+    renderYoutube();
+  });
+  const selectedChannels=youtubeSelectedChannels();
+  const dateSelectionAvailable=youtubeDateMode!=='follow'||youtubeDateOverlap;
+  const allDaily=dateSelectionAvailable
+    ?youtubeRowsForDate(youtube.video_daily,from,to)
+    :[];
+  const daily=allDaily.filter(row=>youtubeRowInChannels(row,selectedChannels));
+  const videoIds=[...new Set(daily.map(row=>String(row.video_id)))].sort();
+  const videoMeta=youtubeVideoMetaMap(daily);
+  buildYoutubeVideoMultiChannel(videoIds,videoMeta);
+  const selectedVideos=youtubeSelectedVideoIds();
+  const videoMinute=dateSelectionAvailable
+    ?youtubeRowsForDate(youtube.video_minute,from,to).filter(row=>
+      youtubeRowInChannels(row,selectedChannels)&&selectedVideos.has(String(row.video_id))
+    )
+    :[];
+  const stats=youtubeMinuteStats(videoMinute);
+  const points=[...stats.entries()].sort((a,b)=>a[0].localeCompare(b[0]))
+    .map(([label,value])=>({label,value:value.total}));
+  const values=points.map(point=>point.value);
+  const peak=values.length?Math.max(...values):0;
+  const average=values.length?values.reduce((sum,value)=>sum+value,0)/values.length:0;
+  const viewerMinutes=values.reduce((sum,value)=>sum+value,0);
+  const peakLiveVideos=stats.size?Math.max(...[...stats.values()].map(row=>row.videos.size)):0;
+  const representedChannels=new Set(videoMinute.map(row=>
+    String(row.youtube_channel||'Unknown / NA')));
+  const selectedScope=selectedChannels.size===channels.length
+    ?'All '+channels.length+' YouTube channels'
+    :selectedChannels.size+' selected YouTube channel'+(selectedChannels.size===1?'':'s');
+  const scopeLabel=selectedScope+' · '+representedChannels.size+' with data in range';
+  $('youtubeMeta').textContent='Available data: '+String(youtube.true_start).slice(0,16)
+    +' to '+String(youtube.true_end).slice(0,16)+' IST | '+channels.length
+    +' collected channels | '+fmt(youtube.completed_files||0)+' completed and '
+    +fmt(youtube.partial_files||0)+' active partial files';
+  $('youtubeMetrics').innerHTML=[
+    ['Peak live concurrency',fmt(peak),scopeLabel],
+    ['Average live concurrency',fmt(average),scopeLabel],
+    ['Estimated viewer-minutes',fmt(viewerMinutes),'Live concurrency summed by minute'],
+    ['Peak simultaneous live videos',fmt(peakLiveVideos),scopeLabel],
+  ].map(metric=>'<div class="youtube-metric"><div class="youtube-metric-label">'
+    +metric[0]+'</div><div class="youtube-metric-value">'+metric[1]
+    +'</div><div class="youtube-metric-note">'+metric[2]+'</div></div>').join('');
+  const chartData=renderYoutubeChannelTrend(videoMinute,selectedChannels);
+  renderYoutubeChannelTable(chartData);
+  const intervalNote=chartData.intervalMinutes===1
+    ?'Chart: minute-by-minute concurrency'
+    :'Chart: '+youtubeIntervalLabel(chartData.intervalMinutes)+' average concurrency';
+  const displayNote=chartData.condensed
+    ?' · display condensed to '+youtubeIntervalLabel(chartData.displayMinutes)
+      +' averages for browser performance'
+    :'';
+  $('youtubeSelectionNote').textContent=dateSelectionAvailable
+    ?scopeLabel+' | '+selectedVideos.size+' selected live video'
+      +(selectedVideos.size===1?'':'s')+' | '+from+' to '+to
+      +' | '+intervalNote+displayNote
+    :'No YouTube data overlaps the selected main dashboard dates.';
+  const grouped=new Map();
+  for(const row of daily){
+    if(!selectedVideos.has(String(row.video_id)))continue;
+    const channel=String(row.youtube_channel||'Unknown / NA');
+    const key=channel+'\u0000'+String(row.video_id);
+    const current=grouped.get(key)||{
+      id:String(row.video_id),channel,title:String(row.title||''),
+      viewerMinutes:0,peak:0,liveMinutes:0,lastDate:'',
+    };
+    current.viewerMinutes+=Number(row.viewer_minutes||0);
+    current.peak=Math.max(current.peak,Number(row.peak_concurrent_viewers||0));
+    current.liveMinutes+=Number(row.live_minutes||0);
+    if(String(row.log_date)>=current.lastDate){
+      current.lastDate=String(row.log_date);
+      current.title=String(row.title||current.title);
+    }
+    grouped.set(key,current);
+  }
+  const ranking=[...grouped.values()].sort((a,b)=>b.viewerMinutes-a.viewerMinutes).slice(0,20);
+  const maxRank=Math.max(1,...ranking.map(row=>row.viewerMinutes));
+  $('youtubeVideoRanking').innerHTML=ranking.length
+    ?ranking.map(row=>'<div class="youtube-video-row"><span class="youtube-video-label">'
+      +'<strong class="youtube-channel-label">'+esc(row.channel)+'</strong>'
+      +'<small>'+esc(row.id)+' · '+esc(row.title)+'</small></span>'
+      +'<div class="youtube-mini-bar"><i style="width:'
+      +((row.viewerMinutes/maxRank)*100)+'%"></i></div>'
+      +'<span class="youtube-video-value">'+fmt(row.viewerMinutes)
+      +'<small>viewer-minutes<br>Peak '+fmt(row.peak)+'</small></span></div>').join('')
+    :'<div class="audience-empty">No live YouTube videos for this selection.</div>';
+  const events=youtubeRangeEvents(from,to);
+  const eventPreview=events.slice().sort((a,b)=>
+    a.on_air_start_ist.localeCompare(b.on_air_start_ist)).slice(-50).reverse();
+  $('youtubeEventContext').innerHTML=eventPreview.length
+    ?eventPreview.map(event=>{
+      const row=stats.get(youtubeMinuteKey(event.on_air_start_ist));
+      return '<div class="youtube-context-row"><span>'+formatIst(event.on_air_start_ist)
+        +'</span><span><strong>'+esc(event.event_id)+'</strong><small>'
+        +esc(event.ad_type)+'</small></span><span>'+esc(event.creative_title)
+        +'</span><span class="youtube-context-value">'
+        +(row?fmt(row.total):'No data')+'</span><span class="youtube-context-value">'
+        +(row?fmt(row.videos.size):'-')+'</span></div>';
+    }).join('')
+    :'<div class="audience-empty">No delivered ad events in this selection.</div>';
+}
+function youtubeMinuteChannelExportRows(youtube,from,to){
+  const stats=new Map();
+  for(const row of youtubeSelectedVideoMinuteRows(youtube,from,to)){
+    const channel=String(row.youtube_channel||'Unknown / NA');
+    const key=youtubeMinuteKey(row.timestamp_ist)+'\u0000'+channel;
+    const current=stats.get(key)||{
+      timestamp:youtubeMinuteKey(row.timestamp_ist),date:String(row.log_date),
+      channel,total:0,peak:0,videos:new Set(),
+    };
+    const value=Number(row.concurrent_viewers||0);
+    current.total+=value;
+    current.peak=Math.max(current.peak,value);
+    current.videos.add(String(row.video_id));
+    stats.set(key,current);
+  }
+  return [...stats.values()].sort((a,b)=>
+    a.timestamp.localeCompare(b.timestamp)||a.channel.localeCompare(b.channel));
+}
+function exportYoutubeCsvChannelAware(){
+  const youtube=DATA.youtube||{},from=$('youtubeFrom').value,to=$('youtubeTo').value;
+  const interval=$('youtubeExportInterval').value;
+  const selectedChannels=[...youtubeSelectedChannels()].sort().join(' | ');
+  let header,rows;
+  if(interval==='1'){
+    header=[
+      'IST Time','Date IST','Selected YouTube Channels','YouTube Channel',
+      'Live Concurrency','Peak Video Concurrency','Live Video Count','Metric Basis',
+    ];
+    rows=youtubeMinuteChannelExportRows(youtube,from,to).map(row=>[
+      formatIst(row.timestamp),row.date,selectedChannels,row.channel,row.total,
+      row.peak,row.videos.size,'Minute total for selected videos in this channel',
+    ]);
+  }else{
+    const channels=youtubeSelectedChannels(),videos=youtubeSelectedVideoIds();
+    header=[
+      'IST Time (5-minute bucket)','Date IST','Selected YouTube Channels',
+      'YouTube Channel','Video ID','Video Title','Average Live Concurrency',
+      'Peak Live Concurrency','Metric Basis',
+    ];
+    rows=(youtubeDateMode==='follow'&&!youtubeDateOverlap
+      ?[]
+      :youtubeRowsForDate(youtube.video_5min,from,to))
+      .filter(row=>youtubeRowInChannels(row,channels)&&videos.has(String(row.video_id)))
+      .sort((a,b)=>String(a.bucket_ist).localeCompare(String(b.bucket_ist))
+        ||String(a.youtube_channel).localeCompare(String(b.youtube_channel))
+        ||String(a.video_id).localeCompare(String(b.video_id)))
+      .map(row=>[
+        formatIst(row.bucket_ist),row.log_date,selectedChannels,row.youtube_channel,
+        row.video_id,row.title,Number(row.avg_concurrent_viewers||0),
+        Number(row.peak_concurrent_viewers||0),'5-minute per-video average and peak',
+      ]);
+  }
+  downloadCsv(
+    'youtube_live_audience_'+interval+'min_'+from+'_to_'+to+'_selected_channels.csv',
+    header,
+    rows,
+  );
+}
+function exportYoutubeReferenceCsvChannelAware(){
+  const youtube=DATA.youtube||{},from=$('youtubeFrom').value,to=$('youtubeTo').value;
+  const channels=youtubeSelectedChannels(),videos=youtubeSelectedVideoIds(),grouped=new Map();
+  const sourceRows=youtubeDateMode==='follow'&&!youtubeDateOverlap
+    ?[]
+    :youtubeRowsForDate(youtube.video_5min,from,to);
+  for(const row of sourceRows){
+    if(!youtubeRowInChannels(row,channels)||!videos.has(String(row.video_id)))continue;
+    const channel=String(row.youtube_channel||'Unknown / NA');
+    const id=String(row.video_id),key=channel+'\u0000'+id;
+    const current=grouped.get(key)||{
+      channel,id,title:String(row.title||''),first:String(row.bucket_ist),
+      last:String(row.bucket_ist),buckets:0,viewerMinutes:0,peak:0,
+    };
+    current.title=String(row.title||current.title);
+    current.first=String(row.bucket_ist)<current.first?String(row.bucket_ist):current.first;
+    current.last=String(row.bucket_ist)>current.last?String(row.bucket_ist):current.last;
+    current.buckets++;
+    current.viewerMinutes+=Number(row.avg_concurrent_viewers||0)*5;
+    current.peak=Math.max(current.peak,Number(row.peak_concurrent_viewers||0));
+    grouped.set(key,current);
+  }
+  const rows=[...grouped.values()].sort((a,b)=>b.viewerMinutes-a.viewerMinutes).map(row=>[
+    from+' to '+to,row.channel,row.id,row.title,formatIst(row.first),
+    formatIst(row.last),row.buckets,row.viewerMinutes,row.peak,
+  ]);
+  downloadCsv(
+    'youtube_channel_video_reference_'+from+'_to_'+to+'.csv',
+    [
+      'Selected YouTube Range','YouTube Channel','Video ID','Video Title',
+      'First Observed IST','Last Observed IST','5-Minute Live Buckets',
+      'Estimated Viewer-Minutes','Peak Live Concurrency',
+    ],
+    rows,
+  );
+}
+youtubeDeliveryDetails=function(event){
+  const youtube=DATA.youtube||{},key=youtubeMinuteKey(event.on_air_start_ist);
+  if(!youtubeDeliveryMinuteIndex){
+    const totals=new Map((youtube.minute||[]).map(row=>[youtubeMinuteKey(row.timestamp_ist),row]));
+    const videos=new Map();
+    for(const row of youtube.video_minute||[]){
+      const minuteKey=youtubeMinuteKey(row.timestamp_ist),list=videos.get(minuteKey)||[];
+      list.push(row);
+      videos.set(minuteKey,list);
+    }
+    youtubeDeliveryMinuteIndex={totals,videos};
+  }
+  const totalRow=youtubeDeliveryMinuteIndex.totals.get(key);
+  const videoRows=youtubeDeliveryMinuteIndex.videos.get(key)||[];
+  if(!totalRow)return {
+    value:'No YouTube data',total:null,live_videos:0,video_ids:'',
+    video_titles:'',scope:'All collected YouTube channels at the on-air minute',
+  };
+  const videoIds=[...new Set(videoRows.map(row=>String(row.video_id||'')).filter(Boolean))];
+  const titles=[...new Set(videoRows.map(row=>
+    youtubeVideoTitle(youtube,row.video_id,row.log_date)).filter(Boolean))];
+  const channels=[...new Set(videoRows.map(row=>
+    String(row.youtube_channel||'Unknown / NA')))].sort();
+  return {
+    value:fmt(Number(totalRow.total_concurrent_viewers||0)),
+    total:Number(totalRow.total_concurrent_viewers||0),
+    live_videos:Number(totalRow.live_videos||videoIds.length),
+    video_ids:videoIds.join(' | '),
+    video_titles:titles.join(' | '),
+    scope:'All collected YouTube channels at the on-air minute: '+channels.join(' | '),
+  };
+};
+function selectedYoutubeRows(){
+  const youtube=DATA.youtube||{},from=$('youtubeFrom').value,to=$('youtubeTo').value;
+  if(youtubeDateMode==='follow'&&!youtubeDateOverlap)return [];
+  return youtubeSelectedVideoMinuteRows(youtube,from,to);
+}
 function renderScopeValidation(){ensureScopePanel();const asrunTrue=sourceBounds(DATA.events||[],'on_air_start_ist','on_air_end_ist'),asrunUsed=sourceBounds(filtered(),'on_air_start_ist','on_air_end_ist'),fastTrue=sourceBounds((DATA.viewer_minute||[]).filter(row=>row.source==='fast'),'minute_ist'),fastUsed=selectedViewerRows('fast'),streamTrue=sourceBounds((DATA.viewer_minute||[]).filter(row=>row.source==='stream'),'minute_ist'),streamUsed=selectedViewerRows('stream'),amagiTrue=sourceBounds(AMAGI.minute||[],'minute_ist'),amagiUsed=selectedAmagiRows(),fctTrue=FCT.true_start&&FCT.true_end?{start:FCT.true_start,end:FCT.true_end}:null,fctUsed=selectedFctRows(),youtube=DATA.youtube||{},youtubeTrue={start:youtube.true_start||'',end:youtube.true_end||''},youtubeUsed=selectedYoutubeRows(),rows=[['ASRUN delivered ad events',asrunTrue,asrunUsed,filtered().length,'Date, ad type, ad ID, creative title'],['FAST fixed 5-minute audience buckets',fastTrue,sourceBounds(fastUsed,'minute_ist'),fastUsed.length,'ASRUN date + FAST platform/channel'],['STREAM fixed 5-minute audience buckets',streamTrue,sourceBounds(streamUsed,'minute_ist'),streamUsed.length,'ASRUN date + STREAM channel'],['AMAGI actual 5-minute audience buckets',amagiTrue,sourceBounds(amagiUsed,'minute_ist'),amagiUsed.length,'ASRUN date + AMAGI platform/channel'],['FCT monitored ad occurrences',fctTrue,sourceBounds(fctUsed,'event_ist'),fctUsed.length,'ASRUN date + FCT class/feed/language/brand/category/company'],['YouTube live audience',youtubeTrue.start&&youtubeTrue.end?youtubeTrue:null,sourceBounds(youtubeUsed,'timestamp_ist'),youtubeUsed.length,'Independent YouTube date + video filter']];$('dataScopeRows').innerHTML=rows.map(row=>'<tr><td><strong>'+esc(row[0])+'</strong></td><td>'+esc(scopeRangeText(row[1]))+'</td><td>'+esc(scopeRangeText(row[2]))+'</td><td>'+fmt(row[3])+'</td><td class="scope-muted">'+esc(row[4])+'</td></tr>').join('');}
-const asrunBaseRender=render;render=function(){asrunBaseRender();renderFct();renderScopeValidation();hideLoading();};
-const asrunBaseRenderYoutube=renderYoutube;renderYoutube=function(){asrunBaseRenderYoutube();renderScopeValidation();hideLoading();};
-ensurePeriodControls();ensureCreativeFilters();refreshDependentOptions();ensureAmagiPanel();ensureFctPanel();ensureScopePanel();$('reset').onclick=resetDashboardFilters;replaceDownloadAction('exportAllEvents',exportAllEventsCsv);replaceDownloadAction('exportAudienceBreakdown',exportAudienceBreakdownCsv);render();renderYoutube();
+const asrunBaseRender=render;render=function(){if(youtubeDateMode==='follow')applyYoutubeMainDate(false);asrunBaseRender();renderFct();if(youtubeDateMode==='follow')renderYoutube();else renderScopeValidation();hideLoading();};
+renderYoutube=renderYoutubeChannelAware;
+const asrunBaseRenderYoutube=renderYoutube;
+renderYoutube=function(){asrunBaseRenderYoutube();renderScopeValidation();hideLoading();};
+ensurePeriodControls();ensureCreativeFilters();ensureYoutubeDateModeControls();ensureYoutubeChannelFilter();ensureYoutubeChartIntervalControls();ensureYoutubeChartExpand();refreshYoutubeDateLimits();initializeYoutubeDates();setYoutubeDateMode('independent',false);refreshDependentOptions();ensureAmagiPanel();ensureFctPanel();ensureScopePanel();$('reset').onclick=resetDashboardFilters;replaceDownloadAction('exportAllEvents',exportAllEventsCsv);replaceDownloadAction('exportAudienceBreakdown',exportAudienceBreakdownCsv);replaceDownloadAction('exportYoutubeCsv',exportYoutubeCsvChannelAware);replaceDownloadAction('exportYoutubeReferenceCsv',exportYoutubeReferenceCsvChannelAware);render();renderYoutube();
 </script>'''
     return (
         template.replace("__TITLE__", title)
