@@ -459,6 +459,30 @@ def test_render_dashboard_wires_complete_reset_and_fatal_error(
     assert "Filters changed from the default view; click to restore defaults" in html
 
 
+def test_render_dashboard_groups_sections_into_three_pages(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Large source sections must be navigable without duplicating their data."""
+    chartjs = tmp_path / "chart.umd.min.js"
+    chartjs.write_text("window.Chart=function(){};", encoding="utf-8")
+    monkeypatch.setattr(asrun, "CHARTJS_CACHE", chartjs)
+
+    html = asrun.render_dashboard({"channels": ["Test Channel"]})
+
+    assert 'id="dashboardPageNav"' in html
+    assert 'data-dashboard-page-target="audience"' in html
+    assert 'data-dashboard-page-target="delivery"' in html
+    assert 'data-dashboard-page-target="content"' in html
+    assert 'id="dashboardPageAudience"' in html
+    assert 'id="dashboardPageDelivery"' in html
+    assert 'id="dashboardPageContent"' in html
+    assert "$('dashboardPageAudience').append(" in html
+    assert "$('dashboardPageDelivery').append(" in html
+    assert "$('dashboardPageContent').append(nodes.nct,nodes.scope)" in html
+    assert "ensureScopePanel();ensureDashboardPages();initializeNctLazyLoad()" in html
+    assert "await activateDashboardPageData(activeDashboardPage)" in html
+
+
 def test_render_dashboard_keeps_fct_multiselects_independent(
     tmp_path: Path, monkeypatch
 ) -> None:

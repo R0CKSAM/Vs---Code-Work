@@ -2776,12 +2776,68 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
 }
 .nct-chart-card.expanded .nct-chart-wrap { flex: 1 1 auto; height: auto; min-height: 0; }
 body.nct-chart-expanded { overflow: hidden; }
+.dashboard-page-nav {
+  position: sticky;
+  z-index: 24;
+  top: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+  margin: 0 0 12px;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, .97);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, .08);
+  backdrop-filter: blur(8px);
+}
+.dashboard-page-nav button {
+  min-width: 0;
+  min-height: 34px;
+  overflow: hidden;
+  border: 1px solid #b8c4cf;
+  background: #ffffff;
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dashboard-page-nav button:hover { border-color: #64748b; background: #f1f5f9; }
+.dashboard-page-nav button.active {
+  border-color: #1f2937;
+  background: #1f2937;
+  color: #ffffff;
+}
+.dashboard-page[hidden] { display: none !important; }
+.dashboard-page {
+  min-width: 0;
+  animation: dashboard-page-enter .16s ease-out;
+}
+.dashboard-page > :first-child { margin-top: 0; }
+.dashboard-page[data-dashboard-page="delivery"] > .fct-panel { margin-top: 16px; }
+@keyframes dashboard-page-enter {
+  from { opacity: .35; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 @media (max-width: 1220px) {
   .youtube-filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .youtube-filter-actions { grid-column: 1 / -1; }
   .nct-controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 680px) {
+  .dashboard-page-nav {
+    position: sticky;
+    gap: 3px;
+    padding: 5px;
+  }
+  .dashboard-page-nav button {
+    min-height: 38px;
+    padding: 5px;
+    font-size: 10px;
+    line-height: 1.15;
+    white-space: normal;
+  }
   .youtube-filter-bar { grid-template-columns: 1fr; }
   .youtube-chart-interval-controls {
     width: 100%;
@@ -5156,6 +5212,133 @@ async function loadYoutubeDashboardData(){
   initializeYoutubeDates();
   renderYoutube();
 }
+let activeDashboardPage='audience';
+const DASHBOARD_PAGE_IDS={
+  audience:'dashboardPageAudience',
+  delivery:'dashboardPageDelivery',
+  content:'dashboardPageContent',
+};
+function ensureDashboardPages(){
+  if($('dashboardPageNav'))return;
+  ensureFctAudiencePanel();
+  const main=document.querySelector('main.wrap');
+  if(!main)throw new Error('ASRUN dashboard main container is missing.');
+  main.insertAdjacentHTML(
+    'afterbegin',
+    '<nav class="dashboard-page-nav" id="dashboardPageNav" '
+    +'aria-label="Dashboard pages">'
+    +'<button type="button" data-dashboard-page-target="audience" '
+    +'aria-controls="dashboardPageAudience">Audience Sources</button>'
+    +'<button type="button" data-dashboard-page-target="delivery" '
+    +'aria-controls="dashboardPageDelivery">Ad Delivery</button>'
+    +'<button type="button" data-dashboard-page-target="content" '
+    +'aria-controls="dashboardPageContent">Content Intelligence</button>'
+    +'</nav>'
+    +'<section class="dashboard-page" id="dashboardPageAudience" '
+    +'data-dashboard-page="audience"></section>'
+    +'<section class="dashboard-page" id="dashboardPageDelivery" '
+    +'data-dashboard-page="delivery" hidden></section>'
+    +'<section class="dashboard-page" id="dashboardPageContent" '
+    +'data-dashboard-page="content" hidden></section>',
+  );
+  const nodes={
+    kpis:$('kpis'),
+    rankings:document.querySelector('.rank-grid'),
+    audience:document.querySelector('.audience-grid'),
+    combined:document.querySelector('.combined-panel'),
+    fct:document.querySelector('.fct-panel'),
+    fctAudience:document.querySelector('.fct-audience-panel'),
+    nct:$('nctPanel'),
+    youtube:$('youtubePanel'),
+    scope:$('dataScopePanel'),
+  };
+  const missing=Object.entries(nodes)
+    .filter(([_name,node])=>!node)
+    .map(([name])=>name);
+  if(missing.length){
+    throw new Error('Dashboard page sections are missing: '+missing.join(', '));
+  }
+  $('dashboardPageAudience').append(
+    nodes.audience,
+    nodes.combined,
+    nodes.youtube,
+  );
+  $('dashboardPageDelivery').append(
+    nodes.kpis,
+    nodes.rankings,
+    nodes.fct,
+    nodes.fctAudience,
+  );
+  $('dashboardPageContent').append(nodes.nct,nodes.scope);
+  for(const button of document.querySelectorAll('[data-dashboard-page-target]')){
+    button.addEventListener('click',()=>setDashboardPage(
+      button.dataset.dashboardPageTarget,
+    ));
+  }
+  setDashboardPage('audience',false,false);
+}
+function dashboardPageNeedsLoading(page){
+  if(page==='audience'){
+    return !dashboardSourceLoaded('viewer')||!dashboardSourceLoaded('amagi')
+      ||!dashboardSourceLoaded('youtube');
+  }
+  if(page==='delivery'){
+    return !dashboardSourceLoaded('viewer')||!dashboardSourceLoaded('amagi')
+      ||!dashboardSourceLoaded('fct')||!dashboardSourceLoaded('youtube');
+  }
+  return !nctPayload;
+}
+async function activateDashboardPageData(page){
+  if(page==='audience'){
+    await Promise.all([loadAudienceDashboardData(),loadYoutubeDashboardData()]);
+    renderYoutube();
+    if(youtubeTrendChart)requestAnimationFrame(()=>youtubeTrendChart.resize());
+    return;
+  }
+  if(page==='delivery'){
+    await Promise.all([
+      loadAudienceDashboardData(),
+      loadFctDashboardData(),
+      loadYoutubeDashboardData(),
+    ]);
+    renderFctAndScope(false);
+    return;
+  }
+  await loadNctData();
+  if(nctPayload)renderNct(false);
+  if(nctChart)requestAnimationFrame(()=>nctChart.resize());
+}
+function setDashboardPage(page,loadData=true,scroll=true){
+  const target=Object.hasOwn(DASHBOARD_PAGE_IDS,page)?page:'audience';
+  activeDashboardPage=target;
+  closeMultiMenus('');
+  for(const [name,id] of Object.entries(DASHBOARD_PAGE_IDS)){
+    const section=$(id);
+    const active=name===target;
+    section.hidden=!active;
+    section.setAttribute('aria-hidden',active?'false':'true');
+  }
+  for(const button of document.querySelectorAll('[data-dashboard-page-target]')){
+    const active=button.dataset.dashboardPageTarget===target;
+    button.classList.toggle('active',active);
+    button.setAttribute('aria-selected',active?'true':'false');
+  }
+  if(scroll)$('dashboardPageNav').scrollIntoView({block:'start',behavior:'smooth'});
+  if(!loadData)return;
+  if(dashboardPageNeedsLoading(target)){
+    showLoading('Loading '+(
+      target==='audience'
+        ?'audience source'
+        :target==='delivery'?'ad delivery':'content intelligence'
+    )+' data...');
+  }
+  activateDashboardPageData(target)
+    .catch(error=>{
+      console.error('Dashboard page activation failed:',error);
+      showFatalDashboardError('dashboard page activation',error);
+    })
+    .finally(hideLoading);
+}
 function observeDashboardSource(name,target,loader){
   if(dashboardSourceLoaded(name)||!target)return;
   const start=()=>{
@@ -5195,7 +5378,7 @@ const asrunBaseRender=render;render=function(){if(youtubeDateMode==='follow')app
 renderYoutube=renderYoutubeChannelAware;
 const asrunBaseRenderYoutube=renderYoutube;
 renderYoutube=function(){asrunBaseRenderYoutube();renderScopeValidation();updateResetState();hideLoading();};
-ensurePeriodControls();ensureCreativeFilters();ensureYoutubeDateModeControls();ensureYoutubeChannelFilter();ensureYoutubeChartIntervalControls();ensureYoutubeChartExpand();refreshYoutubeDateLimits();initializeYoutubeDates();setYoutubeDateMode('independent',false);refreshDependentOptions();ensureAmagiPanel();ensureFctPanel();ensureNctPanel();ensureScopePanel();initializeNctLazyLoad();initializeDashboardSourceLoading();$('reset').onclick=resetDashboardFilters;
+ensurePeriodControls();ensureCreativeFilters();ensureYoutubeDateModeControls();ensureYoutubeChannelFilter();ensureYoutubeChartIntervalControls();ensureYoutubeChartExpand();refreshYoutubeDateLimits();initializeYoutubeDates();setYoutubeDateMode('independent',false);refreshDependentOptions();ensureAmagiPanel();ensureFctPanel();ensureNctPanel();ensureScopePanel();ensureDashboardPages();initializeNctLazyLoad();initializeDashboardSourceLoading();$('reset').onclick=resetDashboardFilters;
 replaceDownloadAction('exportAllEvents',()=>runWithDashboardSources(
   [loadAudienceDashboardData,loadYoutubeDashboardData],exportAllEventsCsv
 ));
@@ -5221,6 +5404,7 @@ async function bootstrapDashboard(){
     renderYoutube();
     showLoading('Loading FAST, STREAM, and AMAGI audience data...');
     await loadAudienceDashboardData();
+    await activateDashboardPageData(activeDashboardPage);
     captureDefaultFilterSignature();
     renderYoutube();
   }catch(startupError){

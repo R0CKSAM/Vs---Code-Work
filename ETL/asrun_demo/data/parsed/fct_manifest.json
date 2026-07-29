@@ -28,22 +28,17 @@
     }
   },
   "file_metadata": {
-    "CTV FCT.xlsx": {
-      "declared_start": "2026-06-24",
-      "declared_end": "2026-06-30",
-      "source_rows": 17927,
-      "valid_rows": 17702,
-      "excluded_rows": 225,
-      "range_source": "Pdate",
+    "YT_NEWS_12072026 to 14072026.xlsx": {
+      "declared_start": "2026-07-12",
+      "declared_end": "2026-07-14",
+      "source_rows": 7513,
+      "valid_rows": 7360,
+      "excluded_rows": 153,
+      "range_source": "filename",
       "parsed_sheets": [
         "Sheet1"
       ],
-      "ignored_sheets": [
-        "S1",
-        "S2",
-        "S3",
-        "S4"
-      ]
+      "ignored_sheets": []
     },
     "YT_NEWS_22072026 to 25072026.xlsx": {
       "declared_start": "2026-07-22",
@@ -51,6 +46,18 @@
       "source_rows": 8819,
       "valid_rows": 8557,
       "excluded_rows": 262,
+      "range_source": "filename",
+      "parsed_sheets": [
+        "Sheet1"
+      ],
+      "ignored_sheets": []
+    },
+    "YT_NEWS_19072026 to 21072026.xlsx": {
+      "declared_start": "2026-07-19",
+      "declared_end": "2026-07-21",
+      "source_rows": 6644,
+      "valid_rows": 6459,
+      "excluded_rows": 185,
       "range_source": "filename",
       "parsed_sheets": [
         "Sheet1"
@@ -81,30 +88,23 @@
       ],
       "ignored_sheets": []
     },
-    "YT_NEWS_19072026 to 21072026.xlsx": {
-      "declared_start": "2026-07-19",
-      "declared_end": "2026-07-21",
-      "source_rows": 6644,
-      "valid_rows": 6459,
-      "excluded_rows": 185,
-      "range_source": "filename",
+    "CTV FCT.xlsx": {
+      "declared_start": "2026-06-24",
+      "declared_end": "2026-06-30",
+      "source_rows": 17927,
+      "valid_rows": 17702,
+      "excluded_rows": 225,
+      "range_source": "Pdate",
       "parsed_sheets": [
         "Sheet1"
       ],
-      "ignored_sheets": []
-    },
-    "YT_NEWS_12072026 to 14072026.xlsx": {
-      "declared_start": "2026-07-12",
-      "declared_end": "2026-07-14",
-      "source_rows": 7513,
-      "valid_rows": 7360,
-      "excluded_rows": 153,
-      "range_source": "filename",
-      "parsed_sheets": [
-        "Sheet1"
-      ],
-      "ignored_sheets": []
+      "ignored_sheets": [
+        "S1",
+        "S2",
+        "S3",
+        "S4"
+      ]
     }
   },
-  "generated_at_ist": "2026-07-29T17:02:15.622138+05:30"
+  "generated_at_ist": "2026-07-29T17:18:05.269469+05:30"
 }
