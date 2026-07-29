@@ -79,6 +79,13 @@
     .source-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:6px;margin-top:6px}
     .source-card{display:grid;grid-template-columns:minmax(75px,.7fr) repeat(4,minmax(72px,1fr));gap:7px;align-items:center;min-width:0;border:1px solid var(--line);border-radius:7px;background:#fff;padding:7px 9px}
     .source-name{color:#183c49;font-size:11px;font-weight:800}.source-metric{min-width:0}.source-metric span{display:block;color:#74838a;font-size:8px;font-weight:700;text-transform:uppercase}.source-metric strong{display:block;margin-top:1px;color:#1f3d48;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .insight-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.insight-controls>span{color:#61727a;font-size:9px;font-weight:700}
+    .insight-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+    .insight-card{min-width:0;border:1px solid var(--line);border-top:3px solid #80949e;border-radius:7px;background:#fff;padding:8px 9px}
+    .insight-card.reference{border-top-color:var(--teal)}.insight-card h3{margin:0;color:#173a46;font-size:11px}.insight-card-period{min-height:24px;margin:2px 0 6px;color:var(--muted);font-size:9px;line-height:1.3}
+    .insight-reference-values{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}.insight-reference-values div{min-width:0;border-left:2px solid #dce8e7;padding-left:5px}.insight-reference-values span,.insight-metric span{display:block;color:#6a7b83;font-size:8px;font-weight:700;text-transform:uppercase}.insight-reference-values strong{display:block;margin-top:2px;color:#173d49;font-size:12px;overflow-wrap:anywhere}
+    .insight-metric{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:2px 6px;padding:5px 0;border-top:1px solid #edf1f3}.insight-metric:first-of-type{border-top:0}.insight-metric strong{font-size:12px;white-space:nowrap}.insight-metric small{grid-column:1/-1;color:#708088;font-size:8px;line-height:1.25}.insight-change.up{color:#08734d}.insight-change.down{color:#b43630}.insight-change.flat{color:#946611}.insight-change.unavailable{color:#708088;font-size:10px}
+    .insight-findings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px}.insight-finding{min-width:0;border:1px solid var(--line);border-radius:6px;background:#f8fafb;padding:7px 9px}.insight-finding span{display:block;color:#667880;font-size:8px;font-weight:750;text-transform:uppercase}.insight-finding strong{display:block;margin-top:2px;color:#1f3d48;font-size:11px;line-height:1.3;overflow-wrap:anywhere}.insight-finding small{display:block;margin-top:2px;color:#708088;font-size:9px;line-height:1.3}
     .analysis-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,.85fr);gap:6px;min-width:0}
     .channel-geo-filter-bar{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;margin:4px 0 6px}
     .channel-geo-filter-bar label{display:grid;gap:2px;color:#52636c;font-size:8px;font-weight:750;text-transform:uppercase;min-width:0}
@@ -137,6 +144,7 @@
       .title-row{display:block}.meta{justify-content:flex-start;text-align:left;margin-top:7px}
       .filter-row{grid-template-columns:1fr 1fr}.filter-group:first-child{grid-column:1/-1}
       .kpi-grid.viewing{grid-template-columns:repeat(4,minmax(0,1fr))}.analysis-grid,.distribution-grid{grid-template-columns:1fr}
+      .insight-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
     }
     @media(max-width:680px){
       .top-inner{padding:9px 10px}.title-row{max-height:240px}.meta{display:grid;grid-template-columns:1fr 1fr;gap:5px 10px}
@@ -148,6 +156,7 @@
       .asn-controls{grid-template-columns:1fr}.asn-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.asn-rank-row{grid-template-columns:22px minmax(120px,1fr) minmax(76px,.35fr)}
       main{padding:13px 10px 25px}.kpi-grid.viewing{grid-template-columns:1fr 1fr}
       .kpi-card{min-height:116px;padding:11px 12px}.kpi-value{font-size:25px}.chart-wrap{height:260px}
+      .insight-grid,.insight-findings{grid-template-columns:1fr}.insight-reference-values{grid-template-columns:1fr 1fr 1fr}
       .source-summary{grid-template-columns:minmax(0,1fr)}.source-card{grid-template-columns:repeat(2,minmax(0,1fr))}.source-name{grid-column:1/-1}
       .channel-geo-filter-bar,.geo-filter-bar,.geo-analysis-grid,.geo-analysis-grid[data-visible-panels="2"],.geo-analysis-grid[data-visible-panels="1"]{grid-template-columns:1fr}.geo-analysis-controls{padding:10px}.channel-geo-filter-bar select,.channel-geo-filter-bar input,.geo-filter-bar select,.geo-filter-bar input,.geo-multi-picker summary{height:34px;font-size:12px}
     }
@@ -318,6 +327,21 @@
       </article>
     </section>
 
+    <section class="section" id="insights" data-dashboard-section>
+      <div class="section-head">
+        <div><h2>Performance Insights</h2><p id="insightContext">Reference-day comparisons for the current Source and Channel filters</p></div>
+        <div class="insight-controls">
+          <span>Same-weekday baseline</span>
+          <div class="segmented" id="weekdayBaselineButtons" aria-label="Same-weekday comparison depth">
+            <button type="button" data-weekday-count="3" class="active">Previous 3</button>
+            <button type="button" data-weekday-count="7">Previous 7</button>
+          </div>
+        </div>
+      </div>
+      <div class="insight-grid" id="insightCards"></div>
+      <div class="insight-findings" id="insightFindings"></div>
+    </section>
+
     <section class="section" id="coverage">
       <div class="section-head"><div><h2>Coverage</h2><p>Completed-day ranges used by this dashboard</p></div></div>
       <div class="coverage-strip" id="coverageStrip"></div>
@@ -360,6 +384,7 @@
     const RAW_GEO_CHANNEL_ROWS=unpackCompact(GEOGRAPHY_SECTION.geo_channel_daily||DATA.geo_channel_daily);
     const nf0=new Intl.NumberFormat("en-IN",{maximumFractionDigits:0});
     const nf1=new Intl.NumberFormat("en-IN",{minimumFractionDigits:1,maximumFractionDigits:1});
+    const weekdayFormatter=new Intl.DateTimeFormat("en-IN",{weekday:"long",timeZone:"UTC"});
     const countryNameDecoder=typeof Intl.DisplayNames==="function"?new Intl.DisplayNames(["en"],{type:"region"}):null;
     const initialSource=(DATA.meta.sources||[]).find(function(value){return String(value).toLowerCase()==="stream"})||(DATA.meta.sources||[])[0]||"all";
     const initialRange=(DATA.meta.source_ranges||[]).find(function(row){return row.source===initialSource});
@@ -373,6 +398,7 @@
     const geoView={channels:null,channelSearch:"",countries:null,states:null,cities:null,countrySearch:"",stateSearch:"",citySearch:""};
     const channelGeoView={countries:null,states:null,cities:null,countrySearch:"",stateSearch:"",citySearch:""};
     const asnView={mode:"all",search:""};
+    let insightWeekdayCount=3;
     const WATCH_HOURS_PER_TS_ROW=6/3600;
     const DEFAULT_PREVIEW_ROWS=10;
     const expandableLists=[["channelLeaderboard","channelExpand",DEFAULT_PREVIEW_ROWS],["deviceLeaderboard","deviceExpand",DEFAULT_PREVIEW_ROWS],["modelLeaderboard","modelExpand",DEFAULT_PREVIEW_ROWS],["osLeaderboard","osExpand",DEFAULT_PREVIEW_ROWS],["osDetailLeaderboard","osDetailExpand",DEFAULT_PREVIEW_ROWS],["asnLeaderboard","asnExpand",DEFAULT_PREVIEW_ROWS],["geoCountryLeaderboard","geoCountryExpand",DEFAULT_PREVIEW_ROWS],["geoStateLeaderboard","geoStateExpand",DEFAULT_PREVIEW_ROWS],["geoCityLeaderboard","geoCityExpand",DEFAULT_PREVIEW_ROWS]];
@@ -612,6 +638,174 @@
       canvas.hidden=!rows.length;empty.hidden=!!rows.length;
       if(!rows.length||!window.Chart)return;
       dailyChart=new Chart(canvas,{type:"line",data:{labels:rows.map(function(row){return formatDate(row.date)}),datasets:[{label:"Watch Hours",data:rows.map(function(row){return row.watch_hours}),borderColor:"#087f78",backgroundColor:"rgba(8,127,120,.10)",borderWidth:2,pointRadius:rows.length>45?0:2,tension:.22,yAxisID:"y"},{label:"IP Users",data:rows.map(function(row){return row.ip_users}),borderColor:"#2463a2",backgroundColor:"rgba(36,99,162,.08)",borderWidth:2,pointRadius:rows.length>45?0:2,tension:.22,yAxisID:"y1"}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:"index",intersect:false},plugins:{legend:{position:"bottom",labels:{boxWidth:10,usePointStyle:true,font:{size:11}}},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+": "+(ctx.dataset.yAxisID==="y"?nf1.format(ctx.parsed.y)+" h":formatCount(ctx.parsed.y))}}}},scales:{x:{grid:{display:false},ticks:{maxTicksLimit:10,font:{size:10}}},y:{beginAtZero:true,position:"left",title:{display:true,text:"Watch Hours",font:{size:10}},ticks:{font:{size:10}}},y1:{beginAtZero:true,position:"right",title:{display:true,text:"IP Users",font:{size:10}},grid:{drawOnChartArea:false},ticks:{font:{size:10}}}}}});
+    }
+
+    function weekdayName(value){
+      return weekdayFormatter.format(new Date(String(value).slice(0,10)+"T00:00:00Z"));
+    }
+
+    function insightAverage(rows){
+      if(!rows.length)return null;
+      return {
+        watch_hours:sum(rows,"watch_hours")/rows.length,
+        ip_users:sum(rows,"ip_users")/rows.length
+      };
+    }
+
+    function insightTotal(rows){
+      if(!rows.length)return null;
+      return {watch_hours:sum(rows,"watch_hours"),ip_users:sum(rows,"ip_users")};
+    }
+
+    function insightPeriodRows(historyByDate,endDate,days){
+      const rows=[];
+      for(let offset=days-1;offset>=0;offset--){
+        const row=historyByDate.get(addDays(endDate,-offset));
+        if(row)rows.push(row);
+      }
+      return rows;
+    }
+
+    function insightChange(current,baseline){
+      if(baseline===null||baseline===undefined)return {text:"Not available",className:"unavailable"};
+      const delta=current-baseline;
+      if(baseline===0){
+        if(current===0)return {text:"0.0%",className:"flat"};
+        return {text:"New",className:"up"};
+      }
+      const pct=delta*100/baseline;
+      return {
+        text:(pct>0?"+":"")+nf1.format(pct)+"%",
+        className:delta>0?"up":delta<0?"down":"flat"
+      };
+    }
+
+    function insightMetricHtml(label,current,baseline,formatter){
+      const currentMissing=current===null||current===undefined;
+      const baselineMissing=baseline===null||baseline===undefined;
+      if(currentMissing||baselineMissing){
+        return '<div class="insight-metric"><span>'+escapeHtml(label)+'</span><strong class="insight-change unavailable">Not available</strong><small>Complete comparison data is required.</small></div>';
+      }
+      const change=insightChange(num(current),num(baseline));
+      return '<div class="insight-metric"><span>'+escapeHtml(label)+'</span><strong class="insight-change '+change.className+'">'+escapeHtml(change.text)+'</strong><small>Current '+escapeHtml(formatter(current))+' · Baseline '+escapeHtml(formatter(baseline))+'</small></div>';
+    }
+
+    function insightComparisonCard(title,period,current,baseline){
+      return '<article class="insight-card"><h3>'+escapeHtml(title)+'</h3><div class="insight-card-period">'+escapeHtml(period)+'</div>'+
+        insightMetricHtml("Watch Hours",current&&current.watch_hours,baseline&&baseline.watch_hours,formatHours)+
+        insightMetricHtml("IP Users",current&&current.ip_users,baseline&&baseline.ip_users,formatCount)+'</article>';
+    }
+
+    function insightPercent(current,baseline){
+      if(baseline===null||baseline===undefined)return null;
+      if(baseline===0)return current===0?0:null;
+      return (current-baseline)*100/baseline;
+    }
+
+    function insightDirection(value){
+      if(value===null)return "unavailable";
+      if(value>.5)return "rose";
+      if(value<-.5)return "fell";
+      return "was broadly stable";
+    }
+
+    function insightChannelDrivers(referenceDate,previousDate){
+      function channelMap(date){
+        const map=new Map();
+        CHANNEL_DAILY.filter(function(row){
+          return sourceOk(row)&&channelOk(row)&&String(row.log_date).slice(0,10)===date;
+        }).forEach(function(row){
+          const channel=String(row.channel_name||"Unknown / NA");
+          map.set(channel,(map.get(channel)||0)+num(row.watch_hours));
+        });
+        return map;
+      }
+      const current=channelMap(referenceDate),previous=channelMap(previousDate);
+      if(!current.size||!previous.size)return null;
+      const channels=unique(Array.from(current.keys()).concat(Array.from(previous.keys())));
+      const changes=channels.map(function(channel){
+        return {channel:channel,delta:(current.get(channel)||0)-(previous.get(channel)||0)};
+      }).sort(function(a,b){return b.delta-a.delta||a.channel.localeCompare(b.channel)});
+      return {
+        gain:changes.find(function(row){return row.delta>0})||null,
+        decline:changes.slice().reverse().find(function(row){return row.delta<0})||null
+      };
+    }
+
+    function renderInsights(){
+      const selectedDaily=groupedByDate(selectedRows());
+      el("weekdayBaselineButtons").querySelectorAll("button").forEach(function(button){
+        button.classList.toggle("active",Number(button.dataset.weekdayCount)===insightWeekdayCount);
+      });
+      if(!selectedDaily.length){
+        el("insightContext").textContent="No reference day is available for the current filters.";
+        el("insightCards").innerHTML='<div class="empty">No matching daily data for stakeholder comparisons.</div>';
+        el("insightFindings").innerHTML="";
+        return;
+      }
+
+      const reference=selectedDaily[selectedDaily.length-1];
+      const referenceDate=reference.date;
+      const bounds=rangeForSource();
+      const history=groupedByDate(rowsForWindow(bounds.min,referenceDate));
+      const historyByDate=new Map(history.map(function(row){return [row.date,row]}));
+      const previousDate=addDays(referenceDate,-1);
+      const priorWeekDate=addDays(referenceDate,-7);
+      const previousDay=historyByDate.get(previousDate)||null;
+      const priorWeekDay=historyByDate.get(priorWeekDate)||null;
+      const sameWeekdayRows=[];
+      const sameWeekdayDates=[];
+      for(let index=1;index<=insightWeekdayCount;index++){
+        const date=addDays(referenceDate,-7*index);
+        const row=historyByDate.get(date);
+        if(row){sameWeekdayRows.push(row);sameWeekdayDates.push(formatDate(date))}
+      }
+      const sameWeekdayAverage=insightAverage(sameWeekdayRows);
+      const currentWeekRows=insightPeriodRows(historyByDate,referenceDate,7);
+      const previousWeekEnd=addDays(referenceDate,-7);
+      const previousWeekRows=insightPeriodRows(historyByDate,previousWeekEnd,7);
+      const completeWeeks=currentWeekRows.length===7&&previousWeekRows.length===7;
+      const currentWeek=completeWeeks?insightTotal(currentWeekRows):null;
+      const previousWeek=completeWeeks?insightTotal(previousWeekRows):null;
+      const referenceWatchMinutes=reference.ip_users>0?reference.watch_hours*60/reference.ip_users:null;
+      const channelText=state.channels===null?"All Channels":state.channels.size+" selected channel"+(state.channels.size===1?"":"s");
+
+      el("insightContext").textContent="Reference: "+weekdayName(referenceDate)+", "+formatDate(referenceDate)+" · "+sourceLabel()+" · "+channelText+" · latest available day inside the selected range";
+      el("insightCards").innerHTML=
+        '<article class="insight-card reference"><h3>Reference Day</h3><div class="insight-card-period">'+escapeHtml(weekdayName(referenceDate)+" · "+formatDate(referenceDate))+'</div><div class="insight-reference-values">'+
+        '<div><span>Watch Hours</span><strong>'+formatHours(reference.watch_hours)+'</strong></div>'+
+        '<div><span>IP Users</span><strong>'+formatCount(reference.ip_users)+'</strong></div>'+
+        '<div><span>Watch / IP</span><strong>'+(referenceWatchMinutes===null?"NA":formatMinutes(referenceWatchMinutes))+'</strong></div></div></article>'+
+        insightComparisonCard("Previous Day",formatDate(previousDate),reference,previousDay)+
+        insightComparisonCard("Same Day Last Week",weekdayName(priorWeekDate)+" · "+formatDate(priorWeekDate),reference,priorWeekDay)+
+        insightComparisonCard("Same-Weekday Average",sameWeekdayRows.length+" of "+insightWeekdayCount+" prior "+weekdayName(referenceDate)+"s · "+(sameWeekdayDates.join(", ")||"no samples"),reference,sameWeekdayAverage)+
+        insightComparisonCard("7-Day Momentum",formatDate(addDays(referenceDate,-6))+" to "+formatDate(referenceDate)+" vs "+formatDate(addDays(referenceDate,-13))+" to "+formatDate(previousWeekEnd),currentWeek,previousWeek);
+
+      const watchPct=previousDay?insightPercent(reference.watch_hours,previousDay.watch_hours):null;
+      const ipPct=previousDay?insightPercent(reference.ip_users,previousDay.ip_users):null;
+      let movementText="Previous-day comparison is unavailable.";
+      let movementNote="Both exact calendar days are required.";
+      if(watchPct!==null&&ipPct!==null){
+        movementText="Watch hours "+insightDirection(watchPct)+" "+(Math.abs(watchPct)>.5?nf1.format(Math.abs(watchPct))+"% ":"")+"while IP users "+insightDirection(ipPct)+" "+(Math.abs(ipPct)>.5?nf1.format(Math.abs(ipPct))+"% ":"")+"versus "+formatDate(previousDate)+".";
+        if(watchPct>.5&&ipPct>.5)movementNote="Both content consumption and daily IP reach increased.";
+        else if(watchPct>.5&&ipPct<-.5)movementNote="Viewing increased despite lower IP reach, indicating stronger watch time per IP.";
+        else if(watchPct<-.5&&ipPct>.5)movementNote="IP reach increased while viewing softened, indicating lower watch time per IP.";
+        else if(watchPct<-.5&&ipPct<-.5)movementNote="Both content consumption and daily IP reach declined.";
+        else movementNote="One or both measures were broadly stable.";
+      }
+
+      const previousWatchMinutes=previousDay&&previousDay.ip_users>0?previousDay.watch_hours*60/previousDay.ip_users:null;
+      const engagementChange=referenceWatchMinutes!==null&&previousWatchMinutes!==null?insightChange(referenceWatchMinutes,previousWatchMinutes):null;
+      const engagementText=engagementChange?"Watch time per IP "+(engagementChange.className==="up"?"increased":engagementChange.className==="down"?"decreased":"was stable")+" "+engagementChange.text+" day over day.":"Watch time per IP comparison is unavailable.";
+      const engagementNote=referenceWatchMinutes===null?"Matching IP denominator is unavailable.":"Current "+formatMinutes(referenceWatchMinutes)+(previousWatchMinutes===null?"":" · Previous "+formatMinutes(previousWatchMinutes));
+
+      const drivers=insightChannelDrivers(referenceDate,previousDate);
+      const driverText=drivers&&drivers.gain?"Largest gain: "+drivers.gain.channel+" ("+(drivers.gain.delta>0?"+":"")+formatHours(drivers.gain.delta)+").":"No positive channel driver is available.";
+      const driverNote=drivers&&drivers.decline?"Largest decline: "+drivers.decline.channel+" ("+formatHours(drivers.decline.delta)+").":"No negative channel driver is available.";
+      el("insightFindings").innerHTML=
+        '<article class="insight-finding"><span>Daily Signal</span><strong>'+escapeHtml(movementText)+'</strong><small>'+escapeHtml(movementNote)+'</small></article>'+
+        '<article class="insight-finding"><span>Engagement Signal</span><strong>'+escapeHtml(engagementText)+'</strong><small>'+escapeHtml(engagementNote)+'</small></article>'+
+        '<article class="insight-finding"><span>Channel Drivers</span><strong>'+escapeHtml(driverText)+'</strong><small>'+escapeHtml(driverNote)+'</small></article>';
     }
 
     function scopedGeoChannelRows(){
@@ -1026,7 +1220,7 @@
       el("scopeDescription").textContent=sourceLabel()+" | "+channelText+" | "+DATA.meta.freshness;
     }
 
-    function renderAll(){renderCache={};renderScope();renderKpis();renderChart();renderLeaderboard();renderDeviceAndOs();renderNetworks();renderGeoAnalysis()}
+    function renderAll(){renderCache={};renderScope();renderKpis();renderChart();renderLeaderboard();renderDeviceAndOs();renderNetworks();renderGeoAnalysis();renderInsights()}
 
     el("singleMode").addEventListener("click",function(){setDateMode("single")});
     el("rangeMode").addEventListener("click",function(){setDateMode("range")});
@@ -1063,6 +1257,7 @@
     el("geoCityDetails").querySelector("summary").addEventListener("click",function(event){if(el("geoCityDetails").dataset.disabled==="true")event.preventDefault()});
     el("asnSearch").addEventListener("input",function(){asnView.search=this.value;renderNetworks()});
     el("asnModeButtons").querySelectorAll("button").forEach(function(button){button.addEventListener("click",function(){asnView.mode=button.dataset.asnMode;renderNetworks()})});
+    el("weekdayBaselineButtons").querySelectorAll("button").forEach(function(button){button.addEventListener("click",function(){insightWeekdayCount=Number(button.dataset.weekdayCount)||3;renderInsights()})});
     expandableLists.forEach(function(item){el(item[1]).addEventListener("click",function(){const list=el(item[0]);list.dataset.expanded=list.dataset.expanded==="true"?"false":"true";capLeaderboardRows(item[0],item[1],item[2])})});
     document.addEventListener("click",function(event){const details=el("channelDetails");if(details.open&&!details.contains(event.target))details.removeAttribute("open")});
     let resizeTimer=null;

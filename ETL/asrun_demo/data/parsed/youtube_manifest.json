@@ -1,6 +1,6 @@
 {
   "source_root": "Z:\\Veto Logs Backup\\DO NOT DELETE\\source=Youtube",
-  "completed_files": 691,
+  "completed_files": 834,
   "partial_files": 11,
   "skipped_files": [],
   "channels": [
@@ -14,7 +14,7 @@
     "Zee News"
   ],
   "true_start": "2026-06-30 18:08:00",
-  "true_end": "2026-07-28 16:59:00",
+  "true_end": "2026-07-29 10:16:00",
   "full_start": "2026-07-01",
-  "full_end": "2026-07-19"
+  "full_end": "2026-07-28"
 }

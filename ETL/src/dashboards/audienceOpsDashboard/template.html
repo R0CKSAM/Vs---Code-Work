@@ -27,6 +27,19 @@ select[multiple]{min-height:70px;padding:4px 6px}
 .multi-picker-toggle .picker-caret{color:var(--muted);font-size:10px;flex:0 0 auto}
 .multi-picker-menu{display:none;position:absolute;left:0;right:0;top:calc(100% + 5px);z-index:80;max-height:280px;overflow:auto;border:1px solid #b8c7d9;border-radius:7px;background:#fff;box-shadow:0 12px 26px rgba(15,23,42,.18);padding:5px}
 .multi-picker-menu.open{display:block}.multi-picker-option{display:flex;align-items:center;gap:7px;padding:7px 6px;border-radius:5px;color:#243044;font-size:11px;font-weight:700;cursor:pointer;overflow-wrap:anywhere}.multi-picker-option:hover{background:#f1f6fa}.multi-picker-option.all{border-bottom:1px solid var(--line);font-weight:900}.multi-picker-option input{accent-color:var(--brand2);flex:0 0 auto}
+.unique-ip-date-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 10px;border-bottom:1px solid var(--line);background:#fbfdff}
+.unique-ip-date-controls>label{font-size:10px;text-transform:uppercase;letter-spacing:.04em;font-weight:850;color:var(--muted)}
+.date-multi-picker{position:relative;width:min(100%,250px)}
+.date-multi-toggle{width:100%;min-height:34px;display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid #b8c7d9;border-radius:6px;background:#fff;color:var(--ink);padding:7px 9px;font:inherit;font-size:12px;font-weight:800;text-align:left;cursor:pointer}
+.date-multi-toggle:hover{border-color:#7f93aa;background:#f8fafc}.date-multi-toggle:focus-visible{outline:0;border-color:var(--brand2);box-shadow:0 0 0 2px rgba(31,120,151,.14)}
+.date-multi-toggle:disabled{cursor:not-allowed;color:#8a97a8;background:#f4f6f8}.date-multi-toggle .picker-caret{color:var(--muted);font-size:10px;flex:0 0 auto}
+.date-multi-menu{display:none;position:absolute;left:0;top:calc(100% + 5px);z-index:100;width:min(420px,calc(100vw - 32px));border:1px solid #b8c7d9;border-radius:8px;background:#fff;box-shadow:0 14px 30px rgba(15,23,42,.2);padding:9px}
+.date-multi-menu.open{display:block}.date-multi-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 2px 8px;font-size:11px;color:var(--muted)}
+.date-multi-head b{color:var(--ink);font-size:12px}.date-multi-actions{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.date-multi-actions .btn{padding:6px 4px;font-size:10px}.date-multi-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;max-height:245px;overflow:auto;padding-top:7px}
+.date-multi-option{display:flex;align-items:center;gap:7px;min-width:0;padding:7px;border:1px solid transparent;border-radius:5px;color:#243044;font-size:11px;font-weight:750;cursor:pointer}
+.date-multi-option:hover{background:#f1f6fa;border-color:#d9e5ef}.date-multi-option input{accent-color:var(--brand2);flex:0 0 auto}.date-multi-option span{overflow-wrap:anywhere}
+.date-selection-status{font-size:11px;color:#64748b;font-weight:750}
 input[type="date"]:focus,select:focus{border-color:var(--brand2);box-shadow:0 0 0 2px rgba(31,120,151,.14)}
 .preset-row,.action-row{display:flex;gap:6px;flex-wrap:wrap}
 .mini-controls{display:flex;align-items:end;gap:7px;flex-wrap:wrap;padding:10px 12px 0}
@@ -38,7 +51,7 @@ input[type="date"]:focus,select:focus{border-color:var(--brand2);box-shadow:0 0 
 .mini-field.date input{width:136px}
 .mini-field.wide select{width:210px}
 .mini-field.wide .multi-picker{width:210px;max-width:100%}
-.modal-controls{position:relative;z-index:6;flex:0 0 auto}.modal-controls .multi-picker-menu{z-index:220}
+.modal-controls{position:relative;z-index:6;flex:0 0 auto}.modal-controls .multi-picker-menu,.modal-controls .date-multi-menu{z-index:220}
 .chart-note{font-size:11px;color:#64748b;line-height:1.35;margin:0 10px 10px}
 .btn{border:1px solid #c8d4e3;background:#fff;color:var(--ink);border-radius:6px;padding:7px 10px;font-size:12px;font-weight:850;cursor:pointer}
 .btn:hover{background:#f8fafc;border-color:#94a3b8}
@@ -141,7 +154,7 @@ tr:hover td{background:#f8fafc}
 @media(max-width:1500px){.stakeholder-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.viewership-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:1050px){.filters{grid-template-columns:repeat(6,minmax(0,1fr))}.field.mode,.field.date,.field.source,.field.platform,.field.channel,.field.actions{grid-column:span 3}.topbar .sub{text-align:left}.chart-box{height:320px}.grid-3{grid-template-columns:1fr}}
 @media(max-width:1050px){.evidence-head{display:none}.evidence-row{grid-template-columns:30px 1fr}.evidence-value{text-align:left}.evidence-track,.evidence-kpis{grid-column:2}.evidence-kpis{grid-template-columns:repeat(auto-fit,minmax(96px,1fr))}}
-@media(max-width:680px){.wrap{padding:12px}.filters{grid-template-columns:1fr}.field.mode,.field.date,.field.source,.field.platform,.field.channel,.field.actions{grid-column:span 1}.preset-row .btn,.action-row .btn{flex:1 1 42%}.sticky{position:relative}.chart-box,.chart-box.tall{height:300px}.topbar{padding:14px 16px}.topbar h1{font-size:19px}.stakeholder-kpis,.viewership-kpis{grid-template-columns:1fr}}
+@media(max-width:680px){.wrap{padding:12px}.filters{grid-template-columns:1fr}.field.mode,.field.date,.field.source,.field.platform,.field.channel,.field.actions{grid-column:span 1}.preset-row .btn,.action-row .btn{flex:1 1 42%}.sticky{position:relative}.chart-box,.chart-box.tall{height:300px}.topbar{padding:14px 16px}.topbar h1{font-size:19px}.stakeholder-kpis,.viewership-kpis{grid-template-columns:1fr}.unique-ip-date-controls{align-items:stretch}.unique-ip-date-controls>label{width:100%}.date-multi-picker{width:100%}.date-multi-grid{grid-template-columns:1fr}.date-multi-actions{grid-template-columns:repeat(3,minmax(0,1fr))}}
 html,body{max-width:100%;overflow-x:hidden}
 .wrap,.topbar,.sticky,.filters,.field,.section,.panel,.chart-box,.table-wrap,.modal-panel,.modal-body{max-width:100%;min-width:0}
 .filters,.preset-row,.action-row{overflow-x:visible!important}
@@ -461,6 +474,14 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
       </div>
       <div class="panel">
         <div class="panel-head"><div class="panel-title">Unique IP Minute Sum<small>Unique IP counts summed inside selected interval</small></div><div class="action-row"><button class="btn" onclick="exportUniqueIpMinuteCsv()">Export CSV</button><button class="btn" onclick="expandChart('opsUniqueIpChart','Unique IP Minute Sum')">Expand</button></div></div>
+        <div class="unique-ip-date-controls">
+          <label>Compare dates</label>
+          <div class="date-multi-picker" id="opsUniqueIpDatePicker">
+            <button type="button" class="date-multi-toggle" id="opsUniqueIpDateToggle" onclick="toggleUniqueIpDatePicker('ops')"><span>Latest available date</span><span class="picker-caret">v</span></button>
+            <div class="date-multi-menu" id="opsUniqueIpDateMenu"></div>
+          </div>
+          <span class="date-selection-status" id="opsUniqueIpDateStatus"></span>
+        </div>
         <div class="chart-box"><canvas id="opsUniqueIpChart"></canvas></div>
         <div class="chart-note" id="opsUniqueIpNote"></div>
       </div>
@@ -525,6 +546,7 @@ DATA.identity_minute=inflateRows(DATA.identity_minute||[],DATA.identity_minute_s
 });
 const COLORS = ["#1f7897","#b88416","#12805c","#6057b1","#d65f18","#b42318","#0f6b4d","#2d5b9a","#9f5a00","#7c3aed","#0891b2","#dc2626"];
 const state = {start:D.meta.max_date,end:D.meta.max_date,source:"fast",platform:"all",channel:"all",preset:"yesterday",dateMode:"single",concurrencyInterval:5,concurrencyStatus:"all"};
+const uniqueIpDateView = {selected:new Set(),available:[],scopeKey:"",initialized:false};
 const charts = {};
 const configs = {};
 const htmlViews = {};
@@ -584,7 +606,10 @@ function changeMultiPicker(kind,input){
   if(input.dataset.all){values=[];}else{values=Array.from(menu.querySelectorAll("input[data-value]:checked")).map(function(box){return box.dataset.value});}
   if(kind==="platform")setPlatformValues(values);else setChannelValues(values);
 }
-document.addEventListener("click",function(event){if(!event.target.closest(".multi-picker"))closeMultiPickers("")});
+document.addEventListener("click",function(event){
+  if(!event.target.closest(".multi-picker"))closeMultiPickers("");
+  if(!event.target.closest(".date-multi-picker"))closeUniqueIpDatePickers("");
+});
 function platformOk(row){const selected=selectedFilterValues(state.platform);return !selected.length||selected.indexOf(String(row.platform_name||""))>=0}
 function channelOk(row){const selected=selectedFilterValues(state.channel);return !selected.length||selected.indexOf(String(row.channel_name||""))>=0}
 function hasPlatformFilter(){return state.source==="fast"||state.source==="amagi"}
@@ -763,6 +788,16 @@ function manifestModalControlsHtml(){
     +"<button class='btn' id='modalOpsInterval30' onclick='setConcurrencyInterval(30)'>30 min</button>"
     +"<button class='btn' id='modalOpsInterval60' onclick='setConcurrencyInterval(60)'>1 hour</button>"
     +"<div class='mini-field'><label>Custom min</label><input id='modalOpsCustomMinutes' type='number' min='1' max='240' step='1' value='"+esc(concurrencyIntervalMinutes())+"' onchange='setCustomConcurrencyInterval(this.value)'/></div>"
+    +"</div>";
+}
+function uniqueIpModalControlsHtml(){
+  return "<div class='unique-ip-date-controls'>"
+    +"<label>Compare dates</label>"
+    +"<div class='date-multi-picker' id='modalOpsUniqueIpDatePicker'>"
+    +"<button type='button' class='date-multi-toggle' id='modalOpsUniqueIpDateToggle' onclick=\"toggleUniqueIpDatePicker('modalOps')\"><span>Latest available date</span><span class='picker-caret'>v</span></button>"
+    +"<div class='date-multi-menu' id='modalOpsUniqueIpDateMenu'></div>"
+    +"</div>"
+    +"<span class='date-selection-status' id='modalOpsUniqueIpDateStatus'></span>"
     +"</div>";
 }
 function modalBaseControlsHtml(){
@@ -2112,6 +2147,169 @@ function opsManifestMinuteRows(){
 function opsIdentityMinuteRows(){
   return filterRows(DATA.identity_minute||[],{channel:true,platform:true});
 }
+function uniqueIpRowDate(row){
+  return String(row.log_date||row.minute_ist||"").slice(0,10);
+}
+function uniqueIpDateScopeKey(){
+  return [state.start,state.end,state.source,state.platform,state.channel].join("\u0000");
+}
+function reconcileUniqueIpDates(rows){
+  const available=[...new Set((rows||[]).map(uniqueIpRowDate).filter(function(date){return /^\d{4}-\d{2}-\d{2}$/.test(date)}))].sort();
+  const availableSet=new Set(available);
+  const scopeKey=uniqueIpDateScopeKey();
+  const scopeChanged=scopeKey!==uniqueIpDateView.scopeKey;
+  const retained=new Set([...uniqueIpDateView.selected].filter(function(date){return availableSet.has(date)}));
+  if(!uniqueIpDateView.initialized||(scopeChanged&&!retained.size)){
+    uniqueIpDateView.selected=new Set(available.length?[available[available.length-1]]:[]);
+  }else{
+    uniqueIpDateView.selected=retained;
+  }
+  uniqueIpDateView.available=available;
+  uniqueIpDateView.scopeKey=scopeKey;
+  uniqueIpDateView.initialized=true;
+}
+function selectedUniqueIpDates(){
+  return [...uniqueIpDateView.selected].sort();
+}
+function closeUniqueIpDatePickers(exceptPrefix){
+  const keep=exceptPrefix?exceptPrefix+"UniqueIpDateMenu":"";
+  document.querySelectorAll(".date-multi-menu.open").forEach(function(menu){
+    if(menu.id!==keep)menu.classList.remove("open");
+  });
+}
+function toggleUniqueIpDatePicker(prefix){
+  const menu=el(prefix+"UniqueIpDateMenu"),toggle=el(prefix+"UniqueIpDateToggle");
+  if(!menu||!toggle||toggle.disabled)return;
+  const willOpen=!menu.classList.contains("open");
+  closeUniqueIpDatePickers(prefix);
+  closeMultiPickers("");
+  menu.classList.toggle("open",willOpen);
+}
+function uniqueIpDateSelectionLabel(){
+  const dates=selectedUniqueIpDates();
+  if(!dates.length)return "No dates selected";
+  if(dates.length===1)return fmtDate(dates[0]);
+  return dates.length+" dates selected";
+}
+function renderUniqueIpDatePicker(prefix){
+  const menu=el(prefix+"UniqueIpDateMenu"),toggle=el(prefix+"UniqueIpDateToggle"),status=el(prefix+"UniqueIpDateStatus");
+  if(!menu||!toggle)return;
+  const available=uniqueIpDateView.available;
+  const selected=uniqueIpDateView.selected;
+  toggle.querySelector("span").textContent=uniqueIpDateSelectionLabel();
+  toggle.disabled=!available.length;
+  if(status)status.textContent=selected.size+" selected | "+available.length+" available";
+  const actions=[
+    ["latest","Latest"],
+    ["3","Last 3"],
+    ["7","Last 7"],
+    ["all","All"],
+    ["clear","Clear"]
+  ];
+  menu.innerHTML="<div class='date-multi-head'><b>Dates with matching minute data</b><span>"+available.length+" available</span></div>"
+    +"<div class='date-multi-actions'>"+actions.map(function(item){
+      return "<button type='button' class='btn' onclick=\"setUniqueIpDatePreset('"+item[0]+"')\">"+item[1]+"</button>";
+    }).join("")+"</div>"
+    +(available.length
+      ?"<div class='date-multi-grid'>"+available.slice().reverse().map(function(date){
+        return "<label class='date-multi-option'><input type='checkbox' "+(selected.has(date)?"checked":"")+" onchange=\"setUniqueIpDateSelected('"+date+"',this.checked)\"/><span>"+fmtDate(date)+"</span></label>";
+      }).join("")+"</div>"
+      :"<div class='empty' style='height:auto;min-height:74px'>No minute data for the current dashboard filters</div>");
+}
+function renderUniqueIpDatePickers(){
+  renderUniqueIpDatePicker("ops");
+  renderUniqueIpDatePicker("modalOps");
+}
+function applyUniqueIpDateSelection(dates){
+  const available=new Set(uniqueIpDateView.available);
+  uniqueIpDateView.selected=new Set((dates||[]).filter(function(date){return available.has(date)}));
+  renderOpsMonitoring();
+  refreshModalChart();
+}
+function setUniqueIpDatePreset(value){
+  const available=uniqueIpDateView.available;
+  if(value==="clear"){applyUniqueIpDateSelection([]);return}
+  if(value==="all"){applyUniqueIpDateSelection(available);return}
+  const count=value==="latest"?1:Math.max(1,Number(value)||1);
+  applyUniqueIpDateSelection(available.slice(-count));
+}
+function setUniqueIpDateSelected(date,checked){
+  const selected=new Set(uniqueIpDateView.selected);
+  if(checked)selected.add(date);else selected.delete(date);
+  applyUniqueIpDateSelection([...selected]);
+}
+function minuteOfDayIndex(value){
+  const match=String(value||"").match(/[T ](\d{2}):(\d{2})/);
+  if(!match)return null;
+  const hour=Number(match[1]),minute=Number(match[2]);
+  if(hour<0||hour>23||minute<0||minute>59)return null;
+  return hour*60+minute;
+}
+function minuteOfDayLabel(index){
+  const total=Math.max(0,Math.min(1439,Number(index)||0));
+  const hour24=Math.floor(total/60),minute=total%60;
+  const suffix=hour24>=12?"PM":"AM";
+  const hour12=hour24%12||12;
+  return String(hour12).padStart(2,"0")+":"+String(minute).padStart(2,"0")+" "+suffix;
+}
+function minuteOfDayTimestamp(date,index){
+  const total=Math.max(0,Math.min(1439,Number(index)||0));
+  return date+" "+String(Math.floor(total/60)).padStart(2,"0")+":"+String(total%60).padStart(2,"0")+":00";
+}
+function uniqueIpLineColor(index,total){
+  if(index<COLORS.length)return COLORS[index];
+  return "hsl("+Math.round((index*307.5)%360)+",68%,42%)";
+}
+function buildUniqueIpDateComparison(rows){
+  reconcileUniqueIpDates(rows);
+  const interval=concurrencyIntervalMinutes();
+  const selected=selectedUniqueIpDates().slice().reverse();
+  const selectedSet=new Set(selected);
+  const byDate=new Map();
+  selected.forEach(function(date){byDate.set(date,new Map())});
+  (rows||[]).forEach(function(row){
+    const date=uniqueIpRowDate(row);
+    if(!selectedSet.has(date))return;
+    const minute=minuteOfDayIndex(row.minute_ist);
+    if(minute===null)return;
+    const bucket=Math.floor(minute/interval)*interval;
+    const dateBuckets=byDate.get(date);
+    dateBuckets.set(bucket,n(dateBuckets.get(bucket))+n(row.distinct_cliips));
+  });
+  const bucketIndexes=[...new Set([].concat.apply([],selected.map(function(date){return [...byDate.get(date).keys()]})))].sort(function(a,b){return a-b});
+  const datasets=selected.map(function(date,index){
+    const buckets=byDate.get(date),color=uniqueIpLineColor(index,selected.length);
+    return {
+      label:fmtDate(date),
+      data:bucketIndexes.map(function(bucket){return buckets.has(bucket)?n(buckets.get(bucket)):null}),
+      borderColor:color,
+      backgroundColor:color,
+      borderWidth:index===0?2.2:1.5,
+      tension:.2,
+      pointRadius:0,
+      spanGaps:false,
+      fill:false
+    };
+  });
+  const records=[];
+  selected.slice().reverse().forEach(function(date){
+    [...byDate.get(date).keys()].sort(function(a,b){return a-b}).forEach(function(bucket){
+      records.push({
+        date:date,
+        bucket_index:bucket,
+        bucket_start:minuteOfDayTimestamp(date,bucket),
+        distinct_cliips:n(byDate.get(date).get(bucket))
+      });
+    });
+  });
+  return {
+    labels:bucketIndexes.map(minuteOfDayLabel),
+    datasets:datasets,
+    records:records,
+    selected:selected,
+    interval:interval
+  };
+}
 function bucketMinuteSums(rows,fields){
   const interval=concurrencyIntervalMinutes();
   const buckets=new Map();
@@ -2151,33 +2349,40 @@ function downloadCsv(filename,headers,rows){
   URL.revokeObjectURL(url);
 }
 function exportUniqueIpMinuteCsv(){
-  const buckets=bucketMinuteSums(opsIdentityMinuteRows(),["distinct_cliips"]);
-  if(!buckets.length){
-    alert("No Unique IP minute data for the selected filters.");
+  const comparison=buildUniqueIpDateComparison(opsIdentityMinuteRows());
+  renderUniqueIpDatePickers();
+  if(!comparison.records.length){
+    alert(uniqueIpDateView.available.length?"Choose at least one comparison date.":"No Unique IP minute data for the selected filters.");
     return;
   }
   const interval=concurrencyIntervalMinutes();
-  const platform=state.platform==="all"?"All Platforms":state.platform;
-  const channel=state.channel==="all"?"All Channels":state.channel;
+  const platform=filterLabel(state.platform,"All Platforms");
+  const channel=filterLabel(state.channel,"All Channels");
   const headers=[
+    "Selected Date",
     "Bucket Start IST",
+    "Time Of Day IST",
     "Source",
     "Platform Filter",
     "Channel Filter",
-    "Date From",
-    "Date To",
+    "Dashboard Date From",
+    "Dashboard Date To",
     "Interval Minutes",
     "Unique IP Minute Sum"
   ];
-  const rows=buckets.map(function(r){
-    return [fmtDateTime(r.key),sourceLabel(),platform,channel,fmtDate(state.start),fmtDate(state.end),interval,n(r.distinct_cliips)];
+  const rows=comparison.records.map(function(r){
+    return [fmtDate(r.date),fmtDateTime(r.bucket_start),minuteOfDayLabel(r.bucket_index)+" IST",sourceLabel(),platform,channel,fmtDate(state.start),fmtDate(state.end),interval,n(r.distinct_cliips)];
   });
+  const selectedDates=selectedUniqueIpDates();
+  const dateToken=selectedDates.length===1
+    ?selectedDates[0]
+    :selectedDates[0]+"_to_"+selectedDates[selectedDates.length-1]+"_"+selectedDates.length+"dates";
   const filename=[
     "unique_ip_minute_sum",
     safeFileToken(state.source),
     safeFileToken(platform),
     safeFileToken(channel),
-    safeFileToken(state.start+"_to_"+state.end),
+    safeFileToken(dateToken),
     interval+"min"
   ].join("_")+".csv";
   downloadCsv(filename,headers,rows);
@@ -2230,6 +2435,8 @@ function renderOpsMonitoring(){
   }
   const identityMinute=opsIdentityMinuteRows();
   const identityBuckets=bucketMinuteSums(identityMinute,["distinct_cliips","distinct_ipua_pairs","distinct_devices","distinct_sessions"]);
+  const uniqueIpComparison=buildUniqueIpDateComparison(identityMinute);
+  renderUniqueIpDatePickers();
   if(identityBuckets.length){
     const deviceTotal=sum(identityBuckets,"distinct_devices");
     const sessionTotal=sum(identityBuckets,"distinct_sessions");
@@ -2251,8 +2458,23 @@ function renderOpsMonitoring(){
       clearChart("opsSessionChart",state.source==="fast"?"Session ID is not present in FAST CDN rows.":"No STREAM session_id rows for selected filters");
     }
     const uniqueIpNote=el("opsUniqueIpNote");
-    if(uniqueIpNote)uniqueIpNote.textContent="Each point is the sum of distinct cliIP counts for every minute inside the "+concurrencyIntervalLabel()+" bucket, using .ts playback rows.";
-    draw("opsUniqueIpChart",lineConfig(labels,[{label:"Unique IP viewer-minute count",data:identityBuckets.map(function(r){return n(r.distinct_cliips)}),borderColor:COLORS[0],backgroundColor:"rgba(31,120,151,.10)",tension:.22,pointRadius:0}],"Unique IP minute-sum"));
+    if(uniqueIpComparison.datasets.length&&uniqueIpComparison.labels.length){
+      const uniqueConfig=lineConfig(uniqueIpComparison.labels,uniqueIpComparison.datasets,"Unique IP minute-sum");
+      uniqueConfig.options.scales.x.title={display:true,text:"IST time of day"};
+      uniqueConfig.options.plugins.tooltip.itemSort=function(a,b){return n(b.raw)-n(a.raw)};
+      draw("opsUniqueIpChart",uniqueConfig);
+      if(uniqueIpNote){
+        const selectedCount=uniqueIpComparison.selected.length;
+        uniqueIpNote.textContent=(selectedCount===1
+          ?"Showing "+fmtDate(uniqueIpComparison.selected[0])+"."
+          :"Comparing "+selectedCount+" selected dates as separate lines aligned by IST time of day.")
+          +" Each point sums distinct cliIP counts for every minute inside the "+concurrencyIntervalLabel()+" bucket. Missing source minutes remain gaps.";
+      }
+    }else{
+      if(uniqueIpNote)uniqueIpNote.textContent=uniqueIpDateView.available.length?"Choose one or more comparison dates from the date selector.":"";
+      clearChart("opsUniqueIpChart",uniqueIpDateView.available.length?"Choose one or more comparison dates":"No embedded minute-level Unique IP rows for selected filters");
+      delete configs["opsUniqueIpChart"];
+    }
     const ipUaNote=el("opsIpUaNote");
     if(ipUaNote)ipUaNote.textContent="Each point is the sum of distinct cliIP + user-agent signature counts for every minute inside the "+concurrencyIntervalLabel()+" bucket, using .ts playback rows.";
     draw("opsIpUaChart",lineConfig(labels,[{label:"IP + UA signature-minute count",data:identityBuckets.map(function(r){return n(r.distinct_ipua_pairs)}),borderColor:COLORS[3],backgroundColor:"rgba(96,87,177,.10)",tension:.22,pointRadius:0}],"IP + UA minute-sum"));
@@ -2261,6 +2483,7 @@ function renderOpsMonitoring(){
     clearChart("opsDeviceChart","No embedded minute-level device rows for selected filters");
     clearChart("opsSessionChart","No embedded minute-level session rows for selected filters");
     clearChart("opsUniqueIpChart","No embedded minute-level Unique IP rows for selected filters");
+    delete configs["opsUniqueIpChart"];
     clearChart("opsIpUaChart","No embedded minute-level IP + UA rows for selected filters");
   }
 }
@@ -2435,10 +2658,13 @@ function expandChart(id,title){
   el("modalTitle").textContent=title;
   el("chartModal").classList.add("open");
   const opsCharts=["opsDeviceChart","opsSessionChart","opsViewsChart","opsUniqueIpChart","opsIpUaChart"];
-  el("modalControls").innerHTML=modalBaseControlsHtml()+(id==="concurrencyChart"?concurrencyModalControlsHtml():(opsCharts.indexOf(id)>=0?manifestModalControlsHtml():""));
+  el("modalControls").innerHTML=modalBaseControlsHtml()
+    +(id==="concurrencyChart"?concurrencyModalControlsHtml():(opsCharts.indexOf(id)>=0?manifestModalControlsHtml():""))
+    +(id==="opsUniqueIpChart"?uniqueIpModalControlsHtml():"");
   syncModalFilterControls();
   if(id==="concurrencyChart"){rebuildConcurrencyStatusOptions();syncConcurrencyControls()}
   if(opsCharts.indexOf(id)>=0){syncConcurrencyControls()}
+  if(id==="opsUniqueIpChart")renderUniqueIpDatePickers();
   refreshModalChart();
 }
 function expandHtml(id,title){

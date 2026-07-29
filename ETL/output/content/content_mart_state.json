@@ -1253,14 +1253,24 @@
     "stream/2026-07-28": {
       "source": "stream",
       "date": "2026-07-28",
-      "file_count": 1,
-      "bytes": 70980211,
-      "max_mtime_ns": 1785208449636712300,
+      "file_count": 2,
+      "bytes": 962931602,
+      "max_mtime_ns": 1785295584461932800,
       "output_counts": {
-        "rows": 179
+        "rows": 1101
+      }
+    },
+    "stream/2026-07-29": {
+      "source": "stream",
+      "date": "2026-07-29",
+      "file_count": 1,
+      "bytes": 74451113,
+      "max_mtime_ns": 1785295584473600400,
+      "output_counts": {
+        "rows": 178
       }
     }
   },
-  "updated_at_utc": "2026-07-28T04:28:24.089291+00:00",
+  "updated_at_utc": "2026-07-29T04:24:37.531669+00:00",
   "mart_version": 3
 }
