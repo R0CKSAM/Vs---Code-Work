@@ -1689,6 +1689,39 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
 .scope-table th { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .03em; }
 .scope-table td:nth-child(4) { text-align: right; font-variant-numeric: tabular-nums; }
 .scope-muted { color: var(--muted); }
+.multi-search-shell {
+  position: sticky;
+  z-index: 2;
+  top: -4px;
+  padding: 4px;
+  border-bottom: 1px solid var(--line);
+  background: #ffffff;
+}
+.multi-search-shell .multi-search { margin: 0 0 4px; }
+.multi-search-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 4px;
+  align-items: center;
+}
+.multi-search-count {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.multi-search-actions button {
+  min-height: 22px;
+  padding: 3px 6px;
+  border-color: #c7d2dc;
+  background: #f7f9fb;
+  color: var(--ink);
+  font-size: 10px;
+}
+.multi-search-actions button:hover { background: #eaf0f5; }
+.multi-search-actions button:disabled { cursor: default; opacity: .45; }
+.multi-menu .multi-option[hidden] { display: none !important; }
 @media (max-width: 1220px) {
   .youtube-filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .youtube-filter-actions { grid-column: 1 / -1; }
@@ -1732,6 +1765,125 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
 const AMAGI=DATA.amagi||{};
 const FCT=DATA.fct||{};
 let fctClassMode='Commercial';
+const multiSearchState=new Map();
+function normalizeMultiSearch(value){
+  return String(value??'')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .toLocaleLowerCase()
+    .replace(/[^a-z0-9]+/g,' ')
+    .trim();
+}
+function applyMultiSearch(id){
+  const menu=$(id+'Menu'),search=menu?.querySelector('[data-multi-search]');
+  if(!menu||!search)return;
+  const terms=normalizeMultiSearch(search.value).split(/\s+/).filter(Boolean);
+  let visible=0,total=0;
+  for(const option of menu.querySelectorAll('.multi-option:not(.multi-all)')){
+    const input=option.querySelector('input[data-value]');
+    if(!input)continue;
+    total++;
+    const haystack=normalizeMultiSearch(option.textContent+' '+input.dataset.value);
+    const words=haystack.split(/\s+/).filter(Boolean);
+    const matches=terms.every(term=>words.some(word=>
+      word.startsWith(term)||(term.length>=4&&word.includes(term))
+    ));
+    option.hidden=!matches;
+    if(matches)visible++;
+  }
+  const count=menu.querySelector('[data-multi-search-count]');
+  if(count)count.textContent=fmt(visible)+' of '+fmt(total)+' matches';
+  for(const button of menu.querySelectorAll('[data-multi-match-action]')){
+    button.disabled=visible===0;
+  }
+}
+function enhanceMultiSearch(id,kind){
+  const menu=$(id+'Menu'),toggle=$(id+'Toggle');
+  if(!menu||!toggle||menu.querySelector('[data-multi-search-shell]'))return;
+  const query=multiSearchState.get(id)||'';
+  menu.insertAdjacentHTML(
+    'afterbegin',
+    '<span class="multi-search-shell" data-multi-search-shell>'
+      +'<input class="multi-search" type="search" data-multi-search '
+      +'placeholder="Search '+esc(kind)+'..." autocomplete="off">'
+      +'<span class="multi-search-actions">'
+        +'<span class="multi-search-count" data-multi-search-count></span>'
+        +'<button type="button" data-multi-match-action="select" '
+        +'title="Select matching options">Select</button>'
+        +'<button type="button" data-multi-match-action="clear" '
+        +'title="Clear matching options">Clear</button>'
+      +'</span>'
+    +'</span>',
+  );
+  const search=menu.querySelector('[data-multi-search]');
+  search.value=query;
+  search.addEventListener('input',event=>{
+    multiSearchState.set(id,event.target.value);
+    applyMultiSearch(id);
+  });
+  // A search input's blur emits change; keep it away from the checkbox handler.
+  search.addEventListener('change',event=>event.stopPropagation());
+  search.addEventListener('keydown',event=>{
+    if(event.key==='Escape'){
+      menu.classList.remove('open');
+      toggle.focus();
+    }
+  });
+  for(const button of menu.querySelectorAll('[data-multi-match-action]')){
+    button.addEventListener('click',event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      const checked=button.dataset.multiMatchAction==='select';
+      const visible=[...menu.querySelectorAll('.multi-option:not(.multi-all)')]
+        .filter(option=>!option.hidden)
+        .map(option=>option.querySelector('input[data-value]'))
+        .filter(Boolean);
+      if(!visible.length)return;
+      for(const input of visible)input.checked=checked;
+      // Reuse the menu's existing change path so labels, dependent filters,
+      // memoization, and charts all update exactly as with a manual checkbox.
+      visible[0].dispatchEvent(new Event('change',{bubbles:true}));
+    });
+  }
+  const originalToggle=toggle.onclick;
+  toggle.onclick=event=>{
+    const opening=!menu.classList.contains('open');
+    originalToggle.call(toggle,event);
+    if(opening)requestAnimationFrame(()=>{
+      const current=menu.querySelector('[data-multi-search]');
+      if(current){
+        current.focus();
+        current.select();
+      }
+    });
+  };
+  applyMultiSearch(id);
+}
+const buildMultiWithoutSearch=buildMulti;
+buildMulti=function(id,items,kind,defaultValues,onChange){
+  buildMultiWithoutSearch(id,items,kind,defaultValues,onChange);
+  enhanceMultiSearch(id,kind);
+};
+const buildHeaderMultiWithoutSearch=buildHeaderMulti;
+buildHeaderMulti=function(id,items,kind,defaultValues,allLabel,onChange){
+  buildHeaderMultiWithoutSearch(id,items,kind,defaultValues,allLabel,onChange);
+  enhanceMultiSearch(id,kind);
+};
+// FAST and STREAM menus were populated by the base script before this extension
+// loaded, so rebuild them once through the searchable wrapper.
+refreshAudienceFilters();
+// Close an open menu when the pointer lands outside that menu's own control.
+// The base handler only checked whether the click was inside any multi-select,
+// which left the previous menu open when users clicked another filter area.
+document.addEventListener('pointerdown',event=>{
+  for(const menu of document.querySelectorAll('.multi-menu.open')){
+    const owner=menu.closest('.multi-select');
+    if(!owner||!owner.contains(event.target))menu.classList.remove('open');
+  }
+},true);
+document.addEventListener('keydown',event=>{
+  if(event.key==='Escape')closeMultiMenus('');
+});
 function showLoading(message='Updating dashboard...'){const toast=$('loadingToast');if(!toast)return;toast.classList.remove('hidden','error');$('loadingText').textContent=message;}
 function hideLoading(){const toast=$('loadingToast');if(toast)toast.classList.add('hidden');}
 let dateMode='range';
@@ -2560,35 +2712,81 @@ function exportYoutubeReferenceCsvChannelAware(){
 youtubeDeliveryDetails=function(event){
   const youtube=DATA.youtube||{},key=youtubeMinuteKey(event.on_air_start_ist);
   if(!youtubeDeliveryMinuteIndex){
-    const totals=new Map((youtube.minute||[]).map(row=>[youtubeMinuteKey(row.timestamp_ist),row]));
-    const videos=new Map();
+    const totals=new Map(),videos=new Map();
     for(const row of youtube.video_minute||[]){
-      const minuteKey=youtubeMinuteKey(row.timestamp_ist),list=videos.get(minuteKey)||[];
+      // Combined ASRUN/FCT reporting is for India TV only. Keep the independent
+      // YouTube analysis section multi-channel, but never blend its other channels here.
+      if(String(row.youtube_channel||'').trim()!=='India TV')continue;
+      const minuteKey=youtubeMinuteKey(row.timestamp_ist);
+      totals.set(
+        minuteKey,
+        (totals.get(minuteKey)||0)+Number(row.concurrent_viewers||0),
+      );
+      const list=videos.get(minuteKey)||[];
       list.push(row);
       videos.set(minuteKey,list);
     }
     youtubeDeliveryMinuteIndex={totals,videos};
   }
-  const totalRow=youtubeDeliveryMinuteIndex.totals.get(key);
+  const hasMinute=youtubeDeliveryMinuteIndex.totals.has(key);
   const videoRows=youtubeDeliveryMinuteIndex.videos.get(key)||[];
-  if(!totalRow)return {
-    value:'No YouTube data',total:null,live_videos:0,video_ids:'',
-    video_titles:'',scope:'All collected YouTube channels at the on-air minute',
+  if(!hasMinute)return {
+    value:'No India TV YouTube data',total:null,live_videos:0,video_ids:'',
+    video_titles:'',scope:'India TV YouTube channel at the on-air minute',
   };
   const videoIds=[...new Set(videoRows.map(row=>String(row.video_id||'')).filter(Boolean))];
   const titles=[...new Set(videoRows.map(row=>
     youtubeVideoTitle(youtube,row.video_id,row.log_date)).filter(Boolean))];
-  const channels=[...new Set(videoRows.map(row=>
-    String(row.youtube_channel||'Unknown / NA')))].sort();
+  const total=Number(youtubeDeliveryMinuteIndex.totals.get(key)||0);
   return {
-    value:fmt(Number(totalRow.total_concurrent_viewers||0)),
-    total:Number(totalRow.total_concurrent_viewers||0),
-    live_videos:Number(totalRow.live_videos||videoIds.length),
+    value:fmt(total),
+    total,
+    live_videos:videoIds.length,
     video_ids:videoIds.join(' | '),
     video_titles:titles.join(' | '),
-    scope:'All collected YouTube channels at the on-air minute: '+channels.join(' | '),
+    scope:'India TV YouTube channel at the on-air minute',
   };
 };
+function applyIndiaTvYoutubeAggregateLabels(){
+  const combined=document.querySelector('.combined-panel');
+  if(combined){
+    const subtitle=combined.querySelector('.panel-head small');
+    const column=combined.querySelector('.youtube-col');
+    if(subtitle)subtitle.textContent='FAST + STREAM selected 5-minute concurrency | Amagi actual 5-minute concurrency | India TV YouTube minute concurrency';
+    if(column){
+      column.textContent='INDIA TV YOUTUBE';
+      column.title='India TV YouTube minute concurrency';
+    }
+  }
+  const fct=document.querySelector('.fct-audience-panel');
+  if(fct){
+    const subtitle=fct.querySelector('.panel-head small');
+    const column=fct.querySelector('.youtube-col');
+    if(subtitle)subtitle.textContent='FCT-selected occurrences | FAST + STREAM + AMAGI 5-minute concurrency | India TV YouTube minute concurrency';
+    if(column){
+      column.textContent='INDIA TV YOUTUBE';
+      column.title='India TV YouTube minute concurrency';
+    }
+  }
+}
+const asrunDownloadCsv=downloadCsv;
+downloadCsv=function(filename,header,rows){
+  if(
+    String(filename).startsWith('asrun_all_delivered_events_')
+    ||String(filename).startsWith('fct_audience_context_')
+  ){
+    const labelMap={
+      'YouTube Scope':'India TV YouTube Scope',
+      'YouTube Minute Concurrency':'India TV YouTube Minute Concurrency',
+      'YouTube Active Live Videos':'India TV YouTube Active Live Videos',
+      'YouTube Active Video IDs':'India TV YouTube Active Video IDs',
+      'YouTube Active Video Titles':'India TV YouTube Active Video Titles',
+    };
+    header=header.map(label=>labelMap[label]||label);
+  }
+  return asrunDownloadCsv(filename,header,rows);
+};
+queueMicrotask(applyIndiaTvYoutubeAggregateLabels);
 function selectedYoutubeRows(){
   const youtube=DATA.youtube||{},from=$('youtubeFrom').value,to=$('youtubeTo').value;
   if(youtubeDateMode==='follow'&&!youtubeDateOverlap)return [];
