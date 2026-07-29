@@ -1,7 +1,8 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$Channel,
-    [string[]]$Input = @()
+    [string[]]$Input = @(),
+    [switch]$DetailedLogs
 )
 
 $ErrorActionPreference = "Stop"
@@ -19,4 +20,11 @@ if ($Input.Count -eq 0) {
     throw "Put ASRUN .txt files in $PSScriptRoot\data\raw or supply -Input."
 }
 
-& $Python $Builder --channel $Channel --input $Input
+$BuilderArgs = @($Builder, "--channel", $Channel, "--input") + $Input
+if ($DetailedLogs) {
+    $BuilderArgs += "--verbose"
+}
+& $Python @BuilderArgs
+if ($LASTEXITCODE -ne 0) {
+    throw "ASRUN dashboard generation failed with Python exit code $LASTEXITCODE."
+}

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Channel Distribution Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-dt@2.3.2/css/dataTables.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/css/tom-select.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <div class="title-block">
+        <p class="eyebrow">Static JSON Dashboard</p>
+        <h1>Channel Distribution Dashboard</h1>
+        <p class="subtitle">
+          Interactive distribution and week-wise comparison views built with HTML, CSS, and vanilla JavaScript.
+        </p>
+      </div>
+      <div class="summary-grid">
+        <article class="summary-card">
+          <span class="summary-label">Last Updated</span>
+          <strong id="summaryLastUpdated">Not available</strong>
+        </article>
+        <article class="summary-card">
+          <span class="summary-label">Total Headends</span>
+          <strong id="summaryHeadends">0</strong>
+        </article>
+        <article class="summary-card">
+          <span class="summary-label">Total Channel Rows</span>
+          <strong id="summaryChannels">0</strong>
+        </article>
+      </div>
+    </header>
+
+    <main class="dashboard-grid">
+      <section class="dashboard-card">
+        <div class="section-header">
+          <div>
+            <p class="section-eyebrow">Table 1</p>
+            <h2>Channel Distribution</h2>
+            <p class="section-copy">Filter and review headend-level distribution details without leaving the page.</p>
+          </div>
+          <div class="record-pill">
+            <span>Visible Records</span>
+            <strong id="headendRecordCount">0</strong>
+          </div>
+        </div>
+
+        <div class="filter-card">
+          <div class="filter-grid">
+            <label class="field">
+              <span>Headend Location</span>
+              <select id="locationFilter">
+                <option value="">All Locations</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>State</span>
+              <select id="stateFilter">
+                <option value="">All States</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>BARC Market</span>
+              <select id="marketFilter">
+                <option value="">All Markets</option>
+              </select>
+            </label>
+          </div>
+          <div class="button-row">
+            <button type="button" class="btn btn-secondary" id="resetHeadendFilters">Reset Filters</button>
+            <button type="button" class="btn btn-ghost" id="exportHeadendsCsv">Export CSV</button>
+            <button type="button" class="btn btn-ghost" id="exportHeadendsExcel">Export Excel</button>
+          </div>
+        </div>
+
+        <div class="status-stack">
+          <div class="status-message error hidden" id="headendsError"></div>
+          <div class="status-message empty hidden" id="headendsEmpty">
+            No channel distribution records match the current filters.
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="loading-overlay hidden" id="headendsLoading">
+            <div class="spinner"></div>
+            <span>Loading channel distribution...</span>
+          </div>
+          <div class="table-scroll">
+            <table id="headendsTable" class="display compact dashboard-table">
+              <thead>
+                <tr>
+                  <th>Headend ID</th>
+                  <th>Network Name</th>
+                  <th>Headend Location</th>
+                  <th>State</th>
+                  <th>BARC Market</th>
+                  <th>STBs</th>
+                  <th>Landing Channel</th>
+                  <th>Second Landing Channel</th>
+                  <th>Barker Channel</th>
+                  <th>2nd Barker Channel</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-card">
+        <div class="section-header">
+          <div>
+            <p class="section-eyebrow">Table 2</p>
+            <h2>Week-wise Channel Comparison</h2>
+            <p class="section-copy">Compare channel lineups across consecutive weeks using the generated comparison dataset.</p>
+          </div>
+          <div class="record-pill">
+            <span>Visible Records</span>
+            <strong id="comparisonRecordCount">0</strong>
+          </div>
+        </div>
+
+        <div class="filter-card">
+          <div class="filter-grid filter-grid-wide">
+            <label class="field">
+              <span>Week From</span>
+              <select id="weekFromFilter">
+                <option value="">All Weeks</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Week To</span>
+              <select id="weekToFilter">
+                <option value="">All Weeks</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>LCN Number</span>
+              <select id="lcnFilter" multiple></select>
+            </label>
+            <label class="field">
+              <span>Channel Name</span>
+              <select id="channelFilter" multiple></select>
+            </label>
+          </div>
+          <div class="button-row">
+            <button type="button" class="btn btn-primary" id="applyComparisonFilters">Compare</button>
+            <button type="button" class="btn btn-secondary" id="resetComparisonFilters">Reset</button>
+            <button type="button" class="btn btn-ghost" id="exportComparisonCsv">Export CSV</button>
+            <button type="button" class="btn btn-ghost" id="exportComparisonExcel">Export Excel</button>
+          </div>
+        </div>
+
+        <div class="status-stack">
+          <div class="status-message error hidden" id="comparisonError"></div>
+          <div class="status-message empty hidden" id="comparisonEmpty">
+            No week-wise comparison rows match the current filters.
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="loading-overlay hidden" id="comparisonLoading">
+            <div class="spinner"></div>
+            <span>Loading week-wise comparison...</span>
+          </div>
+          <div class="table-scroll">
+            <table id="comparisonTable" class="display compact dashboard-table">
+              <thead>
+                <tr>
+                  <th>Headend ID</th>
+                  <th>LCN Number</th>
+                  <th>Week From</th>
+                  <th>Week To</th>
+                  <th>Channel (Week From)</th>
+                  <th>Channel (Week To)</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/datatables.net@2.3.2/js/dataTables.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.3/dist/js/tom-select.complete.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

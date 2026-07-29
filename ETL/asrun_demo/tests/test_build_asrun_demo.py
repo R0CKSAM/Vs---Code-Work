@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -151,6 +152,82 @@ def test_build_fct_ad_mart_classifies_deduplicates_and_tracks_spillover(
     assert (tmp_path / "parsed" / "fct_manifest.json").is_file()
 
 
+def test_fct_workbook_uses_internal_dates_and_ignores_summary_tabs(
+    tmp_path: Path,
+) -> None:
+    """Differently named FCT workbooks derive coverage from their valid data tab."""
+    workbook = tmp_path / "CTV FCT.xlsx"
+    data = pd.DataFrame(
+        {
+            "Feed Name": ["CN INDIA TV", "CN INDIA TV"],
+            "Pdate": ["24/06/2026", "30/06/2026"],
+            "Progname": ["News", "Prime Time"],
+            "Pgst": ["06:00:00", "20:00:00"],
+            "Pgdur": ["00:30:00", "00:30:00"],
+            "Adst": ["06:01:00", "20:01:00"],
+            "Brandname": ["Brand A", "Brand B"],
+            "Aaddur": [10, 20],
+            "Caption": ["Creative A", "Creative B"],
+            "Language": ["Hindi", "Hindi"],
+            "Category": ["FMCG", "FMCG"],
+            "Company": ["Company A", "Company B"],
+            "Adpos": [1, 1],
+            "TotAds": [2, 2],
+        }
+    )
+    with pd.ExcelWriter(workbook) as writer:
+        pd.DataFrame({"Category": ["Summary"]}).to_excel(
+            writer, sheet_name="S1", index=False
+        )
+        data.to_excel(writer, sheet_name="Sheet1", index=False)
+
+    events, metadata = asrun.parse_fct_workbook(workbook, workbook.name)
+
+    assert len(events) == 2
+    assert metadata["declared_start"] == "2026-06-24"
+    assert metadata["declared_end"] == "2026-06-30"
+    assert metadata["range_source"] == "Pdate"
+    assert metadata["parsed_sheets"] == ["Sheet1"]
+    assert metadata["ignored_sheets"] == ["S1"]
+    assert events["is_filename_spillover"].eq(False).all()
+
+
+def test_viewer_snapshot_includes_additional_fct_date_range(tmp_path: Path) -> None:
+    """Historical FCT events must retain FAST/STREAM audience evidence."""
+    mart_path = tmp_path / "identity_minute.parquet"
+    pd.DataFrame(
+        {
+            "log_date": ["2026-06-30", "2026-07-10"],
+            "source": ["fast", "stream"],
+            "minute_ist": pd.to_datetime(
+                ["2026-06-30 23:59:00", "2026-07-10 12:00:00"]
+            ),
+            "platform_name": ["Platform A", "STREAM"],
+            "channel_name": ["India TV", "India TV"],
+            "distinct_cliips": [125, 250],
+        }
+    ).to_parquet(mart_path, index=False)
+    events = pd.DataFrame(
+        {
+            "is_ad": [True],
+            "on_air_start_ist": [pd.Timestamp("2026-07-10 12:00:00")],
+            "on_air_end_ist": [pd.Timestamp("2026-07-10 12:00:10")],
+        }
+    )
+
+    snapshot = asrun.load_viewer_minute_snapshot(
+        events,
+        mart_path,
+        [("2026-06-30", "2026-06-30")],
+    )
+
+    assert snapshot["log_date"].astype(str).tolist() == [
+        "2026-06-30",
+        "2026-07-10",
+    ]
+    assert snapshot["distinct_cliips"].tolist() == [125, 250]
+
+
 def test_fixed_five_minute_sum_preserves_filter_dimensions_and_totals() -> None:
     """Compaction must equal the exact sum of source minutes in each fixed bucket."""
     minute = pd.DataFrame(
@@ -186,3 +263,251 @@ def test_fixed_five_minute_sum_preserves_filter_dimensions_and_totals() -> None:
         compact["platform_name"].eq("Platform B"), "distinct_cliips"
     ].tolist() == [7]
     assert compact["distinct_cliips"].sum() == minute["distinct_cliips"].sum()
+
+
+def test_split_dashboard_payload_preserves_all_source_rows() -> None:
+    """Startup compaction must relocate source rows, never truncate them."""
+    payload = {
+        "viewer_minute": [{"source": "fast"}, {"source": "stream"}],
+        "amagi": {"available": True, "minute": [{"value": 1}]},
+        "fct": {"available": True, "events": [{"event": 1}, {"event": 2}]},
+        "youtube": {
+            "available": True,
+            "minute": [{"minute": 1}],
+            "video_daily": [{"day": 1}],
+            "video_5min": [{"bucket": 1}],
+            "video_minute": [{"video": 1}, {"video": 2}],
+        },
+    }
+
+    core, chunks = asrun.split_dashboard_payload(payload)
+
+    assert core["viewer_minute"] == []
+    assert core["amagi"]["minute"] == []
+    assert core["fct"]["events"] == []
+    assert all(core["youtube"][key] == [] for key in asrun.YOUTUBE_PAYLOAD_ARRAYS)
+    assert chunks["viewer"] == payload["viewer_minute"]
+    assert chunks["amagi"] == payload["amagi"]["minute"]
+    assert chunks["fct"] == payload["fct"]["events"]
+    assert chunks["youtube"]["video_minute"] == payload["youtube"]["video_minute"]
+    assert payload["viewer_minute"]  # The full payload remains available to callers.
+
+
+def test_youtube_mart_reuses_unchanged_source_files(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """An unchanged YouTube refresh should read marts, not every source Parquet."""
+    youtube_root = tmp_path / "youtube"
+    parsed = tmp_path / "parsed"
+    youtube_root.mkdir()
+    source = youtube_root / "indiatv_29-07-2026_12-00_complete.parquet"
+    pd.DataFrame(
+        {
+            "date": ["2026-07-29", "2026-07-29"],
+            "time": ["12:00:00", "12:01:00"],
+            "video_id": ["video-1", "video-1"],
+            "title": ["India TV Live", "India TV Live"],
+            "concurrent_viewers": [100, 120],
+            "status": ["is_live", "is_live"],
+        }
+    ).to_parquet(source, index=False)
+    monkeypatch.setattr(asrun, "YOUTUBE_ROOT", youtube_root)
+    monkeypatch.setattr(asrun, "PARSED_DIR", parsed)
+
+    first = asrun.build_youtube_marts()
+    original_read_parquet = pd.read_parquet
+    source_reads: list[Path] = []
+
+    def tracked_read_parquet(path, *args, **kwargs):
+        resolved = Path(path).resolve()
+        if resolved.parent == youtube_root.resolve():
+            source_reads.append(resolved)
+        return original_read_parquet(path, *args, **kwargs)
+
+    monkeypatch.setattr(pd, "read_parquet", tracked_read_parquet)
+    second = asrun.build_youtube_marts()
+
+    assert first["available"] is True
+    assert second["minute"]["total_concurrent_viewers"].tolist() == [100, 120]
+    assert source_reads == []
+    manifest = json.loads((parsed / "youtube_manifest.json").read_text())
+    assert manifest["schema_version"] == asrun.YOUTUBE_MART_VERSION
+
+
+def test_amagi_mart_reuses_unchanged_source_files(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """An unchanged Amagi refresh should use its normalized minute mart."""
+    amagi_root = tmp_path / "amagi"
+    parsed = tmp_path / "parsed"
+    amagi_root.mkdir()
+    pd.DataFrame(
+        {
+            "channel_name": ["India TV Live"],
+            "platform_name": ["Samsung TV Plus - IN"],
+            "timestamp (UTC)": ["2026-07-29 06:30:00+00:00"],
+            "No. of Concurrent Viewers": [75],
+        }
+    ).to_csv(amagi_root / "concurrency.csv", index=False)
+    events = pd.DataFrame({"is_ad": [True]})
+    monkeypatch.setattr(asrun, "AMAGI_ROOT", amagi_root)
+    monkeypatch.setattr(asrun, "PARSED_DIR", parsed)
+
+    first = asrun.build_amagi_minute_mart(events)
+
+    def unexpected_read_csv(*args, **kwargs):
+        raise AssertionError("unchanged Amagi CSV was reopened")
+
+    monkeypatch.setattr(pd, "read_csv", unexpected_read_csv)
+    second = asrun.build_amagi_minute_mart(events)
+
+    assert first["available"] is True
+    assert second["minute"]["concurrent_viewers"].tolist() == [75]
+    manifest = json.loads((parsed / "amagi_manifest.json").read_text())
+    assert manifest["schema_version"] == asrun.AMAGI_MART_VERSION
+
+
+def test_parse_nct_csv_validates_and_normalizes_story_segments(tmp_path: Path) -> None:
+    """NCT preamble metadata and source-reported IST segments remain traceable."""
+    source = tmp_path / "Detail_StoryTrack_Duration.CSV"
+    row = pd.DataFrame(
+        {
+            "channel": ["INDIA TV"],
+            "Story": ["TEST STORY"],
+            "Sub_Story": ["TEST SUB-STORY"],
+            "story_genre_1": ["POLITICS"],
+            "story_genre_2": ["NO NEWS CONTENT"],
+            "pgm_name": ["TEST PROGRAM"],
+            "Pgm_Start_Time": ["06:00:00"],
+            "Pgm_End_Time": ["06:30:00"],
+            "clip_start_time": ["06:01:00"],
+            "clip_end_time": ["06:01:10"],
+            "pgm_date": ["29/07/2026"],
+            "week": [""],
+            "geography": ["INDIAN"],
+            "title": ["."],
+            "grap_type": ["Duration"],
+            "duration": ["00:00:10"],
+            "duration_seconds": [10],
+            "personality": [""],
+            "guest": [""],
+            "anchor": ["TEST ANCHOR"],
+            "reporter": [""],
+            "logistics": ["IN STUDIO"],
+            "telecast_format": ["HEADLINES"],
+            "assist_used": ["FOOTAGE"],
+            "split": ["NORMAL"],
+            "Story_Format": ["REPORT"],
+        }
+    )
+    preamble = "\n".join(
+        [
+            "Content Diagnostics - Duration - By Story Details",
+            "Selection Details:",
+            "Channels: INDIA TV,ABP NEWS",
+            "From Date: 29/07/2026",
+            "To Date: 29/07/2026",
+            "Start Time: 05:00:00",
+            "End Time: 23:59:00",
+            "Geography: ALL",
+            "Story:",
+            "Genre: Any",
+            "Story Type: Story",
+            "Downloaded On :29/7/2026 10:59",
+            "",
+            "",
+        ]
+    )
+    source.write_text(preamble + row.to_csv(index=False), encoding="utf-8")
+
+    segments, metadata = asrun.parse_nct_csv(source, source.name)
+
+    assert len(segments) == 1
+    assert segments.loc[0, "channel_name"] == "INDIA TV"
+    assert segments.loc[0, "duration_seconds"] == 10
+    assert pd.isna(segments.loc[0, "title"])
+    assert metadata["declared_start"] == "2026-07-29"
+    assert metadata["actual_channels"] == ["INDIA TV"]
+    assert metadata["missing_selected_channels"] == ["ABP NEWS"]
+
+
+def test_nct_missing_channels_ignores_display_case_differences() -> None:
+    """NCT metadata casing must not create a false missing-channel warning."""
+    missing = asrun.missing_channel_labels(
+        ["ABP NEWS", "NDTV INDIA"],
+        {"ABP News"},
+    )
+
+    assert missing == ["NDTV INDIA"]
+
+
+def test_render_dashboard_wires_complete_reset_and_fatal_error(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Generated HTML must expose filter state and never hide startup failures."""
+    chartjs = tmp_path / "chart.umd.min.js"
+    chartjs.write_text("window.Chart=function(){};", encoding="utf-8")
+    monkeypatch.setattr(asrun, "CHARTJS_CACHE", chartjs)
+
+    html = asrun.render_dashboard({"channels": ["Test Channel"]})
+
+    assert "showFatalDashboardError('initial render',startupError)" in html
+    assert "throw startupError" in html
+    assert "SIGNATURE_MULTI_IDS" in html
+    assert "youtubeVideoFilterSignature" in html
+    assert "nctContextChannel" in html
+    assert "Filters changed from the default view; click to restore defaults" in html
+
+
+def test_render_dashboard_keeps_fct_multiselects_independent(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Clearing one FCT dropdown must not rebuild or clear neighboring filters."""
+    chartjs = tmp_path / "chart.umd.min.js"
+    chartjs.write_text("window.Chart=function(){};", encoding="utf-8")
+    monkeypatch.setattr(asrun, "CHARTJS_CACHE", chartjs)
+
+    html = asrun.render_dashboard({"channels": ["Test Channel"]})
+
+    assert "const FCT_FILTER_SPECS=[" in html
+    assert "['fctCaption','caption','captions']" in html
+    assert "['fctProgram','program_name','programs']" in html
+    assert 'id="fctCaptionToggle"' in html
+    assert 'id="fctProgramToggle"' in html
+    assert "for(const [id,key,kind] of FCT_FILTER_SPECS)" in html
+    assert "buildMulti(id,values,kind,values,()=>renderFctAndScope(false))" in html
+    assert "selections.every(([key,values])=>values.has(fctValue(row,key)))" in html
+    assert "'Selected FCT Captions','Selected FCT Programs'" in html
+    assert "const NCT_FILTER_SPECS=[" in html
+    assert "for(const [id,key,kind] of NCT_FILTER_SPECS)" in html
+    assert (
+        "buildMulti('fctFeed',feeds,'feeds',feeds,"
+        "()=>{refreshFctFilters();renderFctAndScope(false)})"
+    ) not in html
+
+
+def test_render_dashboard_gives_fct_an_independent_all_range(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """FCT rows and exports must use FCT dates instead of the ASRUN header range."""
+    chartjs = tmp_path / "chart.umd.min.js"
+    chartjs.write_text("window.Chart=function(){};", encoding="utf-8")
+    monkeypatch.setattr(asrun, "CHARTJS_CACHE", chartjs)
+
+    html = asrun.render_dashboard({"channels": ["Test Channel"]})
+
+    assert 'id="fctFrom"' in html
+    assert 'id="fctTo"' in html
+    assert 'data-fct-range="all" class="active"' in html
+    assert "function initializeFctDates()" in html
+    assert "setFctRange('all',false)" in html
+    assert "const from=$('fctFrom').value,to=$('fctTo').value" in html
+    assert "filters=fctFilterContext()" in html
+    assert (
+        "Independent FCT date + "
+        "class/feed/language/brand/caption/program/category/company"
+    ) in html
+    assert "function fctCoveredAudienceValue(event,state)" in html
+    assert "value:'Not available'" in html
+    assert "partial:available.length!==values.length" in html
+    assert "'Coverage Status'" in html

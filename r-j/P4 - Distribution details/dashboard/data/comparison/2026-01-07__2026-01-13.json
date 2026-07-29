@@ -1,0 +1,173 @@
+[
+  {
+    "headend_id": "HED000228",
+    "lcn": "301",
+    "week_from": "2026-01-07",
+    "week_from_channel": null,
+    "week_to": "2026-01-13",
+    "week_to_channel": "Tv 9 Bharatvarsh",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000228",
+    "lcn": "302",
+    "week_from": "2026-01-07",
+    "week_from_channel": null,
+    "week_to": "2026-01-13",
+    "week_to_channel": "Aaj Tak",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000228",
+    "lcn": "303",
+    "week_from": "2026-01-07",
+    "week_from_channel": null,
+    "week_to": "2026-01-13",
+    "week_to_channel": "India Tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000228",
+    "lcn": "305",
+    "week_from": "2026-01-07",
+    "week_from_channel": null,
+    "week_to": "2026-01-13",
+    "week_to_channel": "R Bharat",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000228",
+    "lcn": "306",
+    "week_from": "2026-01-07",
+    "week_from_channel": null,
+    "week_to": "2026-01-13",
+    "week_to_channel": "ABP News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000228",
+    "lcn": "308",
+    "week_from": "2026-01-07",
+    "week_from_channel": null,
+    "week_to": "2026-01-13",
+    "week_to_channel": "Zee News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000228",
+    "lcn": "310",
+    "week_from": "2026-01-07",
+    "week_from_channel": null,
+    "week_to": "2026-01-13",
+    "week_to_channel": "Ndtv India",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000228",
+    "lcn": "313",
+    "week_from": "2026-01-07",
+    "week_from_channel": null,
+    "week_to": "2026-01-13",
+    "week_to_channel": "News 18 India",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000238",
+    "lcn": "202",
+    "week_from": "2026-01-07",
+    "week_from_channel": "1st India News",
+    "week_to": "2026-01-13",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000238",
+    "lcn": "203",
+    "week_from": "2026-01-07",
+    "week_from_channel": "Bharat 24",
+    "week_to": "2026-01-13",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000238",
+    "lcn": "204",
+    "week_from": "2026-01-07",
+    "week_from_channel": "India Tv",
+    "week_to": "2026-01-13",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000238",
+    "lcn": "205",
+    "week_from": "2026-01-07",
+    "week_from_channel": "News 18 India",
+    "week_to": "2026-01-13",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000238",
+    "lcn": "206",
+    "week_from": "2026-01-07",
+    "week_from_channel": "Zee News",
+    "week_to": "2026-01-13",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000238",
+    "lcn": "207",
+    "week_from": "2026-01-07",
+    "week_from_channel": "Aaj Tak",
+    "week_to": "2026-01-13",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000238",
+    "lcn": "208",
+    "week_from": "2026-01-07",
+    "week_from_channel": "ABP News",
+    "week_to": "2026-01-13",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000238",
+    "lcn": "209",
+    "week_from": "2026-01-07",
+    "week_from_channel": "NDTV India",
+    "week_to": "2026-01-13",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000238",
+    "lcn": "215",
+    "week_from": "2026-01-07",
+    "week_from_channel": "TV9 Bhartvarsh",
+    "week_to": "2026-01-13",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000238",
+    "lcn": "216",
+    "week_from": "2026-01-07",
+    "week_from_channel": "R Bharat",
+    "week_to": "2026-01-13",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000238",
+    "lcn": "217",
+    "week_from": "2026-01-07",
+    "week_from_channel": "DD News",
+    "week_to": "2026-01-13",
+    "week_to_channel": null,
+    "status": "Removed"
+  }
+]

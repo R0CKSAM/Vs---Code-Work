@@ -1,0 +1,4115 @@
+[
+  {
+    "headend_id": "HED000154",
+    "lcn": "122",
+    "week_from": "2026-07-01",
+    "week_from_channel": "Aaj Tak",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000154",
+    "lcn": "123",
+    "week_from": "2026-07-01",
+    "week_from_channel": "India Tv",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000154",
+    "lcn": "124",
+    "week_from": "2026-07-01",
+    "week_from_channel": "Abp News",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000154",
+    "lcn": "125",
+    "week_from": "2026-07-01",
+    "week_from_channel": "Zee News",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000154",
+    "lcn": "126",
+    "week_from": "2026-07-01",
+    "week_from_channel": "Ndtv India",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000154",
+    "lcn": "127",
+    "week_from": "2026-07-01",
+    "week_from_channel": "News 18 India",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000154",
+    "lcn": "128",
+    "week_from": "2026-07-01",
+    "week_from_channel": "News Nation",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000154",
+    "lcn": "129",
+    "week_from": "2026-07-01",
+    "week_from_channel": "TN Navbharat",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000154",
+    "lcn": "130",
+    "week_from": "2026-07-01",
+    "week_from_channel": "R Bharat",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000154",
+    "lcn": "131",
+    "week_from": "2026-07-01",
+    "week_from_channel": "Gnt",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000154",
+    "lcn": "132",
+    "week_from": "2026-07-01",
+    "week_from_channel": "News 24",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000154",
+    "lcn": "133",
+    "week_from": "2026-07-01",
+    "week_from_channel": "Tv 9 Bharatvarsh",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000154",
+    "lcn": "136",
+    "week_from": "2026-07-01",
+    "week_from_channel": "News 18 Jklhp",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000154",
+    "lcn": "137",
+    "week_from": "2026-07-01",
+    "week_from_channel": "Gulistan News",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000154",
+    "lcn": "138",
+    "week_from": "2026-07-01",
+    "week_from_channel": "Voice of Urdu",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000154",
+    "lcn": "139",
+    "week_from": "2026-07-01",
+    "week_from_channel": "Ird 505",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000154",
+    "lcn": "140",
+    "week_from": "2026-07-01",
+    "week_from_channel": "Ird 507",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "99",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Abp News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "100",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News18 India",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "101",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Tv9 Bharatvarsh",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "102",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "India Tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "103",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Ndtv India",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "105",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "R.Bharat",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "106",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "CNBC tv18",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "107",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News18 Mpcg",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "109",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "CNBC Awaaz",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "110",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sahara Samay Mumbai",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "111",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "SAHARA SAMAY UP UK",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "113",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "DD Karnataka",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "114",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Bansal News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "117",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "DD Rajasthan",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "118",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News18 JKLHP",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "119",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Bharat Samachar",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "120",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Aalami Samay",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "122",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sansad tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "123",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "DD News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "124",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "B4U Kadak",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "125",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Zee News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "128",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Times Now Navbharat",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "132",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Khabar Abhi Tak",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "133",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sansad tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "134",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "DD Urdu",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "136",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Naxatra News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "137",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "GS TV",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "139",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Unique Tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "140",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "SAHARA SAMAY BIHAR JH",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "141",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sahara Samay MP CG",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "142",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sahara Samay Rashtriya",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "146",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "DD National",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "148",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Good News Today",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "151",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Network 10",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "153",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sudarshan News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "154",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "INH 24x7",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "155",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Republic Tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "157",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sach Bedhadak",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "158",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "IND24",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "160",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "TEHZEEB TV",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000508",
+    "lcn": "170",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "DD News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "39",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Blank",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "41",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Epic",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "42",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Zee Tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "43",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Sony",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "44",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd & Tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "45",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Colors",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "46",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Plus",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "47",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Bharat",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "48",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Gold",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "49",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Gold Select",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "52",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Nick",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "53",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Sony Sports Ten1",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "54",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Sony Sports Ten2",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "55",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Zee Cinema",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "56",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd & Pictures",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "57",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Max",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "58",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Zee Zest",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "59",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Animal Planet World",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "60",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Sports1",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "61",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Sports1 Hindi",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "62",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Sports2",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "63",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Sports Select2",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "64",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Sony Sports Ten3",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "65",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Zee Bangla",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "66",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Colors Infinity",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "67",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Gold 2",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "68",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Movies",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "69",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Blank",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "71",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Sony Bbc Earth",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "72",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Movies Now",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "73",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Blank",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "74",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Ngc",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "75",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Blank",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "77",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Jalsha",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "78",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Sab",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "79",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Colors Cineplex",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "80",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Blank",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "81",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Sports Select1",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "82",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Movies Select",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "83",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Sony Sports Ten5",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "85",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Mn+",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "86",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd & Flix",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "87",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Pix",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "89",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Cnbc Prime",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "90",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Nhk",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "91",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Dw",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "92",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Al Jazeera",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "93",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Trt World",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "96",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Aaj Tak",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "97",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "HD India TV Speed News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "99",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Epic",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "299",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Aaj Tak",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "300",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "India TV",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "301",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Tv9 Bharatvarsh",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "302",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Abp News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "304",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Times Now Navbharat",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "306",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Good News Today",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "307",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Zee News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "308",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Zee Bharat",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "309",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News18 India",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "310",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Cnn News18",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "311",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Blank",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "312",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Republic Tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "313",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News18 Mp Cg",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "314",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Ibc24",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "316",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News State Mp Cg",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "317",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Vistaar News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "318",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Zee Rajasthan",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "319",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Cnbc Tv18",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "320",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Zee News Mp Cg",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "321",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Cnbc Awaaz",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "322",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Zee Business",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "323",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "India Today",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "324",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News 9",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "325",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Aryan Tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "326",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Mirror Now",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "327",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Bansal News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "331",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Et Now",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "332",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Et Now Swadesh",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "335",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Vistara News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "340",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Dd News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "341",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Blank",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "342",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sansad Tv 2",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "343",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sansad Tv 1",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000524",
+    "lcn": "504",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Sports2 Telugu",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "100",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Ndtv India",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "299",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "India TV",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "300",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Aaj Tak",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "301",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Tv9 Bharatvarsh",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "304",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Abp News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "305",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News18 India",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "308",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Zee News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "309",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Good News Today",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "310",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Times Now Navbharat",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "321",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Cnbc Awaaz",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "322",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Blank",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "323",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Cnbc Tv18",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "324",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Et Now Swadesh",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "340",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Cnn News18",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "342",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "India Today",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "343",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Republic Tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "345",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Times Now",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "346",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Et Now",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "348",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Vistara News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "349",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News18 Mp Cg",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "351",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Ibc24",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "352",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Ndtv Mp Cg",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "353",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Bansal News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "354",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Zee News Mp Cg",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "355",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Ind24",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "356",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Blank",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "357",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Blank",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "358",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News 24",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "359",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Blank",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "360",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Blank",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "363",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Bharat Samachar",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "364",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News11 Bharat",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "371",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Blank",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "377",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Network 10",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "383",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Inh 24X7",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "385",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sadhna Prime",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "386",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Jk News 24*7",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "388",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Khabrain Abhi Tak",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "389",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hindi Khabar",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "396",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sudarshan News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "398",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sansad Tv 1",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "399",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sansad Tv 2",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000525",
+    "lcn": "527",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Sports2 Telugu",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "299",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "India TV",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "300",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News Nation",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "301",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Tv9 Bharatvarsh",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "302",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Aajtak",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "303",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Abp News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "304",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Ndtv India",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "305",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News18 India",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "306",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Times Now Navbharat",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "307",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Good News Today",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "308",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Zee News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "310",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "HD India TV Speed News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "311",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Zee Bharat",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "312",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News18 Mp Cg",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "314",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Blank",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "321",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Cnbc Awaaz",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "322",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Zee Business",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "323",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Times Now",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "324",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Et Now Swadesh",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "326",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News18 Jklhph",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "341",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Dd News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "342",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "India Today",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "343",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Republic Tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "344",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Cnn News18",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "345",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Ind24",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "346",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Et Now",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "348",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Vistara News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "350",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Aastha",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "351",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Ibc24",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "352",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Nd24",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "353",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Inh 24X7",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "354",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Zee News Mp Cg",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "355",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Zee Bihar Jharkhand",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "356",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Blank",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "357",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Vtv News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "358",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Blank",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "370",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Aryan Tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "371",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Jk News 24*7",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "372",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News 24",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "373",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Saam Tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "374",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Pt Express",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "375",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News 24 Mpcg",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "380",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Blank",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "381",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Blank",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "382",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Network 10",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "384",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News 11",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "385",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Khabrain Abhi Tak",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "386",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Gujarat First",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "387",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Bharat Samachar",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "389",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hindi Khabar",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "395",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Blank",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "396",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sudarshan News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "398",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sansad Tv 1",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "399",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sansad Tv 2",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "527",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Sports2 Telugu",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "943",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Dd Haryana",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "945",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Dd News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "951",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd & Tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "952",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Sony Max",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "953",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Bharat",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "954",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Colors",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "955",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Sony Ten3",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "956",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd & Pictures",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "957",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Zee Tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "958",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Plus",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "959",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Sab",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "960",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Zee Cinema",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "961",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Sports1 Hindi",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000526",
+    "lcn": "962",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Sony",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "60",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Local",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "67",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Local",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "68",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Local",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "69",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Local",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "71",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Local",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "75",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Local",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "84",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Local",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "88",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Local",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "89",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Local",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "91",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Local",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "93",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Local",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "94",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Local",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "97",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Local",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "101",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Plus",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "102",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Zee Tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "103",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Bharat",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "104",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd & Tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "105",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Colors",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "106",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Sony",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "107",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Sab",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "108",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Investigation Discovery",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "242",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Local",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "243",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Local",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "244",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Local",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "245",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Local",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "246",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Local",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "247",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Local",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "248",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Local",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "249",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Local",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "250",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Max",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "251",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Gold",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "252",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Movies",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "253",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Gold Select",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "254",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star World",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "255",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd & Pictures",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "256",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Pix",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "257",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Blank",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "258",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Zee Cinema",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "300",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Aaj Tak",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "301",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Tv9 Bharatvarsh",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "302",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "India TV",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "303",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Abp News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "304",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Times Now Navbharat",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "305",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News 18 India",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "307",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Good News Today",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "310",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Republic Bharat",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "311",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Zee News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "312",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Lokshabha",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "313",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Rajyashabha",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "315",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Bharat Samachar",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "316",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Zee Bharat",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "317",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sanskriti 24*7",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "318",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Ind 24",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "320",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "India News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "321",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News 18 India",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "341",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News 18 Mpcg",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "342",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Zee Mpcg",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "344",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News 24",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "345",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Total Tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "346",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Ibc 24",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "347",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "India Veice",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "348",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sundesh",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "349",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Inh 24*7",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "350",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sawaraj Express",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "353",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Bansal News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "355",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Fest India",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "360",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Ind 24 News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "361",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Fatah Tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "381",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Swaraj Express",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "382",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Zee Business",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "384",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Republic Tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "432",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Sports Select 2",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "433",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Sports 1 Hindi",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "434",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Sony Ten 2",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "435",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Sports 1",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "437",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Sony Ten 3",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "438",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Blank",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "439",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Sony Six",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "498",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Animal Planet World",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "499",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Sony Bbc Earth",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000527",
+    "lcn": "500",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Discovery World",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "299",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "India TV",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "300",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Aaj Tak",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "301",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "NDTV India",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "302",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "R.Bharat",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "303",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Times Now Navbharat",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "304",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Abp News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "305",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News 18 India",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "306",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Tv9 Bharatvarsh",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "307",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Zee Bharat",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "308",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Zee News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "309",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Good News Today",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "311",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News Nation",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "314",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News 24",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "316",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Bharat 24",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "320",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News 18 jammu",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "321",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Cnbc Awaaz",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "322",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Zee Business",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "340",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Cnn News18",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "342",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Et Now Sawdesh",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "345",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Time Now",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "350",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Ind 24",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "351",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Ibc24",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "353",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Bansal news",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "354",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News 18 Mp Cg",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "355",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Inh 24X7",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "356",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News 24 Mpcg",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "357",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Ndtv Mpcg",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "359",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Vistaar news",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "360",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News state mpcg",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "362",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Inh 24X7",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "365",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Mh One News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "366",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sawadesh news",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "367",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Dd News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "368",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hindi Khabar",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "369",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "News State Upuk",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "370",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Aryan tv nation",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "371",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sawaraj Express",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "372",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Public First",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "373",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Tv 100",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "374",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Apn",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "375",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Studio one plus",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "397",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sansad 1",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "398",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Sansad 2",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "800",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Plus",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "801",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Zee Tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "802",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Sony",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "804",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Sab",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "805",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Colors",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "806",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd & TV",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "807",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Bharat",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "811",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Zee Cinema",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "812",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Max",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "813",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd & Pictures",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "815",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Star Sports1 Hindi",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000542",
+    "lcn": "816",
+    "week_from": "2026-07-01",
+    "week_from_channel": null,
+    "week_to": "2026-07-02",
+    "week_to_channel": "Hd Sony Sports Ten3",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "100",
+    "week_from": "2026-07-01",
+    "week_from_channel": "News18 India",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "705",
+    "week_from": "2026-07-01",
+    "week_from_channel": "Zee News",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "706",
+    "week_from": "2026-07-01",
+    "week_from_channel": "Abp News",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "707",
+    "week_from": "2026-07-01",
+    "week_from_channel": "R.Bharat",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "709",
+    "week_from": "2026-07-01",
+    "week_from_channel": "Aaj Tak",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "710",
+    "week_from": "2026-07-01",
+    "week_from_channel": "India Tv",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "711",
+    "week_from": "2026-07-01",
+    "week_from_channel": "NDTV India",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "712",
+    "week_from": "2026-07-01",
+    "week_from_channel": "Times Now Navbharat",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "713",
+    "week_from": "2026-07-01",
+    "week_from_channel": "News Nation",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "714",
+    "week_from": "2026-07-01",
+    "week_from_channel": "Tv9 Bharatvarsh",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "715",
+    "week_from": "2026-07-01",
+    "week_from_channel": "Good News Today",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "716",
+    "week_from": "2026-07-01",
+    "week_from_channel": "News 24",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "720",
+    "week_from": "2026-07-01",
+    "week_from_channel": "Zee Bharat",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "721",
+    "week_from": "2026-07-01",
+    "week_from_channel": "Zee Delhi NCR",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "920",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Star Plus",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "921",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Zee TV",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "922",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Colors",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "923",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Sony",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "924",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD & TV",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "925",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Star Bharat",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "926",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD SAB",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "928",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Star Gold",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "929",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Zee Cinema",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "930",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD MAX",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "931",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD & Pictures",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "932",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Star Gold 2",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "933",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD & Xplor",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "935",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Star Pravah",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "936",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Zee marathi",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "937",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD COLORS MARATHI",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "938",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD ZEE TALKIES",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "940",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Star Jalsha",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "941",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Zee Bangla",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "942",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Star JALSHA MOVIES",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "944",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Star Movies",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "945",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Star Movies Select",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "948",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Star Suvarna",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "955",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD ZEE TELUGU",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "957",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD GEMINI TV",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "958",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Star Maa",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "959",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD ETV Plus",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "960",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD GEMINI MOVIES",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "961",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD ETV Cinema",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "962",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Star Maa Movies",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "963",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD ZEE CINEMALU",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "964",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD GEMINI MUSIC",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "966",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD India Tv Speed News",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "967",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD sansad tv",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "969",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Star Sports1 hindi",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "970",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Sony Sports Ten3",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "971",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Star Sports1",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "972",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Star Sports2",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "973",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Sony Sports Ten5",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "974",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Sony Sports Ten1",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "975",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Sony Sports Ten2",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "976",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Star Sports Select1",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "977",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Star Sports Select2",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "979",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Star Sports1 Telugu",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "980",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD NGC",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "981",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Discovery World",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "982",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Sony BBC Earth",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "983",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD ANIMAL PLANET WORLD",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "984",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD NAT GEO WILD",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "985",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD Zee zest",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "986",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD TLC",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "989",
+    "week_from": "2026-07-01",
+    "week_from_channel": "HD DD News",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000543",
+    "lcn": "999",
+    "week_from": "2026-07-01",
+    "week_from_channel": "Customer Supports",
+    "week_to": "2026-07-02",
+    "week_to_channel": null,
+    "status": "Removed"
+  }
+]
