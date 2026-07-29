@@ -3,7 +3,7 @@
     {
       "filename": "Week27.xlsx",
       "week_label": "Week 27",
-      "processed_at": "2026-07-27T16:11:15",
+      "processed_at": "2026-07-28T16:43:21",
       "weeks_found": [
         "2026-01-07",
         "2026-01-13",
@@ -45,12 +45,12 @@
         "2026-07-07"
       ],
       "headend_snapshots": 682,
-      "channel_rows": 64965
+      "channel_rows": 64964
     },
     {
       "filename": "Week28.xlsx",
       "week_label": "Week 28",
-      "processed_at": "2026-07-27T16:11:17",
+      "processed_at": "2026-07-28T16:43:24",
       "weeks_found": [
         "2026-01-07",
         "2026-01-13",
@@ -90,7 +90,7 @@
         "2027-07-18"
       ],
       "headend_snapshots": 686,
-      "channel_rows": 65004
+      "channel_rows": 65003
     }
   ]
 }

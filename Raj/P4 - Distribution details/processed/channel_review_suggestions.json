@@ -617,21 +617,6 @@
   },
   {
     "group": [
-      "Cnbc Tv 18",
-      "Cnbc Tv18"
-    ],
-    "suggested_canonical": "Cnbc Tv 18"
-  },
-  {
-    "group": [
-      "Cnbc Tv 18 Prim",
-      "Cnbc Tv 18 Prime",
-      "Cnbc Tv18 Prime"
-    ],
-    "suggested_canonical": "Cnbc Tv 18 Prim"
-  },
-  {
-    "group": [
       "Cnbc Tv 18 Hd",
       "Cnbc Tv18 Hd"
     ],
@@ -646,17 +631,18 @@
   },
   {
     "group": [
+      "Cnbc Tv 18 Prim",
+      "Cnbc Tv 18 Prime",
+      "Cnbc Tv18 Prime"
+    ],
+    "suggested_canonical": "Cnbc Tv 18 Prim"
+  },
+  {
+    "group": [
       "Cnn Internation",
       "Cnn International"
     ],
     "suggested_canonical": "Cnn Internation"
-  },
-  {
-    "group": [
-      "Cnn News 18",
-      "Cnn News18"
-    ],
-    "suggested_canonical": "Cnn News 18"
   },
   {
     "group": [
@@ -3497,13 +3483,6 @@
   },
   {
     "group": [
-      "News 18 India",
-      "News18 India"
-    ],
-    "suggested_canonical": "News 18 India"
-  },
-  {
-    "group": [
       "News 18 Jammu",
       "News18 Jammu"
     ],
@@ -3538,13 +3517,6 @@
       "News18 Kannada"
     ],
     "suggested_canonical": "News 18 Kannada"
-  },
-  {
-    "group": [
-      "News 18 Lokmat",
-      "News18 Lokmat"
-    ],
-    "suggested_canonical": "News 18 Lokmat"
   },
   {
     "group": [

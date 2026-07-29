@@ -630,10 +630,10 @@ def parse_sheet(
             counters=counters,
         )
         stbs = clean_int(get_cell(rows, label_rows.get("stbs"), block_start))
-        landing_channel_1 = clean_text(get_cell(rows, label_rows.get("landing_channel_1"), block_start))
-        landing_channel_2 = clean_text(get_cell(rows, label_rows.get("landing_channel_2"), block_start))
-        barker_1 = clean_text(get_cell(rows, label_rows.get("barker_1"), block_start))
-        barker_2 = clean_text(get_cell(rows, label_rows.get("barker_2"), block_start))
+        landing_channel_1 = normalize_channel_name(get_cell(rows, label_rows.get("landing_channel_1"), block_start))
+        landing_channel_2 = normalize_channel_name(get_cell(rows, label_rows.get("landing_channel_2"), block_start))
+        barker_1 = normalize_channel_name(get_cell(rows, label_rows.get("barker_1"), block_start))
+        barker_2 = normalize_channel_name(get_cell(rows, label_rows.get("barker_2"), block_start))
 
         if not network_name and not headend_location:
             continue
