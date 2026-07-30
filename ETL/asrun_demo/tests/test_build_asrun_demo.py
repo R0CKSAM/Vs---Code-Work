@@ -476,6 +476,10 @@ def test_render_dashboard_groups_sections_into_three_pages(
     assert 'id="dashboardPageAudience"' in html
     assert 'id="dashboardPageDelivery"' in html
     assert 'id="dashboardPageContent"' in html
+    assert "filters.insertBefore($('dashboardPageNav'),filters.firstChild);" in html
+    assert ".dashboard-page-nav { flex: 1 1 100%; order: -1; }" in html
+    assert ".filter-shell .filters button," in html
+    assert "height: 26px;" in html
     assert "$('dashboardPageAudience').append(" in html
     assert "$('dashboardPageDelivery').append(" in html
     assert "$('dashboardPageContent').append(nodes.nct,nodes.scope)" in html
@@ -510,14 +514,97 @@ def test_render_dashboard_keeps_fct_multiselects_independent(
     assert 'id="nctStorySearch"' not in html
     assert "const NCT_STORY_OPTION_LIMIT=100" in html
     assert "&&(!nctSelectedStory||nctText(row,'story')===nctSelectedStory)" in html
+    assert ".nct-chart-empty[hidden] { display: none !important; }" in html
     assert ".nct-loading[hidden] { display: none !important; }" in html
     assert '.nct-panel .multi-option input[type="checkbox"] {' in html
     assert "function wrapNctOptionLabels(id){" in html
     assert "wrapNctOptionLabels(id);" in html
+    assert ".nct-controls > .filter-label:has(.multi-menu.open) { z-index: 120; }" in html
+    assert ".filter-label:has(.multi-menu.open) { position: relative; z-index: 120; }" in html
+    assert ".multi-menu:has(.multi-search-shell) {" in html
+    assert ".nct-panel .multi-search-actions {" in html
+    assert "grid-template-columns: repeat(2, minmax(0, 1fr));" in html
+    assert ".nct-panel .multi-search-shell {" in html
+    assert "width: calc(100% + 8px);" in html
+    assert "box-shadow: 0 2px 4px rgba(15, 23, 42, .10);" in html
+    assert "width: min(280px, calc(100vw - 24px));" in html
+    assert ".nct-controls > .filter-label:nth-last-child(-n+2) .multi-menu {" in html
+    assert "grid-column: 1 / -1;" in html
+    assert "function clearMultiMenuSearch(menu){" in html
+    assert "search.dispatchEvent(new Event('input',{bubbles:true}));" in html
+    assert "function alignMultiMenu(menu){" in html
+    assert "if(rect.right>window.innerWidth-edge){" in html
+    assert "function closeMultiMenu(menu){" in html
+    assert "if(id)multiSearchState.delete(id);" in html
+    assert "if(!owner||!owner.contains(event.target))closeMultiMenu(menu);" in html
+    assert "'placeholder=\"Search channel, video ID, or title...\" autocomplete=\"off\"></span>'" in html
+    assert "const NCT_RANK_LIMIT=15" in html
+    assert "function renderNctRank(kind,rows){" in html
+    assert "button.textContent=expanded?'Show Top 15':'Expand All ('+fmt(ranked.length)+')'" in html
+    assert "Monitored Content Trend" in html
+    assert 'data-nct-chart-mode=' not in html
+    assert "function setNctChartMode(" not in html
+    assert "function nctRollingAverage(" not in html
+    assert "buildMulti(id,values,kind,values" in html
+    assert "zero-only series hidden" in html
+    assert "pointRadius:0" in html
+    assert "beginAtZero:false" in html
+    assert "text:'Monitored content minutes'" in html
     assert (
         "buildMulti('fctFeed',feeds,'feeds',feeds,"
         "()=>{refreshFctFilters();renderFctAndScope(false)})"
     ) not in html
+
+
+def test_render_dashboard_adds_concurrency_to_nct_top_stories(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Top Stories must reuse the established audience calculations."""
+    chartjs = tmp_path / "chart.umd.min.js"
+    chartjs.write_text("window.Chart=function(){};", encoding="utf-8")
+    monkeypatch.setattr(asrun, "CHARTJS_CACHE", chartjs)
+
+    html = asrun.render_dashboard({"channels": ["Test Channel"]})
+
+    assert 'id="exportNctStoryAudienceCsv"' in html
+    assert "function nctStoryAudienceRows(rows){" in html
+    assert "const fast=fctCoveredAudienceValue(anchor,states.fast);" in html
+    assert "const stream=fctCoveredAudienceValue(anchor,states.stream);" in html
+    assert "const amagi=fctCoveredAudienceValue(anchor,states.amagi);" in html
+    assert "const youtube=youtubeFiveMinuteValue(anchor);" in html
+    assert "function renderNctStoryAudience(rows){" in html
+    assert "const value=Number(seconds||0),hours=Math.round(value/3600);" in html
+    assert "return hours?fmt(hours)+' h':fmt(Math.round(value/60))+' min';" in html
+    assert ".nct-story-audience-table.expandable," in html
+    assert "height: min(65vh, 620px);" in html
+    assert 'id="nctStoryTable"' in html
+    assert "table.classList.toggle('expanded',nctStoryAudienceExpanded);" in html
+    assert "const NCT_SEGMENT_LIMIT=15;" in html
+    assert "const NCT_SEGMENT_BATCH=200;" in html
+    assert 'id="nctSegmentExpand"' in html
+    assert 'id="nctSegmentTable"' in html
+    assert "function renderNctSegments(rows){" in html
+    assert "function toggleNctSegments(){" in html
+    assert "Scroll to load more; CSV exports the complete filtered result." in html
+    assert ".nct-rank-list.expandable {" in html
+    assert "html { scrollbar-gutter: stable; }" in html
+    assert "body.nct-chart-expanded::before {" in html
+    assert ".nct-panel .panel-actions > button," in html
+    assert '.nct-panel button.nct-rank-toggle[aria-expanded="true"],' in html
+    assert "$('expandNctChart').setAttribute('aria-expanded',String(expanded));" in html
+    assert "const NCT_CONTEXT_LIMIT=15;" in html
+    assert 'id="nctContextExpand"' in html
+    assert 'id="nctContextTable"' in html
+    assert "function toggleNctContext(){" in html
+    assert "nctContextRowsCache.slice(0,NCT_CONTEXT_LIMIT)" in html
+    assert "CSV exports the complete filtered result." in html
+    assert "India TV YouTube uses minute concurrency" in html
+    assert ".nct-story-audience-columns > span:not(:first-child)," in html
+    assert ".nct-story-audience-row > span:not(:first-child) {" in html
+    assert "function exportNctStoryAudienceCsv(){" in html
+    assert "Average FAST 5-Minute Concurrency" in html
+    assert "loadAudienceDashboardData()," in html
+    assert "loadYoutubeDashboardData()," in html
 
 
 def test_render_dashboard_gives_fct_an_independent_all_range(

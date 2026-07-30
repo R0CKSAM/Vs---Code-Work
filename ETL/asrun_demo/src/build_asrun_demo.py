@@ -2209,6 +2209,7 @@ def render_dashboard(payload: dict[str, Any]) -> str:
   --display-font: "Segoe UI Variable Display", "Segoe UI", Arial, sans-serif;
 }
 * { box-sizing: border-box; }
+html { scrollbar-gutter: stable; }
 html, body { max-width: 100%; overflow-x: hidden; }
 body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--ui-font); font-size: 14px; line-height: 1.4; letter-spacing: 0; }
 .wrap { width: 100%; margin: 0; padding: 0; }
@@ -2222,18 +2223,63 @@ body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var
 h2, h3 { font-family: var(--display-font); }
 h2 { margin: 0; font-size: 17px; }
 p { margin: 0; color: var(--muted); }
-.filter-shell { position: sticky; top: 0; z-index: 10; min-height: 52px; background: #eef3f8; border-bottom: 1px solid #cbd5e1; box-shadow: 0 3px 8px rgba(22, 36, 49, .08); }
-.filters { min-height: 52px; display: grid; grid-template-columns: minmax(260px, 1.3fr) repeat(2, minmax(150px, 220px)) auto; gap: 8px; align-items: center; justify-content: start; }
-.date-mode-group { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; min-width: 0; }
-.date-mode-group button { min-width: 0; overflow: hidden; padding: 0 8px; border: 1px solid #9dbde7; background: #ffffff; color: var(--blue); text-overflow: ellipsis; }
-.date-mode-group button.active { border-color: var(--blue); background: var(--blue); color: #ffffff; }
+.filter-shell { position: sticky; top: 0; z-index: 30; min-height: 40px; background: #eef3f8; border-bottom: 1px solid #cbd5e1; box-shadow: 0 3px 8px rgba(22, 36, 49, .08); }
+.filters {
+  display: flex;
+  min-height: 40px;
+  gap: 5px;
+  align-items: center;
+  padding: 5px 4px;
+}
+.date-mode-group {
+  display: grid;
+  flex: 0 1 300px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 3px;
+  min-width: 230px;
+}
+.date-mode-group button {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #93b4df;
+  background: #f8fbff;
+  color: #1557a8;
+  text-overflow: ellipsis;
+  transition: border-color .15s ease, background-color .15s ease, color .15s ease;
+}
+.date-mode-group button:hover {
+  border-color: #2563eb;
+  background: #dbeafe;
+  color: #123d73;
+}
+.date-mode-group button.active {
+  border-color: #1d4ed8;
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .12);
+}
 .period-field[hidden] { display: none; }
+.filters .period-field { flex: 0 1 190px; min-width: 150px; }
 .filter-label { display: flex; align-items: center; gap: 6px; min-width: 0; color: var(--muted); font-size: 11px; line-height: 1; white-space: nowrap; }
 .filter-label input, .filter-label select { flex: 1 1 auto; min-width: 0; }
 input, select { width: 100%; height: 30px; border: 1px solid #aebdca; border-radius: 4px; padding: 4px 7px; background: #ffffff; color: var(--ink); font-family: inherit; font-size: 12px; letter-spacing: 0; }
 button { height: 30px; border: 0; border-radius: 4px; padding: 0 11px; background: var(--blue); color: #ffffff; cursor: pointer; font-family: var(--display-font); font-size: 12px; letter-spacing: 0; white-space: nowrap; }
 #reset { background: #16a34a; transition: background-color .16s ease; }
+#reset:hover { background: #15803d; }
 #reset.is-dirty { background: #dc2626; }
+#reset.is-dirty:hover { background: #b91c1c; }
+.filter-shell .filters button,
+.filter-shell .filters input,
+.filter-shell .filters select {
+  height: 26px;
+  min-height: 26px;
+  font-size: 10px;
+}
+.filter-shell .filters button { padding: 0 8px; }
+.filter-shell :is(button, input, select):focus-visible {
+  outline: 2px solid #f59e0b;
+  outline-offset: 1px;
+}
 .loading-toast { position: fixed; right: 18px; bottom: 18px; z-index: 2000; display: flex; align-items: center; gap: 9px; min-width: 210px; max-width: min(360px, calc(100vw - 24px)); min-height: 44px; padding: 10px 13px; border: 1px solid #b8c6d3; border-radius: 6px; background: #ffffff; box-shadow: 0 8px 24px rgba(22, 36, 49, .2); color: var(--ink); font-size: 12px; transition: opacity .18s ease, transform .18s ease; }
 .loading-toast.hidden { opacity: 0; pointer-events: none; transform: translateY(8px); }
 .loading-toast.error { border-color: #dc2626; color: #991b1b; }
@@ -2406,21 +2452,24 @@ body.youtube-chart-expanded { overflow: hidden; }
 .youtube-context-value { text-align: right; font-weight: 700; }
 
 @media (max-width: 1220px) {
-  .filters { grid-template-columns: minmax(240px, 1.3fr) repeat(2, minmax(140px, 1fr)) auto; padding: 6px 0; }
-  .filter-shell { min-height: 52px; }
+  .filters { gap: 4px; }
+  .filters .period-field { min-width: 138px; }
+  .date-mode-group { min-width: 210px; }
   .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 960px) {
   .topbar-inner { min-height: 60px; align-items: flex-start; flex-wrap: wrap; padding: 7px 0; gap: 3px 12px; }
   .meta { width: 100%; justify-content: flex-start; }
+  .filters { flex-wrap: wrap; }
+  .dashboard-page-nav { flex: 1 1 100%; order: -1; }
   .rank-grid, .audience-grid, .youtube-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 680px) {
   .wrap { padding: 0; }
-  .filters { grid-template-columns: repeat(2, minmax(0, 1fr)) 58px; }
-  .date-mode-group { grid-column: 1 / -1; }
-  .filters > button { grid-column: auto; }
-  .filter-shell { min-height: 76px; }
+  .filters { align-items: stretch; }
+  .date-mode-group { flex: 1 1 100%; }
+  .filters .period-field { flex: 1 1 calc(50% - 32px); }
+  #reset { flex: 0 0 58px; }
   .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .youtube-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .youtube-metric:nth-child(2) { border-right: 0; }
@@ -2461,8 +2510,7 @@ body.youtube-chart-expanded { overflow: hidden; }
   .title-group { display: block; }
   .source-label { display: block; margin-top: 2px; }
   .meta { display: grid; gap: 2px; }
-  .filters { grid-template-columns: repeat(2, minmax(0, 1fr)) 58px; }
-  .filter-shell { min-height: 76px; }
+  .filters .period-field { flex-basis: calc(50% - 32px); }
   .grid { grid-template-columns: 1fr; }
   .youtube-metrics { grid-template-columns: 1fr; }
   .youtube-filter-bar { grid-template-columns: 1fr; }
@@ -2676,28 +2724,36 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
 .scope-table td:nth-child(4) { text-align: right; font-variant-numeric: tabular-nums; }
 .scope-muted { color: var(--muted); }
 .multi-search-shell {
+  display: block;
   position: sticky;
-  z-index: 2;
+  z-index: 20;
   top: -4px;
-  padding: 4px;
+  width: calc(100% + 8px);
+  margin: -4px -4px 4px;
+  padding: 6px;
+  box-sizing: border-box;
   border-bottom: 1px solid var(--line);
   background: #ffffff;
+  box-shadow: 0 2px 4px rgba(15, 23, 42, .10);
 }
 .multi-search-shell .multi-search { margin: 0 0 4px; }
 .multi-search-actions {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 4px;
   align-items: center;
 }
 .multi-search-count {
-  overflow: hidden;
+  grid-column: 1 / -1;
+  overflow: visible;
   color: var(--muted);
   font-size: 10px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.2;
+  white-space: normal;
 }
 .multi-search-actions button {
+  width: 100%;
+  min-width: 0;
   min-height: 22px;
   padding: 3px 6px;
   border-color: #c7d2dc;
@@ -2707,23 +2763,87 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
 }
 .multi-search-actions button:hover { background: #eaf0f5; }
 .multi-search-actions button:disabled { cursor: default; opacity: .45; }
+.filter-label:has(.multi-menu.open) { position: relative; z-index: 120; }
+.multi-select:has(.multi-menu.open) { z-index: 121; }
+.multi-menu.open { z-index: 122; }
+.multi-menu:has(.multi-search-shell) {
+  width: min(280px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+}
 .multi-menu .multi-option[hidden] { display: none !important; }
 :root { --nct: #0f766e; }
-.nct-panel { position: relative; margin-top: 16px; border-top: 3px solid var(--nct); }
+.nct-panel {
+  position: relative;
+  margin-top: 16px;
+  border-top: 3px solid var(--nct);
+  box-shadow: 0 3px 12px rgba(15, 118, 110, .07);
+}
 .nct-panel > .panel-head { align-items: flex-start; flex-wrap: wrap; }
 .nct-panel > .panel-head .panel-actions { flex-wrap: wrap; }
 .nct-tag { background: var(--nct); color: #ffffff; }
-.nct-mode { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
-.nct-mode button { border-color: #8cc9c1; background: #ffffff; color: #0b5f59; }
-.nct-mode button.active { border-color: var(--nct); background: var(--nct); color: #ffffff; }
+.nct-mode { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; padding: 2px; border: 1px solid #b7d9d4; border-radius: 4px; background: #f0fdfa; }
+.nct-mode button {
+  border: 1px solid transparent;
+  background: transparent;
+  color: #0b5f59;
+  transition: border-color .15s ease, background-color .15s ease, color .15s ease;
+}
+.nct-mode button:hover { border-color: #84c5bc; background: #d8f3ee; color: #064e3b; }
+.nct-mode button.active {
+  border-color: var(--nct);
+  background: var(--nct);
+  color: #ffffff;
+}
+.nct-panel .panel-actions > button,
+.nct-rank-toggle,
+#expandNctChart,
+#exportNctContextCsv {
+  min-width: 92px;
+  height: 26px;
+  border: 1px solid #6bb5aa;
+  background: #ecfdf9;
+  color: #0b5f59;
+  font-size: 9px;
+  font-weight: 700;
+  transition: border-color .15s ease, background-color .15s ease, color .15s ease;
+}
+.nct-panel .panel-actions > button:hover,
+.nct-rank-toggle:hover,
+#expandNctChart:hover,
+#exportNctContextCsv:hover {
+  border-color: var(--nct);
+  background: #ccfbf1;
+  color: #064e3b;
+}
+.nct-panel button.nct-rank-toggle[aria-expanded="true"],
+.nct-panel button#expandNctChart[aria-expanded="true"] {
+  border-color: #064e3b;
+  background: var(--nct);
+  color: #ffffff;
+}
+.nct-panel button.nct-rank-toggle[aria-expanded="true"]:hover,
+.nct-panel button#expandNctChart[aria-expanded="true"]:hover {
+  border-color: #042f2e;
+  background: #0b5f59;
+  color: #ffffff;
+}
+.nct-panel :is(button, input, select):focus-visible {
+  outline: 2px solid #f59e0b;
+  outline-offset: 1px;
+}
 .nct-controls {
+  position: relative;
+  z-index: 20;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 7px;
   margin-bottom: 8px;
   align-items: end;
 }
-.nct-controls > .filter-label { min-width: 0; }
+.nct-controls > .filter-label { position: relative; min-width: 0; }
+.nct-controls > .filter-label:has(.multi-menu.open) { z-index: 120; }
+.nct-controls .multi-select:has(.multi-menu.open) { z-index: 121; }
+.nct-panel .multi-menu.open { z-index: 122; }
 .nct-controls .nct-mode-label, .nct-story-filter {
   grid-column: span 2;
   min-width: 0;
@@ -2748,11 +2868,45 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
   white-space: normal;
 }
 .nct-panel .multi-menu {
+  width: min(280px, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
+.nct-controls > .filter-label:nth-last-child(-n+2) .multi-menu {
+  right: 0;
+  left: auto;
+}
+.nct-panel .multi-search-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.nct-panel .multi-search-shell {
+  display: block;
+  z-index: 20;
+  width: calc(100% + 8px);
+  margin: -4px -4px 4px;
+  padding: 6px;
+  box-sizing: border-box;
+  background: #ffffff;
+  box-shadow: 0 2px 4px rgba(15, 23, 42, .10);
+}
+.nct-panel .multi-search-count {
+  grid-column: 1 / -1;
+  overflow: visible;
+  line-height: 1.2;
+  white-space: normal;
+}
+.nct-panel .multi-search-actions button {
+  width: 100%;
+  min-width: 0;
+}
+.nct-panel .multi-option { position: relative; z-index: 1; }
 .nct-panel .multi-menu::-webkit-scrollbar { display: none; }
-.nct-story-menu { min-width: min(520px, calc(100vw - 32px)); max-height: 320px; }
+.nct-story-menu {
+  width: min(520px, calc(100vw - 32px));
+  min-width: min(520px, calc(100vw - 32px));
+  max-height: 320px;
+}
 .nct-story-options { display: grid; }
 .nct-story-option {
   display: grid;
@@ -2777,20 +2931,113 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
 .nct-kpi:last-child { border-right: 0; }
 .nct-kpi strong { display: block; font-size: 16px; line-height: 1.15; }
 .nct-kpi small { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; }
-.nct-analytics { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(320px, .8fr); gap: 10px; margin-top: 10px; }
-.nct-chart-card, .nct-rank-card, .nct-context { min-width: 0; border: 1px solid var(--line); border-radius: 4px; background: #ffffff; }
-.nct-chart-head, .nct-rank-head, .nct-context-head { display: flex; justify-content: space-between; gap: 8px; align-items: center; padding: 8px 9px; border-bottom: 1px solid var(--line); }
+.nct-analytics { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
+.nct-chart-card, .nct-rank-card, .nct-context {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #cbdedb;
+  border-radius: 4px;
+  background: #ffffff;
+}
+.nct-chart-head, .nct-rank-head, .nct-context-head {
+  display: flex;
+  min-height: 44px;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 9px;
+  border-bottom: 1px solid #d8e8e5;
+  background: #fbfefd;
+}
 .nct-chart-head h3, .nct-rank-head h3, .nct-context-head h3 { margin: 0; font-size: 13px; }
+.nct-chart-title small, .nct-rank-head small { display: block; margin-top: 2px; color: var(--muted); font-size: 9px; }
+.nct-chart-actions { display: flex; align-items: center; gap: 6px; }
+#expandNctChart { min-width: 88px; }
 .nct-chart-wrap { position: relative; height: 300px; padding: 8px; }
 .nct-chart-empty, .nct-loading { display: flex; min-height: 180px; align-items: center; justify-content: center; color: var(--muted); text-align: center; }
+.nct-chart-empty[hidden] { display: none !important; }
 .nct-loading[hidden] { display: none !important; }
-.nct-ranks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.nct-rank-list { max-height: 220px; overflow-y: auto; padding: 4px 8px 8px; }
+.nct-ranks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.nct-rank-list { max-height: 240px; overflow-y: auto; padding: 4px 8px 8px; }
+.nct-rank-list.expandable {
+  height: 240px;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+.nct-rank-list.expanded { max-height: 240px; overflow-y: auto; }
+.nct-rank-toggle { min-width: 116px; padding: 0 7px; white-space: nowrap; }
 .nct-rank-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 7px; padding: 6px 0; border-bottom: 1px solid #edf1f5; font-size: 10px; }
 .nct-rank-row span { min-width: 0; overflow-wrap: anywhere; }
 .nct-rank-row strong { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .nct-mini-bar { grid-column: 1 / -1; height: 3px; overflow: hidden; border-radius: 2px; background: #e4eceb; }
 .nct-mini-bar i { display: block; height: 100%; background: var(--nct); }
+.nct-story-audience { margin-top: 10px; }
+.nct-story-audience .nct-rank-head > div:first-child { min-width: 0; }
+.nct-story-audience .nct-rank-head small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 9px;
+}
+.nct-story-audience-columns, .nct-story-audience-row {
+  display: grid;
+  grid-template-columns:
+    minmax(210px, 1.5fr) 84px 66px repeat(5, minmax(72px, .62fr));
+  gap: 8px;
+  align-items: center;
+}
+.nct-story-audience-columns {
+  padding: 8px 9px 5px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+}
+.nct-story-audience-columns > span:not(:first-child),
+.nct-story-audience-row > span:not(:first-child) {
+  text-align: right;
+}
+.nct-story-audience-row {
+  min-height: 42px;
+  padding: 6px 9px;
+  border-top: 1px solid var(--line);
+  font-size: 10px;
+}
+.nct-story-audience-row > span { min-width: 0; overflow-wrap: anywhere; }
+.nct-story-audience-row .story-label strong { display: block; }
+.nct-story-audience-row .story-label small {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 9px;
+}
+.nct-story-audience-row .audience-number {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: right;
+}
+.nct-story-audience-row .audience-unavailable {
+  color: var(--muted);
+  font-weight: 500;
+}
+.nct-story-audience-table.expandable,
+.nct-segment-table.expandable,
+.nct-context-table.expandable {
+  height: min(65vh, 620px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.nct-story-audience-table .nct-story-audience-columns,
+.nct-segment-table .nct-segment-columns,
+.nct-context-table .nct-context-columns {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  background: #f7fbfa;
+  border-bottom: 1px solid #d8e8e5;
+}
+.nct-story-audience-note { padding: 7px 9px 9px; }
+.nct-segment-section { margin-top: 10px; }
 .nct-segment-columns, .nct-segment-row {
   display: grid;
   grid-template-columns: 120px 92px minmax(150px, .85fr) minmax(190px, 1.2fr) minmax(120px, .7fr) 65px;
@@ -2801,6 +3048,9 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
 .nct-segment-row { min-height: 45px; padding: 6px 2px; border-bottom: 1px solid var(--line); font-size: 10px; }
 .nct-segment-row > span { min-width: 0; overflow-wrap: anywhere; }
 .nct-segment-row small { display: block; color: var(--muted); font-size: 9px; }
+.nct-segment-columns span:last-child, .nct-segment-row span:last-child {
+  text-align: right;
+}
 .nct-preview-note { margin-top: 6px; color: var(--muted); font-size: 10px; }
 .nct-context { margin-top: 10px; }
 .nct-context-control { min-width: 190px; }
@@ -2825,37 +3075,53 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
 }
 .nct-chart-card.expanded .nct-chart-wrap { flex: 1 1 auto; height: auto; min-height: 0; }
 body.nct-chart-expanded { overflow: hidden; }
+body.nct-chart-expanded::before {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  background: rgba(15, 23, 42, .42);
+  content: "";
+}
+@media (max-width: 840px) {
+  .nct-chart-head { align-items: flex-start; flex-direction: column; }
+  .nct-chart-actions { width: 100%; flex-wrap: wrap; }
+  .nct-chart-mode { flex: 1 1 auto; }
+  .nct-chart-mode button { flex: 1 1 auto; }
+}
 .dashboard-page-nav {
-  position: sticky;
-  z-index: 24;
-  top: 0;
+  position: static;
   display: grid;
+  flex: 1 1 430px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 5px;
-  margin: 0 0 12px;
-  padding: 7px;
+  gap: 3px;
+  min-width: 360px;
+  margin: 0;
+  padding: 2px;
   border: 1px solid var(--line);
-  border-radius: 5px;
-  background: rgba(255, 255, 255, .97);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, .08);
-  backdrop-filter: blur(8px);
+  border-radius: 4px;
+  background: #ffffff;
 }
 .dashboard-page-nav button {
   min-width: 0;
-  min-height: 34px;
+  min-height: 24px;
   overflow: hidden;
-  border: 1px solid #b8c4cf;
-  background: #ffffff;
+  border: 1px solid transparent;
+  background: #f1f5f9;
   color: #334155;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 700;
   text-overflow: ellipsis;
+  transition: border-color .15s ease, background-color .15s ease, color .15s ease;
   white-space: nowrap;
 }
-.dashboard-page-nav button:hover { border-color: #64748b; background: #f1f5f9; }
+.dashboard-page-nav button:hover {
+  border-color: #64748b;
+  background: #dfe7ef;
+  color: #172334;
+}
 .dashboard-page-nav button.active {
-  border-color: #1f2937;
-  background: #1f2937;
+  border-color: #162431;
+  background: #162431;
   color: #ffffff;
 }
 .dashboard-page[hidden] { display: none !important; }
@@ -2877,13 +3143,13 @@ body.nct-chart-expanded { overflow: hidden; }
 }
 @media (max-width: 680px) {
   .dashboard-page-nav {
-    position: sticky;
     gap: 3px;
-    padding: 5px;
+    min-width: 0;
+    padding: 2px;
   }
   .dashboard-page-nav button {
-    min-height: 38px;
-    padding: 5px;
+    min-height: 28px;
+    padding: 3px;
     font-size: 10px;
     line-height: 1.15;
     white-space: normal;
@@ -2929,6 +3195,23 @@ body.nct-chart-expanded { overflow: hidden; }
   .nct-story-menu { right: auto; width: min(520px, calc(100vw - 24px)); }
   .nct-kpi { border-right: 0; border-bottom: 1px solid var(--line); }
   .nct-kpi:last-child { border-bottom: 0; }
+  .nct-story-audience-columns { display: none; }
+  .nct-story-audience-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px 10px;
+    padding: 9px;
+  }
+  .nct-story-audience-row > span::before {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--muted);
+    content: attr(data-label);
+    font-size: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .nct-story-audience-row .story-label { grid-column: 1 / -1; }
+  .nct-story-audience-row > span:not(:first-child) { text-align: left; }
   .nct-segment-columns, .nct-segment-row { grid-template-columns: 94px minmax(0, 1fr) 62px; }
   .nct-segment-columns span:nth-child(2), .nct-segment-row span:nth-child(2),
   .nct-segment-columns span:nth-child(5), .nct-segment-row span:nth-child(5) { display: none; }
@@ -3059,7 +3342,7 @@ class DashboardMultiSelect{
     search.addEventListener('change',event=>event.stopPropagation());
     search.addEventListener('keydown',event=>{
       if(event.key==='Escape'){
-        this.menu.classList.remove('open');
+        closeMultiMenu(this.menu);
         this.toggle.focus();
       }
     });
@@ -3070,7 +3353,9 @@ class DashboardMultiSelect{
     this.toggle.onclick=event=>{
       const opening=!this.menu.classList.contains('open');
       originalToggle.call(this.toggle,event);
+      if(!opening)clearMultiMenuSearch(this.menu);
       if(opening)requestAnimationFrame(()=>{
+        alignMultiMenu(this.menu);
         const current=this.menu.querySelector('[data-multi-search]');
         if(current){
           current.focus();
@@ -3120,6 +3405,38 @@ class DashboardMultiSelect{
     inputs[0].dispatchEvent(new Event('change',{bubbles:true}));
   }
 }
+function clearMultiMenuSearch(menu){
+  if(!menu)return;
+  const search=menu.querySelector('input[type="search"]');
+  if(!search)return;
+  search.value='';
+  search.dispatchEvent(new Event('input',{bubbles:true}));
+  const id=menu.id.endsWith('Menu')?menu.id.slice(0,-4):'';
+  if(id)multiSearchState.delete(id);
+  if(id==='nctStory')renderNctStoryOptions();
+  else if(id)multiSelectControllers.get(id)?.applySearch();
+}
+function alignMultiMenu(menu){
+  if(!menu)return;
+  menu.style.left='0';
+  menu.style.right='auto';
+  const rect=menu.getBoundingClientRect(),edge=8;
+  if(rect.right>window.innerWidth-edge){
+    menu.style.left='auto';
+    menu.style.right='0';
+  }
+}
+function closeMultiMenu(menu){
+  if(!menu)return;
+  menu.classList.remove('open');
+  clearMultiMenuSearch(menu);
+}
+// All close paths share one cleanup rule so a stale search cannot reappear.
+closeMultiMenus=function(exceptId){
+  for(const menu of document.querySelectorAll('.multi-menu')){
+    if(menu.id!==exceptId+'Menu')closeMultiMenu(menu);
+  }
+};
 function applyMultiSearch(id){
   multiSelectControllers.get(id)?.applySearch();
 }
@@ -3147,7 +3464,7 @@ refreshAudienceFilters();
 document.addEventListener('pointerdown',event=>{
   for(const menu of document.querySelectorAll('.multi-menu.open')){
     const owner=menu.closest('.multi-select');
-    if(!owner||!owner.contains(event.target))menu.classList.remove('open');
+    if(!owner||!owner.contains(event.target))closeMultiMenu(menu);
   }
 },true);
 document.addEventListener('keydown',event=>{
@@ -4065,8 +4382,9 @@ function buildYoutubeVideoMultiChannel(videoIds,meta){
     title:'Untitled live video',
     channel:'Unknown / NA',
   })}));
-  menu.innerHTML='<input id="youtubeVideoSearch" class="multi-search" type="search" '
-    +'placeholder="Search channel, video ID, or title...">'
+  menu.innerHTML='<span class="multi-search-shell"><input id="youtubeVideoSearch" '
+    +'class="multi-search" type="search" '
+    +'placeholder="Search channel, video ID, or title..." autocomplete="off"></span>'
     +'<label class="multi-option multi-all"><input type="checkbox" data-all '
     +(allChecked?'checked':'')+'>All videos in selected channels</label>'
     +items.map(item=>'<label class="multi-option" data-video-option data-search="'
@@ -4081,12 +4399,22 @@ function buildYoutubeVideoMultiChannel(videoIds,meta){
     const open=!menu.classList.contains('open');
     closeMultiMenus('youtubeVideo');
     menu.classList.toggle('open',open);
-    if(open)$('youtubeVideoSearch').focus();
+    if(open)requestAnimationFrame(()=>{
+      alignMultiMenu(menu);
+      $('youtubeVideoSearch').focus();
+    });
+    else clearMultiMenuSearch(menu);
   };
   $('youtubeVideoSearch').oninput=event=>{
     const term=event.target.value.trim().toLowerCase();
     for(const option of menu.querySelectorAll('[data-video-option]')){
       option.style.display=!term||option.dataset.search.includes(term)?'flex':'none';
+    }
+  };
+  $('youtubeVideoSearch').onkeydown=event=>{
+    if(event.key==='Escape'){
+      closeMultiMenu(menu);
+      $('youtubeVideoToggle').focus();
     }
   };
   menu.onchange=event=>{
@@ -4643,6 +4971,24 @@ let nctChannelIndexes=new Map();
 let nctSelectedStory='';
 let nctStoryCatalog=[];
 const NCT_STORY_OPTION_LIMIT=100;
+const NCT_RANK_LIMIT=15;
+const NCT_RANK_CONFIG={
+  program:{target:'nctProgramRanks',button:'nctProgramExpand',key:'program_name'},
+  genre:{target:'nctGenreRanks',button:'nctGenreExpand',key:'primary_genre'},
+  geography:{target:'nctGeoRanks',button:'nctGeoExpand',key:'geography'},
+};
+const nctRankExpanded={program:false,genre:false,geography:false};
+let nctStoryAudienceExpanded=false;
+let nctAudienceStateCache={key:null,value:null};
+let nctStoryAudienceCache={key:null,value:null};
+const NCT_SEGMENT_LIMIT=15;
+const NCT_SEGMENT_BATCH=200;
+let nctSegmentsExpanded=false;
+let nctSegmentRenderCount=NCT_SEGMENT_LIMIT;
+let nctSegmentRowsCache=[];
+const NCT_CONTEXT_LIMIT=15;
+let nctContextExpanded=false;
+let nctContextRowsCache=[];
 function preserveNctAllSelections(){
   for(const id of ['nctChannel','nctProgram','nctGenre','nctGeo']){
     const menu=$(id+'Menu');
@@ -4710,7 +5056,7 @@ function refreshNctStoryCatalog(rows){
 function selectNctStory(value){
   nctSelectedStory=String(value||'');
   updateNctStorySummary();
-  $('nctStoryMenu')?.classList.remove('open');
+  closeMultiMenu($('nctStoryMenu'));
   nctFilterCache={key:null,value:null};
   scheduleNctRender();
   updateResetState();
@@ -4723,14 +5069,17 @@ function initializeNctStoryDropdown(){
     menu.classList.toggle('open',opening);
     if(opening){
       renderNctStoryOptions();
-      requestAnimationFrame(()=>$('nctStoryLookup').focus());
-    }
+      requestAnimationFrame(()=>{
+        alignMultiMenu(menu);
+        $('nctStoryLookup').focus();
+      });
+    }else clearMultiMenuSearch(menu);
   });
   $('nctStoryLookup').addEventListener('input',renderNctStoryOptions);
   $('nctStoryLookup').addEventListener('change',event=>event.stopPropagation());
   $('nctStoryLookup').addEventListener('keydown',event=>{
     if(event.key==='Escape'){
-      $('nctStoryMenu').classList.remove('open');
+      closeMultiMenu($('nctStoryMenu'));
       $('nctStoryToggle').focus();
     }
   });
@@ -4780,22 +5129,46 @@ function ensureNctPanel(){
     +'<div id="nctContent" hidden>'
     +'<div class="nct-kpis" id="nctKpis"></div>'
     +'<div class="nct-analytics"><div class="nct-chart-card" id="nctChartCard">'
-    +'<div class="nct-chart-head"><h3>Daily Monitored Content Hours</h3><button id="expandNctChart" type="button">Expand chart</button></div>'
+    +'<div class="nct-chart-head"><div class="nct-chart-title"><h3>Monitored Content Trend</h3>'
+    +'<small id="nctChartNote">All available channels selected · zero-only series hidden</small></div>'
+    +'<div class="nct-chart-actions"><button id="expandNctChart" type="button">Expand chart</button></div></div>'
     +'<div class="nct-chart-wrap"><canvas id="nctTrend"></canvas><div id="nctChartEmpty" class="nct-chart-empty" hidden>No matching NCT segments.</div></div></div>'
     +'<div class="nct-ranks">'
-    +'<div class="nct-rank-card"><div class="nct-rank-head"><h3>Top Stories</h3></div><div class="nct-rank-list" id="nctStoryRanks"></div></div>'
-    +'<div class="nct-rank-card"><div class="nct-rank-head"><h3>Top Programs</h3></div><div class="nct-rank-list" id="nctProgramRanks"></div></div>'
-    +'<div class="nct-rank-card"><div class="nct-rank-head"><h3>Primary Genres</h3></div><div class="nct-rank-list" id="nctGenreRanks"></div></div>'
-    +'<div class="nct-rank-card"><div class="nct-rank-head"><h3>Story Geographies</h3></div><div class="nct-rank-list" id="nctGeoRanks"></div></div>'
+    +'<div class="nct-rank-card"><div class="nct-rank-head"><h3>Top Programs</h3><button class="nct-rank-toggle" id="nctProgramExpand" type="button">Expand All</button></div><div class="nct-rank-list" id="nctProgramRanks"></div></div>'
+    +'<div class="nct-rank-card"><div class="nct-rank-head"><h3>Primary Genres</h3><button class="nct-rank-toggle" id="nctGenreExpand" type="button">Expand All</button></div><div class="nct-rank-list" id="nctGenreRanks"></div></div>'
+    +'<div class="nct-rank-card"><div class="nct-rank-head"><h3>Story Geographies</h3><button class="nct-rank-toggle" id="nctGeoExpand" type="button">Expand All</button></div><div class="nct-rank-list" id="nctGeoRanks"></div></div>'
     +'</div></div>'
-    +'<div class="nct-segment-columns"><span>Clip start IST</span><span>Channel</span><span>Program</span><span>Story / Sub-story</span><span>Genre / Geography</span><span>Duration</span></div>'
-    +'<div id="nctSegmentRows"></div><div class="nct-preview-note" id="nctSegmentNote"></div>'
+    +'<div class="nct-story-audience nct-rank-card">'
+    +'<div class="nct-rank-head"><div><h3>Top Stories</h3>'
+    +'<small>Average audience at matching story clip starts using the selected audience-source filters</small></div>'
+    +'<div class="panel-actions"><button id="exportNctStoryAudienceCsv" type="button">Export CSV</button>'
+    +'<button class="nct-rank-toggle" id="nctStoryExpand" type="button">Expand All</button></div></div>'
+    +'<div class="nct-story-audience-table" id="nctStoryTable">'
+    +'<div class="nct-story-audience-columns"><span>Story</span><span>Monitored</span>'
+    +'<span>Clips</span><span>FAST</span><span>STREAM</span><span>AMAGI</span>'
+    +'<span>India TV YouTube</span><span>Combined</span></div>'
+    +'<div class="nct-story-audience-list" id="nctStoryRanks"></div></div>'
+    +'<div class="nct-preview-note nct-story-audience-note" '
+    +'id="nctStoryAudienceNote"></div></div>'
+    +'<div class="nct-segment-section nct-rank-card">'
+    +'<div class="nct-rank-head"><div><h3>Story Clip Records</h3>'
+    +'<small>Latest matching NCT clips for the current filters</small></div>'
+    +'<button class="nct-rank-toggle" id="nctSegmentExpand" type="button">Expand All</button></div>'
+    +'<div class="nct-segment-table" id="nctSegmentTable">'
+    +'<div class="nct-segment-columns"><span>Clip start IST</span><span>Channel</span>'
+    +'<span>Program</span><span>Story / Sub-story</span><span>Genre / Geography</span>'
+    +'<span>Duration</span></div>'
+    +'<div class="nct-segment-list" id="nctSegmentRows"></div></div>'
+    +'<div class="nct-preview-note nct-story-audience-note" id="nctSegmentNote"></div></div>'
     +'<div class="nct-context"><div class="nct-context-head"><div><h3>Delivered Ad Content Context</h3>'
     +'<small>Explicit NCT channel assignment; concurrency totals are unchanged</small></div>'
     +'<div class="panel-actions"><label class="filter-label nct-context-control">NCT context channel<select id="nctContextChannel"></select></label>'
-    +'<button id="exportNctContextCsv" type="button">Export context CSV</button></div></div>'
+    +'<button id="exportNctContextCsv" type="button">Export context CSV</button>'
+    +'<button class="nct-rank-toggle" id="nctContextExpand" type="button">Expand All</button></div></div>'
+    +'<div class="nct-context-table" id="nctContextTable">'
     +'<div class="nct-context-columns"><span>On-air IST</span><span>Ad ID / Type</span><span>Match</span><span>Program</span><span>Story context</span><span>Distance</span></div>'
-    +'<div id="nctContextRows"></div><div class="nct-preview-note" id="nctContextNote"></div></div>'
+    +'<div id="nctContextRows"></div></div>'
+    +'<div class="nct-preview-note nct-story-audience-note" id="nctContextNote"></div></div>'
     +'</div></section>'
   );
   const bounds=nctBounds();
@@ -4819,10 +5192,35 @@ function ensureNctPanel(){
   }
   initializeNctStoryDropdown();
   $('exportNctCsv').addEventListener('click',()=>loadNctData().then(exportNctCsv));
+  $('exportNctStoryAudienceCsv').addEventListener('click',()=>runWithDashboardSources(
+    [loadAudienceDashboardData,loadYoutubeDashboardData,loadNctData],
+    exportNctStoryAudienceCsv,
+  ));
   $('exportNctContextCsv').addEventListener('click',()=>loadNctData().then(exportNctContextCsv));
   $('nctContextChannel').addEventListener('change',()=>{
     renderNctContext();
     updateResetState();
+  });
+  $('nctContextExpand').addEventListener('click',toggleNctContext);
+  for(const kind of Object.keys(NCT_RANK_CONFIG)){
+    $(NCT_RANK_CONFIG[kind].button).addEventListener('click',()=>toggleNctRank(kind));
+  }
+  $('nctStoryExpand').addEventListener('click',()=>{
+    nctStoryAudienceExpanded=!nctStoryAudienceExpanded;
+    renderNctStoryAudience(nctFilteredRows());
+  });
+  $('nctSegmentExpand').addEventListener('click',toggleNctSegments);
+  $('nctSegmentTable').addEventListener('scroll',event=>{
+    const list=event.currentTarget;
+    if(
+      !nctSegmentsExpanded
+      ||nctSegmentRenderCount>=nctSegmentRowsCache.length
+      ||list.scrollTop+list.clientHeight<list.scrollHeight-120
+    )return;
+    nctSegmentRenderCount=Math.min(
+      nctSegmentRowsCache.length,nctSegmentRenderCount+NCT_SEGMENT_BATCH
+    );
+    renderNctSegmentList(false);
   });
   $('expandNctChart').addEventListener('click',toggleNctChart);
   document.addEventListener('keydown',event=>{
@@ -4852,7 +5250,9 @@ function setNctDateMode(mode,renderNow=true){
   preserveNctAllSelections();
   nctDateMode=mode==='independent'?'independent':'follow';
   for(const button of document.querySelectorAll('[data-nct-date-mode]')){
-    button.classList.toggle('active',button.dataset.nctDateMode===nctDateMode);
+    const active=button.dataset.nctDateMode===nctDateMode;
+    button.classList.toggle('active',active);
+    button.setAttribute('aria-pressed',String(active));
   }
   const disabled=nctDateMode==='follow';
   $('nctFrom').disabled=disabled;
@@ -4990,27 +5390,277 @@ function scheduleNctRender(){
   clearTimeout(nctRenderTimer);
   nctRenderTimer=setTimeout(()=>renderNct(false),120);
 }
-function nctHours(seconds){return fmt(Number(seconds||0)/3600)+' h';}
-function nctRankHtml(rows,key){
+function nctHours(seconds){
+  const value=Number(seconds||0),hours=Math.round(value/3600);
+  return hours?fmt(hours)+' h':fmt(Math.round(value/60))+' min';
+}
+function nctAudienceSelectionKey(range){
+  return [
+    range.start,range.end,
+    [...selectedMulti('fastPlatform')].sort().join('|'),
+    [...selectedMulti('fastChannel')].sort().join('|'),
+    [...selectedMulti('streamChannel')].sort().join('|'),
+    [...selectedMulti('amagiPlatform')].sort().join('|'),
+    [...selectedMulti('amagiChannel')].sort().join('|'),
+  ].join('\u0000');
+}
+function nctViewerAudienceMinuteMap(source,range){
+  const channelId=source==='fast'?'fastChannel':'streamChannel';
+  const channels=selectedMulti(channelId),allChannels=multiSelectionIsAll(channelId);
+  const platforms=source==='fast'?selectedMulti('fastPlatform'):null;
+  const allPlatforms=source!=='fast'||multiSelectionIsAll('fastPlatform');
+  const map=new Map();
+  let boundStart='',boundEnd='';
+  for(const row of (DATA.viewer_minute||[])){
+    if(row.source!==source)continue;
+    const key=minuteKey(row.minute_ist);
+    if(!boundStart||key<boundStart)boundStart=key;
+    if(!boundEnd||key>boundEnd)boundEnd=key;
+    if(String(row.log_date)<range.start||String(row.log_date)>range.end)continue;
+    if(source==='fast'&&!allPlatforms&&!platforms.has(String(row.platform_name)))continue;
+    if(!allChannels&&!channels.has(String(row.channel_name)))continue;
+    map.set(key,(map.get(key)||0)+Number(row.distinct_cliips||0));
+  }
+  return {map,bounds:boundStart&&boundEnd?{start:boundStart,end:boundEnd}:null};
+}
+function nctAmagiAudienceMinuteMap(range){
+  const platforms=selectedMulti('amagiPlatform');
+  const channels=selectedMulti('amagiChannel');
+  const allPlatforms=multiSelectionIsAll('amagiPlatform');
+  const allChannels=multiSelectionIsAll('amagiChannel');
+  const map=new Map();
+  let boundStart='',boundEnd='';
+  for(const row of (AMAGI.minute||[])){
+    const key=minuteKey(row.minute_ist);
+    if(!boundStart||key<boundStart)boundStart=key;
+    if(!boundEnd||key>boundEnd)boundEnd=key;
+    if(String(row.log_date)<range.start||String(row.log_date)>range.end)continue;
+    if(!allPlatforms&&!platforms.has(String(row.platform_name)))continue;
+    if(!allChannels&&!channels.has(String(row.channel_name)))continue;
+    map.set(key,(map.get(key)||0)+Number(row.concurrent_viewers||0));
+  }
+  return {map,bounds:boundStart&&boundEnd?{start:boundStart,end:boundEnd}:null};
+}
+function nctAudienceStates(){
+  const range=nctEffectiveRange(),key=nctAudienceSelectionKey(range);
+  if(nctAudienceStateCache.key===key&&nctAudienceStateCache.value){
+    return nctAudienceStateCache.value;
+  }
+  const value={
+    key,
+    fast:nctViewerAudienceMinuteMap('fast',range),
+    stream:nctViewerAudienceMinuteMap('stream',range),
+    amagi:nctAmagiAudienceMinuteMap(range),
+  };
+  nctAudienceStateCache={key,value};
+  return value;
+}
+function nctAudienceAverage(total,count){
+  return count?Number((total/count).toFixed(2)):null;
+}
+function nctStoryAudienceRows(rows){
+  const states=nctAudienceStates();
+  const cacheKey=[nctFilterCache.key||'',states.key].join('\u0000');
+  if(nctStoryAudienceCache.key===cacheKey&&nctStoryAudienceCache.value){
+    return nctStoryAudienceCache.value;
+  }
+  const stories=new Map(),minuteMetrics=new Map();
+  for(const row of rows){
+    const story=nctText(row,'story');
+    if(!stories.has(story)){
+      stories.set(story,{
+        story,
+        seconds:0,
+        clips:0,
+        fastTotal:0,
+        fastCount:0,
+        streamTotal:0,
+        streamCount:0,
+        amagiTotal:0,
+        amagiCount:0,
+        youtubeTotal:0,
+        youtubeCount:0,
+        combinedTotal:0,
+        combinedCount:0,
+      });
+    }
+    const entry=stories.get(story);
+    entry.seconds+=Number(row.duration_seconds||0);
+    entry.clips+=1;
+    const anchorValue=String(row.clip_start_ist||'');
+    const metricKey=minuteKey(anchorValue);
+    if(!minuteMetrics.has(metricKey)){
+      const anchor={on_air_start_ist:anchorValue};
+      const fast=fctCoveredAudienceValue(anchor,states.fast);
+      const stream=fctCoveredAudienceValue(anchor,states.stream);
+      const amagi=fctCoveredAudienceValue(anchor,states.amagi);
+      const youtube=youtubeFiveMinuteValue(anchor);
+      const available=[fast.total,stream.total,amagi.total,youtube.total]
+        .filter(value=>value!==null);
+      minuteMetrics.set(metricKey,{
+        fast,stream,amagi,youtube,
+        combined:available.length
+          ?available.reduce((sum,value)=>sum+Number(value),0)
+          :null,
+      });
+    }
+    const metrics=minuteMetrics.get(metricKey);
+    for(const source of ['fast','stream','amagi','youtube']){
+      const value=metrics[source].total;
+      if(value===null)continue;
+      entry[source+'Total']+=Number(value);
+      entry[source+'Count']+=1;
+    }
+    if(metrics.combined!==null){
+      entry.combinedTotal+=metrics.combined;
+      entry.combinedCount+=1;
+    }
+  }
+  const result=[...stories.values()].map(entry=>({
+    ...entry,
+    fast:nctAudienceAverage(entry.fastTotal,entry.fastCount),
+    stream:nctAudienceAverage(entry.streamTotal,entry.streamCount),
+    amagi:nctAudienceAverage(entry.amagiTotal,entry.amagiCount),
+    youtube:nctAudienceAverage(entry.youtubeTotal,entry.youtubeCount),
+    combined:nctAudienceAverage(entry.combinedTotal,entry.combinedCount),
+  })).sort((a,b)=>b.seconds-a.seconds||a.story.localeCompare(b.story));
+  nctStoryAudienceCache={key:cacheKey,value:result};
+  return result;
+}
+function nctStoryAudienceCell(label,value,count,clips){
+  const display=value===null?'Not available':fmt(value);
+  const className='audience-number'+(value===null?' audience-unavailable':'');
+  const title=value===null
+    ?'No source coverage at the selected story clip starts'
+    :'Average from '+fmt(count)+' of '+fmt(clips)+' matching story clips';
+  return '<span class="'+className+'" data-label="'+esc(label)+'" title="'+esc(title)+'">'
+    +esc(display)+'</span>';
+}
+function renderNctStoryAudience(rows){
+  const ranked=nctStoryAudienceRows(rows);
+  const visible=nctStoryAudienceExpanded?ranked:ranked.slice(0,NCT_RANK_LIMIT);
+  const list=$('nctStoryRanks'),table=$('nctStoryTable');
+  list.innerHTML=visible.length?visible.map((entry,index)=>
+    '<div class="nct-story-audience-row">'
+    +'<span class="story-label" data-label="Story"><strong>#'+(index+1)+' '
+    +esc(entry.story)+'</strong><small>Audience average at '+fmt(entry.clips)
+    +' matching clip start'+(entry.clips===1?'':'s')+'</small></span>'
+    +'<span data-label="Monitored">'+esc(nctHours(entry.seconds))+'</span>'
+    +'<span data-label="Clips">'+fmt(entry.clips)+'</span>'
+    +nctStoryAudienceCell('FAST',entry.fast,entry.fastCount,entry.clips)
+    +nctStoryAudienceCell('STREAM',entry.stream,entry.streamCount,entry.clips)
+    +nctStoryAudienceCell('AMAGI',entry.amagi,entry.amagiCount,entry.clips)
+    +nctStoryAudienceCell(
+      'India TV YouTube',entry.youtube,entry.youtubeCount,entry.clips
+    )
+    +nctStoryAudienceCell(
+      'Combined',entry.combined,entry.combinedCount,entry.clips
+    )
+    +'</div>'
+  ).join(''):'<div class="audience-empty">No matching stories.</div>';
+  table.classList.toggle('expandable',ranked.length>NCT_RANK_LIMIT);
+  table.classList.toggle('expanded',nctStoryAudienceExpanded);
+  if(!nctStoryAudienceExpanded)table.scrollTop=0;
+  const button=$('nctStoryExpand');
+  button.hidden=ranked.length<=NCT_RANK_LIMIT;
+  button.textContent=nctStoryAudienceExpanded
+    ?'Show Top 15':'Expand All ('+fmt(ranked.length)+')';
+  button.setAttribute('aria-expanded',String(nctStoryAudienceExpanded));
+  $('nctStoryAudienceNote').textContent=ranked.length
+    ?'Ranked by monitored duration. FAST, STREAM, and AMAGI use fixed 5-minute '
+      +'concurrency; India TV YouTube uses minute concurrency. Averages exclude '
+      +'story clips outside each source data range.'
+    :'No story audience observations match the current filters.';
+}
+function nctSegmentLine(row){
+  return '<div class="nct-segment-row"><span>'
+    +formatIstSeconds(row.clip_start_ist)+'</span>'
+    +'<span>'+esc(nctText(row,'channel_name'))+'</span>'
+    +'<span><strong>'+esc(nctText(row,'program_name'))+'</strong><small>'
+    +esc(nctText(row,'anchor'))+'</small></span>'
+    +'<span><strong>'+esc(nctText(row,'story'))+'</strong><small>'
+    +esc(nctText(row,'sub_story'))+'</small></span>'
+    +'<span>'+esc(nctText(row,'primary_genre'))+'<small>'
+    +esc(nctText(row,'geography'))+'</small></span>'
+    +'<span>'+fmt(row.duration_seconds||0)+' sec</span></div>';
+}
+function renderNctSegmentList(preserveScroll=true){
+  const list=$('nctSegmentRows'),table=$('nctSegmentTable');
+  const scrollTop=preserveScroll?table.scrollTop:0;
+  const visible=nctSegmentRowsCache.slice(0,nctSegmentRenderCount);
+  list.innerHTML=visible.length
+    ?visible.map(nctSegmentLine).join('')
+    :'<div class="audience-empty">No NCT segments match the selected filters.</div>';
+  table.classList.toggle(
+    'expandable',nctSegmentRowsCache.length>NCT_SEGMENT_LIMIT
+  );
+  table.classList.toggle('expanded',nctSegmentsExpanded);
+  if(preserveScroll)table.scrollTop=scrollTop;
+  else table.scrollTop=0;
+  const button=$('nctSegmentExpand');
+  button.hidden=nctSegmentRowsCache.length<=NCT_SEGMENT_LIMIT;
+  button.textContent=nctSegmentsExpanded
+    ?'Show Top 15':'Expand All ('+fmt(nctSegmentRowsCache.length)+')';
+  button.setAttribute('aria-expanded',String(nctSegmentsExpanded));
+  $('nctSegmentNote').textContent=nctSegmentsExpanded
+    ?'Showing latest '+fmt(visible.length)+' of '+fmt(nctSegmentRowsCache.length)
+      +' matching clips. Scroll to load more; CSV exports the complete filtered result.'
+    :'Showing latest '+fmt(visible.length)+' of '+fmt(nctSegmentRowsCache.length)
+      +' matching clips. Expand All keeps the complete list inside this scroll area.';
+}
+function renderNctSegments(rows){
+  nctSegmentRowsCache=rows.slice().sort(
+    (a,b)=>String(b.clip_start_ist).localeCompare(String(a.clip_start_ist))
+  );
+  nctSegmentRenderCount=nctSegmentsExpanded
+    ?Math.min(NCT_SEGMENT_BATCH,nctSegmentRowsCache.length)
+    :Math.min(NCT_SEGMENT_LIMIT,nctSegmentRowsCache.length);
+  renderNctSegmentList(false);
+}
+function toggleNctSegments(){
+  nctSegmentsExpanded=!nctSegmentsExpanded;
+  nctSegmentRenderCount=nctSegmentsExpanded
+    ?Math.min(NCT_SEGMENT_BATCH,nctSegmentRowsCache.length)
+    :Math.min(NCT_SEGMENT_LIMIT,nctSegmentRowsCache.length);
+  renderNctSegmentList(false);
+}
+function nctRankEntries(rows,key){
   const totals=new Map();
   for(const row of rows){
     const label=nctText(row,key);
     totals.set(label,(totals.get(label)||0)+Number(row.duration_seconds||0));
   }
-  const ranked=[...totals.entries()].sort((a,b)=>b[1]-a[1]).slice(0,15);
+  return [...totals.entries()].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+}
+function renderNctRank(kind,rows){
+  const config=NCT_RANK_CONFIG[kind],ranked=nctRankEntries(rows,config.key);
+  const expanded=nctRankExpanded[kind],visible=expanded?ranked:ranked.slice(0,NCT_RANK_LIMIT);
   const max=Math.max(1,...ranked.map(item=>item[1]));
-  return ranked.length?ranked.map(([label,value],index)=>
+  const list=$(config.target),button=$(config.button);
+  list.innerHTML=visible.length?visible.map(([label,value],index)=>
     '<div class="nct-rank-row"><span>#'+(index+1)+' '+esc(label)+'</span>'
     +'<strong>'+esc(nctHours(value))+'</strong><span class="nct-mini-bar"><i style="width:'
     +((value/max)*100).toFixed(2)+'%"></i></span></div>'
   ).join(''):'<div class="audience-empty">No matching values.</div>';
+  list.classList.toggle('expandable',ranked.length>NCT_RANK_LIMIT);
+  list.classList.toggle('expanded',expanded);
+  if(!expanded)list.scrollTop=0;
+  button.hidden=ranked.length<=NCT_RANK_LIMIT;
+  button.textContent=expanded?'Show Top 15':'Expand All ('+fmt(ranked.length)+')';
+  button.setAttribute('aria-expanded',String(expanded));
+}
+function toggleNctRank(kind){
+  nctRankExpanded[kind]=!nctRankExpanded[kind];
+  renderNctRank(kind,nctFilteredRows());
 }
 function renderNctChart(rows){
   const canvas=$('nctTrend'),empty=$('nctChartEmpty');
-  const daily=new Map(),channels=[...selectedMulti('nctChannel')];
+  const daily=new Map(),channelTotals=new Map();
   for(const row of rows){
     const channel=nctText(row,'channel_name'),key=String(row.log_date)+'\u0000'+channel;
-    daily.set(key,(daily.get(key)||0)+Number(row.duration_seconds||0)/3600);
+    const minutes=Number(row.duration_seconds||0)/60;
+    daily.set(key,(daily.get(key)||0)+minutes);
+    channelTotals.set(channel,(channelTotals.get(channel)||0)+minutes);
   }
   const dates=[...new Set(rows.map(row=>String(row.log_date)))].sort();
   if(!dates.length){
@@ -5022,19 +5672,39 @@ function renderNctChart(rows){
   canvas.hidden=false;
   empty.hidden=true;
   const colors=['#0f766e','#2563eb','#dc2626','#ca8a04','#7c3aed','#db2777','#16a34a','#475569','#ea580c'];
-  const datasets=channels.map((channel,index)=>({
+  const rankedChannels=[...channelTotals.entries()]
+    .filter(([_channel,total])=>total>0)
+    .sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+  if(!rankedChannels.length){
+    canvas.hidden=true;
+    empty.hidden=false;
+    empty.textContent='No positive monitored minutes for this selection.';
+    if(nctChart){nctChart.destroy();nctChart=null}
+    return;
+  }
+  const datasets=rankedChannels.map(([channel],index)=>({
     label:channel,
-    data:dates.map(date=>Number((daily.get(date+'\u0000'+channel)||0).toFixed(3))),
+    data:dates.map(date=>Number((daily.get(date+'\u0000'+channel)||0).toFixed(1))),
     borderColor:colors[index%colors.length],
     backgroundColor:'transparent',
-    borderWidth:1.7,
-    pointRadius:1.5,
+    borderWidth:1.8,
+    pointRadius:0,
     pointHoverRadius:5,
-    tension:.16,
+    tension:.18,
+    fill:false,
   }));
+  $('nctChartNote').textContent=fmt(rankedChannels.length)
+    +' selected channels · zero-only series hidden';
+  const values=datasets.flatMap(dataset=>dataset.data).filter(Number.isFinite);
+  const minValue=Math.min(...values),maxValue=Math.max(...values);
+  const spread=Math.max(1,maxValue-minValue),axisPadding=Math.max(5,spread*.08);
+  const axisMin=Math.max(0,minValue-axisPadding),axisMax=maxValue+axisPadding;
   const data={labels:dates.map(shortDate),datasets};
   if(nctChart){
     nctChart.data=data;
+    nctChart.options.scales.y.suggestedMin=axisMin;
+    nctChart.options.scales.y.suggestedMax=axisMax;
+    nctChart.options.plugins.legend.display=datasets.length>1;
     nctChart.update('none');
   }else{
     nctChart=new Chart(canvas,{
@@ -5045,12 +5715,18 @@ function renderNctChart(rows){
         maintainAspectRatio:false,
         interaction:{mode:'index',intersect:false},
         plugins:{
-          legend:{position:'bottom',labels:{boxWidth:10,font:{size:10}}},
-          tooltip:{itemSort:(a,b)=>Number(b.raw||0)-Number(a.raw||0),callbacks:{label:item=>item.dataset.label+': '+Number(item.raw||0).toFixed(2)+' h'}},
+          legend:{display:datasets.length>1,position:'bottom',labels:{usePointStyle:true,pointStyle:'line',boxWidth:14,font:{size:10}}},
+          tooltip:{itemSort:(a,b)=>Number(b.raw||0)-Number(a.raw||0),callbacks:{label:item=>item.dataset.label+': '+fmt(Number(item.raw||0))+' min'}},
         },
         scales:{
-          x:{ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:14,font:{size:9}},grid:{display:false}},
-          y:{beginAtZero:true,title:{display:true,text:'Monitored content hours'},ticks:{font:{size:9}}},
+          x:{ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:20,font:{size:9}},grid:{display:false}},
+          y:{
+            beginAtZero:false,
+            suggestedMin:axisMin,
+            suggestedMax:axisMax,
+            title:{display:true,text:'Monitored content minutes'},
+            ticks:{font:{size:9},maxTicksLimit:12,callback:value=>fmt(value)+' min'},
+          },
         },
       },
     });
@@ -5074,22 +5750,9 @@ function renderNct(refresh=true){
     [fmt(new Set(rows.map(row=>nctText(row,'program_name'))).size),'Distinct programs'],
   ].map(item=>'<div class="nct-kpi"><strong>'+item[0]+'</strong><small>'+item[1]+'</small></div>').join('');
   renderNctChart(rows);
-  $('nctStoryRanks').innerHTML=nctRankHtml(rows,'story');
-  $('nctProgramRanks').innerHTML=nctRankHtml(rows,'program_name');
-  $('nctGenreRanks').innerHTML=nctRankHtml(rows,'primary_genre');
-  $('nctGeoRanks').innerHTML=nctRankHtml(rows,'geography');
-  const preview=rows.slice().sort(
-    (a,b)=>String(b.clip_start_ist).localeCompare(String(a.clip_start_ist))
-  ).slice(0,50);
-  $('nctSegmentRows').innerHTML=preview.length?preview.map(row=>
-    '<div class="nct-segment-row"><span>'+formatIstSeconds(row.clip_start_ist)+'</span>'
-    +'<span>'+esc(nctText(row,'channel_name'))+'</span>'
-    +'<span><strong>'+esc(nctText(row,'program_name'))+'</strong><small>'+esc(nctText(row,'anchor'))+'</small></span>'
-    +'<span><strong>'+esc(nctText(row,'story'))+'</strong><small>'+esc(nctText(row,'sub_story'))+'</small></span>'
-    +'<span>'+esc(nctText(row,'primary_genre'))+'<small>'+esc(nctText(row,'geography'))+'</small></span>'
-    +'<span>'+fmt(row.duration_seconds||0)+' sec</span></div>'
-  ).join(''):'<div class="audience-empty">No NCT segments match the selected filters.</div>';
-  $('nctSegmentNote').textContent='Showing latest '+fmt(preview.length)+' of '+fmt(rows.length)+' matching segments. CSV exports the complete filtered result.';
+  renderNctStoryAudience(rows);
+  for(const kind of Object.keys(NCT_RANK_CONFIG))renderNctRank(kind,rows);
+  renderNctSegments(rows);
   renderNctContext();
   updateResetState();
 }
@@ -5098,6 +5761,7 @@ function toggleNctChart(){
   card.classList.toggle('expanded',expanded);
   document.body.classList.toggle('nct-chart-expanded',expanded);
   $('expandNctChart').textContent=expanded?'Close chart':'Expand chart';
+  $('expandNctChart').setAttribute('aria-expanded',String(expanded));
   requestAnimationFrame(()=>nctChart?.resize());
 }
 function exportNctCsv(){
@@ -5113,6 +5777,30 @@ function exportNctCsv(){
     nctText(row,'split'),nctText(row,'story_format'),nctText(row,'source_file'),row.source_row,
   ]);
   downloadCsv('nct_story_segments_'+range.start+'_to_'+range.end+'.csv',header,values);
+}
+function exportNctStoryAudienceCsv(){
+  const range=nctEffectiveRange(),rows=nctStoryAudienceRows(nctFilteredRows());
+  const header=[
+    'NCT Date From','NCT Date To','Story','Monitored Duration Seconds',
+    'Monitored Hours','Story Clip Count','Average FAST 5-Minute Concurrency',
+    'FAST Covered Clips','Average STREAM 5-Minute Concurrency',
+    'STREAM Covered Clips','Average AMAGI 5-Minute Concurrency',
+    'AMAGI Covered Clips','Average India TV YouTube Minute Concurrency',
+    'India TV YouTube Covered Clips','Average Combined Concurrency',
+    'Combined Covered Clips',
+  ];
+  const values=rows.map(row=>[
+    range.start,range.end,row.story,row.seconds,
+    Number((row.seconds/3600).toFixed(4)),row.clips,
+    row.fast??'',row.fastCount,row.stream??'',row.streamCount,
+    row.amagi??'',row.amagiCount,row.youtube??'',row.youtubeCount,
+    row.combined??'',row.combinedCount,
+  ]);
+  downloadCsv(
+    'nct_top_stories_audience_'+range.start+'_to_'+range.end+'.csv',
+    header,
+    values,
+  );
 }
 function nctIndex(channel){
   if(nctChannelIndexes.has(channel))return nctChannelIndexes.get(channel);
@@ -5208,22 +5896,51 @@ function nctContextRows(){
     context&&(context.active||context.previous||context.following)
   );
 }
+function nctContextLine(context){
+  const event=context.event,detail=context.active||context.previous||context.following;
+  return '<div class="nct-context-row"><span>'
+    +formatIstSeconds(event.on_air_start_ist)+'</span>'
+    +'<span><strong>'+esc(event.event_id)+'</strong><small>'
+    +esc(event.ad_type)+'</small></span>'
+    +'<span>'+esc(context.matchType)+'</span>'
+    +'<span>'+esc(nctContextProgram(context))+'</span>'
+    +'<span><strong>'+esc(nctContextStory(context))+'</strong><small>'
+    +esc(
+      detail
+        ?nctText(detail,'primary_genre')+' | '+nctText(detail,'geography')
+        :'No NCT context'
+    )+'</small></span>'
+    +'<span>'+(Number.isFinite(context.distanceSeconds)
+      ?fmt(context.distanceSeconds)+' sec':'NA')+'</span></div>';
+}
 function renderNctContext(){
   if(!nctPayload?.available||!$('nctContextRows'))return;
-  const rows=nctContextRows(),preview=rows.slice().sort(
+  nctContextRowsCache=nctContextRows().slice().sort(
     (a,b)=>String(b.event.on_air_start_ist).localeCompare(String(a.event.on_air_start_ist))
-  ).slice(0,50);
-  $('nctContextRows').innerHTML=preview.length?preview.map(context=>{
-    const event=context.event,detail=context.active||context.previous||context.following;
-    return '<div class="nct-context-row"><span>'+formatIstSeconds(event.on_air_start_ist)+'</span>'
-      +'<span><strong>'+esc(event.event_id)+'</strong><small>'+esc(event.ad_type)+'</small></span>'
-      +'<span>'+esc(context.matchType)+'</span>'
-      +'<span>'+esc(nctContextProgram(context))+'</span>'
-      +'<span><strong>'+esc(nctContextStory(context))+'</strong><small>'
-      +esc(detail?nctText(detail,'primary_genre')+' | '+nctText(detail,'geography'):'No NCT context')+'</small></span>'
-      +'<span>'+(Number.isFinite(context.distanceSeconds)?fmt(context.distanceSeconds)+' sec':'NA')+'</span></div>';
-  }).join(''):'<div class="audience-empty">No delivered events have NCT context in the selected scope.</div>';
-  $('nctContextNote').textContent='Showing latest '+fmt(preview.length)+' of '+fmt(rows.length)+' context matches for '+$('nctContextChannel').value+'.';
+  );
+  const visible=nctContextExpanded
+    ?nctContextRowsCache
+    :nctContextRowsCache.slice(0,NCT_CONTEXT_LIMIT);
+  $('nctContextRows').innerHTML=visible.length
+    ?visible.map(nctContextLine).join('')
+    :'<div class="audience-empty">No delivered events have NCT context in the selected scope.</div>';
+  const table=$('nctContextTable'),button=$('nctContextExpand');
+  table.classList.toggle(
+    'expandable',nctContextRowsCache.length>NCT_CONTEXT_LIMIT
+  );
+  table.classList.toggle('expanded',nctContextExpanded);
+  if(!nctContextExpanded)table.scrollTop=0;
+  button.hidden=nctContextRowsCache.length<=NCT_CONTEXT_LIMIT;
+  button.textContent=nctContextExpanded
+    ?'Show Top 15':'Expand All ('+fmt(nctContextRowsCache.length)+')';
+  button.setAttribute('aria-expanded',String(nctContextExpanded));
+  $('nctContextNote').textContent='Showing latest '+fmt(visible.length)+' of '
+    +fmt(nctContextRowsCache.length)+' context matches for '
+    +$('nctContextChannel').value+'. CSV exports the complete filtered result.';
+}
+function toggleNctContext(){
+  nctContextExpanded=!nctContextExpanded;
+  renderNctContext();
 }
 function exportNctContextCsv(){
   const rows=nctContextRows(),channel=$('nctContextChannel').value;
@@ -5281,6 +5998,10 @@ resetDashboardFilters=function(){
   if($('youtubeExportInterval'))$('youtubeExportInterval').value='5';
   updateYoutubeRangeButtons('');
   if($('nctPanel')){
+    nctStoryAudienceExpanded=false;
+    nctSegmentsExpanded=false;
+    nctContextExpanded=false;
+    for(const kind of Object.keys(nctRankExpanded))nctRankExpanded[kind]=false;
     const bounds=nctBounds();
     $('nctFrom').value=bounds.start;
     $('nctTo').value=bounds.end;
@@ -5404,6 +6125,9 @@ function ensureDashboardPages(){
     +'<section class="dashboard-page" id="dashboardPageContent" '
     +'data-dashboard-page="content" hidden></section>',
   );
+  const filters=document.querySelector('.filters');
+  if(!filters)throw new Error('Dashboard filter toolbar is missing.');
+  filters.insertBefore($('dashboardPageNav'),filters.firstChild);
   const nodes={
     kpis:$('kpis'),
     rankings:document.querySelector('.rank-grid'),
@@ -5449,7 +6173,8 @@ function dashboardPageNeedsLoading(page){
     return !dashboardSourceLoaded('viewer')||!dashboardSourceLoaded('amagi')
       ||!dashboardSourceLoaded('fct')||!dashboardSourceLoaded('youtube');
   }
-  return !nctPayload;
+  return !nctPayload||!dashboardSourceLoaded('viewer')
+    ||!dashboardSourceLoaded('amagi')||!dashboardSourceLoaded('youtube');
 }
 async function activateDashboardPageData(page){
   if(page==='audience'){
@@ -5467,7 +6192,11 @@ async function activateDashboardPageData(page){
     renderFctAndScope(false);
     return;
   }
-  await loadNctData();
+  await Promise.all([
+    loadAudienceDashboardData(),
+    loadYoutubeDashboardData(),
+    loadNctData(),
+  ]);
   if(nctPayload)renderNct(false);
   if(nctChart)requestAnimationFrame(()=>nctChart.resize());
 }

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "available": true,
+  "source_root": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\extras\\test_tmp\\asrun_context\\test_amagi_mart_reuses_unchang0\\amagi",
+  "files": 1,
+  "skipped": [],
+  "fingerprints": {
+    "concurrency.csv": {
+      "size": 135,
+      "mtime_ns": 1785396918226931100
+    }
+  },
+  "readable_files": [
+    "concurrency.csv"
+  ]
+}
