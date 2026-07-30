@@ -2710,19 +2710,67 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
 .multi-menu .multi-option[hidden] { display: none !important; }
 :root { --nct: #0f766e; }
 .nct-panel { position: relative; margin-top: 16px; border-top: 3px solid var(--nct); }
+.nct-panel > .panel-head { align-items: flex-start; flex-wrap: wrap; }
+.nct-panel > .panel-head .panel-actions { flex-wrap: wrap; }
 .nct-tag { background: var(--nct); color: #ffffff; }
 .nct-mode { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
 .nct-mode button { border-color: #8cc9c1; background: #ffffff; color: #0b5f59; }
 .nct-mode button.active { border-color: var(--nct); background: var(--nct); color: #ffffff; }
 .nct-controls {
   display: grid;
-  grid-template-columns: repeat(2, minmax(130px, .7fr)) repeat(4, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 7px;
   margin-bottom: 8px;
   align-items: end;
 }
-.nct-controls .nct-mode-label { min-width: 210px; }
-.nct-story-search { min-width: 180px; }
+.nct-controls > .filter-label { min-width: 0; }
+.nct-controls .nct-mode-label, .nct-story-filter {
+  grid-column: span 2;
+  min-width: 0;
+}
+.nct-controls input:not([type="checkbox"]), .nct-controls .multi-toggle {
+  min-width: 0;
+  width: 100%;
+}
+.nct-panel .multi-option { align-items: flex-start; overflow-wrap: anywhere; }
+.nct-panel .multi-option input[type="checkbox"] {
+  width: 14px;
+  min-width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+}
+.nct-option-label {
+  min-width: 0;
+  flex: 1 1 auto;
+  color: var(--ink);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.nct-panel .multi-menu {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.nct-panel .multi-menu::-webkit-scrollbar { display: none; }
+.nct-story-menu { min-width: min(520px, calc(100vw - 32px)); max-height: 320px; }
+.nct-story-options { display: grid; }
+.nct-story-option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 7px;
+  border: 0;
+  border-bottom: 1px solid #edf1f5;
+  border-radius: 0;
+  background: #ffffff;
+  color: var(--ink);
+  text-align: left;
+}
+.nct-story-option:hover, .nct-story-option.active { background: #e8f4f2; }
+.nct-story-option span { min-width: 0; overflow-wrap: anywhere; }
+.nct-story-option small { color: var(--muted); white-space: nowrap; }
 .nct-help { min-height: 16px; margin: -2px 0 7px; color: var(--muted); font-size: 10px; }
 .nct-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 4px; }
 .nct-kpi { min-width: 0; padding: 8px; border-right: 1px solid var(--line); }
@@ -2735,6 +2783,7 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
 .nct-chart-head h3, .nct-rank-head h3, .nct-context-head h3 { margin: 0; font-size: 13px; }
 .nct-chart-wrap { position: relative; height: 300px; padding: 8px; }
 .nct-chart-empty, .nct-loading { display: flex; min-height: 180px; align-items: center; justify-content: center; color: var(--muted); text-align: center; }
+.nct-loading[hidden] { display: none !important; }
 .nct-ranks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .nct-rank-list { max-height: 220px; overflow-y: auto; padding: 4px 8px 8px; }
 .nct-rank-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 7px; padding: 6px 0; border-bottom: 1px solid #edf1f5; font-size: 10px; }
@@ -2824,6 +2873,7 @@ body.nct-chart-expanded { overflow: hidden; }
   .youtube-filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .youtube-filter-actions { grid-column: 1 / -1; }
   .nct-controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .nct-controls .nct-mode-label, .nct-story-filter { grid-column: span 2; }
 }
 @media (max-width: 680px) {
   .dashboard-page-nav {
@@ -2875,6 +2925,8 @@ body.nct-chart-expanded { overflow: hidden; }
     text-align: left;
   }
   .nct-controls, .nct-kpis, .nct-analytics, .nct-ranks { grid-template-columns: 1fr; }
+  .nct-controls .nct-mode-label, .nct-story-filter { grid-column: 1; }
+  .nct-story-menu { right: auto; width: min(520px, calc(100vw - 24px)); }
   .nct-kpi { border-right: 0; border-bottom: 1px solid var(--line); }
   .nct-kpi:last-child { border-bottom: 0; }
   .nct-segment-columns, .nct-segment-row { grid-template-columns: 94px minmax(0, 1fr) 62px; }
@@ -3185,7 +3237,7 @@ function computeFilterSignature(){
     'nctDateMode:'+nctDateMode,
     'nctFrom:'+($('nctFrom')?.value||''),
     'nctTo:'+($('nctTo')?.value||''),
-    'nctStorySearch:'+($('nctStorySearch')?.value||''),
+    'nctStory:'+nctSelectedStory,
     'nctContextChannel:'+($('nctContextChannel')?.value||nctDefaultChannel),
   );
   return parts.join('|');
@@ -4588,6 +4640,9 @@ let nctChart=null;
 let nctRenderTimer=null;
 let nctFilterCache={key:null,value:null};
 let nctChannelIndexes=new Map();
+let nctSelectedStory='';
+let nctStoryCatalog=[];
+const NCT_STORY_OPTION_LIMIT=100;
 function preserveNctAllSelections(){
   for(const id of ['nctChannel','nctProgram','nctGenre','nctGeo']){
     const menu=$(id+'Menu');
@@ -4606,6 +4661,92 @@ function nctBounds(){
     start:String(NCT.true_start||NCT.declared_start||'').slice(0,10),
     end:String(NCT.true_end||NCT.declared_end||'').slice(0,10),
   };
+}
+function updateNctStorySummary(){
+  const button=$('nctStoryToggle');
+  if(!button)return;
+  button.textContent=nctSelectedStory||'All stories';
+  button.title=nctSelectedStory||'All stories';
+}
+function renderNctStoryOptions(){
+  const options=$('nctStoryOptions'),count=$('nctStoryCount');
+  if(!options||!count)return;
+  const query=normalizeMultiSearch($('nctStoryLookup')?.value||'');
+  const terms=query.split(/\s+/).filter(Boolean),matches=[];
+  for(const item of nctStoryCatalog){
+    const text=normalizeMultiSearch(item.value);
+    const words=text.split(/\s+/).filter(Boolean);
+    const matched=terms.every(term=>words.some(word=>
+      word.startsWith(term)||(term.length>=4&&word.includes(term))
+    ));
+    if(matched)matches.push(item);
+    if(matches.length>=NCT_STORY_OPTION_LIMIT)break;
+  }
+  if(nctSelectedStory&&!matches.some(item=>item.value===nctSelectedStory)){
+    const selected=nctStoryCatalog.find(item=>item.value===nctSelectedStory);
+    if(selected)matches.unshift(selected);
+  }
+  options.innerHTML=matches.length?matches.map(item=>
+    '<button type="button" class="nct-story-option '
+    +(item.value===nctSelectedStory?'active':'')+'" data-nct-story="'+esc(item.value)+'">'
+    +'<span>'+esc(item.value)+'</span><small>'+fmt(item.count)+' rows</small></button>'
+  ).join(''):'<span class="audience-empty">No matching stories.</span>';
+  const suffix=nctStoryCatalog.length>NCT_STORY_OPTION_LIMIT?' · refine with search':'';
+  count.textContent=fmt(matches.length)+' shown of '+fmt(nctStoryCatalog.length)+suffix;
+}
+function refreshNctStoryCatalog(rows){
+  const counts=new Map();
+  for(const row of rows){
+    const value=nctText(row,'story');
+    counts.set(value,(counts.get(value)||0)+1);
+  }
+  nctStoryCatalog=[...counts.entries()]
+    .map(([value,count])=>({value,count}))
+    .sort((a,b)=>b.count-a.count||a.value.localeCompare(b.value));
+  if(nctSelectedStory&&!counts.has(nctSelectedStory))nctSelectedStory='';
+  updateNctStorySummary();
+  renderNctStoryOptions();
+}
+function selectNctStory(value){
+  nctSelectedStory=String(value||'');
+  updateNctStorySummary();
+  $('nctStoryMenu')?.classList.remove('open');
+  nctFilterCache={key:null,value:null};
+  scheduleNctRender();
+  updateResetState();
+}
+function initializeNctStoryDropdown(){
+  $('nctStoryToggle').addEventListener('click',event=>{
+    event.stopPropagation();
+    const menu=$('nctStoryMenu'),opening=!menu.classList.contains('open');
+    closeMultiMenus('nctStory');
+    menu.classList.toggle('open',opening);
+    if(opening){
+      renderNctStoryOptions();
+      requestAnimationFrame(()=>$('nctStoryLookup').focus());
+    }
+  });
+  $('nctStoryLookup').addEventListener('input',renderNctStoryOptions);
+  $('nctStoryLookup').addEventListener('change',event=>event.stopPropagation());
+  $('nctStoryLookup').addEventListener('keydown',event=>{
+    if(event.key==='Escape'){
+      $('nctStoryMenu').classList.remove('open');
+      $('nctStoryToggle').focus();
+    }
+  });
+  $('nctStoryAll').addEventListener('click',event=>{
+    event.preventDefault();
+    event.stopPropagation();
+    $('nctStoryLookup').value='';
+    selectNctStory('');
+  });
+  $('nctStoryOptions').addEventListener('click',event=>{
+    const option=event.target.closest('[data-nct-story]');
+    if(!option)return;
+    event.preventDefault();
+    event.stopPropagation();
+    selectNctStory(option.dataset.nctStory);
+  });
 }
 function ensureNctPanel(){
   if($('nctPanel'))return;
@@ -4626,7 +4767,14 @@ function ensureNctPanel(){
     +'<label class="filter-label">Programs<span class="multi-select"><button id="nctProgramToggle" class="multi-toggle" type="button">All programs</button><span id="nctProgramMenu" class="multi-menu"></span></span></label>'
     +'<label class="filter-label">Primary genre<span class="multi-select"><button id="nctGenreToggle" class="multi-toggle" type="button">All genres</button><span id="nctGenreMenu" class="multi-menu"></span></span></label>'
     +'<label class="filter-label">Geography<span class="multi-select"><button id="nctGeoToggle" class="multi-toggle" type="button">All geographies</button><span id="nctGeoMenu" class="multi-menu"></span></span></label>'
-    +'<label class="filter-label nct-story-search">Story contains<input id="nctStorySearch" type="search" placeholder="Search story or sub-story"></label>'
+    +'<label class="filter-label nct-story-filter">Story'
+    +'<span class="multi-select"><button id="nctStoryToggle" class="multi-toggle" type="button" title="All stories">All stories</button>'
+    +'<span id="nctStoryMenu" class="multi-menu nct-story-menu">'
+    +'<span class="multi-search-shell"><input id="nctStoryLookup" class="multi-search" type="search" '
+    +'placeholder="Search available stories..." autocomplete="off">'
+    +'<span class="multi-search-actions"><span id="nctStoryCount" class="multi-search-count"></span>'
+    +'<button id="nctStoryAll" type="button">All stories</button></span></span>'
+    +'<span id="nctStoryOptions" class="nct-story-options"></span></span></span></label>'
     +'</div><div class="nct-help" id="nctHelp"></div>'
     +'<div id="nctLoading" class="nct-loading">NCT story data loads when this section is opened.</div>'
     +'<div id="nctContent" hidden>'
@@ -4669,10 +4817,7 @@ function ensureNctPanel(){
   for(const button of document.querySelectorAll('[data-nct-date-mode]')){
     button.addEventListener('click',()=>setNctDateMode(button.dataset.nctDateMode));
   }
-  $('nctStorySearch').addEventListener('input',()=>{
-    nctFilterCache={key:null,value:null};
-    scheduleNctRender();
-  });
+  initializeNctStoryDropdown();
   $('exportNctCsv').addEventListener('click',()=>loadNctData().then(exportNctCsv));
   $('exportNctContextCsv').addEventListener('click',()=>loadNctData().then(exportNctContextCsv));
   $('nctContextChannel').addEventListener('change',()=>{
@@ -4784,9 +4929,27 @@ const NCT_FILTER_SPECS=[
   ['nctGenre','primary_genre','genres'],
   ['nctGeo','geography','geographies'],
 ];
+function wrapNctOptionLabels(id){
+  const menu=$(id+'Menu');
+  if(!menu)return;
+  for(const label of menu.querySelectorAll('.multi-option')){
+    if(label.querySelector('.nct-option-label'))continue;
+    const textNodes=[...label.childNodes].filter(node=>
+      node.nodeType===Node.TEXT_NODE&&node.textContent.trim()
+    );
+    if(!textNodes.length)continue;
+    const text=textNodes.map(node=>node.textContent.trim()).join(' ');
+    for(const node of textNodes)node.remove();
+    const span=document.createElement('span');
+    span.className='nct-option-label';
+    span.textContent=text;
+    label.appendChild(span);
+  }
+}
 function refreshNctFilters(){
   if(!nctPayload?.available)return;
   const base=nctDateRows();
+  refreshNctStoryCatalog(base);
   // Keep each NCT selector independent for the same reason as FCT: a user
   // clearing Program must not silently erase Channel, Genre, or Geography.
   for(const [id,key,kind] of NCT_FILTER_SPECS){
@@ -4795,6 +4958,7 @@ function refreshNctFilters(){
       nctFilterCache={key:null,value:null};
       scheduleNctRender();
     });
+    wrapNctOptionLabels(id);
   }
   updateNctHelp();
 }
@@ -4807,20 +4971,17 @@ function nctFilteredRows(){
     [...selectedMulti('nctProgram')].sort().join('|'),
     [...selectedMulti('nctGenre')].sort().join('|'),
     [...selectedMulti('nctGeo')].sort().join('|'),
-    normalizeMultiSearch($('nctStorySearch').value),
+    nctSelectedStory,
   ].join('\u0000');
   if(nctFilterCache.key===key&&nctFilterCache.value)return nctFilterCache.value;
   const channels=selectedMulti('nctChannel'),programs=selectedMulti('nctProgram');
   const genres=selectedMulti('nctGenre'),geographies=selectedMulti('nctGeo');
-  const query=normalizeMultiSearch($('nctStorySearch').value);
   const result=nctDateRows().filter(row=>
     channels.has(nctText(row,'channel_name'))
     &&programs.has(nctText(row,'program_name'))
     &&genres.has(nctText(row,'primary_genre'))
     &&geographies.has(nctText(row,'geography'))
-    &&(!query||normalizeMultiSearch(
-      nctText(row,'story')+' '+nctText(row,'sub_story')
-    ).includes(query))
+    &&(!nctSelectedStory||nctText(row,'story')===nctSelectedStory)
   );
   nctFilterCache={key,value:result};
   return result;
@@ -5124,7 +5285,9 @@ resetDashboardFilters=function(){
     $('nctFrom').value=bounds.start;
     $('nctTo').value=bounds.end;
     setNctDateMode('follow',false);
-    $('nctStorySearch').value='';
+    nctSelectedStory='';
+    $('nctStoryLookup').value='';
+    updateNctStorySummary();
     for(const id of ['nctChannel','nctProgram','nctGenre','nctGeo']){
       const menu=$(id+'Menu');
       if(menu)menu.innerHTML='';

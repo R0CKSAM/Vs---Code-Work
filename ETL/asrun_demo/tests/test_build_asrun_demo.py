@@ -504,6 +504,16 @@ def test_render_dashboard_keeps_fct_multiselects_independent(
     assert "'Selected FCT Captions','Selected FCT Programs'" in html
     assert "const NCT_FILTER_SPECS=[" in html
     assert "for(const [id,key,kind] of NCT_FILTER_SPECS)" in html
+    assert 'id="nctStoryToggle"' in html
+    assert 'id="nctStoryLookup"' in html
+    assert 'id="nctStoryOptions"' in html
+    assert 'id="nctStorySearch"' not in html
+    assert "const NCT_STORY_OPTION_LIMIT=100" in html
+    assert "&&(!nctSelectedStory||nctText(row,'story')===nctSelectedStory)" in html
+    assert ".nct-loading[hidden] { display: none !important; }" in html
+    assert '.nct-panel .multi-option input[type="checkbox"] {' in html
+    assert "function wrapNctOptionLabels(id){" in html
+    assert "wrapNctOptionLabels(id);" in html
     assert (
         "buildMulti('fctFeed',feeds,'feeds',feeds,"
         "()=>{refreshFctFilters();renderFctAndScope(false)})"
