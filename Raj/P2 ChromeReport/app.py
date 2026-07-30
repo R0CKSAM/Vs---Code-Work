@@ -1647,6 +1647,7 @@ __STYLE__
           <label class="filter-select-field"><span>Change</span><div class="filter-select"><button id="changeFilter" class="filter-select-button" type="button">All Changes</button><div id="changeFilterMenu" class="filter-select-menu" hidden><input id="changeFilterSearch" class="filter-menu-search" type="text" placeholder="Search change..." autocomplete="off" /><div id="changeFilterOptions" class="filter-options-list"></div></div></div></label>
           <div class="action-row table1-filter-actions">
             <button id="resetButton" class="ghost-button" type="button">Reset Filters</button>
+            <button id="downloadTable1Button" class="ghost-button" type="button">Download Excel</button>
             <button id="fullscreenButton" class="primary-button" type="button">Full Screen</button>
           </div>
         </div>
@@ -1718,6 +1719,7 @@ __STYLE__
           <label class="filter-select-field"><span>Change</span><div class="filter-select"><button id="nbhdChangeFilter" class="filter-select-button" type="button">All Changes</button><div id="nbhdChangeFilterMenu" class="filter-select-menu" hidden><input id="nbhdChangeFilterSearch" class="filter-menu-search" type="text" placeholder="Search change..." autocomplete="off" /><div id="nbhdChangeFilterOptions" class="filter-options-list"></div></div></div></label>
           <div class="action-row nbhd-actions">
             <button id="nbhdResetButton" class="ghost-button" type="button">Reset Filters</button>
+            <button id="nbhdDownloadButton" class="ghost-button" type="button">Download Excel</button>
             <button id="nbhdFullscreenButton" class="primary-button" type="button">Full Screen</button>
             <button id="nbhdRefreshButton" class="ghost-button" type="button">Refresh</button>
           </div>
@@ -1789,6 +1791,7 @@ __STYLE__
         <label class="filter-select-field"><span>Change</span><div class="filter-select"><button id="otsChangeFilter" class="filter-select-button" type="button">All Changes</button><div id="otsChangeFilterMenu" class="filter-select-menu" hidden><input id="otsChangeFilterSearch" class="filter-menu-search" type="text" placeholder="Search change..." autocomplete="off" /><div id="otsChangeFilterOptions" class="filter-options-list"></div></div></div></label>
         <div class="action-row ots-actions">
           <button id="otsResetButton" class="ghost-button" type="button">Reset Filters</button>
+          <button id="otsDownloadButton" class="ghost-button" type="button">Download Excel</button>
           <button id="otsRefreshButton" class="ghost-button" type="button">Refresh</button>
           <button id="otsFullscreenButton" class="primary-button" type="button">Full Screen</button>
         </div>
@@ -1865,6 +1868,7 @@ __STYLE__
         <label class="filter-select-field"><span>Week</span><div class="filter-select"><button id="comparisonWeekFilter" class="filter-select-button" type="button">Select Week</button><div id="comparisonWeekFilterMenu" class="filter-select-menu" hidden><input id="comparisonWeekFilterSearch" class="filter-menu-search" type="text" placeholder="Search week..." autocomplete="off" /><div id="comparisonWeekFilterOptions" class="filter-options-list"></div></div></div></label>
         <div class="action-row comparison-actions">
           <button id="comparisonResetButton" class="ghost-button" type="button">Reset Filters</button>
+          <button id="comparisonDownloadButton" class="ghost-button" type="button">Download Excel</button>
           <button id="comparisonFullscreenButton" class="primary-button" type="button">Full Screen</button>
         </div>
       </div>
@@ -1933,6 +1937,358 @@ const reportBundle = window.__CHROME_REPORT_DATA__ || {
   ots: { generated_at: "", weeks: [], visible_weeks: [], filters: { markets: [], channels: [] }, table: { records: [], total_count: 0 }, message: "OTS data file could not be loaded.", source_directory: "" }
 };
 const report = reportBundle.frequency;
+function sanitizeSheetName(value, fallback = "Sheet1") {
+  const text = String(value || "").replace(/[\\/*?:\\[\\]]/g, " ").trim();
+  return (text || fallback).slice(0, 31);
+}
+function escapeExcelXml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+function excelCell(value, style = "cell", options = {}) {
+  return { value, style, ...options };
+}
+function excelRow(values, style = "cell") {
+  return (Array.isArray(values) ? values : []).map((value) => {
+    if (value && typeof value === "object" && !Array.isArray(value) && Object.prototype.hasOwnProperty.call(value, "value")) {
+      return value;
+    }
+    return excelCell(value, style);
+  });
+}
+function blankExcelRow(cellCount = 1) {
+  return Array.from({ length: Math.max(1, cellCount) }, () => excelCell("", "cell"));
+}
+function coerceExcelCell(cell) {
+  if (cell && typeof cell === "object" && !Array.isArray(cell) && Object.prototype.hasOwnProperty.call(cell, "value")) {
+    return cell;
+  }
+  return excelCell(cell);
+}
+function columnIndexToLetters(index) {
+  let value = index + 1;
+  let result = "";
+  while (value > 0) {
+    const remainder = (value - 1) % 26;
+    result = String.fromCharCode(65 + remainder) + result;
+    value = Math.floor((value - 1) / 26);
+  }
+  return result;
+}
+function xlsxCellRef(rowIndex, columnIndex) {
+  return `${columnIndexToLetters(columnIndex)}${rowIndex + 1}`;
+}
+function xlsxEscape(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+const XLSX_STYLE_INDEX = {
+  title: 1,
+  meta: 2,
+  group: 3,
+  header: 4,
+  cell: 5,
+  textWrap: 6,
+  number: 7,
+  positive: 8,
+  negative: 9,
+  neutral: 10,
+  highlight: 11,
+  missing: 12,
+  changeYes: 13,
+  changeNo: 14,
+};
+function buildXlsxStylesXml() {
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <fonts count="8">
+    <font><sz val="11"/><color rgb="FF25324B"/><name val="Calibri"/><family val="2"/></font>
+    <font><b/><sz val="13"/><color rgb="FF1F2A44"/><name val="Calibri"/><family val="2"/></font>
+    <font><b/><sz val="11"/><color rgb="FF1F2A44"/><name val="Calibri"/><family val="2"/></font>
+    <font><b/><sz val="11"/><color rgb="FF1A2F6B"/><name val="Calibri"/><family val="2"/></font>
+    <font><b/><sz val="11"/><color rgb="FF13284B"/><name val="Calibri"/><family val="2"/></font>
+    <font><b/><sz val="11"/><color rgb="FF15803D"/><name val="Calibri"/><family val="2"/></font>
+    <font><b/><sz val="11"/><color rgb="FFDC2626"/><name val="Calibri"/><family val="2"/></font>
+    <font><b/><sz val="11"/><color rgb="FF8A6D1F"/><name val="Calibri"/><family val="2"/></font>
+  </fonts>
+  <fills count="8">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFEAF1FF"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFF4F8FF"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFE8F8EF"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFFDEAEA"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFEFF6FF"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFFFFDF0"/><bgColor indexed="64"/></patternFill></fill>
+  </fills>
+  <borders count="2">
+    <border><left/><right/><top/><bottom/><diagonal/></border>
+    <border>
+      <left style="thin"><color rgb="FFD7E1F0"/></left>
+      <right style="thin"><color rgb="FFD7E1F0"/></right>
+      <top style="thin"><color rgb="FFD7E1F0"/></top>
+      <bottom style="thin"><color rgb="FFD7E1F0"/></bottom>
+      <diagonal/>
+    </border>
+  </borders>
+  <cellStyleXfs count="1">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
+  </cellStyleXfs>
+  <cellXfs count="15">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+    <xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>
+    <xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>
+    <xf numFmtId="0" fontId="3" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="4" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="5" fillId="4" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="6" fillId="5" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="3" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>
+    <xf numFmtId="0" fontId="7" fillId="7" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="6" fillId="7" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="5" fillId="4" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+  </cellXfs>
+  <cellStyles count="1">
+    <cellStyle name="Normal" xfId="0" builtinId="0"/>
+  </cellStyles>
+</styleSheet>`;
+}
+function buildXlsxWorksheetXml(sheet) {
+  const rows = Array.isArray(sheet?.rows) ? sheet.rows : [];
+  const occupied = new Set();
+  const merges = [];
+  const rowXml = [];
+  let maxColumn = 0;
+  rows.forEach((row, rowIndex) => {
+    let logicalColumn = 0;
+    const cellXml = [];
+    (Array.isArray(row) ? row : []).forEach((rawCell) => {
+      while (occupied.has(`${rowIndex}:${logicalColumn}`)) logicalColumn += 1;
+      const cell = coerceExcelCell(rawCell);
+      const mergeAcross = Number.isInteger(cell.mergeAcross) && cell.mergeAcross > 0 ? cell.mergeAcross : 0;
+      const mergeDown = Number.isInteger(cell.mergeDown) && cell.mergeDown > 0 ? cell.mergeDown : 0;
+      const cellRef = xlsxCellRef(rowIndex, logicalColumn);
+      const styleIndex = XLSX_STYLE_INDEX[cell.style] ?? XLSX_STYLE_INDEX.cell;
+      const value = cell.value;
+      const isNumber = cell.type === "number" || (typeof value === "number" && Number.isFinite(value));
+      if (mergeAcross || mergeDown) {
+        merges.push(`${cellRef}:${xlsxCellRef(rowIndex + mergeDown, logicalColumn + mergeAcross)}`);
+        for (let r = rowIndex; r <= rowIndex + mergeDown; r += 1) {
+          for (let c = logicalColumn; c <= logicalColumn + mergeAcross; c += 1) {
+            if (r === rowIndex && c === logicalColumn) continue;
+            occupied.add(`${r}:${c}`);
+          }
+        }
+      }
+      if (!(value === null || value === undefined || value === "")) {
+        if (isNumber) {
+          cellXml.push(`<c r="${cellRef}" s="${styleIndex}"><v>${value}</v></c>`);
+        } else {
+          cellXml.push(`<c r="${cellRef}" s="${styleIndex}" t="inlineStr"><is><t>${xlsxEscape(value)}</t></is></c>`);
+        }
+      } else if (styleIndex !== XLSX_STYLE_INDEX.cell) {
+        cellXml.push(`<c r="${cellRef}" s="${styleIndex}" t="inlineStr"><is><t></t></is></c>`);
+      }
+      logicalColumn += mergeAcross + 1;
+      maxColumn = Math.max(maxColumn, logicalColumn);
+    });
+    if (cellXml.length) {
+      rowXml.push(`<row r="${rowIndex + 1}">${cellXml.join("")}</row>`);
+    }
+  });
+  const colsXml = (Array.isArray(sheet?.columns) ? sheet.columns : []).map((column, index) => {
+    const width = Number(column?.width || column);
+    return Number.isFinite(width)
+      ? `<col min="${index + 1}" max="${index + 1}" width="${Math.max(8, width / 7.2).toFixed(2)}" customWidth="1"/>`
+      : "";
+  }).join("");
+  const mergeXml = merges.length ? `<mergeCells count="${merges.length}">${merges.map((ref) => `<mergeCell ref="${ref}"/>`).join("")}</mergeCells>` : "";
+  const dimensionRef = maxColumn > 0 && rows.length > 0 ? `A1:${xlsxCellRef(Math.max(rows.length - 1, 0), Math.max(maxColumn - 1, 0))}` : "A1";
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <dimension ref="${dimensionRef}"/>
+  <sheetViews><sheetView workbookViewId="0"/></sheetViews>
+  <sheetFormatPr defaultRowHeight="15"/>
+  ${colsXml ? `<cols>${colsXml}</cols>` : ""}
+  <sheetData>${rowXml.join("")}</sheetData>
+  ${mergeXml}
+</worksheet>`;
+}
+function buildXlsxWorkbookParts(sheets) {
+  const safeSheets = (Array.isArray(sheets) ? sheets : []).filter((sheet) => Array.isArray(sheet?.rows));
+  const worksheetParts = safeSheets.map((sheet, index) => ({
+    path: `xl/worksheets/sheet${index + 1}.xml`,
+    content: buildXlsxWorksheetXml(sheet),
+  }));
+  const workbookXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets>
+    ${safeSheets.map((sheet, index) => `<sheet name="${xlsxEscape(sanitizeSheetName(sheet.name, `Sheet${index + 1}`))}" sheetId="${index + 1}" r:id="rId${index + 1}"/>`).join("")}
+  </sheets>
+</workbook>`;
+  const workbookRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  ${safeSheets.map((_, index) => `<Relationship Id="rId${index + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${index + 1}.xml"/>`).join("")}
+  <Relationship Id="rId${safeSheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`;
+  const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+  ${safeSheets.map((_, index) => `<Override PartName="/xl/worksheets/sheet${index + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join("")}
+</Types>`;
+  const rootRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`;
+  return [
+    { path: "[Content_Types].xml", content: contentTypesXml },
+    { path: "_rels/.rels", content: rootRelsXml },
+    { path: "xl/workbook.xml", content: workbookXml },
+    { path: "xl/_rels/workbook.xml.rels", content: workbookRelsXml },
+    { path: "xl/styles.xml", content: buildXlsxStylesXml() },
+    ...worksheetParts,
+  ];
+}
+function crc32(bytes) {
+  const table = crc32.table || (crc32.table = (() => {
+    const values = new Uint32Array(256);
+    for (let index = 0; index < 256; index += 1) {
+      let current = index;
+      for (let bit = 0; bit < 8; bit += 1) {
+        current = (current & 1) ? (0xEDB88320 ^ (current >>> 1)) : (current >>> 1);
+      }
+      values[index] = current >>> 0;
+    }
+    return values;
+  })());
+  let value = 0xFFFFFFFF;
+  for (let index = 0; index < bytes.length; index += 1) {
+    value = table[(value ^ bytes[index]) & 0xFF] ^ (value >>> 8);
+  }
+  return (value ^ 0xFFFFFFFF) >>> 0;
+}
+function concatUint8Arrays(chunks) {
+  const total = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+  const result = new Uint8Array(total);
+  let offset = 0;
+  chunks.forEach((chunk) => {
+    result.set(chunk, offset);
+    offset += chunk.length;
+  });
+  return result;
+}
+function uint16LE(value) {
+  return new Uint8Array([value & 0xFF, (value >>> 8) & 0xFF]);
+}
+function uint32LE(value) {
+  return new Uint8Array([value & 0xFF, (value >>> 8) & 0xFF, (value >>> 16) & 0xFF, (value >>> 24) & 0xFF]);
+}
+async function deflateRaw(bytes) {
+  if (typeof CompressionStream === "undefined") return null;
+  try {
+    const stream = new Blob([bytes]).stream().pipeThrough(new CompressionStream("deflate-raw"));
+    const buffer = await new Response(stream).arrayBuffer();
+    return new Uint8Array(buffer);
+  } catch (_error) {
+    return null;
+  }
+}
+async function buildZip(files) {
+  const encoder = new TextEncoder();
+  const localParts = [];
+  const centralParts = [];
+  let offset = 0;
+  for (let index = 0; index < files.length; index += 1) {
+    const file = files[index];
+    const nameBytes = encoder.encode(file.path);
+    const contentBytes = encoder.encode(file.content);
+    const compressed = await deflateRaw(contentBytes);
+    const useCompression = compressed && compressed.length < contentBytes.length;
+    const body = useCompression ? compressed : contentBytes;
+    const method = useCompression ? 8 : 0;
+    const checksum = crc32(contentBytes);
+    const localHeader = concatUint8Arrays([
+      uint32LE(0x04034B50),
+      uint16LE(20),
+      uint16LE(0),
+      uint16LE(method),
+      uint16LE(0),
+      uint16LE(0),
+      uint32LE(checksum),
+      uint32LE(body.length),
+      uint32LE(contentBytes.length),
+      uint16LE(nameBytes.length),
+      uint16LE(0),
+      nameBytes,
+    ]);
+    localParts.push(localHeader, body);
+    const centralHeader = concatUint8Arrays([
+      uint32LE(0x02014B50),
+      uint16LE(20),
+      uint16LE(20),
+      uint16LE(0),
+      uint16LE(method),
+      uint16LE(0),
+      uint16LE(0),
+      uint32LE(checksum),
+      uint32LE(body.length),
+      uint32LE(contentBytes.length),
+      uint16LE(nameBytes.length),
+      uint16LE(0),
+      uint16LE(0),
+      uint16LE(0),
+      uint16LE(0),
+      uint32LE(0),
+      uint32LE(offset),
+      nameBytes,
+    ]);
+    centralParts.push(centralHeader);
+    offset += localHeader.length + body.length;
+  }
+  const centralDirectory = concatUint8Arrays(centralParts);
+  const endRecord = concatUint8Arrays([
+    uint32LE(0x06054B50),
+    uint16LE(0),
+    uint16LE(0),
+    uint16LE(files.length),
+    uint16LE(files.length),
+    uint32LE(centralDirectory.length),
+    uint32LE(offset),
+    uint16LE(0),
+  ]);
+  return concatUint8Arrays([...localParts, centralDirectory, endRecord]);
+}
+async function downloadExcelWorkbook(filename, sheets) {
+  const zipBytes = await buildZip(buildXlsxWorkbookParts(sheets));
+  const blob = new Blob([zipBytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  const safeName = filename.replace(/\\.xls$/i, "").replace(/\\.xlsx$/i, "");
+  link.download = `${safeName}.xlsx`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+window.__downloadExcelWorkbook = downloadExcelWorkbook;
+window.__excelCell = excelCell;
+window.__excelRow = excelRow;
+window.__blankExcelRow = blankExcelRow;
 function normalizeWeeks(weeks) {
   return Array.isArray(weeks) ? weeks.filter((week) => String(week || "").trim() !== "") : [];
 }
@@ -2034,6 +2390,7 @@ const channelReportControls = {
   reset: document.getElementById("channelReportResetButton"),
   hide: document.getElementById("channelReportHideButton"),
 };
+const table1DownloadButton = document.getElementById("downloadTable1Button");
 function formatNumber(value) { return new Intl.NumberFormat().format(value || 0); }
 function formatTimestamp(value) {
   const date = new Date(value);
@@ -2163,10 +2520,34 @@ function getChannelReportWeekPair() {
   channelReportState.week_to = allWeeks[toIndex];
   return [allWeeks[fromIndex], allWeeks[toIndex]];
 }
+function syncChannelReportWeeksWithTable() {
+  const allWeeks = normalizeWeeks(report.weeks || []);
+  if (!allWeeks.length) return;
+  if (state.filters.week_from && allWeeks.includes(state.filters.week_from)) {
+    channelReportState.week_from = state.filters.week_from;
+  }
+  if (state.filters.week_to && allWeeks.includes(state.filters.week_to)) {
+    channelReportState.week_to = state.filters.week_to;
+  }
+  if (!state.filters.week_from && !state.filters.week_to && !channelReportState.week_from && !channelReportState.week_to) {
+    const fallbackTo = allWeeks[allWeeks.length - 1];
+    const fallbackFrom = allWeeks[Math.max(0, allWeeks.length - 2)] || fallbackTo;
+    channelReportState.week_from = fallbackFrom;
+    channelReportState.week_to = fallbackTo;
+  }
+}
+function getChannelReportSourceRecords() {
+  return (report.records || []).filter((record) => {
+    for (const [key, field] of Object.entries(fieldMap)) {
+      if (state.filters[key] && String(record[field] || "") !== state.filters[key]) return false;
+    }
+    return true;
+  });
+}
 function buildChannelReportOptions() {
   const channels = Array.from(
     new Set(
-      (report.records || [])
+      getChannelReportSourceRecords()
         .map((record) => String(record.channel_name || "").trim())
         .filter(Boolean)
     )
@@ -2180,13 +2561,13 @@ function getChannelReportTargets() {
   if (channelReportState.channel && channelReportState.channel !== "__default__") {
     return [channelReportState.channel];
   }
-  const available = new Set((report.records || []).map((record) => String(record.channel_name || "").trim()));
+  const available = new Set(getChannelReportSourceRecords().map((record) => String(record.channel_name || "").trim()));
   return DEFAULT_CHANNEL_REPORTS.filter((channel) => available.has(channel));
 }
 function buildChannelReportRows(channel, weeks) {
   const [previousWeek, currentWeek] = weeks;
   const grouped = new Map();
-  (report.records || []).forEach((record) => {
+  getChannelReportSourceRecords().forEach((record) => {
     if (String(record.channel_name || "").trim() !== channel) return;
     const market = String(record.market || "").trim();
     const headend = String(record.head_end || "").trim();
@@ -2205,6 +2586,7 @@ function buildChannelReportRows(channel, weeks) {
       return {
         channel_name: record.channel_name,
         market: record.market,
+        city: record.city,
         head_end: record.head_end,
         previousFrequency,
         currentFrequency,
@@ -2240,6 +2622,192 @@ function buildChannelReportNotes(channel, rows) {
   if (!notes.length) notes.push(`${label} has no frequency movement in the selected weeks.`);
   return notes;
 }
+function formatExcelValue(value, fallback = "NA") {
+  return value === null || value === undefined || value === "" ? fallback : value;
+}
+function isAllCitiesValue(value) {
+  return String(value || "").trim().toUpperCase().replace(/\\s+/g, "") === "ALLCITIES";
+}
+function getFrequencyChangeStyle(previousValue, currentValue) {
+  const previousMissing = previousValue === null || previousValue === undefined || previousValue === "";
+  const currentMissing = currentValue === null || currentValue === undefined || currentValue === "";
+  if (previousMissing && currentMissing) return "neutral";
+  if (previousMissing && !currentMissing) return "positive";
+  if (!previousMissing && currentMissing) return "negative";
+  if (Number(currentValue) > Number(previousValue)) return "positive";
+  if (Number(currentValue) < Number(previousValue)) return "negative";
+  return "neutral";
+}
+function getRankChangeStyle(previousValue, currentValue) {
+  const previousMissing = previousValue === null || previousValue === undefined || previousValue === "";
+  const currentMissing = currentValue === null || currentValue === undefined || currentValue === "";
+  if (previousMissing && currentMissing) return "neutral";
+  if (previousMissing && !currentMissing) return "positive";
+  if (!previousMissing && currentMissing) return "negative";
+  if (Number(currentValue) < Number(previousValue)) return "positive";
+  if (Number(currentValue) > Number(previousValue)) return "negative";
+  return "neutral";
+}
+function getSequentialTrendStyle(weeks, values, index, styleResolver, emptyFallback = "neutral", filledFallback = "number") {
+  const week = weeks[index];
+  const currentValue = values?.[week];
+  const currentMissing = currentValue === null || currentValue === undefined || currentValue === "";
+  if (index <= 0) {
+    return currentMissing ? emptyFallback : filledFallback;
+  }
+  const previousValue = values?.[weeks[index - 1]];
+  const style = styleResolver(previousValue, currentValue);
+  return style === "neutral" && !currentMissing ? filledFallback : style;
+}
+function buildChannelReportRemark(row, weeks) {
+  const [previousWeek, currentWeek] = weeks;
+  const channel = formatChannelLabel(row.channel_name);
+  const previousMissing = row.previousFrequency === null || row.previousFrequency === undefined || row.previousFrequency === "";
+  const currentMissing = row.currentFrequency === null || row.currentFrequency === undefined || row.currentFrequency === "";
+  const parts = [];
+  if (previousMissing && !currentMissing) {
+    parts.push(`${channel} became available in this head end from ${currentWeek}.`);
+  } else if (!previousMissing && currentMissing) {
+    parts.push(`${channel} is not available in ${currentWeek} after being present in ${previousWeek}.`);
+  } else if (row.previousFrequency !== row.currentFrequency) {
+    parts.push(`${channel} frequency changed from ${row.previousFrequency} to ${row.currentFrequency}.`);
+  }
+  const rankStyle = getRankChangeStyle(row.previousRank, row.currentRank);
+  if (rankStyle === "positive") {
+    parts.push(`Rank improved from ${formatExcelValue(row.previousRank, "No Rank")} to ${formatExcelValue(row.currentRank, "No Rank")}.`);
+  } else if (rankStyle === "negative") {
+    parts.push(`Rank dropped from ${formatExcelValue(row.previousRank, "No Rank")} to ${formatExcelValue(row.currentRank, "No Rank")}.`);
+  } else if (!parts.length) {
+    parts.push(`${channel} has no major change in the selected weeks.`);
+  }
+  return parts.join(" ");
+}
+function exportTable1Excel() {
+  syncChannelReportWeeksWithTable();
+  const records = getFilteredRecords()
+    .filter((record) => !isAllCitiesValue(record.city))
+    .slice()
+    .sort((left, right) => {
+      const channelCompare = formatChannelLabel(left.channel_name || "").localeCompare(formatChannelLabel(right.channel_name || ""));
+      if (channelCompare !== 0) return channelCompare;
+      const marketCompare = String(left.market || "").localeCompare(String(right.market || ""));
+      if (marketCompare !== 0) return marketCompare;
+      const cityCompare = String(left.city || "").localeCompare(String(right.city || ""));
+      if (cityCompare !== 0) return cityCompare;
+      return String(left.head_end || "").localeCompare(String(right.head_end || ""));
+    });
+  const visibleWeeks = getVisibleWeeks();
+  const activeWeeks = getChannelReportWeekPair();
+  const channels = getChannelReportTargets()
+    .slice()
+    .sort((left, right) => formatChannelLabel(left).localeCompare(formatChannelLabel(right)));
+  const frequencyExportView = { series: "frequencies", changes: "changes" };
+  const rankExportView = { series: "ranks", changes: "rank_changes" };
+  const detailRows = [
+    excelRow(["CHANNEL NAME", "MARKET", "CITY", "HEAD-END"], "header").concat(
+      visibleWeeks.map((week) => excelCell(week, "header")),
+      visibleWeeks.map((week) => excelCell(week, "header"))
+    ),
+  ];
+  detailRows.unshift([
+    excelCell("", "group", { mergeAcross: 3 }),
+    excelCell("Freq", "group", { mergeAcross: Math.max(0, visibleWeeks.length - 1) }),
+    excelCell("Rank", "group", { mergeAcross: Math.max(0, visibleWeeks.length - 1) }),
+  ]);
+  records.forEach((record) => {
+    detailRows.push([
+      excelCell(record.channel_name || "", "cell"),
+      excelCell(record.market || "", "cell"),
+      excelCell(record.city || "", "cell"),
+      excelCell(record.head_end || "", "cell"),
+      ...visibleWeeks.map((week, weekIndex) => {
+        const value = record.frequencies?.[week];
+        const status = getDisplayStatusForView(record, frequencyExportView, visibleWeeks, weekIndex, "frequency");
+        const style = mapTableStatusToExcelStyle(status, value === null || value === undefined || value === "" ? "neutral" : "number");
+        return excelCell(formatExcelValue(value, "NA"), style);
+      }),
+      ...visibleWeeks.map((week, weekIndex) => {
+        const value = record.ranks?.[week];
+        const status = getDisplayStatusForView(record, rankExportView, visibleWeeks, weekIndex, "rank");
+        const style = mapTableStatusToExcelStyle(status, value === null || value === undefined || value === "" ? "neutral" : "number");
+        return excelCell(formatExcelValue(value, "No Rank"), style);
+      }),
+    ]);
+  });
+
+  const reportRows = [
+    [excelCell("Channel Report", "title", { mergeAcross: 6 })],
+    blankExcelRow(7),
+  ];
+
+  channels.forEach((channel) => {
+    const rows = buildChannelReportRows(channel, activeWeeks).filter((row) => !isAllCitiesValue(row.city));
+    const notes = buildChannelReportNotes(channel, rows);
+    reportRows.push([
+      excelCell(formatChannelLabel(channel), "meta", { mergeAcross: 6 }),
+    ]);
+    reportRows.push([
+      excelCell("", "group", { mergeAcross: 2 }),
+      excelCell("Freq", "group", { mergeAcross: 1 }),
+      excelCell("Rank", "group", { mergeAcross: 1 }),
+    ]);
+    reportRows.push([
+      excelCell("CHANNEL NAME", "header"),
+      excelCell("MARKET", "header"),
+      excelCell("HEAD-END", "header"),
+      excelCell(activeWeeks[0] || "Week 1", "header"),
+      excelCell(activeWeeks[1] || "Week 2", "header"),
+      excelCell(activeWeeks[0] || "Week 1", "header"),
+      excelCell(activeWeeks[1] || "Week 2", "header"),
+    ]);
+
+    if (!rows.length) {
+      reportRows.push([excelCell("No frequency changes found for the selected weeks.", "textWrap", { mergeAcross: 6 })]);
+    }
+
+    rows.forEach((row) => {
+      const currentFrequencyStyle = getFrequencyChangeStyle(row.previousFrequency, row.currentFrequency);
+      const currentRankStyle = getRankChangeStyle(row.previousRank, row.currentRank);
+      const currentFrequencyExportStyle = currentFrequencyStyle === "neutral"
+        ? (row.currentFrequency === null || row.currentFrequency === undefined || row.currentFrequency === "" ? "neutral" : "number")
+        : currentFrequencyStyle;
+      const currentRankExportStyle = currentRankStyle === "neutral"
+        ? (row.currentRank === null || row.currentRank === undefined || row.currentRank === "" ? "neutral" : "number")
+        : currentRankStyle;
+      reportRows.push([
+        excelCell(formatChannelLabel(row.channel_name), "cell"),
+        excelCell(row.market || "", "cell"),
+        excelCell(row.head_end || "", "cell"),
+        excelCell(formatExcelValue(row.previousFrequency, "NA"), row.previousFrequency === null || row.previousFrequency === undefined || row.previousFrequency === "" ? "neutral" : "number"),
+        excelCell(formatExcelValue(row.currentFrequency, "NA"), currentFrequencyExportStyle),
+        excelCell(formatExcelValue(row.previousRank, "No Rank"), row.previousRank === null || row.previousRank === undefined || row.previousRank === "" ? "neutral" : "number"),
+        excelCell(formatExcelValue(row.currentRank, "No Rank"), currentRankExportStyle),
+      ]);
+    });
+
+    notes.forEach((note) => {
+      reportRows.push([excelCell(`• ${note}`, "textWrap", { mergeAcross: 6 })]);
+    });
+    reportRows.push(blankExcelRow(7));
+  });
+
+  if (reportRows.length === 2) {
+    reportRows.push([excelCell("No channel report data available for the current filters.", "textWrap", { mergeAcross: 6 })]);
+  }
+
+  downloadExcelWorkbook(`table1_${getActiveBaseView()}_export`, [
+    {
+      name: "Summary Sheet",
+      columns: [180, 180, 260, 90, 90, 90, 90],
+      rows: reportRows,
+    },
+    {
+      name: "Detailed Sheet",
+      columns: [180, 170, 140, 240, ...visibleWeeks.map(() => 85), ...visibleWeeks.map(() => 85)],
+      rows: detailRows,
+    },
+  ]);
+}
 function renderChannelReports() {
   if (channelReportControls.panel) {
     channelReportControls.panel.hidden = !channelReportState.open;
@@ -2250,6 +2818,7 @@ function renderChannelReports() {
   if (!channelReportState.open) return;
   const container = channelReportControls.container;
   if (!container) return;
+  syncChannelReportWeeksWithTable();
   const weeks = getChannelReportWeekPair();
   const allWeeks = normalizeWeeks(report.weeks || []);
   channelReportState.channel = populateOptionList(channelReportControls.channel, buildChannelReportOptions(), channelReportState.channel || "__default__");
@@ -2388,7 +2957,7 @@ function getActiveBaseView() {
 function isMissingValue(value) {
   return value === null || value === undefined || value === "";
 }
-function getDisplayStatus(record, viewConfig, weeks, weekIndex) {
+function getDisplayStatusForView(record, viewConfig, weeks, weekIndex, activeView) {
   if (weekIndex === 0) return "baseline";
   const week = weeks[weekIndex];
   const previousWeek = weeks[weekIndex - 1];
@@ -2398,13 +2967,25 @@ function getDisplayStatus(record, viewConfig, weeks, weekIndex) {
   const previousMissing = isMissingValue(previousValue);
   if (previousMissing && currentMissing) return "no_change";
   if (previousMissing && !currentMissing) {
-    return state.view === "rank" ? "improve" : "increase";
+    return activeView === "rank" ? "improve" : "increase";
   }
   if (!previousMissing && currentMissing) {
-    return state.view === "rank" ? "decline" : "decrease";
+    return activeView === "rank" ? "decline" : "decrease";
   }
   if (currentMissing) return "missing";
   return record[viewConfig.changes]?.[week] || "no_change";
+}
+function getDisplayStatus(record, viewConfig, weeks, weekIndex) {
+  return getDisplayStatusForView(record, viewConfig, weeks, weekIndex, state.view);
+}
+function mapTableStatusToExcelStyle(status, fallback = "number") {
+  if (status === "increase" || status === "decline") return "negative";
+  if (status === "decrease" || status === "improve") return "positive";
+  if (status === "change") return "highlight";
+  if (status === "missing") return "missing";
+  if (status === "no_change") return fallback;
+  if (status === "baseline") return fallback;
+  return fallback;
 }
 function isChangedStatus(status) {
   return ["increase", "decrease", "improve", "decline", "change"].includes(status);
@@ -2929,7 +3510,7 @@ document.addEventListener("click", (event) => {
   }
 });
 Object.entries(channelReportControls).forEach(([key, control]) => {
-  if (!control || key === "container" || key === "count" || key === "panel" || key === "toggle" || key === "reset" || key === "hide") return;
+  if (!control || key === "container" || key === "count" || key === "panel" || key === "toggle" || key === "reset" || key === "download" || key === "hide") return;
   control.addEventListener("change", () => {
     channelReportState[key] = control.value;
     renderChannelReports();
@@ -2971,6 +3552,9 @@ Object.entries(viewButtons).forEach(([view, button]) => {
     render();
   });
 });
+if (table1DownloadButton) {
+  table1DownloadButton.addEventListener("click", exportTable1Excel);
+}
 fullscreenButton.addEventListener("click", toggleFullscreen);
 if (exitFullscreenButton) {
   exitFullscreenButton.addEventListener("click", async () => {

@@ -65,6 +65,7 @@
   const reportChannelFilter = getMultiSelectControl("otsReportChannelFilter");
   const reportResetButton = document.getElementById("otsReportResetButton");
   const reportHideButton = document.getElementById("otsReportHideButton");
+  const tableDownloadButton = document.getElementById("otsDownloadButton");
   const resultCount = document.getElementById("otsResultCount");
   const tableHead = document.getElementById("otsTableHead");
   const tableBody = document.getElementById("otsTableBody");
@@ -710,6 +711,97 @@ function getChangeMeta(record, weeks) {
     };
   }
 
+  function exportTableExcel() {
+    const payload = state.payload || buildStandalonePayload();
+    const visibleWeeks = getVisibleWeeks(payload);
+    const records = payload.table?.records || [];
+    const excelCell = window.__excelCell || ((value, style = "cell", options = {}) => ({ value, style, ...options }));
+    const blankRow = window.__blankExcelRow || ((count = 1) => Array.from({ length: Math.max(1, count) }, () => excelCell("", "cell")));
+    const reportData = buildReportNarratives();
+    const detailRows = [
+      [
+        excelCell("Market", "header"),
+        excelCell("Channel", "header"),
+        ...visibleWeeks.map((week) => excelCell(week, "header")),
+        excelCell("Change", "header"),
+      ],
+    ];
+    function getWeekValueStyle(index, values) {
+      const week = visibleWeeks[index];
+      const currentValue = values?.[week];
+      const currentMissing = currentValue === null || currentValue === undefined || currentValue === "";
+      if (index <= 0) return currentMissing ? "neutral" : "number";
+      const previousValue = values?.[visibleWeeks[index - 1]];
+      const previousMissing = previousValue === null || previousValue === undefined || previousValue === "";
+      if (previousMissing && currentMissing) return "neutral";
+      if (previousMissing && !currentMissing) return "positive";
+      if (!previousMissing && currentMissing) return "negative";
+      if (Number(currentValue) > Number(previousValue)) return "positive";
+      if (Number(currentValue) < Number(previousValue)) return "negative";
+      return "number";
+    }
+    records.forEach((record) => {
+      const changeMeta = getChangeMeta(record, visibleWeeks);
+      detailRows.push([
+        excelCell(record.market || "", "cell"),
+        excelCell(record.channel || "", normalizeChannelKey(record.channel) === "INDIATV" ? "highlight" : "cell"),
+        ...visibleWeeks.map((week, weekIndex) => {
+          const value = record.ots_values?.[week];
+          return excelCell(value === null || value === undefined || value === "" ? "NA" : value, getWeekValueStyle(weekIndex, record.ots_values || {}));
+        }),
+        excelCell(changeMeta.text, changeMeta.type === "increase" ? "positive" : changeMeta.type === "decrease" ? "negative" : "neutral"),
+      ]);
+    });
+
+    const reportRows = [
+      [excelCell("OTS Change Report", "title", { mergeAcross: 2 })],
+      [excelCell(reportData.weeks.length >= 2 ? `${reportData.weeks[0]} to ${reportData.weeks[1]}` : "Selected weeks", "meta", { mergeAcross: 2 })],
+      blankRow(3),
+      [excelCell("Channel", "header"), excelCell("Market", "header"), excelCell("Narrative", "header")],
+    ];
+    if (reportData.items.length) {
+      reportData.items.forEach((item) => {
+        reportRows.push([
+          excelCell(item.channel, "cell"),
+          excelCell(item.market, "cell"),
+          excelCell(item.text, "textWrap"),
+        ]);
+      });
+    } else {
+      reportRows.push([excelCell(reportData.message || "No OTS report data available.", "textWrap", { mergeAcross: 2 })]);
+    }
+
+    const downloader = window.__downloadExcelWorkbook;
+    if (typeof downloader === "function") {
+      downloader("table3_ots_export", [
+        {
+          name: "OTS Comparison",
+          columns: [170, 180, ...visibleWeeks.map(() => 90), 120],
+          rows: detailRows,
+        },
+        {
+          name: "Report",
+          columns: [160, 160, 620],
+          rows: reportRows,
+        },
+      ]);
+    }
+  }
+
+  function exportReportExcel() {
+    const reportData = buildReportNarratives();
+    const rows = reportData.items.length
+      ? reportData.items.map((item) => [item.channel, item.market, item.text])
+      : [[reportData.message || "No OTS report data available.", "", ""]];
+    const downloader = window.__downloadExcelWorkbook;
+    if (typeof downloader === "function") {
+      downloader("table3_ots_report_export", [{
+        name: "OTS Report",
+        rows: [["Channel", "Market", "Narrative"], ...rows],
+      }]);
+    }
+  }
+
   function renderReportStatus(message) {
     if (!reportStatus) return;
     if (message) {
@@ -1047,6 +1139,7 @@ function getChangeMeta(record, weeks) {
   if (reportToggleButton) reportToggleButton.addEventListener("click", openReportPanel);
   if (reportHideButton) reportHideButton.addEventListener("click", closeReportPanel);
   if (reportResetButton) reportResetButton.addEventListener("click", resetReportFilters);
+  if (tableDownloadButton) tableDownloadButton.addEventListener("click", exportTableExcel);
   if (exitFullscreenButton) {
     exitFullscreenButton.addEventListener("click", async () => {
       if (fullscreenState.usingNativeFullscreen && document.fullscreenElement === panel) {

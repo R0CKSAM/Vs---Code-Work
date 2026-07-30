@@ -68,6 +68,7 @@
   const channelFilter = getSingleSelectControl("comparisonChannelFilter");
   const weekFilter = getSingleSelectControl("comparisonWeekFilter");
   const resetButton = document.getElementById("comparisonResetButton");
+  const downloadButton = document.getElementById("comparisonDownloadButton");
   const fullscreenButton = document.getElementById("comparisonFullscreenButton");
   const exitFullscreenButton = document.getElementById("comparisonExitFullscreenButton");
   const prevPageButton = document.getElementById("comparisonPrevPage");
@@ -455,6 +456,34 @@
     renderTable();
   }
 
+  function exportComparisonExcel() {
+    const rows = sortedRows();
+    const excelCell = window.__excelCell || ((value, style = "cell", options = {}) => ({ value, style, ...options }));
+    const headers = columns.map((column) => excelCell(getColumnLabel(column.key), "header"));
+    const exportedRows = rows.map((row) => columns.map((column) => {
+      if (column.key === "frequency_change") {
+        const meta = getFrequencyChangeMeta(row.frequency_previous, row.frequency_current);
+        return excelCell(meta.text, meta.type === "positive" ? "positive" : meta.type === "negative" ? "negative" : "neutral");
+      }
+      if (column.key === "rank_change") {
+        const meta = getRankChangeMeta(row.rank_previous, row.rank_current);
+        return excelCell(meta.text, meta.type === "positive" ? "positive" : meta.type === "negative" ? "negative" : "neutral");
+      }
+      if (column.type === "number") {
+        return excelCell(isMissing(row[column.key]) ? "NA" : row[column.key], isMissing(row[column.key]) ? "neutral" : "number");
+      }
+      return excelCell(normalizeText(row[column.key]), "cell");
+    }));
+    const downloader = window.__downloadExcelWorkbook;
+    if (typeof downloader === "function") {
+      downloader("table4_comparison_export", [{
+        name: "Weekly Comparison",
+        columns: [190, 150, 240, 180, 130, 130, 130, 120, 120, 120],
+        rows: [headers, ...exportedRows],
+      }]);
+    }
+  }
+
   function syncFullscreenButtons() {
     const label = fullscreenState.active ? "Exit Full Screen" : "Full Screen";
     if (fullscreenButton) fullscreenButton.textContent = label;
@@ -554,6 +583,7 @@
       render();
     });
   }
+  if (downloadButton) downloadButton.addEventListener("click", exportComparisonExcel);
   if (fullscreenButton) fullscreenButton.addEventListener("click", toggleFullscreen);
   if (exitFullscreenButton) {
     exitFullscreenButton.addEventListener("click", async () => {

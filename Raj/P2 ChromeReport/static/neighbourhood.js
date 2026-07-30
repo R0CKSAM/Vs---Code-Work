@@ -68,6 +68,7 @@
   const reportWeekToFilter = getSingleSelectControl("nbhdReportWeekToFilter");
   const reportResetButton = document.getElementById("nbhdReportResetButton");
   const reportHideButton = document.getElementById("nbhdReportHideButton");
+  const tableDownloadButton = document.getElementById("nbhdDownloadButton");
   const resultCount = document.getElementById("nbhdResultCount");
   const tableHead = document.getElementById("nbhdTableHead");
   const tableBody = document.getElementById("nbhdTableBody");
@@ -855,6 +856,133 @@
       reportLauncher?.scrollIntoView({ behavior: "smooth", block: "center" });
     });
   }
+  function exportTableExcel() {
+    const payload = normalizePayloadShape(state.payload || window.__NBHD_STANDALONE_DATA__ || { weeks: [] });
+    const weeks = getVisibleWeeks(payload);
+    const records = payload.table?.records || [];
+    const excelCell = window.__excelCell || ((value, style = "cell", options = {}) => ({ value, style, ...options }));
+    const blankRow = window.__blankExcelRow || ((count = 1) => Array.from({ length: Math.max(1, count) }, () => excelCell("", "cell")));
+    const reportData = buildReportNarratives();
+    const detailRows = [
+      [
+        excelCell("", "group", { mergeAcross: 2 }),
+        excelCell("Channel", "group", { mergeAcross: Math.max(0, weeks.length - 1) }),
+        excelCell("Frequency", "group", { mergeAcross: Math.max(0, weeks.length - 1) }),
+        excelCell("Genre", "group", { mergeAcross: Math.max(0, weeks.length - 1) }),
+      ],
+      [
+        excelCell("MARKET", "header"),
+        excelCell("CITY", "header"),
+        excelCell("HEADEND", "header"),
+        ...weeks.map((week) => excelCell(week, "header")),
+        ...weeks.map((week) => excelCell(week, "header")),
+        ...weeks.map((week) => excelCell(week, "header")),
+      ],
+    ];
+    function getFrequencyStyle(index, values) {
+      const week = weeks[index];
+      const currentValue = values?.[week];
+      const currentMissing = currentValue === null || currentValue === undefined || currentValue === "";
+      if (index <= 0) return currentMissing ? "neutral" : "number";
+      const previousValue = values?.[weeks[index - 1]];
+      const previousMissing = previousValue === null || previousValue === undefined || previousValue === "";
+      if (previousMissing && currentMissing) return "neutral";
+      if (previousMissing && !currentMissing) return "positive";
+      if (!previousMissing && currentMissing) return "negative";
+      if (Number(currentValue) > Number(previousValue)) return "positive";
+      if (Number(currentValue) < Number(previousValue)) return "negative";
+      return "number";
+    }
+    function getTextChangeStyle(index, values) {
+      const week = weeks[index];
+      const currentValue = values?.[week];
+      const currentMissing = currentValue === null || currentValue === undefined || currentValue === "";
+      if (index <= 0) return currentMissing ? "neutral" : "cell";
+      const previousValue = values?.[weeks[index - 1]];
+      const previousMissing = previousValue === null || previousValue === undefined || previousValue === "";
+      if (previousMissing && currentMissing) return "neutral";
+      if (previousMissing && !currentMissing) return "positive";
+      if (!previousMissing && currentMissing) return "negative";
+      if (String(previousValue) !== String(currentValue)) return "highlight";
+      return "cell";
+    }
+    records.forEach((record) => {
+      detailRows.push([
+        excelCell(record.market || "", "cell"),
+        excelCell(record.city || "", "cell"),
+        excelCell(record.head_end || "", "cell"),
+        ...weeks.map((week, weekIndex) => {
+          const baseStyle = getTextChangeStyle(weekIndex, record.channels || {});
+          const channelStyle = normalizeChannelKey(record.channels?.[week]) === "INDIATV" ? "highlight" : baseStyle;
+          return excelCell(record.channels?.[week] ?? "NA", channelStyle);
+        }),
+        ...weeks.map((week, weekIndex) => {
+          const value = record.frequencies?.[week];
+          return excelCell(value ?? "NA", getFrequencyStyle(weekIndex, record.frequencies || {}));
+        }),
+        ...weeks.map((week, weekIndex) => excelCell(record.genres?.[week] ?? "NA", getTextChangeStyle(weekIndex, record.genres || {}))),
+      ]);
+    });
+
+    const reportRows = [
+      [excelCell("Neighbour Change Report", "title", { mergeAcross: 3 })],
+      [excelCell(reportData.headend ? `Headend: ${reportData.headend}` : "Headend: Selected Headend", "meta", { mergeAcross: 3 })],
+      blankRow(4),
+      [
+        excelCell("Channel", "header"),
+        excelCell("Previous Position", "header"),
+        excelCell("Current Position", "header"),
+        excelCell("Status", "header"),
+      ],
+    ];
+    if (reportData.rows.length) {
+      reportData.rows.forEach((row) => {
+        reportRows.push([
+          excelCell(row.channel, "cell"),
+          excelCell(row.previous_position, "textWrap"),
+          excelCell(row.current_position, "textWrap"),
+          excelCell(row.status, "positive"),
+        ]);
+      });
+      reportRows.push(blankRow(4));
+      reportRows.push([excelCell("Summary", "meta", { mergeAcross: 3 })]);
+      reportData.rows.forEach((row) => {
+        reportRows.push([excelCell(`• ${row.summary}`, "textWrap", { mergeAcross: 3 })]);
+      });
+    } else {
+      reportRows.push([excelCell(reportData.message || "No neighbour change report data available.", "textWrap", { mergeAcross: 3 })]);
+    }
+
+    window.__downloadExcelWorkbook?.("table2_neighbourhood_export", [
+      {
+        name: "Neighbourhood",
+        columns: [150, 140, 240, ...weeks.map(() => 150), ...weeks.map(() => 95), ...weeks.map(() => 140)],
+        rows: detailRows,
+      },
+      {
+        name: "Report",
+        columns: [150, 280, 280, 100],
+        rows: reportRows,
+      },
+    ]);
+  }
+  function exportReportExcel() {
+    const reportData = buildReportNarratives();
+    const headers = ["Channel", "Previous Position", "Current Position", "Status"];
+    const detailRows = reportData.rows.map((row) => [
+      row.channel,
+      row.previous_position,
+      row.current_position,
+      row.status,
+    ]);
+    const summaryRows = reportData.rows.length
+      ? reportData.rows.map((row) => [row.summary])
+      : [[reportData.message || "No report data available."]];
+    window.__downloadExcelWorkbook?.("table2_neighbour_change_report", [
+      { name: "Report", rows: [headers, ...detailRows] },
+      { name: "Summary", rows: [["Summary"], ...summaryRows] },
+    ]);
+  }
   function buildReportNarratives() {
     const payload = normalizePayloadShape(state.payload || window.__NBHD_STANDALONE_DATA__ || { weeks: [] });
     const allWeeks = payload.weeks || [];
@@ -1416,6 +1544,9 @@
   }
   if (reportResetButton) {
     reportResetButton.addEventListener("click", resetReportFilters);
+  }
+  if (tableDownloadButton) {
+    tableDownloadButton.addEventListener("click", exportTableExcel);
   }
   if (fullscreenButton) {
     fullscreenButton.addEventListener("click", toggleFullscreen);
