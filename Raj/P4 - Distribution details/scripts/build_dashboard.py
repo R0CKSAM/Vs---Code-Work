@@ -27,12 +27,14 @@ def load_json(path: Path):
 def main() -> int:
     distribution_master = load_json(PROCESSED_DIR / "distribution_master.json")
     channel_weekly = load_json(PROCESSED_DIR / "channel_weekly.json")
+    headend_weekly_history = load_json(PROCESSED_DIR / "headend_weekly_history.json")
     processed_log = load_json(PROCESSED_DIR / "_processed_log.json")
 
     template = TEMPLATE_PATH.read_text(encoding="utf-8")
     rendered = (
         template.replace("__DISTRIBUTION_MASTER_JSON__", json.dumps(distribution_master, ensure_ascii=False))
         .replace("__CHANNEL_WEEKLY_JSON__", json.dumps(channel_weekly, ensure_ascii=False))
+        .replace("__HEADEND_WEEKLY_HISTORY_JSON__", json.dumps(headend_weekly_history, ensure_ascii=False))
         .replace("__PROCESSED_LOG_JSON__", json.dumps(processed_log, ensure_ascii=False))
     )
 

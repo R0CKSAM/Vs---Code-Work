@@ -102,13 +102,13 @@ class DashboardUpdatePipeline:
                 summary.failed += 1
                 self.logger.exception("Failed to process %s: %s", file_path.name, error)
 
-        from app import generate_frequency_report_json
+        from app import generate_standalone_dashboard
 
-        json_path = generate_frequency_report_json()
+        json_path, html_path = generate_standalone_dashboard()
         result = {
             **summary.as_dict(),
             "frequency_report_json": str(json_path),
-            "dashboard_html": str(self.config.dashboard_html),
+            "dashboard_html": str(html_path),
             "distribution_csv": str(self.config.distribution_csv),
             "nbhd_csv": str(self.config.nbhd_csv),
             "ots_csv": str(self.config.ots_csv),

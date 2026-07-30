@@ -115,10 +115,45 @@ def normalize_lookup_key(value: Any) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
+def extract_date_from_filename(value: str) -> date | None:
+    text = value.strip()
+    for pattern in (
+        r"(?P<day>\d{1,2})[-_ ](?P<month>[A-Za-z]{3,9})[-_ ](?P<year>\d{2,4})",
+        r"(?P<year>\d{4})[-_ ](?P<month>\d{1,2})[-_ ](?P<day>\d{1,2})",
+        r"(?P<day>\d{1,2})[-_ ](?P<month>\d{1,2})[-_ ](?P<year>\d{2,4})",
+    ):
+        match = re.search(pattern, text, flags=re.IGNORECASE)
+        if not match:
+            continue
+
+        candidate = match.group(0)
+        for fmt in ("%d-%b-%y", "%d-%B-%y", "%d-%b-%Y", "%d-%B-%Y", "%Y-%m-%d", "%d-%m-%y", "%d-%m-%Y"):
+            try:
+                normalized = candidate.replace("_", "-").replace(" ", "-")
+                return datetime.strptime(normalized, fmt).date()
+            except ValueError:
+                continue
+    return None
+
+
+def format_week_label_from_date(value: date) -> str:
+    iso_year, iso_week, _ = value.isocalendar()
+    return f"{iso_year}'Week{iso_week:02d}"
+
+
 def derive_week_label(workbook_path: Path) -> str:
+    year_week_match = re.search(r"(?P<year>\d{4})\W*week\W*(?P<week>\d{1,2})", workbook_path.stem, flags=re.IGNORECASE)
+    if year_week_match:
+        return f"{int(year_week_match.group('year'))}'Week{int(year_week_match.group('week')):02d}"
+
     match = re.search(r"week\W*([0-9]{1,2})", workbook_path.stem, flags=re.IGNORECASE)
     if match:
         return f"Week {int(match.group(1))}"
+
+    filename_date = extract_date_from_filename(workbook_path.stem)
+    if filename_date:
+        return format_week_label_from_date(filename_date)
+
     return workbook_path.stem.strip() or "Unknown Week"
 
 
