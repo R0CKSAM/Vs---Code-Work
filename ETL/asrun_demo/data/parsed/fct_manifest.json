@@ -28,24 +28,24 @@
     }
   },
   "file_metadata": {
-    "sheet2_processed_20260714_121100.xlsx": {
-      "declared_start": "2026-07-01",
-      "declared_end": "2026-07-08",
-      "source_rows": 17201,
-      "valid_rows": 16944,
-      "excluded_rows": 257,
-      "range_source": "Pdate",
+    "YT_NEWS_12072026 to 14072026.xlsx": {
+      "declared_start": "2026-07-12",
+      "declared_end": "2026-07-14",
+      "source_rows": 7513,
+      "valid_rows": 7360,
+      "excluded_rows": 153,
+      "range_source": "filename",
       "parsed_sheets": [
         "Sheet1"
       ],
       "ignored_sheets": []
     },
-    "YT_NEWS_15072026 to 18072026.xlsx": {
-      "declared_start": "2026-07-15",
-      "declared_end": "2026-07-18",
-      "source_rows": 9458,
-      "valid_rows": 9247,
-      "excluded_rows": 211,
+    "YT_NEWS_22072026 to 25072026.xlsx": {
+      "declared_start": "2026-07-22",
+      "declared_end": "2026-07-25",
+      "source_rows": 8819,
+      "valid_rows": 8557,
+      "excluded_rows": 262,
       "range_source": "filename",
       "parsed_sheets": [
         "Sheet1"
@@ -58,18 +58,6 @@
       "source_rows": 6644,
       "valid_rows": 6459,
       "excluded_rows": 185,
-      "range_source": "filename",
-      "parsed_sheets": [
-        "Sheet1"
-      ],
-      "ignored_sheets": []
-    },
-    "YT_NEWS_12072026 to 14072026.xlsx": {
-      "declared_start": "2026-07-12",
-      "declared_end": "2026-07-14",
-      "source_rows": 7513,
-      "valid_rows": 7360,
-      "excluded_rows": 153,
       "range_source": "filename",
       "parsed_sheets": [
         "Sheet1"
@@ -93,18 +81,30 @@
         "S4"
       ]
     },
-    "YT_NEWS_22072026 to 25072026.xlsx": {
-      "declared_start": "2026-07-22",
-      "declared_end": "2026-07-25",
-      "source_rows": 8819,
-      "valid_rows": 8557,
-      "excluded_rows": 262,
+    "YT_NEWS_15072026 to 18072026.xlsx": {
+      "declared_start": "2026-07-15",
+      "declared_end": "2026-07-18",
+      "source_rows": 9458,
+      "valid_rows": 9247,
+      "excluded_rows": 211,
       "range_source": "filename",
+      "parsed_sheets": [
+        "Sheet1"
+      ],
+      "ignored_sheets": []
+    },
+    "sheet2_processed_20260714_121100.xlsx": {
+      "declared_start": "2026-07-01",
+      "declared_end": "2026-07-08",
+      "source_rows": 17201,
+      "valid_rows": 16944,
+      "excluded_rows": 257,
+      "range_source": "Pdate",
       "parsed_sheets": [
         "Sheet1"
       ],
       "ignored_sheets": []
     }
   },
-  "generated_at_ist": "2026-07-30T13:17:40.449034+05:30"
+  "generated_at_ist": "2026-07-30T17:46:16.472640+05:30"
 }

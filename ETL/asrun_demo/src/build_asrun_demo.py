@@ -2226,6 +2226,7 @@ p { margin: 0; color: var(--muted); }
 .filter-shell { position: sticky; top: 0; z-index: 30; min-height: 40px; background: #eef3f8; border-bottom: 1px solid #cbd5e1; box-shadow: 0 3px 8px rgba(22, 36, 49, .08); }
 .filters {
   display: flex;
+  flex-wrap: wrap;
   min-height: 40px;
   gap: 5px;
   align-items: center;
@@ -2355,6 +2356,45 @@ main { padding: 16px 0 24px; }
 .combined-columns, .combined-line { display: grid; grid-template-columns: 112px 92px minmax(190px, 1fr) 66px 112px 112px 112px 124px; gap: 8px; align-items: center; }
 .combined-columns { padding: 0 2px 6px; color: var(--muted); font-size: 10px; font-weight: 700; }
 .combined-line { min-height: 44px; padding: 7px 2px; border-bottom: 1px solid var(--line); font-size: 11px; }
+.combined-columns .fast-col,
+.fct-audience-columns .fast-col {
+  border-bottom: 2px solid var(--fast);
+  color: var(--fast);
+}
+.combined-columns .stream-col,
+.fct-audience-columns .stream-col {
+  border-bottom: 2px solid var(--stream);
+  color: var(--stream);
+}
+.combined-columns .amagi-col,
+.fct-audience-columns .amagi-col {
+  border-bottom: 2px solid var(--amagi);
+  color: var(--amagi);
+}
+.combined-line .fast-col,
+.fct-audience-line .fast-col {
+  border-left: 3px solid var(--fast);
+  background: #f3efff;
+  color: #4c1d95;
+}
+.combined-line .stream-col,
+.fct-audience-line .stream-col {
+  border-left: 3px solid var(--stream);
+  background: #fff0f6;
+  color: #9d174d;
+}
+.combined-line .amagi-col,
+.fct-audience-line .amagi-col {
+  border-left: 3px solid var(--amagi);
+  background: #fff4ed;
+  color: #9a3412;
+}
+.combined-line :is(.fast-col, .stream-col, .amagi-col),
+.fct-audience-line :is(.fast-col, .stream-col, .amagi-col) {
+  min-height: 28px;
+  padding: 6px;
+  border-radius: 3px;
+}
 
 .youtube-panel { margin-top: 16px; border-top: 3px solid #e62117; }
 .youtube-tag { background: #e62117; }
@@ -2676,6 +2716,34 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
 .fct-panel { border-top: 3px solid var(--fct); }
 .fct-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .fct-controls .filter-label:last-child { grid-column: 1 / -1; }
+.fct-advanced {
+  margin: -1px 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: #fbfcfd;
+}
+.fct-advanced summary {
+  padding: 6px 8px;
+  color: var(--fct);
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 700;
+}
+.fct-advanced[open] summary { border-bottom: 1px solid var(--line); }
+.fct-advanced-controls {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+  padding: 8px;
+}
+.fct-advanced-controls .filter-label {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  white-space: normal;
+}
+.fct-advanced-controls input,
+.fct-advanced-controls .multi-toggle { width: 100%; }
 .fct-date-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-bottom: 8px; }
 .fct-date-controls input { width: 100%; min-width: 0; }
 .fct-range-actions { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
@@ -2982,7 +3050,7 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
 .nct-story-audience-columns, .nct-story-audience-row {
   display: grid;
   grid-template-columns:
-    minmax(210px, 1.5fr) 84px 66px repeat(5, minmax(72px, .62fr));
+    minmax(230px, 1.65fr) 78px 58px repeat(6, minmax(76px, .62fr));
   gap: 8px;
   align-items: center;
 }
@@ -3019,6 +3087,89 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
   color: var(--muted);
   font-weight: 500;
 }
+.nct-story-performance-controls {
+  display: flex;
+  align-items: end;
+  gap: 6px;
+}
+.nct-story-performance-controls .filter-label { min-width: 128px; }
+.nct-story-performance-controls select {
+  width: 100%;
+  min-width: 0;
+  height: 28px;
+}
+.nct-story-source-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding: 7px 9px;
+  border-bottom: 1px solid #d8e8e5;
+  background: #f7fbfa;
+}
+.nct-story-source-group {
+  display: flex;
+  min-width: 0;
+  align-items: end;
+  gap: 6px;
+}
+.nct-story-source-group[hidden] { display: none !important; }
+.nct-story-source-group .source-tag { flex: 0 0 auto; margin-bottom: 2px; }
+.nct-story-source-group .filter-label { min-width: 0; flex: 1 1 0; }
+.nct-story-source-note {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  font-size: 9px;
+}
+.global-audience-details {
+  flex: 1 0 100%;
+  order: 2;
+  min-width: 0;
+}
+.global-audience-details > summary {
+  display: none;
+}
+.global-audience-filters {
+  display: grid;
+  grid-template-columns: auto repeat(4, minmax(150px, 1fr));
+  gap: 5px;
+  align-items: end;
+  width: 100%;
+  min-width: 0;
+  padding: 4px 5px;
+  border: 1px solid #c5d2de;
+  border-radius: 4px;
+  background: #ffffff;
+}
+.global-audience-heading {
+  align-self: center;
+  min-width: 92px;
+}
+.global-audience-heading strong { display: block; font-size: 10px; }
+.global-audience-heading small {
+  display: block;
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1.2;
+}
+.global-source-group {
+  display: flex;
+  min-width: 0;
+  align-items: end;
+  gap: 4px;
+}
+.global-source-group .source-tag {
+  min-height: 20px;
+  margin-bottom: 3px;
+  padding: 1px 5px;
+  font-size: 9px;
+}
+.global-source-group .filter-label {
+  min-width: 0;
+  flex: 1 1 0;
+  font-size: 9px;
+}
+.global-source-group .multi-toggle { height: 25px; font-size: 10px; }
+.audience-controls:empty { display: none; }
 .nct-story-audience-table.expandable,
 .nct-segment-table.expandable,
 .nct-context-table.expandable {
@@ -3136,12 +3287,55 @@ body.nct-chart-expanded::before {
   to { opacity: 1; transform: translateY(0); }
 }
 @media (max-width: 1220px) {
+  .global-audience-filters {
+    grid-template-columns: auto repeat(2, minmax(0, 1fr));
+  }
+  .global-audience-heading { grid-row: span 2; }
   .youtube-filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .youtube-filter-actions { grid-column: 1 / -1; }
   .nct-controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .nct-controls .nct-mode-label, .nct-story-filter { grid-column: span 2; }
 }
 @media (max-width: 680px) {
+  .global-audience-details > summary {
+    display: flex;
+    min-height: 28px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 5px 7px;
+    border: 1px solid #c5d2de;
+    border-radius: 4px;
+    background: #ffffff;
+    color: var(--ink);
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 700;
+    list-style-position: inside;
+  }
+  .global-audience-details > summary small {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--muted);
+    font-size: 8px;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .global-audience-details[open] > summary {
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+  .global-audience-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-top: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+  .global-audience-heading { display: none; }
+  .global-source-group { flex-wrap: wrap; }
+  .global-source-group .source-tag { width: 100%; }
+  .global-audience-filters > .nct-story-source-note { display: none; }
   .dashboard-page-nav {
     gap: 3px;
     min-width: 0;
@@ -3174,6 +3368,7 @@ body.nct-chart-expanded::before {
   .fct-date-controls { grid-template-columns: 1fr; }
   .fct-date-controls .filter-label, .fct-range-actions, .fct-date-meta { grid-column: 1; }
   .fct-range-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fct-advanced-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .fct-controls, .fct-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .fct-kpi:nth-child(2) { border-right: 0; }
   .fct-kpi:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
@@ -3195,6 +3390,12 @@ body.nct-chart-expanded::before {
   .nct-story-menu { right: auto; width: min(520px, calc(100vw - 24px)); }
   .nct-kpi { border-right: 0; border-bottom: 1px solid var(--line); }
   .nct-kpi:last-child { border-bottom: 0; }
+  .nct-story-audience .nct-rank-head { align-items: flex-start; flex-direction: column; }
+  .nct-story-performance-controls { width: 100%; flex-wrap: wrap; }
+  .nct-story-performance-controls .filter-label { flex: 1 1 145px; }
+  .nct-story-source-filters { grid-template-columns: 1fr; }
+  .nct-story-source-group { flex-wrap: wrap; }
+  .nct-story-source-group .source-tag { width: 100%; }
   .nct-story-audience-columns { display: none; }
   .nct-story-audience-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3296,6 +3497,15 @@ function loadDashboardSources(names){
 }
 let fctClassMode='Commercial';
 let fctRangeMode='all';
+const FCT_SCALAR_FILTER_IDS=[
+  'fctTimeFrom','fctTimeTo','fctProgramTimeFrom','fctProgramTimeTo',
+  'fctDurationMin','fctDurationMax',
+  'fctProgramDurationMin','fctProgramDurationMax',
+];
+const FCT_NUMERIC_FILTER_PAIRS=[
+  ['fctDurationMin','fctDurationMax'],
+  ['fctProgramDurationMin','fctProgramDurationMax'],
+];
 const multiSearchState=new Map();
 const multiSelectControllers=new Map();
 function normalizeMultiSearch(value){
@@ -3509,8 +3719,17 @@ function filterKey(){return [$('from').value,$('to').value,[...selectedMulti('sp
 function filtered(){const key=filterKey();if(filterCache.key===key&&filterCache.value)return filterCache.value;const result=[...sectionFilteredRows('Spot','spot'),...sectionFilteredRows('L-band','lband')].sort((a,b)=>String(a.on_air_start_ist).localeCompare(String(b.on_air_start_ist)));filterCache={key,value:result};return result;}
 // Multi-selects restored by Reset. The signature also covers independently
 // rendered YouTube/NCT controls so a clean button always means a clean dashboard.
-const RESET_SCOPE_IDS=['spotAdId','spotCreative','lbandAdId','lbandCreative','fastPlatform','fastChannel','streamChannel','amagiPlatform','amagiChannel','fctFeed','fctLanguage','fctBrand','fctCaption','fctProgram','fctCategory','fctCompany'];
-const SIGNATURE_MULTI_IDS=[...RESET_SCOPE_IDS,'youtubeChannel','nctChannel','nctProgram','nctGenre','nctGeo'];
+const RESET_SCOPE_IDS=[
+  'spotAdId','spotCreative','lbandAdId','lbandCreative',
+  'fastPlatform','fastChannel','streamChannel','amagiPlatform','amagiChannel',
+  'fctFeed','fctLanguage','fctBrand','fctCaption','fctProgram','fctCategory',
+  'fctCompany','fctWeekday','fctAdPosition','fctBreakSize','fctCoverage',
+  'fctSourceFile','fctSourceSheet',
+];
+const SIGNATURE_MULTI_IDS=[
+  ...RESET_SCOPE_IDS,'youtubeChannel','nctChannel','nctProgram','nctGenre','nctGeo',
+  'nctYoutubeVideo',
+];
 let defaultFilterSignature=null;
 function multiFilterSignature(id){
   const menu=$(id+'Menu');
@@ -3538,6 +3757,9 @@ function computeFilterSignature(){
       'fctFrom:'+($('fctFrom')?.value||''),
       'fctTo:'+($('fctTo')?.value||''),
     );
+  }
+  for(const id of FCT_SCALAR_FILTER_IDS){
+    parts.push(id+':'+($(id)?.value||''));
   }
   for(const id of SIGNATURE_MULTI_IDS)parts.push(id+':'+multiFilterSignature(id));
   const nctDefaultChannel=(NCT.channels||[]).includes('INDIA TV')
@@ -3577,6 +3799,9 @@ function resetDashboardFilters(){
   for(const id of RESET_SCOPE_IDS){
     const menu=$(id+'Menu');
     if(menu)menu.innerHTML='';
+  }
+  for(const id of FCT_SCALAR_FILTER_IDS){
+    if($(id))$(id).value='';
   }
   multiInitialized.clear();
   if(dashboardSourceLoaded('fct'))setFctRange('all',false);
@@ -3647,6 +3872,46 @@ function ensureFctPanel(){
     +'<label class="filter-label">Company<span class="multi-select"><button id="fctCompanyToggle" '
     +'class="multi-toggle" type="button">All companies</button><span id="fctCompanyMenu" '
     +'class="multi-menu"></span></span></label></div>'
+    +'<details class="fct-advanced"><summary>More FCT Filters</summary>'
+    +'<div class="fct-advanced-controls">'
+    +'<label class="filter-label">Day of week<span class="multi-select">'
+    +'<button id="fctWeekdayToggle" class="multi-toggle" type="button">All weekdays</button>'
+    +'<span id="fctWeekdayMenu" class="multi-menu"></span></span></label>'
+    +'<label class="filter-label">Ad position<span class="multi-select">'
+    +'<button id="fctAdPositionToggle" class="multi-toggle" type="button">All positions</button>'
+    +'<span id="fctAdPositionMenu" class="multi-menu"></span></span></label>'
+    +'<label class="filter-label">Ads in break<span class="multi-select">'
+    +'<button id="fctBreakSizeToggle" class="multi-toggle" type="button">All break sizes</button>'
+    +'<span id="fctBreakSizeMenu" class="multi-menu"></span></span></label>'
+    +'<label class="filter-label">Coverage status<span class="multi-select">'
+    +'<button id="fctCoverageToggle" class="multi-toggle" type="button">'
+    +'All coverage states</button><span id="fctCoverageMenu" '
+    +'class="multi-menu"></span></span></label>'
+    +'<label class="filter-label">Source workbook<span class="multi-select">'
+    +'<button id="fctSourceFileToggle" class="multi-toggle" type="button">All workbooks</button>'
+    +'<span id="fctSourceFileMenu" class="multi-menu"></span></span></label>'
+    +'<label class="filter-label">Source sheet<span class="multi-select">'
+    +'<button id="fctSourceSheetToggle" class="multi-toggle" type="button">All sheets</button>'
+    +'<span id="fctSourceSheetMenu" class="multi-menu"></span></span></label>'
+    +'<label class="filter-label">On-air from<input id="fctTimeFrom" type="time"></label>'
+    +'<label class="filter-label">On-air to<input id="fctTimeTo" type="time"></label>'
+    +'<label class="filter-label">Program starts from'
+    +'<input id="fctProgramTimeFrom" type="time"></label>'
+    +'<label class="filter-label">Program starts to'
+    +'<input id="fctProgramTimeTo" type="time"></label>'
+    +'<label class="filter-label">Ad duration min (sec)'
+    +'<input id="fctDurationMin" type="number" min="0" step="1" '
+    +'placeholder="No minimum"></label>'
+    +'<label class="filter-label">Ad duration max (sec)'
+    +'<input id="fctDurationMax" type="number" min="0" step="1" '
+    +'placeholder="No maximum"></label>'
+    +'<label class="filter-label">Program duration min (sec)'
+    +'<input id="fctProgramDurationMin" type="number" min="0" step="1" '
+    +'placeholder="No minimum"></label>'
+    +'<label class="filter-label">Program duration max (sec)'
+    +'<input id="fctProgramDurationMax" type="number" min="0" step="1" '
+    +'placeholder="No maximum"></label>'
+    +'</div></details>'
     +'<div class="fct-kpis" id="fctKpis"></div>'
     +'<div class="fct-columns"><span>On-air IST</span><span>Feed</span>'
     +'<span>Brand / Caption</span><span>Program</span><span>Duration</span>'
@@ -3671,10 +3936,33 @@ function ensureFctPanel(){
   }
   $('fctFrom').addEventListener('change',()=>syncFctDates('from'));
   $('fctTo').addEventListener('change',()=>syncFctDates('to'));
+  for(const id of FCT_SCALAR_FILTER_IDS){
+    $(id).addEventListener('change',()=>{
+      const pair=FCT_NUMERIC_FILTER_PAIRS.find(ids=>ids.includes(id));
+      if(pair)syncFctNumericRange(id,...pair);
+      renderFctAndScope(false);
+    });
+  }
   $('exportFctCsv').addEventListener('click',exportFctCsv);
 }
 function ensureFctAudiencePanel(){if($('fctAllRows'))return;document.querySelector('.combined-panel').insertAdjacentHTML('afterend','<section class="panel fct-audience-panel"><div class="panel-head"><div><h2>All FCT Monitored Ad Occurrences</h2><small>FCT-selected occurrences | FAST + STREAM + AMAGI 5-minute concurrency | YouTube minute concurrency</small></div><div class="panel-actions"><button id="exportFctAudienceCsv" type="button">Export CSV</button><span class="source-tag fct-tag">FCT ANCHORED</span></div></div><div class="fct-audience-columns"><span>On-air IST</span><span>Feed</span><span>Brand / Caption</span><span class="duration">Duration</span><span class="fast-col">FAST</span><span class="stream-col">STREAM</span><span class="amagi-col">AMAGI</span><span class="youtube-col">YOUTUBE</span><span class="total-col">Combined</span></div><div class="combined-list" id="fctAllRows"></div><div class="fct-preview-note" id="fctAllNote"></div></section>');$('exportFctAudienceCsv').addEventListener('click',exportFctAudienceCsv);}
-function fctValue(row,key){const value=String(row[key]??'').trim();return value||'Unknown / NA';}
+const FCT_WEEKDAYS=[
+  'Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday',
+];
+function fctValue(row,key){
+  if(key==='_weekday'){
+    const [year,month,day]=String(row.log_date||'').split('-').map(Number);
+    if(!year||!month||!day)return 'Unknown / NA';
+    return FCT_WEEKDAYS[new Date(Date.UTC(year,month-1,day)).getUTCDay()];
+  }
+  if(key==='is_filename_spillover'){
+    return row.is_filename_spillover===true
+      ?'Filename spillover'
+      :'Within declared range';
+  }
+  const value=String(row[key]??'').trim();
+  return value||'Unknown / NA';
+}
 function formatIstSeconds(value){const normalized=String(value).replace(' ','T'),[datePart,timePart='00:00:00']=normalized.split('T'),[year,month,day]=datePart.split('-'),[rawHour='0',minute='00',second='00']=timePart.split(':'),hour=Number(rawHour),suffix=hour>=12?'PM':'AM',twelve=hour%12||12;return day+'-'+month+'-'+year.slice(-2)+' '+String(twelve).padStart(2,'0')+':'+minute+':'+second.slice(0,2)+' '+suffix;}
 function fctBounds(){
   const dates=(FCT.events||[])
@@ -3773,7 +4061,22 @@ const FCT_FILTER_SPECS=[
   ['fctProgram','program_name','programs'],
   ['fctCategory','category','categories'],
   ['fctCompany','company','companies'],
+  ['fctWeekday','_weekday','weekdays'],
+  ['fctAdPosition','ad_position','positions'],
+  ['fctBreakSize','total_ads','break sizes'],
+  ['fctCoverage','is_filename_spillover','coverage states'],
+  ['fctSourceFile','source_file','workbooks'],
+  ['fctSourceSheet','source_sheet','sheets'],
 ];
+function fctOptionSort(key,left,right){
+  if(key==='ad_position'||key==='total_ads'){
+    return Number(left)-Number(right);
+  }
+  if(key==='_weekday'){
+    return FCT_WEEKDAYS.indexOf(left)-FCT_WEEKDAYS.indexOf(right);
+  }
+  return left.localeCompare(right);
+}
 function refreshFctFilters(){
   if(!FCT.available)return;
   const base=fctClassRows();
@@ -3781,19 +4084,83 @@ function refreshFctFilters(){
   // the same date/class scope prevents Clear in one control from erasing the
   // valid choices or current selections in neighboring controls.
   for(const [id,key,kind] of FCT_FILTER_SPECS){
-    const values=[...new Set(base.map(row=>fctValue(row,key)))].sort();
+    const values=[...new Set(base.map(row=>fctValue(row,key)))]
+      .sort((left,right)=>fctOptionSort(key,left,right));
     buildMulti(id,values,kind,values,()=>renderFctAndScope(false));
   }
 }
+function fctClockMinutes(value){
+  const match=/(\d{2}):(\d{2})/.exec(String(value||''));
+  return match?Number(match[1])*60+Number(match[2]):null;
+}
+function fctClockMatches(row,key,fromId,toId){
+  const from=fctClockMinutes($(fromId)?.value);
+  const to=fctClockMinutes($(toId)?.value);
+  if(from===null&&to===null)return true;
+  const value=fctClockMinutes(String(row[key]||'').slice(11,16));
+  if(value===null)return false;
+  if(from!==null&&to!==null){
+    return from<=to
+      ?value>=from&&value<=to
+      :value>=from||value<=to;
+  }
+  return from!==null?value>=from:value<=to;
+}
+function fctNumericMatches(row,key,minId,maxId){
+  const minText=String($(minId)?.value||'').trim();
+  const maxText=String($(maxId)?.value||'').trim();
+  if(!minText&&!maxText)return true;
+  const value=Number(row[key]);
+  if(!Number.isFinite(value))return false;
+  const min=minText?Number(minText):null,max=maxText?Number(maxText):null;
+  return (min===null||value>=min)&&(max===null||value<=max);
+}
+function syncFctNumericRange(changed,minId,maxId){
+  const minInput=$(minId),maxInput=$(maxId);
+  if(!minInput.value||!maxInput.value)return;
+  if(Number(minInput.value)<=Number(maxInput.value))return;
+  if(changed===minId)maxInput.value=minInput.value;
+  else minInput.value=maxInput.value;
+}
+function fctAdvancedRangesMatch(row){
+  return fctClockMatches(row,'event_ist','fctTimeFrom','fctTimeTo')
+    &&fctClockMatches(
+      row,'program_start_ist','fctProgramTimeFrom','fctProgramTimeTo'
+    )
+    &&fctNumericMatches(
+      row,'duration_seconds','fctDurationMin','fctDurationMax'
+    )
+    &&fctNumericMatches(
+      row,'program_duration_seconds',
+      'fctProgramDurationMin','fctProgramDurationMax'
+    );
+}
+let fctSelectionCache={key:null,value:null};
+function fctSelectionKey(){
+  return [
+    $('fctFrom')?.value||'',$('fctTo')?.value||'',fctClassMode,
+    ...FCT_FILTER_SPECS.map(([id])=>
+      [...selectedMulti(id)].sort().join('\u0001')
+    ),
+    ...FCT_SCALAR_FILTER_IDS.map(id=>$(id)?.value||''),
+  ].join('\u0000');
+}
 function selectedFctRows(){
   if(!FCT.available)return [];
+  const cacheKey=fctSelectionKey();
+  if(fctSelectionCache.key===cacheKey&&fctSelectionCache.value){
+    return fctSelectionCache.value;
+  }
   const selections=FCT_FILTER_SPECS.map(([id,key])=>[
     key,selectedMulti(id),
   ]);
   if(selections.some(([_key,values])=>!values.size))return [];
-  return fctClassRows().filter(row=>
+  const value=fctClassRows().filter(row=>
     selections.every(([key,values])=>values.has(fctValue(row,key)))
+    &&fctAdvancedRangesMatch(row)
   );
+  fctSelectionCache={key:cacheKey,value};
+  return value;
 }
 function multiSelectionIsAll(id){
   const inputs=[...$(id+'Menu').querySelectorAll('input[data-value]')];
@@ -3915,12 +4282,14 @@ function renderFct(refresh=true){
     for(const [id] of FCT_FILTER_SPECS){
       $(id+'Toggle').disabled=true;
     }
+    for(const id of FCT_SCALAR_FILTER_IDS)$(id).disabled=true;
     return;
   }
   updateFctDateControls();
   for(const [id] of FCT_FILTER_SPECS){
     $(id+'Toggle').disabled=false;
   }
+  for(const id of FCT_SCALAR_FILTER_IDS)$(id).disabled=false;
   if(refresh)refreshFctFilters();
   const rows=selectedFctRows();
   const duration=rows.reduce((sum,row)=>sum+Number(row.duration_seconds||0),0);
@@ -3962,7 +4331,15 @@ function renderFct(refresh=true){
 }
 function renderFctAndScope(refresh=true){renderFct(refresh);if(typeof renderScopeValidation==='function')renderScopeValidation();updateResetState();hideLoading();}
 function fctFilterContext(){
-  return {dateFrom:$('fctFrom').value,dateTo:$('fctTo').value};
+  return {
+    dateFrom:$('fctFrom').value,dateTo:$('fctTo').value,
+    timeFrom:$('fctTimeFrom').value,timeTo:$('fctTimeTo').value,
+    programTimeFrom:$('fctProgramTimeFrom').value,
+    programTimeTo:$('fctProgramTimeTo').value,
+    durationMin:$('fctDurationMin').value,durationMax:$('fctDurationMax').value,
+    programDurationMin:$('fctProgramDurationMin').value,
+    programDurationMax:$('fctProgramDurationMax').value,
+  };
 }
 function fctExportSelections(){
   return {
@@ -3973,7 +4350,36 @@ function fctExportSelections(){
     programs:exportSelection('fctProgram','All FCT programs'),
     categories:exportSelection('fctCategory','All FCT categories'),
     companies:exportSelection('fctCompany','All FCT companies'),
+    weekdays:exportSelection('fctWeekday','All weekdays'),
+    positions:exportSelection('fctAdPosition','All ad positions'),
+    breakSizes:exportSelection('fctBreakSize','All break sizes'),
+    coverage:exportSelection('fctCoverage','All coverage states'),
+    sourceFiles:exportSelection('fctSourceFile','All source workbooks'),
+    sourceSheets:exportSelection('fctSourceSheet','All source sheets'),
   };
+}
+function fctAdvancedExportHeaders(){
+  return [
+    'Selected FCT Weekdays','Selected FCT Ad Positions',
+    'Selected FCT Break Sizes','Selected FCT Coverage States',
+    'Selected FCT Source Workbooks','Selected FCT Source Sheets',
+    'Selected On-air Time From','Selected On-air Time To',
+    'Selected Program Start Time From','Selected Program Start Time To',
+    'Selected Ad Duration Minimum Seconds','Selected Ad Duration Maximum Seconds',
+    'Selected Program Duration Minimum Seconds',
+    'Selected Program Duration Maximum Seconds',
+  ];
+}
+function fctAdvancedExportValues(filters,selections){
+  return [
+    selections.weekdays,selections.positions,selections.breakSizes,
+    selections.coverage,selections.sourceFiles,selections.sourceSheets,
+    filters.timeFrom||'All',filters.timeTo||'All',
+    filters.programTimeFrom||'All',filters.programTimeTo||'All',
+    filters.durationMin||'No minimum',filters.durationMax||'No maximum',
+    filters.programDurationMin||'No minimum',
+    filters.programDurationMax||'No maximum',
+  ];
 }
 function exportFctCsv(){
   const rows=selectedFctRows(),filters=fctFilterContext();
@@ -3983,6 +4389,7 @@ function exportFctCsv(){
     'Selected FCT Feeds','Selected FCT Languages','Selected FCT Brands',
     'Selected FCT Captions','Selected FCT Programs',
     'Selected FCT Categories','Selected FCT Companies',
+    ...fctAdvancedExportHeaders(),
     'On-air IST','Feed','Brand','Caption','Program','Program Start IST',
     'Program Duration Seconds','Ad Duration Seconds','Language','Category',
     'Company','Ad Position','Total Ads','Filename Spillover',
@@ -3995,6 +4402,7 @@ function exportFctCsv(){
       filters.dateFrom,filters.dateTo,fctClassMode,selections.feeds,
       selections.languages,selections.brands,selections.captions,
       selections.programs,selections.categories,selections.companies,
+      ...fctAdvancedExportValues(filters,selections),
       formatIstSeconds(row.event_ist),row.feed_name,row.brand_name,row.caption,
       row.program_name,
       row.program_start_ist?formatIstSeconds(row.program_start_ist):'',
@@ -4017,14 +4425,17 @@ function exportFctAudienceCsv(){
   const streamChannels=exportSelection('streamChannel','All STREAM channels');
   const amagiPlatforms=exportSelection('amagiPlatform','All AMAGI platforms');
   const amagiChannels=exportSelection('amagiChannel','All AMAGI channels');
+  const youtubeChannels=exportSelection('youtubeChannel','All YouTube channels',true);
   const header=[
     'Selected Date From','Selected Date To','FCT Classification',
     'Selected FCT Feeds','Selected FCT Languages','Selected FCT Brands',
     'Selected FCT Captions','Selected FCT Programs',
     'Selected FCT Categories','Selected FCT Companies',
+    ...fctAdvancedExportHeaders(),
     'FCT On-air IST','Feed','Brand','Caption','Program','Ad Duration Seconds',
     'Language','Category','Company','5-Minute Window IST','FAST Platforms',
     'FAST Channels','STREAM Channels','AMAGI Platforms','AMAGI Channels',
+    'Selected YouTube Channels',
     'FAST 5-Minute Concurrency','STREAM 5-Minute Concurrency',
     'AMAGI 5-Minute Actual Concurrency','YouTube Scope',
     'YouTube Minute Concurrency','YouTube Active Live Videos',
@@ -4043,10 +4454,11 @@ function exportFctAudienceCsv(){
       filters.dateFrom,filters.dateTo,fctClassMode,selections.feeds,
       selections.languages,selections.brands,selections.captions,
       selections.programs,selections.categories,selections.companies,
+      ...fctAdvancedExportValues(filters,selections),
       formatIstSeconds(event.event_ist),event.feed_name,event.brand_name,
       event.caption,event.program_name,event.duration_seconds,event.language,
       event.category,event.company,row.fast.window,fastPlatforms,fastChannels,
-      streamChannels,amagiPlatforms,amagiChannels,row.fast.value,
+      streamChannels,amagiPlatforms,amagiChannels,youtubeChannels,row.fast.value,
       row.stream.value,row.amagi.value,row.youtube.scope,row.youtube.value,
       row.youtube.live_videos,row.youtube.video_ids,row.youtube.video_titles,
       combined,row.partial?'Partial source coverage':'All sources covered',
@@ -4063,10 +4475,10 @@ function audienceLines(events,state){const preview=events.slice().sort((a,b)=>St
 function amagiLines(events,state){if(!AMAGI.available)return '<div class="audience-empty">'+esc(AMAGI.reason||'Amagi concurrency data is unavailable.')+'</div>';return audienceLines(events,state);}
 function combinedRows(events,fast,stream){const amagi=amagiMinuteMap();return events.sort((a,b)=>a.on_air_start_ist.localeCompare(b.on_air_start_ist)).map(e=>{const fastMetric=audienceValue(e,fast),streamMetric=audienceValue(e,stream),amagiMetric=audienceValue(e,amagi),youtubeMetric=youtubeFiveMinuteValue(e),all=[fastMetric.total,streamMetric.total,amagiMetric.total,youtubeMetric.total];return {event:e,fast:fastMetric,stream:streamMetric,amagi:amagiMetric,youtube:youtubeMetric,total:all.some(v=>v===null)?null:all.reduce((sum,v)=>sum+v,0)};});}
 function combinedLines(events,fast,stream){const rows=combinedRows(events,fast,stream),preview=rows.slice(-50).reverse();if(!preview.length)return '<div class="audience-empty">No delivered ad events in this selection.</div>';return preview.map(row=>{const e=row.event,total=row.total===null?'No combined data':fmt(row.total);return '<div class="combined-line"><span>'+formatIst(e.on_air_start_ist)+'</span><span><strong>'+esc(e.event_id)+'</strong><small>'+esc(e.ad_type)+'</small></span><span>'+esc(e.creative_title)+'</span><span class="duration">'+fmt(e.actual_duration_seconds)+' sec</span><span class="combined-value fast-col">'+esc(row.fast.value)+'</span><span class="combined-value stream-col">'+esc(row.stream.value)+'</span><span class="combined-value amagi-col">'+esc(row.amagi.value)+'</span><span class="combined-value youtube-col">'+esc(row.youtube.value)+'</span><span class="combined-value total-col">'+esc(total)+'</span></div>';}).join('');}
-function renderAudience(events){ensureAmagiPanel();if(!dashboardSourceLoaded('viewer')||!dashboardSourceLoaded('amagi')){const failed=dashboardSourceError('viewer')||dashboardSourceError('amagi'),message=failed||'Loading FAST, STREAM, and AMAGI audience data...';for(const id of ['fastRows','streamRows','amagiRows','allRows'])$(id).innerHTML='<div class="audience-empty">'+esc(message)+'</div>';for(const id of ['fastNote','streamNote','amagiNote','allNote'])$(id).textContent='';return}refreshAmagiFilters();const fast=audienceMinuteMap('fast'),stream=audienceMinuteMap('stream'),amagi=amagiMinuteMap(),visible=Math.min(events.length,50),note='Showing latest '+fmt(visible)+' of '+fmt(events.length)+' delivered events. CSV exports the complete filtered result.';$('fastRows').innerHTML=audienceLines(events,fast);$('streamRows').innerHTML=audienceLines(events,stream);$('amagiRows').innerHTML=amagiLines(events,amagi);$('allRows').innerHTML=combinedLines(events,fast,stream);$('fastNote').textContent=note;$('streamNote').textContent=note;$('amagiNote').textContent=note;$('allNote').textContent=note;}
+function renderAudience(events){if(!dashboardSourceLoaded('viewer')||!dashboardSourceLoaded('amagi')){const failed=dashboardSourceError('viewer')||dashboardSourceError('amagi'),message=failed||'Loading FAST, STREAM, and AMAGI audience data...';$('allRows').innerHTML='<div class="audience-empty">'+esc(message)+'</div>';$('allNote').textContent='';return}refreshAmagiFilters();const fast=audienceMinuteMap('fast'),stream=audienceMinuteMap('stream'),visible=Math.min(events.length,50),note='Showing latest '+fmt(visible)+' of '+fmt(events.length)+' delivered events. CSV exports the complete filtered result.';$('allRows').innerHTML=combinedLines(events,fast,stream);$('allNote').textContent=note;}
 function exportSelection(id,allLabel,keepExactValues=false){const menu=$(id+'Menu');if(!menu)return 'Not available';const inputs=[...menu.querySelectorAll('input[data-value]')],selected=inputs.filter(input=>input.checked).map(input=>input.dataset.value);if(!selected.length)return 'None';return selected.length===inputs.length&&!keepExactValues?allLabel:selected.join(' | ');}
 function exportFilterContext(){return {dateFrom:$('from').value,dateTo:$('to').value,adTypes:'Spot | L-band',adIds:'Spot: '+exportSelection('spotAdId','All Spot ad IDs')+' || L-band: '+exportSelection('lbandAdId','All L-band ad IDs'),creatives:'Spot: '+exportSelection('spotCreative','All Spot creative titles')+' || L-band: '+exportSelection('lbandCreative','All L-band creative titles')};}
-function exportAllEventsCsv(){const events=filtered(),fast=audienceMinuteMap('fast'),stream=audienceMinuteMap('stream'),amagi=amagiMinuteMap(),filters=exportFilterContext(),fastPlatforms=exportSelection('fastPlatform','All FAST platforms',true),fastChannels=exportSelection('fastChannel','All FAST channels',true),streamChannels=exportSelection('streamChannel','All STREAM channels',true),amagiPlatforms=exportSelection('amagiPlatform','All AMAGI platforms',true),amagiChannels=exportSelection('amagiChannel','All AMAGI channels',true),header=['Selected Date From','Selected Date To','Selected Ad Types','Selected Ad IDs','Selected Creative Titles','On-air IST','Ad Type','Ad ID','Creative Title','Actual Duration Seconds','5-Minute Window IST','FAST Platforms','FAST Channels','STREAM Channels','AMAGI Platforms','AMAGI Channels','FAST 5-Minute Concurrency','STREAM 5-Minute Concurrency','AMAGI 5-Minute Actual Concurrency','YouTube Scope','YouTube Minute Concurrency','YouTube Active Live Videos','YouTube Active Video IDs','YouTube Active Video Titles','Combined Concurrency'],rows=combinedRows(events,fast,stream).map(row=>[filters.dateFrom,filters.dateTo,filters.adTypes,filters.adIds,filters.creatives,formatIst(row.event.on_air_start_ist),row.event.ad_type,row.event.event_id,row.event.creative_title,row.event.actual_duration_seconds,row.fast.window,fastPlatforms,fastChannels,streamChannels,amagiPlatforms,amagiChannels,row.fast.value,row.stream.value,row.amagi.value,row.youtube.scope,row.youtube.value,row.youtube.live_videos,row.youtube.video_ids,row.youtube.video_titles,row.total===null?'No combined data':fmt(row.total)]);downloadCsv('asrun_all_delivered_events_'+filters.dateFrom+'_to_'+filters.dateTo+'.csv',header,rows);}
+function exportAllEventsCsv(){const events=filtered(),fast=audienceMinuteMap('fast'),stream=audienceMinuteMap('stream'),amagi=amagiMinuteMap(),filters=exportFilterContext(),fastPlatforms=exportSelection('fastPlatform','All FAST platforms',true),fastChannels=exportSelection('fastChannel','All FAST channels',true),streamChannels=exportSelection('streamChannel','All STREAM channels',true),amagiPlatforms=exportSelection('amagiPlatform','All AMAGI platforms',true),amagiChannels=exportSelection('amagiChannel','All AMAGI channels',true),youtubeChannels=exportSelection('youtubeChannel','All YouTube channels',true),header=['Selected Date From','Selected Date To','Selected Ad Types','Selected Ad IDs','Selected Creative Titles','On-air IST','Ad Type','Ad ID','Creative Title','Actual Duration Seconds','5-Minute Window IST','FAST Platforms','FAST Channels','STREAM Channels','AMAGI Platforms','AMAGI Channels','Selected YouTube Channels','FAST 5-Minute Concurrency','STREAM 5-Minute Concurrency','AMAGI 5-Minute Actual Concurrency','YouTube Scope','YouTube Minute Concurrency','YouTube Active Live Videos','YouTube Active Video IDs','YouTube Active Video Titles','Combined Concurrency'],rows=combinedRows(events,fast,stream).map(row=>[filters.dateFrom,filters.dateTo,filters.adTypes,filters.adIds,filters.creatives,formatIst(row.event.on_air_start_ist),row.event.ad_type,row.event.event_id,row.event.creative_title,row.event.actual_duration_seconds,row.fast.window,fastPlatforms,fastChannels,streamChannels,amagiPlatforms,amagiChannels,youtubeChannels,row.fast.value,row.stream.value,row.amagi.value,row.youtube.scope,row.youtube.value,row.youtube.live_videos,row.youtube.video_ids,row.youtube.video_titles,row.total===null?'No combined data':fmt(row.total)]);downloadCsv('asrun_all_delivered_events_'+filters.dateFrom+'_to_'+filters.dateTo+'.csv',header,rows);}
 function amagiBreakdownScopes(){const rows=selectedAmagiRows(),seen=new Set(),scopes=[];for(const row of rows){const platform=String(row.platform_name||'Unknown / NA'),channel=String(row.channel_name||'Unknown / NA'),key=platform+'\u0000'+channel;if(!seen.has(key)){seen.add(key);scopes.push({source:'AMAGI',platform,channel})}}return scopes.sort((a,b)=>a.platform.localeCompare(b.platform)||a.channel.localeCompare(b.channel));}
 function amagiScopeMap(scope){const map=new Map();for(const row of selectedAmagiRows()){const platform=String(row.platform_name||'Unknown / NA'),channel=String(row.channel_name||'Unknown / NA');if(platform!==scope.platform||channel!==scope.channel)continue;const key=minuteKey(row.minute_ist);map.set(key,(map.get(key)||0)+Number(row.concurrent_viewers||0));}return map;}
 function exportAudienceBreakdownCsv(){const events=filtered(),filters=exportFilterContext(),scopes=[...audienceBreakdownScopes('fast'),...audienceBreakdownScopes('stream'),...amagiBreakdownScopes()],header=['Selected Date From','Selected Date To','Selected Ad Types','Selected Ad IDs','Selected Creative Titles','On-air IST','Ad Type','Ad ID','Creative Title','Actual Duration Seconds','Source','Platform','Channel','5-Minute Window IST','Individual 5-Minute Concurrency','Metric Basis'],rows=[];for(const scope of scopes){const map=scope.source==='AMAGI'?amagiScopeMap(scope):audienceScopeMap(scope),basis=scope.source==='AMAGI'?'Actual platform-reported concurrent viewers':'Unique IP minute sum';for(const event of events){const metric=audienceScopeValue(event,map);rows.push([filters.dateFrom,filters.dateTo,filters.adTypes,filters.adIds,filters.creatives,formatIst(event.on_air_start_ist),event.ad_type,event.event_id,event.creative_title,event.actual_duration_seconds,scope.source,scope.platform,scope.channel,metric.window,metric.total,basis])}}downloadCsv('asrun_audience_platform_channel_breakdown_'+filters.dateFrom+'_to_'+filters.dateTo+'.csv',header,rows)}
@@ -4673,6 +5085,11 @@ function renderYoutubeChannelAware(){
   const from=$('youtubeFrom').value,to=$('youtubeTo').value;
   const channels=youtubeChannels();
   buildMulti('youtubeChannel',channels,'channels',channels,()=>{
+    youtubeDeliveryMinuteIndex=null;
+    resetSemanticAllSelection('nctYoutubeVideo');
+    resetNctAudienceCaches();
+    if(nctPayload)refreshNctStorySourceFilters();
+    render();
     renderYoutube();
   });
   const selectedChannels=youtubeSelectedChannels();
@@ -4868,6 +5285,49 @@ function exportYoutubeReferenceCsvChannelAware(){
     rows,
   );
 }
+function ensureGlobalAudienceFilters(){
+  if($('globalAudienceFilters'))return;
+  const filters=document.querySelector('.filters');
+  filters.insertAdjacentHTML(
+    'beforeend',
+    '<details class="global-audience-details" id="globalAudienceDetails" open>'
+    +'<summary>Audience Scope '
+    +'<small>FAST · STREAM · AMAGI · YOUTUBE</small></summary>'
+    +'<section class="global-audience-filters" id="globalAudienceFilters" '
+    +'aria-label="Global audience source filters">'
+    +'<div class="global-audience-heading"><strong>Audience Scope</strong>'
+    +'<small>Applies across all dashboard pages</small></div>'
+    +'<div class="global-source-group" id="globalFastFilters">'
+    +'<span class="source-tag fast-tag">FAST</span></div>'
+    +'<div class="global-source-group" id="globalStreamFilters">'
+    +'<span class="source-tag stream-tag">STREAM</span></div>'
+    +'<div class="global-source-group" id="globalAmagiFilters">'
+    +'<span class="source-tag amagi-tag">AMAGI</span></div>'
+    +'<div class="global-source-group" id="globalYoutubeFilters">'
+    +'<span class="source-tag youtube-tag">YOUTUBE</span></div>'
+    +'<div class="nct-story-source-note">Audience/concurrency metrics follow this '
+    +'scope. Source-native ASRUN, FCT, and NCT record counts remain unchanged.</div>'
+    +'</section></details>',
+  );
+  const move=(target,...ids)=>{
+    for(const id of ids){
+      const label=$(id+'Toggle')?.closest('.filter-label');
+      if(label)$(target).append(label);
+    }
+  };
+  move('globalFastFilters','fastPlatform','fastChannel');
+  move('globalStreamFilters','streamChannel');
+  move('globalAmagiFilters','amagiPlatform','amagiChannel');
+  move('globalYoutubeFilters','youtubeChannel');
+  if(window.matchMedia('(max-width: 680px)').matches){
+    $('globalAudienceDetails').open=false;
+  }
+}
+function selectedYoutubeAudienceChannels(){
+  const menu=$('youtubeChannelMenu');
+  if(!menu)return new Set();
+  return selectedMulti('youtubeChannel');
+}
 youtubeDeliveryDetails=function(event){
   const youtube=DATA.youtube||{},key=youtubeMinuteKey(event.on_air_start_ist);
   if(!dashboardSourceLoaded('youtube'))return {
@@ -4876,14 +5336,21 @@ youtubeDeliveryDetails=function(event){
     live_videos:0,
     video_ids:'',
     video_titles:'',
-    scope:'India TV YouTube source is loading',
+    scope:'Selected YouTube channels are loading',
   };
-  if(!youtubeDeliveryMinuteIndex){
+  const channels=selectedYoutubeAudienceChannels();
+  if(!channels.size)return {
+    value:'0',total:0,live_videos:0,video_ids:'',video_titles:'',
+    scope:'No YouTube channels selected',
+  };
+  const selectionKey=[...channels].sort().join('\u0000');
+  if(!(youtubeDeliveryMinuteIndex instanceof Map)){
+    youtubeDeliveryMinuteIndex=new Map();
+  }
+  if(!youtubeDeliveryMinuteIndex.has(selectionKey)){
     const totals=new Map(),videos=new Map();
     for(const row of youtube.video_minute||[]){
-      // Combined ASRUN/FCT reporting is for India TV only. Keep the independent
-      // YouTube analysis section multi-channel, but never blend its other channels here.
-      if(String(row.youtube_channel||'').trim()!=='India TV')continue;
+      if(!channels.has(String(row.youtube_channel||'Unknown / NA')))continue;
       const minuteKey=youtubeMinuteKey(row.timestamp_ist);
       totals.set(
         minuteKey,
@@ -4893,73 +5360,61 @@ youtubeDeliveryDetails=function(event){
       list.push(row);
       videos.set(minuteKey,list);
     }
-    youtubeDeliveryMinuteIndex={totals,videos};
+    youtubeDeliveryMinuteIndex.set(selectionKey,{totals,videos});
   }
-  const hasMinute=youtubeDeliveryMinuteIndex.totals.has(key);
-  const videoRows=youtubeDeliveryMinuteIndex.videos.get(key)||[];
+  const index=youtubeDeliveryMinuteIndex.get(selectionKey);
+  const hasMinute=index.totals.has(key);
+  const videoRows=index.videos.get(key)||[];
+  const scope=[...channels].sort().join(' | ');
   if(!hasMinute)return {
-    value:'No India TV YouTube data',total:null,live_videos:0,video_ids:'',
-    video_titles:'',scope:'India TV YouTube channel at the on-air minute',
+    value:'No selected YouTube data',total:null,live_videos:0,video_ids:'',
+    video_titles:'',scope,
   };
   const videoIds=[...new Set(videoRows.map(row=>String(row.video_id||'')).filter(Boolean))];
   const titles=[...new Set(videoRows.map(row=>
     youtubeVideoTitle(youtube,row.video_id,row.log_date)).filter(Boolean))];
-  const total=Number(youtubeDeliveryMinuteIndex.totals.get(key)||0);
+  const total=Number(index.totals.get(key)||0);
   return {
     value:fmt(total),
     total,
     live_videos:videoIds.length,
     video_ids:videoIds.join(' | '),
     video_titles:titles.join(' | '),
-    scope:'India TV YouTube channel at the on-air minute',
+    scope,
   };
 };
-function applyIndiaTvYoutubeAggregateLabels(){
+youtubeFiveMinuteValue=function(event){
+  return youtubeDeliveryDetails(event);
+};
+function applyYoutubeAggregateLabels(){
   const combined=document.querySelector('.combined-panel');
   if(combined){
     const subtitle=combined.querySelector('.panel-head small');
     const column=combined.querySelector('.youtube-col');
-    if(subtitle)subtitle.textContent='FAST + STREAM selected 5-minute concurrency | Amagi actual 5-minute concurrency | India TV YouTube minute concurrency';
+    if(subtitle)subtitle.textContent='FAST + STREAM selected 5-minute concurrency | Amagi actual 5-minute concurrency | selected YouTube channel minute concurrency';
     if(column){
-      column.textContent='INDIA TV YOUTUBE';
-      column.title='India TV YouTube minute concurrency';
+      column.textContent='YOUTUBE';
+      column.title='Selected YouTube channel minute concurrency';
     }
   }
   const fct=document.querySelector('.fct-audience-panel');
   if(fct){
     const subtitle=fct.querySelector('.panel-head small');
     const column=fct.querySelector('.youtube-col');
-    if(subtitle)subtitle.textContent='FCT-selected occurrences | FAST + STREAM + AMAGI 5-minute concurrency | India TV YouTube minute concurrency';
+    if(subtitle)subtitle.textContent='FCT-selected occurrences | FAST + STREAM + AMAGI 5-minute concurrency | selected YouTube channel minute concurrency';
     if(column){
-      column.textContent='INDIA TV YOUTUBE';
-      column.title='India TV YouTube minute concurrency';
+      column.textContent='YOUTUBE';
+      column.title='Selected YouTube channel minute concurrency';
     }
   }
 }
-const asrunDownloadCsv=downloadCsv;
-downloadCsv=function(filename,header,rows){
-  if(
-    String(filename).startsWith('asrun_all_delivered_events_')
-    ||String(filename).startsWith('fct_audience_context_')
-  ){
-    const labelMap={
-      'YouTube Scope':'India TV YouTube Scope',
-      'YouTube Minute Concurrency':'India TV YouTube Minute Concurrency',
-      'YouTube Active Live Videos':'India TV YouTube Active Live Videos',
-      'YouTube Active Video IDs':'India TV YouTube Active Video IDs',
-      'YouTube Active Video Titles':'India TV YouTube Active Video Titles',
-    };
-    header=header.map(label=>labelMap[label]||label);
-  }
-  return asrunDownloadCsv(filename,header,rows);
-};
-queueMicrotask(applyIndiaTvYoutubeAggregateLabels);
+queueMicrotask(applyYoutubeAggregateLabels);
 function selectedYoutubeRows(){
   const youtube=DATA.youtube||{},from=$('youtubeFrom').value,to=$('youtubeTo').value;
   if(youtubeDateMode==='follow'&&!youtubeDateOverlap)return [];
   return youtubeSelectedVideoMinuteRows(youtube,from,to);
 }
-function renderScopeValidation(){ensureScopePanel();const asrunTrue=sourceBounds(DATA.events||[],'on_air_start_ist','on_air_end_ist'),asrunUsed=sourceBounds(filtered(),'on_air_start_ist','on_air_end_ist'),fastTrue=sourceBounds((DATA.viewer_minute||[]).filter(row=>row.source==='fast'),'minute_ist'),fastUsed=selectedViewerRows('fast'),streamTrue=sourceBounds((DATA.viewer_minute||[]).filter(row=>row.source==='stream'),'minute_ist'),streamUsed=selectedViewerRows('stream'),amagiTrue=sourceBounds(AMAGI.minute||[],'minute_ist'),amagiUsed=selectedAmagiRows(),fctTrue=FCT.true_start&&FCT.true_end?{start:FCT.true_start,end:FCT.true_end}:null,fctUsed=selectedFctRows(),youtube=DATA.youtube||{},youtubeTrue={start:youtube.true_start||'',end:youtube.true_end||''},youtubeUsed=selectedYoutubeRows(),rows=[['ASRUN delivered ad events',asrunTrue,asrunUsed,filtered().length,'Date, ad type, ad ID, creative title'],['FAST fixed 5-minute audience buckets',fastTrue,sourceBounds(fastUsed,'minute_ist'),fastUsed.length,'ASRUN date + FAST platform/channel'],['STREAM fixed 5-minute audience buckets',streamTrue,sourceBounds(streamUsed,'minute_ist'),streamUsed.length,'ASRUN date + STREAM channel'],['AMAGI actual 5-minute audience buckets',amagiTrue,sourceBounds(amagiUsed,'minute_ist'),amagiUsed.length,'ASRUN date + AMAGI platform/channel'],['FCT monitored ad occurrences',fctTrue,sourceBounds(fctUsed,'event_ist'),fctUsed.length,'Independent FCT date + class/feed/language/brand/caption/program/category/company'],['YouTube live audience',youtubeTrue.start&&youtubeTrue.end?youtubeTrue:null,sourceBounds(youtubeUsed,'timestamp_ist'),youtubeUsed.length,'Independent YouTube date + video filter']];$('dataScopeRows').innerHTML=rows.map(row=>'<tr><td><strong>'+esc(row[0])+'</strong></td><td>'+esc(scopeRangeText(row[1]))+'</td><td>'+esc(scopeRangeText(row[2]))+'</td><td>'+fmt(row[3])+'</td><td class="scope-muted">'+esc(row[4])+'</td></tr>').join('');}
+function renderScopeValidation(){ensureScopePanel();const asrunTrue=sourceBounds(DATA.events||[],'on_air_start_ist','on_air_end_ist'),asrunUsed=sourceBounds(filtered(),'on_air_start_ist','on_air_end_ist'),fastTrue=sourceBounds((DATA.viewer_minute||[]).filter(row=>row.source==='fast'),'minute_ist'),fastUsed=selectedViewerRows('fast'),streamTrue=sourceBounds((DATA.viewer_minute||[]).filter(row=>row.source==='stream'),'minute_ist'),streamUsed=selectedViewerRows('stream'),amagiTrue=sourceBounds(AMAGI.minute||[],'minute_ist'),amagiUsed=selectedAmagiRows(),fctTrue=FCT.true_start&&FCT.true_end?{start:FCT.true_start,end:FCT.true_end}:null,fctUsed=selectedFctRows(),youtube=DATA.youtube||{},youtubeTrue={start:youtube.true_start||'',end:youtube.true_end||''},youtubeUsed=selectedYoutubeRows(),rows=[['ASRUN delivered ad events',asrunTrue,asrunUsed,filtered().length,'Date, ad type, ad ID, creative title'],['FAST fixed 5-minute audience buckets',fastTrue,sourceBounds(fastUsed,'minute_ist'),fastUsed.length,'ASRUN date + FAST platform/channel'],['STREAM fixed 5-minute audience buckets',streamTrue,sourceBounds(streamUsed,'minute_ist'),streamUsed.length,'ASRUN date + STREAM channel'],['AMAGI actual 5-minute audience buckets',amagiTrue,sourceBounds(amagiUsed,'minute_ist'),amagiUsed.length,'ASRUN date + AMAGI platform/channel'],['FCT monitored ad occurrences',fctTrue,sourceBounds(fctUsed,'event_ist'),fctUsed.length,'Independent FCT date + all selected FCT dimensions'],['YouTube live audience',youtubeTrue.start&&youtubeTrue.end?youtubeTrue:null,sourceBounds(youtubeUsed,'timestamp_ist'),youtubeUsed.length,'Independent YouTube date + video filter']];$('dataScopeRows').innerHTML=rows.map(row=>'<tr><td><strong>'+esc(row[0])+'</strong></td><td>'+esc(scopeRangeText(row[1]))+'</td><td>'+esc(scopeRangeText(row[2]))+'</td><td>'+fmt(row[3])+'</td><td class="scope-muted">'+esc(row[4])+'</td></tr>').join('');}
 const NCT=DATA.nct||{};
 let nctPayload=null;
 let nctLoadPromise=null;
@@ -4989,8 +5444,15 @@ let nctSegmentRowsCache=[];
 const NCT_CONTEXT_LIMIT=15;
 let nctContextExpanded=false;
 let nctContextRowsCache=[];
+const NCT_STORY_SOURCE_FILTER_IDS=['nctYoutubeVideo'];
+function resetNctAudienceCaches(){
+  nctAudienceStateCache={key:null,value:null};
+  nctStoryAudienceCache={key:null,value:null};
+}
 function preserveNctAllSelections(){
-  for(const id of ['nctChannel','nctProgram','nctGenre','nctGeo']){
+  for(const id of [
+    'nctChannel','nctProgram','nctGenre','nctGeo',...NCT_STORY_SOURCE_FILTER_IDS,
+  ]){
     const menu=$(id+'Menu');
     if(!menu)continue;
     const inputs=[...menu.querySelectorAll('input[data-value]')];
@@ -5139,14 +5601,31 @@ function ensureNctPanel(){
     +'<div class="nct-rank-card"><div class="nct-rank-head"><h3>Story Geographies</h3><button class="nct-rank-toggle" id="nctGeoExpand" type="button">Expand All</button></div><div class="nct-rank-list" id="nctGeoRanks"></div></div>'
     +'</div></div>'
     +'<div class="nct-story-audience nct-rank-card">'
-    +'<div class="nct-rank-head"><div><h3>Top Stories</h3>'
-    +'<small>Average audience at matching story clip starts using the selected audience-source filters</small></div>'
-    +'<div class="panel-actions"><button id="exportNctStoryAudienceCsv" type="button">Export CSV</button>'
+    +'<div class="nct-rank-head"><div><h3>Story Performance</h3>'
+    +'<small>Interval-weighted viewer delivery and airtime efficiency for the current filters</small></div>'
+    +'<div class="panel-actions nct-story-performance-controls">'
+    +'<label class="filter-label">Audience basis<select id="nctStoryAudienceBasis">'
+    +'<option value="combined" selected>Combined sources</option><option value="fast">FAST</option>'
+    +'<option value="stream">STREAM</option><option value="amagi">AMAGI</option>'
+    +'<option value="youtube">YouTube</option></select></label>'
+    +'<label class="filter-label">Rank by<select id="nctStoryRankBy">'
+    +'<option value="viewerHours" selected>Viewer Hours</option>'
+    +'<option value="ama">Average Minute Audience</option>'
+    +'<option value="performanceIndex">Performance Index</option>'
+    +'<option value="viewingShare">Viewing Share</option><option value="seconds">Monitored Time</option>'
+    +'</select></label><button id="exportNctStoryAudienceCsv" type="button">Export CSV</button>'
     +'<button class="nct-rank-toggle" id="nctStoryExpand" type="button">Expand All</button></div></div>'
+    +'<div class="nct-story-source-filters" id="nctStorySourceFilters">'
+    +'<div class="nct-story-source-group" data-nct-story-source="youtube">'
+    +'<label class="filter-label">YouTube video drilldown<span class="multi-select">'
+    +'<button id="nctYoutubeVideoToggle" class="multi-toggle" type="button">All videos</button>'
+    +'<span id="nctYoutubeVideoMenu" class="multi-menu"></span></span></label></div>'
+    +'<div class="nct-story-source-note" id="nctStorySourceNote"></div></div>'
     +'<div class="nct-story-audience-table" id="nctStoryTable">'
     +'<div class="nct-story-audience-columns"><span>Story</span><span>Monitored</span>'
-    +'<span>Clips</span><span>FAST</span><span>STREAM</span><span>AMAGI</span>'
-    +'<span>India TV YouTube</span><span>Combined</span></div>'
+    +'<span>Clips</span><span>Viewer Hours</span><span>AMA</span>'
+    +'<span>Viewing Share</span><span>Airtime Share</span>'
+    +'<span>Performance Index</span><span>Coverage</span></div>'
     +'<div class="nct-story-audience-list" id="nctStoryRanks"></div></div>'
     +'<div class="nct-preview-note nct-story-audience-note" '
     +'id="nctStoryAudienceNote"></div></div>'
@@ -5209,6 +5688,13 @@ function ensureNctPanel(){
     nctStoryAudienceExpanded=!nctStoryAudienceExpanded;
     renderNctStoryAudience(nctFilteredRows());
   });
+  for(const id of ['nctStoryAudienceBasis','nctStoryRankBy']){
+    $(id).addEventListener('change',()=>{
+      if(id==='nctStoryAudienceBasis')updateNctStorySourceControls();
+      renderNctStoryAudience(nctFilteredRows());
+      updateResetState();
+    });
+  }
   $('nctSegmentExpand').addEventListener('click',toggleNctSegments);
   $('nctSegmentTable').addEventListener('scroll',event=>{
     const list=event.currentTarget;
@@ -5346,6 +5832,93 @@ function wrapNctOptionLabels(id){
     label.appendChild(span);
   }
 }
+function resetSemanticAllSelection(id){
+  const menu=$(id+'Menu');
+  if(!menu)return;
+  const inputs=[...menu.querySelectorAll('input[data-value]')];
+  if(inputs.length&&inputs.every(input=>input.checked)){
+    menu.innerHTML='';
+    multiInitialized.delete(id);
+  }
+}
+function nctStorySourceDateRows(rows){
+  const range=nctEffectiveRange();
+  if(!range.valid)return [];
+  return rows.filter(row=>
+    String(row.log_date)>=range.start&&String(row.log_date)<=range.end
+  );
+}
+function updateNctStorySourceControls(){
+  const basis=nctStoryAudienceBasis();
+  for(const group of document.querySelectorAll('[data-nct-story-source]')){
+    group.hidden=!['combined','youtube'].includes(basis);
+  }
+  const note=$('nctStorySourceNote');
+  if(note){
+    note.textContent='Audience platform/channel scope comes from the fixed header. '
+      +(basis==='combined'
+        ?'Combined source totals are not cross-source deduplicated.'
+        :nctStoryBasisLabel(basis)+' uses its matching header filters.')
+      +(groupVisibleForNctYoutube(basis)
+        ?' The YouTube video control is an optional local drilldown.':'');
+  }
+}
+function groupVisibleForNctYoutube(basis){
+  return basis==='combined'||basis==='youtube';
+}
+function nctStorySourceSelectionChanged(dependentId=''){
+  if(dependentId)resetSemanticAllSelection(dependentId);
+  resetNctAudienceCaches();
+  refreshNctStorySourceFilters();
+  if(nctPayload)renderNctStoryAudience(nctFilteredRows());
+  updateResetState();
+}
+function labelNctYoutubeVideoOptions(titleById){
+  wrapNctOptionLabels('nctYoutubeVideo');
+  const menu=$('nctYoutubeVideoMenu');
+  if(!menu)return;
+  for(const input of menu.querySelectorAll('input[data-value]')){
+    const label=input.closest('.multi-option'),text=label?.querySelector('.nct-option-label');
+    if(text){
+      const title=titleById.get(String(input.dataset.value))||String(input.dataset.value);
+      text.textContent=title+' · '+String(input.dataset.value);
+    }
+  }
+  const selected=[...selectedMulti('nctYoutubeVideo')];
+  const total=menu.querySelectorAll('input[data-value]').length;
+  if(selected.length===total&&total)$('nctYoutubeVideoToggle').textContent='All videos';
+  else if(selected.length===1){
+    $('nctYoutubeVideoToggle').textContent=titleById.get(selected[0])||selected[0];
+  }else $('nctYoutubeVideoToggle').textContent=selected.length+' videos selected';
+  applyMultiSearch('nctYoutubeVideo');
+}
+function refreshNctStorySourceFilters(){
+  if(!$('nctStorySourceFilters'))return;
+  const youtube=nctStorySourceDateRows((DATA.youtube||{}).video_minute||[]);
+  const selectedYoutubeChannels=selectedMulti('youtubeChannel');
+  const selectedYoutubeRows=youtube.filter(row=>selectedYoutubeChannels.has(
+    String(row.youtube_channel||'Unknown / NA')
+  ));
+  const videoIds=[...new Set(selectedYoutubeRows
+    .map(row=>String(row.video_id||'')).filter(Boolean))]
+    .sort();
+  const titleById=new Map();
+  for(const row of ((DATA.youtube||{}).video_daily||[])){
+    const channel=String(row.youtube_channel||'Unknown / NA');
+    if(!selectedYoutubeChannels.has(channel))continue;
+    const id=String(row.video_id||'');
+    if(id&&String(row.title||'').trim()){
+      titleById.set(id,channel+' Â· '+String(row.title).trim());
+    }
+  }
+  buildMulti(
+    'nctYoutubeVideo',videoIds,'videos',videoIds,
+    ()=>nctStorySourceSelectionChanged(),
+  );
+  for(const id of NCT_STORY_SOURCE_FILTER_IDS)wrapNctOptionLabels(id);
+  labelNctYoutubeVideoOptions(titleById);
+  updateNctStorySourceControls();
+}
 function refreshNctFilters(){
   if(!nctPayload?.available)return;
   const base=nctDateRows();
@@ -5360,6 +5933,7 @@ function refreshNctFilters(){
     });
     wrapNctOptionLabels(id);
   }
+  refreshNctStorySourceFilters();
   updateNctHelp();
 }
 function nctFilteredRows(){
@@ -5402,7 +5976,74 @@ function nctAudienceSelectionKey(range){
     [...selectedMulti('streamChannel')].sort().join('|'),
     [...selectedMulti('amagiPlatform')].sort().join('|'),
     [...selectedMulti('amagiChannel')].sort().join('|'),
+    [...selectedMulti('youtubeChannel')].sort().join('|'),
+    [...selectedMulti('nctYoutubeVideo')].sort().join('|'),
   ].join('\u0000');
+}
+function nctLowerBound(values,target){
+  let low=0,high=values.length;
+  while(low<high){
+    const middle=(low+high)>>1;
+    if(values[middle]<target)low=middle+1;
+    else high=middle;
+  }
+  return low;
+}
+function nctPrepareAudienceState(state){
+  const entries=[...state.map.entries()].map(([key,value])=>[
+    naiveMillis(String(key).replace(' ','T')),
+    Number(value||0),
+  ]).filter(entry=>Number.isFinite(entry[0])).sort((a,b)=>a[0]-b[0]);
+  const times=[],values=[],prefixValues=[0],prefixCoverage=[0],valueByMillis=new Map();
+  for(const [time,value] of entries){
+    times.push(time);
+    values.push(value);
+    valueByMillis.set(time,value);
+    prefixValues.push(prefixValues.at(-1)+value);
+    prefixCoverage.push(prefixCoverage.at(-1)+1);
+  }
+  return {...state,times,values,prefixValues,prefixCoverage,valueByMillis};
+}
+function nctAudienceRangeSum(state,startMinute,endMinute){
+  if(!state.times.length||startMinute>=endMinute)return {value:0,covered:0};
+  const startIndex=nctLowerBound(state.times,startMinute);
+  const endIndex=nctLowerBound(state.times,endMinute);
+  return {
+    value:state.prefixValues[endIndex]-state.prefixValues[startIndex],
+    covered:state.prefixCoverage[endIndex]-state.prefixCoverage[startIndex],
+  };
+}
+function nctAudienceInterval(state,startMillis,endMillis){
+  if(!state?.times?.length||!Number.isFinite(startMillis)||!Number.isFinite(endMillis)
+    ||endMillis<=startMillis){
+    return {viewerMinutes:0,coveredMinutes:0};
+  }
+  const minute=60000,startMinute=Math.floor(startMillis/minute)*minute;
+  const endMinute=Math.floor(endMillis/minute)*minute;
+  if(startMinute===endMinute){
+    const fraction=(endMillis-startMillis)/minute;
+    return state.valueByMillis.has(startMinute)
+      ?{
+        viewerMinutes:Number(state.valueByMillis.get(startMinute)||0)*fraction,
+        coveredMinutes:fraction,
+      }
+      :{viewerMinutes:0,coveredMinutes:0};
+  }
+  let viewerMinutes=0,coveredMinutes=0;
+  const firstFraction=(startMinute+minute-startMillis)/minute;
+  if(state.valueByMillis.has(startMinute)){
+    viewerMinutes+=Number(state.valueByMillis.get(startMinute)||0)*firstFraction;
+    coveredMinutes+=firstFraction;
+  }
+  const middle=nctAudienceRangeSum(state,startMinute+minute,endMinute);
+  viewerMinutes+=middle.value;
+  coveredMinutes+=middle.covered;
+  const finalFraction=(endMillis-endMinute)/minute;
+  if(finalFraction>0&&state.valueByMillis.has(endMinute)){
+    viewerMinutes+=Number(state.valueByMillis.get(endMinute)||0)*finalFraction;
+    coveredMinutes+=finalFraction;
+  }
+  return {viewerMinutes,coveredMinutes};
 }
 function nctViewerAudienceMinuteMap(source,range){
   const channelId=source==='fast'?'fastChannel':'streamChannel';
@@ -5441,22 +6082,42 @@ function nctAmagiAudienceMinuteMap(range){
   }
   return {map,bounds:boundStart&&boundEnd?{start:boundStart,end:boundEnd}:null};
 }
+function nctYoutubeAudienceMinuteMap(range){
+  const map=new Map(),channels=selectedMulti('youtubeChannel');
+  const allChannels=multiSelectionIsAll('youtubeChannel');
+  const videos=selectedMulti('nctYoutubeVideo');
+  const allVideos=multiSelectionIsAll('nctYoutubeVideo');
+  for(const row of ((DATA.youtube||{}).video_minute||[])){
+    if(!allChannels&&!channels.has(String(row.youtube_channel||'Unknown / NA')))continue;
+    if(String(row.log_date)<range.start||String(row.log_date)>range.end)continue;
+    if(!allVideos&&!videos.has(String(row.video_id||'')))continue;
+    const key=minuteKey(row.timestamp_ist);
+    map.set(key,(map.get(key)||0)+Number(row.concurrent_viewers||0));
+  }
+  return {map,bounds:map.size?{start:[...map.keys()][0],end:[...map.keys()].at(-1)}:null};
+}
+function nctCombinedAudienceState(states){
+  const map=new Map();
+  for(const source of ['fast','stream','amagi','youtube']){
+    for(const [key,value] of states[source].map){
+      map.set(key,(map.get(key)||0)+Number(value||0));
+    }
+  }
+  return nctPrepareAudienceState({map,bounds:null});
+}
 function nctAudienceStates(){
   const range=nctEffectiveRange(),key=nctAudienceSelectionKey(range);
   if(nctAudienceStateCache.key===key&&nctAudienceStateCache.value){
     return nctAudienceStateCache.value;
   }
-  const value={
-    key,
-    fast:nctViewerAudienceMinuteMap('fast',range),
-    stream:nctViewerAudienceMinuteMap('stream',range),
-    amagi:nctAmagiAudienceMinuteMap(range),
-  };
+  const value={key};
+  value.fast=nctPrepareAudienceState(nctViewerAudienceMinuteMap('fast',range));
+  value.stream=nctPrepareAudienceState(nctViewerAudienceMinuteMap('stream',range));
+  value.amagi=nctPrepareAudienceState(nctAmagiAudienceMinuteMap(range));
+  value.youtube=nctPrepareAudienceState(nctYoutubeAudienceMinuteMap(range));
+  value.combined=nctCombinedAudienceState(value);
   nctAudienceStateCache={key,value};
   return value;
-}
-function nctAudienceAverage(total,count){
-  return count?Number((total/count).toFixed(2)):null;
 }
 function nctStoryAudienceRows(rows){
   const states=nctAudienceStates();
@@ -5464,7 +6125,8 @@ function nctStoryAudienceRows(rows){
   if(nctStoryAudienceCache.key===cacheKey&&nctStoryAudienceCache.value){
     return nctStoryAudienceCache.value;
   }
-  const stories=new Map(),minuteMetrics=new Map();
+  const sources=['fast','stream','amagi','youtube','combined'];
+  const stories=new Map();
   for(const row of rows){
     const story=nctText(row,'story');
     if(!stories.has(story)){
@@ -5472,92 +6134,123 @@ function nctStoryAudienceRows(rows){
         story,
         seconds:0,
         clips:0,
-        fastTotal:0,
-        fastCount:0,
-        streamTotal:0,
-        streamCount:0,
-        amagiTotal:0,
-        amagiCount:0,
-        youtubeTotal:0,
-        youtubeCount:0,
-        combinedTotal:0,
-        combinedCount:0,
+        metrics:Object.fromEntries(sources.map(source=>[
+          source,{viewerMinutes:0,coveredMinutes:0},
+        ])),
       });
     }
     const entry=stories.get(story);
-    entry.seconds+=Number(row.duration_seconds||0);
+    const start=naiveMillis(String(row.clip_start_ist||'').replace(' ','T'));
+    let end=naiveMillis(String(row.clip_end_ist||'').replace(' ','T'));
+    const fallbackSeconds=Math.max(0,Number(row.duration_seconds||0));
+    if(!Number.isFinite(end)||end<=start)end=start+(fallbackSeconds*1000);
+    const durationSeconds=Number.isFinite(start)&&Number.isFinite(end)&&end>start
+      ?(end-start)/1000
+      :fallbackSeconds;
+    if(!Number.isFinite(start)||!Number.isFinite(end)||durationSeconds<=0)continue;
+    entry.seconds+=durationSeconds;
     entry.clips+=1;
-    const anchorValue=String(row.clip_start_ist||'');
-    const metricKey=minuteKey(anchorValue);
-    if(!minuteMetrics.has(metricKey)){
-      const anchor={on_air_start_ist:anchorValue};
-      const fast=fctCoveredAudienceValue(anchor,states.fast);
-      const stream=fctCoveredAudienceValue(anchor,states.stream);
-      const amagi=fctCoveredAudienceValue(anchor,states.amagi);
-      const youtube=youtubeFiveMinuteValue(anchor);
-      const available=[fast.total,stream.total,amagi.total,youtube.total]
-        .filter(value=>value!==null);
-      minuteMetrics.set(metricKey,{
-        fast,stream,amagi,youtube,
-        combined:available.length
-          ?available.reduce((sum,value)=>sum+Number(value),0)
-          :null,
-      });
-    }
-    const metrics=minuteMetrics.get(metricKey);
-    for(const source of ['fast','stream','amagi','youtube']){
-      const value=metrics[source].total;
-      if(value===null)continue;
-      entry[source+'Total']+=Number(value);
-      entry[source+'Count']+=1;
-    }
-    if(metrics.combined!==null){
-      entry.combinedTotal+=metrics.combined;
-      entry.combinedCount+=1;
+    for(const source of sources){
+      const interval=nctAudienceInterval(states[source],start,end);
+      entry.metrics[source].viewerMinutes+=interval.viewerMinutes;
+      entry.metrics[source].coveredMinutes+=interval.coveredMinutes;
     }
   }
-  const result=[...stories.values()].map(entry=>({
-    ...entry,
-    fast:nctAudienceAverage(entry.fastTotal,entry.fastCount),
-    stream:nctAudienceAverage(entry.streamTotal,entry.streamCount),
-    amagi:nctAudienceAverage(entry.amagiTotal,entry.amagiCount),
-    youtube:nctAudienceAverage(entry.youtubeTotal,entry.youtubeCount),
-    combined:nctAudienceAverage(entry.combinedTotal,entry.combinedCount),
-  })).sort((a,b)=>b.seconds-a.seconds||a.story.localeCompare(b.story));
+  const result=[...stories.values()];
+  const totalSeconds=result.reduce((sum,entry)=>sum+entry.seconds,0);
+  const totalViewerMinutes=Object.fromEntries(sources.map(source=>[
+    source,
+    result.reduce((sum,entry)=>sum+entry.metrics[source].viewerMinutes,0),
+  ]));
+  for(const entry of result){
+    entry.airtimeShare=totalSeconds?entry.seconds/totalSeconds*100:0;
+    for(const source of sources){
+      const metric=entry.metrics[source];
+      metric.viewerHours=metric.viewerMinutes/60;
+      metric.ama=metric.coveredMinutes
+        ?metric.viewerMinutes/metric.coveredMinutes
+        :null;
+      metric.viewingShare=totalViewerMinutes[source]
+        ?metric.viewerMinutes/totalViewerMinutes[source]*100
+        :null;
+      metric.coverage=entry.seconds
+        ?Math.min(100,metric.coveredMinutes/(entry.seconds/60)*100)
+        :0;
+      metric.performanceIndex=metric.viewingShare!==null&&entry.airtimeShare
+        ?metric.viewingShare/entry.airtimeShare*100
+        :null;
+    }
+  }
   nctStoryAudienceCache={key:cacheKey,value:result};
   return result;
 }
-function nctStoryAudienceCell(label,value,count,clips){
-  const display=value===null?'Not available':fmt(value);
-  const className='audience-number'+(value===null?' audience-unavailable':'');
-  const title=value===null
-    ?'No source coverage at the selected story clip starts'
-    :'Average from '+fmt(count)+' of '+fmt(clips)+' matching story clips';
-  return '<span class="'+className+'" data-label="'+esc(label)+'" title="'+esc(title)+'">'
-    +esc(display)+'</span>';
+function nctStoryAudienceBasis(){
+  const value=$('nctStoryAudienceBasis')?.value||'combined';
+  return ['fast','stream','amagi','youtube','combined'].includes(value)
+    ?value:'combined';
+}
+function nctStoryBasisLabel(source){
+  return {
+    fast:'FAST',stream:'STREAM',amagi:'AMAGI',
+    youtube:'YouTube',combined:'Combined sources',
+  }[source]||'Combined sources';
+}
+function nctStoryRankMetric(){
+  const value=$('nctStoryRankBy')?.value||'viewerHours';
+  return ['performanceIndex','viewerHours','ama','viewingShare','seconds'].includes(value)
+    ?value:'viewerHours';
+}
+function nctStoryRankValue(entry,basis,metric){
+  const value=metric==='seconds'?entry.seconds:entry.metrics[basis][metric];
+  return value===null||!Number.isFinite(Number(value))?Number.NEGATIVE_INFINITY:Number(value);
+}
+function nctSortedStoryAudienceRows(rows){
+  const basis=nctStoryAudienceBasis(),metric=nctStoryRankMetric();
+  return [...rows].sort((a,b)=>
+    nctStoryRankValue(b,basis,metric)-nctStoryRankValue(a,basis,metric)
+    ||b.metrics[basis].viewerMinutes-a.metrics[basis].viewerMinutes
+    ||b.seconds-a.seconds
+    ||a.story.localeCompare(b.story)
+  );
+}
+function nctPerformanceCell(label,value,suffix='',digits=2,title=''){
+  const available=value!==null&&Number.isFinite(Number(value));
+  const display=available
+    ?new Intl.NumberFormat('en-IN',{maximumFractionDigits:digits}).format(Number(value))+suffix
+    :'Not available';
+  return '<span class="audience-number'+(available?'':' audience-unavailable')
+    +'" data-label="'+esc(label)+'" title="'+esc(title)+'">'+esc(display)+'</span>';
 }
 function renderNctStoryAudience(rows){
-  const ranked=nctStoryAudienceRows(rows);
+  const basis=nctStoryAudienceBasis(),basisLabel=nctStoryBasisLabel(basis);
+  const ranked=nctSortedStoryAudienceRows(nctStoryAudienceRows(rows));
   const visible=nctStoryAudienceExpanded?ranked:ranked.slice(0,NCT_RANK_LIMIT);
   const list=$('nctStoryRanks'),table=$('nctStoryTable');
-  list.innerHTML=visible.length?visible.map((entry,index)=>
-    '<div class="nct-story-audience-row">'
-    +'<span class="story-label" data-label="Story"><strong>#'+(index+1)+' '
-    +esc(entry.story)+'</strong><small>Audience average at '+fmt(entry.clips)
-    +' matching clip start'+(entry.clips===1?'':'s')+'</small></span>'
-    +'<span data-label="Monitored">'+esc(nctHours(entry.seconds))+'</span>'
-    +'<span data-label="Clips">'+fmt(entry.clips)+'</span>'
-    +nctStoryAudienceCell('FAST',entry.fast,entry.fastCount,entry.clips)
-    +nctStoryAudienceCell('STREAM',entry.stream,entry.streamCount,entry.clips)
-    +nctStoryAudienceCell('AMAGI',entry.amagi,entry.amagiCount,entry.clips)
-    +nctStoryAudienceCell(
-      'India TV YouTube',entry.youtube,entry.youtubeCount,entry.clips
-    )
-    +nctStoryAudienceCell(
-      'Combined',entry.combined,entry.combinedCount,entry.clips
-    )
-    +'</div>'
-  ).join(''):'<div class="audience-empty">No matching stories.</div>';
+  list.innerHTML=visible.length?visible.map((entry,index)=>{
+    const metric=entry.metrics[basis];
+    const metricTitle='Based on '+basisLabel+' minute-level audience overlapping '
+      +fmt(entry.clips)+' story clip interval'+(entry.clips===1?'':'s');
+    const lowBase=entry.seconds<300?' · low time base (<5 min)':'';
+    return '<div class="nct-story-audience-row">'
+      +'<span class="story-label" data-label="Story"><strong>#'+(index+1)+' '
+      +esc(entry.story)+'</strong><small>'+esc(basisLabel)
+      +' · full clip-interval audience measurement'+esc(lowBase)+'</small></span>'
+      +'<span data-label="Monitored">'+esc(nctHours(entry.seconds))+'</span>'
+      +'<span data-label="Clips">'+fmt(entry.clips)+'</span>'
+      +nctPerformanceCell('Viewer Hours',metric.viewerHours,' h',2,metricTitle)
+      +nctPerformanceCell('AMA',metric.ama,'',2,'Average Minute Audience · '+metricTitle)
+      +nctPerformanceCell('Viewing Share',metric.viewingShare,'%',2,metricTitle)
+      +nctPerformanceCell('Airtime Share',entry.airtimeShare,'%',2,'Share of selected monitored duration')
+      +nctPerformanceCell(
+        'Performance Index',metric.performanceIndex,'',1,
+        'Viewing Share ÷ Airtime Share × 100; above 100 overperforms airtime',
+      )
+      +nctPerformanceCell(
+        'Coverage',metric.coverage,'%',1,
+        'Percent of monitored story duration covered by '+basisLabel+' audience data',
+      )
+      +'</div>';
+  }).join(''):'<div class="audience-empty">No matching stories.</div>';
   table.classList.toggle('expandable',ranked.length>NCT_RANK_LIMIT);
   table.classList.toggle('expanded',nctStoryAudienceExpanded);
   if(!nctStoryAudienceExpanded)table.scrollTop=0;
@@ -5567,9 +6260,11 @@ function renderNctStoryAudience(rows){
     ?'Show Top 15':'Expand All ('+fmt(ranked.length)+')';
   button.setAttribute('aria-expanded',String(nctStoryAudienceExpanded));
   $('nctStoryAudienceNote').textContent=ranked.length
-    ?'Ranked by monitored duration. FAST, STREAM, and AMAGI use fixed 5-minute '
-      +'concurrency; India TV YouTube uses minute concurrency. Averages exclude '
-      +'story clips outside each source data range.'
+    ?'Audience basis: '+basisLabel+'. Viewer Hours and AMA use every overlapping '
+      +'minute, weighted for partial minutes. Performance Index = Viewing Share ÷ '
+      +'Airtime Share × 100; above 100 overperforms its airtime. Combined sources '
+      +'are summed and are not cross-source deduplicated. Treat Performance Index '
+      +'as directional when monitored time is below 5 minutes.'
     :'No story audience observations match the current filters.';
 }
 function nctSegmentLine(row){
@@ -5779,25 +6474,58 @@ function exportNctCsv(){
   downloadCsv('nct_story_segments_'+range.start+'_to_'+range.end+'.csv',header,values);
 }
 function exportNctStoryAudienceCsv(){
-  const range=nctEffectiveRange(),rows=nctStoryAudienceRows(nctFilteredRows());
+  const range=nctEffectiveRange(),basis=nctStoryAudienceBasis();
+  const rankMetric=nctStoryRankMetric();
+  const rows=nctSortedStoryAudienceRows(nctStoryAudienceRows(nctFilteredRows()));
+  const selections=[
+    'fastPlatform','fastChannel','streamChannel','amagiPlatform','amagiChannel',
+    'youtubeChannel','nctYoutubeVideo',
+  ].map(id=>
+    [...selectedMulti(id)].sort().join(' | ')
+  );
   const header=[
-    'NCT Date From','NCT Date To','Story','Monitored Duration Seconds',
-    'Monitored Hours','Story Clip Count','Average FAST 5-Minute Concurrency',
-    'FAST Covered Clips','Average STREAM 5-Minute Concurrency',
-    'STREAM Covered Clips','Average AMAGI 5-Minute Concurrency',
-    'AMAGI Covered Clips','Average India TV YouTube Minute Concurrency',
-    'India TV YouTube Covered Clips','Average Combined Concurrency',
-    'Combined Covered Clips',
+    'NCT Date From','NCT Date To','Audience Basis','Rank Metric','Rank','Story',
+    'Selected FAST Platforms','Selected FAST Channels','Selected STREAM Channels',
+    'Selected AMAGI Platforms','Selected AMAGI Channels',
+    'Selected YouTube Channels','Selected YouTube Video IDs',
+    'Monitored Duration Seconds','Monitored Hours','Story Clip Count',
+    'Selected Viewer Minutes','Selected Viewer Hours','Selected Average Minute Audience',
+    'Selected Viewing Share Percent','Airtime Share Percent',
+    'Selected Performance Index','Selected Audience Coverage Percent',
+    'FAST Viewer Hours','FAST AMA','FAST Coverage Percent',
+    'STREAM Viewer Hours','STREAM AMA','STREAM Coverage Percent',
+    'AMAGI Viewer Hours','AMAGI AMA','AMAGI Coverage Percent',
+    'YouTube Viewer Hours','YouTube AMA',
+    'YouTube Coverage Percent','Combined Viewer Hours','Combined AMA',
+    'Combined Coverage Percent',
   ];
-  const values=rows.map(row=>[
-    range.start,range.end,row.story,row.seconds,
-    Number((row.seconds/3600).toFixed(4)),row.clips,
-    row.fast??'',row.fastCount,row.stream??'',row.streamCount,
-    row.amagi??'',row.amagiCount,row.youtube??'',row.youtubeCount,
-    row.combined??'',row.combinedCount,
-  ]);
+  const values=rows.map((row,index)=>{
+    const selected=row.metrics[basis];
+    const sourceValues=source=>{
+      const metric=row.metrics[source];
+      return [
+        Number(metric.viewerHours.toFixed(4)),
+        metric.ama===null?'':Number(metric.ama.toFixed(4)),
+        Number(metric.coverage.toFixed(4)),
+      ];
+    };
+    return [
+      range.start,range.end,nctStoryBasisLabel(basis),rankMetric,index+1,row.story,
+      ...selections,
+      Number(row.seconds.toFixed(3)),Number((row.seconds/3600).toFixed(4)),row.clips,
+      Number(selected.viewerMinutes.toFixed(4)),
+      Number(selected.viewerHours.toFixed(4)),
+      selected.ama===null?'':Number(selected.ama.toFixed(4)),
+      selected.viewingShare===null?'':Number(selected.viewingShare.toFixed(4)),
+      Number(row.airtimeShare.toFixed(4)),
+      selected.performanceIndex===null?'':Number(selected.performanceIndex.toFixed(4)),
+      Number(selected.coverage.toFixed(4)),
+      ...sourceValues('fast'),...sourceValues('stream'),...sourceValues('amagi'),
+      ...sourceValues('youtube'),...sourceValues('combined'),
+    ];
+  });
   downloadCsv(
-    'nct_top_stories_audience_'+range.start+'_to_'+range.end+'.csv',
+    'nct_story_performance_'+basis+'_'+range.start+'_to_'+range.end+'.csv',
     header,
     values,
   );
@@ -6001,6 +6729,8 @@ resetDashboardFilters=function(){
     nctStoryAudienceExpanded=false;
     nctSegmentsExpanded=false;
     nctContextExpanded=false;
+    $('nctStoryAudienceBasis').value='combined';
+    $('nctStoryRankBy').value='viewerHours';
     for(const kind of Object.keys(nctRankExpanded))nctRankExpanded[kind]=false;
     const bounds=nctBounds();
     $('nctFrom').value=bounds.start;
@@ -6009,11 +6739,14 @@ resetDashboardFilters=function(){
     nctSelectedStory='';
     $('nctStoryLookup').value='';
     updateNctStorySummary();
-    for(const id of ['nctChannel','nctProgram','nctGenre','nctGeo']){
+    for(const id of [
+      'nctChannel','nctProgram','nctGenre','nctGeo',...NCT_STORY_SOURCE_FILTER_IDS,
+    ]){
       const menu=$(id+'Menu');
       if(menu)menu.innerHTML='';
       multiInitialized.delete(id);
     }
+    resetNctAudienceCaches();
     const defaultContext=(NCT.channels||[]).includes('INDIA TV')
       ?'INDIA TV'
       :String((NCT.channels||[])[0]||'');
@@ -6023,7 +6756,7 @@ resetDashboardFilters=function(){
       $('nctContextChannel').value=defaultContext;
     }
     nctFilterCache={key:null,value:null};
-    if(nctPayload){refreshNctFilters();renderNct(false)}
+    if(nctPayload){refreshNctFilters();updateNctStorySourceControls();renderNct(false)}
   }
   renderYoutube();
   updateResetState();
@@ -6066,11 +6799,13 @@ async function loadAudienceDashboardData(){
   const alreadyLoaded=dashboardSourceLoaded('viewer')&&dashboardSourceLoaded('amagi');
   await loadDashboardSources(['viewer','amagi']);
   if(alreadyLoaded)return;
+  resetNctAudienceCaches();
   resetSourceMenus([
     'fastPlatform','fastChannel','streamChannel','amagiPlatform','amagiChannel',
   ]);
   refreshAudienceFilters();
   refreshAmagiFilters();
+  refreshNctStorySourceFilters();
   render();
 }
 async function loadFctDashboardData(){
@@ -6087,13 +6822,18 @@ async function loadYoutubeDashboardData(){
   const alreadyLoaded=dashboardSourceLoaded('youtube');
   await loadDashboardSource('youtube');
   if(alreadyLoaded)return;
-  resetSourceMenus(['youtubeChannel']);
+  resetNctAudienceCaches();
+  resetSourceMenus([
+    'youtubeChannel','nctYoutubeVideo',
+  ]);
   $('youtubeVideoMenu').innerHTML='';
   youtubeVideoMultiInitialized=false;
   youtubeVideoSelectAll=true;
   youtubeDeliveryMinuteIndex=null;
+  refreshNctStorySourceFilters();
   refreshYoutubeDateLimits();
   initializeYoutubeDates();
+  render();
   renderYoutube();
 }
 let activeDashboardPage='audience';
@@ -6145,11 +6885,10 @@ function ensureDashboardPages(){
   if(missing.length){
     throw new Error('Dashboard page sections are missing: '+missing.join(', '));
   }
-  $('dashboardPageAudience').append(
-    nodes.audience,
-    nodes.combined,
-    nodes.youtube,
-  );
+  // Source controls already live in the global header. Remove the three
+  // duplicate source event panels and keep only their consolidated result.
+  nodes.audience.remove();
+  $('dashboardPageAudience').append(nodes.combined,nodes.youtube);
   $('dashboardPageDelivery').append(
     nodes.kpis,
     nodes.rankings,
@@ -6270,7 +7009,7 @@ const asrunBaseRender=render;render=function(){if(youtubeDateMode==='follow')app
 renderYoutube=renderYoutubeChannelAware;
 const asrunBaseRenderYoutube=renderYoutube;
 renderYoutube=function(){asrunBaseRenderYoutube();renderScopeValidation();updateResetState();hideLoading();};
-ensurePeriodControls();ensureCreativeFilters();ensureYoutubeDateModeControls();ensureYoutubeChannelFilter();ensureYoutubeChartIntervalControls();ensureYoutubeChartExpand();refreshYoutubeDateLimits();initializeYoutubeDates();setYoutubeDateMode('independent',false);refreshDependentOptions();ensureAmagiPanel();ensureFctPanel();ensureNctPanel();ensureScopePanel();ensureDashboardPages();initializeNctLazyLoad();initializeDashboardSourceLoading();$('reset').onclick=resetDashboardFilters;
+ensurePeriodControls();ensureCreativeFilters();ensureYoutubeDateModeControls();ensureYoutubeChannelFilter();ensureYoutubeChartIntervalControls();ensureYoutubeChartExpand();refreshYoutubeDateLimits();initializeYoutubeDates();setYoutubeDateMode('independent',false);refreshDependentOptions();ensureAmagiPanel();ensureFctPanel();ensureNctPanel();ensureScopePanel();ensureGlobalAudienceFilters();ensureDashboardPages();initializeNctLazyLoad();initializeDashboardSourceLoading();$('reset').onclick=resetDashboardFilters;
 replaceDownloadAction('exportAllEvents',()=>runWithDashboardSources(
   [loadAudienceDashboardData,loadYoutubeDashboardData],exportAllEventsCsv
 ));

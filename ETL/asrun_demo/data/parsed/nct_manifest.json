@@ -16,6 +16,40 @@
     }
   },
   "file_metadata": {
+    "Detail_StoryTrack_Duration (2).CSV": {
+      "selected_channels": [
+        "AAJ TAK",
+        "ABP NEWS",
+        "INDIA TV",
+        "NDTV INDIA",
+        "NEWS18 INDIA",
+        "REPUBLIC BHARAT",
+        "TIMES NOW NAVBHARAT",
+        "TV9 BHARATVARSH",
+        "Z NEWS"
+      ],
+      "declared_start": "2026-04-01",
+      "declared_end": "2026-06-30",
+      "declared_start_time": "05:00:00",
+      "declared_end_time": "23:59:00",
+      "downloaded_on": "29/7/2026 17:24",
+      "source_rows": 314875,
+      "valid_rows": 314875,
+      "duplicate_rows": 0,
+      "actual_channels": [
+        "AAJ TAK",
+        "ABP News",
+        "INDIA TV",
+        "NDTV INDIA",
+        "NEWS18 INDIA",
+        "REPUBLIC BHARAT",
+        "TV9 BHARATVARSH",
+        "Z NEWS"
+      ],
+      "missing_selected_channels": [
+        "TIMES NOW NAVBHARAT"
+      ]
+    },
     "Detail_StoryTrack_Duration (1).CSV": {
       "selected_channels": [
         "AAJ TAK",
@@ -83,41 +117,7 @@
         "ABP NEWS",
         "TIMES NOW NAVBHARAT"
       ]
-    },
-    "Detail_StoryTrack_Duration (2).CSV": {
-      "selected_channels": [
-        "AAJ TAK",
-        "ABP NEWS",
-        "INDIA TV",
-        "NDTV INDIA",
-        "NEWS18 INDIA",
-        "REPUBLIC BHARAT",
-        "TIMES NOW NAVBHARAT",
-        "TV9 BHARATVARSH",
-        "Z NEWS"
-      ],
-      "declared_start": "2026-04-01",
-      "declared_end": "2026-06-30",
-      "declared_start_time": "05:00:00",
-      "declared_end_time": "23:59:00",
-      "downloaded_on": "29/7/2026 17:24",
-      "source_rows": 314875,
-      "valid_rows": 314875,
-      "duplicate_rows": 0,
-      "actual_channels": [
-        "AAJ TAK",
-        "ABP News",
-        "INDIA TV",
-        "NDTV INDIA",
-        "NEWS18 INDIA",
-        "REPUBLIC BHARAT",
-        "TV9 BHARATVARSH",
-        "Z NEWS"
-      ],
-      "missing_selected_channels": [
-        "TIMES NOW NAVBHARAT"
-      ]
     }
   },
-  "generated_at_ist": "2026-07-30T13:17:47.066688+05:30"
+  "generated_at_ist": "2026-07-30T17:46:20.834199+05:30"
 }

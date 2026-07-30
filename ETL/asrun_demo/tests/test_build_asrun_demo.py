@@ -483,7 +483,10 @@ def test_render_dashboard_groups_sections_into_three_pages(
     assert "$('dashboardPageAudience').append(" in html
     assert "$('dashboardPageDelivery').append(" in html
     assert "$('dashboardPageContent').append(nodes.nct,nodes.scope)" in html
-    assert "ensureScopePanel();ensureDashboardPages();initializeNctLazyLoad()" in html
+    assert (
+        "ensureScopePanel();ensureDashboardPages();"
+        "ensureGlobalAudienceFilters();initializeNctLazyLoad()"
+    ) in html
     assert "await activateDashboardPageData(activeDashboardPage)" in html
 
 
@@ -500,12 +503,39 @@ def test_render_dashboard_keeps_fct_multiselects_independent(
     assert "const FCT_FILTER_SPECS=[" in html
     assert "['fctCaption','caption','captions']" in html
     assert "['fctProgram','program_name','programs']" in html
+    assert "['fctWeekday','_weekday','weekdays']" in html
+    assert "['fctAdPosition','ad_position','positions']" in html
+    assert "['fctBreakSize','total_ads','break sizes']" in html
+    assert "['fctCoverage','is_filename_spillover','coverage states']" in html
+    assert "['fctSourceFile','source_file','workbooks']" in html
+    assert "['fctSourceSheet','source_sheet','sheets']" in html
     assert 'id="fctCaptionToggle"' in html
     assert 'id="fctProgramToggle"' in html
+    assert 'id="fctWeekdayToggle"' in html
+    assert 'id="fctAdPositionToggle"' in html
+    assert 'id="fctBreakSizeToggle"' in html
+    assert 'id="fctCoverageToggle"' in html
+    assert 'id="fctSourceFileToggle"' in html
+    assert 'id="fctSourceSheetToggle"' in html
+    assert 'id="fctTimeFrom"' in html
+    assert 'id="fctTimeTo"' in html
+    assert 'id="fctProgramTimeFrom"' in html
+    assert 'id="fctProgramTimeTo"' in html
+    assert 'id="fctDurationMin"' in html
+    assert 'id="fctDurationMax"' in html
+    assert 'id="fctProgramDurationMin"' in html
+    assert 'id="fctProgramDurationMax"' in html
     assert "for(const [id,key,kind] of FCT_FILTER_SPECS)" in html
     assert "buildMulti(id,values,kind,values,()=>renderFctAndScope(false))" in html
     assert "selections.every(([key,values])=>values.has(fctValue(row,key)))" in html
+    assert "&&fctAdvancedRangesMatch(row)" in html
+    assert "function fctClockMatches(row,key,fromId,toId){" in html
+    assert "function fctNumericMatches(row,key,minId,maxId){" in html
+    assert "function syncFctNumericRange(changed,minId,maxId){" in html
+    assert "let fctSelectionCache={key:null,value:null};" in html
     assert "'Selected FCT Captions','Selected FCT Programs'" in html
+    assert "'Selected FCT Weekdays','Selected FCT Ad Positions'" in html
+    assert "'Selected On-air Time From','Selected On-air Time To'" in html
     assert "const NCT_FILTER_SPECS=[" in html
     assert "for(const [id,key,kind] of NCT_FILTER_SPECS)" in html
     assert 'id="nctStoryToggle"' in html
@@ -556,10 +586,10 @@ def test_render_dashboard_keeps_fct_multiselects_independent(
     ) not in html
 
 
-def test_render_dashboard_adds_concurrency_to_nct_top_stories(
+def test_render_dashboard_adds_interval_weighted_nct_story_performance(
     tmp_path: Path, monkeypatch
 ) -> None:
-    """Top Stories must reuse the established audience calculations."""
+    """Story Performance must use interval-weighted minute audience metrics."""
     chartjs = tmp_path / "chart.umd.min.js"
     chartjs.write_text("window.Chart=function(){};", encoding="utf-8")
     monkeypatch.setattr(asrun, "CHARTJS_CACHE", chartjs)
@@ -567,11 +597,34 @@ def test_render_dashboard_adds_concurrency_to_nct_top_stories(
     html = asrun.render_dashboard({"channels": ["Test Channel"]})
 
     assert 'id="exportNctStoryAudienceCsv"' in html
+    assert 'id="nctStoryAudienceBasis"' in html
+    assert 'id="nctStoryRankBy"' in html
+    assert 'id="fastPlatformToggle"' in html
+    assert 'id="fastChannelToggle"' in html
+    assert 'id="streamChannelToggle"' in html
+    assert 'id="amagiPlatformToggle"' in html
+    assert 'id="amagiChannelToggle"' in html
+    assert 'id="youtubeChannelToggle"' in html
+    assert 'id="globalAudienceDetails"' in html
+    assert 'id="nctYoutubeVideoToggle"' in html
+    assert 'id="globalAudienceFilters"' in html
+    assert "window.matchMedia('(max-width: 680px)').matches" in html
+    assert "move('globalFastFilters','fastPlatform','fastChannel')" in html
+    assert "move('globalYoutubeFilters','youtubeChannel')" in html
+    assert "function refreshNctStorySourceFilters(){" in html
+    assert "const channelId=source==='fast'?'fastChannel':'streamChannel';" in html
+    assert "selectedMulti('fastPlatform')" in html
+    assert "selectedMulti('amagiPlatform')" in html
+    assert "selectedMulti('youtubeChannel')" in html
+    assert "selectedMulti('nctYoutubeVideo')" in html
+    assert "updateNctStorySourceControls();" in html
     assert "function nctStoryAudienceRows(rows){" in html
-    assert "const fast=fctCoveredAudienceValue(anchor,states.fast);" in html
-    assert "const stream=fctCoveredAudienceValue(anchor,states.stream);" in html
-    assert "const amagi=fctCoveredAudienceValue(anchor,states.amagi);" in html
-    assert "const youtube=youtubeFiveMinuteValue(anchor);" in html
+    assert "function nctPrepareAudienceState(state){" in html
+    assert "function nctAudienceInterval(state,startMillis,endMillis){" in html
+    assert "metric.viewerMinutes/metric.coveredMinutes" in html
+    assert "metric.viewingShare/entry.airtimeShare*100" in html
+    assert "value.youtube=nctPrepareAudienceState(nctYoutubeAudienceMinuteMap(range));" in html
+    assert "value.combined=nctCombinedAudienceState(value);" in html
     assert "function renderNctStoryAudience(rows){" in html
     assert "const value=Number(seconds||0),hours=Math.round(value/3600);" in html
     assert "return hours?fmt(hours)+' h':fmt(Math.round(value/60))+' min';" in html
@@ -598,11 +651,19 @@ def test_render_dashboard_adds_concurrency_to_nct_top_stories(
     assert "function toggleNctContext(){" in html
     assert "nctContextRowsCache.slice(0,NCT_CONTEXT_LIMIT)" in html
     assert "CSV exports the complete filtered result." in html
-    assert "India TV YouTube uses minute concurrency" in html
+    assert "Performance Index = Viewing Share" in html
+    assert "are summed and are not cross-source deduplicated." in html
     assert ".nct-story-audience-columns > span:not(:first-child)," in html
     assert ".nct-story-audience-row > span:not(:first-child) {" in html
     assert "function exportNctStoryAudienceCsv(){" in html
-    assert "Average FAST 5-Minute Concurrency" in html
+    assert "Selected Average Minute Audience" in html
+    assert "Selected Performance Index" in html
+    assert "Selected Audience Coverage Percent" in html
+    assert "Selected FAST Platforms" in html
+    assert "Selected YouTube Channels" in html
+    assert "Selected YouTube Video IDs" in html
+    assert "youtubeMetric=youtubeFiveMinuteValue(e)" in html
+    assert "youtubeMetric=youtubeFiveMinuteValue(anchor)" in html
     assert "loadAudienceDashboardData()," in html
     assert "loadYoutubeDashboardData()," in html
 
@@ -624,10 +685,7 @@ def test_render_dashboard_gives_fct_an_independent_all_range(
     assert "setFctRange('all',false)" in html
     assert "const from=$('fctFrom').value,to=$('fctTo').value" in html
     assert "filters=fctFilterContext()" in html
-    assert (
-        "Independent FCT date + "
-        "class/feed/language/brand/caption/program/category/company"
-    ) in html
+    assert "Independent FCT date + all selected FCT dimensions" in html
     assert "function fctCoveredAudienceValue(event,state)" in html
     assert "value:'Not available'" in html
     assert "partial:available.length!==values.length" in html
