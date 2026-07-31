@@ -1273,14 +1273,24 @@
     "stream/2026-07-30": {
       "source": "stream",
       "date": "2026-07-30",
-      "file_count": 1,
-      "bytes": 75757005,
-      "max_mtime_ns": 1785381371398706500,
+      "file_count": 2,
+      "bytes": 964712289,
+      "max_mtime_ns": 1785467773235777400,
       "output_counts": {
-        "rows": 181
+        "rows": 1175
+      }
+    },
+    "stream/2026-07-31": {
+      "source": "stream",
+      "date": "2026-07-31",
+      "file_count": 1,
+      "bytes": 37327369,
+      "max_mtime_ns": 1785467773352304700,
+      "output_counts": {
+        "rows": 167
       }
     }
   },
-  "updated_at_utc": "2026-07-30T04:07:48.551500+00:00",
+  "updated_at_utc": "2026-07-31T04:18:12.324486+00:00",
   "mart_version": 3
 }
