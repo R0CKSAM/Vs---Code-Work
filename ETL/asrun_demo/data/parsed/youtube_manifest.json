@@ -2,7 +2,7 @@
   "schema_version": 3,
   "available": true,
   "source_root": "Z:\\Veto Logs Backup\\DO NOT DELETE\\source=Youtube",
-  "completed_files": 1090,
+  "completed_files": 1810,
   "partial_files": 11,
   "skipped_files": [],
   "fingerprints": {
@@ -3862,6 +3862,30 @@
       "size": 16739,
       "mtime_ns": 1785414612963640900
     },
+    "year=2026\\month=07\\day=30\\aajtak_30-07-2026_18-00_cc3bfc53.parquet": {
+      "size": 17023,
+      "mtime_ns": 1785418207768068500
+    },
+    "year=2026\\month=07\\day=30\\aajtak_30-07-2026_19-00_0214f14d.parquet": {
+      "size": 16294,
+      "mtime_ns": 1785421812591538300
+    },
+    "year=2026\\month=07\\day=30\\aajtak_30-07-2026_20-00_baa8554e.parquet": {
+      "size": 17649,
+      "mtime_ns": 1785425417297976900
+    },
+    "year=2026\\month=07\\day=30\\aajtak_30-07-2026_21-00_7b08e62a.parquet": {
+      "size": 16777,
+      "mtime_ns": 1785429018233293400
+    },
+    "year=2026\\month=07\\day=30\\aajtak_30-07-2026_22-00_5fe43557.parquet": {
+      "size": 17141,
+      "mtime_ns": 1785432608421283300
+    },
+    "year=2026\\month=07\\day=30\\aajtak_30-07-2026_23-00_2f472ca1.parquet": {
+      "size": 11837,
+      "mtime_ns": 1785436206694651700
+    },
     "year=2026\\month=07\\day=30\\ABPNews_30-07-2026_00-00_8c7a1f40.parquet": {
       "size": 12919,
       "mtime_ns": 1785353406717633600
@@ -3933,6 +3957,30 @@
     "year=2026\\month=07\\day=30\\ABPNews_30-07-2026_17-00_300ed750.parquet": {
       "size": 16868,
       "mtime_ns": 1785414617229220900
+    },
+    "year=2026\\month=07\\day=30\\ABPNews_30-07-2026_18-00_f995499a.parquet": {
+      "size": 16838,
+      "mtime_ns": 1785418214394377000
+    },
+    "year=2026\\month=07\\day=30\\ABPNews_30-07-2026_19-00_38e59289.parquet": {
+      "size": 18549,
+      "mtime_ns": 1785421820466930700
+    },
+    "year=2026\\month=07\\day=30\\ABPNews_30-07-2026_20-00_32a0259e.parquet": {
+      "size": 19862,
+      "mtime_ns": 1785425417327788700
+    },
+    "year=2026\\month=07\\day=30\\ABPNews_30-07-2026_21-00_9649f79b.parquet": {
+      "size": 19700,
+      "mtime_ns": 1785429018264574100
+    },
+    "year=2026\\month=07\\day=30\\ABPNews_30-07-2026_22-00_5e37ae20.parquet": {
+      "size": 19145,
+      "mtime_ns": 1785432611843209800
+    },
+    "year=2026\\month=07\\day=30\\ABPNews_30-07-2026_23-00_e8a92836.parquet": {
+      "size": 18250,
+      "mtime_ns": 1785436210568547500
     },
     "year=2026\\month=07\\day=30\\indiatv_30-07-2026_00-00_cb4804ff.parquet": {
       "size": 48379,
@@ -4006,6 +4054,30 @@
       "size": 65149,
       "mtime_ns": 1785414609543497600
     },
+    "year=2026\\month=07\\day=30\\indiatv_30-07-2026_18-00_33b376c9.parquet": {
+      "size": 64424,
+      "mtime_ns": 1785418210283705300
+    },
+    "year=2026\\month=07\\day=30\\indiatv_30-07-2026_19-00_eeb571a7.parquet": {
+      "size": 64855,
+      "mtime_ns": 1785421810435280800
+    },
+    "year=2026\\month=07\\day=30\\indiatv_30-07-2026_20-00_00a24e78.parquet": {
+      "size": 64120,
+      "mtime_ns": 1785425408983633700
+    },
+    "year=2026\\month=07\\day=30\\indiatv_30-07-2026_21-00_ee10d969.parquet": {
+      "size": 63788,
+      "mtime_ns": 1785429010205894600
+    },
+    "year=2026\\month=07\\day=30\\indiatv_30-07-2026_22-00_3e8309e1.parquet": {
+      "size": 63896,
+      "mtime_ns": 1785432608890039300
+    },
+    "year=2026\\month=07\\day=30\\indiatv_30-07-2026_23-00_ae0627eb.parquet": {
+      "size": 63725,
+      "mtime_ns": 1785436207804134300
+    },
     "year=2026\\month=07\\day=30\\NDTVindia_30-07-2026_00-00_da8ffea7.parquet": {
       "size": 12746,
       "mtime_ns": 1785353421722337600
@@ -4077,6 +4149,30 @@
     "year=2026\\month=07\\day=30\\NDTVindia_30-07-2026_17-00_7807f7df.parquet": {
       "size": 19165,
       "mtime_ns": 1785414633541905700
+    },
+    "year=2026\\month=07\\day=30\\NDTVindia_30-07-2026_18-00_c2b173d5.parquet": {
+      "size": 19657,
+      "mtime_ns": 1785418240136477100
+    },
+    "year=2026\\month=07\\day=30\\NDTVindia_30-07-2026_19-00_197043ab.parquet": {
+      "size": 20324,
+      "mtime_ns": 1785421834871686400
+    },
+    "year=2026\\month=07\\day=30\\NDTVindia_30-07-2026_20-00_a6b90afb.parquet": {
+      "size": 20480,
+      "mtime_ns": 1785425432424533000
+    },
+    "year=2026\\month=07\\day=30\\NDTVindia_30-07-2026_21-00_8f9bb950.parquet": {
+      "size": 20649,
+      "mtime_ns": 1785429034983250500
+    },
+    "year=2026\\month=07\\day=30\\NDTVindia_30-07-2026_22-00_c5fb09f7.parquet": {
+      "size": 20029,
+      "mtime_ns": 1785432628804239500
+    },
+    "year=2026\\month=07\\day=30\\NDTVindia_30-07-2026_23-00_84dbadd7.parquet": {
+      "size": 18695,
+      "mtime_ns": 1785436226418096600
     },
     "year=2026\\month=07\\day=30\\news18india_30-07-2026_00-00_45ae46ed.parquet": {
       "size": 14518,
@@ -4150,6 +4246,30 @@
       "size": 17222,
       "mtime_ns": 1785414617260470400
     },
+    "year=2026\\month=07\\day=30\\news18india_30-07-2026_18-00_b05faa87.parquet": {
+      "size": 14697,
+      "mtime_ns": 1785418221211685200
+    },
+    "year=2026\\month=07\\day=30\\news18india_30-07-2026_19-00_570e86c4.parquet": {
+      "size": 15522,
+      "mtime_ns": 1785421820498198800
+    },
+    "year=2026\\month=07\\day=30\\news18india_30-07-2026_20-00_eba989c9.parquet": {
+      "size": 17046,
+      "mtime_ns": 1785425417359038800
+    },
+    "year=2026\\month=07\\day=30\\news18india_30-07-2026_21-00_558c5698.parquet": {
+      "size": 17080,
+      "mtime_ns": 1785429018311460000
+    },
+    "year=2026\\month=07\\day=30\\news18india_30-07-2026_22-00_370b69c4.parquet": {
+      "size": 18117,
+      "mtime_ns": 1785432611890649000
+    },
+    "year=2026\\month=07\\day=30\\news18india_30-07-2026_23-00_6cdda340.parquet": {
+      "size": 18078,
+      "mtime_ns": 1785436213778053200
+    },
     "year=2026\\month=07\\day=30\\RepublicBharat_30-07-2026_00-00_0ac0f83e.parquet": {
       "size": 14410,
       "mtime_ns": 1785353414925373800
@@ -4221,6 +4341,30 @@
     "year=2026\\month=07\\day=30\\RepublicBharat_30-07-2026_17-00_5ed116a1.parquet": {
       "size": 17319,
       "mtime_ns": 1785414622572993900
+    },
+    "year=2026\\month=07\\day=30\\RepublicBharat_30-07-2026_18-00_247d0f2a.parquet": {
+      "size": 19574,
+      "mtime_ns": 1785418226960762700
+    },
+    "year=2026\\month=07\\day=30\\RepublicBharat_30-07-2026_19-00_8a12a8e2.parquet": {
+      "size": 21252,
+      "mtime_ns": 1785421824730926500
+    },
+    "year=2026\\month=07\\day=30\\RepublicBharat_30-07-2026_20-00_37fc1c3f.parquet": {
+      "size": 21064,
+      "mtime_ns": 1785425421859370500
+    },
+    "year=2026\\month=07\\day=30\\RepublicBharat_30-07-2026_21-00_3271ad7a.parquet": {
+      "size": 21393,
+      "mtime_ns": 1785429023217656500
+    },
+    "year=2026\\month=07\\day=30\\RepublicBharat_30-07-2026_22-00_8aad4a25.parquet": {
+      "size": 16864,
+      "mtime_ns": 1785432618520992500
+    },
+    "year=2026\\month=07\\day=30\\RepublicBharat_30-07-2026_23-00_5e2b3e9c.parquet": {
+      "size": 17476,
+      "mtime_ns": 1785436217278218600
     },
     "year=2026\\month=07\\day=30\\TV9Bharatvarsh_30-07-2026_00-00_1c76f495.parquet": {
       "size": 35536,
@@ -4294,6 +4438,30 @@
       "size": 62605,
       "mtime_ns": 1785414630557573300
     },
+    "year=2026\\month=07\\day=30\\TV9Bharatvarsh_30-07-2026_18-00_0230133f.parquet": {
+      "size": 62834,
+      "mtime_ns": 1785418237964278800
+    },
+    "year=2026\\month=07\\day=30\\TV9Bharatvarsh_30-07-2026_19-00_a7e879cd.parquet": {
+      "size": 65027,
+      "mtime_ns": 1785421834559146400
+    },
+    "year=2026\\month=07\\day=30\\TV9Bharatvarsh_30-07-2026_20-00_e4cdf639.parquet": {
+      "size": 69358,
+      "mtime_ns": 1785425429815037900
+    },
+    "year=2026\\month=07\\day=30\\TV9Bharatvarsh_30-07-2026_21-00_1cdfc8bb.parquet": {
+      "size": 73337,
+      "mtime_ns": 1785429030545797700
+    },
+    "year=2026\\month=07\\day=30\\TV9Bharatvarsh_30-07-2026_22-00_b558bb15.parquet": {
+      "size": 77415,
+      "mtime_ns": 1785432626054229400
+    },
+    "year=2026\\month=07\\day=30\\TV9Bharatvarsh_30-07-2026_23-00_b913ce76.parquet": {
+      "size": 81499,
+      "mtime_ns": 1785436223683747400
+    },
     "year=2026\\month=07\\day=30\\ZeeNews_30-07-2026_00-00_d5d52428.parquet": {
       "size": 12917,
       "mtime_ns": 1785353412237837600
@@ -4365,6 +4533,2718 @@
     "year=2026\\month=07\\day=30\\ZeeNews_30-07-2026_17-00_d6a419ac.parquet": {
       "size": 16713,
       "mtime_ns": 1785414617291720300
+    },
+    "year=2026\\month=07\\day=30\\ZeeNews_30-07-2026_18-00_17a87314.parquet": {
+      "size": 17051,
+      "mtime_ns": 1785418221289815200
+    },
+    "year=2026\\month=07\\day=30\\ZeeNews_30-07-2026_19-00_8ff7f3b9.parquet": {
+      "size": 16916,
+      "mtime_ns": 1785421820529430600
+    },
+    "year=2026\\month=07\\day=30\\ZeeNews_30-07-2026_20-00_43be5b78.parquet": {
+      "size": 16538,
+      "mtime_ns": 1785425417406272400
+    },
+    "year=2026\\month=07\\day=30\\ZeeNews_30-07-2026_21-00_f91c6908.parquet": {
+      "size": 16345,
+      "mtime_ns": 1785429018342668100
+    },
+    "year=2026\\month=07\\day=30\\ZeeNews_30-07-2026_22-00_4eb26f68.parquet": {
+      "size": 16138,
+      "mtime_ns": 1785432614784880700
+    },
+    "year=2026\\month=07\\day=30\\ZeeNews_30-07-2026_23-00_92da8678.parquet": {
+      "size": 15928,
+      "mtime_ns": 1785436213809308100
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_00-00_d98da4f5.parquet": {
+      "size": 12381,
+      "mtime_ns": 1785439809801333500
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_01-00_97a4d7ca.parquet": {
+      "size": 12026,
+      "mtime_ns": 1785443406840922100
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_02-00_05e1c85b.parquet": {
+      "size": 11865,
+      "mtime_ns": 1785447007327772400
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_03-00_ffe4dd9c.parquet": {
+      "size": 11716,
+      "mtime_ns": 1785450604187361900
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_04-00_01a592e0.parquet": {
+      "size": 11674,
+      "mtime_ns": 1785454209782367800
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_05-00_571aedcf.parquet": {
+      "size": 11847,
+      "mtime_ns": 1785457810638551700
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_06-00_b4f6017d.parquet": {
+      "size": 12053,
+      "mtime_ns": 1785461410892725200
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_07-00_6897e569.parquet": {
+      "size": 12412,
+      "mtime_ns": 1785465013669374500
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_08-00_dfb97e2d.parquet": {
+      "size": 11004,
+      "mtime_ns": 1785468612326073900
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_09-00_cd84dd9b.parquet": {
+      "size": 14766,
+      "mtime_ns": 1785472214087675000
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_10-00_b232a00e.parquet": {
+      "size": 14756,
+      "mtime_ns": 1785475806407256500
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_11-00_1cbf70ea.parquet": {
+      "size": 16818,
+      "mtime_ns": 1785479409630659200
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_12-00_16b18c4f.parquet": {
+      "size": 14051,
+      "mtime_ns": 1785483017668892900
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_13-00_3918ea5b.parquet": {
+      "size": 14320,
+      "mtime_ns": 1785486604882391700
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_14-00_d483e3df.parquet": {
+      "size": 12939,
+      "mtime_ns": 1785490219351704600
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_15-00_9136826e.parquet": {
+      "size": 15827,
+      "mtime_ns": 1785493816553461800
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_16-00_a469b09a.parquet": {
+      "size": 17856,
+      "mtime_ns": 1785497417774227900
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_17-00_e7a69397.parquet": {
+      "size": 17653,
+      "mtime_ns": 1785501015857879700
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_18-00_fcf0ac2c.parquet": {
+      "size": 18392,
+      "mtime_ns": 1785504620975186500
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_19-00_dc2ae0d8.parquet": {
+      "size": 18078,
+      "mtime_ns": 1785508209907233300
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_20-00_9cf7293f.parquet": {
+      "size": 17777,
+      "mtime_ns": 1785511819736091800
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_21-00_f70facd7.parquet": {
+      "size": 18247,
+      "mtime_ns": 1785515417873154000
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_22-00_72b516d7.parquet": {
+      "size": 19113,
+      "mtime_ns": 1785519016496055800
+    },
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_23-00_76a43179.parquet": {
+      "size": 17801,
+      "mtime_ns": 1785522612094195900
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_00-00_9b628ac1.parquet": {
+      "size": 18059,
+      "mtime_ns": 1785439809832575500
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_01-00_1717b586.parquet": {
+      "size": 17768,
+      "mtime_ns": 1785443406887797300
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_02-00_09d6fc27.parquet": {
+      "size": 17594,
+      "mtime_ns": 1785447007358982900
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_03-00_2d918893.parquet": {
+      "size": 17528,
+      "mtime_ns": 1785450613049150500
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_04-00_08cde2f3.parquet": {
+      "size": 16539,
+      "mtime_ns": 1785454209829253200
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_05-00_525db0a7.parquet": {
+      "size": 15498,
+      "mtime_ns": 1785457813357299400
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_06-00_d821d330.parquet": {
+      "size": 17038,
+      "mtime_ns": 1785461414892826300
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_07-00_9ead60ea.parquet": {
+      "size": 17625,
+      "mtime_ns": 1785465013700596900
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_08-00_211d1191.parquet": {
+      "size": 18072,
+      "mtime_ns": 1785468616114740400
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_09-00_a3e9f6a7.parquet": {
+      "size": 18491,
+      "mtime_ns": 1785472217760975500
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_10-00_00acebb6.parquet": {
+      "size": 19070,
+      "mtime_ns": 1785475819440148200
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_11-00_f0fce95c.parquet": {
+      "size": 16937,
+      "mtime_ns": 1785479412901024700
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_12-00_7c100faa.parquet": {
+      "size": 16709,
+      "mtime_ns": 1785483017702944400
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_13-00_311bb5a2.parquet": {
+      "size": 16466,
+      "mtime_ns": 1785486608639417100
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_14-00_af83d4fa.parquet": {
+      "size": 17954,
+      "mtime_ns": 1785490219382918700
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_15-00_6e3aaf11.parquet": {
+      "size": 23920,
+      "mtime_ns": 1785493822803821600
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_16-00_25de7636.parquet": {
+      "size": 20281,
+      "mtime_ns": 1785497418545405300
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_17-00_b3dc1d15.parquet": {
+      "size": 18940,
+      "mtime_ns": 1785501015889094000
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_18-00_57c4c052.parquet": {
+      "size": 18825,
+      "mtime_ns": 1785504621022055900
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_19-00_cdeb0866.parquet": {
+      "size": 19369,
+      "mtime_ns": 1785508209954113700
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_20-00_9ee74faa.parquet": {
+      "size": 20783,
+      "mtime_ns": 1785511819782997300
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_21-00_71692e49.parquet": {
+      "size": 20200,
+      "mtime_ns": 1785515417921631700
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_22-00_758ff5f1.parquet": {
+      "size": 19295,
+      "mtime_ns": 1785519016527305700
+    },
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_23-00_8f1f52d4.parquet": {
+      "size": 20171,
+      "mtime_ns": 1785522612125402900
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_00-00_4df1107e.parquet": {
+      "size": 63511,
+      "mtime_ns": 1785439807158409700
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_01-00_c5ee050f.parquet": {
+      "size": 63351,
+      "mtime_ns": 1785443407122138600
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_02-00_913391e3.parquet": {
+      "size": 63158,
+      "mtime_ns": 1785447008197635600
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_03-00_3e03ba11.parquet": {
+      "size": 63053,
+      "mtime_ns": 1785450607611555200
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_04-00_b84920dd.parquet": {
+      "size": 62923,
+      "mtime_ns": 1785454208235333300
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_05-00_f6cae280.parquet": {
+      "size": 63004,
+      "mtime_ns": 1785457808090700600
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_06-00_afd8cabc.parquet": {
+      "size": 51349,
+      "mtime_ns": 1785461407689605400
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_07-00_1be28be6.parquet": {
+      "size": 51047,
+      "mtime_ns": 1785465007513071300
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_08-00_341e768e.parquet": {
+      "size": 53810,
+      "mtime_ns": 1785468608451048900
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_09-00_60fe3966.parquet": {
+      "size": 52519,
+      "mtime_ns": 1785472208394904700
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_10-00_621b6ba3.parquet": {
+      "size": 61582,
+      "mtime_ns": 1785475810737081300
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_11-00_68c3fc84.parquet": {
+      "size": 64102,
+      "mtime_ns": 1785479412539751900
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_12-00_6ee0bcef.parquet": {
+      "size": 66151,
+      "mtime_ns": 1785483009856377100
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_13-00_fe47554a.parquet": {
+      "size": 65822,
+      "mtime_ns": 1785486610536408000
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_14-00_f810d0f8.parquet": {
+      "size": 66604,
+      "mtime_ns": 1785490210499176900
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_15-00_224e3e17.parquet": {
+      "size": 71735,
+      "mtime_ns": 1785493810028510800
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_16-00_95828a23.parquet": {
+      "size": 67510,
+      "mtime_ns": 1785497412671244200
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_17-00_da7145d8.parquet": {
+      "size": 66416,
+      "mtime_ns": 1785501010341862700
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_18-00_ccc8fafd.parquet": {
+      "size": 70242,
+      "mtime_ns": 1785504610423747600
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_19-00_f788c082.parquet": {
+      "size": 73213,
+      "mtime_ns": 1785508216001864500
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_20-00_28b36cc6.parquet": {
+      "size": 73563,
+      "mtime_ns": 1785511813126729400
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_21-00_5075db69.parquet": {
+      "size": 71044,
+      "mtime_ns": 1785515410158516900
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_22-00_23f8d0d4.parquet": {
+      "size": 70955,
+      "mtime_ns": 1785519009641758200
+    },
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_23-00_50e5cbf8.parquet": {
+      "size": 70713,
+      "mtime_ns": 1785522609421555000
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_00-00_8f4515b5.parquet": {
+      "size": 18512,
+      "mtime_ns": 1785439826077570800
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_01-00_f79d7651.parquet": {
+      "size": 18511,
+      "mtime_ns": 1785443426524300200
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_02-00_869c328e.parquet": {
+      "size": 19088,
+      "mtime_ns": 1785447026550376200
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_03-00_42b3183f.parquet": {
+      "size": 18948,
+      "mtime_ns": 1785450627873404000
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_04-00_4a63a347.parquet": {
+      "size": 18963,
+      "mtime_ns": 1785454227260333500
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_05-00_cde3264c.parquet": {
+      "size": 18919,
+      "mtime_ns": 1785457828189249500
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_06-00_e5f0af3f.parquet": {
+      "size": 19526,
+      "mtime_ns": 1785461427111693900
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_07-00_b2770d2f.parquet": {
+      "size": 19904,
+      "mtime_ns": 1785465029542032000
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_08-00_1a32ff20.parquet": {
+      "size": 19018,
+      "mtime_ns": 1785468632688357000
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_09-00_8a48a04b.parquet": {
+      "size": 20021,
+      "mtime_ns": 1785472234138815600
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_10-00_032cfcc1.parquet": {
+      "size": 20261,
+      "mtime_ns": 1785475837190129600
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_11-00_034c5b22.parquet": {
+      "size": 20570,
+      "mtime_ns": 1785479436267623500
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_12-00_8476f536.parquet": {
+      "size": 20114,
+      "mtime_ns": 1785483038597759900
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_13-00_ff11f7c8.parquet": {
+      "size": 21098,
+      "mtime_ns": 1785486636274165900
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_14-00_3141d8b8.parquet": {
+      "size": 19020,
+      "mtime_ns": 1785490237499857400
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_15-00_6a818c39.parquet": {
+      "size": 17907,
+      "mtime_ns": 1785493839322351700
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_16-00_b8483796.parquet": {
+      "size": 19837,
+      "mtime_ns": 1785497444652799400
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_17-00_6392557c.parquet": {
+      "size": 20074,
+      "mtime_ns": 1785501043501146100
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_18-00_0ad6fe25.parquet": {
+      "size": 19886,
+      "mtime_ns": 1785504643105051000
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_19-00_03345b46.parquet": {
+      "size": 20199,
+      "mtime_ns": 1785508242422465300
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_20-00_73d7acb7.parquet": {
+      "size": 23859,
+      "mtime_ns": 1785511842218909600
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_21-00_05f88fed.parquet": {
+      "size": 20859,
+      "mtime_ns": 1785515438394618700
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_22-00_afc63d7d.parquet": {
+      "size": 24861,
+      "mtime_ns": 1785519035916720900
+    },
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_23-00_a08e95ef.parquet": {
+      "size": 24557,
+      "mtime_ns": 1785522633436375800
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_00-00_701073cc.parquet": {
+      "size": 19897,
+      "mtime_ns": 1785439813238841200
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_01-00_76d43468.parquet": {
+      "size": 19609,
+      "mtime_ns": 1785443413238830600
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_02-00_476f2e47.parquet": {
+      "size": 19507,
+      "mtime_ns": 1785447013541377000
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_03-00_41b6a4c3.parquet": {
+      "size": 19363,
+      "mtime_ns": 1785450613080400000
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_04-00_189c3318.parquet": {
+      "size": 19412,
+      "mtime_ns": 1785454213782376300
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_05-00_d8025828.parquet": {
+      "size": 19367,
+      "mtime_ns": 1785457813404129900
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_06-00_83755ea8.parquet": {
+      "size": 18050,
+      "mtime_ns": 1785461414924063000
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_07-00_9d5189fd.parquet": {
+      "size": 18098,
+      "mtime_ns": 1785465013731844900
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_08-00_312e6ef5.parquet": {
+      "size": 18774,
+      "mtime_ns": 1785468616147054800
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_09-00_68123bdc.parquet": {
+      "size": 19082,
+      "mtime_ns": 1785472217792261500
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_10-00_ff5424fc.parquet": {
+      "size": 22051,
+      "mtime_ns": 1785475819471397700
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_11-00_28491f59.parquet": {
+      "size": 21826,
+      "mtime_ns": 1785479412932239200
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_12-00_443e5a0b.parquet": {
+      "size": 21942,
+      "mtime_ns": 1785483017734681500
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_13-00_df82763a.parquet": {
+      "size": 22005,
+      "mtime_ns": 1785486619755224600
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_14-00_27f4f8ed.parquet": {
+      "size": 21183,
+      "mtime_ns": 1785490219414169500
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_15-00_11c62e05.parquet": {
+      "size": 17257,
+      "mtime_ns": 1785493822897574500
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_16-00_0a1e5d2f.parquet": {
+      "size": 19962,
+      "mtime_ns": 1785497418592317300
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_17-00_8655f22b.parquet": {
+      "size": 16091,
+      "mtime_ns": 1785501015920373500
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_18-00_72cbc4da.parquet": {
+      "size": 16737,
+      "mtime_ns": 1785504621053305200
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_19-00_8c8254d8.parquet": {
+      "size": 20043,
+      "mtime_ns": 1785508218211900600
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_20-00_aa5b30a6.parquet": {
+      "size": 20120,
+      "mtime_ns": 1785511819814254700
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_21-00_72917b63.parquet": {
+      "size": 16467,
+      "mtime_ns": 1785515417937255100
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_22-00_2b526f3c.parquet": {
+      "size": 21112,
+      "mtime_ns": 1785519016558583800
+    },
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_23-00_316b1a3f.parquet": {
+      "size": 22140,
+      "mtime_ns": 1785522616125417800
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_00-00_6e2a4754.parquet": {
+      "size": 16684,
+      "mtime_ns": 1785439816394691500
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_01-00_e5a628cf.parquet": {
+      "size": 16482,
+      "mtime_ns": 1785443416836763400
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_02-00_030386e1.parquet": {
+      "size": 16344,
+      "mtime_ns": 1785447016978821500
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_03-00_9c0a0786.parquet": {
+      "size": 16164,
+      "mtime_ns": 1785450616861910000
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_04-00_0b262331.parquet": {
+      "size": 16247,
+      "mtime_ns": 1785454217298027200
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_05-00_4a23fdba.parquet": {
+      "size": 16427,
+      "mtime_ns": 1785457817110840600
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_06-00_f49a5974.parquet": {
+      "size": 15293,
+      "mtime_ns": 1785461416939844500
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_07-00_ae39f458.parquet": {
+      "size": 17104,
+      "mtime_ns": 1785465018403858100
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_08-00_83e3dd46.parquet": {
+      "size": 22901,
+      "mtime_ns": 1785468620860138200
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_09-00_5587cd9e.parquet": {
+      "size": 22177,
+      "mtime_ns": 1785472222871674500
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_10-00_e324cf0b.parquet": {
+      "size": 22993,
+      "mtime_ns": 1785475824393260500
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_11-00_d901a745.parquet": {
+      "size": 21936,
+      "mtime_ns": 1785479421698858000
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_12-00_400ae1c5.parquet": {
+      "size": 21373,
+      "mtime_ns": 1785483021522181000
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_13-00_afced6e7.parquet": {
+      "size": 21846,
+      "mtime_ns": 1785486623907390700
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_14-00_a9059463.parquet": {
+      "size": 22330,
+      "mtime_ns": 1785490224387816000
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_15-00_59dea0cc.parquet": {
+      "size": 22621,
+      "mtime_ns": 1785493826038215900
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_16-00_e9f66f88.parquet": {
+      "size": 22810,
+      "mtime_ns": 1785497427561008500
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_17-00_72fd9c63.parquet": {
+      "size": 22287,
+      "mtime_ns": 1785501025796089400
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_18-00_8bd869aa.parquet": {
+      "size": 21610,
+      "mtime_ns": 1785504623647040100
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_19-00_b154dd10.parquet": {
+      "size": 21345,
+      "mtime_ns": 1785508225340658800
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_20-00_0d9d1c59.parquet": {
+      "size": 22347,
+      "mtime_ns": 1785511825328254800
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_21-00_66f9647d.parquet": {
+      "size": 22346,
+      "mtime_ns": 1785515423281719400
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_22-00_7aba2da5.parquet": {
+      "size": 21163,
+      "mtime_ns": 1785519020287119200
+    },
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_23-00_987e4b4c.parquet": {
+      "size": 19781,
+      "mtime_ns": 1785522619500468700
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_00-00_63deb3b1.parquet": {
+      "size": 81159,
+      "mtime_ns": 1785439823390060500
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_01-00_10a0e388.parquet": {
+      "size": 80999,
+      "mtime_ns": 1785443423539913700
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_02-00_b81992d3.parquet": {
+      "size": 80875,
+      "mtime_ns": 1785447023838120900
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_03-00_232475fc.parquet": {
+      "size": 80874,
+      "mtime_ns": 1785450624792278800
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_04-00_63b1bf12.parquet": {
+      "size": 80844,
+      "mtime_ns": 1785454224104029200
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_05-00_5f82a690.parquet": {
+      "size": 80879,
+      "mtime_ns": 1785457825033007600
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_06-00_c742f6e4.parquet": {
+      "size": 81579,
+      "mtime_ns": 1785461424127344100
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_07-00_8388cba6.parquet": {
+      "size": 87504,
+      "mtime_ns": 1785465026218949900
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_08-00_49bc9917.parquet": {
+      "size": 88965,
+      "mtime_ns": 1785468628453873400
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_09-00_885dfcf0.parquet": {
+      "size": 93819,
+      "mtime_ns": 1785472230232550600
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_10-00_202065f3.parquet": {
+      "size": 101176,
+      "mtime_ns": 1785475833065112500
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_11-00_ebfc8d0c.parquet": {
+      "size": 100246,
+      "mtime_ns": 1785479431830048200
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_12-00_7679f167.parquet": {
+      "size": 105059,
+      "mtime_ns": 1785483034727444800
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_13-00_a2c441fe.parquet": {
+      "size": 112883,
+      "mtime_ns": 1785486631992710000
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_14-00_79f54b52.parquet": {
+      "size": 113454,
+      "mtime_ns": 1785490235671775900
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_15-00_396b4d2b.parquet": {
+      "size": 124962,
+      "mtime_ns": 1785493836259839900
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_16-00_e8653635.parquet": {
+      "size": 127977,
+      "mtime_ns": 1785497442637179100
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_17-00_384b015c.parquet": {
+      "size": 136452,
+      "mtime_ns": 1785501038968419500
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_18-00_1cd9e714.parquet": {
+      "size": 140388,
+      "mtime_ns": 1785504643058138000
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_19-00_cd1d349c.parquet": {
+      "size": 151494,
+      "mtime_ns": 1785508242391210700
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_20-00_fd55bbab.parquet": {
+      "size": 157055,
+      "mtime_ns": 1785511837531391600
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_21-00_5f58153e.parquet": {
+      "size": 161467,
+      "mtime_ns": 1785515433813608000
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_22-00_ba7a8884.parquet": {
+      "size": 164622,
+      "mtime_ns": 1785519032201538400
+    },
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_23-00_e826ece7.parquet": {
+      "size": 165085,
+      "mtime_ns": 1785522629998862600
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_00-00_79e69f77.parquet": {
+      "size": 15607,
+      "mtime_ns": 1785439813273787500
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_01-00_1fb64eb0.parquet": {
+      "size": 15401,
+      "mtime_ns": 1785443413270083300
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_02-00_bb13b879.parquet": {
+      "size": 15278,
+      "mtime_ns": 1785447013572587500
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_03-00_93a05756.parquet": {
+      "size": 15245,
+      "mtime_ns": 1785450613174273500
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_04-00_536cc704.parquet": {
+      "size": 15210,
+      "mtime_ns": 1785454213798011600
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_05-00_d49da3b5.parquet": {
+      "size": 15187,
+      "mtime_ns": 1785457813419754900
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_06-00_cab9a3a2.parquet": {
+      "size": 15875,
+      "mtime_ns": 1785461414955313300
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_07-00_8f8c1524.parquet": {
+      "size": 14720,
+      "mtime_ns": 1785465013763094100
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_08-00_f93554b1.parquet": {
+      "size": 16036,
+      "mtime_ns": 1785468616178295000
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_09-00_5ad00369.parquet": {
+      "size": 16598,
+      "mtime_ns": 1785472217823476200
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_10-00_54b7d64d.parquet": {
+      "size": 17264,
+      "mtime_ns": 1785475819502683900
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_11-00_f04d2a7d.parquet": {
+      "size": 21269,
+      "mtime_ns": 1785479417510576000
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_12-00_971f05e1.parquet": {
+      "size": 21239,
+      "mtime_ns": 1785483017750295400
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_13-00_e0045936.parquet": {
+      "size": 20951,
+      "mtime_ns": 1785486619802068200
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_14-00_d5fed784.parquet": {
+      "size": 15721,
+      "mtime_ns": 1785490219445418600
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_15-00_b4a76f12.parquet": {
+      "size": 16587,
+      "mtime_ns": 1785493822975696900
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_16-00_c825354e.parquet": {
+      "size": 22516,
+      "mtime_ns": 1785497423654789800
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_17-00_40a64907.parquet": {
+      "size": 23615,
+      "mtime_ns": 1785501020983194200
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_18-00_b9fe7cdd.parquet": {
+      "size": 24513,
+      "mtime_ns": 1785504621115849900
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_19-00_bdd06fae.parquet": {
+      "size": 24379,
+      "mtime_ns": 1785508218243116800
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_20-00_87aaac94.parquet": {
+      "size": 23275,
+      "mtime_ns": 1785511819829878000
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_21-00_36eac2cd.parquet": {
+      "size": 22924,
+      "mtime_ns": 1785515418046670600
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_22-00_df7b3851.parquet": {
+      "size": 22686,
+      "mtime_ns": 1785519016621093400
+    },
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_23-00_4e1b90b7.parquet": {
+      "size": 22410,
+      "mtime_ns": 1785522616156668400
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_00-00_743ad931.parquet": {
+      "size": 16577,
+      "mtime_ns": 1785526205155152700
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_01-00_461e33ab.parquet": {
+      "size": 16418,
+      "mtime_ns": 1785529812073857600
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_02-00_a7a2443c.parquet": {
+      "size": 16190,
+      "mtime_ns": 1785533404784193400
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_03-00_2b4cdf3a.parquet": {
+      "size": 16014,
+      "mtime_ns": 1785537004916113900
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_04-00_303ce705.parquet": {
+      "size": 15977,
+      "mtime_ns": 1785540615105082200
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_05-00_cba9e950.parquet": {
+      "size": 16033,
+      "mtime_ns": 1785544204883149500
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_06-00_f5981d78.parquet": {
+      "size": 15788,
+      "mtime_ns": 1785547805280914000
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_07-00_c655155b.parquet": {
+      "size": 15174,
+      "mtime_ns": 1785551415704631800
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_08-00_bdc70df9.parquet": {
+      "size": 16935,
+      "mtime_ns": 1785555013359522100
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_09-00_5e209c0a.parquet": {
+      "size": 19910,
+      "mtime_ns": 1785558619501333700
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_10-00_5c88bf4a.parquet": {
+      "size": 17005,
+      "mtime_ns": 1785562220046510100
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_11-00_5937e092.parquet": {
+      "size": 17862,
+      "mtime_ns": 1785565811896228400
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_12-00_5d1b6cc9.parquet": {
+      "size": 17533,
+      "mtime_ns": 1785569405665065700
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_13-00_84e82c5c.parquet": {
+      "size": 16835,
+      "mtime_ns": 1785573005821345100
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_14-00_7e715937.parquet": {
+      "size": 16117,
+      "mtime_ns": 1785576618910982600
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_15-00_812f4932.parquet": {
+      "size": 15981,
+      "mtime_ns": 1785580215425614400
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_16-00_6508d432.parquet": {
+      "size": 20082,
+      "mtime_ns": 1785583824749009600
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_17-00_154a67da.parquet": {
+      "size": 20998,
+      "mtime_ns": 1785587407656777900
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_18-00_0acd5ae7.parquet": {
+      "size": 20539,
+      "mtime_ns": 1785591021669371900
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_19-00_f9cfb56c.parquet": {
+      "size": 20150,
+      "mtime_ns": 1785594622079243100
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_20-00_a53673bd.parquet": {
+      "size": 20067,
+      "mtime_ns": 1785598217262648100
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_21-00_99f64900.parquet": {
+      "size": 16364,
+      "mtime_ns": 1785601821139665700
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_22-00_4c9641fe.parquet": {
+      "size": 15815,
+      "mtime_ns": 1785605417628695800
+    },
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_23-00_a9384143.parquet": {
+      "size": 19929,
+      "mtime_ns": 1785609005613264600
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_00-00_b385bcc9.parquet": {
+      "size": 20089,
+      "mtime_ns": 1785526208342688300
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_01-00_7052e294.parquet": {
+      "size": 19838,
+      "mtime_ns": 1785529812105082100
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_02-00_5c4ad4f7.parquet": {
+      "size": 19584,
+      "mtime_ns": 1785533407815459800
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_03-00_4a80cec3.parquet": {
+      "size": 19417,
+      "mtime_ns": 1785537007979130900
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_04-00_d7a42bca.parquet": {
+      "size": 19521,
+      "mtime_ns": 1785540615151989900
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_05-00_d0df909f.parquet": {
+      "size": 19568,
+      "mtime_ns": 1785544208120175800
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_06-00_182ba2e6.parquet": {
+      "size": 17701,
+      "mtime_ns": 1785547815484778800
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_07-00_bed0c1b8.parquet": {
+      "size": 16774,
+      "mtime_ns": 1785551415736127600
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_08-00_fe298d5e.parquet": {
+      "size": 17394,
+      "mtime_ns": 1785555013390733200
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_09-00_92caa3fd.parquet": {
+      "size": 17813,
+      "mtime_ns": 1785558619533042300
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_10-00_6cbcf71f.parquet": {
+      "size": 17962,
+      "mtime_ns": 1785562220124598700
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_11-00_4f5145e7.parquet": {
+      "size": 15943,
+      "mtime_ns": 1785565819974292600
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_12-00_00091d91.parquet": {
+      "size": 17323,
+      "mtime_ns": 1785569417861701500
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_13-00_fd732b27.parquet": {
+      "size": 17614,
+      "mtime_ns": 1785573009700035200
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_14-00_f15cb1e0.parquet": {
+      "size": 16561,
+      "mtime_ns": 1785576618942795300
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_15-00_a05fa6ef.parquet": {
+      "size": 15913,
+      "mtime_ns": 1785580215441203400
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_16-00_170ab1ef.parquet": {
+      "size": 20343,
+      "mtime_ns": 1785583824780302300
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_17-00_18fcb3f4.parquet": {
+      "size": 20644,
+      "mtime_ns": 1785587412250516100
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_18-00_d8467547.parquet": {
+      "size": 20029,
+      "mtime_ns": 1785591021700618600
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_19-00_8237bdfe.parquet": {
+      "size": 20245,
+      "mtime_ns": 1785594622110521300
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_20-00_7e485c92.parquet": {
+      "size": 20809,
+      "mtime_ns": 1785598220715727600
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_21-00_5eaf675e.parquet": {
+      "size": 19721,
+      "mtime_ns": 1785601821188981900
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_22-00_4dc0c8cc.parquet": {
+      "size": 19835,
+      "mtime_ns": 1785605417659945700
+    },
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_23-00_5c6e68e9.parquet": {
+      "size": 20934,
+      "mtime_ns": 1785609013002185700
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_00-00_824a9a7d.parquet": {
+      "size": 70700,
+      "mtime_ns": 1785526208842692100
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_01-00_22521eb9.parquet": {
+      "size": 70473,
+      "mtime_ns": 1785529808980106800
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_02-00_d3167c2f.parquet": {
+      "size": 70315,
+      "mtime_ns": 1785533408815472600
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_03-00_cf6cd78d.parquet": {
+      "size": 70197,
+      "mtime_ns": 1785537008309363200
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_04-00_02caa6f9.parquet": {
+      "size": 70087,
+      "mtime_ns": 1785540608355134500
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_05-00_c32c5cb8.parquet": {
+      "size": 70269,
+      "mtime_ns": 1785544207354510300
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_06-00_13ef17cf.parquet": {
+      "size": 52351,
+      "mtime_ns": 1785547808234032700
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_07-00_2cd3e9bb.parquet": {
+      "size": 60354,
+      "mtime_ns": 1785551408594956400
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_08-00_889e7d3f.parquet": {
+      "size": 57616,
+      "mtime_ns": 1785555007687623200
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_09-00_945994a4.parquet": {
+      "size": 52833,
+      "mtime_ns": 1785558608095041100
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_10-00_0365dae2.parquet": {
+      "size": 59468,
+      "mtime_ns": 1785562209370257100
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_11-00_dda33015.parquet": {
+      "size": 64058,
+      "mtime_ns": 1785565810255601200
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_12-00_13e8d860.parquet": {
+      "size": 66927,
+      "mtime_ns": 1785569409165019200
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_13-00_09c2170a.parquet": {
+      "size": 71486,
+      "mtime_ns": 1785573010949996200
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_14-00_69945853.parquet": {
+      "size": 71466,
+      "mtime_ns": 1785576615020283600
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_15-00_3dd9f025.parquet": {
+      "size": 70084,
+      "mtime_ns": 1785580209111835900
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_16-00_bc44b745.parquet": {
+      "size": 67040,
+      "mtime_ns": 1785583810366882700
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_17-00_d091d4df.parquet": {
+      "size": 75169,
+      "mtime_ns": 1785587410266112100
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_18-00_9b26e67e.parquet": {
+      "size": 71065,
+      "mtime_ns": 1785591011501031200
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_19-00_d5901844.parquet": {
+      "size": 65795,
+      "mtime_ns": 1785594613713932300
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_20-00_ee062305.parquet": {
+      "size": 65658,
+      "mtime_ns": 1785598209401011900
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_21-00_9a05a2dc.parquet": {
+      "size": 68941,
+      "mtime_ns": 1785601810263703600
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_22-00_521f2e30.parquet": {
+      "size": 70754,
+      "mtime_ns": 1785605410056251200
+    },
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_23-00_4babeca9.parquet": {
+      "size": 70500,
+      "mtime_ns": 1785609008597616500
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_00-00_9cd45f40.parquet": {
+      "size": 23823,
+      "mtime_ns": 1785526234503351700
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_01-00_e0d88582.parquet": {
+      "size": 23427,
+      "mtime_ns": 1785529831600121000
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_02-00_15abd290.parquet": {
+      "size": 23075,
+      "mtime_ns": 1785533432630050600
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_03-00_ef19c567.parquet": {
+      "size": 22686,
+      "mtime_ns": 1785537032278281200
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_04-00_77618d0c.parquet": {
+      "size": 22501,
+      "mtime_ns": 1785540631181995300
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_05-00_19c3c5e3.parquet": {
+      "size": 22779,
+      "mtime_ns": 1785544234164832800
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_06-00_dad3b828.parquet": {
+      "size": 18703,
+      "mtime_ns": 1785547833315122400
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_07-00_3bafd235.parquet": {
+      "size": 17725,
+      "mtime_ns": 1785551435463972700
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_08-00_d31e28db.parquet": {
+      "size": 19256,
+      "mtime_ns": 1785555038973413900
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_09-00_5bdc0802.parquet": {
+      "size": 20112,
+      "mtime_ns": 1785558640408108700
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_10-00_b5fec9a9.parquet": {
+      "size": 18255,
+      "mtime_ns": 1785562244331240300
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_11-00_8e4cba41.parquet": {
+      "size": 18118,
+      "mtime_ns": 1785565842165975200
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_12-00_74a10708.parquet": {
+      "size": 19334,
+      "mtime_ns": 1785569442425079800
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_13-00_df8121b3.parquet": {
+      "size": 20516,
+      "mtime_ns": 1785573045084365500
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_14-00_d5fb384b.parquet": {
+      "size": 19622,
+      "mtime_ns": 1785576645708535400
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_15-00_edd5e79a.parquet": {
+      "size": 20580,
+      "mtime_ns": 1785580245671281500
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_16-00_34450108.parquet": {
+      "size": 20309,
+      "mtime_ns": 1785583851754994400
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_17-00_b676f23d.parquet": {
+      "size": 20622,
+      "mtime_ns": 1785587454802618500
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_18-00_c421340b.parquet": {
+      "size": 20155,
+      "mtime_ns": 1785591049317276200
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_19-00_f8c234a3.parquet": {
+      "size": 24554,
+      "mtime_ns": 1785594648821501900
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_20-00_ac94692b.parquet": {
+      "size": 20045,
+      "mtime_ns": 1785598246340661600
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_21-00_f2db2ded.parquet": {
+      "size": 20358,
+      "mtime_ns": 1785601843804097500
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_22-00_c5b004db.parquet": {
+      "size": 23624,
+      "mtime_ns": 1785605438906788200
+    },
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_23-00_012e9d90.parquet": {
+      "size": 23533,
+      "mtime_ns": 1785609037410162700
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_00-00_5dc0c2f4.parquet": {
+      "size": 22288,
+      "mtime_ns": 1785526212344309600
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_01-00_81b1de70.parquet": {
+      "size": 20263,
+      "mtime_ns": 1785529812136360400
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_02-00_d3599b14.parquet": {
+      "size": 20162,
+      "mtime_ns": 1785533411445415800
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_03-00_b0c1697b.parquet": {
+      "size": 20103,
+      "mtime_ns": 1785537015137590300
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_04-00_e0712185.parquet": {
+      "size": 20096,
+      "mtime_ns": 1785540615183206600
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_05-00_2d5cce36.parquet": {
+      "size": 20087,
+      "mtime_ns": 1785544215795782900
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_06-00_41dab542.parquet": {
+      "size": 21502,
+      "mtime_ns": 1785547815516029500
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_07-00_d9fe6f56.parquet": {
+      "size": 20459,
+      "mtime_ns": 1785551415783157300
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_08-00_9821b5f6.parquet": {
+      "size": 19696,
+      "mtime_ns": 1785555018190141000
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_09-00_c3b4414f.parquet": {
+      "size": 20892,
+      "mtime_ns": 1785558619579922300
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_10-00_d6eb4606.parquet": {
+      "size": 20073,
+      "mtime_ns": 1785562220142911400
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_11-00_9b90c677.parquet": {
+      "size": 21390,
+      "mtime_ns": 1785565820005543000
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_12-00_92b58876.parquet": {
+      "size": 20681,
+      "mtime_ns": 1785569417892915100
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_13-00_9cfc9da6.parquet": {
+      "size": 16263,
+      "mtime_ns": 1785573023889651400
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_14-00_b8689561.parquet": {
+      "size": 20028,
+      "mtime_ns": 1785576618974078500
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_15-00_a0309f7a.parquet": {
+      "size": 20042,
+      "mtime_ns": 1785580219962012000
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_16-00_f672aa27.parquet": {
+      "size": 16125,
+      "mtime_ns": 1785583824811514500
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_17-00_47a19d63.parquet": {
+      "size": 16690,
+      "mtime_ns": 1785587416298880500
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_18-00_4f4f9cb4.parquet": {
+      "size": 19907,
+      "mtime_ns": 1785591021731850400
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_19-00_03d1b376.parquet": {
+      "size": 19431,
+      "mtime_ns": 1785594622141745800
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_20-00_c4c0b772.parquet": {
+      "size": 19185,
+      "mtime_ns": 1785598220746980100
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_21-00_15a9c45b.parquet": {
+      "size": 19094,
+      "mtime_ns": 1785601821220275400
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_22-00_7c87314b.parquet": {
+      "size": 20104,
+      "mtime_ns": 1785605417691230200
+    },
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_23-00_154e8de2.parquet": {
+      "size": 19883,
+      "mtime_ns": 1785609016549064100
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_00-00_717d4203.parquet": {
+      "size": 20675,
+      "mtime_ns": 1785526219657123500
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_01-00_c38452aa.parquet": {
+      "size": 20376,
+      "mtime_ns": 1785529819261891200
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_02-00_1624626c.parquet": {
+      "size": 20272,
+      "mtime_ns": 1785533418698339000
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_03-00_8fd89f1b.parquet": {
+      "size": 20146,
+      "mtime_ns": 1785537018575105300
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_04-00_4f1899d9.parquet": {
+      "size": 20095,
+      "mtime_ns": 1785540618745815200
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_05-00_5e888181.parquet": {
+      "size": 20120,
+      "mtime_ns": 1785544219765885400
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_06-00_59783195.parquet": {
+      "size": 20401,
+      "mtime_ns": 1785547819656670800
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_07-00_53000306.parquet": {
+      "size": 22833,
+      "mtime_ns": 1785551420955733100
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_08-00_ad38f18c.parquet": {
+      "size": 22589,
+      "mtime_ns": 1785555023257854300
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_09-00_fc521722.parquet": {
+      "size": 26526,
+      "mtime_ns": 1785558624954937100
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_10-00_21c7ecc5.parquet": {
+      "size": 26837,
+      "mtime_ns": 1785562226946377200
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_11-00_f81c1072.parquet": {
+      "size": 27583,
+      "mtime_ns": 1785565825745046700
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_12-00_913e764d.parquet": {
+      "size": 27474,
+      "mtime_ns": 1785569423955394500
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_13-00_7a85f261.parquet": {
+      "size": 28174,
+      "mtime_ns": 1785573029092850200
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_14-00_dc48eedc.parquet": {
+      "size": 27712,
+      "mtime_ns": 1785576624200866600
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_15-00_86aec7c8.parquet": {
+      "size": 27979,
+      "mtime_ns": 1785580225539239700
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_16-00_5e5ea892.parquet": {
+      "size": 27804,
+      "mtime_ns": 1785583831567832900
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_17-00_9272072a.parquet": {
+      "size": 27292,
+      "mtime_ns": 1785587426658417100
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_18-00_c1d6b550.parquet": {
+      "size": 26557,
+      "mtime_ns": 1785591026858191900
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_19-00_ab4f1889.parquet": {
+      "size": 22297,
+      "mtime_ns": 1785594627669897900
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_20-00_eca06598.parquet": {
+      "size": 25089,
+      "mtime_ns": 1785598226715749800
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_21-00_8b491952.parquet": {
+      "size": 26723,
+      "mtime_ns": 1785601827316080400
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_22-00_c5f55dcf.parquet": {
+      "size": 22356,
+      "mtime_ns": 1785605421800595100
+    },
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_23-00_4f3dd6a0.parquet": {
+      "size": 20660,
+      "mtime_ns": 1785609020314709900
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_00-00_fc8a956a.parquet": {
+      "size": 165323,
+      "mtime_ns": 1785526231320661800
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_01-00_5b90670d.parquet": {
+      "size": 165269,
+      "mtime_ns": 1785529828302990600
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_02-00_3630fc13.parquet": {
+      "size": 165214,
+      "mtime_ns": 1785533429500291500
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_03-00_390847b7.parquet": {
+      "size": 165233,
+      "mtime_ns": 1785537029168894200
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_04-00_daeb256a.parquet": {
+      "size": 165185,
+      "mtime_ns": 1785540627900711000
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_05-00_6a4ee4b5.parquet": {
+      "size": 165222,
+      "mtime_ns": 1785544230852349900
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_06-00_af98667c.parquet": {
+      "size": 165599,
+      "mtime_ns": 1785547829924507000
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_07-00_edc10f37.parquet": {
+      "size": 176964,
+      "mtime_ns": 1785551432960268200
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_08-00_2d7fdc8e.parquet": {
+      "size": 179725,
+      "mtime_ns": 1785555037254024500
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_09-00_602fb6de.parquet": {
+      "size": 190682,
+      "mtime_ns": 1785558637189368300
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_10-00_d9952c39.parquet": {
+      "size": 194735,
+      "mtime_ns": 1785562241251055000
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_11-00_59cd711a.parquet": {
+      "size": 200084,
+      "mtime_ns": 1785565838884884200
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_12-00_a401af70.parquet": {
+      "size": 212330,
+      "mtime_ns": 1785569437847000200
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_13-00_cfaf5953.parquet": {
+      "size": 214323,
+      "mtime_ns": 1785573044506207400
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_14-00_f538537c.parquet": {
+      "size": 223623,
+      "mtime_ns": 1785576643536687000
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_15-00_19e49b44.parquet": {
+      "size": 228448,
+      "mtime_ns": 1785580241889922000
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_16-00_49df4bd9.parquet": {
+      "size": 228959,
+      "mtime_ns": 1785583849911231000
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_17-00_b27bb4bf.parquet": {
+      "size": 243026,
+      "mtime_ns": 1785587454712506100
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_18-00_fdbdddb7.parquet": {
+      "size": 244509,
+      "mtime_ns": 1785591049286017500
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_19-00_6c32f681.parquet": {
+      "size": 255490,
+      "mtime_ns": 1785594645152357500
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_20-00_1305891c.parquet": {
+      "size": 255719,
+      "mtime_ns": 1785598242637546000
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_21-00_d521ec9d.parquet": {
+      "size": 262223,
+      "mtime_ns": 1785601842351012400
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_22-00_faae22d5.parquet": {
+      "size": 263754,
+      "mtime_ns": 1785605436499412400
+    },
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_23-00_b12cc4b9.parquet": {
+      "size": 263764,
+      "mtime_ns": 1785609034191434000
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_00-00_a77ab246.parquet": {
+      "size": 22161,
+      "mtime_ns": 1785526215688367400
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_01-00_98da91c9.parquet": {
+      "size": 21936,
+      "mtime_ns": 1785529815261345100
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_02-00_b6fb641f.parquet": {
+      "size": 21819,
+      "mtime_ns": 1785533415070591400
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_03-00_e4f92642.parquet": {
+      "size": 21602,
+      "mtime_ns": 1785537015231380000
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_04-00_58954d79.parquet": {
+      "size": 21533,
+      "mtime_ns": 1785540615198869900
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_05-00_63e70baa.parquet": {
+      "size": 21609,
+      "mtime_ns": 1785544215827033500
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_06-00_ae6311f4.parquet": {
+      "size": 20756,
+      "mtime_ns": 1785547815562939000
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_07-00_1d284c5a.parquet": {
+      "size": 20495,
+      "mtime_ns": 1785551415814371600
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_08-00_62b822b3.parquet": {
+      "size": 20509,
+      "mtime_ns": 1785555018222376100
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_09-00_9d6832f4.parquet": {
+      "size": 20846,
+      "mtime_ns": 1785558619611199100
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_10-00_12d1902a.parquet": {
+      "size": 23568,
+      "mtime_ns": 1785562220174167900
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_11-00_762606f1.parquet": {
+      "size": 25305,
+      "mtime_ns": 1785565820036793300
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_12-00_7b985da8.parquet": {
+      "size": 25444,
+      "mtime_ns": 1785569417908570800
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_13-00_a1590d60.parquet": {
+      "size": 24636,
+      "mtime_ns": 1785573023920866800
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_14-00_c68e1216.parquet": {
+      "size": 24110,
+      "mtime_ns": 1785576619005300600
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_15-00_80988650.parquet": {
+      "size": 23843,
+      "mtime_ns": 1785580219980909400
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_16-00_54dbd3a1.parquet": {
+      "size": 25119,
+      "mtime_ns": 1785583824842791500
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_17-00_36316530.parquet": {
+      "size": 25252,
+      "mtime_ns": 1785587422502174800
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_18-00_5296c6d3.parquet": {
+      "size": 28181,
+      "mtime_ns": 1785591021794340800
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_19-00_209edde2.parquet": {
+      "size": 28212,
+      "mtime_ns": 1785594622172997500
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_20-00_fb353b40.parquet": {
+      "size": 28307,
+      "mtime_ns": 1785598220778227000
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_21-00_1b127aea.parquet": {
+      "size": 23198,
+      "mtime_ns": 1785601821252065900
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_22-00_af053a8b.parquet": {
+      "size": 23000,
+      "mtime_ns": 1785605417722445600
+    },
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_23-00_df1ec908.parquet": {
+      "size": 22920,
+      "mtime_ns": 1785609016580326100
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_00-00_2e2ab38c.parquet": {
+      "size": 19745,
+      "mtime_ns": 1785612611743189400
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_01-00_7b8fa8d9.parquet": {
+      "size": 19671,
+      "mtime_ns": 1785616211331424200
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_02-00_9707b06d.parquet": {
+      "size": 19479,
+      "mtime_ns": 1785619808290400600
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_03-00_a29652b1.parquet": {
+      "size": 19465,
+      "mtime_ns": 1785623412176242700
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_04-00_e8e1f983.parquet": {
+      "size": 19361,
+      "mtime_ns": 1785627015981842300
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_05-00_3b71dbc4.parquet": {
+      "size": 19480,
+      "mtime_ns": 1785630608505855900
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_06-00_cb3be789.parquet": {
+      "size": 15676,
+      "mtime_ns": 1785634208756262200
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_07-00_eef4cfac.parquet": {
+      "size": 13776,
+      "mtime_ns": 1785637805158426600
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_08-00_458d350f.parquet": {
+      "size": 15843,
+      "mtime_ns": 1785641409879783200
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_09-00_edb399dd.parquet": {
+      "size": 16447,
+      "mtime_ns": 1785645005712477900
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_10-00_ebdf0d18.parquet": {
+      "size": 15354,
+      "mtime_ns": 1785648613952504700
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_11-00_2a950367.parquet": {
+      "size": 20642,
+      "mtime_ns": 1785652207176135700
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_12-00_2bb6218d.parquet": {
+      "size": 21658,
+      "mtime_ns": 1785655821333754400
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_13-00_bcba9ed0.parquet": {
+      "size": 20971,
+      "mtime_ns": 1785659411574051500
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_14-00_9944dbc0.parquet": {
+      "size": 22088,
+      "mtime_ns": 1785663020963085900
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_15-00_abae1586.parquet": {
+      "size": 21534,
+      "mtime_ns": 1785666614833519600
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_16-00_c3cbb66e.parquet": {
+      "size": 21138,
+      "mtime_ns": 1785670217062560000
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_17-00_181d6301.parquet": {
+      "size": 22284,
+      "mtime_ns": 1785673812152897200
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_18-00_a3e0c14f.parquet": {
+      "size": 22066,
+      "mtime_ns": 1785677417115700200
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_19-00_d21e1bd7.parquet": {
+      "size": 22461,
+      "mtime_ns": 1785681013102971000
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_20-00_07606f83.parquet": {
+      "size": 22311,
+      "mtime_ns": 1785684611539205400
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_21-00_67cf9f06.parquet": {
+      "size": 21505,
+      "mtime_ns": 1785688211133976400
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_22-00_dba6ccbf.parquet": {
+      "size": 21389,
+      "mtime_ns": 1785691814280108500
+    },
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_23-00_e7578c59.parquet": {
+      "size": 21165,
+      "mtime_ns": 1785695413331901800
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_00-00_3326601c.parquet": {
+      "size": 20454,
+      "mtime_ns": 1785612611758926600
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_01-00_f897451d.parquet": {
+      "size": 20031,
+      "mtime_ns": 1785616211425177100
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_02-00_142376ef.parquet": {
+      "size": 19815,
+      "mtime_ns": 1785619808352904700
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_03-00_f877f839.parquet": {
+      "size": 19773,
+      "mtime_ns": 1785623412223078600
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_04-00_f0adce59.parquet": {
+      "size": 19696,
+      "mtime_ns": 1785627016013703400
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_05-00_be02a74c.parquet": {
+      "size": 19693,
+      "mtime_ns": 1785630611053667900
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_06-00_42ed02b2.parquet": {
+      "size": 14876,
+      "mtime_ns": 1785634215508882700
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_07-00_bee16cbc.parquet": {
+      "size": 16894,
+      "mtime_ns": 1785637807720962300
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_08-00_37dd0422.parquet": {
+      "size": 16489,
+      "mtime_ns": 1785641409942273700
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_09-00_9b4d9ba6.parquet": {
+      "size": 15835,
+      "mtime_ns": 1785645019512341800
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_10-00_1f2f85a7.parquet": {
+      "size": 15801,
+      "mtime_ns": 1785648613996166300
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_11-00_35bea29f.parquet": {
+      "size": 16059,
+      "mtime_ns": 1785652216102172600
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_12-00_2f35b168.parquet": {
+      "size": 17244,
+      "mtime_ns": 1785655821365004800
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_13-00_29e4ed56.parquet": {
+      "size": 17875,
+      "mtime_ns": 1785659415500340500
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_14-00_54364b7b.parquet": {
+      "size": 15497,
+      "mtime_ns": 1785663020994474900
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_15-00_5d3b8813.parquet": {
+      "size": 16327,
+      "mtime_ns": 1785666614864769100
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_16-00_fd532202.parquet": {
+      "size": 19830,
+      "mtime_ns": 1785670217093774000
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_17-00_ab804b88.parquet": {
+      "size": 25147,
+      "mtime_ns": 1785673821648886100
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_18-00_d81e1eb2.parquet": {
+      "size": 24740,
+      "mtime_ns": 1785677417146913200
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_19-00_92cee1b9.parquet": {
+      "size": 24984,
+      "mtime_ns": 1785681013134215100
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_20-00_6ad096fe.parquet": {
+      "size": 24662,
+      "mtime_ns": 1785684616641010800
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_21-00_bba246fb.parquet": {
+      "size": 24661,
+      "mtime_ns": 1785688220743695900
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_22-00_17f6f344.parquet": {
+      "size": 20348,
+      "mtime_ns": 1785691814343228300
+    },
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_23-00_77fec77b.parquet": {
+      "size": 19754,
+      "mtime_ns": 1785695413394366600
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_00-00_425d9b85.parquet": {
+      "size": 69860,
+      "mtime_ns": 1785612607758799000
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_01-00_5ea0ce4e.parquet": {
+      "size": 69713,
+      "mtime_ns": 1785616209454373600
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_02-00_02ce3926.parquet": {
+      "size": 69542,
+      "mtime_ns": 1785619807884153300
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_03-00_a7d0ac2e.parquet": {
+      "size": 69530,
+      "mtime_ns": 1785623407981150200
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_04-00_7d561ab7.parquet": {
+      "size": 69482,
+      "mtime_ns": 1785627008042272900
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_05-00_f2c7b5da.parquet": {
+      "size": 69503,
+      "mtime_ns": 1785630608724605900
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_06-00_43a59b2b.parquet": {
+      "size": 59980,
+      "mtime_ns": 1785634208048516200
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_07-00_f58e526f.parquet": {
+      "size": 60204,
+      "mtime_ns": 1785637808314706500
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_08-00_f3901715.parquet": {
+      "size": 61376,
+      "mtime_ns": 1785641409582865100
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_09-00_859bb370.parquet": {
+      "size": 63842,
+      "mtime_ns": 1785645009275260400
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_10-00_5db77f6e.parquet": {
+      "size": 73312,
+      "mtime_ns": 1785648610454186200
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_11-00_a7092ae1.parquet": {
+      "size": 74292,
+      "mtime_ns": 1785652211069856400
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_12-00_4553943a.parquet": {
+      "size": 74706,
+      "mtime_ns": 1785655809583671900
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_13-00_5ffdfc55.parquet": {
+      "size": 74322,
+      "mtime_ns": 1785659409167773100
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_14-00_51d2611f.parquet": {
+      "size": 74354,
+      "mtime_ns": 1785663010942137400
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_15-00_70c2fb50.parquet": {
+      "size": 75636,
+      "mtime_ns": 1785666610213656500
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_16-00_7aba4576.parquet": {
+      "size": 75014,
+      "mtime_ns": 1785670209967346300
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_17-00_a62f9b1e.parquet": {
+      "size": 74131,
+      "mtime_ns": 1785673810371406400
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_18-00_041c943a.parquet": {
+      "size": 74211,
+      "mtime_ns": 1785677411353346900
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_19-00_54d23db3.parquet": {
+      "size": 74845,
+      "mtime_ns": 1785681012509426000
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_20-00_29e66294.parquet": {
+      "size": 75031,
+      "mtime_ns": 1785684610867326500
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_21-00_45428e96.parquet": {
+      "size": 76455,
+      "mtime_ns": 1785688212040186600
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_22-00_82c5b7df.parquet": {
+      "size": 75157,
+      "mtime_ns": 1785691808993135100
+    },
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_23-00_3b7574ac.parquet": {
+      "size": 73886,
+      "mtime_ns": 1785695408925628100
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_00-00_a67f0e57.parquet": {
+      "size": 23218,
+      "mtime_ns": 1785612636026993600
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_01-00_3f08a39f.parquet": {
+      "size": 22907,
+      "mtime_ns": 1785616235237891800
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_02-00_6c9b81a1.parquet": {
+      "size": 22698,
+      "mtime_ns": 1785619835139421500
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_03-00_c97c78a1.parquet": {
+      "size": 22462,
+      "mtime_ns": 1785623434973619100
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_04-00_e1ba7900.parquet": {
+      "size": 22362,
+      "mtime_ns": 1785627035515950900
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_05-00_43dccfa2.parquet": {
+      "size": 22979,
+      "mtime_ns": 1785630635504861400
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_06-00_a5fcf5dd.parquet": {
+      "size": 17725,
+      "mtime_ns": 1785634236001304800
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_07-00_112278be.parquet": {
+      "size": 19718,
+      "mtime_ns": 1785637839998341700
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_08-00_9b61fa2f.parquet": {
+      "size": 24015,
+      "mtime_ns": 1785641445383000700
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_09-00_d3cde9c4.parquet": {
+      "size": 23485,
+      "mtime_ns": 1785645045965953700
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_10-00_724c6f5a.parquet": {
+      "size": 23478,
+      "mtime_ns": 1785648646619562200
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_11-00_b6eab74f.parquet": {
+      "size": 23867,
+      "mtime_ns": 1785652248060552500
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_12-00_191fc6cb.parquet": {
+      "size": 23992,
+      "mtime_ns": 1785655846224165900
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_13-00_aa3a27e3.parquet": {
+      "size": 20157,
+      "mtime_ns": 1785659448622018200
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_14-00_3362b477.parquet": {
+      "size": 24546,
+      "mtime_ns": 1785663048504689700
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_15-00_c6294a1f.parquet": {
+      "size": 23579,
+      "mtime_ns": 1785666649897528500
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_16-00_99f778b7.parquet": {
+      "size": 23892,
+      "mtime_ns": 1785670250928773300
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_17-00_82a32c1c.parquet": {
+      "size": 24597,
+      "mtime_ns": 1785673850340436400
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_18-00_f2ae3037.parquet": {
+      "size": 24734,
+      "mtime_ns": 1785677451530172400
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_19-00_5fe71e78.parquet": {
+      "size": 24761,
+      "mtime_ns": 1785681057011572000
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_20-00_5e09c12a.parquet": {
+      "size": 18289,
+      "mtime_ns": 1785684649698984500
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_21-00_d3d980fb.parquet": {
+      "size": 17205,
+      "mtime_ns": 1785688248066713300
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_22-00_0eca9f40.parquet": {
+      "size": 19303,
+      "mtime_ns": 1785691841236510000
+    },
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_23-00_1b2edbe7.parquet": {
+      "size": 17810,
+      "mtime_ns": 1785695440964077200
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_00-00_2de1e2b9.parquet": {
+      "size": 16077,
+      "mtime_ns": 1785612611790217900
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_01-00_97c6fa95.parquet": {
+      "size": 15500,
+      "mtime_ns": 1785616211456427200
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_02-00_c6ba1992.parquet": {
+      "size": 15411,
+      "mtime_ns": 1785619811446783500
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_03-00_efa20a0b.parquet": {
+      "size": 15331,
+      "mtime_ns": 1785623412254328300
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_04-00_f6be6100.parquet": {
+      "size": 15285,
+      "mtime_ns": 1785627016044884500
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_05-00_c1c436d9.parquet": {
+      "size": 15328,
+      "mtime_ns": 1785630611084882600
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_06-00_bff655e5.parquet": {
+      "size": 19649,
+      "mtime_ns": 1785634215540096600
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_07-00_f6343a18.parquet": {
+      "size": 20953,
+      "mtime_ns": 1785637816615219800
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_08-00_556fc65e.parquet": {
+      "size": 20604,
+      "mtime_ns": 1785641419973503100
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_09-00_758176f4.parquet": {
+      "size": 20914,
+      "mtime_ns": 1785645019543591500
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_10-00_ab41029e.parquet": {
+      "size": 17888,
+      "mtime_ns": 1785648614011790900
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_11-00_c5615f3a.parquet": {
+      "size": 15781,
+      "mtime_ns": 1785652221008480800
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_12-00_159eb7a1.parquet": {
+      "size": 20517,
+      "mtime_ns": 1785655821396254700
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_13-00_09ead29b.parquet": {
+      "size": 21301,
+      "mtime_ns": 1785659419652528300
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_14-00_10688e50.parquet": {
+      "size": 16333,
+      "mtime_ns": 1785663021025730400
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_15-00_80935762.parquet": {
+      "size": 20087,
+      "mtime_ns": 1785666614897722200
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_16-00_17b68395.parquet": {
+      "size": 16776,
+      "mtime_ns": 1785670222344005500
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_17-00_3d1bafdd.parquet": {
+      "size": 15932,
+      "mtime_ns": 1785673821680136400
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_18-00_90b8f32d.parquet": {
+      "size": 15525,
+      "mtime_ns": 1785677421850090400
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_19-00_3f38af81.parquet": {
+      "size": 20650,
+      "mtime_ns": 1785681025009579400
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_20-00_4a8a7899.parquet": {
+      "size": 21284,
+      "mtime_ns": 1785684616672221700
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_21-00_64c3dbe1.parquet": {
+      "size": 21090,
+      "mtime_ns": 1785688220774898500
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_22-00_7dd31020.parquet": {
+      "size": 20817,
+      "mtime_ns": 1785691818140127300
+    },
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_23-00_2123aaa8.parquet": {
+      "size": 21225,
+      "mtime_ns": 1785695417581888400
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_00-00_d230be3b.parquet": {
+      "size": 19761,
+      "mtime_ns": 1785612619743541400
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_01-00_1bcc4cb9.parquet": {
+      "size": 19610,
+      "mtime_ns": 1785616218982263500
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_02-00_74dfc7dd.parquet": {
+      "size": 19477,
+      "mtime_ns": 1785619818915523300
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_03-00_966ae4b0.parquet": {
+      "size": 19392,
+      "mtime_ns": 1785623419004569700
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_04-00_9118a18f.parquet": {
+      "size": 19500,
+      "mtime_ns": 1785627019466828000
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_05-00_883ca1ee.parquet": {
+      "size": 19495,
+      "mtime_ns": 1785630619320848200
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_06-00_58b30128.parquet": {
+      "size": 19756,
+      "mtime_ns": 1785634219362238600
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_07-00_f37da364.parquet": {
+      "size": 24619,
+      "mtime_ns": 1785637822255795300
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_08-00_848518b5.parquet": {
+      "size": 27875,
+      "mtime_ns": 1785641425864189400
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_09-00_e5d39355.parquet": {
+      "size": 28007,
+      "mtime_ns": 1785645025982012200
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_10-00_bc6574a0.parquet": {
+      "size": 27225,
+      "mtime_ns": 1785648625763648400
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_11-00_60d0189d.parquet": {
+      "size": 28127,
+      "mtime_ns": 1785652227528957000
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_12-00_60642378.parquet": {
+      "size": 28477,
+      "mtime_ns": 1785655826737001800
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_13-00_f5ba06f9.parquet": {
+      "size": 28823,
+      "mtime_ns": 1785659427950226000
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_14-00_0908d572.parquet": {
+      "size": 28916,
+      "mtime_ns": 1785663027181963800
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_15-00_186019a2.parquet": {
+      "size": 28339,
+      "mtime_ns": 1785666628917614700
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_16-00_5857fb52.parquet": {
+      "size": 28624,
+      "mtime_ns": 1785670228582917500
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_17-00_f9da489f.parquet": {
+      "size": 27927,
+      "mtime_ns": 1785673827604813100
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_18-00_ee9f5a7c.parquet": {
+      "size": 27954,
+      "mtime_ns": 1785677428978354400
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_19-00_ae171f89.parquet": {
+      "size": 28209,
+      "mtime_ns": 1785681031994234700
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_20-00_4aee20bd.parquet": {
+      "size": 28402,
+      "mtime_ns": 1785684628188000600
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_21-00_494e60d5.parquet": {
+      "size": 28482,
+      "mtime_ns": 1785688227332137900
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_22-00_2cc5e187.parquet": {
+      "size": 26369,
+      "mtime_ns": 1785691822903317100
+    },
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_23-00_77076f76.parquet": {
+      "size": 26010,
+      "mtime_ns": 1785695422801016700
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_00-00_28685355.parquet": {
+      "size": 263745,
+      "mtime_ns": 1785612632524997700
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_01-00_4994c276.parquet": {
+      "size": 263709,
+      "mtime_ns": 1785616232128393500
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_02-00_034d0bb0.parquet": {
+      "size": 263700,
+      "mtime_ns": 1785619832075471900
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_03-00_ea0a1ff4.parquet": {
+      "size": 263637,
+      "mtime_ns": 1785623432176600600
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_04-00_ff458951.parquet": {
+      "size": 263574,
+      "mtime_ns": 1785627032406566300
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_05-00_fa190726.parquet": {
+      "size": 263683,
+      "mtime_ns": 1785630633120226200
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_06-00_b731213d.parquet": {
+      "size": 262782,
+      "mtime_ns": 1785634233048204300
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_07-00_514ea490.parquet": {
+      "size": 277882,
+      "mtime_ns": 1785637835859146400
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_08-00_cc1fdfaa.parquet": {
+      "size": 283907,
+      "mtime_ns": 1785641440961172500
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_09-00_38e01ae8.parquet": {
+      "size": 294453,
+      "mtime_ns": 1785645041387835900
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_10-00_ce7508f7.parquet": {
+      "size": 297326,
+      "mtime_ns": 1785648642619581800
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_11-00_16a86257.parquet": {
+      "size": 311798,
+      "mtime_ns": 1785652243904313600
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_12-00_682c6da2.parquet": {
+      "size": 313630,
+      "mtime_ns": 1785655842051575000
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_13-00_61a759b8.parquet": {
+      "size": 318236,
+      "mtime_ns": 1785659444028306800
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_14-00_230fccef.parquet": {
+      "size": 333250,
+      "mtime_ns": 1785663044300565200
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_15-00_650efbcd.parquet": {
+      "size": 336377,
+      "mtime_ns": 1785666645218902400
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_16-00_bac0d8e1.parquet": {
+      "size": 350136,
+      "mtime_ns": 1785670246491397400
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_17-00_b6a1830d.parquet": {
+      "size": 355989,
+      "mtime_ns": 1785673845856073300
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_18-00_bf4bddc4.parquet": {
+      "size": 355515,
+      "mtime_ns": 1785677447344371100
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_19-00_819bce8f.parquet": {
+      "size": 360714,
+      "mtime_ns": 1785681056745917400
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_20-00_450ca567.parquet": {
+      "size": 375889,
+      "mtime_ns": 1785684649605232100
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_21-00_5124ffcc.parquet": {
+      "size": 376774,
+      "mtime_ns": 1785688245129184500
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_22-00_f2c83f13.parquet": {
+      "size": 378340,
+      "mtime_ns": 1785691837970621200
+    },
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_23-00_57c49c88.parquet": {
+      "size": 385908,
+      "mtime_ns": 1785695438729706600
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_00-00_8d700496.parquet": {
+      "size": 22630,
+      "mtime_ns": 1785612616102885700
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_01-00_35e86ad5.parquet": {
+      "size": 22330,
+      "mtime_ns": 1785616215565655000
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_02-00_a5451835.parquet": {
+      "size": 22186,
+      "mtime_ns": 1785619815431137500
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_03-00_20718491.parquet": {
+      "size": 22061,
+      "mtime_ns": 1785623416066982500
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_04-00_a1a3e013.parquet": {
+      "size": 22044,
+      "mtime_ns": 1785627016060508300
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_05-00_2c94295f.parquet": {
+      "size": 21930,
+      "mtime_ns": 1785630615590458500
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_06-00_22e771e3.parquet": {
+      "size": 22518,
+      "mtime_ns": 1785634215602597600
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_07-00_863685d0.parquet": {
+      "size": 23291,
+      "mtime_ns": 1785637816646424900
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_08-00_d7ef4d3e.parquet": {
+      "size": 28466,
+      "mtime_ns": 1785641420004713800
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_09-00_89397392.parquet": {
+      "size": 29349,
+      "mtime_ns": 1785645019574841600
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_10-00_82939f93.parquet": {
+      "size": 29885,
+      "mtime_ns": 1785648620199790900
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_11-00_a183868a.parquet": {
+      "size": 29947,
+      "mtime_ns": 1785652221039758500
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_12-00_5a0c8c29.parquet": {
+      "size": 28637,
+      "mtime_ns": 1785655821427504600
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_13-00_f67d12f1.parquet": {
+      "size": 28474,
+      "mtime_ns": 1785659419683802500
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_14-00_c15fb01a.parquet": {
+      "size": 28518,
+      "mtime_ns": 1785663021056979500
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_15-00_cc0dde13.parquet": {
+      "size": 28681,
+      "mtime_ns": 1785666620243718600
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_16-00_bade7c52.parquet": {
+      "size": 28954,
+      "mtime_ns": 1785670222375255800
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_17-00_a48a7094.parquet": {
+      "size": 29445,
+      "mtime_ns": 1785673821711385900
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_18-00_6930b707.parquet": {
+      "size": 28236,
+      "mtime_ns": 1785677421896932300
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_19-00_8b256134.parquet": {
+      "size": 28093,
+      "mtime_ns": 1785681025040864500
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_20-00_030d4220.parquet": {
+      "size": 29827,
+      "mtime_ns": 1785684622625369100
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_21-00_acc70f44.parquet": {
+      "size": 29998,
+      "mtime_ns": 1785688220806148400
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_22-00_a03f4573.parquet": {
+      "size": 29365,
+      "mtime_ns": 1785691818187005200
+    },
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_23-00_3f2c1157.parquet": {
+      "size": 28067,
+      "mtime_ns": 1785695417613135300
+    },
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_00-00_f2913393.parquet": {
+      "size": 20247,
+      "mtime_ns": 1785699016180034900
+    },
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_01-00_061fc456.parquet": {
+      "size": 20035,
+      "mtime_ns": 1785702604878635300
+    },
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_02-00_00846a3b.parquet": {
+      "size": 19880,
+      "mtime_ns": 1785706215555898400
+    },
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_03-00_102af234.parquet": {
+      "size": 19738,
+      "mtime_ns": 1785709805377924300
+    },
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_04-00_f54be210.parquet": {
+      "size": 19646,
+      "mtime_ns": 1785713405171402500
+    },
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_05-00_617de798.parquet": {
+      "size": 19849,
+      "mtime_ns": 1785717005318340100
+    },
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_06-00_2100c7f7.parquet": {
+      "size": 20047,
+      "mtime_ns": 1785720614114796200
+    },
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_07-00_2c489715.parquet": {
+      "size": 19647,
+      "mtime_ns": 1785724206363813900
+    },
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_08-00_4677eb48.parquet": {
+      "size": 21360,
+      "mtime_ns": 1785727811479421900
+    },
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_09-00_4d33a052.parquet": {
+      "size": 21357,
+      "mtime_ns": 1785731406967404000
+    },
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_10-00_8d57f157.parquet": {
+      "size": 22007,
+      "mtime_ns": 1785735023083528900
+    },
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_11-00_0bb52eb0.parquet": {
+      "size": 22119,
+      "mtime_ns": 1785738620361327900
+    },
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_00-00_3682cec9.parquet": {
+      "size": 19575,
+      "mtime_ns": 1785699016211921000
+    },
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_01-00_e408b86f.parquet": {
+      "size": 19460,
+      "mtime_ns": 1785702615798866600
+    },
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_02-00_4d0f5631.parquet": {
+      "size": 19162,
+      "mtime_ns": 1785706215587135700
+    },
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_03-00_48ebfedb.parquet": {
+      "size": 19159,
+      "mtime_ns": 1785709808346656000
+    },
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_04-00_deb6aca0.parquet": {
+      "size": 19131,
+      "mtime_ns": 1785713416484028300
+    },
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_05-00_84cffff9.parquet": {
+      "size": 19376,
+      "mtime_ns": 1785717012508932900
+    },
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_06-00_0098d98e.parquet": {
+      "size": 18680,
+      "mtime_ns": 1785720614177261900
+    },
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_07-00_b3aee384.parquet": {
+      "size": 24805,
+      "mtime_ns": 1785724215297784300
+    },
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_08-00_8f93c366.parquet": {
+      "size": 24757,
+      "mtime_ns": 1785727816026314300
+    },
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_09-00_33622dc7.parquet": {
+      "size": 24587,
+      "mtime_ns": 1785731421961610300
+    },
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_10-00_fb350026.parquet": {
+      "size": 23667,
+      "mtime_ns": 1785735023114778200
+    },
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_11-00_00db2ca1.parquet": {
+      "size": 22144,
+      "mtime_ns": 1785738620392613200
+    },
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_00-00_efd3a4d3.parquet": {
+      "size": 73553,
+      "mtime_ns": 1785699009226790600
+    },
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_01-00_8d3117f9.parquet": {
+      "size": 73357,
+      "mtime_ns": 1785702608175472000
+    },
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_02-00_574e5d4b.parquet": {
+      "size": 73215,
+      "mtime_ns": 1785706208073439800
+    },
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_03-00_9f8db1de.parquet": {
+      "size": 73219,
+      "mtime_ns": 1785709808049783900
+    },
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_04-00_a2c6b667.parquet": {
+      "size": 73152,
+      "mtime_ns": 1785713408093365900
+    },
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_05-00_6e348c12.parquet": {
+      "size": 73320,
+      "mtime_ns": 1785717008646422000
+    },
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_06-00_45c249e3.parquet": {
+      "size": 73287,
+      "mtime_ns": 1785720608613569700
+    },
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_07-00_353fbf59.parquet": {
+      "size": 74354,
+      "mtime_ns": 1785724210238769900
+    },
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_08-00_9e641dff.parquet": {
+      "size": 76095,
+      "mtime_ns": 1785727809384309100
+    },
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_09-00_ae24c864.parquet": {
+      "size": 74272,
+      "mtime_ns": 1785731409843177000
+    },
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_10-00_c2766e08.parquet": {
+      "size": 84146,
+      "mtime_ns": 1785735010880399400
+    },
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_11-00_b6ea0fd0.parquet": {
+      "size": 89627,
+      "mtime_ns": 1785738609489698700
+    },
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_00-00_5e1bb6b8.parquet": {
+      "size": 17479,
+      "mtime_ns": 1785699038792321500
+    },
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_01-00_b443463c.parquet": {
+      "size": 17240,
+      "mtime_ns": 1785702638342621200
+    },
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_02-00_d6a57ee7.parquet": {
+      "size": 17151,
+      "mtime_ns": 1785706237468769900
+    },
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_03-00_2e3841c0.parquet": {
+      "size": 17004,
+      "mtime_ns": 1785709838456331600
+    },
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_04-00_be594017.parquet": {
+      "size": 17006,
+      "mtime_ns": 1785713440332251300
+    },
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_05-00_6292f709.parquet": {
+      "size": 17056,
+      "mtime_ns": 1785717040838814500
+    },
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_06-00_6dbf1cd4.parquet": {
+      "size": 17748,
+      "mtime_ns": 1785720643043320500
+    },
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_07-00_225d4f44.parquet": {
+      "size": 21780,
+      "mtime_ns": 1785724244435394100
+    },
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_08-00_e8c47725.parquet": {
+      "size": 23401,
+      "mtime_ns": 1785727846198659700
+    },
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_09-00_1aa68838.parquet": {
+      "size": 23824,
+      "mtime_ns": 1785731450554828400
+    },
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_10-00_7efac5c3.parquet": {
+      "size": 23451,
+      "mtime_ns": 1785735053320219600
+    },
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_11-00_018d3fb7.parquet": {
+      "size": 23187,
+      "mtime_ns": 1785738646314804200
+    },
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_00-00_c51804f0.parquet": {
+      "size": 20016,
+      "mtime_ns": 1785699016243114200
+    },
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_01-00_22c7b92a.parquet": {
+      "size": 18347,
+      "mtime_ns": 1785702615830113500
+    },
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_02-00_e612e01c.parquet": {
+      "size": 18189,
+      "mtime_ns": 1785706215618359400
+    },
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_03-00_9dc54e62.parquet": {
+      "size": 18005,
+      "mtime_ns": 1785709816800650700
+    },
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_04-00_6b543c76.parquet": {
+      "size": 18112,
+      "mtime_ns": 1785713416515316400
+    },
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_05-00_4a05ef74.parquet": {
+      "size": 21144,
+      "mtime_ns": 1785717012540148300
+    },
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_06-00_a465dea9.parquet": {
+      "size": 22029,
+      "mtime_ns": 1785720614208512000
+    },
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_07-00_6be61a0d.parquet": {
+      "size": 21875,
+      "mtime_ns": 1785724219923040400
+    },
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_08-00_7f7293e5.parquet": {
+      "size": 22451,
+      "mtime_ns": 1785727820760673400
+    },
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_09-00_be11f2b4.parquet": {
+      "size": 22942,
+      "mtime_ns": 1785731422008490300
+    },
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_10-00_ad6adf78.parquet": {
+      "size": 23254,
+      "mtime_ns": 1785735023146027900
+    },
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_11-00_4fda113d.parquet": {
+      "size": 22880,
+      "mtime_ns": 1785738620423827300
+    },
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_00-00_72e79777.parquet": {
+      "size": 24799,
+      "mtime_ns": 1785699020761121000
+    },
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_01-00_ce2adf1d.parquet": {
+      "size": 24694,
+      "mtime_ns": 1785702620298817900
+    },
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_02-00_66e99fb6.parquet": {
+      "size": 24516,
+      "mtime_ns": 1785706219869148800
+    },
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_03-00_5d687bf4.parquet": {
+      "size": 24476,
+      "mtime_ns": 1785709821253804000
+    },
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_04-00_f930d4fa.parquet": {
+      "size": 24414,
+      "mtime_ns": 1785713420655916300
+    },
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_05-00_6f9820a5.parquet": {
+      "size": 24567,
+      "mtime_ns": 1785717023624291200
+    },
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_06-00_90faad5f.parquet": {
+      "size": 24580,
+      "mtime_ns": 1785720623036669600
+    },
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_07-00_3e19d643.parquet": {
+      "size": 26028,
+      "mtime_ns": 1785724224844864400
+    },
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_08-00_003fdee0.parquet": {
+      "size": 27717,
+      "mtime_ns": 1785727826597878100
+    },
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_09-00_a2adbda0.parquet": {
+      "size": 32810,
+      "mtime_ns": 1785731428047206900
+    },
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_10-00_5767be09.parquet": {
+      "size": 33640,
+      "mtime_ns": 1785735029739899800
+    },
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_11-00_003612d8.parquet": {
+      "size": 33040,
+      "mtime_ns": 1785738625810330600
+    },
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_00-00_eaca10b1.parquet": {
+      "size": 385802,
+      "mtime_ns": 1785699038651734500
+    },
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_01-00_32e797d0.parquet": {
+      "size": 385723,
+      "mtime_ns": 1785702637826997600
+    },
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_02-00_46891b02.parquet": {
+      "size": 385653,
+      "mtime_ns": 1785706234281267900
+    },
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_03-00_c6b586cb.parquet": {
+      "size": 385614,
+      "mtime_ns": 1785709835456299600
+    },
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_04-00_3d36ed73.parquet": {
+      "size": 385575,
+      "mtime_ns": 1785713438629313900
+    },
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_05-00_459194e2.parquet": {
+      "size": 385666,
+      "mtime_ns": 1785717038151321400
+    },
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_06-00_50bb10bc.parquet": {
+      "size": 381367,
+      "mtime_ns": 1785720639808562300
+    },
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_07-00_52f02fa4.parquet": {
+      "size": 390085,
+      "mtime_ns": 1785724241167950900
+    },
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_08-00_6eef9127.parquet": {
+      "size": 393338,
+      "mtime_ns": 1785727842193062700
+    },
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_09-00_5229e45c.parquet": {
+      "size": 412503,
+      "mtime_ns": 1785731446631485000
+    },
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_10-00_9aa09933.parquet": {
+      "size": 420380,
+      "mtime_ns": 1785735049009164300
+    },
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_11-00_fcad8c3e.parquet": {
+      "size": 412742,
+      "mtime_ns": 1785738642674184600
+    },
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_00-00_7f5319f8.parquet": {
+      "size": 27676,
+      "mtime_ns": 1785699016274364100
+    },
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_01-00_31d10e4b.parquet": {
+      "size": 27267,
+      "mtime_ns": 1785702615861328900
+    },
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_02-00_ad70d7cc.parquet": {
+      "size": 27165,
+      "mtime_ns": 1785706215649607300
+    },
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_03-00_af128753.parquet": {
+      "size": 27139,
+      "mtime_ns": 1785709816831934300
+    },
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_04-00_552de1cf.parquet": {
+      "size": 27149,
+      "mtime_ns": 1785713416546525500
+    },
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_05-00_20d561ce.parquet": {
+      "size": 27253,
+      "mtime_ns": 1785717019399506600
+    },
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_06-00_fa2a819b.parquet": {
+      "size": 27574,
+      "mtime_ns": 1785720618177305000
+    },
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_07-00_1ceb3af7.parquet": {
+      "size": 29348,
+      "mtime_ns": 1785724219969877300
+    },
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_08-00_3f64d0eb.parquet": {
+      "size": 29574,
+      "mtime_ns": 1785727820807548500
+    },
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_09-00_a76868c7.parquet": {
+      "size": 29781,
+      "mtime_ns": 1785731422039769600
+    },
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_10-00_189850fa.parquet": {
+      "size": 30540,
+      "mtime_ns": 1785735023177278500
+    },
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_11-00_a450c121.parquet": {
+      "size": 30377,
+      "mtime_ns": 1785738620486361300
     }
   },
   "readable_files": [
@@ -5332,6 +8212,12 @@
     "year=2026\\month=07\\day=30\\ABPNews_30-07-2026_15-00_0091c0e6.parquet",
     "year=2026\\month=07\\day=30\\ABPNews_30-07-2026_16-00_6ccb8676.parquet",
     "year=2026\\month=07\\day=30\\ABPNews_30-07-2026_17-00_300ed750.parquet",
+    "year=2026\\month=07\\day=30\\ABPNews_30-07-2026_18-00_f995499a.parquet",
+    "year=2026\\month=07\\day=30\\ABPNews_30-07-2026_19-00_38e59289.parquet",
+    "year=2026\\month=07\\day=30\\ABPNews_30-07-2026_20-00_32a0259e.parquet",
+    "year=2026\\month=07\\day=30\\ABPNews_30-07-2026_21-00_9649f79b.parquet",
+    "year=2026\\month=07\\day=30\\ABPNews_30-07-2026_22-00_5e37ae20.parquet",
+    "year=2026\\month=07\\day=30\\ABPNews_30-07-2026_23-00_e8a92836.parquet",
     "year=2026\\month=07\\day=30\\NDTVindia_30-07-2026_00-00_da8ffea7.parquet",
     "year=2026\\month=07\\day=30\\NDTVindia_30-07-2026_01-00_d242dbb1.parquet",
     "year=2026\\month=07\\day=30\\NDTVindia_30-07-2026_02-00_ffabf6a0.parquet",
@@ -5350,6 +8236,12 @@
     "year=2026\\month=07\\day=30\\NDTVindia_30-07-2026_15-00_edf00650.parquet",
     "year=2026\\month=07\\day=30\\NDTVindia_30-07-2026_16-00_14617cc9.parquet",
     "year=2026\\month=07\\day=30\\NDTVindia_30-07-2026_17-00_7807f7df.parquet",
+    "year=2026\\month=07\\day=30\\NDTVindia_30-07-2026_18-00_c2b173d5.parquet",
+    "year=2026\\month=07\\day=30\\NDTVindia_30-07-2026_19-00_197043ab.parquet",
+    "year=2026\\month=07\\day=30\\NDTVindia_30-07-2026_20-00_a6b90afb.parquet",
+    "year=2026\\month=07\\day=30\\NDTVindia_30-07-2026_21-00_8f9bb950.parquet",
+    "year=2026\\month=07\\day=30\\NDTVindia_30-07-2026_22-00_c5fb09f7.parquet",
+    "year=2026\\month=07\\day=30\\NDTVindia_30-07-2026_23-00_84dbadd7.parquet",
     "year=2026\\month=07\\day=30\\RepublicBharat_30-07-2026_00-00_0ac0f83e.parquet",
     "year=2026\\month=07\\day=30\\RepublicBharat_30-07-2026_01-00_bfe49975.parquet",
     "year=2026\\month=07\\day=30\\RepublicBharat_30-07-2026_02-00_280ff01c.parquet",
@@ -5368,6 +8260,12 @@
     "year=2026\\month=07\\day=30\\RepublicBharat_30-07-2026_15-00_8d5acca9.parquet",
     "year=2026\\month=07\\day=30\\RepublicBharat_30-07-2026_16-00_83bf3b0f.parquet",
     "year=2026\\month=07\\day=30\\RepublicBharat_30-07-2026_17-00_5ed116a1.parquet",
+    "year=2026\\month=07\\day=30\\RepublicBharat_30-07-2026_18-00_247d0f2a.parquet",
+    "year=2026\\month=07\\day=30\\RepublicBharat_30-07-2026_19-00_8a12a8e2.parquet",
+    "year=2026\\month=07\\day=30\\RepublicBharat_30-07-2026_20-00_37fc1c3f.parquet",
+    "year=2026\\month=07\\day=30\\RepublicBharat_30-07-2026_21-00_3271ad7a.parquet",
+    "year=2026\\month=07\\day=30\\RepublicBharat_30-07-2026_22-00_8aad4a25.parquet",
+    "year=2026\\month=07\\day=30\\RepublicBharat_30-07-2026_23-00_5e2b3e9c.parquet",
     "year=2026\\month=07\\day=30\\TV9Bharatvarsh_30-07-2026_00-00_1c76f495.parquet",
     "year=2026\\month=07\\day=30\\TV9Bharatvarsh_30-07-2026_01-00_b296958f.parquet",
     "year=2026\\month=07\\day=30\\TV9Bharatvarsh_30-07-2026_02-00_50586072.parquet",
@@ -5386,6 +8284,12 @@
     "year=2026\\month=07\\day=30\\TV9Bharatvarsh_30-07-2026_15-00_a890b4d6.parquet",
     "year=2026\\month=07\\day=30\\TV9Bharatvarsh_30-07-2026_16-00_d54e4730.parquet",
     "year=2026\\month=07\\day=30\\TV9Bharatvarsh_30-07-2026_17-00_ed4e16a7.parquet",
+    "year=2026\\month=07\\day=30\\TV9Bharatvarsh_30-07-2026_18-00_0230133f.parquet",
+    "year=2026\\month=07\\day=30\\TV9Bharatvarsh_30-07-2026_19-00_a7e879cd.parquet",
+    "year=2026\\month=07\\day=30\\TV9Bharatvarsh_30-07-2026_20-00_e4cdf639.parquet",
+    "year=2026\\month=07\\day=30\\TV9Bharatvarsh_30-07-2026_21-00_1cdfc8bb.parquet",
+    "year=2026\\month=07\\day=30\\TV9Bharatvarsh_30-07-2026_22-00_b558bb15.parquet",
+    "year=2026\\month=07\\day=30\\TV9Bharatvarsh_30-07-2026_23-00_b913ce76.parquet",
     "year=2026\\month=07\\day=30\\ZeeNews_30-07-2026_00-00_d5d52428.parquet",
     "year=2026\\month=07\\day=30\\ZeeNews_30-07-2026_01-00_b62dbe69.parquet",
     "year=2026\\month=07\\day=30\\ZeeNews_30-07-2026_02-00_9b9f62cb.parquet",
@@ -5404,6 +8308,12 @@
     "year=2026\\month=07\\day=30\\ZeeNews_30-07-2026_15-00_0e7f4b86.parquet",
     "year=2026\\month=07\\day=30\\ZeeNews_30-07-2026_16-00_364b9b8f.parquet",
     "year=2026\\month=07\\day=30\\ZeeNews_30-07-2026_17-00_d6a419ac.parquet",
+    "year=2026\\month=07\\day=30\\ZeeNews_30-07-2026_18-00_17a87314.parquet",
+    "year=2026\\month=07\\day=30\\ZeeNews_30-07-2026_19-00_8ff7f3b9.parquet",
+    "year=2026\\month=07\\day=30\\ZeeNews_30-07-2026_20-00_43be5b78.parquet",
+    "year=2026\\month=07\\day=30\\ZeeNews_30-07-2026_21-00_f91c6908.parquet",
+    "year=2026\\month=07\\day=30\\ZeeNews_30-07-2026_22-00_4eb26f68.parquet",
+    "year=2026\\month=07\\day=30\\ZeeNews_30-07-2026_23-00_92da8678.parquet",
     "year=2026\\month=07\\day=30\\aajtak_30-07-2026_00-00_d819b074.parquet",
     "year=2026\\month=07\\day=30\\aajtak_30-07-2026_01-00_ec6c8fe1.parquet",
     "year=2026\\month=07\\day=30\\aajtak_30-07-2026_02-00_91fda4da.parquet",
@@ -5422,6 +8332,12 @@
     "year=2026\\month=07\\day=30\\aajtak_30-07-2026_15-00_72ac825e.parquet",
     "year=2026\\month=07\\day=30\\aajtak_30-07-2026_16-00_09bc1c77.parquet",
     "year=2026\\month=07\\day=30\\aajtak_30-07-2026_17-00_d8ccf810.parquet",
+    "year=2026\\month=07\\day=30\\aajtak_30-07-2026_18-00_cc3bfc53.parquet",
+    "year=2026\\month=07\\day=30\\aajtak_30-07-2026_19-00_0214f14d.parquet",
+    "year=2026\\month=07\\day=30\\aajtak_30-07-2026_20-00_baa8554e.parquet",
+    "year=2026\\month=07\\day=30\\aajtak_30-07-2026_21-00_7b08e62a.parquet",
+    "year=2026\\month=07\\day=30\\aajtak_30-07-2026_22-00_5fe43557.parquet",
+    "year=2026\\month=07\\day=30\\aajtak_30-07-2026_23-00_2f472ca1.parquet",
     "year=2026\\month=07\\day=30\\indiatv_30-07-2026_00-00_cb4804ff.parquet",
     "year=2026\\month=07\\day=30\\indiatv_30-07-2026_01-00_6b82373f.parquet",
     "year=2026\\month=07\\day=30\\indiatv_30-07-2026_02-00_ead47e32.parquet",
@@ -5440,6 +8356,12 @@
     "year=2026\\month=07\\day=30\\indiatv_30-07-2026_15-00_a6538e88.parquet",
     "year=2026\\month=07\\day=30\\indiatv_30-07-2026_16-00_738c2d27.parquet",
     "year=2026\\month=07\\day=30\\indiatv_30-07-2026_17-00_18e1ba29.parquet",
+    "year=2026\\month=07\\day=30\\indiatv_30-07-2026_18-00_33b376c9.parquet",
+    "year=2026\\month=07\\day=30\\indiatv_30-07-2026_19-00_eeb571a7.parquet",
+    "year=2026\\month=07\\day=30\\indiatv_30-07-2026_20-00_00a24e78.parquet",
+    "year=2026\\month=07\\day=30\\indiatv_30-07-2026_21-00_ee10d969.parquet",
+    "year=2026\\month=07\\day=30\\indiatv_30-07-2026_22-00_3e8309e1.parquet",
+    "year=2026\\month=07\\day=30\\indiatv_30-07-2026_23-00_ae0627eb.parquet",
     "year=2026\\month=07\\day=30\\news18india_30-07-2026_00-00_45ae46ed.parquet",
     "year=2026\\month=07\\day=30\\news18india_30-07-2026_01-00_a6896993.parquet",
     "year=2026\\month=07\\day=30\\news18india_30-07-2026_02-00_7eb4958b.parquet",
@@ -5457,7 +8379,685 @@
     "year=2026\\month=07\\day=30\\news18india_30-07-2026_14-00_004e333d.parquet",
     "year=2026\\month=07\\day=30\\news18india_30-07-2026_15-00_3a0ce537.parquet",
     "year=2026\\month=07\\day=30\\news18india_30-07-2026_16-00_c57bf4a5.parquet",
-    "year=2026\\month=07\\day=30\\news18india_30-07-2026_17-00_897c8fbf.parquet"
+    "year=2026\\month=07\\day=30\\news18india_30-07-2026_17-00_897c8fbf.parquet",
+    "year=2026\\month=07\\day=30\\news18india_30-07-2026_18-00_b05faa87.parquet",
+    "year=2026\\month=07\\day=30\\news18india_30-07-2026_19-00_570e86c4.parquet",
+    "year=2026\\month=07\\day=30\\news18india_30-07-2026_20-00_eba989c9.parquet",
+    "year=2026\\month=07\\day=30\\news18india_30-07-2026_21-00_558c5698.parquet",
+    "year=2026\\month=07\\day=30\\news18india_30-07-2026_22-00_370b69c4.parquet",
+    "year=2026\\month=07\\day=30\\news18india_30-07-2026_23-00_6cdda340.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_00-00_9b628ac1.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_01-00_1717b586.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_02-00_09d6fc27.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_03-00_2d918893.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_04-00_08cde2f3.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_05-00_525db0a7.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_06-00_d821d330.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_07-00_9ead60ea.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_08-00_211d1191.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_09-00_a3e9f6a7.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_10-00_00acebb6.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_11-00_f0fce95c.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_12-00_7c100faa.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_13-00_311bb5a2.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_14-00_af83d4fa.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_15-00_6e3aaf11.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_16-00_25de7636.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_17-00_b3dc1d15.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_18-00_57c4c052.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_19-00_cdeb0866.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_20-00_9ee74faa.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_21-00_71692e49.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_22-00_758ff5f1.parquet",
+    "year=2026\\month=07\\day=31\\ABPNews_31-07-2026_23-00_8f1f52d4.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_00-00_8f4515b5.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_01-00_f79d7651.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_02-00_869c328e.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_03-00_42b3183f.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_04-00_4a63a347.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_05-00_cde3264c.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_06-00_e5f0af3f.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_07-00_b2770d2f.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_08-00_1a32ff20.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_09-00_8a48a04b.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_10-00_032cfcc1.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_11-00_034c5b22.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_12-00_8476f536.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_13-00_ff11f7c8.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_14-00_3141d8b8.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_15-00_6a818c39.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_16-00_b8483796.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_17-00_6392557c.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_18-00_0ad6fe25.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_19-00_03345b46.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_20-00_73d7acb7.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_21-00_05f88fed.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_22-00_afc63d7d.parquet",
+    "year=2026\\month=07\\day=31\\NDTVindia_31-07-2026_23-00_a08e95ef.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_00-00_6e2a4754.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_01-00_e5a628cf.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_02-00_030386e1.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_03-00_9c0a0786.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_04-00_0b262331.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_05-00_4a23fdba.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_06-00_f49a5974.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_07-00_ae39f458.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_08-00_83e3dd46.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_09-00_5587cd9e.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_10-00_e324cf0b.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_11-00_d901a745.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_12-00_400ae1c5.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_13-00_afced6e7.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_14-00_a9059463.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_15-00_59dea0cc.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_16-00_e9f66f88.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_17-00_72fd9c63.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_18-00_8bd869aa.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_19-00_b154dd10.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_20-00_0d9d1c59.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_21-00_66f9647d.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_22-00_7aba2da5.parquet",
+    "year=2026\\month=07\\day=31\\RepublicBharat_31-07-2026_23-00_987e4b4c.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_00-00_63deb3b1.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_01-00_10a0e388.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_02-00_b81992d3.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_03-00_232475fc.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_04-00_63b1bf12.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_05-00_5f82a690.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_06-00_c742f6e4.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_07-00_8388cba6.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_08-00_49bc9917.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_09-00_885dfcf0.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_10-00_202065f3.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_11-00_ebfc8d0c.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_12-00_7679f167.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_13-00_a2c441fe.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_14-00_79f54b52.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_15-00_396b4d2b.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_16-00_e8653635.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_17-00_384b015c.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_18-00_1cd9e714.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_19-00_cd1d349c.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_20-00_fd55bbab.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_21-00_5f58153e.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_22-00_ba7a8884.parquet",
+    "year=2026\\month=07\\day=31\\TV9Bharatvarsh_31-07-2026_23-00_e826ece7.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_00-00_79e69f77.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_01-00_1fb64eb0.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_02-00_bb13b879.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_03-00_93a05756.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_04-00_536cc704.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_05-00_d49da3b5.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_06-00_cab9a3a2.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_07-00_8f8c1524.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_08-00_f93554b1.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_09-00_5ad00369.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_10-00_54b7d64d.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_11-00_f04d2a7d.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_12-00_971f05e1.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_13-00_e0045936.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_14-00_d5fed784.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_15-00_b4a76f12.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_16-00_c825354e.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_17-00_40a64907.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_18-00_b9fe7cdd.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_19-00_bdd06fae.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_20-00_87aaac94.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_21-00_36eac2cd.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_22-00_df7b3851.parquet",
+    "year=2026\\month=07\\day=31\\ZeeNews_31-07-2026_23-00_4e1b90b7.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_00-00_d98da4f5.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_01-00_97a4d7ca.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_02-00_05e1c85b.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_03-00_ffe4dd9c.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_04-00_01a592e0.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_05-00_571aedcf.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_06-00_b4f6017d.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_07-00_6897e569.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_08-00_dfb97e2d.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_09-00_cd84dd9b.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_10-00_b232a00e.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_11-00_1cbf70ea.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_12-00_16b18c4f.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_13-00_3918ea5b.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_14-00_d483e3df.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_15-00_9136826e.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_16-00_a469b09a.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_17-00_e7a69397.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_18-00_fcf0ac2c.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_19-00_dc2ae0d8.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_20-00_9cf7293f.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_21-00_f70facd7.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_22-00_72b516d7.parquet",
+    "year=2026\\month=07\\day=31\\aajtak_31-07-2026_23-00_76a43179.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_00-00_4df1107e.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_01-00_c5ee050f.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_02-00_913391e3.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_03-00_3e03ba11.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_04-00_b84920dd.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_05-00_f6cae280.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_06-00_afd8cabc.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_07-00_1be28be6.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_08-00_341e768e.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_09-00_60fe3966.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_10-00_621b6ba3.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_11-00_68c3fc84.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_12-00_6ee0bcef.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_13-00_fe47554a.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_14-00_f810d0f8.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_15-00_224e3e17.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_16-00_95828a23.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_17-00_da7145d8.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_18-00_ccc8fafd.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_19-00_f788c082.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_20-00_28b36cc6.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_21-00_5075db69.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_22-00_23f8d0d4.parquet",
+    "year=2026\\month=07\\day=31\\indiatv_31-07-2026_23-00_50e5cbf8.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_00-00_701073cc.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_01-00_76d43468.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_02-00_476f2e47.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_03-00_41b6a4c3.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_04-00_189c3318.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_05-00_d8025828.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_06-00_83755ea8.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_07-00_9d5189fd.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_08-00_312e6ef5.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_09-00_68123bdc.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_10-00_ff5424fc.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_11-00_28491f59.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_12-00_443e5a0b.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_13-00_df82763a.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_14-00_27f4f8ed.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_15-00_11c62e05.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_16-00_0a1e5d2f.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_17-00_8655f22b.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_18-00_72cbc4da.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_19-00_8c8254d8.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_20-00_aa5b30a6.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_21-00_72917b63.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_22-00_2b526f3c.parquet",
+    "year=2026\\month=07\\day=31\\news18india_31-07-2026_23-00_316b1a3f.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_00-00_b385bcc9.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_01-00_7052e294.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_02-00_5c4ad4f7.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_03-00_4a80cec3.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_04-00_d7a42bca.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_05-00_d0df909f.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_06-00_182ba2e6.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_07-00_bed0c1b8.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_08-00_fe298d5e.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_09-00_92caa3fd.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_10-00_6cbcf71f.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_11-00_4f5145e7.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_12-00_00091d91.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_13-00_fd732b27.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_14-00_f15cb1e0.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_15-00_a05fa6ef.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_16-00_170ab1ef.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_17-00_18fcb3f4.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_18-00_d8467547.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_19-00_8237bdfe.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_20-00_7e485c92.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_21-00_5eaf675e.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_22-00_4dc0c8cc.parquet",
+    "year=2026\\month=08\\day=01\\ABPNews_01-08-2026_23-00_5c6e68e9.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_00-00_9cd45f40.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_01-00_e0d88582.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_02-00_15abd290.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_03-00_ef19c567.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_04-00_77618d0c.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_05-00_19c3c5e3.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_06-00_dad3b828.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_07-00_3bafd235.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_08-00_d31e28db.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_09-00_5bdc0802.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_10-00_b5fec9a9.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_11-00_8e4cba41.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_12-00_74a10708.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_13-00_df8121b3.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_14-00_d5fb384b.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_15-00_edd5e79a.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_16-00_34450108.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_17-00_b676f23d.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_18-00_c421340b.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_19-00_f8c234a3.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_20-00_ac94692b.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_21-00_f2db2ded.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_22-00_c5b004db.parquet",
+    "year=2026\\month=08\\day=01\\NDTVindia_01-08-2026_23-00_012e9d90.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_00-00_717d4203.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_01-00_c38452aa.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_02-00_1624626c.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_03-00_8fd89f1b.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_04-00_4f1899d9.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_05-00_5e888181.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_06-00_59783195.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_07-00_53000306.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_08-00_ad38f18c.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_09-00_fc521722.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_10-00_21c7ecc5.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_11-00_f81c1072.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_12-00_913e764d.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_13-00_7a85f261.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_14-00_dc48eedc.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_15-00_86aec7c8.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_16-00_5e5ea892.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_17-00_9272072a.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_18-00_c1d6b550.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_19-00_ab4f1889.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_20-00_eca06598.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_21-00_8b491952.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_22-00_c5f55dcf.parquet",
+    "year=2026\\month=08\\day=01\\RepublicBharat_01-08-2026_23-00_4f3dd6a0.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_00-00_fc8a956a.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_01-00_5b90670d.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_02-00_3630fc13.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_03-00_390847b7.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_04-00_daeb256a.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_05-00_6a4ee4b5.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_06-00_af98667c.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_07-00_edc10f37.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_08-00_2d7fdc8e.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_09-00_602fb6de.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_10-00_d9952c39.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_11-00_59cd711a.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_12-00_a401af70.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_13-00_cfaf5953.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_14-00_f538537c.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_15-00_19e49b44.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_16-00_49df4bd9.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_17-00_b27bb4bf.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_18-00_fdbdddb7.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_19-00_6c32f681.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_20-00_1305891c.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_21-00_d521ec9d.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_22-00_faae22d5.parquet",
+    "year=2026\\month=08\\day=01\\TV9Bharatvarsh_01-08-2026_23-00_b12cc4b9.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_00-00_a77ab246.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_01-00_98da91c9.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_02-00_b6fb641f.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_03-00_e4f92642.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_04-00_58954d79.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_05-00_63e70baa.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_06-00_ae6311f4.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_07-00_1d284c5a.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_08-00_62b822b3.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_09-00_9d6832f4.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_10-00_12d1902a.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_11-00_762606f1.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_12-00_7b985da8.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_13-00_a1590d60.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_14-00_c68e1216.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_15-00_80988650.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_16-00_54dbd3a1.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_17-00_36316530.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_18-00_5296c6d3.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_19-00_209edde2.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_20-00_fb353b40.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_21-00_1b127aea.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_22-00_af053a8b.parquet",
+    "year=2026\\month=08\\day=01\\ZeeNews_01-08-2026_23-00_df1ec908.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_00-00_743ad931.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_01-00_461e33ab.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_02-00_a7a2443c.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_03-00_2b4cdf3a.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_04-00_303ce705.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_05-00_cba9e950.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_06-00_f5981d78.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_07-00_c655155b.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_08-00_bdc70df9.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_09-00_5e209c0a.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_10-00_5c88bf4a.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_11-00_5937e092.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_12-00_5d1b6cc9.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_13-00_84e82c5c.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_14-00_7e715937.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_15-00_812f4932.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_16-00_6508d432.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_17-00_154a67da.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_18-00_0acd5ae7.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_19-00_f9cfb56c.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_20-00_a53673bd.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_21-00_99f64900.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_22-00_4c9641fe.parquet",
+    "year=2026\\month=08\\day=01\\aajtak_01-08-2026_23-00_a9384143.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_00-00_824a9a7d.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_01-00_22521eb9.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_02-00_d3167c2f.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_03-00_cf6cd78d.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_04-00_02caa6f9.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_05-00_c32c5cb8.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_06-00_13ef17cf.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_07-00_2cd3e9bb.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_08-00_889e7d3f.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_09-00_945994a4.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_10-00_0365dae2.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_11-00_dda33015.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_12-00_13e8d860.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_13-00_09c2170a.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_14-00_69945853.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_15-00_3dd9f025.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_16-00_bc44b745.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_17-00_d091d4df.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_18-00_9b26e67e.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_19-00_d5901844.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_20-00_ee062305.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_21-00_9a05a2dc.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_22-00_521f2e30.parquet",
+    "year=2026\\month=08\\day=01\\indiatv_01-08-2026_23-00_4babeca9.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_00-00_5dc0c2f4.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_01-00_81b1de70.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_02-00_d3599b14.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_03-00_b0c1697b.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_04-00_e0712185.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_05-00_2d5cce36.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_06-00_41dab542.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_07-00_d9fe6f56.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_08-00_9821b5f6.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_09-00_c3b4414f.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_10-00_d6eb4606.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_11-00_9b90c677.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_12-00_92b58876.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_13-00_9cfc9da6.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_14-00_b8689561.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_15-00_a0309f7a.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_16-00_f672aa27.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_17-00_47a19d63.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_18-00_4f4f9cb4.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_19-00_03d1b376.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_20-00_c4c0b772.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_21-00_15a9c45b.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_22-00_7c87314b.parquet",
+    "year=2026\\month=08\\day=01\\news18india_01-08-2026_23-00_154e8de2.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_00-00_3326601c.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_01-00_f897451d.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_02-00_142376ef.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_03-00_f877f839.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_04-00_f0adce59.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_05-00_be02a74c.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_06-00_42ed02b2.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_07-00_bee16cbc.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_08-00_37dd0422.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_09-00_9b4d9ba6.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_10-00_1f2f85a7.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_11-00_35bea29f.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_12-00_2f35b168.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_13-00_29e4ed56.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_14-00_54364b7b.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_15-00_5d3b8813.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_16-00_fd532202.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_17-00_ab804b88.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_18-00_d81e1eb2.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_19-00_92cee1b9.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_20-00_6ad096fe.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_21-00_bba246fb.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_22-00_17f6f344.parquet",
+    "year=2026\\month=08\\day=02\\ABPNews_02-08-2026_23-00_77fec77b.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_00-00_a67f0e57.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_01-00_3f08a39f.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_02-00_6c9b81a1.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_03-00_c97c78a1.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_04-00_e1ba7900.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_05-00_43dccfa2.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_06-00_a5fcf5dd.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_07-00_112278be.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_08-00_9b61fa2f.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_09-00_d3cde9c4.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_10-00_724c6f5a.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_11-00_b6eab74f.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_12-00_191fc6cb.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_13-00_aa3a27e3.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_14-00_3362b477.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_15-00_c6294a1f.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_16-00_99f778b7.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_17-00_82a32c1c.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_18-00_f2ae3037.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_19-00_5fe71e78.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_20-00_5e09c12a.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_21-00_d3d980fb.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_22-00_0eca9f40.parquet",
+    "year=2026\\month=08\\day=02\\NDTVindia_02-08-2026_23-00_1b2edbe7.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_00-00_d230be3b.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_01-00_1bcc4cb9.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_02-00_74dfc7dd.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_03-00_966ae4b0.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_04-00_9118a18f.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_05-00_883ca1ee.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_06-00_58b30128.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_07-00_f37da364.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_08-00_848518b5.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_09-00_e5d39355.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_10-00_bc6574a0.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_11-00_60d0189d.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_12-00_60642378.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_13-00_f5ba06f9.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_14-00_0908d572.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_15-00_186019a2.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_16-00_5857fb52.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_17-00_f9da489f.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_18-00_ee9f5a7c.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_19-00_ae171f89.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_20-00_4aee20bd.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_21-00_494e60d5.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_22-00_2cc5e187.parquet",
+    "year=2026\\month=08\\day=02\\RepublicBharat_02-08-2026_23-00_77076f76.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_00-00_28685355.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_01-00_4994c276.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_02-00_034d0bb0.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_03-00_ea0a1ff4.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_04-00_ff458951.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_05-00_fa190726.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_06-00_b731213d.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_07-00_514ea490.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_08-00_cc1fdfaa.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_09-00_38e01ae8.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_10-00_ce7508f7.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_11-00_16a86257.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_12-00_682c6da2.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_13-00_61a759b8.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_14-00_230fccef.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_15-00_650efbcd.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_16-00_bac0d8e1.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_17-00_b6a1830d.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_18-00_bf4bddc4.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_19-00_819bce8f.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_20-00_450ca567.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_21-00_5124ffcc.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_22-00_f2c83f13.parquet",
+    "year=2026\\month=08\\day=02\\TV9Bharatvarsh_02-08-2026_23-00_57c49c88.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_00-00_8d700496.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_01-00_35e86ad5.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_02-00_a5451835.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_03-00_20718491.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_04-00_a1a3e013.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_05-00_2c94295f.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_06-00_22e771e3.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_07-00_863685d0.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_08-00_d7ef4d3e.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_09-00_89397392.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_10-00_82939f93.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_11-00_a183868a.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_12-00_5a0c8c29.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_13-00_f67d12f1.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_14-00_c15fb01a.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_15-00_cc0dde13.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_16-00_bade7c52.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_17-00_a48a7094.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_18-00_6930b707.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_19-00_8b256134.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_20-00_030d4220.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_21-00_acc70f44.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_22-00_a03f4573.parquet",
+    "year=2026\\month=08\\day=02\\ZeeNews_02-08-2026_23-00_3f2c1157.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_00-00_2e2ab38c.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_01-00_7b8fa8d9.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_02-00_9707b06d.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_03-00_a29652b1.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_04-00_e8e1f983.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_05-00_3b71dbc4.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_06-00_cb3be789.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_07-00_eef4cfac.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_08-00_458d350f.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_09-00_edb399dd.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_10-00_ebdf0d18.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_11-00_2a950367.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_12-00_2bb6218d.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_13-00_bcba9ed0.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_14-00_9944dbc0.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_15-00_abae1586.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_16-00_c3cbb66e.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_17-00_181d6301.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_18-00_a3e0c14f.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_19-00_d21e1bd7.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_20-00_07606f83.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_21-00_67cf9f06.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_22-00_dba6ccbf.parquet",
+    "year=2026\\month=08\\day=02\\aajtak_02-08-2026_23-00_e7578c59.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_00-00_425d9b85.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_01-00_5ea0ce4e.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_02-00_02ce3926.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_03-00_a7d0ac2e.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_04-00_7d561ab7.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_05-00_f2c7b5da.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_06-00_43a59b2b.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_07-00_f58e526f.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_08-00_f3901715.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_09-00_859bb370.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_10-00_5db77f6e.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_11-00_a7092ae1.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_12-00_4553943a.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_13-00_5ffdfc55.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_14-00_51d2611f.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_15-00_70c2fb50.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_16-00_7aba4576.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_17-00_a62f9b1e.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_18-00_041c943a.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_19-00_54d23db3.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_20-00_29e66294.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_21-00_45428e96.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_22-00_82c5b7df.parquet",
+    "year=2026\\month=08\\day=02\\indiatv_02-08-2026_23-00_3b7574ac.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_00-00_2de1e2b9.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_01-00_97c6fa95.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_02-00_c6ba1992.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_03-00_efa20a0b.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_04-00_f6be6100.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_05-00_c1c436d9.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_06-00_bff655e5.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_07-00_f6343a18.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_08-00_556fc65e.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_09-00_758176f4.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_10-00_ab41029e.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_11-00_c5615f3a.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_12-00_159eb7a1.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_13-00_09ead29b.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_14-00_10688e50.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_15-00_80935762.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_16-00_17b68395.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_17-00_3d1bafdd.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_18-00_90b8f32d.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_19-00_3f38af81.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_20-00_4a8a7899.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_21-00_64c3dbe1.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_22-00_7dd31020.parquet",
+    "year=2026\\month=08\\day=02\\news18india_02-08-2026_23-00_2123aaa8.parquet",
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_00-00_3682cec9.parquet",
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_01-00_e408b86f.parquet",
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_02-00_4d0f5631.parquet",
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_03-00_48ebfedb.parquet",
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_04-00_deb6aca0.parquet",
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_05-00_84cffff9.parquet",
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_06-00_0098d98e.parquet",
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_07-00_b3aee384.parquet",
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_08-00_8f93c366.parquet",
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_09-00_33622dc7.parquet",
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_10-00_fb350026.parquet",
+    "year=2026\\month=08\\day=03\\ABPNews_03-08-2026_11-00_00db2ca1.parquet",
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_00-00_5e1bb6b8.parquet",
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_01-00_b443463c.parquet",
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_02-00_d6a57ee7.parquet",
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_03-00_2e3841c0.parquet",
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_04-00_be594017.parquet",
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_05-00_6292f709.parquet",
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_06-00_6dbf1cd4.parquet",
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_07-00_225d4f44.parquet",
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_08-00_e8c47725.parquet",
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_09-00_1aa68838.parquet",
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_10-00_7efac5c3.parquet",
+    "year=2026\\month=08\\day=03\\NDTVindia_03-08-2026_11-00_018d3fb7.parquet",
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_00-00_72e79777.parquet",
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_01-00_ce2adf1d.parquet",
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_02-00_66e99fb6.parquet",
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_03-00_5d687bf4.parquet",
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_04-00_f930d4fa.parquet",
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_05-00_6f9820a5.parquet",
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_06-00_90faad5f.parquet",
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_07-00_3e19d643.parquet",
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_08-00_003fdee0.parquet",
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_09-00_a2adbda0.parquet",
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_10-00_5767be09.parquet",
+    "year=2026\\month=08\\day=03\\RepublicBharat_03-08-2026_11-00_003612d8.parquet",
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_00-00_eaca10b1.parquet",
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_01-00_32e797d0.parquet",
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_02-00_46891b02.parquet",
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_03-00_c6b586cb.parquet",
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_04-00_3d36ed73.parquet",
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_05-00_459194e2.parquet",
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_06-00_50bb10bc.parquet",
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_07-00_52f02fa4.parquet",
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_08-00_6eef9127.parquet",
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_09-00_5229e45c.parquet",
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_10-00_9aa09933.parquet",
+    "year=2026\\month=08\\day=03\\TV9Bharatvarsh_03-08-2026_11-00_fcad8c3e.parquet",
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_00-00_7f5319f8.parquet",
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_01-00_31d10e4b.parquet",
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_02-00_ad70d7cc.parquet",
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_03-00_af128753.parquet",
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_04-00_552de1cf.parquet",
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_05-00_20d561ce.parquet",
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_06-00_fa2a819b.parquet",
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_07-00_1ceb3af7.parquet",
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_08-00_3f64d0eb.parquet",
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_09-00_a76868c7.parquet",
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_10-00_189850fa.parquet",
+    "year=2026\\month=08\\day=03\\ZeeNews_03-08-2026_11-00_a450c121.parquet",
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_00-00_f2913393.parquet",
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_01-00_061fc456.parquet",
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_02-00_00846a3b.parquet",
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_03-00_102af234.parquet",
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_04-00_f54be210.parquet",
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_05-00_617de798.parquet",
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_06-00_2100c7f7.parquet",
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_07-00_2c489715.parquet",
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_08-00_4677eb48.parquet",
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_09-00_4d33a052.parquet",
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_10-00_8d57f157.parquet",
+    "year=2026\\month=08\\day=03\\aajtak_03-08-2026_11-00_0bb52eb0.parquet",
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_00-00_efd3a4d3.parquet",
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_01-00_8d3117f9.parquet",
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_02-00_574e5d4b.parquet",
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_03-00_9f8db1de.parquet",
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_04-00_a2c6b667.parquet",
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_05-00_6e348c12.parquet",
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_06-00_45c249e3.parquet",
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_07-00_353fbf59.parquet",
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_08-00_9e641dff.parquet",
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_09-00_ae24c864.parquet",
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_10-00_c2766e08.parquet",
+    "year=2026\\month=08\\day=03\\indiatv_03-08-2026_11-00_b6ea0fd0.parquet",
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_00-00_c51804f0.parquet",
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_01-00_22c7b92a.parquet",
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_02-00_e612e01c.parquet",
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_03-00_9dc54e62.parquet",
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_04-00_6b543c76.parquet",
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_05-00_4a05ef74.parquet",
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_06-00_a465dea9.parquet",
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_07-00_6be61a0d.parquet",
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_08-00_7f7293e5.parquet",
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_09-00_be11f2b4.parquet",
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_10-00_ad6adf78.parquet",
+    "year=2026\\month=08\\day=03\\news18india_03-08-2026_11-00_4fda113d.parquet"
   ],
   "channels": [
     "ABP News",
@@ -5471,7 +9071,7 @@
     "news18india"
   ],
   "true_start": "2026-06-30 18:08:00",
-  "true_end": "2026-07-30 17:59:00",
+  "true_end": "2026-08-03 11:59:00",
   "full_start": "2026-07-01",
-  "full_end": "2026-07-29"
+  "full_end": "2026-08-02"
 }

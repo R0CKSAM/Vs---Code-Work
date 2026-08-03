@@ -57,7 +57,16 @@ ETL/output/micro_live/
 # ASRUN demo output is regenerated locally and can be too large for GitHub.
 ETL/asrun_demo/output/*.html
 ETL/asrun_demo/output/*.js
+ETL/asrun_demo/output/data/
 ETL/asrun_demo/data/raw/ASRUN-*.txt
+ETL/asrun_demo/.pytest_tmp*/
+ETL/output/test_tmp/
+ETL/extras/**/test_artifacts/
+ETL/extras/**/python_caches/
+
+# Large generated reverse-engineering dashboard exports are local-only.
+reverseEngg/chrome_report_dashboard*.html
+reverseEngg/channel_distribution_dashboard_shared.html
 
 # Amagi browser automation keeps an authenticated local profile plus generated
 # diagnostics, downloaded CSV reports, and run logs on this workstation.

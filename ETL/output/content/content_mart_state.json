@@ -1283,14 +1283,44 @@
     "stream/2026-07-31": {
       "source": "stream",
       "date": "2026-07-31",
-      "file_count": 1,
-      "bytes": 37327369,
-      "max_mtime_ns": 1785467773352304700,
+      "file_count": 2,
+      "bytes": 841237091,
+      "max_mtime_ns": 1785553616841075000,
       "output_counts": {
-        "rows": 167
+        "rows": 1215
+      }
+    },
+    "stream/2026-08-01": {
+      "source": "stream",
+      "date": "2026-08-01",
+      "file_count": 2,
+      "bytes": 796443952,
+      "max_mtime_ns": 1785639978403277000,
+      "output_counts": {
+        "rows": 1232
+      }
+    },
+    "stream/2026-08-02": {
+      "source": "stream",
+      "date": "2026-08-02",
+      "file_count": 2,
+      "bytes": 748869230,
+      "max_mtime_ns": 1785726358053275400,
+      "output_counts": {
+        "rows": 1178
+      }
+    },
+    "stream/2026-08-03": {
+      "source": "stream",
+      "date": "2026-08-03",
+      "file_count": 1,
+      "bytes": 54636392,
+      "max_mtime_ns": 1785726357909729200,
+      "output_counts": {
+        "rows": 175
       }
     }
   },
-  "updated_at_utc": "2026-07-31T04:18:12.324486+00:00",
+  "updated_at_utc": "2026-08-03T03:56:28.634706+00:00",
   "mart_version": 3
 }

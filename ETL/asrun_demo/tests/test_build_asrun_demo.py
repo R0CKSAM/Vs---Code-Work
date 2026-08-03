@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 
 import pandas as pd
+import pytest
 
 
 MODULE_PATH = Path(__file__).parents[1] / "src" / "build_asrun_demo.py"
@@ -367,7 +368,20 @@ def test_amagi_mart_reuses_unchanged_source_files(
     assert manifest["schema_version"] == asrun.AMAGI_MART_VERSION
 
 
-def test_parse_nct_csv_validates_and_normalizes_story_segments(tmp_path: Path) -> None:
+@pytest.mark.parametrize(
+    ("date_value", "start_time", "end_time", "duration_value"),
+    [
+        ("29/07/2026", "06:01:00", "06:01:10", "00:00:10"),
+        ("29-07-26", "6.01.00", "6.01.10", "0.00.10"),
+    ],
+)
+def test_parse_nct_csv_validates_and_normalizes_story_segments(
+    tmp_path: Path,
+    date_value: str,
+    start_time: str,
+    end_time: str,
+    duration_value: str,
+) -> None:
     """NCT preamble metadata and source-reported IST segments remain traceable."""
     source = tmp_path / "Detail_StoryTrack_Duration.CSV"
     row = pd.DataFrame(
@@ -380,14 +394,14 @@ def test_parse_nct_csv_validates_and_normalizes_story_segments(tmp_path: Path) -
             "pgm_name": ["TEST PROGRAM"],
             "Pgm_Start_Time": ["06:00:00"],
             "Pgm_End_Time": ["06:30:00"],
-            "clip_start_time": ["06:01:00"],
-            "clip_end_time": ["06:01:10"],
-            "pgm_date": ["29/07/2026"],
+            "clip_start_time": [start_time],
+            "clip_end_time": [end_time],
+            "pgm_date": [date_value],
             "week": [""],
             "geography": ["INDIAN"],
             "title": ["."],
             "grap_type": ["Duration"],
-            "duration": ["00:00:10"],
+            "duration": [duration_value],
             "duration_seconds": [10],
             "personality": [""],
             "guest": [""],
@@ -404,11 +418,11 @@ def test_parse_nct_csv_validates_and_normalizes_story_segments(tmp_path: Path) -
         [
             "Content Diagnostics - Duration - By Story Details",
             "Selection Details:",
-            "Channels: INDIA TV,ABP NEWS",
-            "From Date: 29/07/2026",
-            "To Date: 29/07/2026",
-            "Start Time: 05:00:00",
-            "End Time: 23:59:00",
+            "Channels: INDIA TV,ABP NEWS,,,,",
+            "From Date: 29/07/2026,,,,",
+            "To Date: 29/07/2026,,,,",
+            "Start Time: 05:00:00,,,,",
+            "End Time: 23:59:00,,,,",
             "Geography: ALL",
             "Story:",
             "Genre: Any",
@@ -456,7 +470,38 @@ def test_render_dashboard_wires_complete_reset_and_fatal_error(
     assert "SIGNATURE_MULTI_IDS" in html
     assert "youtubeVideoFilterSignature" in html
     assert "nctContextChannel" in html
+    assert "function loadNctManifest(){" in html
+    assert "function nctMissingPartitions(range){" in html
+    assert "function loadNctPartition(dateValue,file){" in html
     assert "Filters changed from the default view; click to restore defaults" in html
+
+
+def test_delivery_filters_are_bidirectional_and_empty_multiselects_stay_empty(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """ID/title filters must adapt both ways without a redundant type toggle."""
+    chartjs = tmp_path / "chart.umd.min.js"
+    chartjs.write_text("window.Chart=function(){};", encoding="utf-8")
+    monkeypatch.setattr(asrun, "CHARTJS_CACHE", chartjs)
+
+    html = asrun.render_dashboard({"channels": ["Test Channel"]})
+
+    assert "const DELIVERY_AD_TYPES=['Spot','L-band'];" in html
+    assert "function selectedDeliveryAdTypes(){" in html
+    assert 'id="deliveryTypeFilter"' not in html
+    assert 'data-delivery-ad-type="' not in html
+    assert "function multiSelectionState(id){" in html
+    assert "const idRows=creativeState.restricted" in html
+    assert "const creativeRows=idState.restricted" in html
+    assert "creativeState.selected.has(event.creative_title)" in html
+    assert "idState.selected.has(event.event_id)" in html
+    assert "if(!ids.size||!creatives.size)return [];" in html
+    assert "if(!values.length){button.textContent='No '+kind+' selected';return;}" in html
+    assert "adTypes:deliveryAdTypeLabel()" in html
+    assert "adIds:exportDeliverySelection('adIds')" in html
+    assert "creatives:exportDeliverySelection('creatives')" in html
+    assert "deliveryAdTypeFileToken()+'_'+filters.dateFrom" in html
+    assert "parts.push('deliveryTypes:'" in html
 
 
 def test_render_dashboard_groups_sections_into_three_pages(
@@ -484,10 +529,115 @@ def test_render_dashboard_groups_sections_into_three_pages(
     assert "$('dashboardPageDelivery').append(" in html
     assert "$('dashboardPageContent').append(nodes.nct,nodes.scope)" in html
     assert (
-        "ensureScopePanel();ensureDashboardPages();"
-        "ensureGlobalAudienceFilters();initializeNctLazyLoad()"
+        "ensureScopePanel();ensureGlobalAudienceFilters();"
+        "ensureDashboardPages();initializeNctLazyLoad()"
     ) in html
+    assert "nodes.audience.remove();" in html
     assert "await activateDashboardPageData(activeDashboardPage)" in html
+
+
+def test_render_dashboard_uses_one_visible_date_scope_per_page(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Page-specific date controls must not compete with the master range."""
+    chartjs = tmp_path / "chart.umd.min.js"
+    chartjs.write_text("window.Chart=function(){};", encoding="utf-8")
+    monkeypatch.setattr(asrun, "CHARTJS_CACHE", chartjs)
+
+    html = asrun.render_dashboard({"channels": ["Test Channel"]})
+
+    assert ".filters.master-date-hidden [data-master-date-control]" in html
+    assert ".youtube-filter-bar.follow-main .youtube-independent-date-control" in html
+    assert "let youtubeDateMode='follow';" in html
+    assert "function syncDateControlVisibility(){" in html
+    assert "activeDashboardPage==='content'" in html
+    assert "activeDashboardPage==='audience'&&youtubeDateMode==='independent'" in html
+    assert "setYoutubeDateMode('follow',false);" in html
+    assert "syncDateControlVisibility();\n  closeMultiMenus('');" in html
+
+
+def test_write_javascript_assignment_is_atomic_and_script_safe(
+    tmp_path: Path,
+) -> None:
+    """Published sidecars must never expose partial or script-breaking JSON."""
+    target = tmp_path / "payload.js"
+
+    asrun.write_javascript_assignment(
+        target,
+        "window.__TEST_DATA__",
+        {"title": "safe </script> value", "event_id": "C0012345"},
+    )
+
+    output = target.read_text(encoding="utf-8")
+    assert output.startswith("window.__TEST_DATA__=")
+    assert "<\\/script>" in output
+    assert '"event_id":"C0012345"' in output
+    assert not target.with_name(f".{target.name}.tmp").exists()
+
+
+def test_write_nct_payload_script_partitions_rows_by_date(tmp_path: Path) -> None:
+    """The browser must be able to load only selected NCT dates."""
+    columns = [
+        "clip_start_ist",
+        "clip_end_ist",
+        "log_date",
+        "channel_name",
+        "program_name",
+        "story",
+        "sub_story",
+        "primary_genre",
+        "secondary_genre",
+        "geography",
+        "duration_seconds",
+        "anchor",
+        "reporter",
+        "personality",
+        "guest",
+        "logistics",
+        "telecast_format",
+        "assist_used",
+        "split",
+        "story_format",
+        "source_file",
+        "source_row",
+    ]
+    rows = []
+    for index, date_value in enumerate(["2026-07-28", "2026-07-29"]):
+        row = {column: "" for column in columns}
+        row.update(
+            {
+                "clip_start_ist": f"{date_value} 10:00:00",
+                "clip_end_ist": f"{date_value} 10:00:10",
+                "log_date": date_value,
+                "channel_name": "INDIA TV",
+                "story": f"Story {index}",
+                "duration_seconds": 10,
+                "source_row": index + 1,
+            }
+        )
+        rows.append(row)
+    target = tmp_path / "nct_story_data.js"
+
+    asrun.write_nct_payload_script(
+        target,
+        {
+            "available": True,
+            "reason": "",
+            "segments": pd.DataFrame(rows, columns=columns),
+        },
+    )
+
+    manifest_text = target.read_text(encoding="utf-8")
+    manifest = json.loads(manifest_text.split("=", 1)[1].rstrip(";"))
+    assert manifest["partitioned"] is True
+    assert manifest["segment_count"] == 2
+    assert manifest["segments"] == []
+    assert sorted(manifest["dates"]) == ["2026-07-28", "2026-07-29"]
+    for date_value, relative_path in manifest["dates"].items():
+        chunk_text = (tmp_path / relative_path).read_text(encoding="utf-8")
+        marker = f'window.__NCT_STORY_PARTITIONS__["{date_value}"]='
+        chunk_rows = json.loads(chunk_text.split(marker, 1)[1].rstrip(";"))
+        assert [row["log_date"] for row in chunk_rows] == [date_value]
 
 
 def test_render_dashboard_keeps_fct_multiselects_independent(
@@ -611,11 +761,22 @@ def test_render_dashboard_adds_interval_weighted_nct_story_performance(
     assert "window.matchMedia('(max-width: 680px)').matches" in html
     assert "move('globalFastFilters','fastPlatform','fastChannel')" in html
     assert "move('globalYoutubeFilters','youtubeChannel')" in html
+    assert 'id="globalAsrunFilters"' in html
+    assert "$('globalAsrunFilters').append($('deliveryTypeFilter'));" not in html
+    assert "'spotAdId','spotCreative','lbandAdId','lbandCreative'" in html
+    assert "if(!controls.children.length)controls.remove();" in html
     assert "function refreshNctStorySourceFilters(){" in html
     assert "const channelId=source==='fast'?'fastChannel':'streamChannel';" in html
     assert "selectedMulti('fastPlatform')" in html
     assert "selectedMulti('amagiPlatform')" in html
     assert "selectedMulti('youtubeChannel')" in html
+    assert "function isIndiaTvYoutubeChannel(value){" in html
+    assert "youtubeDefaultChannels(channels)" in html
+    assert "const channels=new Set(indiaTvYoutubeChannels());" in html
+    assert "youtubeChannels=indiaTvYoutubeScopeLabel()" in html
+    assert "column.textContent='INDIA TV YOUTUBE';" in html
+    assert ".combined-columns .youtube-col," in html
+    assert "background: #fef9c3;" in html
     assert "selectedMulti('nctYoutubeVideo')" in html
     assert "updateNctStorySourceControls();" in html
     assert "function nctStoryAudienceRows(rows){" in html

@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import argparse
-import csv
 import html
 import json
 import logging
 import os
 import re
+import sys
 from datetime import datetime
 from pathlib import Path
 from time import perf_counter
@@ -16,24 +16,6 @@ from typing import Any
 from zoneinfo import ZoneInfo
 
 import pandas as pd
-
-try:
-    from ETL.asrun_demo.src.io_utils import (
-        atomic_write_json,
-        atomic_write_parquet,
-        atomic_write_text,
-        read_json_object,
-        source_file_fingerprint,
-    )
-except ModuleNotFoundError:
-    # Direct script execution places this source directory on sys.path.
-    from io_utils import (  # type: ignore[no-redef]
-        atomic_write_json,
-        atomic_write_parquet,
-        atomic_write_text,
-        read_json_object,
-        source_file_fingerprint,
-    )
 
 
 LOGGER = logging.getLogger("veto.asrun")
@@ -153,7 +135,6 @@ YOUTUBE_PAYLOAD_ARRAYS = (
     "video_5min",
     "video_minute",
 )
-NCT_PARTITION_DIR = Path("data") / "nct"
 NCT_REQUIRED_COLUMNS = {
     "channel",
     "Story",
@@ -387,7 +368,12 @@ def build_amagi_minute_mart(events: pd.DataFrame) -> dict[str, Any]:
     manifest_path = PARSED_DIR / "amagi_manifest.json"
     source_cache_path = PARSED_DIR / "amagi_source_rows.parquet"
     minute_path = PARSED_DIR / "amagi_minute.parquet"
-    old_manifest = read_json_object(manifest_path)
+    old_manifest: dict[str, Any] = {}
+    if manifest_path.is_file():
+        try:
+            old_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            old_manifest = {}
     old_fingerprints = (
         old_manifest.get("fingerprints", {})
         if old_manifest.get("schema_version") == AMAGI_MART_VERSION
@@ -477,7 +463,7 @@ def build_amagi_minute_mart(events: pd.DataFrame) -> dict[str, Any]:
         return {"available": False, "reason": "No readable Amagi concurrency CSV files were found.", "minute": empty, "files": 0, "skipped": skipped}
 
     amagi = pd.concat(source_parts, ignore_index=True)
-    atomic_write_parquet(source_cache_path, amagi)
+    amagi.to_parquet(source_cache_path, index=False)
     # CSV timestamps are UTC. Converting with a timezone-aware dtype prevents
     # accidental filename-based date assignment or an extra IST shift.
     amagi["minute_ist"] = pd.to_datetime(amagi["timestamp (UTC)"], errors="coerce", utc=True).dt.tz_convert("Asia/Kolkata").dt.tz_localize(None)
@@ -507,7 +493,7 @@ def build_amagi_minute_mart(events: pd.DataFrame) -> dict[str, Any]:
         .sum()
         .sort_values(["minute_ist", "platform_name", "channel_raw"])
     )
-    atomic_write_parquet(minute_path, minute)
+    minute.to_parquet(minute_path, index=False)
     manifest = {
         "schema_version": AMAGI_MART_VERSION,
         "available": not minute.empty,
@@ -517,7 +503,12 @@ def build_amagi_minute_mart(events: pd.DataFrame) -> dict[str, Any]:
         "fingerprints": fingerprints,
         "readable_files": sorted(readable_files),
     }
-    atomic_write_json(manifest_path, manifest)
+    temp_manifest = manifest_path.with_name(f".{manifest_path.name}.tmp")
+    try:
+        temp_manifest.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        os.replace(temp_manifest, manifest_path)
+    finally:
+        temp_manifest.unlink(missing_ok=True)
     return {
         "available": not minute.empty,
         "reason": "" if not minute.empty else "No Amagi viewer minutes overlap the selected ASRUN dates.",
@@ -569,6 +560,12 @@ def fct_filename_range(path: Path) -> tuple[str, str]:
     if end < start:
         raise ValueError(f"FCT filename has an end date before its start date: {path.name}")
     return start, end
+
+
+def source_file_fingerprint(path: Path) -> dict[str, int]:
+    """Use stable local metadata to identify an unchanged source file."""
+    stat = path.stat()
+    return {"size": int(stat.st_size), "mtime_ns": int(stat.st_mtime_ns)}
 
 
 def fct_internal_range(
@@ -818,7 +815,14 @@ def build_fct_ad_mart() -> dict[str, Any]:
     fingerprints = {
         str(path.relative_to(FCT_ROOT)): source_file_fingerprint(path) for path in paths
     }
-    old_manifest = read_json_object(manifest_path)
+    old_manifest: dict[str, Any] = {}
+    if manifest_path.is_file():
+        try:
+            old_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            # A damaged cache manifest is recoverable because the source workbooks
+            # remain authoritative; force a clean rebuild below.
+            old_manifest = {}
 
     old_fingerprints = (
         old_manifest.get("fingerprints", {})
@@ -893,8 +897,16 @@ def build_fct_ad_mart() -> dict[str, Any]:
         "generated_at_ist": datetime.now(IST_ZONE).isoformat(),
     }
 
-    atomic_write_parquet(mart_path, events)
-    atomic_write_json(manifest_path, manifest)
+    temp_mart = mart_path.with_name(f".{mart_path.name}.tmp")
+    temp_manifest = manifest_path.with_name(f".{manifest_path.name}.tmp")
+    try:
+        events.to_parquet(temp_mart, index=False)
+        temp_manifest.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        os.replace(temp_mart, mart_path)
+        os.replace(temp_manifest, manifest_path)
+    finally:
+        temp_mart.unlink(missing_ok=True)
+        temp_manifest.unlink(missing_ok=True)
 
     return fct_result(
         events,
@@ -971,11 +983,7 @@ def read_nct_header(path: Path) -> tuple[int, str, dict[str, Any]]:
         "downloaded_on": "",
     }
     for raw_line in lines[:header_index]:
-        # Some NCT exports serialize preamble rows to the full CSV width,
-        # leaving dozens of empty trailing fields after the visible value.
-        # Parse the row structurally so those delimiters never become date text.
-        fields = [field.strip() for field in next(csv.reader([raw_line]))]
-        line = ",".join(field for field in fields if field)
+        line = raw_line.strip()
         if ":" not in line:
             continue
         key, value = (part.strip() for part in line.split(":", 1))
@@ -1025,41 +1033,19 @@ def parse_nct_csv(path: Path, source_name: str) -> tuple[pd.DataFrame, dict[str,
         dtype="Int64",
     )
 
-    date_values = frame["pgm_date"].astype("string").str.strip()
-    source_date = pd.Series(pd.NaT, index=frame.index, dtype="datetime64[ns]")
-    # NCT exports have used both slash/four-digit-year and dash/two-digit-year
-    # formats. Parse only those documented layouts so ambiguous dates never pass.
-    for date_format in ("%d/%m/%Y", "%d-%m-%y", "%d-%m-%Y"):
-        missing_dates = source_date.isna()
-        if not missing_dates.any():
-            break
-        source_date.loc[missing_dates] = pd.to_datetime(
-            date_values.loc[missing_dates],
-            format=date_format,
-            errors="coerce",
-        )
+    source_date = pd.to_datetime(
+        frame["pgm_date"].astype("string").str.strip(),
+        format="%d/%m/%Y",
+        errors="coerce",
+    )
 
     def combine_time(column: str) -> pd.Series:
-        values = (
-            frame[column]
-            .astype("string")
-            .str.strip()
-            .str.replace(".", ":", regex=False)
+        values = frame[column].astype("string").str.strip()
+        return pd.to_datetime(
+            source_date.dt.strftime("%Y-%m-%d") + " " + values,
+            format="%Y-%m-%d %H:%M:%S",
+            errors="coerce",
         )
-        clock = values.str.extract(
-            r"^(?P<hour>\d{1,2}):(?P<minute>\d{2}):(?P<second>\d{2})$"
-        ).apply(pd.to_numeric, errors="coerce")
-        valid_clock = (
-            clock["hour"].between(0, 23)
-            & clock["minute"].between(0, 59)
-            & clock["second"].between(0, 59)
-        )
-        seconds = (
-            clock["hour"] * 3600 + clock["minute"] * 60 + clock["second"]
-        ).where(valid_clock)
-        # Adding a validated offset preserves the source-reported IST clock and
-        # avoids host-timezone interpretation by pandas.
-        return source_date + pd.to_timedelta(seconds, unit="s")
 
     frame["program_start_ist"] = combine_time("Pgm_Start_Time")
     frame["program_end_ist"] = combine_time("Pgm_End_Time")
@@ -1079,25 +1065,9 @@ def parse_nct_csv(path: Path, source_name: str) -> tuple[pd.DataFrame, dict[str,
     frame["duration_seconds"] = pd.to_numeric(
         frame["duration_seconds"], errors="coerce"
     )
-    duration_values = (
-        frame["duration"]
-        .astype("string")
-        .str.strip()
-        .str.replace(".", ":", regex=False)
-    )
-    duration_parts = duration_values.str.extract(
-        r"^(?P<hour>\d+):(?P<minute>\d{2}):(?P<second>\d{2})$"
-    ).apply(pd.to_numeric, errors="coerce")
-    valid_duration = (
-        duration_parts["hour"].ge(0)
-        & duration_parts["minute"].between(0, 59)
-        & duration_parts["second"].between(0, 59)
-    )
-    duration_text_seconds = (
-        duration_parts["hour"] * 3600
-        + duration_parts["minute"] * 60
-        + duration_parts["second"]
-    ).where(valid_duration)
+    duration_text_seconds = pd.to_timedelta(
+        frame["duration"].astype("string").str.strip(), errors="coerce"
+    ).dt.total_seconds()
     invalid_critical = (
         source_date.isna()
         | frame["program_start_ist"].isna()
@@ -1309,7 +1279,12 @@ def build_nct_story_mart() -> dict[str, Any]:
     fingerprints = {
         str(path.relative_to(NCT_ROOT)): source_file_fingerprint(path) for path in paths
     }
-    old_manifest = read_json_object(manifest_path)
+    old_manifest: dict[str, Any] = {}
+    if manifest_path.is_file():
+        try:
+            old_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            old_manifest = {}
     old_fingerprints = (
         old_manifest.get("fingerprints", {})
         if old_manifest.get("schema_version") == NCT_MART_VERSION
@@ -1389,8 +1364,16 @@ def build_nct_story_mart() -> dict[str, Any]:
         "file_metadata": file_metadata,
         "generated_at_ist": datetime.now(IST_ZONE).isoformat(),
     }
-    atomic_write_parquet(mart_path, segments)
-    atomic_write_json(manifest_path, manifest)
+    temp_mart = mart_path.with_name(f".{mart_path.name}.tmp")
+    temp_manifest = manifest_path.with_name(f".{manifest_path.name}.tmp")
+    try:
+        segments.to_parquet(temp_mart, index=False)
+        temp_manifest.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        os.replace(temp_mart, mart_path)
+        os.replace(temp_manifest, manifest_path)
+    finally:
+        temp_mart.unlink(missing_ok=True)
+        temp_manifest.unlink(missing_ok=True)
 
     return nct_result(
         segments,
@@ -1506,7 +1489,12 @@ def build_youtube_marts() -> dict[str, Any]:
     fingerprints = {
         name: source_file_fingerprint(path) for name, path in path_by_name.items()
     }
-    old_manifest = read_json_object(manifest_path)
+    old_manifest: dict[str, Any] = {}
+    if manifest_path.is_file():
+        try:
+            old_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            old_manifest = {}
 
     old_fingerprints = (
         old_manifest.get("fingerprints", {})
@@ -1616,7 +1604,7 @@ def build_youtube_marts() -> dict[str, Any]:
         }
 
     youtube = pd.concat(source_parts, ignore_index=True)
-    atomic_write_parquet(source_cache_path, youtube)
+    youtube.to_parquet(source_cache_path, index=False)
     youtube["timestamp_ist"] = pd.to_datetime(
         youtube["date"].astype("string") + " " + youtube["time"].astype("string"),
         format="%Y-%m-%d %H:%M:%S",
@@ -1740,10 +1728,10 @@ def build_youtube_marts() -> dict[str, Any]:
         .sort_values(["bucket_ist", "youtube_channel", "video_id"])
     )
 
-    atomic_write_parquet(mart_paths["minute"], minute)
-    atomic_write_parquet(mart_paths["video_daily"], video_daily)
-    atomic_write_parquet(mart_paths["video_5min"], video_5min)
-    atomic_write_parquet(mart_paths["video_minute"], video_minute)
+    minute.to_parquet(mart_paths["minute"], index=False)
+    video_daily.to_parquet(mart_paths["video_daily"], index=False)
+    video_5min.to_parquet(mart_paths["video_5min"], index=False)
+    video_minute.to_parquet(mart_paths["video_minute"], index=False)
     full_day_counts = minute.groupby("log_date")["timestamp_ist"].nunique()
     full_days = full_day_counts[full_day_counts.eq(1440)].index.tolist()
     manifest = {
@@ -1761,7 +1749,12 @@ def build_youtube_marts() -> dict[str, Any]:
         "full_start": min(full_days) if full_days else "",
         "full_end": max(full_days) if full_days else "",
     }
-    atomic_write_json(manifest_path, manifest)
+    temp_manifest = manifest_path.with_name(f".{manifest_path.name}.tmp")
+    try:
+        temp_manifest.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+        os.replace(temp_manifest, manifest_path)
+    finally:
+        temp_manifest.unlink(missing_ok=True)
     return {
         "available": True,
         "reason": "",
@@ -2091,7 +2084,15 @@ def write_javascript_assignment(path: Path, target: str, value: Any) -> None:
         ensure_ascii=True,
         separators=(",", ":"),
     ).replace("</", "<\\/")
-    atomic_write_text(path, f"{target}={encoded};")
+    temp_path = path.with_name(f".{path.name}.tmp")
+    try:
+        temp_path.write_text(
+            f"{target}={encoded};",
+            encoding="utf-8",
+        )
+        os.replace(temp_path, path)
+    finally:
+        temp_path.unlink(missing_ok=True)
 
 
 def split_dashboard_payload(
@@ -2137,7 +2138,7 @@ def write_dashboard_sidecars(chunks: dict[str, Any]) -> dict[str, Path]:
 
 
 def write_nct_payload_script(path: Path, nct: dict[str, Any]) -> None:
-    """Publish a lightweight NCT manifest plus independently loadable daily rows."""
+    """Atomically publish NCT segment rows as an independently loaded sidecar."""
     segment_columns = [
         "clip_start_ist",
         "clip_end_ist",
@@ -2162,40 +2163,23 @@ def write_nct_payload_script(path: Path, nct: dict[str, Any]) -> None:
         "source_file",
         "source_row",
     ]
-    segments = nct["segments"]
-    partitions: dict[str, str] = {}
-    if not segments.empty:
-        for log_date, daily in segments.groupby("log_date", sort=True, dropna=False):
-            date_value = str(log_date).strip()
-            if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date_value):
-                raise ValueError(f"NCT segment has an invalid log_date: {date_value!r}")
-            relative_path = NCT_PARTITION_DIR / f"{date_value}.js"
-            chunk_path = path.parent / relative_path
-            rows = records(daily, segment_columns)
-            encoded = json.dumps(
-                rows,
-                ensure_ascii=True,
-                separators=(",", ":"),
-            ).replace("</", "<\\/")
-            atomic_write_text(
-                chunk_path,
-                "window.__NCT_STORY_PARTITIONS__="
-                "window.__NCT_STORY_PARTITIONS__||{};"
-                f"window.__NCT_STORY_PARTITIONS__[{json.dumps(date_value)}]={encoded};",
-            )
-            partitions[date_value] = relative_path.as_posix()
-
     payload = {
         "available": bool(nct["available"]),
         "reason": nct["reason"],
-        "partitioned": True,
-        "segment_count": int(len(segments)),
-        "dates": partitions,
-        # Retain this key so older dashboard code degrades to an empty dataset
-        # instead of failing if the manifest and HTML are briefly out of sync.
-        "segments": [],
+        "segments": records(nct["segments"], segment_columns),
     }
-    write_javascript_assignment(path, "window.__NCT_STORY_DATA__", payload)
+    encoded = json.dumps(
+        payload, ensure_ascii=True, separators=(",", ":")
+    ).replace("</", "<\\/")
+    temp_path = path.with_name(f".{path.name}.tmp")
+    try:
+        temp_path.write_text(
+            f"window.__NCT_STORY_DATA__={encoded};",
+            encoding="utf-8",
+        )
+        os.replace(temp_path, path)
+    finally:
+        temp_path.unlink(missing_ok=True)
 
 
 def render_dashboard(payload: dict[str, Any]) -> str:
@@ -2412,22 +2396,8 @@ main { padding: 16px 0 24px; }
   border-radius: 3px;
 }
 
-.youtube-panel { margin-top: 16px; border-top: 3px solid #eab308; }
-.youtube-tag { background: #facc15; color: #422006; }
-.combined-columns .youtube-col,
-.fct-audience-columns .youtube-col {
-  border-bottom: 2px solid #eab308;
-  color: #713f12;
-}
-.combined-line .youtube-col,
-.fct-audience-line .youtube-col {
-  min-height: 28px;
-  padding: 6px;
-  border-left: 3px solid #eab308;
-  border-radius: 3px;
-  background: #fef9c3;
-  color: #713f12;
-}
+.youtube-panel { margin-top: 16px; border-top: 3px solid #e62117; }
+.youtube-tag { background: #e62117; }
 .youtube-meta { margin: -2px 0 10px; color: var(--muted); font-size: 11px; }
 .youtube-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 12px; border: 1px solid var(--line); border-radius: 5px; }
 .youtube-metric { min-width: 0; min-height: 78px; padding: 11px 12px; border-right: 1px solid var(--line); }
@@ -2592,18 +2562,18 @@ body.youtube-chart-expanded { overflow: hidden; }
   .bar { display: none; }
 }
 </style><script>__CHARTJS__</script></head><body><header class="topbar"><div class="wrap topbar-inner"><div class="title-group"><h1>Veto ASRUN Delivery Demo</h1><span class="source-label">__TITLE__ | ASRUN playout evidence</span></div><div class="meta"><span id="range"></span><span id="updated"></span></div></div></header><section class="filter-shell"><div class="wrap filters"><label class="filter-label">Date from<input id="from" type="date"></label><label class="filter-label">Date to<input id="to" type="date"></label><label class="filter-label">Ad type<span class="multi-select"><button id="typeToggle" class="multi-toggle" type="button">All ad types</button><span id="typeMenu" class="multi-menu"></span></span></label><label class="filter-label">Ad ID<span class="multi-select"><button id="adIdToggle" class="multi-toggle" type="button">All ad IDs</button><span id="adIdMenu" class="multi-menu"></span></span></label><label class="filter-label">Creative title<span class="multi-select"><button id="creativeToggle" class="multi-toggle" type="button">All creative titles</button><span id="creativeMenu" class="multi-menu"></span></span></label><button id="reset" type="button">Reset</button></div></section><main class="wrap"><section class="grid" id="kpis"></section><section class="rank-grid"><div class="panel rank-panel"><div class="panel-head"><h2>Spot Creative Delivery</h2><span class="source-tag fast-tag">SPOT</span></div><div class="rank-list" id="spotBars"></div></div><div class="panel rank-panel"><div class="panel-head"><h2>L-band Creative Delivery</h2><span class="source-tag stream-tag">L-BAND</span></div><div class="rank-list" id="lbandBars"></div></div></section><section class="audience-grid"><div class="panel audience-panel"><div class="panel-head"><div><h2>FAST Delivered Ad Events</h2></div><span class="source-tag fast-tag">FAST</span></div><div class="audience-controls"><label class="filter-label">Platform<span class="multi-select"><button id="fastPlatformToggle" class="multi-toggle" type="button">All platforms</button><span id="fastPlatformMenu" class="multi-menu"></span></span></label><label class="filter-label">Channel<span class="multi-select"><button id="fastChannelToggle" class="multi-toggle" type="button">Choose channels</button><span id="fastChannelMenu" class="multi-menu"></span></span></label></div><div class="event-columns"><span>On-air IST</span><span>Ad ID / Type</span><span>Creative title</span><span class="duration">Duration</span><span class="metric">Concurrency</span></div><div class="audience-list" id="fastRows"></div><div class="audience-note" id="fastNote"></div></div><div class="panel audience-panel"><div class="panel-head"><div><h2>STREAM Delivered Ad Events</h2></div><span class="source-tag stream-tag">STREAM</span></div><div class="audience-controls stream-audience-controls"><label class="filter-label">Channel<span class="multi-select"><button id="streamChannelToggle" class="multi-toggle" type="button">Choose channels</button><span id="streamChannelMenu" class="multi-menu"></span></span></label></div><div class="event-columns"><span>On-air IST</span><span>Ad ID / Type</span><span>Creative title</span><span class="duration">Duration</span><span class="metric">Concurrency</span></div><div class="audience-list" id="streamRows"></div><div class="audience-note" id="streamNote"></div></div></section><section class="panel combined-panel"><div class="panel-head"><div><h2>All Delivered Ad Events</h2><small>FAST + STREAM selected 5-minute concurrency | YouTube minute concurrency</small></div><div class="panel-actions"><button id="exportAllEvents" type="button">Export CSV</button><button id="exportAudienceBreakdown" type="button">Export platform/channel CSV</button><span class="source-tag combined-tag">FAST + STREAM</span></div></div><div class="combined-columns"><span>On-air IST</span><span>Ad ID / Type</span><span>Creative title</span><span class="duration">Duration</span><span class="fast-col">FAST</span><span class="stream-col">STREAM</span><span class="youtube-col">YOUTUBE</span><span class="total-col">Combined</span></div><div class="combined-list" id="allRows"></div><div class="audience-note" id="allNote"></div></section><section class="panel youtube-panel" id="youtubePanel"><div class="panel-head"><div><h2>YouTube Live Audience Context</h2></div><span class="source-tag youtube-tag">YOUTUBE</span></div><div class="youtube-meta" id="youtubeMeta"></div><div class="youtube-filter-bar" aria-label="Independent YouTube filters"><label class="filter-label">YouTube date from<input id="youtubeFrom" type="date"></label><label class="filter-label">YouTube date to<input id="youtubeTo" type="date"></label><label class="filter-label">Videos<span class="multi-select"><button id="youtubeVideoToggle" class="multi-toggle" type="button">All live videos</button><span id="youtubeVideoMenu" class="multi-menu"></span></span></label><div class="youtube-filter-actions" role="group" aria-label="YouTube quick ranges"><button type="button" data-youtube-range="latest">Latest day</button><button type="button" data-youtube-range="7">7D</button><button type="button" data-youtube-range="30">30D</button><button type="button" data-youtube-range="all">All</button></div></div><div class="youtube-metrics" id="youtubeMetrics"></div><div class="youtube-controls"><span class="youtube-controls-note" id="youtubeSelectionNote" aria-live="polite"></span><div class="panel-actions"><label class="filter-label">CSV interval<select id="youtubeExportInterval"><option value="1">1 minute</option><option value="5" selected>5 minutes</option></select></label><button id="exportYoutubeCsv" type="button">Export minute CSV</button><button id="exportYoutubeReferenceCsv" type="button">Export stream reference</button></div></div><div class="youtube-chart-shell"><canvas id="youtubeTrend" aria-label="YouTube live concurrency trend"></canvas><div class="youtube-chart-empty" id="youtubeChartEmpty"></div></div><details class="youtube-data-details"><summary>View chart values as a table</summary><table class="youtube-data-table"><thead><tr><th>IST time</th><th>Live concurrency</th></tr></thead><tbody id="youtubeTrendTable"></tbody></table></details><div class="youtube-grid"><section class="youtube-subsection"><h3>Top Live Videos</h3><div class="youtube-list" id="youtubeVideoRanking"></div></section><section class="youtube-subsection"><h3>YouTube Audience at Delivered Ad Events</h3><div class="youtube-context-head"><span>On-air IST</span><span>Ad ID / Type</span><span>Creative title</span><span>YT concurrency</span><span>Live videos</span></div><div class="youtube-list" id="youtubeEventContext"></div></section></div></section></main><script>const DATA=__BLOB__;const $=id=>document.getElementById(id),fmt=n=>new Intl.NumberFormat('en-IN',{maximumFractionDigits:2}).format(n),mins=s=>fmt(s/60)+' min',esc=v=>String(v??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));const canonical=String((DATA.channels||[])[0]||'');const dates=DATA.events.map(x=>x.on_air_start_ist.slice(0,10)),minDate=[...dates].sort()[0],maxDate=[...dates].sort().at(-1);$('from').value=minDate;$('to').value=maxDate;$('from').min=minDate;$('from').max=maxDate;$('to').min=minDate;$('to').max=maxDate;$('range').textContent='Ad data range: '+DATA.true_range.start+' to '+DATA.true_range.end;$('updated').textContent='Dashboard created: '+DATA.generated_at_ist;
-function option(value,label){return '<option value="'+esc(value)+'">'+esc(label)+'</option>'}function dateScope(){const from=$('from').value,to=$('to').value;return DATA.events.filter(e=>e.on_air_start_ist.slice(0,10)>=from&&e.on_air_start_ist.slice(0,10)<=to)}function selectedMulti(id){return new Set([...$(id+'Menu').querySelectorAll('input[data-value]:checked')].map(input=>input.dataset.value))}function scope(){const types=selectedMulti('type');return dateScope().filter(e=>!types.size||types.has(e.ad_type))}function filterKey(){return [$('from').value,$('to').value,[...selectedMulti('type')].sort().join('|'),[...selectedMulti('adId')].sort().join('|'),[...selectedMulti('creative')].sort().join('|')].join('\u0000')}function multiAllLabel(id,kind,allLabel){const values=[...selectedMulti(id)],count=$(id+'Menu').querySelectorAll('input[data-value]').length,button=$(id+'Toggle');if(!values.length||values.length===count){button.textContent=allLabel;return}button.textContent=values.length===1?values[0]:values.length+' '+kind+' selected'}function buildHeaderMulti(id,items,kind,defaultValues,allLabel,onChange){const menu=$(id+'Menu'),old=selectedMulti(id),allowed=new Set(items.map(item=>item.value)),selected=new Set([...old].filter(value=>allowed.has(value)));if(!old.size&&!multiInitialized.has(id))for(const value of defaultValues)if(allowed.has(value))selected.add(value);multiInitialized.add(id);const allChecked=items.length>0&&selected.size===items.length;menu.innerHTML='<label class="multi-option multi-all"><input type="checkbox" data-all '+(allChecked?'checked':'')+'>All '+kind+'</label>'+items.map(item=>'<label class="multi-option"><input type="checkbox" data-value="'+esc(item.value)+'" '+(selected.has(item.value)?'checked':'')+'>'+esc(item.label)+'</label>').join('');multiAllLabel(id,kind,allLabel);$(id+'Toggle').onclick=event=>{event.stopPropagation();const open=!menu.classList.contains('open');closeMultiMenus(id);menu.classList.toggle('open',open)};menu.onchange=event=>{const all=menu.querySelector('input[data-all]');if(event.target.hasAttribute('data-all'))for(const input of menu.querySelectorAll('input[data-value]'))input.checked=event.target.checked;else all.checked=[...menu.querySelectorAll('input[data-value]')].every(input=>input.checked);multiAllLabel(id,kind,allLabel);clearFilterCache();onChange()};}function countedOptions(rows,key){const counts=new Map();for(const row of rows){const value=String(row[key]||'').trim();if(value)counts.set(value,(counts.get(value)||0)+1)}return [...counts.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([value,count])=>({value,label:value+' ('+fmt(count)+')'}))}function refreshDependentOptions(){const base=dateScope(),typeCounts=new Map();for(const row of base)typeCounts.set(row.ad_type,(typeCounts.get(row.ad_type)||0)+1);const types=['Spot','L-band'].filter(type=>typeCounts.has(type)).map(type=>({value:type,label:type+' ('+fmt(typeCounts.get(type))+')'}));buildHeaderMulti('type',types,'ad types',types.map(item=>item.value),'All ad types ('+fmt(base.length)+')',()=>{refreshDependentOptions();refreshAudienceFilters();scheduleRender()});const eligible=scope(),ids=countedOptions(eligible,'event_id');buildHeaderMulti('adId',ids,'ad IDs',ids.map(item=>item.value),'All ad IDs ('+fmt(eligible.length)+')',()=>{refreshDependentOptions();scheduleRender()});const selectedIds=selectedMulti('adId'),titlesSource=eligible.filter(e=>!selectedIds.size||selectedIds.has(e.event_id)),titles=countedOptions(titlesSource,'creative_title');buildHeaderMulti('creative',titles,'creative titles',titles.map(item=>item.value),'All creative titles ('+fmt(titlesSource.length)+')',scheduleRender)}function filtered(){const key=filterKey();if(filterCache.key===key&&filterCache.value)return filterCache.value;const selectedIds=selectedMulti('adId'),creative=selectedMulti('creative'),result=scope().filter(e=>(!selectedIds.size||selectedIds.has(e.event_id))&&(!creative.size||creative.has(e.creative_title)));filterCache={key,value:result};return result}function formatIst(value){const normalized=String(value).replace(' ','T'),[datePart,timePart='00:00']=normalized.split('T'),[year,month,day]=datePart.split('-'),[rawHour='0',minute='00']=timePart.split(':');const hour=Number(rawHour),suffix=hour>=12?'PM':'AM',twelve=hour%12||12;return day+'-'+month+'-'+year.slice(-2)+' '+String(twelve).padStart(2,'0')+':'+minute+' '+suffix;}
-function rankingBars(node,items){const visible=items.slice(0,50),max=Math.max(1,...visible.map(x=>x.seconds));node.innerHTML=visible.length?visible.map(x=>'<div class="barrow"><span class="bar-label"><strong>'+esc(x.id)+'</strong><small>'+esc(x.title)+'</small></span><div class="bar"><i style="width:'+((x.seconds/max)*100)+'%"></i></div><span class="rank-meta">'+fmt(x.plays)+' plays<br>'+mins(x.seconds)+'</span></div>').join(''):'<p>No delivery events in this selection.</p>';}function minuteKey(value){return String(value).slice(0,16)+':00'}function viewerScope(source){const from=$('from').value,to=$('to').value;return (DATA.viewer_minute||[]).filter(r=>r.source===source&&String(r.minute_ist).slice(0,10)>=from&&String(r.minute_ist).slice(0,10)<=to)}const multiInitialized=new Set();let filterCache={key:null,value:null},renderTimer=null;function clearFilterCache(){filterCache={key:null,value:null}}function scheduleRender(){clearTimeout(renderTimer);renderTimer=setTimeout(render,160)}function closeMultiMenus(exceptId){for(const menu of document.querySelectorAll('.multi-menu'))if(menu.id!==exceptId+'Menu')menu.classList.remove('open')}function multiSummary(id,kind){const values=[...selectedMulti(id)],button=$(id+'Toggle');if(!values.length){button.textContent='Choose '+kind;return}const all=[...$(id+'Menu').querySelectorAll('input[data-value]')].map(input=>input.dataset.value);if(values.length===all.length){button.textContent='All '+kind;return}button.textContent=values.length===1?values[0]:values.length+' '+kind+' selected'}function buildMulti(id,items,kind,defaultValues,onChange){const menu=$(id+'Menu'),old=selectedMulti(id),allowed=new Set(items),selected=new Set([...old].filter(value=>allowed.has(value)));if(!old.size&&!multiInitialized.has(id))for(const value of defaultValues)if(allowed.has(value))selected.add(value);multiInitialized.add(id);const allChecked=items.length>0&&selected.size===items.length;menu.innerHTML='<label class="multi-option multi-all"><input type="checkbox" data-all '+(allChecked?'checked':'')+'>All '+kind+'</label>'+items.map(value=>'<label class="multi-option"><input type="checkbox" data-value="'+esc(value)+'" '+(selected.has(value)?'checked':'')+'>'+esc(value)+'</label>').join('');multiSummary(id,kind);$(id+'Toggle').onclick=event=>{event.stopPropagation();const open=!menu.classList.contains('open');closeMultiMenus(id);menu.classList.toggle('open',open)};menu.onchange=event=>{const all=menu.querySelector('input[data-all]');if(event.target.hasAttribute('data-all'))for(const input of menu.querySelectorAll('input[data-value]'))input.checked=event.target.checked;else all.checked=[...menu.querySelectorAll('input[data-value]')].every(input=>input.checked);multiSummary(id,kind);clearFilterCache();onChange()};}function refreshAudienceFilters(){const fast=viewerScope('fast'),platforms=[...new Set(fast.map(r=>String(r.platform_name)))].sort();buildMulti('fastPlatform',platforms,'platforms',platforms,()=>{refreshAudienceFilters();scheduleRender()});const selectedPlatforms=selectedMulti('fastPlatform'),fastChannels=[...new Set(fast.filter(r=>!selectedPlatforms.size||selectedPlatforms.has(String(r.platform_name))).map(r=>String(r.channel_name)))].sort();buildMulti('fastChannel',fastChannels,'channels',fastChannels,scheduleRender);const streamChannels=[...new Set(viewerScope('stream').map(r=>String(r.channel_name)))].sort();buildMulti('streamChannel',streamChannels,'channels',streamChannels,scheduleRender);}function audienceMinuteMap(source){const channels=selectedMulti(source==='fast'?'fastChannel':'streamChannel'),platforms=source==='fast'?selectedMulti('fastPlatform'):null;if(!channels.size||(source==='fast'&&!platforms.size))return {message:'',map:new Map()};const rows=viewerScope(source).filter(r=>(source!=='fast'||platforms.has(String(r.platform_name)))&&channels.has(String(r.channel_name)));if(!rows.length)return {message:'',map:new Map()};const map=new Map();for(const r of rows){const key=minuteKey(r.minute_ist);map.set(key,(map.get(key)||0)+Number(r.distinct_cliips||0));}return {message:'',map};}function naiveMillis(value){const [d,t='00:00:00']=String(value).split('T'),[year,month,day]=d.split('-').map(Number),[hour=0,minute=0,seconds=0]=t.split(':').map(Number);return Date.UTC(year,month-1,day,hour,minute,seconds);}function fiveMinuteWindow(event){const bucket=Math.floor(naiveMillis(event.on_air_start_ist)/(5*60000))*(5*60000),keys=[];for(let offset=0;offset<5;offset++)keys.push(new Date(bucket+offset*60000).toISOString().slice(0,16)+':00');const start=new Date(bucket),end=new Date(bucket+4*60000),clock=d=>{const hour=d.getUTCHours(),suffix=hour>=12?'PM':'AM',twelve=hour%12||12;return String(twelve).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0')+' '+suffix;};return {keys,label:clock(start)+'-'+clock(end)+' IST'};}function audienceValue(event,state){const window=fiveMinuteWindow(event);if(!state.map)return {value:'0',window:window.label,total:0};let total=0,found=false;for(const key of window.keys){if(state.map.has(key)){found=true;total+=state.map.get(key);}}return {value:found?fmt(total):'0',window:window.label,total:found?total:0};}function audienceLines(events,state){if(!events.length)return '<div class="audience-empty">No delivered ad events in this selection.</div>';return events.sort((a,b)=>a.on_air_start_ist.localeCompare(b.on_air_start_ist)).map(e=>{const metric=audienceValue(e,state);return '<div class="event-line"><span>'+formatIst(e.on_air_start_ist)+'</span><span><strong>'+esc(e.event_id)+'</strong><small>'+esc(e.ad_type)+'</small></span><span>'+esc(e.creative_title)+'</span><span class="duration">'+fmt(e.actual_duration_seconds)+' sec</span><span class="audience-value">'+esc(metric.value)+'</span></div>';}).join('');}let youtubeDeliveryMinuteIndex=null;
-function youtubeDeliveryDetails(event){const youtube=DATA.youtube||{},key=youtubeMinuteKey(event.on_air_start_ist);if(!youtubeDeliveryMinuteIndex){const totals=new Map((youtube.minute||[]).map(row=>[youtubeMinuteKey(row.timestamp_ist),row]));const videos=new Map();for(const row of youtube.video_minute||[]){const minuteKey=youtubeMinuteKey(row.timestamp_ist),list=videos.get(minuteKey)||[];list.push(row);videos.set(minuteKey,list)}youtubeDeliveryMinuteIndex={totals,videos}}const totalRow=youtubeDeliveryMinuteIndex.totals.get(key),videoRows=youtubeDeliveryMinuteIndex.videos.get(key)||[];if(!totalRow)return {value:'No YouTube data',total:null,live_videos:0,video_ids:'',video_titles:'',scope:'All live YouTube videos at the on-air minute'};const videoIds=[...new Set(videoRows.map(row=>String(row.video_id||'')).filter(Boolean))],titles=[...new Set(videoRows.map(row=>youtubeVideoTitle(youtube,row.video_id,row.log_date)).filter(Boolean))];return {value:fmt(Number(totalRow.total_concurrent_viewers||0)),total:Number(totalRow.total_concurrent_viewers||0),live_videos:Number(totalRow.live_videos||videoIds.length),video_ids:videoIds.join(' | '),video_titles:titles.join(' | '),scope:'All live YouTube videos at the on-air minute'}}
-function youtubeFiveMinuteValue(event){return youtubeDeliveryDetails(event)}
-function combinedRows(events,fast,stream){return events.sort((a,b)=>a.on_air_start_ist.localeCompare(b.on_air_start_ist)).map(e=>{const fastMetric=audienceValue(e,fast),streamMetric=audienceValue(e,stream),youtubeMetric=youtubeFiveMinuteValue(e);return {event:e,fast:fastMetric,stream:streamMetric,youtube:youtubeMetric,total:fastMetric.total===null||streamMetric.total===null||youtubeMetric.total===null?null:fastMetric.total+streamMetric.total+youtubeMetric.total};});}function combinedLines(events,fast,stream){const rows=combinedRows(events,fast,stream);if(!rows.length)return '<div class="audience-empty">No delivered ad events in this selection.</div>';return rows.map(row=>{const e=row.event,total=row.total===null?'No combined data':fmt(row.total);return '<div class="combined-line"><span>'+formatIst(e.on_air_start_ist)+'</span><span><strong>'+esc(e.event_id)+'</strong><small>'+esc(e.ad_type)+'</small></span><span>'+esc(e.creative_title)+'</span><span class="duration">'+fmt(e.actual_duration_seconds)+' sec</span><span class="combined-value fast-col">'+esc(row.fast.value)+'</span><span class="combined-value stream-col">'+esc(row.stream.value)+'</span><span class="combined-value youtube-col">'+esc(row.youtube.value)+'</span><span class="combined-value total-col">'+esc(total)+'</span></div>';}).join('');}function renderAudience(events){const fast=audienceMinuteMap('fast'),stream=audienceMinuteMap('stream');$('fastRows').innerHTML=audienceLines(events,fast);$('streamRows').innerHTML=audienceLines(events,stream);$('allRows').innerHTML=combinedLines(events,fast,stream);$('fastNote').textContent='';$('streamNote').textContent='';$('allNote').textContent='';}function csvCell(value){const text=String(value??'');return text.includes(',')||text.includes('\"')||text.split(String.fromCharCode(10)).length>1?'\"'+text.replace(/\"/g,'\"\"')+'\"':text}function exportAllEventsCsv(){const events=filtered(),fast=audienceMinuteMap('fast'),stream=audienceMinuteMap('stream'),fastPlatforms=[...selectedMulti('fastPlatform')].join(' | '),fastChannels=[...selectedMulti('fastChannel')].join(' | '),streamChannels=[...selectedMulti('streamChannel')].join(' | '),header=['On-air IST','Ad Type','Ad ID','Creative Title','Actual Duration Seconds','5-Minute Window IST','FAST Platforms','FAST Channels','STREAM Channels','FAST 5-Minute Concurrency','STREAM 5-Minute Concurrency','YouTube Scope','YouTube Minute Concurrency','YouTube Active Live Videos','YouTube Active Video IDs','YouTube Active Video Titles','Combined 5-Minute Concurrency'],rows=combinedRows(events,fast,stream).map(row=>[formatIst(row.event.on_air_start_ist),row.event.ad_type,row.event.event_id,row.event.creative_title,row.event.actual_duration_seconds,row.fast.window,fastPlatforms,fastChannels,streamChannels,row.fast.value,row.stream.value,row.youtube.scope,row.youtube.value,row.youtube.live_videos,row.youtube.video_ids,row.youtube.video_titles,row.total===null?'No combined data':fmt(row.total)]),csv=[header,...rows].map(row=>row.map(csvCell).join(',')).join(String.fromCharCode(13,10)),blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download='asrun_all_delivered_events_'+$('from').value+'_to_'+$('to').value+'.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),0);}
+function option(value,label){return '<option value="'+esc(value)+'">'+esc(label)+'</option>'}function dateScope(){const from=$('from').value,to=$('to').value;return DATA.events.filter(e=>e.on_air_start_ist.slice(0,10)>=from&&e.on_air_start_ist.slice(0,10)<=to)}function selectedMulti(id){return new Set([...$(id+'Menu').querySelectorAll('input[data-value]:checked')].map(input=>input.dataset.value))}function multiAllLabel(id,kind,allLabel){const values=[...selectedMulti(id)],count=$(id+'Menu').querySelectorAll('input[data-value]').length,button=$(id+'Toggle');if(!values.length||values.length===count){button.textContent=allLabel;return}button.textContent=values.length===1?values[0]:values.length+' '+kind+' selected'}function buildHeaderMulti(id,items,kind,defaultValues,allLabel,onChange){const menu=$(id+'Menu'),old=selectedMulti(id),allowed=new Set(items.map(item=>item.value)),selected=new Set([...old].filter(value=>allowed.has(value)));if(!old.size&&!multiInitialized.has(id))for(const value of defaultValues)if(allowed.has(value))selected.add(value);multiInitialized.add(id);const allChecked=items.length>0&&selected.size===items.length;menu.innerHTML='<label class="multi-option multi-all"><input type="checkbox" data-all '+(allChecked?'checked':'')+'>All '+kind+'</label>'+items.map(item=>'<label class="multi-option"><input type="checkbox" data-value="'+esc(item.value)+'" '+(selected.has(item.value)?'checked':'')+'>'+esc(item.label)+'</label>').join('');multiAllLabel(id,kind,allLabel);$(id+'Toggle').onclick=event=>{event.stopPropagation();const open=!menu.classList.contains('open');closeMultiMenus(id);menu.classList.toggle('open',open)};menu.onchange=event=>{const all=menu.querySelector('input[data-all]');if(event.target.hasAttribute('data-all'))for(const input of menu.querySelectorAll('input[data-value]'))input.checked=event.target.checked;else all.checked=[...menu.querySelectorAll('input[data-value]')].every(input=>input.checked);multiAllLabel(id,kind,allLabel);clearFilterCache();onChange()};}function countedOptions(rows,key){const counts=new Map();for(const row of rows){const value=String(row[key]||'').trim();if(value)counts.set(value,(counts.get(value)||0)+1)}return [...counts.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([value,count])=>({value,label:value+' ('+fmt(count)+')'}))}function formatIst(value){const normalized=String(value).replace(' ','T'),[datePart,timePart='00:00']=normalized.split('T'),[year,month,day]=datePart.split('-'),[rawHour='0',minute='00']=timePart.split(':');const hour=Number(rawHour),suffix=hour>=12?'PM':'AM',twelve=hour%12||12;return day+'-'+month+'-'+year.slice(-2)+' '+String(twelve).padStart(2,'0')+':'+minute+' '+suffix;}
+function rankingBars(node,items){const visible=items.slice(0,50),max=Math.max(1,...visible.map(x=>x.seconds));node.innerHTML=visible.length?visible.map(x=>'<div class="barrow"><span class="bar-label"><strong>'+esc(x.id)+'</strong><small>'+esc(x.title)+'</small></span><div class="bar"><i style="width:'+((x.seconds/max)*100)+'%"></i></div><span class="rank-meta">'+fmt(x.plays)+' plays<br>'+mins(x.seconds)+'</span></div>').join(''):'<p>No delivery events in this selection.</p>';}function minuteKey(value){return String(value).slice(0,16)+':00'}function viewerScope(source){const from=$('from').value,to=$('to').value;return (DATA.viewer_minute||[]).filter(r=>r.source===source&&String(r.minute_ist).slice(0,10)>=from&&String(r.minute_ist).slice(0,10)<=to)}const multiInitialized=new Set();let filterCache={key:null,value:null},renderTimer=null;function clearFilterCache(){filterCache={key:null,value:null}}function scheduleRender(){clearTimeout(renderTimer);renderTimer=setTimeout(render,160)}function multiSummary(id,kind){const values=[...selectedMulti(id)],button=$(id+'Toggle');if(!values.length){button.textContent='Choose '+kind;return}const all=[...$(id+'Menu').querySelectorAll('input[data-value]')].map(input=>input.dataset.value);if(values.length===all.length){button.textContent='All '+kind;return}button.textContent=values.length===1?values[0]:values.length+' '+kind+' selected'}function buildMulti(id,items,kind,defaultValues,onChange){const menu=$(id+'Menu'),old=selectedMulti(id),allowed=new Set(items),selected=new Set([...old].filter(value=>allowed.has(value)));if(!old.size&&!multiInitialized.has(id))for(const value of defaultValues)if(allowed.has(value))selected.add(value);multiInitialized.add(id);const allChecked=items.length>0&&selected.size===items.length;menu.innerHTML='<label class="multi-option multi-all"><input type="checkbox" data-all '+(allChecked?'checked':'')+'>All '+kind+'</label>'+items.map(value=>'<label class="multi-option"><input type="checkbox" data-value="'+esc(value)+'" '+(selected.has(value)?'checked':'')+'>'+esc(value)+'</label>').join('');multiSummary(id,kind);$(id+'Toggle').onclick=event=>{event.stopPropagation();const open=!menu.classList.contains('open');closeMultiMenus(id);menu.classList.toggle('open',open)};menu.onchange=event=>{const all=menu.querySelector('input[data-all]');if(event.target.hasAttribute('data-all'))for(const input of menu.querySelectorAll('input[data-value]'))input.checked=event.target.checked;else all.checked=[...menu.querySelectorAll('input[data-value]')].every(input=>input.checked);multiSummary(id,kind);clearFilterCache();onChange()};}function refreshAudienceFilters(){const fast=viewerScope('fast'),platforms=[...new Set(fast.map(r=>String(r.platform_name)))].sort();buildMulti('fastPlatform',platforms,'platforms',platforms,()=>{refreshAudienceFilters();scheduleRender()});const selectedPlatforms=selectedMulti('fastPlatform'),fastChannels=[...new Set(fast.filter(r=>!selectedPlatforms.size||selectedPlatforms.has(String(r.platform_name))).map(r=>String(r.channel_name)))].sort();buildMulti('fastChannel',fastChannels,'channels',fastChannels,scheduleRender);const streamChannels=[...new Set(viewerScope('stream').map(r=>String(r.channel_name)))].sort();buildMulti('streamChannel',streamChannels,'channels',streamChannels,scheduleRender);}function audienceMinuteMap(source){const channels=selectedMulti(source==='fast'?'fastChannel':'streamChannel'),platforms=source==='fast'?selectedMulti('fastPlatform'):null;if(!channels.size||(source==='fast'&&!platforms.size))return {message:'',map:new Map()};const rows=viewerScope(source).filter(r=>(source!=='fast'||platforms.has(String(r.platform_name)))&&channels.has(String(r.channel_name)));if(!rows.length)return {message:'',map:new Map()};const map=new Map();for(const r of rows){const key=minuteKey(r.minute_ist);map.set(key,(map.get(key)||0)+Number(r.distinct_cliips||0));}return {message:'',map};}function naiveMillis(value){const [d,t='00:00:00']=String(value).split('T'),[year,month,day]=d.split('-').map(Number),[hour=0,minute=0,seconds=0]=t.split(':').map(Number);return Date.UTC(year,month-1,day,hour,minute,seconds);}function fiveMinuteWindow(event){const bucket=Math.floor(naiveMillis(event.on_air_start_ist)/(5*60000))*(5*60000),keys=[];for(let offset=0;offset<5;offset++)keys.push(new Date(bucket+offset*60000).toISOString().slice(0,16)+':00');const start=new Date(bucket),end=new Date(bucket+4*60000),clock=d=>{const hour=d.getUTCHours(),suffix=hour>=12?'PM':'AM',twelve=hour%12||12;return String(twelve).padStart(2,'0')+':'+String(d.getUTCMinutes()).padStart(2,'0')+' '+suffix;};return {keys,label:clock(start)+'-'+clock(end)+' IST'};}function audienceValue(event,state){const window=fiveMinuteWindow(event);if(!state.map)return {value:'0',window:window.label,total:0};let total=0,found=false;for(const key of window.keys){if(state.map.has(key)){found=true;total+=state.map.get(key);}}return {value:found?fmt(total):'0',window:window.label,total:found?total:0};}let youtubeDeliveryMinuteIndex=null;
 
-function audienceBreakdownScopes(source){const rows=viewerScope(source),channels=selectedMulti(source==='fast'?'fastChannel':'streamChannel'),platforms=source==='fast'?selectedMulti('fastPlatform'):null;if(!channels.size||(source==='fast'&&!platforms.size))return [];const seen=new Set(),scopes=[];for(const row of rows){const platform=source==='fast'?String(row.platform_name||'Unknown / NA'):'STREAM',channel=String(row.channel_name||'Unknown / NA');if(!channels.has(channel)||(source==='fast'&&!platforms.has(platform)))continue;const key=platform+'\u0000'+channel;if(!seen.has(key)){seen.add(key);scopes.push({source:source.toUpperCase(),platform,channel})}}return scopes.sort((a,b)=>a.platform.localeCompare(b.platform)||a.channel.localeCompare(b.channel));}function audienceScopeMap(scope){const map=new Map();for(const row of viewerScope(scope.source.toLowerCase())){const platform=scope.source==='FAST'?String(row.platform_name||'Unknown / NA'):'STREAM',channel=String(row.channel_name||'Unknown / NA');if(platform!==scope.platform||channel!==scope.channel)continue;const key=minuteKey(row.minute_ist);map.set(key,(map.get(key)||0)+Number(row.distinct_cliips||0));}return map}function audienceScopeValue(event,map){const window=fiveMinuteWindow(event);let total=0;for(const key of window.keys)total+=Number(map.get(key)||0);return {window:window.label,total}}function exportAudienceBreakdownCsv(){const events=filtered(),scopes=[...audienceBreakdownScopes('fast'),...audienceBreakdownScopes('stream')],header=['On-air IST','Ad Type','Ad ID','Creative Title','Actual Duration Seconds','Source','Platform','Channel','5-Minute Window IST','Individual 5-Minute Concurrency'],rows=[];for(const scope of scopes){const map=audienceScopeMap(scope);for(const event of events){const metric=audienceScopeValue(event,map);rows.push([formatIst(event.on_air_start_ist),event.ad_type,event.event_id,event.creative_title,event.actual_duration_seconds,scope.source,scope.platform,scope.channel,metric.window,metric.total])}}downloadCsv('asrun_audience_platform_channel_breakdown_'+$('from').value+'_to_'+$('to').value+'.csv',header,rows)}function youtubeMinuteKey(value){return String(value||'').slice(0,16)+':00'}
-function youtubeBounds(){const y=DATA.youtube||{};return {start:String(y.full_start||y.true_start||'').slice(0,10),end:String(y.full_end||y.true_end||'').slice(0,10)}}
+
+function csvCell(value){const text=String(value??'');return text.includes(',')||text.includes('\"')||text.split(String.fromCharCode(10)).length>1?'\"'+text.replace(/\"/g,'\"\"')+'\"':text}
+
+function audienceBreakdownScopes(source){const rows=viewerScope(source),channels=selectedMulti(source==='fast'?'fastChannel':'streamChannel'),platforms=source==='fast'?selectedMulti('fastPlatform'):null;if(!channels.size||(source==='fast'&&!platforms.size))return [];const seen=new Set(),scopes=[];for(const row of rows){const platform=source==='fast'?String(row.platform_name||'Unknown / NA'):'STREAM',channel=String(row.channel_name||'Unknown / NA');if(!channels.has(channel)||(source==='fast'&&!platforms.has(platform)))continue;const key=platform+'\u0000'+channel;if(!seen.has(key)){seen.add(key);scopes.push({source:source.toUpperCase(),platform,channel})}}return scopes.sort((a,b)=>a.platform.localeCompare(b.platform)||a.channel.localeCompare(b.channel));}function audienceScopeMap(scope){const map=new Map();for(const row of viewerScope(scope.source.toLowerCase())){const platform=scope.source==='FAST'?String(row.platform_name||'Unknown / NA'):'STREAM',channel=String(row.channel_name||'Unknown / NA');if(platform!==scope.platform||channel!==scope.channel)continue;const key=minuteKey(row.minute_ist);map.set(key,(map.get(key)||0)+Number(row.distinct_cliips||0));}return map}function audienceScopeValue(event,map){const window=fiveMinuteWindow(event);let total=0;for(const key of window.keys)total+=Number(map.get(key)||0);return {window:window.label,total}}function youtubeMinuteKey(value){return String(value||'').slice(0,16)+':00'}
+
 function youtubeRangeEvents(from,to){return (DATA.events||[]).filter(e=>e.is_ad&&String(e.on_air_start_ist||'').slice(0,10)>=from&&String(e.on_air_start_ist||'').slice(0,10)<=to)}
 function updateYoutubeRangeButtons(kind){document.querySelectorAll('[data-youtube-range]').forEach(button=>button.classList.toggle('active',button.dataset.youtubeRange===kind))}
-function syncYoutubeDates(changed){const from=$('youtubeFrom'),to=$('youtubeTo');if(from.value>to.value){if(changed==='from')to.value=from.value;else from.value=to.value}to.min=from.value;from.max=to.value}
-function setYoutubeRange(kind){const b=youtubeBounds(),end=new Date(b.end+'T00:00:00Z');if(kind==='all'){$('youtubeFrom').value=b.start;$('youtubeTo').value=b.end}else{const days=kind==='latest'?1:Number(kind);end.setUTCDate(end.getUTCDate()-(days-1));$('youtubeFrom').value=[end.toISOString().slice(0,10),b.start].sort().at(-1);$('youtubeTo').value=b.end}syncYoutubeDates('from');updateYoutubeRangeButtons(kind);renderYoutube()}
+
+
 function youtubeRowsForDate(rows,from,to){return (rows||[]).filter(row=>String(row.log_date||'').slice(0,10)>=from&&String(row.log_date||'').slice(0,10)<=to)}
 function youtubeVideoLabel(row){const id=String(row.video_id||'Unknown video'),title=String(row.title||'Untitled live video');return {id,title}}function youtubeSelectedVideoIds(){return new Set([...$('youtubeVideoMenu').querySelectorAll('input[data-video]:checked')].map(input=>input.dataset.video))}let youtubeVideoMultiInitialized=false;function youtubeSelectionIsAll(videoIds,selected){return videoIds.length>0&&selected.size===videoIds.length}function youtubeVideoSummary(videoIds,selected){const button=$('youtubeVideoToggle');if(!selected.size){button.textContent='No live videos selected';return}button.textContent=youtubeSelectionIsAll(videoIds,selected)?'All live videos':selected.size===1?'1 live video selected':selected.size+' live videos selected'}function buildYoutubeVideoMulti(videoIds,titles){const menu=$('youtubeVideoMenu'),old=youtubeSelectedVideoIds(),allowed=new Set(videoIds),selected=new Set([...old].filter(id=>allowed.has(id)));if(!youtubeVideoMultiInitialized){for(const id of videoIds)selected.add(id);youtubeVideoMultiInitialized=true}const allChecked=youtubeSelectionIsAll(videoIds,selected),items=videoIds.map(id=>({id,title:titles.get(id)||'Untitled live video'}));menu.innerHTML='<input id="youtubeVideoSearch" class="multi-search" type="search" placeholder="Search video ID or title..."><label class="multi-option multi-all"><input type="checkbox" data-all '+(allChecked?'checked':'')+'>All live videos</label>'+items.map(item=>'<label class="multi-option" data-video-option data-search="'+esc((item.id+' '+item.title).toLowerCase())+'"><input type="checkbox" data-video="'+esc(item.id)+'" '+(selected.has(item.id)?'checked':'')+'><span><strong>'+esc(item.id)+'</strong><br><small>'+esc(item.title)+'</small></span></label>').join('');youtubeVideoSummary(videoIds,selected);$('youtubeVideoToggle').onclick=event=>{event.stopPropagation();const open=!menu.classList.contains('open');closeMultiMenus('youtubeVideo');menu.classList.toggle('open',open);if(open)$('youtubeVideoSearch').focus()};$('youtubeVideoSearch').oninput=event=>{const term=event.target.value.trim().toLowerCase();for(const option of menu.querySelectorAll('[data-video-option]'))option.style.display=!term||option.dataset.search.includes(term)?'flex':'none'};menu.onchange=event=>{const all=menu.querySelector('input[data-all]');if(event.target.hasAttribute('data-all'))for(const input of menu.querySelectorAll('input[data-video]'))input.checked=event.target.checked;else all.checked=[...menu.querySelectorAll('input[data-video]')].every(input=>input.checked);youtubeVideoSummary(videoIds,youtubeSelectedVideoIds());renderYoutube()}}function youtubePointsForSelection(minute,videoMinute,videoIds,selected){if(youtubeSelectionIsAll(videoIds,selected))return minute.map(row=>({label:youtubeMinuteKey(row.timestamp_ist),value:Number(row.total_concurrent_viewers||0)}));const totals=new Map();for(const row of videoMinute){if(!selected.has(String(row.video_id)))continue;const key=youtubeMinuteKey(row.timestamp_ist);totals.set(key,(totals.get(key)||0)+Number(row.concurrent_viewers||0))}return [...totals.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([label,value])=>({label,value}))}
 let youtubeTrendChart=null;
@@ -2688,15 +2658,6 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
     minmax(185px, .9fr)
     minmax(245px, 1.35fr)
     auto;
-}
-.filters.master-date-hidden [data-master-date-control] {
-  display: none !important;
-}
-.youtube-filter-bar.follow-main {
-  grid-template-columns: minmax(190px, .7fr) minmax(260px, 1.3fr);
-}
-.youtube-filter-bar.follow-main .youtube-independent-date-control {
-  display: none !important;
 }
 .youtube-date-mode {
   display: grid;
@@ -3208,16 +3169,6 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
   font-size: 9px;
 }
 .global-source-group .multi-toggle { height: 25px; font-size: 10px; }
-.global-asrun-group {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: auto repeat(4, minmax(145px, 1fr));
-  align-items: end;
-  gap: 5px;
-  padding-top: 4px;
-  border-top: 1px solid var(--line);
-}
-.rank-controls:empty { display: none; }
 .audience-controls:empty { display: none; }
 .nct-story-audience-table.expandable,
 .nct-segment-table.expandable,
@@ -3340,10 +3291,6 @@ body.nct-chart-expanded::before {
     grid-template-columns: auto repeat(2, minmax(0, 1fr));
   }
   .global-audience-heading { grid-row: span 2; }
-  .global-asrun-group {
-    grid-template-columns: auto repeat(2, minmax(145px, 1fr));
-  }
-  .global-asrun-group .source-tag { grid-row: span 2; align-self: center; }
   .youtube-filter-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .youtube-filter-actions { grid-column: 1 / -1; }
   .nct-controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -3388,13 +3335,6 @@ body.nct-chart-expanded::before {
   .global-audience-heading { display: none; }
   .global-source-group { flex-wrap: wrap; }
   .global-source-group .source-tag { width: 100%; }
-  .global-asrun-group {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-  .global-asrun-group .source-tag,
-  .global-asrun-group .filter-label { grid-column: auto; }
-  .global-asrun-group .source-tag { grid-row: auto; }
   .global-audience-filters > .nct-story-source-note { display: none; }
   .dashboard-page-nav {
     gap: 3px;
@@ -3409,7 +3349,6 @@ body.nct-chart-expanded::before {
     white-space: normal;
   }
   .youtube-filter-bar { grid-template-columns: 1fr; }
-  .youtube-filter-bar.follow-main { grid-template-columns: 1fr; }
   .youtube-chart-interval-controls {
     width: 100%;
     flex-wrap: wrap;
@@ -3726,18 +3665,6 @@ buildHeaderMulti=function(id,items,kind,defaultValues,allLabel,onChange){
   buildHeaderMultiWithoutSearch(id,items,kind,defaultValues,allLabel,onChange);
   enhanceMultiSearch(id,kind);
 };
-// An empty multi-select is an explicit zero-result selection. The original
-// label treated both zero and all selected values as "All", which made exports
-// look correctly filtered while silently including every row.
-multiAllLabel=function(id,kind,allLabel){
-  const values=[...selectedMulti(id)];
-  const count=$(id+'Menu').querySelectorAll('input[data-value]').length;
-  const button=$(id+'Toggle');
-  if(!count){button.textContent='No '+kind+' available';return;}
-  if(values.length===count){button.textContent=allLabel;return;}
-  if(!values.length){button.textContent='No '+kind+' selected';return;}
-  button.textContent=values.length===1?values[0]:values.length+' '+kind+' selected';
-};
 // FAST and STREAM menus were populated by the base script before this extension
 // loaded, so rebuild them once through the searchable wrapper.
 refreshAudienceFilters();
@@ -3781,61 +3708,19 @@ function applyCalendarYear(){const year=Number($('calendarYear').value);applyPer
 function applyFinancialYear(){const year=Number($('financialYear').value);applyPeriodRange(year+'-04-01',(year+1)+'-03-31');}
 function applyBarcPeriod(){const year=Number($('barcYear').value),week=$('barcWeek').value,start=firstSaturday(year);if(week==='all'){const end=new Date(firstSaturday(year+1).getTime()-86400000);applyPeriodRange(isoUtc(start),isoUtc(end));return}const weekStart=new Date(start.getTime()+(Number(week)-1)*604800000),weekEnd=new Date(weekStart.getTime()+6*86400000);applyPeriodRange(isoUtc(weekStart),isoUtc(weekEnd));}
 function setDateMode(mode,apply=true){dateMode=mode;for(const button of document.querySelectorAll('[data-date-mode]'))button.classList.toggle('active',button.dataset.dateMode===mode);for(const field of document.querySelectorAll('.period-field'))field.hidden=true;if(mode==='range'){$('dateFromLabel').hidden=false;$('dateToLabel').hidden=false}else if(mode==='cy')$('calendarYearLabel').hidden=false;else if(mode==='fy')$('financialYearLabel').hidden=false;else{$('barcYearLabel').hidden=false;$('barcWeekLabel').hidden=false}if(!apply){updatePeriodMeta();return}if(mode==='cy')applyCalendarYear();else if(mode==='fy')applyFinancialYear();else if(mode==='barc')applyBarcPeriod();else{updatePeriodMeta();hideLoading();}}
-function ensurePeriodControls(){if($('dateModeGroup'))return;const filters=document.querySelector('.filters'),fromLabel=$('from').closest('.filter-label'),toLabel=$('to').closest('.filter-label');fromLabel.id='dateFromLabel';toLabel.id='dateToLabel';fromLabel.classList.add('period-field');toLabel.classList.add('period-field');fromLabel.dataset.masterDateControl='';toLabel.dataset.masterDateControl='';filters.insertAdjacentHTML('afterbegin','<div class="date-mode-group" id="dateModeGroup" data-master-date-control role="group" aria-label="Date period"><button type="button" data-date-mode="range" title="Custom date range">Range</button><button type="button" data-date-mode="cy" title="Calendar Year, January to December">CY</button><button type="button" data-date-mode="fy" title="Indian Financial Year, April to March">FY</button><button type="button" data-date-mode="barc" title="BARC Year and Week, Saturday to Friday">BY/BW</button></div><label class="filter-label period-field" id="calendarYearLabel" data-master-date-control hidden>Calendar Year<select id="calendarYear"></select></label><label class="filter-label period-field" id="financialYearLabel" data-master-date-control hidden>Financial Year<select id="financialYear"></select></label><label class="filter-label period-field" id="barcYearLabel" data-master-date-control hidden>BARC Year<select id="barcYear"></select></label><label class="filter-label period-field" id="barcWeekLabel" data-master-date-control hidden>BARC Week<select id="barcWeek"></select></label>');const minYear=utcDay(minDate).getUTCFullYear(),maxYear=utcDay(maxDate).getUTCFullYear(),calendarYears=[];for(let year=minYear;year<=maxYear;year++)calendarYears.push({value:String(year),label:'CY '+year});fillSelect($('calendarYear'),calendarYears,String(maxYear));const minFy=fiscalStartYear(minDate),maxFy=fiscalStartYear(maxDate),financialYears=[];for(let year=minFy;year<=maxFy;year++)financialYears.push({value:String(year),label:'FY '+year+'-'+String(year+1).slice(-2)});fillSelect($('financialYear'),financialYears,String(maxFy));const minBarc=barcYearWeek(minDate).year,maxBarc=barcYearWeek(maxDate).year,barcYears=[];for(let year=minBarc;year<=maxBarc;year++)barcYears.push({value:String(year),label:'BY '+year});fillSelect($('barcYear'),barcYears,String(maxBarc));populateBarcWeeks();document.querySelectorAll('[data-date-mode]').forEach(button=>button.addEventListener('click',()=>setDateMode(button.dataset.dateMode)));$('calendarYear').addEventListener('change',applyCalendarYear);$('financialYear').addEventListener('change',applyFinancialYear);$('barcYear').addEventListener('change',()=>{populateBarcWeeks();applyBarcPeriod()});$('barcWeek').addEventListener('change',applyBarcPeriod);for(const id of ['from','to'])$(id).addEventListener('change',()=>{setDateMode('range',false);updatePeriodMeta()});setDateMode('range',false);}
-const DELIVERY_AD_TYPES=['Spot','L-band'];
-function selectedDeliveryAdTypes(){
-  return new Set(DELIVERY_AD_TYPES);
-}
-function deliveryAdTypeLabel(){
-  return DELIVERY_AD_TYPES.join(' | ');
-}
-function deliveryAdTypeFileToken(){
-  return DELIVERY_AD_TYPES.map(value=>
-    value.toLowerCase().replace(/[^a-z0-9]+/g,'_')
-  ).join('_');
-}
-function ensureCreativeFilters(){if($('spotAdIdToggle'))return;for(const id of ['typeToggle','adIdToggle','creativeToggle']){const control=$(id);if(control)control.closest('.filter-label').remove()}const panels=document.querySelectorAll('.rank-panel'),controls=(prefix,type)=>'<div class="rank-controls" aria-label="'+type+' creative filters"><label class="filter-label">'+type+' Ad ID<span class="multi-select"><button id="'+prefix+'AdIdToggle" class="multi-toggle" type="button">All ad IDs</button><span id="'+prefix+'AdIdMenu" class="multi-menu"></span></span></label><label class="filter-label">'+type+' Creative title<span class="multi-select"><button id="'+prefix+'CreativeToggle" class="multi-toggle" type="button">All creative titles</button><span id="'+prefix+'CreativeMenu" class="multi-menu"></span></span></label></div>';panels[0].querySelector('.panel-head').insertAdjacentHTML('afterend',controls('spot','Spot'));panels[1].querySelector('.panel-head').insertAdjacentHTML('afterend',controls('lband','L-band'));}
+function ensurePeriodControls(){if($('dateModeGroup'))return;const filters=document.querySelector('.filters'),fromLabel=$('from').closest('.filter-label'),toLabel=$('to').closest('.filter-label');fromLabel.id='dateFromLabel';toLabel.id='dateToLabel';fromLabel.classList.add('period-field');toLabel.classList.add('period-field');filters.insertAdjacentHTML('afterbegin','<div class="date-mode-group" id="dateModeGroup" role="group" aria-label="Date period"><button type="button" data-date-mode="range" title="Custom date range">Range</button><button type="button" data-date-mode="cy" title="Calendar Year, January to December">CY</button><button type="button" data-date-mode="fy" title="Indian Financial Year, April to March">FY</button><button type="button" data-date-mode="barc" title="BARC Year and Week, Saturday to Friday">BY/BW</button></div><label class="filter-label period-field" id="calendarYearLabel" hidden>Calendar Year<select id="calendarYear"></select></label><label class="filter-label period-field" id="financialYearLabel" hidden>Financial Year<select id="financialYear"></select></label><label class="filter-label period-field" id="barcYearLabel" hidden>BARC Year<select id="barcYear"></select></label><label class="filter-label period-field" id="barcWeekLabel" hidden>BARC Week<select id="barcWeek"></select></label>');const minYear=utcDay(minDate).getUTCFullYear(),maxYear=utcDay(maxDate).getUTCFullYear(),calendarYears=[];for(let year=minYear;year<=maxYear;year++)calendarYears.push({value:String(year),label:'CY '+year});fillSelect($('calendarYear'),calendarYears,String(maxYear));const minFy=fiscalStartYear(minDate),maxFy=fiscalStartYear(maxDate),financialYears=[];for(let year=minFy;year<=maxFy;year++)financialYears.push({value:String(year),label:'FY '+year+'-'+String(year+1).slice(-2)});fillSelect($('financialYear'),financialYears,String(maxFy));const minBarc=barcYearWeek(minDate).year,maxBarc=barcYearWeek(maxDate).year,barcYears=[];for(let year=minBarc;year<=maxBarc;year++)barcYears.push({value:String(year),label:'BY '+year});fillSelect($('barcYear'),barcYears,String(maxBarc));populateBarcWeeks();document.querySelectorAll('[data-date-mode]').forEach(button=>button.addEventListener('click',()=>setDateMode(button.dataset.dateMode)));$('calendarYear').addEventListener('change',applyCalendarYear);$('financialYear').addEventListener('change',applyFinancialYear);$('barcYear').addEventListener('change',()=>{populateBarcWeeks();applyBarcPeriod()});$('barcWeek').addEventListener('change',applyBarcPeriod);for(const id of ['from','to'])$(id).addEventListener('change',()=>{setDateMode('range',false);updatePeriodMeta()});setDateMode('range',false);}
+function ensureCreativeFilters(){if($('spotAdIdToggle'))return;for(const id of ['adIdToggle','creativeToggle']){const control=$(id);if(control)control.closest('.filter-label').remove()}const reset=$('reset'),controls=(prefix,type)=>'<label class="filter-label">'+type+' Ad ID<span class="multi-select"><button id="'+prefix+'AdIdToggle" class="multi-toggle" type="button">All '+type+' ad IDs</button><span id="'+prefix+'AdIdMenu" class="multi-menu"></span></span></label><label class="filter-label">'+type+' Creative title<span class="multi-select"><button id="'+prefix+'CreativeToggle" class="multi-toggle" type="button">All '+type+' creative titles</button><span id="'+prefix+'CreativeMenu" class="multi-menu"></span></span></label>';reset.insertAdjacentHTML('beforebegin',controls('spot','Spot')+controls('lband','L-band'));}
 function sectionDateRows(type){return dateScope().filter(event=>event.ad_type===type);}
-function sectionFilteredRows(type,prefix){const ids=selectedMulti(prefix+'AdId'),creatives=selectedMulti(prefix+'Creative');if(!ids.size||!creatives.size)return [];return sectionDateRows(type).filter(event=>ids.has(event.event_id)&&creatives.has(event.creative_title));}
-function multiSelectionState(id){
-  const menu=$(id+'Menu');
-  const inputs=menu?[...menu.querySelectorAll('input[data-value]')]:[];
-  const selected=selectedMulti(id);
-  return {selected,restricted:inputs.length>0&&selected.size<inputs.length};
-}
-function refreshSectionOptions(type,prefix){
-  const rows=sectionDateRows(type),idKey=prefix+'AdId',creativeKey=prefix+'Creative';
-  const idState=multiSelectionState(idKey),creativeState=multiSelectionState(creativeKey);
-  const idRows=creativeState.restricted
-    ?rows.filter(event=>creativeState.selected.has(event.creative_title))
-    :rows;
-  const creativeRows=idState.restricted
-    ?rows.filter(event=>idState.selected.has(event.event_id))
-    :rows;
-  const refresh=()=>{
-    refreshSectionOptions(type,prefix);
-    refreshAudienceFilters();
-    scheduleRender();
-  };
-  const ids=countedOptions(idRows,'event_id');
-  buildHeaderMulti(
-    idKey,ids,'ad IDs',ids.map(item=>item.value),
-    'All '+type+' ad IDs ('+fmt(idRows.length)+')',refresh,
-  );
-  const titles=countedOptions(creativeRows,'creative_title');
-  buildHeaderMulti(
-    creativeKey,titles,'creative titles',titles.map(item=>item.value),
-    'All '+type+' creative titles ('+fmt(creativeRows.length)+')',refresh,
-  );
-}
-function refreshDependentOptions(){ensureCreativeFilters();refreshSectionOptions('Spot','spot');refreshSectionOptions('L-band','lband');}
-function scope(){const types=selectedDeliveryAdTypes();return DELIVERY_AD_TYPES.flatMap(type=>types.has(type)?sectionDateRows(type):[]);}
-function filterKey(){return [$('from').value,$('to').value,[...selectedDeliveryAdTypes()].sort().join('|'),[...selectedMulti('spotAdId')].sort().join('|'),[...selectedMulti('spotCreative')].sort().join('|'),[...selectedMulti('lbandAdId')].sort().join('|'),[...selectedMulti('lbandCreative')].sort().join('|')].join('\u0000');}
-function filtered(){const key=filterKey();if(filterCache.key===key&&filterCache.value)return filterCache.value;const types=selectedDeliveryAdTypes(),result=[...(types.has('Spot')?sectionFilteredRows('Spot','spot'):[]),...(types.has('L-band')?sectionFilteredRows('L-band','lband'):[])].sort((a,b)=>String(a.on_air_start_ist).localeCompare(String(b.on_air_start_ist)));filterCache={key,value:result};return result;}
+function sectionFilteredRows(type,prefix){const ids=selectedMulti(prefix+'AdId'),creatives=selectedMulti(prefix+'Creative');return sectionDateRows(type).filter(event=>(!ids.size||ids.has(event.event_id))&&(!creatives.size||creatives.has(event.creative_title)));}
+function refreshSectionOptions(type,prefix){const rows=sectionDateRows(type),ids=countedOptions(rows,'event_id');buildHeaderMulti(prefix+'AdId',ids,'ad IDs',ids.map(item=>item.value),'All '+type+' ad IDs ('+fmt(rows.length)+')',()=>{refreshSectionOptions(type,prefix);refreshAudienceFilters();scheduleRender()});const selectedIds=selectedMulti(prefix+'AdId'),titleRows=rows.filter(event=>!selectedIds.size||selectedIds.has(event.event_id)),titles=countedOptions(titleRows,'creative_title');buildHeaderMulti(prefix+'Creative',titles,'creative titles',titles.map(item=>item.value),'All '+type+' creative titles ('+fmt(titleRows.length)+')',scheduleRender);}
+function refreshDependentOptions(){ensureCreativeFilters();const base=dateScope(),typeCounts=new Map();for(const row of base)typeCounts.set(row.ad_type,(typeCounts.get(row.ad_type)||0)+1);const types=['Spot','L-band'].filter(type=>typeCounts.has(type)).map(type=>({value:type,label:type+' ('+fmt(typeCounts.get(type))+')'}));buildHeaderMulti('type',types,'ad types',types.map(item=>item.value),'All ad types ('+fmt(base.length)+')',()=>{refreshDependentOptions();refreshAudienceFilters();scheduleRender()});refreshSectionOptions('Spot','spot');refreshSectionOptions('L-band','lband');}
+function scope(){const types=selectedMulti('type'),list=[];if(!types.size||types.has('Spot'))list.push(...sectionDateRows('Spot'));if(!types.size||types.has('L-band'))list.push(...sectionDateRows('L-band'));return list;}
+function filterKey(){return [$('from').value,$('to').value,[...selectedMulti('type')].sort().join('|'),[...selectedMulti('spotAdId')].sort().join('|'),[...selectedMulti('spotCreative')].sort().join('|'),[...selectedMulti('lbandAdId')].sort().join('|'),[...selectedMulti('lbandCreative')].sort().join('|')].join('\u0000');}
+function filtered(){const key=filterKey();if(filterCache.key===key&&filterCache.value)return filterCache.value;const types=selectedMulti('type'),result=[...(!types.size||types.has('Spot')?sectionFilteredRows('Spot','spot'):[]),...(!types.size||types.has('L-band')?sectionFilteredRows('L-band','lband'):[])].sort((a,b)=>String(a.on_air_start_ist).localeCompare(String(b.on_air_start_ist)));filterCache={key,value:result};return result;}
 // Multi-selects restored by Reset. The signature also covers independently
 // rendered YouTube/NCT controls so a clean button always means a clean dashboard.
 const RESET_SCOPE_IDS=[
-  'spotAdId','spotCreative','lbandAdId','lbandCreative',
+  'type','spotAdId','spotCreative','lbandAdId','lbandCreative',
   'fastPlatform','fastChannel','streamChannel','amagiPlatform','amagiChannel',
   'fctFeed','fctLanguage','fctBrand','fctCaption','fctProgram','fctCategory',
   'fctCompany','fctWeekday','fctAdPosition','fctBreakSize','fctCoverage',
@@ -3866,7 +3751,6 @@ function youtubeVideoFilterSignature(){
 }
 function computeFilterSignature(){
   const parts=[$('from').value,$('to').value,dateMode,fctClassMode];
-  parts.push('deliveryTypes:'+[...selectedDeliveryAdTypes()].sort().join(','));
   parts.push('fctRangeMode:'+fctRangeMode);
   if(fctRangeMode==='custom'){
     parts.push(
@@ -4541,7 +4425,7 @@ function exportFctAudienceCsv(){
   const streamChannels=exportSelection('streamChannel','All STREAM channels');
   const amagiPlatforms=exportSelection('amagiPlatform','All AMAGI platforms');
   const amagiChannels=exportSelection('amagiChannel','All AMAGI channels');
-  const youtubeChannels=indiaTvYoutubeScopeLabel();
+  const youtubeChannels=exportSelection('youtubeChannel','All YouTube channels',true);
   const header=[
     'Selected Date From','Selected Date To','FCT Classification',
     'Selected FCT Feeds','Selected FCT Languages','Selected FCT Brands',
@@ -4551,11 +4435,11 @@ function exportFctAudienceCsv(){
     'FCT On-air IST','Feed','Brand','Caption','Program','Ad Duration Seconds',
     'Language','Category','Company','5-Minute Window IST','FAST Platforms',
     'FAST Channels','STREAM Channels','AMAGI Platforms','AMAGI Channels',
-    'India TV YouTube Channel',
+    'Selected YouTube Channels',
     'FAST 5-Minute Concurrency','STREAM 5-Minute Concurrency',
-    'AMAGI 5-Minute Actual Concurrency','India TV YouTube Scope',
-    'India TV YouTube Minute Concurrency','India TV YouTube Active Live Videos',
-    'India TV YouTube Active Video IDs','India TV YouTube Active Video Titles',
+    'AMAGI 5-Minute Actual Concurrency','YouTube Scope',
+    'YouTube Minute Concurrency','YouTube Active Live Videos',
+    'YouTube Active Video IDs','YouTube Active Video Titles',
     'Combined Concurrency','Coverage Status','Source File','Source Sheet',
     'Source Row',
   ];
@@ -4593,28 +4477,22 @@ function combinedRows(events,fast,stream){const amagi=amagiMinuteMap();return ev
 function combinedLines(events,fast,stream){const rows=combinedRows(events,fast,stream),preview=rows.slice(-50).reverse();if(!preview.length)return '<div class="audience-empty">No delivered ad events in this selection.</div>';return preview.map(row=>{const e=row.event,total=row.total===null?'No combined data':fmt(row.total);return '<div class="combined-line"><span>'+formatIst(e.on_air_start_ist)+'</span><span><strong>'+esc(e.event_id)+'</strong><small>'+esc(e.ad_type)+'</small></span><span>'+esc(e.creative_title)+'</span><span class="duration">'+fmt(e.actual_duration_seconds)+' sec</span><span class="combined-value fast-col">'+esc(row.fast.value)+'</span><span class="combined-value stream-col">'+esc(row.stream.value)+'</span><span class="combined-value amagi-col">'+esc(row.amagi.value)+'</span><span class="combined-value youtube-col">'+esc(row.youtube.value)+'</span><span class="combined-value total-col">'+esc(total)+'</span></div>';}).join('');}
 function renderAudience(events){if(!dashboardSourceLoaded('viewer')||!dashboardSourceLoaded('amagi')){const failed=dashboardSourceError('viewer')||dashboardSourceError('amagi'),message=failed||'Loading FAST, STREAM, and AMAGI audience data...';$('allRows').innerHTML='<div class="audience-empty">'+esc(message)+'</div>';$('allNote').textContent='';return}refreshAmagiFilters();const fast=audienceMinuteMap('fast'),stream=audienceMinuteMap('stream'),visible=Math.min(events.length,50),note='Showing latest '+fmt(visible)+' of '+fmt(events.length)+' delivered events. CSV exports the complete filtered result.';$('allRows').innerHTML=combinedLines(events,fast,stream);$('allNote').textContent=note;}
 function exportSelection(id,allLabel,keepExactValues=false){const menu=$(id+'Menu');if(!menu)return 'Not available';const inputs=[...menu.querySelectorAll('input[data-value]')],selected=inputs.filter(input=>input.checked).map(input=>input.dataset.value);if(!selected.length)return 'None';return selected.length===inputs.length&&!keepExactValues?allLabel:selected.join(' | ');}
-function exportDeliverySelection(kind){const types=selectedDeliveryAdTypes();if(!types.size)return 'None';return DELIVERY_AD_TYPES.filter(type=>types.has(type)).map(type=>{const prefix=type==='Spot'?'spot':'lband',suffix=kind==='adIds'?'AdId':'Creative',label=kind==='adIds'?'ad IDs':'creative titles';return type+': '+exportSelection(prefix+suffix,'All '+type+' '+label)}).join(' || ');}
-function exportFilterContext(){return {dateFrom:$('from').value,dateTo:$('to').value,adTypes:deliveryAdTypeLabel(),adIds:exportDeliverySelection('adIds'),creatives:exportDeliverySelection('creatives')};}
-function exportAllEventsCsv(){const events=filtered(),fast=audienceMinuteMap('fast'),stream=audienceMinuteMap('stream'),amagi=amagiMinuteMap(),filters=exportFilterContext(),fastPlatforms=exportSelection('fastPlatform','All FAST platforms',true),fastChannels=exportSelection('fastChannel','All FAST channels',true),streamChannels=exportSelection('streamChannel','All STREAM channels',true),amagiPlatforms=exportSelection('amagiPlatform','All AMAGI platforms',true),amagiChannels=exportSelection('amagiChannel','All AMAGI channels',true),youtubeChannels=indiaTvYoutubeScopeLabel(),header=['Selected Date From','Selected Date To','Selected Ad Types','Selected Ad IDs','Selected Creative Titles','On-air IST','Ad Type','Ad ID','Creative Title','Actual Duration Seconds','5-Minute Window IST','FAST Platforms','FAST Channels','STREAM Channels','AMAGI Platforms','AMAGI Channels','India TV YouTube Channel','FAST 5-Minute Concurrency','STREAM 5-Minute Concurrency','AMAGI 5-Minute Actual Concurrency','India TV YouTube Scope','India TV YouTube Minute Concurrency','India TV YouTube Active Live Videos','India TV YouTube Active Video IDs','India TV YouTube Active Video Titles','Combined Concurrency'],rows=combinedRows(events,fast,stream).map(row=>[filters.dateFrom,filters.dateTo,filters.adTypes,filters.adIds,filters.creatives,formatIst(row.event.on_air_start_ist),row.event.ad_type,row.event.event_id,row.event.creative_title,row.event.actual_duration_seconds,row.fast.window,fastPlatforms,fastChannels,streamChannels,amagiPlatforms,amagiChannels,youtubeChannels,row.fast.value,row.stream.value,row.amagi.value,row.youtube.scope,row.youtube.value,row.youtube.live_videos,row.youtube.video_ids,row.youtube.video_titles,row.total===null?'No combined data':fmt(row.total)]);downloadCsv('asrun_all_delivered_events_'+deliveryAdTypeFileToken()+'_'+filters.dateFrom+'_to_'+filters.dateTo+'.csv',header,rows);}
+function exportFilterContext(){return {dateFrom:$('from').value,dateTo:$('to').value,adTypes:exportSelection('type','All ad types'),adIds:'Spot: '+exportSelection('spotAdId','All Spot ad IDs')+' || L-band: '+exportSelection('lbandAdId','All L-band ad IDs'),creatives:'Spot: '+exportSelection('spotCreative','All Spot creative titles')+' || L-band: '+exportSelection('lbandCreative','All L-band creative titles')};}
+function exportAllEventsCsv(){const events=filtered(),fast=audienceMinuteMap('fast'),stream=audienceMinuteMap('stream'),amagi=amagiMinuteMap(),filters=exportFilterContext(),fastPlatforms=exportSelection('fastPlatform','All FAST platforms',true),fastChannels=exportSelection('fastChannel','All FAST channels',true),streamChannels=exportSelection('streamChannel','All STREAM channels',true),amagiPlatforms=exportSelection('amagiPlatform','All AMAGI platforms',true),amagiChannels=exportSelection('amagiChannel','All AMAGI channels',true),youtubeChannels=exportSelection('youtubeChannel','All YouTube channels',true),header=['Selected Date From','Selected Date To','Selected Ad Types','Selected Ad IDs','Selected Creative Titles','On-air IST','Ad Type','Ad ID','Creative Title','Actual Duration Seconds','5-Minute Window IST','FAST Platforms','FAST Channels','STREAM Channels','AMAGI Platforms','AMAGI Channels','Selected YouTube Channels','FAST 5-Minute Concurrency','STREAM 5-Minute Concurrency','AMAGI 5-Minute Actual Concurrency','YouTube Scope','YouTube Minute Concurrency','YouTube Active Live Videos','YouTube Active Video IDs','YouTube Active Video Titles','Combined Concurrency'],rows=combinedRows(events,fast,stream).map(row=>[filters.dateFrom,filters.dateTo,filters.adTypes,filters.adIds,filters.creatives,formatIst(row.event.on_air_start_ist),row.event.ad_type,row.event.event_id,row.event.creative_title,row.event.actual_duration_seconds,row.fast.window,fastPlatforms,fastChannels,streamChannels,amagiPlatforms,amagiChannels,youtubeChannels,row.fast.value,row.stream.value,row.amagi.value,row.youtube.scope,row.youtube.value,row.youtube.live_videos,row.youtube.video_ids,row.youtube.video_titles,row.total===null?'No combined data':fmt(row.total)]);downloadCsv('asrun_all_delivered_events_'+filters.dateFrom+'_to_'+filters.dateTo+'.csv',header,rows);}
 function amagiBreakdownScopes(){const rows=selectedAmagiRows(),seen=new Set(),scopes=[];for(const row of rows){const platform=String(row.platform_name||'Unknown / NA'),channel=String(row.channel_name||'Unknown / NA'),key=platform+'\u0000'+channel;if(!seen.has(key)){seen.add(key);scopes.push({source:'AMAGI',platform,channel})}}return scopes.sort((a,b)=>a.platform.localeCompare(b.platform)||a.channel.localeCompare(b.channel));}
 function amagiScopeMap(scope){const map=new Map();for(const row of selectedAmagiRows()){const platform=String(row.platform_name||'Unknown / NA'),channel=String(row.channel_name||'Unknown / NA');if(platform!==scope.platform||channel!==scope.channel)continue;const key=minuteKey(row.minute_ist);map.set(key,(map.get(key)||0)+Number(row.concurrent_viewers||0));}return map;}
-function exportAudienceBreakdownCsv(){const events=filtered(),filters=exportFilterContext(),scopes=[...audienceBreakdownScopes('fast'),...audienceBreakdownScopes('stream'),...amagiBreakdownScopes()],header=['Selected Date From','Selected Date To','Selected Ad Types','Selected Ad IDs','Selected Creative Titles','On-air IST','Ad Type','Ad ID','Creative Title','Actual Duration Seconds','Source','Platform','Channel','5-Minute Window IST','Individual 5-Minute Concurrency','Metric Basis'],rows=[];for(const scope of scopes){const map=scope.source==='AMAGI'?amagiScopeMap(scope):audienceScopeMap(scope),basis=scope.source==='AMAGI'?'Actual platform-reported concurrent viewers':'Unique IP minute sum';for(const event of events){const metric=audienceScopeValue(event,map);rows.push([filters.dateFrom,filters.dateTo,filters.adTypes,filters.adIds,filters.creatives,formatIst(event.on_air_start_ist),event.ad_type,event.event_id,event.creative_title,event.actual_duration_seconds,scope.source,scope.platform,scope.channel,metric.window,metric.total,basis])}}downloadCsv('asrun_audience_platform_channel_breakdown_'+deliveryAdTypeFileToken()+'_'+filters.dateFrom+'_to_'+filters.dateTo+'.csv',header,rows)}
+function exportAudienceBreakdownCsv(){const events=filtered(),filters=exportFilterContext(),scopes=[...audienceBreakdownScopes('fast'),...audienceBreakdownScopes('stream'),...amagiBreakdownScopes()],header=['Selected Date From','Selected Date To','Selected Ad Types','Selected Ad IDs','Selected Creative Titles','On-air IST','Ad Type','Ad ID','Creative Title','Actual Duration Seconds','Source','Platform','Channel','5-Minute Window IST','Individual 5-Minute Concurrency','Metric Basis'],rows=[];for(const scope of scopes){const map=scope.source==='AMAGI'?amagiScopeMap(scope):audienceScopeMap(scope),basis=scope.source==='AMAGI'?'Actual platform-reported concurrent viewers':'Unique IP minute sum';for(const event of events){const metric=audienceScopeValue(event,map);rows.push([filters.dateFrom,filters.dateTo,filters.adTypes,filters.adIds,filters.creatives,formatIst(event.on_air_start_ist),event.ad_type,event.event_id,event.creative_title,event.actual_duration_seconds,scope.source,scope.platform,scope.channel,metric.window,metric.total,basis])}}downloadCsv('asrun_audience_platform_channel_breakdown_'+filters.dateFrom+'_to_'+filters.dateTo+'.csv',header,rows)}
 function replaceDownloadAction(id,handler){const button=$(id);if(!button)return;const replacement=button.cloneNode(true);button.replaceWith(replacement);replacement.addEventListener('click',handler);}
 function ensureScopePanel(){if($('dataScopeRows'))return;$('youtubePanel').insertAdjacentHTML('afterend','<section class="panel scope-panel" id="dataScopePanel"><div class="panel-head"><div><h2>Data Scope And Validation</h2><small>True range is all data embedded in this dashboard run. Used range updates with the active filters.</small></div></div><div class="scope-table-wrap"><table class="scope-table"><thead><tr><th>Dataset</th><th>True range (IST)</th><th>Used range (IST)</th><th>Used rows / points</th><th>Applied scope</th></tr></thead><tbody id="dataScopeRows"></tbody></table></div></section>');}
 function sourceBounds(rows,startKey,endKey){if(!rows.length)return null;const starts=rows.map(row=>String(row[startKey]||'')).filter(Boolean).sort(),ends=rows.map(row=>String(row[endKey||startKey]||'')).filter(Boolean).sort();return starts.length&&ends.length?{start:starts[0],end:ends[ends.length-1]}:null;}
 function scopeRangeText(bounds){return bounds?formatIst(bounds.start)+' to '+formatIst(bounds.end):'No matching data';}
 function selectedViewerRows(source){const channels=selectedMulti(source==='fast'?'fastChannel':'streamChannel'),platforms=source==='fast'?selectedMulti('fastPlatform'):null;return viewerScope(source).filter(row=>(!platforms||platforms.has(String(row.platform_name)))&&channels.has(String(row.channel_name)));}
 function selectedAmagiRows(){const platforms=selectedMulti('amagiPlatform'),channels=selectedMulti('amagiChannel'),from=$('from').value,to=$('to').value;return (AMAGI.minute||[]).filter(row=>String(row.log_date)>=from&&String(row.log_date)<=to&&platforms.has(String(row.platform_name))&&channels.has(String(row.channel_name)));}
-let youtubeDateMode='follow';
+let youtubeDateMode='independent';
 let youtubeDateOverlap=true;
 function ensureYoutubeDateModeControls(){
   if($('youtubeDateMode'))return;
   const bar=document.querySelector('.youtube-filter-bar');
-  $('youtubeFrom').closest('.filter-label').classList.add('youtube-independent-date-control');
-  $('youtubeTo').closest('.filter-label').classList.add('youtube-independent-date-control');
-  document.querySelector('.youtube-filter-actions')?.classList.add(
-    'youtube-independent-date-control'
-  );
   bar.insertAdjacentHTML(
     'afterbegin',
     '<div class="youtube-date-mode" id="youtubeDateMode">'
@@ -4675,23 +4553,14 @@ function applyYoutubeMainDate(renderNow=true){
   updateYoutubeDateHelp();
   if(renderNow)renderYoutube();
 }
-function syncDateControlVisibility(){
-  const filters=document.querySelector('.filters');
-  if(!filters)return;
-  const hideMaster=activeDashboardPage==='content'
-    ||(activeDashboardPage==='audience'&&youtubeDateMode==='independent');
-  filters.classList.toggle('master-date-hidden',hideMaster);
-}
 function setYoutubeDateMode(mode,renderNow=true){
   youtubeDateMode=mode==='follow'?'follow':'independent';
   document.querySelectorAll('[data-youtube-date-mode]').forEach(button=>
     button.classList.toggle('active',button.dataset.youtubeDateMode===youtubeDateMode)
   );
   const follow=youtubeDateMode==='follow';
-  document.querySelector('.youtube-filter-bar')?.classList.toggle('follow-main',follow);
   $('youtubeFrom').disabled=follow;
   $('youtubeTo').disabled=follow;
-  syncDateControlVisibility();
   if(follow){
     applyYoutubeMainDate(renderNow);
     updateResetState();
@@ -4877,19 +4746,6 @@ function youtubeChannels(){
   const youtube=DATA.youtube||{},declared=(youtube.channels||[]).map(String);
   const derived=(youtube.video_daily||[]).map(row=>String(row.youtube_channel||'Unknown / NA'));
   return [...new Set([...declared,...derived].filter(Boolean))].sort((a,b)=>a.localeCompare(b));
-}
-function isIndiaTvYoutubeChannel(value){
-  return String(value||'').replace(/[^a-z0-9]+/gi,'').toLowerCase()==='indiatv';
-}
-function indiaTvYoutubeChannels(){
-  return youtubeChannels().filter(isIndiaTvYoutubeChannel);
-}
-function youtubeDefaultChannels(channels){
-  return channels.filter(isIndiaTvYoutubeChannel);
-}
-function indiaTvYoutubeScopeLabel(){
-  const channels=indiaTvYoutubeChannels();
-  return channels.length?channels.join(' | '):'India TV YouTube not available';
 }
 function youtubeSelectedChannels(){return selectedMulti('youtubeChannel');}
 function youtubeRowInChannels(row,channels){
@@ -5228,7 +5084,7 @@ function renderYoutubeChannelAware(){
   refreshYoutubeDateLimits();
   const from=$('youtubeFrom').value,to=$('youtubeTo').value;
   const channels=youtubeChannels();
-  buildMulti('youtubeChannel',channels,'channels',youtubeDefaultChannels(channels),()=>{
+  buildMulti('youtubeChannel',channels,'channels',channels,()=>{
     youtubeDeliveryMinuteIndex=null;
     resetSemanticAllSelection('nctYoutubeVideo');
     resetNctAudienceCaches();
@@ -5436,7 +5292,7 @@ function ensureGlobalAudienceFilters(){
     'beforeend',
     '<details class="global-audience-details" id="globalAudienceDetails" open>'
     +'<summary>Audience Scope '
-    +'<small>ASRUN / FAST / STREAM / AMAGI / YOUTUBE</small></summary>'
+    +'<small>FAST · STREAM · AMAGI · YOUTUBE</small></summary>'
     +'<section class="global-audience-filters" id="globalAudienceFilters" '
     +'aria-label="Global audience source filters">'
     +'<div class="global-audience-heading"><strong>Audience Scope</strong>'
@@ -5449,8 +5305,6 @@ function ensureGlobalAudienceFilters(){
     +'<span class="source-tag amagi-tag">AMAGI</span></div>'
     +'<div class="global-source-group" id="globalYoutubeFilters">'
     +'<span class="source-tag youtube-tag">YOUTUBE</span></div>'
-    +'<div class="global-source-group global-asrun-group" id="globalAsrunFilters">'
-    +'<span class="source-tag combined-tag">ASRUN</span></div>'
     +'<div class="nct-story-source-note">Audience/concurrency metrics follow this '
     +'scope. Source-native ASRUN, FCT, and NCT record counts remain unchanged.</div>'
     +'</section></details>',
@@ -5465,16 +5319,14 @@ function ensureGlobalAudienceFilters(){
   move('globalStreamFilters','streamChannel');
   move('globalAmagiFilters','amagiPlatform','amagiChannel');
   move('globalYoutubeFilters','youtubeChannel');
-  move(
-    'globalAsrunFilters',
-    'spotAdId','spotCreative','lbandAdId','lbandCreative',
-  );
-  for(const controls of document.querySelectorAll('.rank-controls')){
-    if(!controls.children.length)controls.remove();
-  }
   if(window.matchMedia('(max-width: 680px)').matches){
     $('globalAudienceDetails').open=false;
   }
+}
+function selectedYoutubeAudienceChannels(){
+  const menu=$('youtubeChannelMenu');
+  if(!menu)return new Set();
+  return selectedMulti('youtubeChannel');
 }
 youtubeDeliveryDetails=function(event){
   const youtube=DATA.youtube||{},key=youtubeMinuteKey(event.on_air_start_ist);
@@ -5484,12 +5336,12 @@ youtubeDeliveryDetails=function(event){
     live_videos:0,
     video_ids:'',
     video_titles:'',
-    scope:'India TV YouTube is loading',
+    scope:'Selected YouTube channels are loading',
   };
-  const channels=new Set(indiaTvYoutubeChannels());
+  const channels=selectedYoutubeAudienceChannels();
   if(!channels.size)return {
-    value:'Not available',total:null,live_videos:0,video_ids:'',video_titles:'',
-    scope:'India TV YouTube not available',
+    value:'0',total:0,live_videos:0,video_ids:'',video_titles:'',
+    scope:'No YouTube channels selected',
   };
   const selectionKey=[...channels].sort().join('\u0000');
   if(!(youtubeDeliveryMinuteIndex instanceof Map)){
@@ -5513,9 +5365,9 @@ youtubeDeliveryDetails=function(event){
   const index=youtubeDeliveryMinuteIndex.get(selectionKey);
   const hasMinute=index.totals.has(key);
   const videoRows=index.videos.get(key)||[];
-  const scope=indiaTvYoutubeScopeLabel();
+  const scope=[...channels].sort().join(' | ');
   if(!hasMinute)return {
-    value:'No India TV YouTube data',total:null,live_videos:0,video_ids:'',
+    value:'No selected YouTube data',total:null,live_videos:0,video_ids:'',
     video_titles:'',scope,
   };
   const videoIds=[...new Set(videoRows.map(row=>String(row.video_id||'')).filter(Boolean))];
@@ -5539,20 +5391,20 @@ function applyYoutubeAggregateLabels(){
   if(combined){
     const subtitle=combined.querySelector('.panel-head small');
     const column=combined.querySelector('.youtube-col');
-    if(subtitle)subtitle.textContent='FAST + STREAM selected 5-minute concurrency | Amagi actual 5-minute concurrency | India TV YouTube minute concurrency';
+    if(subtitle)subtitle.textContent='FAST + STREAM selected 5-minute concurrency | Amagi actual 5-minute concurrency | selected YouTube channel minute concurrency';
     if(column){
-      column.textContent='INDIA TV YOUTUBE';
-      column.title='India TV YouTube minute concurrency';
+      column.textContent='YOUTUBE';
+      column.title='Selected YouTube channel minute concurrency';
     }
   }
   const fct=document.querySelector('.fct-audience-panel');
   if(fct){
     const subtitle=fct.querySelector('.panel-head small');
     const column=fct.querySelector('.youtube-col');
-    if(subtitle)subtitle.textContent='FCT-selected occurrences | FAST + STREAM + AMAGI 5-minute concurrency | India TV YouTube minute concurrency';
+    if(subtitle)subtitle.textContent='FCT-selected occurrences | FAST + STREAM + AMAGI 5-minute concurrency | selected YouTube channel minute concurrency';
     if(column){
-      column.textContent='INDIA TV YOUTUBE';
-      column.title='India TV YouTube minute concurrency';
+      column.textContent='YOUTUBE';
+      column.title='Selected YouTube channel minute concurrency';
     }
   }
 }
@@ -5566,11 +5418,6 @@ function renderScopeValidation(){ensureScopePanel();const asrunTrue=sourceBounds
 const NCT=DATA.nct||{};
 let nctPayload=null;
 let nctLoadPromise=null;
-let nctManifest=null;
-let nctManifestPromise=null;
-let nctInitialized=false;
-const nctLoadedDates=new Set();
-const nctPartitionPromises=new Map();
 let nctDateMode='follow';
 let nctChart=null;
 let nctRenderTimer=null;
@@ -5815,10 +5662,8 @@ function ensureNctPanel(){
         else $('nctFrom').value=$('nctTo').value;
       }
       nctFilterCache={key:null,value:null};
-      loadNctData().catch(error=>{
-        console.error('NCT date partition load failed:',error);
-        showFatalDashboardError('NCT date load',error);
-      });
+      refreshNctFilters();
+      scheduleNctRender();
     });
   }
   for(const button of document.querySelectorAll('[data-nct-date-mode]')){
@@ -5900,105 +5745,43 @@ function setNctDateMode(mode,renderNow=true){
   $('nctTo').disabled=disabled;
   nctFilterCache={key:null,value:null};
   updateNctHelp();
-  if(renderNow)loadNctData().catch(error=>{
-    console.error('NCT date mode load failed:',error);
-    showFatalDashboardError('NCT date mode load',error);
-  });
+  if(nctPayload){
+    refreshNctFilters();
+    if(renderNow)renderNct(false);
+  }else if(renderNow){
+    loadNctData();
+  }
   updateResetState();
 }
-function loadNctManifest(){
-  if(nctManifest)return Promise.resolve(nctManifest);
-  if(nctManifestPromise)return nctManifestPromise;
-  nctManifestPromise=new Promise((resolve,reject)=>{
-    const script=document.createElement('script');
-    script.src=NCT.sidecar||'nct_story_data.js';
-    script.onload=()=>{
-      nctManifest=window.__NCT_STORY_DATA__||{available:false,segments:[]};
-      nctPayload=nctManifest.partitioned
-        ?{available:Boolean(nctManifest.available),reason:nctManifest.reason||'',segments:[]}
-        :nctManifest;
-      resolve(nctManifest);
-    };
-    script.onerror=()=>reject(new Error('NCT story manifest could not be loaded.'));
-    document.head.appendChild(script);
-  });
-  return nctManifestPromise;
-}
-function nctMissingPartitions(range){
-  if(!nctManifest?.partitioned||!range.valid)return [];
-  return Object.entries(nctManifest.dates||{}).filter(([dateValue])=>
-    dateValue>=range.start&&dateValue<=range.end&&!nctLoadedDates.has(dateValue)
-  );
-}
-function loadNctPartition(dateValue,file){
-  if(nctLoadedDates.has(dateValue))return Promise.resolve();
-  if(nctPartitionPromises.has(dateValue))return nctPartitionPromises.get(dateValue);
-  const promise=new Promise((resolve,reject)=>{
-    const script=document.createElement('script');
-    script.src=file;
-    script.onload=()=>{
-      const rows=window.__NCT_STORY_PARTITIONS__?.[dateValue];
-      if(!Array.isArray(rows)){
-        reject(new Error(file+' did not publish NCT rows for '+dateValue));
-        return;
-      }
-      for(const row of rows)nctPayload.segments.push(row);
-      delete window.__NCT_STORY_PARTITIONS__[dateValue];
-      nctLoadedDates.add(dateValue);
-      resolve();
-    };
-    script.onerror=()=>reject(new Error('NCT daily partition could not be loaded: '+file));
-    document.head.appendChild(script);
-  }).finally(()=>nctPartitionPromises.delete(dateValue));
-  nctPartitionPromises.set(dateValue,promise);
-  return promise;
-}
-async function loadNctData(){
+function loadNctData(){
   ensureNctPanel();
+  if(nctPayload)return Promise.resolve(nctPayload);
+  if(nctLoadPromise)return nctLoadPromise;
   if(!NCT.available){
     $('nctLoading').textContent=NCT.reason||'NCT story data is unavailable.';
     $('nctLoading').classList.add('nct-load-error');
-    return null;
-  }
-  if(nctLoadPromise){
-    await nctLoadPromise;
-    if(nctMissingPartitions(nctEffectiveRange()).length)return loadNctData();
-    return nctPayload;
+    return Promise.resolve(null);
   }
   $('nctLoading').textContent='Loading validated NCT story segments...';
-  const operation=(async()=>{
-    await loadNctManifest();
-    const range=nctEffectiveRange();
-    const missing=nctMissingPartitions(range);
-    await Promise.all(missing.map(([dateValue,file])=>
-      loadNctPartition(dateValue,file)
-    ));
-    if(missing.length){
-      nctPayload.segments.sort((a,b)=>
-        String(a.clip_start_ist).localeCompare(String(b.clip_start_ist))
-      );
-    }
-    nctChannelIndexes=new Map();
-    nctFilterCache={key:null,value:null};
-    if(!nctInitialized){
+  nctLoadPromise=new Promise((resolve,reject)=>{
+    const script=document.createElement('script');
+    script.src=NCT.sidecar||'nct_story_data.js';
+    script.onload=()=>{
+      nctPayload=window.__NCT_STORY_DATA__||{available:false,segments:[]};
+      nctChannelIndexes=new Map();
       initializeNctData();
-      nctInitialized=true;
-    }else if(missing.length){
-      refreshNctFilters();
-      renderNct(false);
-    }
-    return nctPayload;
-  })();
-  nctLoadPromise=operation;
-  try{
-    return await operation;
-  }catch(error){
+      resolve(nctPayload);
+    };
+    script.onerror=()=>{
+      const error=new Error('NCT story sidecar could not be loaded.');
       $('nctLoading').textContent=error.message;
       $('nctLoading').classList.add('nct-load-error');
-    throw error;
-  }finally{
-    nctLoadPromise=null;
-  }
+      nctLoadPromise=null;
+      reject(error);
+    };
+    document.head.appendChild(script);
+  });
+  return nctLoadPromise;
 }
 function initializeNctData(){
   const channels=NCT.channels||[];
@@ -6936,7 +6719,7 @@ resetDashboardFilters=function(){
     multiInitialized.delete(id);
   }
   initializeYoutubeDates();
-  setYoutubeDateMode('follow',false);
+  setYoutubeDateMode('independent',false);
   if($('youtubeChartInterval'))$('youtubeChartInterval').value='5';
   if($('youtubeCustomInterval'))$('youtubeCustomInterval').value='120';
   if($('youtubeCustomIntervalLabel'))$('youtubeCustomIntervalLabel').hidden=true;
@@ -7159,7 +6942,6 @@ async function activateDashboardPageData(page){
 function setDashboardPage(page,loadData=true,scroll=true){
   const target=Object.hasOwn(DASHBOARD_PAGE_IDS,page)?page:'audience';
   activeDashboardPage=target;
-  syncDateControlVisibility();
   closeMultiMenus('');
   for(const [name,id] of Object.entries(DASHBOARD_PAGE_IDS)){
     const section=$(id);
@@ -7223,36 +7005,11 @@ function runWithDashboardSources(loaders,action){
     })
     .finally(hideLoading);
 }
-const asrunBaseRender=render;
-render=function(){
-  if(youtubeDateMode==='follow')applyYoutubeMainDate(false);
-  asrunBaseRender();
-  renderFct();
-  if(nctPayload){
-    if(nctDateMode==='follow'){
-      nctFilterCache={key:null,value:null};
-      if(nctMissingPartitions(nctEffectiveRange()).length){
-        loadNctData().catch(error=>{
-          console.error('NCT follow-range load failed:',error);
-          showFatalDashboardError('NCT follow-range load',error);
-        });
-      }else{
-        refreshNctFilters();
-        renderNct(false);
-      }
-    }else{
-      renderNct(false);
-    }
-  }
-  if(youtubeDateMode==='follow')renderYoutube();
-  else renderScopeValidation();
-  updateResetState();
-  hideLoading();
-};
+const asrunBaseRender=render;render=function(){if(youtubeDateMode==='follow')applyYoutubeMainDate(false);asrunBaseRender();renderFct();if(nctPayload){if(nctDateMode==='follow'){nctFilterCache={key:null,value:null};refreshNctFilters()}renderNct(false)}if(youtubeDateMode==='follow')renderYoutube();else renderScopeValidation();updateResetState();hideLoading();};
 renderYoutube=renderYoutubeChannelAware;
 const asrunBaseRenderYoutube=renderYoutube;
 renderYoutube=function(){asrunBaseRenderYoutube();renderScopeValidation();updateResetState();hideLoading();};
-ensurePeriodControls();ensureCreativeFilters();ensureYoutubeDateModeControls();ensureYoutubeChannelFilter();ensureYoutubeChartIntervalControls();ensureYoutubeChartExpand();refreshYoutubeDateLimits();initializeYoutubeDates();setYoutubeDateMode('follow',false);refreshDependentOptions();ensureAmagiPanel();ensureFctPanel();ensureNctPanel();ensureScopePanel();ensureGlobalAudienceFilters();ensureDashboardPages();initializeNctLazyLoad();initializeDashboardSourceLoading();$('reset').onclick=resetDashboardFilters;
+ensurePeriodControls();ensureCreativeFilters();ensureYoutubeDateModeControls();ensureYoutubeChannelFilter();ensureYoutubeChartIntervalControls();ensureYoutubeChartExpand();refreshYoutubeDateLimits();initializeYoutubeDates();setYoutubeDateMode('independent',false);refreshDependentOptions();ensureAmagiPanel();ensureFctPanel();ensureNctPanel();ensureScopePanel();ensureGlobalAudienceFilters();ensureDashboardPages();initializeNctLazyLoad();initializeDashboardSourceLoading();$('reset').onclick=resetDashboardFilters;
 replaceDownloadAction('exportAllEvents',()=>runWithDashboardSources(
   [loadAudienceDashboardData,loadYoutubeDashboardData],exportAllEventsCsv
 ));
@@ -7345,7 +7102,7 @@ def main() -> None:
     PARSED_DIR.mkdir(parents=True, exist_ok=True)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     parsed_path = PARSED_DIR / "asrun_events.parquet"
-    atomic_write_parquet(parsed_path, events)
+    events.to_parquet(parsed_path, index=False)
     # FCT can extend beyond the ASRUN text-file dates. Build its range first so
     # valid historical FAST/STREAM audience minutes are not clipped away.
     fct = timed_step("FCT occurrence mart", build_fct_ad_mart)
@@ -7365,7 +7122,7 @@ def main() -> None:
     amagi = timed_step("Amagi concurrency mart", build_amagi_minute_mart, events)
     nct = timed_step("NCT story mart", build_nct_story_mart)
     viewer_snapshot_path = PARSED_DIR / "audience_ops_identity_minute_asrun_dates.parquet"
-    atomic_write_parquet(viewer_snapshot_path, viewer_minute)
+    viewer_minute.to_parquet(viewer_snapshot_path, index=False)
     payload = timed_step(
         "Dashboard payload preparation",
         build_payload,
