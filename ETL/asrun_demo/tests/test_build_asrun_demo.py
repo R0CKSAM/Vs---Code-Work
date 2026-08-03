@@ -68,6 +68,36 @@ def test_build_payload_handles_no_classified_ads() -> None:
         "end": "No classified ad events",
     }
     assert payload["generated_at_ist"].endswith(" IST")
+    assert payload["date_coverage"] == {
+        "asrun": [],
+        "fast": [],
+        "stream": [],
+        "amagi": [],
+        "fct": [],
+        "youtube": [],
+        "nct": [],
+    }
+
+
+def test_distinct_iso_dates_reports_only_represented_calendar_dates() -> None:
+    """Continuity indexes must be sorted, deduplicated, and ignore invalid timestamps."""
+    frame = pd.DataFrame(
+        {
+            "minute_ist": [
+                "2026-07-03 12:30:00",
+                "2026-07-01 08:00:00",
+                "2026-07-03 18:00:00",
+                "invalid",
+                None,
+            ]
+        }
+    )
+
+    assert asrun.distinct_iso_dates(frame, "minute_ist") == [
+        "2026-07-01",
+        "2026-07-03",
+    ]
+    assert asrun.distinct_iso_dates(frame, "missing") == []
 
 
 def test_build_youtube_marts_handles_no_live_rows(tmp_path: Path, monkeypatch) -> None:
@@ -550,10 +580,15 @@ def test_render_dashboard_uses_one_visible_date_scope_per_page(
     assert ".youtube-filter-bar.follow-main .youtube-independent-date-control" in html
     assert "let youtubeDateMode='follow';" in html
     assert "function syncDateControlVisibility(){" in html
-    assert "activeDashboardPage==='content'" in html
+    assert "activeDashboardPage==='content'&&nctDateMode==='independent'" in html
     assert "activeDashboardPage==='audience'&&youtubeDateMode==='independent'" in html
     assert "setYoutubeDateMode('follow',false);" in html
     assert "syncDateControlVisibility();\n  closeMultiMenus('');" in html
+    assert 'id="nctDateFields" hidden' in html
+    assert 'id="nctApplyDate"' in html
+    assert "function applyNctDateRange(){" in html
+    assert "<strong>Available:</strong>" in html
+    assert "<strong>Used:</strong>" in html
 
 
 def test_write_javascript_assignment_is_atomic_and_script_safe(
@@ -699,7 +734,7 @@ def test_render_dashboard_keeps_fct_multiselects_independent(
     assert '.nct-panel .multi-option input[type="checkbox"] {' in html
     assert "function wrapNctOptionLabels(id){" in html
     assert "wrapNctOptionLabels(id);" in html
-    assert ".nct-controls > .filter-label:has(.multi-menu.open) { z-index: 120; }" in html
+    assert ".nct-filter-grid > .filter-label:has(.multi-menu.open) { z-index: 120; }" in html
     assert ".filter-label:has(.multi-menu.open) { position: relative; z-index: 120; }" in html
     assert ".multi-menu:has(.multi-search-shell) {" in html
     assert ".nct-panel .multi-search-actions {" in html
@@ -708,7 +743,7 @@ def test_render_dashboard_keeps_fct_multiselects_independent(
     assert "width: calc(100% + 8px);" in html
     assert "box-shadow: 0 2px 4px rgba(15, 23, 42, .10);" in html
     assert "width: min(280px, calc(100vw - 24px));" in html
-    assert ".nct-controls > .filter-label:nth-last-child(-n+2) .multi-menu {" in html
+    assert ".nct-filter-grid > .filter-label:nth-last-child(-n+2) .multi-menu {" in html
     assert "grid-column: 1 / -1;" in html
     assert "function clearMultiMenuSearch(menu){" in html
     assert "search.dispatchEvent(new Event('input',{bubbles:true}));" in html
@@ -825,8 +860,25 @@ def test_render_dashboard_adds_interval_weighted_nct_story_performance(
     assert "Selected YouTube Video IDs" in html
     assert "youtubeMetric=youtubeFiveMinuteValue(e)" in html
     assert "youtubeMetric=youtubeFiveMinuteValue(anchor)" in html
+    assert "value:'0',total:0,live_videos:0" in html
+    assert "scope:'No India TV YouTube collector'" in html
+    assert "return 'No India TV YouTube minute record';" in html
+    assert "return 'Outside India TV YouTube source range';" in html
+    assert "value:'No India TV YouTube data'" not in html
+    assert "row.fast.total,row.stream.total,row.amagi.total,row.youtube.scope,row.youtube.total" in html
+    assert "row.fast.total??'',row.stream.total??'',row.amagi.total??''" in html
+    assert "row.total??'',row.partial?'Partial source coverage'" in html
+    assert "const zeroMissing=source==='youtube';" in html
+    assert "const zeroSelected=basis==='youtube';" in html
     assert "loadAudienceDashboardData()," in html
     assert "loadYoutubeDashboardData()," in html
+    assert "Date continuity checks source coverage inside the date window" in html
+    assert "<th>Date continuity</th>" in html
+    assert "function dateContinuity(dateValues,start,end)" in html
+    assert "function usedDateContinuity(dateValues,start,end,trueBounds)" in html
+    assert "outside source range" in html
+    assert "function scopeContinuityHtml(dateValues,trueBounds,usedStart,usedEnd)" in html
+    assert "(DATA.date_coverage||{}).nct" in html
 
 
 def test_render_dashboard_gives_fct_an_independent_all_range(

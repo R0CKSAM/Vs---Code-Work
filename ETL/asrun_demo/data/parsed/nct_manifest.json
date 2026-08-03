@@ -16,40 +16,6 @@
     }
   },
   "file_metadata": {
-    "Detail_StoryTrack_Duration (1).CSV": {
-      "selected_channels": [
-        "AAJ TAK",
-        "ABP NEWS",
-        "INDIA TV",
-        "NDTV INDIA",
-        "NEWS18 INDIA",
-        "REPUBLIC BHARAT",
-        "TIMES NOW NAVBHARAT",
-        "TV9 BHARATVARSH",
-        "Z NEWS"
-      ],
-      "declared_start": "2026-01-01",
-      "declared_end": "2026-03-31",
-      "declared_start_time": "05:00:00",
-      "declared_end_time": "23:59:00",
-      "downloaded_on": "29/7/2026 11:30",
-      "source_rows": 318549,
-      "valid_rows": 318549,
-      "duplicate_rows": 0,
-      "actual_channels": [
-        "AAJ TAK",
-        "ABP News",
-        "INDIA TV",
-        "NEWS18 INDIA",
-        "REPUBLIC BHARAT",
-        "TV9 BHARATVARSH",
-        "Z NEWS"
-      ],
-      "missing_selected_channels": [
-        "NDTV INDIA",
-        "TIMES NOW NAVBHARAT"
-      ]
-    },
     "Detail_StoryTrack_Duration.CSV": {
       "selected_channels": [
         "AAJ TAK",
@@ -81,6 +47,40 @@
       ],
       "missing_selected_channels": [
         "ABP NEWS",
+        "TIMES NOW NAVBHARAT"
+      ]
+    },
+    "Detail_StoryTrack_Duration (1).CSV": {
+      "selected_channels": [
+        "AAJ TAK",
+        "ABP NEWS",
+        "INDIA TV",
+        "NDTV INDIA",
+        "NEWS18 INDIA",
+        "REPUBLIC BHARAT",
+        "TIMES NOW NAVBHARAT",
+        "TV9 BHARATVARSH",
+        "Z NEWS"
+      ],
+      "declared_start": "2026-01-01",
+      "declared_end": "2026-03-31",
+      "declared_start_time": "05:00:00",
+      "declared_end_time": "23:59:00",
+      "downloaded_on": "29/7/2026 11:30",
+      "source_rows": 318549,
+      "valid_rows": 318549,
+      "duplicate_rows": 0,
+      "actual_channels": [
+        "AAJ TAK",
+        "ABP News",
+        "INDIA TV",
+        "NEWS18 INDIA",
+        "REPUBLIC BHARAT",
+        "TV9 BHARATVARSH",
+        "Z NEWS"
+      ],
+      "missing_selected_channels": [
+        "NDTV INDIA",
         "TIMES NOW NAVBHARAT"
       ]
     },
@@ -119,5 +119,5 @@
       ]
     }
   },
-  "generated_at_ist": "2026-08-03T12:50:49.819059+05:30"
+  "generated_at_ist": "2026-08-03T16:41:59.891769+05:30"
 }

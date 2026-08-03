@@ -2,7 +2,7 @@
   "schema_version": 1,
   "available": true,
   "source_root": "Z:\\Veto Logs Backup\\DO NOT DELETE\\source=amagi",
-  "files": 13,
+  "files": 14,
   "skipped": [],
   "fingerprints": {
     "concurreny_metrics - 2026-07-21T09_00_04Z_0cb117fe-a022-457b-8b36-685571a0a51a_2026-07-21.csv": {
@@ -56,6 +56,10 @@
     "concurreny_metrics - 2026-08-02T09_00_03Z_c0d0a4c4-c013-4594-80f5-b5afb27e290e_2026-08-02.csv": {
       "size": 1330370,
       "mtime_ns": 1785734501673800900
+    },
+    "concurreny_metrics - 2026-08-03T09_00_05Z_7d06de76-a5c9-418e-82b8-428d1bfe2761_2026-08-03.csv": {
+      "size": 1330575,
+      "mtime_ns": 1785750288244642400
     }
   },
   "readable_files": [
@@ -71,6 +75,7 @@
     "concurreny_metrics - 2026-07-30T09_00_03Z_89df9ff5-48b1-47b4-974c-a7bb614263dd_2026-07-30.csv",
     "concurreny_metrics - 2026-07-31T09_00_03Z_6434c70a-9a09-4356-9cc2-aae6669ba5d0_2026-07-31.csv",
     "concurreny_metrics - 2026-08-01T09_00_03Z_0bbfe5d2-9db3-4990-888f-e6ba82b0b9ca_2026-08-01.csv",
-    "concurreny_metrics - 2026-08-02T09_00_03Z_c0d0a4c4-c013-4594-80f5-b5afb27e290e_2026-08-02.csv"
+    "concurreny_metrics - 2026-08-02T09_00_03Z_c0d0a4c4-c013-4594-80f5-b5afb27e290e_2026-08-02.csv",
+    "concurreny_metrics - 2026-08-03T09_00_05Z_7d06de76-a5c9-418e-82b8-428d1bfe2761_2026-08-03.csv"
   ]
 }
