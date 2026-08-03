@@ -25,6 +25,20 @@
       week_from: "",
       week_to: "",
     },
+    reportCache: {
+      context: null,
+      lastPayload: null,
+      narratives: null,
+      narrativesForDownload: null,
+      lastHeadend: "",
+      lastWeeks: [],
+      lastChannel: "",
+      lastWeeksForDownload: [],
+      lastChannelForDownload: "",
+      headendsWithChanges: null,
+      channelsWithChanges: null,
+      lastReportWeeks: [],
+    },
   };
 
   const DEFAULT_REPORT_CHANNELS = [
@@ -70,6 +84,7 @@
   const reportWeekToFilter = getSingleSelectControl("nbhdReportWeekToFilter");
   const reportResetButton = document.getElementById("nbhdReportResetButton");
   const reportHideButton = document.getElementById("nbhdReportHideButton");
+  const reportDownloadButton = document.getElementById("nbhdReportDownloadButton");
   const tableDownloadButton = document.getElementById("nbhdDownloadButton");
   const resultCount = document.getElementById("nbhdResultCount");
   const tableHead = document.getElementById("nbhdTableHead");
@@ -91,6 +106,146 @@
     tableScrollLeft: 0,
     usingNativeFullscreen: false,
   };
+  let renderFrame = null;
+  let reportRenderTimeout = null;
+
+  function scheduleRender(payload = state.payload) {
+    if (renderFrame !== null) return;
+    renderFrame = window.requestAnimationFrame(() => {
+      renderFrame = null;
+      render(payload);
+    });
+  }
+
+  function isReportCacheValid() {
+    const currentHeadend = normalizeText(state.report.headend);
+    const currentWeeks = [state.report.week_from, state.report.week_to].filter(Boolean);
+    const currentChannel = normalizeText(state.report.channel);
+    
+    return state.reportCache.context !== null &&
+           state.reportCache.lastHeadend === currentHeadend &&
+           JSON.stringify(state.reportCache.lastWeeks) === JSON.stringify(currentWeeks) &&
+           state.reportCache.lastChannel === currentChannel;
+  }
+
+  function getHeadendsAndChannelsWithChanges() {
+    // Check cache first
+    const currentReportWeeks = [state.report.week_from, state.report.week_to].filter(Boolean);
+    if (state.reportCache.headendsWithChanges !== null && 
+        state.reportCache.channelsWithChanges !== null &&
+        state.payload === state.reportCache.lastPayload &&
+        JSON.stringify(state.reportCache.lastReportWeeks) === JSON.stringify(currentReportWeeks)) {
+      return {
+        headends: state.reportCache.headendsWithChanges,
+        channels: state.reportCache.channelsWithChanges
+      };
+    }
+    
+    const payload = normalizePayloadShape(state.payload || window.__NBHD_STANDALONE_DATA__ || { weeks: [] });
+    const allWeeks = payload.weeks || [];
+    
+    if (allWeeks.length < 2) {
+      // Need at least 2 weeks to detect changes
+      const result = { headends: [], channels: [] };
+      state.reportCache.headendsWithChanges = result.headends;
+      state.reportCache.channelsWithChanges = result.channels;
+      state.reportCache.lastPayload = state.payload;
+      state.reportCache.lastReportWeeks = currentReportWeeks;
+      return result;
+    }
+    
+    // Use the report's selected weeks, or last two weeks if none selected
+    const reportWeeks = [state.report.week_from, state.report.week_to].filter(Boolean);
+    const previousWeek = reportWeeks.length >= 2 ? reportWeeks[0] : (allWeeks.length >= 2 ? allWeeks[allWeeks.length - 2] : null);
+    const currentWeek = reportWeeks.length >= 2 ? reportWeeks[reportWeeks.length - 1] : (allWeeks.length >= 1 ? allWeeks[allWeeks.length - 1] : null);
+    
+    // If we don't have valid weeks, return empty
+    if (!previousWeek || !currentWeek) {
+      const result = { headends: [], channels: [] };
+      state.reportCache.headendsWithChanges = result.headends;
+      state.reportCache.channelsWithChanges = result.channels;
+      state.reportCache.lastPayload = state.payload;
+      state.reportCache.lastReportWeeks = currentReportWeeks;
+      return result;
+    }
+    
+    const baseRecords = getAllSourceRecords();
+    const headendsWithChanges = new Set();
+    const channelsWithChanges = new Set();
+    const targetChannels = getReportTargetChannels(); // Only check the 4 default channels
+    
+    // Group records by headend for efficient processing
+    const headendGroups = new Map();
+    baseRecords.forEach((record) => {
+      const headend = normalizeText(record.head_end);
+      if (!headend) return;
+      if (!headendGroups.has(headend)) headendGroups.set(headend, []);
+      headendGroups.get(headend).push(record);
+    });
+    
+    // Check each headend for changes - only for the 4 default channels
+    for (const [headend, groupRecords] of headendGroups.entries()) {
+      const previousMap = buildHeadendMaps(groupRecords, previousWeek);
+      const currentMap = buildHeadendMaps(groupRecords, currentWeek);
+      
+      let headendHasChanges = false;
+      
+      // Only check the 4 default channels for changes
+      for (const { label, key } of targetChannels) {
+        const previousPosition = previousMap.channelPositions.get(key);
+        const currentPosition = currentMap.channelPositions.get(key);
+        
+        if (previousPosition === undefined || currentPosition === undefined) continue;
+        
+        const previousLower = neighborAt(previousMap, previousPosition, -1);
+        const previousUpper = neighborAt(previousMap, previousPosition, 1);
+        const currentLower = neighborAt(currentMap, currentPosition, -1);
+        const currentUpper = neighborAt(currentMap, currentPosition, 1);
+        
+        // If neighbors changed, this channel has a change
+        if (previousLower !== currentLower || previousUpper !== currentUpper) {
+          headendHasChanges = true;
+          channelsWithChanges.add(label);
+        }
+      }
+      
+      if (headendHasChanges) {
+        headendsWithChanges.add(headend);
+      }
+    }
+    
+    const result = {
+      headends: Array.from(headendsWithChanges).sort((a, b) => a.localeCompare(b, undefined, { numeric: true })),
+      channels: Array.from(channelsWithChanges).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+    };
+    
+    // Cache the result
+    state.reportCache.headendsWithChanges = result.headends;
+    state.reportCache.channelsWithChanges = result.channels;
+    state.reportCache.lastPayload = state.payload;
+    state.reportCache.lastReportWeeks = currentReportWeeks;
+    
+    return result;
+  }
+
+  function invalidateReportCache() {
+    state.reportCache = {
+      context: null,
+      lastPayload: null,
+      narratives: null,
+      narrativesForDownload: null,
+      lastHeadend: "",
+      lastWeeks: [],
+      lastChannel: "",
+      lastWeeksForDownload: [],
+      lastChannelForDownload: "",
+      headendsWithChanges: null,
+      channelsWithChanges: null,
+      lastReportWeeks: [],
+    };
+  }
+
+  setReportVisibility(false);
 
   function normalizeText(value) {
     return String(value ?? "").replace(/\s+/g, " ").trim();
@@ -509,6 +664,10 @@
   function render(payload) {
     state.payload = normalizePayloadShape(payload);
     state.pageSize = getPageSize();
+    
+    // Invalidate report cache when new data is loaded
+    invalidateReportCache();
+    
     syncFilters(state.payload);
     renderStatus(state.payload);
     resultCount.textContent = `${new Intl.NumberFormat().format(state.payload.table.total_count)} rows`;
@@ -753,15 +912,30 @@
   }
 
   function buildReportContext() {
+    // Use cached context if available and payload hasn't changed
+    if (state.reportCache.context !== null && state.payload === state.reportCache.lastPayload) {
+      return state.reportCache.context;
+    }
+    
     const records = getAllSourceRecords();
     const allWeeks = getReportAvailableWeeks();
     const activeWeeks = getContextReportWeeks(allWeeks);
-    return {
-      headends: getReportHeadends(records),
-      channels: getAllReportChannels(records),
+    
+    // Get headends and channels with changes for filters
+    const { headends, channels } = getHeadendsAndChannelsWithChanges();
+    
+    const context = {
+      headends: headends.length > 0 ? headends : getReportHeadends(records),
+      channels: channels.length > 0 ? channels : getAllReportChannels(records),
       allWeeks,
       activeWeeks,
     };
+    
+    // Cache the context
+    state.reportCache.context = context;
+    state.reportCache.lastPayload = state.payload;
+    
+    return context;
   }
 
   function renderReportFilters(context) {
@@ -868,6 +1042,7 @@
   function closeReportPanel() {
     state.report.open = false;
     setReportVisibility(false);
+    scheduleRender(state.payload);
     requestAnimationFrame(() => {
       reportLauncher?.scrollIntoView({ behavior: "smooth", block: "center" });
     });
@@ -878,7 +1053,7 @@
     const records = payload.table?.records || [];
     const excelCell = window.__excelCell || ((value, style = "cell", options = {}) => ({ value, style, ...options }));
     const blankRow = window.__blankExcelRow || ((count = 1) => Array.from({ length: Math.max(1, count) }, () => excelCell("", "cell")));
-    const reportData = buildReportNarratives();
+    const reportData = buildReportNarrativesForDownload();
     const detailRows = [
       [
         excelCell("", "group", { mergeAcross: 2 }),
@@ -990,7 +1165,7 @@
     ]);
   }
   function exportReportExcel() {
-    const reportData = buildReportNarratives();
+    const reportData = buildReportNarrativesForDownload();
     const headers = ["Headend", "Channel", "Previous Position", "Current Position", "Status", "Summary"];
     const detailRows = reportData.rows.map((row) => [
       row.headend,
@@ -1020,53 +1195,118 @@
     const weeks = fromIndex >= 0 && toIndex >= 0
       ? allWeeks.slice(Math.min(fromIndex, toIndex), Math.max(fromIndex, toIndex) + 1)
       : [];
+    
+    const selectedHeadend = normalizeText(state.report.headend);
+    const selectedChannel = normalizeText(state.report.channel);
+    const currentWeeks = [weekFrom, weekTo].filter(Boolean);
+    
+    // Check cache first
+    if (isReportCacheValid() && state.reportCache.narratives !== null) {
+      return state.reportCache.narratives;
+    }
+    
     if (weeks.length < 2) {
-      return {
+      const result = {
         weeks,
-        headend: normalizeText(state.report.headend),
-        channel: normalizeText(state.report.channel),
+        headend: selectedHeadend,
+        channel: selectedChannel,
         rows: [],
         totalRows: 0,
         message: "Select previous and current week in the report filters to generate the neighbour change report.",
       };
+      state.reportCache.narratives = result;
+      state.reportCache.lastHeadend = selectedHeadend;
+      state.reportCache.lastWeeks = currentWeeks;
+      state.reportCache.lastChannel = selectedChannel;
+      return result;
     }
 
+    // STRICT REQUIREMENT: By default, don't show any data
+    // Force blank report if no headend is explicitly selected
+    if (!selectedHeadend) {
+      console.log('NBHD: No headend selected, returning blank report');
+      const result = {
+        weeks,
+        headend: selectedHeadend,
+        channel: selectedChannel,
+        rows: [],
+        totalRows: 0,
+        message: "Select a headend to view the neighbour change report.",
+      };
+      state.reportCache.narratives = result;
+      state.reportCache.lastHeadend = selectedHeadend;
+      state.reportCache.lastWeeks = currentWeeks;
+      state.reportCache.lastChannel = selectedChannel;
+      return result;
+    }
+    
+    // STRICT REQUIREMENT: Only show data for the EXACT selected headend
+    // Never show data for multiple headends
+    console.log(`NBHD: Processing data for headend: ${selectedHeadend}`);
+    
     const previousWeek = weeks[0];
     const currentWeek = weeks[weeks.length - 1];
     const baseRecords = getAllSourceRecords();
-    const selectedHeadend = normalizeText(state.report.headend);
+    
+    // STRICT FILTERING: Only process the selected headend
+    // This ensures we never show data for multiple headends
     const groupedRecords = new Map();
     baseRecords.forEach((record) => {
       const headend = normalizeText(record.head_end);
-      if (!headend || (selectedHeadend && headend !== selectedHeadend)) return;
+      // CRITICAL: Only include records for the EXACT selected headend
+      if (!headend || headend !== selectedHeadend) return;
       if (!groupedRecords.has(headend)) groupedRecords.set(headend, []);
       groupedRecords.get(headend).push(record);
     });
+    
+    // DEBUG: Ensure we only have one headend in groupedRecords
+    // If we have more than one, something is wrong with the filtering
+    if (groupedRecords.size > 1) {
+      console.warn(`Expected 1 headend, got ${groupedRecords.size}. Clearing to prevent showing multiple headends.`);
+      groupedRecords.clear();
+    }
+    
     if (!groupedRecords.size) {
-      return {
+      const result = {
         weeks,
         headend: selectedHeadend,
-        channel: normalizeText(state.report.channel),
+        channel: selectedChannel,
         rows: [],
         totalRows: 0,
         message: "No headend data is available for the selected report filters.",
       };
+      state.reportCache.narratives = result;
+      state.reportCache.lastHeadend = selectedHeadend;
+      state.reportCache.lastWeeks = currentWeeks;
+      state.reportCache.lastChannel = selectedChannel;
+      return result;
     }
 
     const rows = [];
-    const targetChannels = getReportTargetChannels();
+    const targetChannels = getReportTargetChannels(); // This returns only 4 default channels when no channel selected
+    
+    // REQUIREMENT: Only show the 4 default channels when headend is selected
+    console.log(`NBHD: Target channels:`, targetChannels.map(c => c.label));
+    
+    // Optimize: Pre-compute available channels for all groups
+    const allAvailableChannels = new Map();
+    for (const [headend, groupRecords] of groupedRecords.entries()) {
+      getReportChannelOptions(groupRecords).forEach((value) => {
+        const key = normalizeChannelKey(value);
+        if (!allAvailableChannels.has(key)) {
+          allAvailableChannels.set(key, normalizeText(value));
+        }
+      });
+    }
+    
     for (const [headend, groupRecords] of groupedRecords.entries()) {
       const previousMap = buildHeadendMaps(groupRecords, previousWeek);
       const currentMap = buildHeadendMaps(groupRecords, currentWeek);
-      const availableChannels = new Map();
-      getReportChannelOptions(groupRecords).forEach((value) => {
-        availableChannels.set(normalizeChannelKey(value), normalizeText(value));
-      });
+      
       targetChannels.forEach(({ label, key }) => {
-        const channelLabel = availableChannels.get(key) || label;
-        const channelKey = key;
-        const previousPosition = previousMap.channelPositions.get(channelKey);
-        const currentPosition = currentMap.channelPositions.get(channelKey);
+        const channelLabel = allAvailableChannels.get(key) || label;
+        const previousPosition = previousMap.channelPositions.get(key);
+        const currentPosition = currentMap.channelPositions.get(key);
         if (previousPosition === undefined || currentPosition === undefined) return;
 
         const previousLower = neighborAt(previousMap, previousPosition, -1);
@@ -1086,14 +1326,155 @@
       });
     }
 
-    return {
+    // FINAL VALIDATION: Ensure all rows are for the selected headend only
+    const headendsInRows = new Set(rows.map(row => row.headend));
+    if (headendsInRows.size > 1) {
+      console.error(`NBHD: Found rows for multiple headends:`, Array.from(headendsInRows));
+      // Filter to only keep rows for the selected headend
+      rows = rows.filter(row => row.headend === selectedHeadend);
+    }
+    
+    const result = {
       weeks,
       headend: selectedHeadend,
-      channel: normalizeText(state.report.channel),
+      channel: selectedChannel,
       rows,
       totalRows: rows.length,
-      message: rows.length ? "" : `No neighbour changes detected for ${state.report.channel ? normalizeText(state.report.channel) : "the selected channels"} in ${selectedHeadend || "all headends"}.`,
+      message: rows.length ? "" : `No neighbour changes detected for ${selectedChannel ? selectedChannel : "the selected channels"} in ${selectedHeadend || "all headends"}.`,
     };
+    
+    console.log(`NBHD: Final result - headend: ${selectedHeadend}, rows: ${rows.length}`);
+    
+    // Cache the result
+    state.reportCache.narratives = result;
+    state.reportCache.lastHeadend = selectedHeadend;
+    state.reportCache.lastWeeks = currentWeeks;
+    state.reportCache.lastChannel = selectedChannel;
+    
+    return result;
+  }
+
+  function buildReportNarrativesForDownload() {
+    const payload = normalizePayloadShape(state.payload || window.__NBHD_STANDALONE_DATA__ || { weeks: [] });
+    const allWeeks = payload.weeks || [];
+    const weekFrom = state.report.week_from;
+    const weekTo = state.report.week_to;
+    const fromIndex = allWeeks.includes(weekFrom) ? allWeeks.indexOf(weekFrom) : -1;
+    const toIndex = allWeeks.includes(weekTo) ? allWeeks.indexOf(weekTo) : -1;
+    const weeks = fromIndex >= 0 && toIndex >= 0
+      ? allWeeks.slice(Math.min(fromIndex, toIndex), Math.max(fromIndex, toIndex) + 1)
+      : [];
+    
+    const selectedChannel = normalizeText(state.report.channel);
+    const currentWeeks = [weekFrom, weekTo].filter(Boolean);
+    
+    // Check cache first - for download, cache is separate from display cache
+    if (state.reportCache.narrativesForDownload !== null && 
+        state.reportCache.lastWeeksForDownload && 
+        JSON.stringify(state.reportCache.lastWeeksForDownload) === JSON.stringify(currentWeeks) &&
+        state.reportCache.lastChannelForDownload === selectedChannel) {
+      return state.reportCache.narrativesForDownload;
+    }
+    
+    if (weeks.length < 2) {
+      const result = {
+        weeks,
+        headend: "",
+        channel: selectedChannel,
+        rows: [],
+        totalRows: 0,
+        message: "Select previous and current week in the report filters to generate the neighbour change report.",
+      };
+      state.reportCache.narrativesForDownload = result;
+      state.reportCache.lastWeeksForDownload = currentWeeks;
+      state.reportCache.lastChannelForDownload = selectedChannel;
+      return result;
+    }
+
+    const previousWeek = weeks[0];
+    const currentWeek = weeks[weeks.length - 1];
+    const baseRecords = getAllSourceRecords();
+    const groupedRecords = new Map();
+    
+    // For download, include ALL headends (ignore the selected headend filter)
+    baseRecords.forEach((record) => {
+      const headend = normalizeText(record.head_end);
+      if (!headend) return;
+      if (!groupedRecords.has(headend)) groupedRecords.set(headend, []);
+      groupedRecords.get(headend).push(record);
+    });
+    
+    if (!groupedRecords.size) {
+      const result = {
+        weeks,
+        headend: "",
+        channel: selectedChannel,
+        rows: [],
+        totalRows: 0,
+        message: "No headend data is available for the selected report filters.",
+      };
+      state.reportCache.narrativesForDownload = result;
+      state.reportCache.lastWeeksForDownload = currentWeeks;
+      state.reportCache.lastChannelForDownload = selectedChannel;
+      return result;
+    }
+
+    const rows = [];
+    const targetChannels = getReportTargetChannels();
+    
+    // Optimize: Pre-compute available channels for all groups
+    const allAvailableChannels = new Map();
+    for (const [headend, groupRecords] of groupedRecords.entries()) {
+      getReportChannelOptions(groupRecords).forEach((value) => {
+        const key = normalizeChannelKey(value);
+        if (!allAvailableChannels.has(key)) {
+          allAvailableChannels.set(key, normalizeText(value));
+        }
+      });
+    }
+    
+    for (const [headend, groupRecords] of groupedRecords.entries()) {
+      const previousMap = buildHeadendMaps(groupRecords, previousWeek);
+      const currentMap = buildHeadendMaps(groupRecords, currentWeek);
+      
+      targetChannels.forEach(({ label, key }) => {
+        const channelLabel = allAvailableChannels.get(key) || label;
+        const previousPosition = previousMap.channelPositions.get(key);
+        const currentPosition = currentMap.channelPositions.get(key);
+        if (previousPosition === undefined || currentPosition === undefined) return;
+
+        const previousLower = neighborAt(previousMap, previousPosition, -1);
+        const previousUpper = neighborAt(previousMap, previousPosition, 1);
+        const currentLower = neighborAt(currentMap, currentPosition, -1);
+        const currentUpper = neighborAt(currentMap, currentPosition, 1);
+        if (previousLower === currentLower && previousUpper === currentUpper) return;
+
+        rows.push({
+          headend,
+          channel: channelLabel,
+          previous_position: `${previousLower} <- ${channelLabel} -> ${previousUpper}`,
+          current_position: `${currentLower} <- ${channelLabel} -> ${currentUpper}`,
+          status: "Changed",
+          summary: `${headend}: ${channelLabel} moved from between ${previousLower} and ${previousUpper} to between ${currentLower} and ${currentUpper}.`,
+        });
+      });
+    }
+
+    const result = {
+      weeks,
+      headend: "",
+      channel: selectedChannel,
+      rows,
+      totalRows: rows.length,
+      message: rows.length ? "" : `No neighbour changes detected for ${selectedChannel ? selectedChannel : "the selected channels"} in all headends.`,
+    };
+    
+    // Cache the result
+    state.reportCache.narrativesForDownload = result;
+    state.reportCache.lastWeeksForDownload = currentWeeks;
+    state.reportCache.lastChannelForDownload = selectedChannel;
+    
+    return result;
   }
 
   function renderReportPanel() {
@@ -1101,13 +1482,42 @@
     setReportVisibility(state.report.open);
     if (reportToggleButton) reportToggleButton.textContent = "Neighbour Change Report";
     if (!state.report.open) return;
-    try {
-      const context = buildReportContext();
-      syncReportSelections(context);
-      renderReportFilters(context);
-      const reportData = buildReportNarratives();
-      const previousWeek = reportData.weeks[0];
-      const currentWeek = reportData.weeks[reportData.weeks.length - 1];
+    
+    // Invalidate cache when opening report panel to ensure fresh start
+    invalidateReportCache();
+    
+    // Show loading state immediately
+    if (reportStatus) {
+      reportStatus.hidden = false;
+      reportStatus.textContent = "Loading neighbour change report...";
+    }
+    if (reportContent) {
+      reportContent.innerHTML = '<div class="nbhd-report-loading">Loading report data...</div>';
+    }
+    
+    // Set a maximum loading time to prevent hanging
+    const loadingTimeout = setTimeout(() => {
+      if (reportStatus) {
+        reportStatus.textContent = "Processing report data (this may take a moment)...";
+      }
+    }, 2000);
+    
+    // Use debounced processing to prevent UI freezing and rapid re-renders
+    if (reportRenderTimeout) {
+      clearTimeout(reportRenderTimeout);
+    }
+    
+    // Use requestIdleCallback if available for background processing
+    if (window.requestIdleCallback) {
+      reportRenderTimeout = null;
+      window.requestIdleCallback(() => {
+        try {
+        const context = buildReportContext();
+        syncReportSelections(context);
+        renderReportFilters(context);
+        const reportData = buildReportNarratives();
+        const previousWeek = reportData.weeks[0];
+        const currentWeek = reportData.weeks[reportData.weeks.length - 1];
       if (reportMeta) {
         const channelText = reportData.channel || "default 4 channels";
         const headendText = reportData.headend || "all headends";
@@ -1182,13 +1592,107 @@
         fragment.appendChild(section);
       });
       reportContent.replaceChildren(fragment);
-    } catch (error) {
-      if (reportCount) reportCount.textContent = "0 narratives";
-      renderReportStatus("Neighbour change report could not be generated.");
-      reportContent.innerHTML = `<div class="nbhd-report-empty">Neighbour change report could not be generated.</div>`;
-      console.error("NBHD report render failed", error);
+      } catch (error) {
+        if (reportCount) reportCount.textContent = "0 narratives";
+        renderReportStatus("Neighbour change report could not be generated.");
+        reportContent.innerHTML = `<div class="nbhd-report-empty">Neighbour change report could not be generated.</div>`;
+        console.error("NBHD report render failed", error);
+        clearTimeout(loadingTimeout);
+      }
+      }, { timeout: 100 }); // Max 100ms delay for idle callback
+    } else {
+      // Fallback to setTimeout for browsers without requestIdleCallback
+      reportRenderTimeout = setTimeout(() => {
+        try {
+          const context = buildReportContext();
+          syncReportSelections(context);
+          renderReportFilters(context);
+          const reportData = buildReportNarratives();
+          const previousWeek = reportData.weeks[0];
+          const currentWeek = reportData.weeks[reportData.weeks.length - 1];
+          if (reportMeta) {
+            const channelText = reportData.channel || "default 4 channels";
+            const headendText = reportData.headend || "all headends";
+            reportMeta.textContent = previousWeek && currentWeek
+              ? `Neighbour comparison for ${headendText} (${channelText}) from ${previousWeek} to ${currentWeek}.`
+              : "Select previous and current week to compare neighbourhood positions.";
+          }
+          if (reportCount) {
+            reportCount.textContent = `${reportData.totalRows} narrative${reportData.totalRows === 1 ? "" : "s"}`;
+          }
+
+          renderReportStatus(reportData.message);
+          if (reportData.message) {
+            reportContent.innerHTML = `<div class="nbhd-report-empty">${reportData.message}</div>`;
+            return;
+          }
+
+          const groups = new Map();
+          reportData.rows.forEach((row) => {
+            const headend = row.headend || "Selected Headend";
+            if (!groups.has(headend)) groups.set(headend, []);
+            groups.get(headend).push(row);
+          });
+          const fragment = document.createDocumentFragment();
+          groups.forEach((rows, headend) => {
+            const section = document.createElement("section");
+            section.className = "nbhd-report-group";
+
+            const header = document.createElement("div");
+            header.className = "nbhd-report-group-header";
+            const title = document.createElement("h4");
+            title.textContent = headend;
+            header.append(title);
+
+            const tableWrap = document.createElement("div");
+            tableWrap.className = "nbhd-report-table-wrap";
+            const table = document.createElement("table");
+            table.className = "nbhd-report-table";
+            const tbodyRows = rows.map((row) => `
+              <tr>
+                <td>${row.channel}</td>
+                <td>${row.previous_position}</td>
+                <td>${row.current_position}</td>
+                <td>${row.status}</td>
+              </tr>
+            `).join("");
+            table.innerHTML = `
+              <thead>
+                <tr>
+                  <th>Channel</th>
+                  <th>Previous Position</th>
+                  <th>Current Position</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>${tbodyRows}</tbody>
+            `;
+            tableWrap.appendChild(table);
+
+            const summaryTitle = document.createElement("h4");
+            summaryTitle.className = "nbhd-report-summary-title";
+            summaryTitle.textContent = "Summary";
+            const summaryList = document.createElement("ul");
+            summaryList.className = "nbhd-report-list";
+            rows.forEach((row) => {
+              const item = document.createElement("li");
+              item.textContent = row.summary;
+              summaryList.appendChild(item);
+            });
+
+            section.append(header, tableWrap, summaryTitle, summaryList);
+            fragment.appendChild(section);
+          });
+          reportContent.replaceChildren(fragment);
+        } catch (error) {
+          if (reportCount) reportCount.textContent = "0 narratives";
+          renderReportStatus("Neighbour change report could not be generated.");
+          reportContent.innerHTML = `<div class="nbhd-report-empty">Neighbour change report could not be generated.</div>`;
+          console.error("NBHD report render failed", error);
+        }
+        clearTimeout(loadingTimeout);
+      }, 0);
     }
-  }
 
   function resetReportFilters() {
     state.report.open = true;
@@ -1196,6 +1700,7 @@
     state.report.channel = "";
     state.report.week_from = "";
     state.report.week_to = "";
+    invalidateReportCache();
     renderReportPanel();
   }
 
@@ -1204,7 +1709,7 @@
     setReportVisibility(true);
     reportContent.replaceChildren();
     renderReportStatus("");
-    renderReportPanel();
+    scheduleRender(state.payload);
     requestAnimationFrame(() => {
       reportPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
@@ -1423,6 +1928,7 @@
           if (key === "week_from") state.report.week_to = value;
           else state.report.week_from = value;
         }
+        invalidateReportCache();
         renderReportPanel();
         closeMenus();
       });
@@ -1567,6 +2073,7 @@
       "All Headends",
       (value) => {
         state.report.headend = value;
+        invalidateReportCache();
         renderReportPanel();
         closeMenus();
       }
@@ -1580,6 +2087,7 @@
       "Default 4 Channels",
       (value) => {
         state.report.channel = value;
+        invalidateReportCache();
         renderReportPanel();
         closeMenus();
       }
@@ -1605,6 +2113,9 @@
   if (reportResetButton) {
     reportResetButton.addEventListener("click", resetReportFilters);
   }
+  if (reportDownloadButton) {
+    reportDownloadButton.addEventListener("click", exportReportExcel);
+  }
   if (tableDownloadButton) {
     tableDownloadButton.addEventListener("click", exportTableExcel);
   }
@@ -1628,7 +2139,7 @@
     prevPageButton.addEventListener("click", () => {
       if (state.page > 1) {
         state.page -= 1;
-        render(state.payload);
+        scheduleRender(state.payload);
       }
     });
   }
@@ -1638,7 +2149,7 @@
       const totalPages = Math.max(1, paginateGroupedRecords(state.payload.table.records || []).length);
       if (state.page < totalPages) {
         state.page += 1;
-        render(state.payload);
+        scheduleRender(state.payload);
       }
     });
   }
@@ -1647,7 +2158,7 @@
     const nextPageSize = getPageSize();
     if (nextPageSize !== state.pageSize) {
       state.pageSize = nextPageSize;
-      render(state.payload);
+      scheduleRender(state.payload);
     }
   });
   document.addEventListener("fullscreenchange", () => {

@@ -119,6 +119,24 @@ def normalize_text(value: Any) -> str:
     return str(value).strip()
 
 
+def sort_summary_channels(channels: list[str]) -> list[str]:
+    ordered: list[str] = []
+    seen: set[str] = set()
+    for channel in channels:
+        label = normalize_text(channel)
+        if not label:
+            continue
+        normalized = label.upper()
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+        ordered.append(label)
+    return [channel for channel in ordered if normalize_text(channel).upper() == "INDIA TV"] + sorted(
+        [channel for channel in ordered if normalize_text(channel).upper() != "INDIA TV"],
+        key=lambda channel: normalize_text(channel).upper(),
+    )
+
+
 def normalize_number(value: Any) -> float | int | None:
     text = normalize_text(value).replace(",", "")
     if not text:
@@ -1617,6 +1635,7 @@ def write_standalone_dashboard(report: dict[str, Any]) -> None:
 
 def create_standalone_dashboard(report: dict[str, Any]) -> str:
     style_text = read_style()
+    default_channel_reports_js = json.dumps(sort_summary_channels(["INDIA TV", "AAJ TAK", "NEWS 18 INDIA", "REPUBLIC BHARAT"]))
     nbhd_benchmark_script_text = read_nbhd_benchmark_script()
     nbhd_script_text = read_nbhd_script()
     ots_script_text = read_ots_script()
@@ -1764,6 +1783,7 @@ __STYLE__
             <div class="action-row nbhd-report-actions">
               <button id="nbhdReportResetButton" class="ghost-button" type="button">Reset</button>
               <button id="nbhdReportHideButton" class="primary-button" type="button">Hide</button>
+              <button id="nbhdReportDownloadButton" class="ghost-button" type="button">Download Report</button>
             </div>
           </div>
           <div id="nbhdReportStatusMessage" class="status-message" hidden></div>
@@ -2379,7 +2399,16 @@ const fullscreenState = {
   tableScrollTop: 0,
   tableScrollLeft: 0,
 };
-const DEFAULT_CHANNEL_REPORTS = ["INDIA TV", "AAJ TAK", "NEWS 18 INDIA", "REPUBLIC BHARAT"];
+const DEFAULT_CHANNEL_REPORTS = __DEFAULT_CHANNEL_REPORTS__;
+function sortSummaryChannels(channels) {
+  const uniqueChannels = Array.from(new Set((channels || []).map((channel) => String(channel || "").trim()).filter(Boolean)));
+  const indiaTv = uniqueChannels.find((channel) => formatChannelLabel(channel) === "INDIA TV");
+  const otherChannels = uniqueChannels.filter((channel) => formatChannelLabel(channel) !== "INDIA TV");
+  return [
+    ...(indiaTv ? [indiaTv] : []),
+    ...otherChannels.sort((left, right) => formatChannelLabel(left).localeCompare(formatChannelLabel(right))),
+  ];
+}
 const channelReportState = {
   channel: "__default__",
   week_from: "",
@@ -2569,7 +2598,7 @@ function getChannelReportTargets() {
     return [channelReportState.channel];
   }
   const available = new Set(getChannelReportSourceRecords().map((record) => String(record.channel_name || "").trim()));
-  return DEFAULT_CHANNEL_REPORTS.filter((channel) => available.has(channel));
+  return sortSummaryChannels(DEFAULT_CHANNEL_REPORTS.filter((channel) => available.has(channel)));
 }
 function buildChannelReportRows(channel, weeks) {
   const [previousWeek, currentWeek] = weeks;
@@ -2705,9 +2734,7 @@ function exportTable1Excel() {
     });
   const visibleWeeks = getVisibleWeeks();
   const activeWeeks = getChannelReportWeekPair();
-  const channels = getChannelReportTargets()
-    .slice()
-    .sort((left, right) => formatChannelLabel(left).localeCompare(formatChannelLabel(right)));
+  const channels = getChannelReportTargets();
   const frequencyExportView = { series: "frequencies", changes: "changes" };
   const rankExportView = { series: "ranks", changes: "rank_changes" };
   const detailRows = [
@@ -3638,6 +3665,7 @@ __OTS_SCRIPT__
 
     return (
         html.replace("__STYLE__", style_text)
+        .replace("__DEFAULT_CHANNEL_REPORTS__", default_channel_reports_js)
         .replace("__NBHD_BENCHMARK_SCRIPT__", nbhd_benchmark_script_text)
         .replace("__COMPARISON_SCRIPT__", comparison_script_text)
         .replace("__NBHD_SCRIPT__", nbhd_script_text)

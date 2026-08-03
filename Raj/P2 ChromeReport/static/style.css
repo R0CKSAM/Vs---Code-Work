@@ -1564,6 +1564,34 @@ body.nbhd-fullscreen-active {
   color: var(--muted);
 }
 
+.nbhd-report-loading {
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  background: #fbfcff;
+  padding: 14px 16px;
+  font-size: 0.76rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nbhd-report-loading::after {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--primary);
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 0.8s linear infinite;
+  margin-left: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 @media print {
   .nbhd-report-panel {
     box-shadow: none !important;

@@ -88,6 +88,15 @@
     tableScrollTop: 0,
     tableScrollLeft: 0,
   };
+  let renderFrame = null;
+
+  function scheduleRender() {
+    if (renderFrame !== null) return;
+    renderFrame = window.requestAnimationFrame(() => {
+      renderFrame = null;
+      render();
+    });
+  }
 
   function normalizeText(value) {
     return String(value || "").trim();
@@ -385,7 +394,7 @@
           state.sortKey = column.key;
           state.sortDirection = "asc";
         }
-        render();
+        scheduleRender();
       });
       tr.appendChild(th);
     });
@@ -506,7 +515,7 @@
       document.body.classList.remove("comparison-fullscreen-active");
       panel.classList.remove("comparison-panel-fullscreen");
     }
-    render();
+    scheduleRender();
     requestAnimationFrame(() => {
       if (!active) window.scrollTo({ top: fullscreenState.windowScrollY, behavior: "auto" });
       tableWrap.scrollTop = fullscreenState.tableScrollTop;
@@ -580,7 +589,7 @@
     resetButton.addEventListener("click", () => {
       state.filters = { market: "", city: "", head_end: "", channel: "", week: "" };
       state.page = 1;
-      render();
+      scheduleRender();
     });
   }
   if (downloadButton) downloadButton.addEventListener("click", exportComparisonExcel);
@@ -599,7 +608,7 @@
     prevPageButton.addEventListener("click", () => {
       if (state.page > 1) {
         state.page -= 1;
-        render();
+        scheduleRender();
       }
     });
   }
@@ -608,16 +617,16 @@
       const totalPages = Math.max(1, Math.ceil(sortedRows().length / state.pageSize));
       if (state.page < totalPages) {
         state.page += 1;
-        render();
+        scheduleRender();
       }
     });
   }
-  window.addEventListener("resize", () => render());
+  window.addEventListener("resize", () => scheduleRender());
 
   columns.forEach((column) => {
     state.columnWidths[column.key] = DEFAULT_COLUMN_WIDTHS[column.key] || 120;
   });
 
   syncFullscreenButtons();
-  render();
+  scheduleRender();
 })();

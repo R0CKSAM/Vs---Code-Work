@@ -94,6 +94,15 @@
     tableScrollLeft: 0,
     usingNativeFullscreen: false,
   };
+  let renderFrame = null;
+
+  function scheduleRender(payload = state.payload) {
+    if (renderFrame !== null) return;
+    renderFrame = window.requestAnimationFrame(() => {
+      renderFrame = null;
+      render(payload);
+    });
+  }
 
   function getPageSize() {
     if (!fullscreenState.active) return 30;
@@ -1058,7 +1067,7 @@ function getChangeMeta(record, weeks) {
     }
 
     state.page = 1;
-    render(state.payload);
+    scheduleRender(state.payload);
     requestAnimationFrame(() => {
       if (!active) {
         window.scrollTo({ top: fullscreenState.windowScrollY, behavior: "auto" });
@@ -1154,7 +1163,7 @@ function getChangeMeta(record, weeks) {
     prevPageButton.addEventListener("click", () => {
       if (state.page > 1) {
         state.page -= 1;
-        render(state.payload);
+        scheduleRender(state.payload);
       }
     });
   }
@@ -1163,13 +1172,13 @@ function getChangeMeta(record, weeks) {
       const totalPages = Math.max(1, Math.ceil((state.payload?.table.records || []).length / state.pageSize));
       if (state.page < totalPages) {
         state.page += 1;
-        render(state.payload);
+        scheduleRender(state.payload);
       }
     });
   }
   window.addEventListener("resize", () => {
     if (!state.payload) return;
-    render(state.payload);
+    scheduleRender(state.payload);
   });
   document.addEventListener("fullscreenchange", () => {
     const isPanelFullscreen = document.fullscreenElement === panel;

@@ -2274,7 +2274,7 @@
           <th data-table="landing-barker" data-key="headend_location">Headend Location</th>
           <th data-table="landing-barker" data-key="network_name">Network Name</th>
           <th data-table="landing-barker" data-key="headend_id">Headend ID</th>
-          ${weeks.map(week => `<th colspan="2" class="week-group-header">${formatWeekCompact(week)}</th>`).join("")}
+          ${weeks.map(week => `<th class="week-group-header">${formatWeekCompact(week)}</th>`).join("")}
           <th data-table="landing-barker" data-key="change_status">Change Status</th>
         </tr>
         <tr class="subhead-row">
@@ -2283,22 +2283,30 @@
           <th></th>
           <th></th>
           <th></th>
-          ${weeks.map(() => `<th class="channel-column">${channelType.header}</th><th class="date-column">LCN No</th>`).join("")}
+          ${weeks.map(() => `<th class="channel-column">${channelType.header} - LCN No</th>`).join("")}
           <th></th>
         </tr>
       `;
 
       if (!groupedRows.length) {
-        elements.landingBarkerTableBody.innerHTML = `<tr><td colspan="${6 + (weeks.length * 2)}" class="table-empty">No weekly landing / barker rows match the current filters.</td></tr>`;
+        elements.landingBarkerTableBody.innerHTML = `<tr><td colspan="${6 + weeks.length}" class="table-empty">No weekly landing / barker rows match the current filters.</td></tr>`;
         return;
       }
 
       elements.landingBarkerTableBody.innerHTML = groupedRows.map(row => {
         const changeStatus = renderChangeStatusCell(row.change_status);
-        const weekCells = weeks.map(week => `
-          <td class="channel-column">${renderStaticHighlightedChannelValue(table3WeekValue(row, week, "channel_name"))}</td>
-          <td class="date-column">${displayValue(table3WeekValue(row, week, "lcn_no"))}</td>
-        `).join("");
+        const weekCells = weeks.map(week => {
+          const channelName = table3WeekValue(row, week, "channel_name");
+          const lcnNo = table3WeekValue(row, week, "lcn_no");
+          const channelDisplay = displayValue(channelName);
+          const lcnDisplay = displayValue(lcnNo);
+          const isBothNA = channelDisplay === "NA" && lcnDisplay === "NA";
+          if (isBothNA) {
+            return `<td class="channel-column">NA</td>`;
+          }
+          const lcnSuffix = lcnDisplay !== "NA" ? ` - ${lcnDisplay}` : "";
+          return `<td class="channel-column">${renderStaticHighlightedChannelValue(channelName)}${lcnSuffix}</td>`;
+        }).join("");
 
         return `
           <tr>
