@@ -141,10 +141,28 @@ def format_week_label_from_date(value: date) -> str:
     return f"{iso_year}'Week{iso_week:02d}"
 
 
-def derive_week_label(workbook_path: Path) -> str:
+def infer_week_label_from_rows(rows: dict[str, list[list[Any]]]) -> str | None:
+    for sheet_rows in rows.values():
+        for row in sheet_rows:
+            for cell in row:
+                parsed_date = clean_date(cell)
+                if parsed_date:
+                    return format_week_label_from_date(date.fromisoformat(parsed_date))
+    return None
+
+
+def derive_week_label(workbook_path: Path, workbook_rows: dict[str, list[list[Any]]] | None = None) -> str:
     year_week_match = re.search(r"(?P<year>\d{4})\W*week\W*(?P<week>\d{1,2})", workbook_path.stem, flags=re.IGNORECASE)
     if year_week_match:
         return f"{int(year_week_match.group('year'))}'Week{int(year_week_match.group('week')):02d}"
+
+    bare_week_match = re.match(r"^week\W*([0-9]{1,2})$", workbook_path.stem, flags=re.IGNORECASE)
+    if bare_week_match:
+        if workbook_rows is not None:
+            inferred = infer_week_label_from_rows(workbook_rows)
+            if inferred:
+                return inferred
+        return f"Week {int(bare_week_match.group(1))}"
 
     match = re.search(r"week\W*([0-9]{1,2})", workbook_path.stem, flags=re.IGNORECASE)
     if match:
@@ -735,7 +753,7 @@ def parse_workbook(workbook_path: Path) -> ParsedWorkbook:
     distribution_rows: list[dict[str, Any]] = []
     channel_rows: list[dict[str, Any]] = []
     counters = create_warning_counters()
-    week_label = derive_week_label(workbook_path)
+    week_label = derive_week_label(workbook_path, workbook_rows)
 
     for sheet_name, rows in workbook_rows.items():
         LOGGER.info("Parsing sheet: %s", sheet_name)

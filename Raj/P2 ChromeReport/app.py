@@ -443,22 +443,24 @@ def get_nbhd_sorted_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def extract_nbhd_window(rows: list[dict[str, Any]], radius: int = 4) -> list[tuple[int, dict[str, Any]]]:
-    india_rows = [row for row in rows if normalize_text(row["channel"]).upper() == "INDIA TV"]
-    if not india_rows:
-        return []
-
-    india_row = india_rows[0]
     sorted_rows = get_nbhd_sorted_rows(rows)
-    india_index = next((index for index, row in enumerate(sorted_rows) if row is india_row), None)
-    if india_index is None:
+    focus_channel_keys = set(FOCUS_CHANNELS)
+    focus_indexes = [
+        index
+        for index, row in enumerate(sorted_rows)
+        if normalize_text(row["channel"]).upper() in focus_channel_keys
+    ]
+    if not focus_indexes:
         return []
 
-    window_rows: list[tuple[int, dict[str, Any]]] = []
-    for offset in range(-radius, radius + 1):
-        row_index = india_index + offset
-        if 0 <= row_index < len(sorted_rows):
-            window_rows.append((offset, sorted_rows[row_index]))
-    return window_rows
+    window_indexes: set[int] = set()
+    for focus_index in focus_indexes:
+        for offset in range(-radius, radius + 1):
+            row_index = focus_index + offset
+            if 0 <= row_index < len(sorted_rows):
+                window_indexes.add(row_index)
+
+    return [(row_index + 1, sorted_rows[row_index]) for row_index in sorted(window_indexes)]
 
 
 def build_nbhd_report() -> dict[str, Any]:
@@ -512,7 +514,7 @@ def build_nbhd_report() -> dict[str, Any]:
                             "city": city,
                             "head_end": head_end,
                             "position": offset,
-                            "is_reference": offset == 0,
+                            "is_reference": False,
                             "channels": {},
                             "genres": {},
                             "frequencies": {},
@@ -521,6 +523,8 @@ def build_nbhd_report() -> dict[str, Any]:
                     record["channels"][week_label] = normalize_text(nbhd_row["channel"])
                     record["genres"][week_label] = normalize_text(nbhd_row["genre"])
                     record["frequencies"][week_label] = nbhd_row["frequency"]
+                    if normalize_text(nbhd_row["channel"]).upper() in FOCUS_CHANNELS:
+                        record["is_reference"] = True
 
         records = list(merged.values())
         for record in records:
@@ -569,7 +573,7 @@ def build_nbhd_report() -> dict[str, Any]:
                         "city": city,
                         "head_end": head_end,
                         "position": offset,
-                        "is_reference": offset == 0,
+                        "is_reference": False,
                         "channels": {},
                         "genres": {},
                         "frequencies": {},
@@ -578,6 +582,8 @@ def build_nbhd_report() -> dict[str, Any]:
                 record["channels"][week_label] = normalize_text(nbhd_row["channel"])
                 record["genres"][week_label] = normalize_text(nbhd_row["genre"])
                 record["frequencies"][week_label] = nbhd_row["frequency"]
+                if normalize_text(nbhd_row["channel"]).upper() in FOCUS_CHANNELS:
+                    record["is_reference"] = True
 
     records = list(merged.values())
     for record in records:
@@ -1591,7 +1597,7 @@ def build_dashboard_bundle(report: dict[str, Any] | None = None) -> dict[str, An
         "frequency": frequency_report,
         "comparison": load_comparison_report(force=True, report=frequency_report),
         "nbhd_benchmark": load_nbhd_benchmark_report(force=True),
-        "nbhd": build_nbhd_api_payload({"market": "", "city": "", "head_end": ""}, "", force_refresh=True),
+        "nbhd": build_nbhd_api_payload({"market": "", "city": "", "head_end": "", "channel": ""}, "", force_refresh=True),
         "ots": build_ots_api_payload(
             {"markets": [], "channels": [], "week_from": "", "week_to": "", "change": "", "search": ""},
             force_refresh=True,
@@ -1744,16 +1750,17 @@ __STYLE__
           <div class="panel-heading nbhd-report-heading">
             <div>
               <h3>Neighbour Change Report</h3>
-              <p id="nbhdReportMeta" class="panel-subtitle">Compare the default channels with their previous and current neighbourhood positions for the selected headend.</p>
+              <p id="nbhdReportMeta" class="panel-subtitle">Compare changed neighbourhood positions for the default channels across all headends.</p>
             </div>
             <div class="table-meta">
               <span id="nbhdReportCount">0 narratives</span>
             </div>
           </div>
           <div class="nbhd-report-toolbar">
-            <label class="filter-select-field"><span>Headend</span><div class="filter-select"><button id="nbhdReportHeadendFilter" class="filter-select-button" type="button">Select Headend</button><div id="nbhdReportHeadendFilterMenu" class="filter-select-menu" hidden><input id="nbhdReportHeadendFilterSearch" class="filter-menu-search" type="text" placeholder="Search headend..." autocomplete="off" /><div id="nbhdReportHeadendFilterOptions" class="filter-options-list"></div></div></div></label>
-            <label class="filter-select-field"><span>Previous Week</span><div class="filter-select"><button id="nbhdReportWeekFromFilter" class="filter-select-button" type="button">Previous Week</button><div id="nbhdReportWeekFromFilterMenu" class="filter-select-menu" hidden><input id="nbhdReportWeekFromFilterSearch" class="filter-menu-search" type="text" placeholder="Search week..." autocomplete="off" /><div id="nbhdReportWeekFromFilterOptions" class="filter-options-list"></div></div></div></label>
-            <label class="filter-select-field"><span>Current Week</span><div class="filter-select"><button id="nbhdReportWeekToFilter" class="filter-select-button" type="button">Current Week</button><div id="nbhdReportWeekToFilterMenu" class="filter-select-menu" hidden><input id="nbhdReportWeekToFilterSearch" class="filter-menu-search" type="text" placeholder="Search week..." autocomplete="off" /><div id="nbhdReportWeekToFilterOptions" class="filter-options-list"></div></div></div></label>
+            <label class="filter-select-field"><span>Headend Name</span><div class="filter-select"><button id="nbhdReportHeadendFilter" class="filter-select-button" type="button">All Headends</button><div id="nbhdReportHeadendFilterMenu" class="filter-select-menu" hidden><input id="nbhdReportHeadendFilterSearch" class="filter-menu-search" type="text" placeholder="Search headend..." autocomplete="off" /><div id="nbhdReportHeadendFilterOptions" class="filter-options-list"></div></div></div></label>
+            <label class="filter-select-field"><span>Channel</span><div class="filter-select"><button id="nbhdReportChannelFilter" class="filter-select-button" type="button">Default 4 Channels</button><div id="nbhdReportChannelFilterMenu" class="filter-select-menu" hidden><input id="nbhdReportChannelFilterSearch" class="filter-menu-search" type="text" placeholder="Search channel..." autocomplete="off" /><div id="nbhdReportChannelFilterOptions" class="filter-options-list"></div></div></div></label>
+            <label class="filter-select-field"><span>Week From</span><div class="filter-select"><button id="nbhdReportWeekFromFilter" class="filter-select-button" type="button">Week From</button><div id="nbhdReportWeekFromFilterMenu" class="filter-select-menu" hidden><input id="nbhdReportWeekFromFilterSearch" class="filter-menu-search" type="text" placeholder="Search week..." autocomplete="off" /><div id="nbhdReportWeekFromFilterOptions" class="filter-options-list"></div></div></div></label>
+            <label class="filter-select-field"><span>Week To</span><div class="filter-select"><button id="nbhdReportWeekToFilter" class="filter-select-button" type="button">Week To</button><div id="nbhdReportWeekToFilterMenu" class="filter-select-menu" hidden><input id="nbhdReportWeekToFilterSearch" class="filter-menu-search" type="text" placeholder="Search week..." autocomplete="off" /><div id="nbhdReportWeekToFilterOptions" class="filter-options-list"></div></div></div></label>
             <div class="action-row nbhd-report-actions">
               <button id="nbhdReportResetButton" class="ghost-button" type="button">Reset</button>
               <button id="nbhdReportHideButton" class="primary-button" type="button">Hide</button>
@@ -1933,7 +1940,7 @@ const reportBundle = window.__CHROME_REPORT_DATA__ || {
   frequency: { generated_at: "", weeks: [], records: [], message: "Dashboard data file could not be loaded." },
   comparison: { generated_at: "", weeks: [], pairs: [], rows_by_pair: {}, message: "Comparison data file could not be loaded." },
   nbhd_benchmark: { generated_at: "", weeks: [], records: [], message: "INDIA TV comparison data file could not be loaded.", source_directory: "" },
-  nbhd: { generated_at: "", weeks: [], filters: { markets: [], cities: [], head_ends: [] }, table: { records: [], total_count: 0 }, message: "Neighbourhood data file could not be loaded.", source_directory: "" },
+  nbhd: { generated_at: "", weeks: [], filters: { markets: [], cities: [], head_ends: [], channels: [] }, table: { records: [], total_count: 0 }, message: "Neighbourhood data file could not be loaded.", source_directory: "" },
   ots: { generated_at: "", weeks: [], visible_weeks: [], filters: { markets: [], channels: [] }, table: { records: [], total_count: 0 }, message: "OTS data file could not be loaded.", source_directory: "" }
 };
 const report = reportBundle.frequency;
@@ -2736,20 +2743,20 @@ function exportTable1Excel() {
   });
 
   const reportRows = [
-    [excelCell("Channel Report", "title", { mergeAcross: 6 })],
-    blankExcelRow(7),
+    [excelCell("Channel Report", "title", { mergeAcross: 7 })],
+    blankExcelRow(8),
   ];
 
   channels.forEach((channel) => {
     const rows = buildChannelReportRows(channel, activeWeeks).filter((row) => !isAllCitiesValue(row.city));
-    const notes = buildChannelReportNotes(channel, rows);
     reportRows.push([
-      excelCell(formatChannelLabel(channel), "meta", { mergeAcross: 6 }),
+      excelCell(formatChannelLabel(channel), "meta", { mergeAcross: 7 }),
     ]);
     reportRows.push([
       excelCell("", "group", { mergeAcross: 2 }),
       excelCell("Freq", "group", { mergeAcross: 1 }),
       excelCell("Rank", "group", { mergeAcross: 1 }),
+      excelCell("Summary", "group"),
     ]);
     reportRows.push([
       excelCell("CHANNEL NAME", "header"),
@@ -2759,10 +2766,20 @@ function exportTable1Excel() {
       excelCell(activeWeeks[1] || "Week 2", "header"),
       excelCell(activeWeeks[0] || "Week 1", "header"),
       excelCell(activeWeeks[1] || "Week 2", "header"),
+      excelCell("Summary", "header"),
     ]);
 
     if (!rows.length) {
-      reportRows.push([excelCell("No frequency changes found for the selected weeks.", "textWrap", { mergeAcross: 6 })]);
+      reportRows.push([
+        excelCell("", "cell"),
+        excelCell("", "cell"),
+        excelCell("", "cell"),
+        excelCell("", "cell"),
+        excelCell("", "cell"),
+        excelCell("", "cell"),
+        excelCell("", "cell"),
+        excelCell("No frequency changes found for the selected weeks.", "textWrap"),
+      ]);
     }
 
     rows.forEach((row) => {
@@ -2782,23 +2799,21 @@ function exportTable1Excel() {
         excelCell(formatExcelValue(row.currentFrequency, "NA"), currentFrequencyExportStyle),
         excelCell(formatExcelValue(row.previousRank, "No Rank"), row.previousRank === null || row.previousRank === undefined || row.previousRank === "" ? "neutral" : "number"),
         excelCell(formatExcelValue(row.currentRank, "No Rank"), currentRankExportStyle),
+        excelCell(buildChannelReportRemark(row, activeWeeks), "textWrap"),
       ]);
     });
 
-    notes.forEach((note) => {
-      reportRows.push([excelCell(`• ${note}`, "textWrap", { mergeAcross: 6 })]);
-    });
-    reportRows.push(blankExcelRow(7));
+    reportRows.push(blankExcelRow(8));
   });
 
   if (reportRows.length === 2) {
-    reportRows.push([excelCell("No channel report data available for the current filters.", "textWrap", { mergeAcross: 6 })]);
+    reportRows.push([excelCell("No channel report data available for the current filters.", "textWrap", { mergeAcross: 7 })]);
   }
 
   downloadExcelWorkbook(`table1_${getActiveBaseView()}_export`, [
     {
       name: "Summary Sheet",
-      columns: [180, 180, 260, 90, 90, 90, 90],
+      columns: [180, 180, 260, 90, 90, 90, 90, 420],
       rows: reportRows,
     },
     {
@@ -3211,7 +3226,7 @@ function buildTableHead() {
   [...tableColumns, ...getVisibleWeeks().map((week) => ({ key: week, label: week })), { key: "change_status", label: "CHANGE" }].forEach((column) => {
     const th = document.createElement("th");
     const isActive = state.sortKey === column.key;
-    const suffix = isActive ? (state.sortDirection === "asc" ? " ▲" : " ▼") : "";
+    const suffix = isActive ? (state.sortDirection === "asc" ? " ^" : " v") : "";
     th.textContent = `${column.label}${suffix}`;
     th.className = "sortable";
     th.addEventListener("click", () => {
@@ -3227,16 +3242,16 @@ function formatWeekValue(value, status, isBaseline) {
   if (value === null || value === undefined || value === "") return "NA";
   if (isBaseline || status === "baseline" || status === "missing" || status === "no_change") return String(value);
   if (state.view === "rank") {
-    if (status === "improve") return `▲ ${value}`;
-    if (status === "decline") return `▼ ${value}`;
+    if (status === "improve") return `+ ${value}`;
+    if (status === "decline") return `- ${value}`;
     return String(value);
   }
   if (state.view === "band") {
-    if (status === "change") return `• ${value}`;
+    if (status === "change") return `* ${value}`;
     return String(value);
   }
-  if (status === "increase") return `▲ ${value}`;
-  if (status === "decrease") return `▼ ${value}`;
+  if (status === "increase") return `+ ${value}`;
+  if (status === "decrease") return `- ${value}`;
   return String(value);
 }
 function renderFocusSummary(records) {
@@ -3670,6 +3685,11 @@ def filter_nbhd_records(records: list[dict[str, Any]], filters: dict[str, str], 
             continue
         if filters["head_end"] and record["head_end"] != filters["head_end"] and ignore_key != "head_end":
             continue
+        if filters.get("channel") and ignore_key != "channel":
+            selected_channel = normalize_text(filters["channel"])
+            channel_values = {normalize_text(value) for value in record.get("channels", {}).values()}
+            if selected_channel not in channel_values:
+                continue
         if search_text:
             haystack = " ".join(
                 [
@@ -3696,10 +3716,20 @@ def build_nbhd_filters(records: list[dict[str, Any]], current_filters: dict[str,
         }
         return sorted(values, key=lambda value: value.lower())
 
+    def channel_values() -> list[str]:
+        values = {
+            normalize_text(channel)
+            for record in filter_nbhd_records(records, current_filters, search, ignore_key="channel")
+            for channel in record.get("channels", {}).values()
+            if normalize_text(channel)
+        }
+        return sorted(values, key=lambda value: value.lower())
+
     return {
         "markets": values_for("market", "market"),
         "cities": values_for("city", "city"),
         "head_ends": values_for("head_end", "head_end"),
+        "channels": channel_values(),
     }
 
 
@@ -3987,6 +4017,7 @@ def parse_nbhd_api_request(query: dict[str, list[str]]) -> dict[str, Any]:
         "market": (query.get("market", [""])[0] or "").strip(),
         "city": (query.get("city", [""])[0] or "").strip(),
         "head_end": (query.get("head_end", [""])[0] or "").strip(),
+        "channel": (query.get("channel", [""])[0] or "").strip(),
     }
     search = (query.get("search", [""])[0] or "").strip()
     force_refresh = (query.get("refresh", [""])[0] or "").strip() == "1"

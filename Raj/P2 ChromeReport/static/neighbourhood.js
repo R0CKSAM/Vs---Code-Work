@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   const root = document.getElementById("nbhdTable");
   if (!root) return;
   const NO_DATA_LABEL = "NA";
@@ -21,6 +21,7 @@
     report: {
       open: false,
       headend: "",
+      channel: "",
       week_from: "",
       week_to: "",
     },
@@ -64,6 +65,7 @@
   const reportStatus = document.getElementById("nbhdReportStatusMessage");
   const reportContent = document.getElementById("nbhdReportContent");
   const reportHeadendFilter = getSingleSelectControl("nbhdReportHeadendFilter");
+  const reportChannelFilter = getSingleSelectControl("nbhdReportChannelFilter");
   const reportWeekFromFilter = getSingleSelectControl("nbhdReportWeekFromFilter");
   const reportWeekToFilter = getSingleSelectControl("nbhdReportWeekToFilter");
   const reportResetButton = document.getElementById("nbhdReportResetButton");
@@ -106,11 +108,9 @@
       };
     }
 
-    if (payload.table && Array.isArray(payload.table.records)) {
-      return payload;
-    }
-
-    const records = Array.isArray(payload.records) ? payload.records : [];
+    const records = Array.isArray(payload.table?.records)
+      ? payload.table.records
+      : Array.isArray(payload.records) ? payload.records : [];
     const markets = Array.from(new Set(records.map((record) => record.market).filter((value) => String(value || "").trim() !== "")))
       .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
     const cities = Array.from(new Set(records.map((record) => record.city).filter((value) => String(value || "").trim() !== "")))
@@ -121,10 +121,11 @@
     return {
       ...payload,
       weeks: Array.isArray(payload.weeks) ? payload.weeks : [],
-      filters: payload.filters || {
-        markets,
-        cities,
-        head_ends: headends,
+      filters: {
+        ...(payload.filters || {}),
+        markets: Array.isArray(payload.filters?.markets) ? payload.filters.markets : markets,
+        cities: Array.isArray(payload.filters?.cities) ? payload.filters.cities : cities,
+        head_ends: Array.isArray(payload.filters?.head_ends) ? payload.filters.head_ends : headends,
       },
       table: {
         records,
@@ -146,6 +147,7 @@
       weekToFilter,
       changeFilter,
       reportHeadendFilter,
+      reportChannelFilter,
       reportWeekFromFilter,
       reportWeekToFilter,
     ].forEach((control) => {
@@ -605,6 +607,14 @@
     return Array.from(values.values()).sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
   }
 
+  function getReportTargetChannels() {
+    const selectedChannel = normalizeText(state.report.channel);
+    if (selectedChannel) {
+      return [{ label: selectedChannel, key: normalizeChannelKey(selectedChannel) }];
+    }
+    return DEFAULT_REPORT_CHANNELS;
+  }
+
   function updateMultiSelectButton(button, selectedValues, allValues, emptyLabel, noun) {
     if (!button) return;
     if (!selectedValues.length || selectedValues.length === allValues.length) {
@@ -671,7 +681,7 @@
     return weeks.slice(Math.min(fromIndex, toIndex), Math.max(fromIndex, toIndex) + 1);
   }
 
-  function getChangedReportHeadends(records, weeks) {
+  function getChangedReportHeadends(records, weeks, channels = DEFAULT_REPORT_CHANNELS) {
     if (!Array.isArray(weeks) || weeks.length < 2) {
       return getReportHeadends(records);
     }
@@ -690,7 +700,7 @@
       const previousMap = buildHeadendMaps(groupRecords, previousWeek);
       const currentMap = buildHeadendMaps(groupRecords, currentWeek);
       let hasChange = false;
-      for (const { key } of DEFAULT_REPORT_CHANNELS) {
+      for (const { key } of channels) {
         const previousPosition = previousMap.channelPositions.get(key);
         const currentPosition = currentMap.channelPositions.get(key);
         if (previousPosition === undefined || currentPosition === undefined) continue;
@@ -712,14 +722,8 @@
   }
 
   function syncReportSelections(context) {
-    if (!context.headends.includes(state.report.headend)) {
-      if (state.filters.head_end && context.headends.includes(state.filters.head_end)) {
-        state.report.headend = state.filters.head_end;
-      } else {
-        state.report.headend = getPreferredReportHeadend(getAllSourceRecords(), context.allWeeks, DEFAULT_REPORT_CHANNELS.map((channel) => channel.label))
-          || context.headends[0]
-          || "";
-      }
+    if (state.report.headend && !context.headends.includes(state.report.headend)) {
+      state.report.headend = "";
     }
 
     const allWeeks = context.allWeeks || [];
@@ -753,8 +757,10 @@
     const allWeeks = getReportAvailableWeeks();
     const activeWeeks = getContextReportWeeks(allWeeks);
     return {
-      headends: getChangedReportHeadends(records, activeWeeks),
+      headends: getReportHeadends(records),
+      channels: getAllReportChannels(records),
       allWeeks,
+      activeWeeks,
     };
   }
 
@@ -762,17 +768,27 @@
     state.report.headend = populateSelect(
       reportHeadendFilter,
       context.headends,
-      "Select Headend",
+      "All Headends",
       state.report.headend,
       (value) => {
         state.report.headend = value;
         renderReportPanel();
       }
     );
+    state.report.channel = populateSelect(
+      reportChannelFilter,
+      context.channels,
+      "Default 4 Channels",
+      state.report.channel,
+      (value) => {
+        state.report.channel = value;
+        renderReportPanel();
+      }
+    );
     state.report.week_from = populateSelect(
       reportWeekFromFilter,
       getReportConstrainedWeekOptions("week_from"),
-      "Previous Week",
+      "Week From",
       state.report.week_from,
       (value) => {
         state.report.week_from = value;
@@ -788,7 +804,7 @@
     state.report.week_to = populateSelect(
       reportWeekToFilter,
       getReportConstrainedWeekOptions("week_to"),
-      "Current Week",
+      "Week To",
       state.report.week_to,
       (value) => {
         state.report.week_to = value;
@@ -925,32 +941,39 @@
     });
 
     const reportRows = [
-      [excelCell("Neighbour Change Report", "title", { mergeAcross: 3 })],
-      [excelCell(reportData.headend ? `Headend: ${reportData.headend}` : "Headend: Selected Headend", "meta", { mergeAcross: 3 })],
-      blankRow(4),
+      [excelCell("Neighbour Change Report", "title", { mergeAcross: 5 })],
+      [excelCell(reportData.headend ? `Headend: ${reportData.headend}` : "Headend: All Headends", "meta", { mergeAcross: 5 })],
+      [excelCell(reportData.channel ? `Channel: ${reportData.channel}` : "Channel: Default 4 Channels", "meta", { mergeAcross: 5 })],
+      blankRow(6),
       [
+        excelCell("Headend", "header"),
         excelCell("Channel", "header"),
         excelCell("Previous Position", "header"),
         excelCell("Current Position", "header"),
         excelCell("Status", "header"),
+        excelCell("Summary", "header"),
       ],
     ];
     if (reportData.rows.length) {
       reportData.rows.forEach((row) => {
         reportRows.push([
+          excelCell(row.headend, "cell"),
           excelCell(row.channel, "cell"),
           excelCell(row.previous_position, "textWrap"),
           excelCell(row.current_position, "textWrap"),
           excelCell(row.status, "positive"),
+          excelCell(row.summary, "textWrap"),
         ]);
       });
-      reportRows.push(blankRow(4));
-      reportRows.push([excelCell("Summary", "meta", { mergeAcross: 3 })]);
-      reportData.rows.forEach((row) => {
-        reportRows.push([excelCell(`• ${row.summary}`, "textWrap", { mergeAcross: 3 })]);
-      });
     } else {
-      reportRows.push([excelCell(reportData.message || "No neighbour change report data available.", "textWrap", { mergeAcross: 3 })]);
+      reportRows.push([
+        excelCell("", "cell"),
+        excelCell("", "cell"),
+        excelCell("", "cell"),
+        excelCell("", "cell"),
+        excelCell("", "cell"),
+        excelCell(reportData.message || "No neighbour change report data available.", "textWrap"),
+      ]);
     }
 
     window.__downloadExcelWorkbook?.("table2_neighbourhood_export", [
@@ -961,26 +984,30 @@
       },
       {
         name: "Report",
-        columns: [150, 280, 280, 100],
+        columns: [220, 150, 280, 280, 100, 420],
         rows: reportRows,
       },
     ]);
   }
   function exportReportExcel() {
     const reportData = buildReportNarratives();
-    const headers = ["Channel", "Previous Position", "Current Position", "Status"];
+    const headers = ["Headend", "Channel", "Previous Position", "Current Position", "Status", "Summary"];
     const detailRows = reportData.rows.map((row) => [
+      row.headend,
       row.channel,
       row.previous_position,
       row.current_position,
       row.status,
+      row.summary,
     ]);
-    const summaryRows = reportData.rows.length
-      ? reportData.rows.map((row) => [row.summary])
-      : [[reportData.message || "No report data available."]];
     window.__downloadExcelWorkbook?.("table2_neighbour_change_report", [
-      { name: "Report", rows: [headers, ...detailRows] },
-      { name: "Summary", rows: [["Summary"], ...summaryRows] },
+      {
+        name: "Report",
+        columns: [220, 150, 280, 280, 100, 420],
+        rows: reportData.rows.length
+          ? [headers, ...detailRows]
+          : [headers, ["", "", "", "", "", reportData.message || "No report data available."]],
+      },
     ]);
   }
   function buildReportNarratives() {
@@ -997,6 +1024,7 @@
       return {
         weeks,
         headend: normalizeText(state.report.headend),
+        channel: normalizeText(state.report.channel),
         rows: [],
         totalRows: 0,
         message: "Select previous and current week in the report filters to generate the neighbour change report.",
@@ -1007,63 +1035,64 @@
     const currentWeek = weeks[weeks.length - 1];
     const baseRecords = getAllSourceRecords();
     const selectedHeadend = normalizeText(state.report.headend);
-    if (!selectedHeadend) {
-      return {
-        weeks,
-        headend: "",
-        rows: [],
-        totalRows: 0,
-        message: "Select a Headend in the report filters to generate the neighbour change report.",
-      };
-    }
-
-    const groupRecords = baseRecords.filter((record) => normalizeText(record.head_end) === selectedHeadend);
-    if (!groupRecords.length) {
+    const groupedRecords = new Map();
+    baseRecords.forEach((record) => {
+      const headend = normalizeText(record.head_end);
+      if (!headend || (selectedHeadend && headend !== selectedHeadend)) return;
+      if (!groupedRecords.has(headend)) groupedRecords.set(headend, []);
+      groupedRecords.get(headend).push(record);
+    });
+    if (!groupedRecords.size) {
       return {
         weeks,
         headend: selectedHeadend,
+        channel: normalizeText(state.report.channel),
         rows: [],
         totalRows: 0,
         message: "No headend data is available for the selected report filters.",
       };
     }
 
-    const previousMap = buildHeadendMaps(groupRecords, previousWeek);
-    const currentMap = buildHeadendMaps(groupRecords, currentWeek);
-    const availableChannels = new Map();
-    getReportChannelOptions(groupRecords).forEach((value) => {
-      availableChannels.set(normalizeChannelKey(value), normalizeText(value));
-    });
     const rows = [];
-
-    DEFAULT_REPORT_CHANNELS.forEach(({ label, key }) => {
-      const channelLabel = availableChannels.get(key) || label;
-      const channelKey = key;
-      const previousPosition = previousMap.channelPositions.get(channelKey);
-      const currentPosition = currentMap.channelPositions.get(channelKey);
-      if (previousPosition === undefined || currentPosition === undefined) return;
-
-      const previousLower = neighborAt(previousMap, previousPosition, -1);
-      const previousUpper = neighborAt(previousMap, previousPosition, 1);
-      const currentLower = neighborAt(currentMap, currentPosition, -1);
-      const currentUpper = neighborAt(currentMap, currentPosition, 1);
-      if (previousLower === currentLower && previousUpper === currentUpper) return;
-
-      rows.push({
-        channel: channelLabel,
-        previous_position: `${previousLower} <- ${channelLabel} -> ${previousUpper}`,
-        current_position: `${currentLower} <- ${channelLabel} -> ${currentUpper}`,
-        status: "Changed",
-        summary: `${channelLabel} moved from between ${previousLower} and ${previousUpper} to between ${currentLower} and ${currentUpper}.`,
+    const targetChannels = getReportTargetChannels();
+    for (const [headend, groupRecords] of groupedRecords.entries()) {
+      const previousMap = buildHeadendMaps(groupRecords, previousWeek);
+      const currentMap = buildHeadendMaps(groupRecords, currentWeek);
+      const availableChannels = new Map();
+      getReportChannelOptions(groupRecords).forEach((value) => {
+        availableChannels.set(normalizeChannelKey(value), normalizeText(value));
       });
-    });
+      targetChannels.forEach(({ label, key }) => {
+        const channelLabel = availableChannels.get(key) || label;
+        const channelKey = key;
+        const previousPosition = previousMap.channelPositions.get(channelKey);
+        const currentPosition = currentMap.channelPositions.get(channelKey);
+        if (previousPosition === undefined || currentPosition === undefined) return;
+
+        const previousLower = neighborAt(previousMap, previousPosition, -1);
+        const previousUpper = neighborAt(previousMap, previousPosition, 1);
+        const currentLower = neighborAt(currentMap, currentPosition, -1);
+        const currentUpper = neighborAt(currentMap, currentPosition, 1);
+        if (previousLower === currentLower && previousUpper === currentUpper) return;
+
+        rows.push({
+          headend,
+          channel: channelLabel,
+          previous_position: `${previousLower} <- ${channelLabel} -> ${previousUpper}`,
+          current_position: `${currentLower} <- ${channelLabel} -> ${currentUpper}`,
+          status: "Changed",
+          summary: `${headend}: ${channelLabel} moved from between ${previousLower} and ${previousUpper} to between ${currentLower} and ${currentUpper}.`,
+        });
+      });
+    }
 
     return {
       weeks,
       headend: selectedHeadend,
+      channel: normalizeText(state.report.channel),
       rows,
       totalRows: rows.length,
-      message: rows.length ? "" : `No neighbour changes detected for the selected channels in ${selectedHeadend}.`,
+      message: rows.length ? "" : `No neighbour changes detected for ${state.report.channel ? normalizeText(state.report.channel) : "the selected channels"} in ${selectedHeadend || "all headends"}.`,
     };
   }
 
@@ -1080,8 +1109,10 @@
       const previousWeek = reportData.weeks[0];
       const currentWeek = reportData.weeks[reportData.weeks.length - 1];
       if (reportMeta) {
+        const channelText = reportData.channel || "default 4 channels";
+        const headendText = reportData.headend || "all headends";
         reportMeta.textContent = previousWeek && currentWeek
-          ? `Neighbour comparison for ${reportData.headend || "the selected headend"} from ${previousWeek} to ${currentWeek}.`
+          ? `Neighbour comparison for ${headendText} (${channelText}) from ${previousWeek} to ${currentWeek}.`
           : "Select previous and current week to compare neighbourhood positions.";
       }
       if (reportCount) {
@@ -1094,53 +1125,63 @@
         return;
       }
 
-      const section = document.createElement("section");
-      section.className = "nbhd-report-group";
-
-      const header = document.createElement("div");
-      header.className = "nbhd-report-group-header";
-      const title = document.createElement("h4");
-      title.textContent = reportData.headend || "Selected Headend";
-      header.append(title);
-
-      const tableWrap = document.createElement("div");
-      tableWrap.className = "nbhd-report-table-wrap";
-      const table = document.createElement("table");
-      table.className = "nbhd-report-table";
-      const tbodyRows = reportData.rows.map((row) => `
-        <tr>
-          <td>${row.channel}</td>
-          <td>${row.previous_position}</td>
-          <td>${row.current_position}</td>
-          <td>${row.status}</td>
-        </tr>
-      `).join("");
-      table.innerHTML = `
-        <thead>
-          <tr>
-            <th>Channel</th>
-            <th>Previous Position</th>
-            <th>Current Position</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>${tbodyRows}</tbody>
-      `;
-      tableWrap.appendChild(table);
-
-      const summaryTitle = document.createElement("h4");
-      summaryTitle.className = "nbhd-report-summary-title";
-      summaryTitle.textContent = "Summary";
-      const summaryList = document.createElement("ul");
-      summaryList.className = "nbhd-report-list";
+      const groups = new Map();
       reportData.rows.forEach((row) => {
-        const item = document.createElement("li");
-        item.textContent = row.summary;
-        summaryList.appendChild(item);
+        const headend = row.headend || "Selected Headend";
+        if (!groups.has(headend)) groups.set(headend, []);
+        groups.get(headend).push(row);
       });
+      const fragment = document.createDocumentFragment();
+      groups.forEach((rows, headend) => {
+        const section = document.createElement("section");
+        section.className = "nbhd-report-group";
 
-      section.append(header, tableWrap, summaryTitle, summaryList);
-      reportContent.replaceChildren(section);
+        const header = document.createElement("div");
+        header.className = "nbhd-report-group-header";
+        const title = document.createElement("h4");
+        title.textContent = headend;
+        header.append(title);
+
+        const tableWrap = document.createElement("div");
+        tableWrap.className = "nbhd-report-table-wrap";
+        const table = document.createElement("table");
+        table.className = "nbhd-report-table";
+        const tbodyRows = rows.map((row) => `
+          <tr>
+            <td>${row.channel}</td>
+            <td>${row.previous_position}</td>
+            <td>${row.current_position}</td>
+            <td>${row.status}</td>
+          </tr>
+        `).join("");
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>Channel</th>
+              <th>Previous Position</th>
+              <th>Current Position</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>${tbodyRows}</tbody>
+        `;
+        tableWrap.appendChild(table);
+
+        const summaryTitle = document.createElement("h4");
+        summaryTitle.className = "nbhd-report-summary-title";
+        summaryTitle.textContent = "Summary";
+        const summaryList = document.createElement("ul");
+        summaryList.className = "nbhd-report-list";
+        rows.forEach((row) => {
+          const item = document.createElement("li");
+          item.textContent = row.summary;
+          summaryList.appendChild(item);
+        });
+
+        section.append(header, tableWrap, summaryTitle, summaryList);
+        fragment.appendChild(section);
+      });
+      reportContent.replaceChildren(fragment);
     } catch (error) {
       if (reportCount) reportCount.textContent = "0 narratives";
       renderReportStatus("Neighbour change report could not be generated.");
@@ -1152,6 +1193,7 @@
   function resetReportFilters() {
     state.report.open = true;
     state.report.headend = "";
+    state.report.channel = "";
     state.report.week_from = "";
     state.report.week_to = "";
     renderReportPanel();
@@ -1258,6 +1300,11 @@
         markets: optionsFor("market", "market"),
         cities: optionsFor("city", "city"),
         head_ends: optionsFor("head_end", "head_end"),
+        channels: Array.from(new Set(
+          filterGroupedRecords(allRecords, state.filters, visibleWeeks)
+            .flatMap((record) => Object.values(record.channels || {}))
+            .filter((value) => String(value || "").trim() !== "")
+        )).sort((left, right) => left.localeCompare(right)),
       },
       summary: {
         total_headends: new Set(filtered.map((record) => groupKey(record))).size,
@@ -1517,7 +1564,7 @@
       reportHeadendFilter,
       buildReportContext().headends,
       state.report.headend,
-      "Select Headend",
+      "All Headends",
       (value) => {
         state.report.headend = value;
         renderReportPanel();
@@ -1525,8 +1572,21 @@
       }
     );
   });
-  bindReportWeekSelect(reportWeekFromFilter, "week_from", "Previous Week");
-  bindReportWeekSelect(reportWeekToFilter, "week_to", "Current Week");
+  bindReportSelect(reportChannelFilter, () => {
+    renderOptions(
+      reportChannelFilter,
+      buildReportContext().channels,
+      state.report.channel,
+      "Default 4 Channels",
+      (value) => {
+        state.report.channel = value;
+        renderReportPanel();
+        closeMenus();
+      }
+    );
+  });
+  bindReportWeekSelect(reportWeekFromFilter, "week_from", "Week From");
+  bindReportWeekSelect(reportWeekToFilter, "week_to", "Week To");
   document.addEventListener("click", (event) => {
     if (!event.target.closest(".filter-select") && !event.target.closest(".ots-multiselect")) closeMenus();
   });
@@ -1608,5 +1668,3 @@
   syncFullscreenButtons();
   fetchPayload(false);
 })();
-
-

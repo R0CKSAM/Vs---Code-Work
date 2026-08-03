@@ -1498,17 +1498,19 @@ body.nbhd-fullscreen-active {
 
 .nbhd-report-toolbar {
   display: grid;
-  grid-template-columns: minmax(220px, 1.2fr) minmax(180px, 0.9fr) minmax(180px, 0.9fr) auto;
+  grid-template-columns: repeat(4, minmax(150px, 1fr)) auto auto;
   gap: 8px;
   align-items: end;
   margin-top: 6px;
 }
 
 .nbhd-report-actions {
-  gap: 6px;
-  justify-content: flex-end;
-  flex-wrap: nowrap;
+  display: contents;
   white-space: nowrap;
+}
+
+.nbhd-report-actions button {
+  min-width: 90px;
 }
 
 .nbhd-report-stack {

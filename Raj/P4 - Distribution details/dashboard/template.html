@@ -1469,6 +1469,13 @@
         .sort((a, b) => String(a).localeCompare(String(b)));
     }
 
+    function addNAOption(values) {
+      if (!values.includes("N/A")) {
+        return ["N/A", ...values];
+      }
+      return values;
+    }
+
     function getShareableState() {
       return {
         headendFilterSelections: state.headendFilterSelections,
@@ -2523,10 +2530,10 @@
         });
       });
 
-      renderTable2FilterControl("state", uniqueValues(filterMetaRows("state"), "state"));
-      renderTable2FilterControl("barc_market", uniqueValues(filterMetaRows("barc_market"), "barc_market"));
-      renderTable2FilterControl("headend_location", uniqueValues(filterMetaRows("headend_location"), "headend_location"));
-      renderTable2FilterControl("network_name", uniqueValues(filterMetaRows("network_name"), "network_name"));
+      renderTable2FilterControl("state", addNAOption(uniqueValues(filterMetaRows("state"), "state")));
+      renderTable2FilterControl("barc_market", addNAOption(uniqueValues(filterMetaRows("barc_market"), "barc_market")));
+      renderTable2FilterControl("headend_location", addNAOption(uniqueValues(filterMetaRows("headend_location"), "headend_location")));
+      renderTable2FilterControl("network_name", addNAOption(uniqueValues(filterMetaRows("network_name"), "network_name")));
 
       const weeks = allWeekColumns();
       renderTable2FilterControl("week_from", weeks);
