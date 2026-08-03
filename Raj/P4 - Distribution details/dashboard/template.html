@@ -1709,15 +1709,22 @@
       return table2SelectedValues(key)[0] || "";
     }
 
+    function table2FilterOptionLabel(key, value) {
+      if (key === "channel" && value === "NA") {
+        return "N/A";
+      }
+      return value;
+    }
+
     function table2SelectedSummary(key, availableValues = []) {
       const values = table2SelectedValues(key);
       if (!values.length) return table2FilterPlaceholder(key);
       if (!TABLE2_SINGLE_SELECT_KEYS.has(key) && availableValues.length && values.length === availableValues.length) {
         return table2FilterPlaceholder(key);
       }
-      if (values.length === 1) return values[0];
-      if (values.length <= 2) return values.join(", ");
-      return `${values.slice(0, 2).join(", ")} +${values.length - 2}`;
+      if (values.length === 1) return table2FilterOptionLabel(key, values[0]);
+      if (values.length <= 2) return values.map(value => table2FilterOptionLabel(key, value)).join(", ");
+      return `${values.slice(0, 2).map(value => table2FilterOptionLabel(key, value)).join(", ")} +${values.length - 2}`;
     }
 
     function syncOpenFilterPanelState() {
@@ -1768,7 +1775,7 @@
       container.innerHTML = `
         <select class="table2-native-select" aria-label="${table2FilterLabel(key)}">
           <option value="">${placeholder}</option>
-          ${values.map(value => `<option value="${String(value).replace(/"/g, "&quot;")}">${value}</option>`).join("")}
+          ${values.map(value => `<option value="${String(value).replace(/"/g, "&quot;")}">${table2FilterOptionLabel(key, value)}</option>`).join("")}
         </select>
       `;
 
@@ -1813,7 +1820,7 @@
             ${filteredValues.length ? filteredValues.map(value => `
               <label class="multiselect-option">
                 <input type="${singleSelect ? "radio" : "checkbox"}" name="table2-${key}" value="${String(value).replace(/"/g, "&quot;")}" ${selectedValues.includes(value) ? "checked" : ""}>
-                <span>${value}</span>
+                <span>${table2FilterOptionLabel(key, value)}</span>
               </label>
             `).join("") : '<div class="multiselect-empty">No options found.</div>'}
           </div>
@@ -2391,6 +2398,9 @@
       const normalized = normalizeChannelName(display);
       const compact = normalized.replace(/[^a-z0-9]+/g, "");
 
+      if (compact === "na") {
+        return "NA";
+      }
       if (compact.includes("news18india")) {
         return "News18 India";
       }
@@ -2411,15 +2421,22 @@
 
     function extractChannelOptions(rows, weeks) {
       const values = new Set();
+      let hasNA = false;
       rows.forEach(row => {
         weeks.forEach(week => {
           const channel = canonicalChannelDisplay(row.weeks?.[week]?.channel_name || "");
-          if (channel !== "NA") {
+          if (channel === "NA") {
+            hasNA = true;
+          } else {
             values.add(channel);
           }
         });
       });
-      return [...values].sort((a, b) => a.localeCompare(b));
+      const sorted = [...values].sort((a, b) => a.localeCompare(b));
+      if (hasNA) {
+        sorted.unshift("NA");
+      }
+      return sorted;
     }
 
     function channelHighlightClass(value) {
