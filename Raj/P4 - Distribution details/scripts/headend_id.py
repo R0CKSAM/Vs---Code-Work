@@ -61,6 +61,9 @@ STATE_ALIASES = {
     "telangana": ("Telangana", "TG"),
     "karnataka": ("Karnataka", "KA"),
     "maharashtra": ("Maharashtra", "MH"),
+    "GOA": ("Goa", "GA"),
+    "Goa": ("Goa", "GA"),
+    "goa": ("Goa", "GA"),
 }
 
 
