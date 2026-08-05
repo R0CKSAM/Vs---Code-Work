@@ -110,6 +110,17 @@
         "nbhd": 29748,
         "ots": 1066
       }
+    },
+    "f86ab5bee786b3fd0f37a7d3db99a7604c8b8f9b": {
+      "file_name": "Chrome Track 2.0 Wk-30, 2026 (India TV).xlsm",
+      "file_path": "D:\\Vs - Code Work\\Raj\\P2 ChromeReport\\data\\Chrome Track 2.0 Wk-30, 2026 (India TV).xlsm",
+      "week": "Wk-30'26",
+      "processed_at": "2026-08-05T05:01:44.266973+00:00",
+      "row_counts": {
+        "distribution": 84864,
+        "nbhd": 29388,
+        "ots": 1066
+      }
     }
   }
 }
