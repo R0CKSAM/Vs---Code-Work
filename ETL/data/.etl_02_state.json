@@ -1734,5 +1734,53 @@
     "rows": 49868713,
     "updated_at_utc": "2026-08-03T03:04:00.921872+00:00",
     "elapsed_sec": 341.45
+  },
+  "stream_2026_08_03": {
+    "status": "ok",
+    "signature": "f21761c586b170fa14b4540d9f25e005",
+    "source_id": "stream_2026_08_03",
+    "input_folder": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\stage\\parquet\\source=stream\\year=2026\\month=08\\day=03",
+    "output_file": "stream_2026_08_03_final_clean.parquet",
+    "dedupe_method": "bucketed_32_zstd",
+    "input_rows": 22995568,
+    "rows": 22991710,
+    "updated_at_utc": "2026-08-04T03:13:38.151276+00:00",
+    "elapsed_sec": 136.48
+  },
+  "fast_2026_08_03": {
+    "status": "ok",
+    "signature": "09a9d0a86c4129ad4fd8f0b461cdbb60",
+    "source_id": "fast_2026_08_03",
+    "input_folder": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\stage\\parquet\\source=fast\\year=2026\\month=08\\day=03",
+    "output_file": "fast_2026_08_03_final_clean.parquet",
+    "dedupe_method": "bucketed_32_zstd",
+    "input_rows": 51679854,
+    "rows": 51668574,
+    "updated_at_utc": "2026-08-04T03:30:07.515414+00:00",
+    "elapsed_sec": 989.35
+  },
+  "stream_2026_08_04": {
+    "status": "ok",
+    "signature": "103f7893b7282a61289f973441d3f00a",
+    "source_id": "stream_2026_08_04",
+    "input_folder": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\stage\\parquet\\source=stream\\year=2026\\month=08\\day=04",
+    "output_file": "stream_2026_08_04_final_clean.parquet",
+    "dedupe_method": "bucketed_32_zstd",
+    "input_rows": 22002832,
+    "rows": 21998176,
+    "updated_at_utc": "2026-08-05T03:18:01.225013+00:00",
+    "elapsed_sec": 132.3
+  },
+  "fast_2026_08_04": {
+    "status": "ok",
+    "signature": "5abdbc5d20cdb5bf6d20b80eecaac1a5",
+    "source_id": "fast_2026_08_04",
+    "input_folder": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\stage\\parquet\\source=fast\\year=2026\\month=08\\day=04",
+    "output_file": "fast_2026_08_04_final_clean.parquet",
+    "dedupe_method": "bucketed_32_zstd",
+    "input_rows": 51127153,
+    "rows": 51116586,
+    "updated_at_utc": "2026-08-05T03:31:24.643969+00:00",
+    "elapsed_sec": 803.4
   }
 }

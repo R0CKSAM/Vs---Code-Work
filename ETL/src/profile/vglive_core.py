@@ -55,6 +55,9 @@ PATH_MAP = {
     "vglive-sk-479089": "India TV SpeedNews",
     "vglive-sk-912213": "India TV Adalat",
     "vglive-sk-699286": "India TV Yoga",
+    "vglive-sk-494434": "NDTV Rajasthan",
+    "vglive-sk-618504": "NDTV Madhya Pradesh",
+    "vglive-sk-722277": "NDTV 24x7",
     "speednews": "India TV SpeedNews",
     "rimo": "India TV SpeedNews",
 

@@ -2042,5 +2042,61 @@
     "promoted_files": 2,
     "elapsed_sec": 29.87,
     "processed_at_utc": "2026-08-03T03:05:58.104767+00:00"
+  },
+  "fast_2026_08_03_final_clean.parquet": {
+    "status": "ok",
+    "partition_version": 3,
+    "partition_timezone": "Asia/Kolkata",
+    "source_key": "fast",
+    "file_prefix": "part_fast_2026_08_03",
+    "signature": "9faf8d1b6e01b398c8b8adc9bd4330ca",
+    "src_prefix": "part_fast_2026_08_03",
+    "rows": 51668574,
+    "removed_previous_files": 0,
+    "promoted_files": 2,
+    "elapsed_sec": 220.86,
+    "processed_at_utc": "2026-08-04T03:33:53.289924+00:00"
+  },
+  "stream_2026_08_03_final_clean.parquet": {
+    "status": "ok",
+    "partition_version": 3,
+    "partition_timezone": "Asia/Kolkata",
+    "source_key": "stream",
+    "file_prefix": "part_stream_2026_08_03",
+    "signature": "008083341e713b20628e4ff096f9da49",
+    "src_prefix": "part_stream_2026_08_03",
+    "rows": 22991710,
+    "removed_previous_files": 0,
+    "promoted_files": 2,
+    "elapsed_sec": 40.78,
+    "processed_at_utc": "2026-08-04T03:34:34.120495+00:00"
+  },
+  "fast_2026_08_04_final_clean.parquet": {
+    "status": "ok",
+    "partition_version": 3,
+    "partition_timezone": "Asia/Kolkata",
+    "source_key": "fast",
+    "file_prefix": "part_fast_2026_08_04",
+    "signature": "7212ae07b5821b0fde0460f4676044c2",
+    "src_prefix": "part_fast_2026_08_04",
+    "rows": 51116586,
+    "removed_previous_files": 0,
+    "promoted_files": 2,
+    "elapsed_sec": 186.7,
+    "processed_at_utc": "2026-08-05T03:34:34.007280+00:00"
+  },
+  "stream_2026_08_04_final_clean.parquet": {
+    "status": "ok",
+    "partition_version": 3,
+    "partition_timezone": "Asia/Kolkata",
+    "source_key": "stream",
+    "file_prefix": "part_stream_2026_08_04",
+    "signature": "6ebf2324f26b4f5e03f4225901ca9477",
+    "src_prefix": "part_stream_2026_08_04",
+    "rows": 21998176,
+    "removed_previous_files": 0,
+    "promoted_files": 2,
+    "elapsed_sec": 37.83,
+    "processed_at_utc": "2026-08-05T03:35:11.853355+00:00"
   }
 }

@@ -311,6 +311,18 @@
     "total_ipv6_ips": "54.5 Octillion",
     "updated_at": "2026-04-29T13:07:44"
   },
+  "11172": {
+    "as_country": "Mexico",
+    "as_domain": "alestra.com.mx",
+    "as_name": "Alestra S. de R.L. de C.V.",
+    "as_number": "11172",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as11172",
+    "status": "ok",
+    "total_ipv4_ips": "598,272",
+    "total_ipv6_ips": "237.7 Octillion",
+    "updated_at": "2026-08-03T17:18:14"
+  },
   "11232": {
     "as_country": "United States of America",
     "as_domain": "midcocomm.com",
@@ -334,6 +346,18 @@
     "total_ipv4_ips": "605,184",
     "total_ipv6_ips": "321.9 Octillion",
     "updated_at": "2026-04-29T13:04:31"
+  },
+  "11289": {
+    "as_country": "United States of America",
+    "as_domain": "wdc.com",
+    "as_name": "Sandisk Technologies Inc.",
+    "as_number": "11289",
+    "asn_type": "(COM) Commercial",
+    "lookup_source": "https://lite.ip2location.com/as11289",
+    "status": "ok",
+    "total_ipv4_ips": "31,488",
+    "total_ipv6_ips": "309.5 Septillion",
+    "updated_at": "2026-08-03T17:18:29"
   },
   "11351": {
     "as_country": "United States of America",
@@ -406,6 +430,18 @@
     "total_ipv4_ips": "1,366,016",
     "total_ipv6_ips": "324.5 Nonillion",
     "updated_at": "2026-08-03T17:00:02"
+  },
+  "11556": {
+    "as_country": "Panama",
+    "as_domain": "cw.com",
+    "as_name": "Cable & Wireless Panama",
+    "as_number": "11556",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as11556",
+    "status": "ok",
+    "total_ipv4_ips": "924,160",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:10:00"
   },
   "11562": {
     "as_country": "Venezuela (Bolivarian Republic of)",
@@ -695,6 +731,18 @@
     "total_ipv6_ips": "1.5 Nonillion",
     "updated_at": "2026-04-29T11:53:53"
   },
+  "12297": {
+    "as_country": "Armenia",
+    "as_domain": "telecomarmenia.am",
+    "as_name": "Telecom Armenia OJSC",
+    "as_number": "12297",
+    "asn_type": "(MOB) Mobile ISP",
+    "lookup_source": "https://lite.ip2location.com/as12297",
+    "status": "ok",
+    "total_ipv4_ips": "118,528",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:10:10"
+  },
   "12301": {
     "as_country": "Hungary",
     "as_domain": "invitel.net",
@@ -934,6 +982,18 @@
     "total_ipv4_ips": "302,080",
     "total_ipv6_ips": "1.4 Nonillion",
     "updated_at": "2026-08-03T14:57:58"
+  },
+  "12714": {
+    "as_country": "Russian Federation",
+    "as_domain": "megafon.ru",
+    "as_name": "PJSC MegaFon",
+    "as_number": "12714",
+    "asn_type": "-",
+    "lookup_source": "https://lite.ip2location.com/as12714",
+    "status": "ok",
+    "total_ipv4_ips": "1,184,768",
+    "total_ipv6_ips": "158.5 Octillion",
+    "updated_at": "2026-08-03T17:10:42"
   },
   "12716": {
     "as_country": "Bulgaria",
@@ -1235,6 +1295,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:03:07"
   },
+  "131199": {
+    "as_country": "United States of America",
+    "as_domain": "nexeontech.com",
+    "as_name": "Nexeon Technologies Inc.",
+    "as_number": "131199",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as131199",
+    "status": "ok",
+    "total_ipv4_ips": "4,352",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:23:37"
+  },
   "131207": {
     "as_country": "Cambodia",
     "as_domain": "sinet.com.kh",
@@ -1270,6 +1342,18 @@
     "total_ipv4_ips": "8,704",
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-04-28T19:01:16"
+  },
+  "131216": {
+    "as_country": "Bangladesh",
+    "as_domain": "ansbd.net",
+    "as_name": "Saharea Hossain T/A Authentic Network",
+    "as_number": "131216",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as131216",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:05:56"
   },
   "131226": {
     "as_country": "India",
@@ -1619,6 +1703,18 @@
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T16:47:30"
   },
+  "13188": {
+    "as_country": "Ukraine",
+    "as_domain": "triolan.com.ua",
+    "as_name": "Content Delivery Network Ltd",
+    "as_number": "13188",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as13188",
+    "status": "ok",
+    "total_ipv4_ips": "411,648",
+    "total_ipv6_ips": "713.1 Octillion",
+    "updated_at": "2026-08-03T17:21:45"
+  },
   "131918": {
     "as_country": "Japan",
     "as_domain": "scn-net.ne.jp",
@@ -1834,6 +1930,18 @@
     "total_ipv4_ips": "46,592",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T11:54:58"
+  },
+  "132216": {
+    "as_country": "Bangladesh",
+    "as_domain": "cou.ac.bd",
+    "as_name": "Comilla University",
+    "as_number": "132216",
+    "asn_type": "(EDU) University/College/School",
+    "lookup_source": "https://lite.ip2location.com/as132216",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:07:40"
   },
   "132216132116": {
     "as_country": "",
@@ -3071,6 +3179,18 @@
     "total_ipv6_ips": "14.5 Septillion",
     "updated_at": "2026-04-28T18:56:36"
   },
+  "133006": {
+    "as_country": "India",
+    "as_domain": "pega.com",
+    "as_name": "Pega Systems Worldwide India Pvt Ltd",
+    "as_number": "133006",
+    "asn_type": "(COM) Commercial",
+    "lookup_source": "https://lite.ip2location.com/as133006",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:09:04"
+  },
   "133007": {
     "as_country": "India",
     "as_domain": "ucnindia.com",
@@ -3346,6 +3466,18 @@
     "total_ipv4_ips": "4,864",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T11:12:02"
+  },
+  "133256": {
+    "as_country": "India",
+    "as_domain": "tangedconet.org",
+    "as_name": "TANGEDCO",
+    "as_number": "133256",
+    "asn_type": "(COM) Commercial",
+    "lookup_source": "https://lite.ip2location.com/as133256",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:10:53"
   },
   "133257": {
     "as_country": "India",
@@ -3659,6 +3791,18 @@
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T15:37:33"
   },
+  "133325": {
+    "as_country": "Bangladesh",
+    "as_domain": "genfivebd.com",
+    "as_name": "Genfive Technology",
+    "as_number": "133325",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as133325",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:18:45"
+  },
   "133331": {
     "as_country": "Bangladesh",
     "as_domain": "infobd.net",
@@ -3838,6 +3982,18 @@
     "total_ipv4_ips": "1,024",
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T13:42:26"
+  },
+  "133599": {
+    "as_country": "Bangladesh",
+    "as_domain": "dayannet.org",
+    "as_name": "Dayan Net",
+    "as_number": "133599",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as133599",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:17:38"
   },
   "133605": {
     "as_country": "Bangladesh",
@@ -5015,6 +5171,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:05:16"
   },
+  "134128": {
+    "as_country": "Bangladesh",
+    "as_domain": "megaspeednet.com",
+    "as_name": "Mega Speed Net",
+    "as_number": "134128",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as134128",
+    "status": "ok",
+    "total_ipv4_ips": "1,280",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:19:08"
+  },
   "134146": {
     "as_country": "Bangladesh",
     "as_domain": "sambd.com",
@@ -5507,6 +5675,18 @@
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T13:56:59"
   },
+  "134306": {
+    "as_country": "India",
+    "as_domain": "motherson.com",
+    "as_name": "Motherson Technology Services Limited",
+    "as_number": "134306",
+    "asn_type": "(COM) Commercial",
+    "lookup_source": "https://lite.ip2location.com/as134306",
+    "status": "ok",
+    "total_ipv4_ips": "768",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:06:25"
+  },
   "134307": {
     "as_country": "India",
     "as_domain": "classicnet.in",
@@ -5831,6 +6011,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T16:33:00"
   },
+  "134497": {
+    "as_country": "Philippines",
+    "as_domain": "cinecebu.com",
+    "as_name": "Cine Cebu",
+    "as_number": "134497",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as134497",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:19:18"
+  },
   "134502": {
     "as_country": "Bangladesh",
     "as_domain": "victoriansonline.com",
@@ -6023,6 +6215,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T14:51:23"
   },
+  "134712": {
+    "as_country": "Bangladesh",
+    "as_domain": "pipexbd.com",
+    "as_name": "Pipex Network",
+    "as_number": "134712",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as134712",
+    "status": "ok",
+    "total_ipv4_ips": "1,536",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:06:19"
+  },
   "134715": {
     "as_country": "Bhutan",
     "as_domain": "tech.gov.sg",
@@ -6094,6 +6298,18 @@
     "total_ipv4_ips": "768",
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T15:14:44"
+  },
+  "134774": {
+    "as_country": "China",
+    "as_domain": "cn.net",
+    "as_name": "CHINANET Guangdong Province Shenzhen MAN Network",
+    "as_number": "134774",
+    "asn_type": "-",
+    "lookup_source": "https://lite.ip2location.com/as134774",
+    "status": "ok",
+    "total_ipv4_ips": "213,248",
+    "total_ipv6_ips": "239.4 Octillion",
+    "updated_at": "2026-08-03T17:19:33"
   },
   "134781": {
     "as_country": "Bangladesh",
@@ -7043,6 +7259,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:58:52"
   },
+  "135091": {
+    "as_country": "Bangladesh",
+    "as_domain": "ayaancommunication.net",
+    "as_name": "Ayaan Communication",
+    "as_number": "135091",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as135091",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:07:08"
+  },
   "135092": {
     "as_country": "Bangladesh",
     "as_domain": "dhakatech.com",
@@ -7090,6 +7318,18 @@
     "total_ipv4_ips": "512",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:16:23"
+  },
+  "135125": {
+    "as_country": "Bangladesh",
+    "as_domain": "talmuri.net",
+    "as_name": "Emdadul Huq Khan T/A Talmuri Computer System",
+    "as_number": "135125",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as135125",
+    "status": "ok",
+    "total_ipv4_ips": "2,048",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:08:23"
   },
   "135126": {
     "as_country": "Australia",
@@ -7150,6 +7390,18 @@
     "total_ipv4_ips": "768",
     "total_ipv6_ips": "0",
     "updated_at": "2026-04-29T13:12:23"
+  },
+  "135173": {
+    "as_country": "India",
+    "as_domain": "imd.gov.in",
+    "as_name": "India Meteorological Department",
+    "as_number": "135173",
+    "asn_type": "(GOV) Government",
+    "lookup_source": "https://lite.ip2location.com/as135173",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:19:36"
   },
   "135175": {
     "as_country": "India",
@@ -8146,6 +8398,18 @@
     "total_ipv4_ips": "1,280",
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T14:48:09"
+  },
+  "135628": {
+    "as_country": "Bangladesh",
+    "as_domain": "pcnet-catv.ro",
+    "as_name": "PC-NET",
+    "as_number": "135628",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as135628",
+    "status": "ok",
+    "total_ipv4_ips": "1,792",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:05:45"
   },
   "135650": {
     "as_country": "Bangladesh",
@@ -9814,6 +10078,18 @@
     "total_ipv4_ips": "1,536",
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T15:42:11"
+  },
+  "136248": {
+    "as_country": "Bangladesh",
+    "as_domain": "fastnetbd.com",
+    "as_name": "Abdur Rahim Bishas t/a Fast Net BD",
+    "as_number": "136248",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as136248",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:16:37"
   },
   "136255": {
     "as_country": "Myanmar",
@@ -12863,6 +13139,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:23:49"
   },
+  "137419": {
+    "as_country": "Bangladesh",
+    "as_domain": "themnet.com",
+    "as_name": "Asif Chowdhury",
+    "as_number": "137419",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as137419",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:17:01"
+  },
   "137425": {
     "as_country": "Bangladesh",
     "as_domain": "incomitbd.com",
@@ -13823,6 +14111,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:05:09"
   },
+  "137872": {
+    "as_country": "Hong Kong",
+    "as_domain": "chinamobile.com",
+    "as_name": "China Mobile Hong Kong Company Limited",
+    "as_number": "137872",
+    "asn_type": "(MOB) Mobile ISP",
+    "lookup_source": "https://lite.ip2location.com/as137872",
+    "status": "ok",
+    "total_ipv4_ips": "167,936",
+    "total_ipv6_ips": "5 Octillion",
+    "updated_at": "2026-08-03T17:06:02"
+  },
   "137880": {
     "as_country": "Nepal",
     "as_domain": "prime.net.np",
@@ -13834,6 +14134,18 @@
     "total_ipv4_ips": "1,024",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:40:53"
+  },
+  "137883": {
+    "as_country": "Bangladesh",
+    "as_domain": "skcommunication.in",
+    "as_name": "SK Communication",
+    "as_number": "137883",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as137883",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:21:27"
   },
   "137884": {
     "as_country": "Bangladesh",
@@ -14039,6 +14351,30 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T16:37:22"
   },
+  "138022": {
+    "as_country": "Bangladesh",
+    "as_domain": "rawshanarainternet.com",
+    "as_name": "Mohammad Mohiuddin",
+    "as_number": "138022",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as138022",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:07:46"
+  },
+  "138023": {
+    "as_country": "Bangladesh",
+    "as_domain": "creationonlinebd.com",
+    "as_name": "Creation Online",
+    "as_number": "138023",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as138023",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:07:50"
+  },
   "138043": {
     "as_country": "Bangladesh",
     "as_domain": "triangle.com.bd",
@@ -14050,6 +14386,30 @@
     "total_ipv4_ips": "512",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:19:58"
+  },
+  "138064": {
+    "as_country": "Indonesia",
+    "as_domain": "jinom.net.id",
+    "as_name": "PT. Jinom Network Indonesia",
+    "as_number": "138064",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as138064",
+    "status": "ok",
+    "total_ipv4_ips": "2,560",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:15:01"
+  },
+  "13807": {
+    "as_country": "United States of America",
+    "as_domain": "gpcom.com",
+    "as_name": "Great Plains Communications LLC",
+    "as_number": "13807",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as13807",
+    "status": "ok",
+    "total_ipv4_ips": "76,544",
+    "total_ipv6_ips": "316.9 Octillion",
+    "updated_at": "2026-08-03T17:14:56"
   },
   "138074": {
     "as_country": "Indonesia",
@@ -14963,6 +15323,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T12:56:04"
   },
+  "138412": {
+    "as_country": "Bangladesh",
+    "as_domain": "asiancommunicationbd.com",
+    "as_name": "Golam Rabbani Chowdhury",
+    "as_number": "138412",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as138412",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:08:33"
+  },
   "138418": {
     "as_country": "Bangladesh",
     "as_domain": "citylink.net.bd",
@@ -15047,6 +15419,18 @@
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T15:18:55"
   },
+  "138476": {
+    "as_country": "Bangladesh",
+    "as_domain": "skylink-bd.com",
+    "as_name": "Sky Link ISP",
+    "as_number": "138476",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as138476",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:08:37"
+  },
   "138482": {
     "as_country": "Bangladesh",
     "as_domain": "skyviewonlineltd.com",
@@ -15082,6 +15466,18 @@
     "total_ipv4_ips": "512",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T16:31:14"
+  },
+  "138493": {
+    "as_country": "Bangladesh",
+    "as_domain": "yesnet.info",
+    "as_name": "Yes Net",
+    "as_number": "138493",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as138493",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:07:54"
   },
   "138495": {
     "as_country": "Nepal",
@@ -15239,6 +15635,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:14:21"
   },
+  "138550": {
+    "as_country": "Bangladesh",
+    "as_domain": "jagannathuniversity.org",
+    "as_name": "Jagannath University",
+    "as_number": "138550",
+    "asn_type": "(ORG) Organization",
+    "lookup_source": "https://lite.ip2location.com/as138550",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:08:30"
+  },
   "138551": {
     "as_country": "Bangladesh",
     "as_domain": "skyinfoonline.net",
@@ -15299,6 +15707,18 @@
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T14:46:37"
   },
+  "138566": {
+    "as_country": "Bangladesh",
+    "as_domain": "duet.ac.bd",
+    "as_name": "Dhaka University of Engineering & Technology Gazipur",
+    "as_number": "138566",
+    "asn_type": "(EDU) University/College/School",
+    "lookup_source": "https://lite.ip2location.com/as138566",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:08:45"
+  },
   "138575": {
     "as_country": "Bangladesh",
     "as_domain": "applenetbd.com",
@@ -15322,6 +15742,18 @@
     "total_ipv4_ips": "256",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:06:30"
+  },
+  "138587": {
+    "as_country": "Bangladesh",
+    "as_domain": "pstu.ac.bd",
+    "as_name": "Patuakhali Science and Technology University",
+    "as_number": "138587",
+    "asn_type": "(EDU) University/College/School",
+    "lookup_source": "https://lite.ip2location.com/as138587",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:08:49"
   },
   "138590": {
     "as_country": "Pakistan",
@@ -15490,6 +15922,18 @@
     "total_ipv4_ips": "512",
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T15:10:44"
+  },
+  "138659": {
+    "as_country": "Bangladesh",
+    "as_domain": "cyberlink.com",
+    "as_name": "Cyberlink Online",
+    "as_number": "138659",
+    "asn_type": "(COM) Commercial",
+    "lookup_source": "https://lite.ip2location.com/as138659",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:08:40"
   },
   "138665": {
     "as_country": "Bangladesh",
@@ -16163,6 +16607,18 @@
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-04-29T16:34:29"
   },
+  "138886": {
+    "as_country": "Indonesia",
+    "as_domain": "dbn.net.id",
+    "as_name": "PT Data Buana Nusantara",
+    "as_number": "138886",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as138886",
+    "status": "ok",
+    "total_ipv4_ips": "7,424",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:06:30"
+  },
   "138903": {
     "as_country": "Bangladesh",
     "as_domain": "promeeinternational.com",
@@ -16222,6 +16678,18 @@
     "total_ipv4_ips": "512",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T14:45:08"
+  },
+  "138944": {
+    "as_country": "Bangladesh",
+    "as_domain": "snet.com",
+    "as_name": "SNet And Electronics",
+    "as_number": "138944",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as138944",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:05:27"
   },
   "138953": {
     "as_country": "Bangladesh",
@@ -16619,6 +17087,42 @@
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T15:54:47"
   },
+  "139251": {
+    "as_country": "Bangladesh",
+    "as_domain": "juniv.edu",
+    "as_name": "Jahangirnagar University",
+    "as_number": "139251",
+    "asn_type": "(EDU) University/College/School",
+    "lookup_source": "https://lite.ip2location.com/as139251",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:14:00"
+  },
+  "13926": {
+    "as_country": "United States of America",
+    "as_domain": "strongvpn.com",
+    "as_name": "Strong Technology LLC.",
+    "as_number": "13926",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as13926",
+    "status": "ok",
+    "total_ipv4_ips": "8,192",
+    "total_ipv6_ips": "367 Octillion",
+    "updated_at": "2026-08-03T17:13:57"
+  },
+  "139261": {
+    "as_country": "Nepal",
+    "as_domain": "brainworknepal.com",
+    "as_name": "Metrolink Business Group Pvt Ltd",
+    "as_number": "139261",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as139261",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:22:25"
+  },
   "139270": {
     "as_country": "Bangladesh",
     "as_domain": "accesscommunicationbd.com",
@@ -16798,6 +17302,18 @@
     "total_ipv4_ips": "512",
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T14:32:47"
+  },
+  "139481": {
+    "as_country": "India",
+    "as_domain": "ASN Type",
+    "as_name": "Airmimo Networks Private Limited",
+    "as_number": "139481",
+    "asn_type": "(COM) Commercial",
+    "lookup_source": "https://lite.ip2location.com/as139481",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:22:58"
   },
   "139483": {
     "as_country": "India",
@@ -17279,6 +17795,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:26:46"
   },
+  "139590": {
+    "as_country": "Bangladesh",
+    "as_domain": "gnetworkbd.com",
+    "as_name": "Galaxy Cyber Cafe",
+    "as_number": "139590",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as139590",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:09:07"
+  },
   "139604": {
     "as_country": "Bangladesh",
     "as_domain": "arrownet.co.in",
@@ -17302,6 +17830,30 @@
     "total_ipv4_ips": "256",
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T15:53:02"
+  },
+  "139622": {
+    "as_country": "Bangladesh",
+    "as_domain": "qutelbd.net",
+    "as_name": "Que Tel BD",
+    "as_number": "139622",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as139622",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:09:10"
+  },
+  "139632": {
+    "as_country": "Bangladesh",
+    "as_domain": "mirpurnetbd.com",
+    "as_name": "Mirpur Net",
+    "as_number": "139632",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as139632",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:10:50"
   },
   "139642": {
     "as_country": "Bangladesh",
@@ -17519,6 +18071,30 @@
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T15:26:53"
   },
+  "139792": {
+    "as_country": "Bangladesh",
+    "as_domain": "browserworldit.com",
+    "as_name": "Browser World IT",
+    "as_number": "139792",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as139792",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:09:15"
+  },
+  "139806": {
+    "as_country": "Bangladesh",
+    "as_domain": "masternetbd.net",
+    "as_name": "Master Net",
+    "as_number": "139806",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as139806",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:23:17"
+  },
   "139808": {
     "as_country": "Bangladesh",
     "as_domain": "sonycyber.net",
@@ -17639,6 +18215,18 @@
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T16:08:43"
   },
+  "139839": {
+    "as_country": "Bangladesh",
+    "as_domain": "zeronet.io",
+    "as_name": "ZeroNet",
+    "as_number": "139839",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as139839",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:07:19"
+  },
   "139841": {
     "as_country": "Bangladesh",
     "as_domain": "starcommunications.net",
@@ -17650,6 +18238,18 @@
     "total_ipv4_ips": "1,280",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T14:47:20"
+  },
+  "139854": {
+    "as_country": "Bangladesh",
+    "as_domain": "diginet-bd.com",
+    "as_name": "Digi Net",
+    "as_number": "139854",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as139854",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:08:15"
   },
   "139863": {
     "as_country": "Bangladesh",
@@ -17819,6 +18419,18 @@
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T17:02:34"
   },
+  "139955": {
+    "as_country": "Indonesia",
+    "as_domain": "dataprime.net.id",
+    "as_name": "PT Data Prima Solusindo",
+    "as_number": "139955",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as139955",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:23:59"
+  },
   "139967": {
     "as_country": "Indonesia",
     "as_domain": "yam.net.id",
@@ -17854,6 +18466,18 @@
     "total_ipv4_ips": "9,216",
     "total_ipv6_ips": "29 Septillion",
     "updated_at": "2026-04-29T11:09:15"
+  },
+  "140026": {
+    "as_country": "Indonesia",
+    "as_domain": "timornet.id",
+    "as_name": "PT. Kupang Intermedia",
+    "as_number": "140026",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as140026",
+    "status": "ok",
+    "total_ipv4_ips": "1,536",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:24:04"
   },
   "140033": {
     "as_country": "India",
@@ -18010,6 +18634,18 @@
     "total_ipv4_ips": "512",
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T16:26:16"
+  },
+  "140087": {
+    "as_country": "Bangladesh",
+    "as_domain": "jannatmirinternetservice.com",
+    "as_name": "Jannat Mir Internet Service",
+    "as_number": "140087",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as140087",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:16:07"
   },
   "140090": {
     "as_country": "Bangladesh",
@@ -18671,6 +19307,18 @@
     "total_ipv6_ips": "1.3 Nonillion",
     "updated_at": "2026-08-03T14:49:49"
   },
+  "140323": {
+    "as_country": "Philippines",
+    "as_domain": "alefiber.com",
+    "as_name": "Allastrilla Enterprises",
+    "as_number": "140323",
+    "asn_type": "(COM) Commercial",
+    "lookup_source": "https://lite.ip2location.com/as140323",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:24:36"
+  },
   "140384": {
     "as_country": "Indonesia",
     "as_domain": "bitniaga.net.id",
@@ -18694,6 +19342,18 @@
     "total_ipv4_ips": "2,048",
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T17:04:01"
+  },
+  "140413": {
+    "as_country": "Indonesia",
+    "as_domain": "gayuh.net.id",
+    "as_name": "PT. Gayuh Media Informatika",
+    "as_number": "140413",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as140413",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:15:26"
   },
   "140429": {
     "as_country": "Indonesia",
@@ -19067,6 +19727,18 @@
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T15:06:51"
   },
+  "140917": {
+    "as_country": "Bangladesh",
+    "as_domain": "eratraders.com.bd",
+    "as_name": "Era Traders",
+    "as_number": "140917",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as140917",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:05:35"
+  },
   "140923": {
     "as_country": "Bangladesh",
     "as_domain": "globallink.net.pk",
@@ -19439,6 +20111,18 @@
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T16:21:24"
   },
+  "141114": {
+    "as_country": "Indonesia",
+    "as_domain": "smi.net.id",
+    "as_name": "PT Super Media Indonesia",
+    "as_number": "141114",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as141114",
+    "status": "ok",
+    "total_ipv4_ips": "768",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:09:47"
+  },
   "141169": {
     "as_country": "India",
     "as_domain": "ASN Type",
@@ -19450,6 +20134,18 @@
     "total_ipv4_ips": "256",
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T15:46:03"
+  },
+  "141178": {
+    "as_country": "Bangladesh",
+    "as_domain": "superfastconnectivity.com",
+    "as_name": "Super Fast Connectivity",
+    "as_number": "141178",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as141178",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:09:52"
   },
   "141184": {
     "as_country": "Bangladesh",
@@ -20567,6 +21263,18 @@
     "total_ipv6_ips": "0",
     "updated_at": "2026-04-29T13:05:26"
   },
+  "141507": {
+    "as_country": "India",
+    "as_domain": "nimhans.ac.in",
+    "as_name": "National Institute of Mental Health and Neurosciences",
+    "as_number": "141507",
+    "asn_type": "(EDU) University/College/School",
+    "lookup_source": "https://lite.ip2location.com/as141507",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:14:04"
+  },
   "141509": {
     "as_country": "India",
     "as_domain": "alfanetworks.in",
@@ -20927,6 +21635,18 @@
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T16:42:37"
   },
+  "141621": {
+    "as_country": "Indonesia",
+    "as_domain": "gms.net.id",
+    "as_name": "PT Galuh Multidata Solution",
+    "as_number": "141621",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as141621",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:14:08"
+  },
   "141680": {
     "as_country": "Bhutan",
     "as_domain": "supernetinfocomm.bt",
@@ -21082,6 +21802,18 @@
     "total_ipv4_ips": "512",
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T15:30:23"
+  },
+  "141745": {
+    "as_country": "Bangladesh",
+    "as_domain": "moghbazardotnet.business.site",
+    "as_name": "Moghbazar Dot Net",
+    "as_number": "141745",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as141745",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:12:48"
   },
   "141763": {
     "as_country": "Bangladesh",
@@ -21671,6 +22403,18 @@
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T16:43:52"
   },
+  "141934": {
+    "as_country": "Indonesia",
+    "as_domain": "speedforce.id",
+    "as_name": "PT Sanders Bersaudara Media",
+    "as_number": "141934",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as141934",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:25:34"
+  },
   "141945": {
     "as_country": "Indonesia",
     "as_domain": "hydra.co.id",
@@ -21778,6 +22522,18 @@
     "total_ipv4_ips": "256",
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T15:27:46"
+  },
+  "142058": {
+    "as_country": "Bangladesh",
+    "as_domain": "fastnetwork.com.bd",
+    "as_name": "Fast Network",
+    "as_number": "142058",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as142058",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:06:42"
   },
   "142060": {
     "as_country": "Bangladesh",
@@ -21983,6 +22739,18 @@
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T16:22:29"
   },
+  "142278": {
+    "as_country": "Bangladesh",
+    "as_domain": "modhumotinet.com",
+    "as_name": "Modhumoti Internet Service",
+    "as_number": "142278",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as142278",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:14:51"
+  },
   "142285": {
     "as_country": "Philippines",
     "as_domain": "keithnetinc.com",
@@ -22043,6 +22811,18 @@
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T16:08:18"
   },
+  "142307": {
+    "as_country": "Indonesia",
+    "as_domain": "cybmedia.com",
+    "as_name": "PT CYB Media Group",
+    "as_number": "142307",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as142307",
+    "status": "ok",
+    "total_ipv4_ips": "3,072",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:26:04"
+  },
   "142311": {
     "as_country": "Indonesia",
     "as_domain": "jayanet.co.id",
@@ -22054,6 +22834,18 @@
     "total_ipv4_ips": "512",
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T14:50:37"
+  },
+  "142319": {
+    "as_country": "Indonesia",
+    "as_domain": "viberlink.net",
+    "as_name": "PT Telemedia Komunikasi Pratama",
+    "as_number": "142319",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as142319",
+    "status": "ok",
+    "total_ipv4_ips": "9,984",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:12:45"
   },
   "142322": {
     "as_country": "Indonesia",
@@ -22091,6 +22883,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:01:28"
   },
+  "142381": {
+    "as_country": "Indonesia",
+    "as_domain": "mactel.net.id",
+    "as_name": "PT Media Access Telematika",
+    "as_number": "142381",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as142381",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:06:50"
+  },
   "142382": {
     "as_country": "Indonesia",
     "as_domain": "jnhost.co.id",
@@ -22114,6 +22918,18 @@
     "total_ipv4_ips": "1,280",
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T15:11:45"
+  },
+  "142387": {
+    "as_country": "Indonesia",
+    "as_domain": "weave.co.id",
+    "as_name": "PT Integrasi Jaringan Ekosistem",
+    "as_number": "142387",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as142387",
+    "status": "ok",
+    "total_ipv4_ips": "2,304",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:12:40"
   },
   "142407": {
     "as_country": "Bangladesh",
@@ -22691,6 +23507,18 @@
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T15:10:05"
   },
+  "142551": {
+    "as_country": "Bangladesh",
+    "as_domain": "ASN Type",
+    "as_name": "KingsHost",
+    "as_number": "142551",
+    "asn_type": "(COM) Commercial",
+    "lookup_source": "https://lite.ip2location.com/as142551",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:25:24"
+  },
   "142552": {
     "as_country": "Pakistan",
     "as_domain": "kcn.com.pk",
@@ -22762,6 +23590,18 @@
     "total_ipv4_ips": "512",
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T14:55:56"
+  },
+  "142618": {
+    "as_country": "Pakistan",
+    "as_domain": "winnet.com.pk",
+    "as_name": "GH Telecom",
+    "as_number": "142618",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as142618",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:16:11"
   },
   "142619": {
     "as_country": "Bangladesh",
@@ -23387,6 +24227,18 @@
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T16:10:10"
   },
+  "146961": {
+    "as_country": "Hong Kong",
+    "as_domain": "nexet.hk",
+    "as_name": "Nexet Limited",
+    "as_number": "146961",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as146961",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:24:13"
+  },
   "146988": {
     "as_country": "Bangladesh",
     "as_domain": "asthanetworks.net",
@@ -23506,6 +24358,30 @@
     "total_ipv4_ips": "512",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:08:38"
+  },
+  "147131": {
+    "as_country": "Indonesia",
+    "as_domain": "g-fiber.co.id",
+    "as_name": "PT Global Sarana Elektronika",
+    "as_number": "147131",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as147131",
+    "status": "ok",
+    "total_ipv4_ips": "1,280",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:13:49"
+  },
+  "147135": {
+    "as_country": "Indonesia",
+    "as_domain": "salam.net.id",
+    "as_name": "PT Swajasa Lintas Media",
+    "as_number": "147135",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as147135",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:13:45"
   },
   "147145": {
     "as_country": "Indonesia",
@@ -24142,6 +25018,42 @@
     "total_ipv4_ips": "79,360",
     "total_ipv6_ips": "1.3 Nonillion",
     "updated_at": "2026-04-29T13:13:41"
+  },
+  "14868": {
+    "as_country": "Brazil",
+    "as_domain": "liggatelecom.com.br",
+    "as_name": "Ligga Telecomunicacoes S.A.",
+    "as_number": "14868",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as14868",
+    "status": "ok",
+    "total_ipv4_ips": "87,040",
+    "total_ipv6_ips": "237.7 Octillion",
+    "updated_at": "2026-08-03T17:09:23"
+  },
+  "148794": {
+    "as_country": "Bangladesh",
+    "as_domain": "nsnetconnection.net",
+    "as_name": "NS Net Connection",
+    "as_number": "148794",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as148794",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:09:26"
+  },
+  "148974": {
+    "as_country": "Bangladesh",
+    "as_domain": "geekycloud.net",
+    "as_name": "Geeky Cloud",
+    "as_number": "148974",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as148974",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:09:30"
   },
   "148975": {
     "as_country": "Bangladesh",
@@ -25247,6 +26159,18 @@
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T15:56:09"
   },
+  "149499": {
+    "as_country": "Bangladesh",
+    "as_domain": "mahinonline.com",
+    "as_name": "Mahin Online",
+    "as_number": "149499",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as149499",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:18:34"
+  },
   "149501": {
     "as_country": "Bangladesh",
     "as_domain": "palashbarionline.com",
@@ -25258,6 +26182,18 @@
     "total_ipv4_ips": "512",
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-04-29T12:36:11"
+  },
+  "149505": {
+    "as_country": "Bangladesh",
+    "as_domain": "3rcommunications.com",
+    "as_name": "3R Communications",
+    "as_number": "149505",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as149505",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:08:59"
   },
   "149517": {
     "as_country": "Bangladesh",
@@ -25414,6 +26350,18 @@
     "total_ipv4_ips": "512",
     "total_ipv6_ips": "0",
     "updated_at": "2026-04-29T12:35:12"
+  },
+  "149548": {
+    "as_country": "India",
+    "as_domain": "dnetbroadband.in",
+    "as_name": "D Net Broadband",
+    "as_number": "149548",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as149548",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:05:31"
   },
   "149549": {
     "as_country": "India",
@@ -26159,6 +27107,18 @@
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T16:07:49"
   },
+  "149925": {
+    "as_country": "Indonesia",
+    "as_domain": "swnetwork.id",
+    "as_name": "PT Sakti Wijaya Network",
+    "as_number": "149925",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as149925",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:11:59"
+  },
   "149983": {
     "as_country": "Bangladesh",
     "as_domain": "minjuonline.com",
@@ -26194,6 +27154,18 @@
     "total_ipv4_ips": "512",
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-04-29T12:48:33"
+  },
+  "149988": {
+    "as_country": "Bangladesh",
+    "as_domain": "ilogisticbd.net",
+    "as_name": "I Logistic",
+    "as_number": "149988",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as149988",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:11:56"
   },
   "149994": {
     "as_country": "Bangladesh",
@@ -26711,6 +27683,18 @@
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T14:10:59"
   },
+  "150108": {
+    "as_country": "Pakistan",
+    "as_domain": "telenor.com.pk",
+    "as_name": "Telehouse Pvt Ltd",
+    "as_number": "150108",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as150108",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:24:28"
+  },
   "150126": {
     "as_country": "India",
     "as_domain": "ASN Type",
@@ -26794,6 +27778,18 @@
     "total_ipv4_ips": "512",
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T15:20:03"
+  },
+  "150170": {
+    "as_country": "Bangladesh",
+    "as_domain": "web-eleven.com",
+    "as_name": "Web Eleven",
+    "as_number": "150170",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as150170",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:09:39"
   },
   "150175": {
     "as_country": "Bangladesh",
@@ -26975,6 +27971,18 @@
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T14:56:05"
   },
+  "150352": {
+    "as_country": "Bangladesh",
+    "as_domain": "skybusinesscenter.com.pa",
+    "as_name": "Sky Business Center",
+    "as_number": "150352",
+    "asn_type": "(COM) Commercial",
+    "lookup_source": "https://lite.ip2location.com/as150352",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:23:52"
+  },
   "150371": {
     "as_country": "Pakistan",
     "as_domain": "pace-tel.com",
@@ -27034,6 +28042,18 @@
     "total_ipv4_ips": "512",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:51:38"
+  },
+  "150387": {
+    "as_country": "Pakistan",
+    "as_domain": "badarnetworks.online",
+    "as_name": "Badar Enterprises Cable Network (Private) Limited",
+    "as_number": "150387",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as150387",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:23:55"
   },
   "150397": {
     "as_country": "Bangladesh",
@@ -27226,6 +28246,18 @@
     "total_ipv4_ips": "256",
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T15:22:15"
+  },
+  "150573": {
+    "as_country": "India",
+    "as_domain": "rihant.in",
+    "as_name": "Rihant Infotech Private Limited",
+    "as_number": "150573",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as150573",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:14:37"
   },
   "150576": {
     "as_country": "India",
@@ -27430,6 +28462,18 @@
     "total_ipv4_ips": "256",
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T14:17:31"
+  },
+  "150617": {
+    "as_country": "India",
+    "as_domain": "anonet.in",
+    "as_name": "Doorsanchar STS Telecom Services Private Limited",
+    "as_number": "150617",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as150617",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:07:12"
   },
   "150618": {
     "as_country": "India",
@@ -28163,6 +29207,18 @@
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T13:52:33"
   },
+  "151099": {
+    "as_country": "India",
+    "as_domain": "ananthtelecomservices.com",
+    "as_name": "Ananth Telecom Services Private Limited",
+    "as_number": "151099",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as151099",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:06:33"
+  },
   "151101": {
     "as_country": "India",
     "as_domain": "sphatiknetwork.in",
@@ -28583,6 +29639,18 @@
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T16:09:59"
   },
+  "151370": {
+    "as_country": "Bangladesh",
+    "as_domain": "nrgroup-bd.com",
+    "as_name": "Arif Knitspin Limited",
+    "as_number": "151370",
+    "asn_type": "(COM) Commercial",
+    "lookup_source": "https://lite.ip2location.com/as151370",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:08:18"
+  },
   "151391": {
     "as_country": "Bangladesh",
     "as_domain": "varendrait.com",
@@ -28703,6 +29771,18 @@
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T16:35:01"
   },
+  "151549": {
+    "as_country": "Indonesia",
+    "as_domain": "ihore.id",
+    "as_name": "PT Sarana Kawan Setia",
+    "as_number": "151549",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as151549",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:12:06"
+  },
   "151576": {
     "as_country": "Indonesia",
     "as_domain": "mahawiranusantaragroup.id",
@@ -28714,6 +29794,18 @@
     "total_ipv4_ips": "512",
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T16:26:09"
+  },
+  "151577": {
+    "as_country": "Indonesia",
+    "as_domain": "gekanet.id",
+    "as_name": "PT Geka Solusi Utama",
+    "as_number": "151577",
+    "asn_type": "(COM) Commercial",
+    "lookup_source": "https://lite.ip2location.com/as151577",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:21:58"
   },
   "151614": {
     "as_country": "Bangladesh",
@@ -29603,6 +30695,18 @@
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T15:01:15"
   },
+  "152115": {
+    "as_country": "Bangladesh",
+    "as_domain": "summitiig.net",
+    "as_name": "RSINet",
+    "as_number": "152115",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as152115",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:16:20"
+  },
   "152122": {
     "as_country": "Bangladesh",
     "as_domain": "borendroonline.net",
@@ -29699,6 +30803,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:33:12"
   },
+  "152179": {
+    "as_country": "Hong Kong",
+    "as_domain": "ipraft.com",
+    "as_name": "Global Communication Network Limited",
+    "as_number": "152179",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as152179",
+    "status": "ok",
+    "total_ipv4_ips": "88,576",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:17:19"
+  },
   "152185": {
     "as_country": "Bangladesh",
     "as_domain": "webex-bd.com",
@@ -29746,6 +30862,18 @@
     "total_ipv4_ips": "256",
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T16:33:47"
+  },
+  "152306": {
+    "as_country": "Bangladesh",
+    "as_domain": "mollasoft.net",
+    "as_name": "Molla Soft Net Technology",
+    "as_number": "152306",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as152306",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:11:41"
   },
   "152317": {
     "as_country": "Bhutan",
@@ -29806,6 +30934,30 @@
     "total_ipv4_ips": "1,024",
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T16:52:58"
+  },
+  "152388": {
+    "as_country": "Indonesia",
+    "as_domain": "sknetwork.id",
+    "as_name": "PT Sinyal Khatulistiwa Network",
+    "as_number": "152388",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as152388",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:07:57"
+  },
+  "152391": {
+    "as_country": "Indonesia",
+    "as_domain": "sheepnet.id",
+    "as_name": "PT Sheep Network Teknologi",
+    "as_number": "152391",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as152391",
+    "status": "ok",
+    "total_ipv4_ips": "768",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:08:03"
   },
   "152446": {
     "as_country": "Bangladesh",
@@ -29998,6 +31150,18 @@
     "total_ipv4_ips": "512",
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T13:51:15"
+  },
+  "152508": {
+    "as_country": "India",
+    "as_domain": "bdspl.in",
+    "as_name": "Bharat Data Services Pvt Ltd",
+    "as_number": "152508",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as152508",
+    "status": "ok",
+    "total_ipv4_ips": "768",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:05:16"
   },
   "152512": {
     "as_country": "India",
@@ -30743,6 +31907,18 @@
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T15:02:31"
   },
+  "153124": {
+    "as_country": "Indonesia",
+    "as_domain": "cadas.co.id",
+    "as_name": "PT Cahaya Data Nusantara",
+    "as_number": "153124",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as153124",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:19:03"
+  },
   "153132": {
     "as_country": "Indonesia",
     "as_domain": "taffnet.id",
@@ -31427,6 +32603,18 @@
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T15:57:40"
   },
+  "153527": {
+    "as_country": "Pakistan",
+    "as_domain": "ASN Type",
+    "as_name": "Velocity Telecom (Private) Limited",
+    "as_number": "153527",
+    "asn_type": "(COM) Commercial",
+    "lookup_source": "https://lite.ip2location.com/as153527",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:10:28"
+  },
   "153530": {
     "as_country": "Bangladesh",
     "as_domain": "mebtechnology.com",
@@ -31522,6 +32710,18 @@
     "total_ipv4_ips": "512",
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T16:13:47"
+  },
+  "153670": {
+    "as_country": "Indonesia",
+    "as_domain": "nafnet.id",
+    "as_name": "PT Nafis Global Visi",
+    "as_number": "153670",
+    "asn_type": "(COM) Commercial",
+    "lookup_source": "https://lite.ip2location.com/as153670",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:10:23"
   },
   "153676": {
     "as_country": "India",
@@ -31642,6 +32842,18 @@
     "total_ipv4_ips": "512",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T13:55:42"
+  },
+  "153723": {
+    "as_country": "India",
+    "as_domain": "rrgroupinsts.org",
+    "as_name": "Moogambigai Chairitable and Educational Trust",
+    "as_number": "153723",
+    "asn_type": "(EDU) University/College/School",
+    "lookup_source": "https://lite.ip2location.com/as153723",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:05:12"
   },
   "153734": {
     "as_country": "India",
@@ -32303,6 +33515,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:51:51"
   },
+  "154218": {
+    "as_country": "Indonesia",
+    "as_domain": "ASN Type",
+    "as_name": "PT Lintas Jaringan Tungkal",
+    "as_number": "154218",
+    "asn_type": "(COM) Commercial",
+    "lookup_source": "https://lite.ip2location.com/as154218",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:18:09"
+  },
   "154223": {
     "as_country": "Pakistan",
     "as_domain": "dwn.net.pk",
@@ -32603,6 +33827,30 @@
     "total_ipv6_ips": "0",
     "updated_at": "2026-04-29T12:53:18"
   },
+  "154449": {
+    "as_country": "Bangladesh",
+    "as_domain": "dreamsolutionnetworks.com",
+    "as_name": "Dream Solution Networks",
+    "as_number": "154449",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as154449",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:09:56"
+  },
+  "154453": {
+    "as_country": "Pakistan",
+    "as_domain": "deltatelecom.net.pk",
+    "as_name": "Delta Broadband Private Limited",
+    "as_number": "154453",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as154453",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:18:25"
+  },
   "154455": {
     "as_country": "India",
     "as_domain": "microtalk.in",
@@ -32831,6 +34079,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:47:15"
   },
+  "154723": {
+    "as_country": "Bangladesh",
+    "as_domain": "opticalcommunication.com.bd",
+    "as_name": "Optical Communication",
+    "as_number": "154723",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as154723",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:09:42"
+  },
   "15502": {
     "as_country": "Ireland",
     "as_domain": "vodafone.ie",
@@ -32950,6 +34210,18 @@
     "total_ipv4_ips": "131,072",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:36:44"
+  },
+  "15723": {
+    "as_country": "Azerbaijan",
+    "as_domain": "azeronline.com",
+    "as_name": "Azeronline Ltd Joint Enterprise",
+    "as_number": "15723",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as15723",
+    "status": "ok",
+    "total_ipv4_ips": "20,224",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:10:46"
   },
   "15735": {
     "as_country": "Malta",
@@ -33083,6 +34355,30 @@
     "total_ipv6_ips": "1.3 Nonillion",
     "updated_at": "2026-08-03T15:28:55"
   },
+  "15964": {
+    "as_country": "Cameroon",
+    "as_domain": "camtel.cm",
+    "as_name": "Cameroon Telecommunications Network",
+    "as_number": "15964",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as15964",
+    "status": "ok",
+    "total_ipv4_ips": "175,104",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:13:38"
+  },
+  "16010": {
+    "as_country": "Georgia",
+    "as_domain": "magtinet.ge",
+    "as_name": "Magticom Ltd.",
+    "as_number": "16010",
+    "asn_type": "(MOB) Mobile ISP",
+    "lookup_source": "https://lite.ip2location.com/as16010",
+    "status": "ok",
+    "total_ipv4_ips": "301,312",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:13:34"
+  },
   "16019": {
     "as_country": "Czechia",
     "as_domain": "vodafone.cz",
@@ -33106,6 +34402,18 @@
     "total_ipv4_ips": "258,048",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T13:01:09"
+  },
+  "16082": {
+    "as_country": "United Kingdom of Great Britain and Northern Ireland",
+    "as_domain": "spitfire.co.uk",
+    "as_name": "Spitfire Network Services Limited",
+    "as_number": "16082",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as16082",
+    "status": "ok",
+    "total_ipv4_ips": "79,872",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:23:42"
   },
   "16086": {
     "as_country": "Finland",
@@ -33358,6 +34666,18 @@
     "total_ipv4_ips": "25,185,152",
     "total_ipv6_ips": "4.1 Nonillion",
     "updated_at": "2026-04-29T18:45:01"
+  },
+  "17421": {
+    "as_country": "Taiwan (Province of China)",
+    "as_domain": "hinet.net",
+    "as_name": "Mobile Business Group",
+    "as_number": "17421",
+    "asn_type": "(MOB) Mobile ISP",
+    "lookup_source": "https://lite.ip2location.com/as17421",
+    "status": "ok",
+    "total_ipv4_ips": "1,655,808",
+    "total_ipv6_ips": "40.6 Nonillion",
+    "updated_at": "2026-08-03T17:20:41"
   },
   "17426": {
     "as_country": "India",
@@ -34079,6 +35399,18 @@
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T15:23:27"
   },
+  "18186": {
+    "as_country": "United States of America",
+    "as_domain": "as18186.net",
+    "as_name": "Nebula Global LLC",
+    "as_number": "18186",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as18186",
+    "status": "ok",
+    "total_ipv4_ips": "217,088",
+    "total_ipv6_ips": "5 Octillion",
+    "updated_at": "2026-08-03T17:16:49"
+  },
   "18196": {
     "as_country": "India",
     "as_domain": "my7star.com",
@@ -34187,6 +35519,18 @@
     "total_ipv6_ips": "0",
     "updated_at": "2026-04-29T16:37:59"
   },
+  "18530": {
+    "as_country": "United States of America",
+    "as_domain": "isomedia.com",
+    "as_name": "Isomedia Inc.",
+    "as_number": "18530",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as18530",
+    "status": "ok",
+    "total_ipv4_ips": "64,256",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:05:20"
+  },
   "18678": {
     "as_country": "Colombia",
     "as_domain": "internexa.com",
@@ -34210,6 +35554,18 @@
     "total_ipv4_ips": "768",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T14:57:38"
+  },
+  "18747": {
+    "as_country": "United States of America",
+    "as_domain": "ifxcorp.com",
+    "as_name": "IFX Corporation",
+    "as_number": "18747",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as18747",
+    "status": "ok",
+    "total_ipv4_ips": "293,632",
+    "total_ipv6_ips": "554.8 Octillion",
+    "updated_at": "2026-08-03T17:13:13"
   },
   "18779": {
     "as_country": "United States of America",
@@ -34355,6 +35711,18 @@
     "total_ipv6_ips": "16.9 Septillion",
     "updated_at": "2026-08-03T15:32:13"
   },
+  "196881": {
+    "as_country": "United Kingdom of Great Britain and Northern Ireland",
+    "as_domain": "liberty-izone.com",
+    "as_name": "Liberty-izone Ltd",
+    "as_number": "196881",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as196881",
+    "status": "ok",
+    "total_ipv4_ips": "4,096",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:19:27"
+  },
   "197075": {
     "as_country": "Italy",
     "as_domain": "activenetwork.it",
@@ -34378,6 +35746,18 @@
     "total_ipv4_ips": "2,298,880",
     "total_ipv6_ips": "1.5 Octillion",
     "updated_at": "2026-08-03T15:28:18"
+  },
+  "197295": {
+    "as_country": "Poland",
+    "as_domain": "tsm.tarnobrzeg.pl",
+    "as_name": "Tarnobrzeska Spoldzielnia Mieszkaniowa W Tarnobrzegu",
+    "as_number": "197295",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as197295",
+    "status": "ok",
+    "total_ipv4_ips": "6,656",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:13:10"
   },
   "197350": {
     "as_country": "Palestine, State of",
@@ -34414,6 +35794,18 @@
     "total_ipv4_ips": "214,016",
     "total_ipv6_ips": "1.2 Nonillion",
     "updated_at": "2026-04-29T16:32:37"
+  },
+  "19773": {
+    "as_country": "United States of America",
+    "as_domain": "motorola.com",
+    "as_name": "Motorola Inc.",
+    "as_number": "19773",
+    "asn_type": "(COM) Commercial",
+    "lookup_source": "https://lite.ip2location.com/as19773",
+    "status": "ok",
+    "total_ipv4_ips": "545,280",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:13:05"
   },
   "197830": {
     "as_country": "Azerbaijan",
@@ -34547,6 +35939,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:41:38"
   },
+  "198883": {
+    "as_country": "Bulgaria",
+    "as_domain": "byoip.ru",
+    "as_name": "Tabunscic Anatoli",
+    "as_number": "198883",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as198883",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "2.4 Septillion",
+    "updated_at": "2026-08-03T17:19:47"
+  },
   "19901": {
     "as_country": "United States of America",
     "as_domain": "brightspeed.com",
@@ -34558,6 +35962,18 @@
     "total_ipv4_ips": "3,624,704",
     "total_ipv6_ips": "20.4 Nonillion",
     "updated_at": "2026-08-03T14:49:59"
+  },
+  "199140": {
+    "as_country": "France",
+    "as_domain": "orange.com",
+    "as_name": "Orange S.A.",
+    "as_number": "199140",
+    "asn_type": "-",
+    "lookup_source": "https://lite.ip2location.com/as199140",
+    "status": "ok",
+    "total_ipv4_ips": "2,304",
+    "total_ipv6_ips": "622.6 Septillion",
+    "updated_at": "2026-08-03T17:19:52"
   },
   "199218": {
     "as_country": "Switzerland",
@@ -34606,6 +36022,18 @@
     "total_ipv4_ips": "63,744",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T16:35:11"
+  },
+  "199775": {
+    "as_country": "United Kingdom of Great Britain and Northern Ireland",
+    "as_domain": "connexin.co.uk",
+    "as_name": "Connexin Limited",
+    "as_number": "199775",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as199775",
+    "status": "ok",
+    "total_ipv4_ips": "13,568",
+    "total_ipv6_ips": "2.7 Nonillion",
+    "updated_at": "2026-08-03T17:11:45"
   },
   "199995": {
     "as_country": "Ukraine",
@@ -34726,6 +36154,18 @@
     "total_ipv4_ips": "318,720",
     "total_ipv6_ips": "316.9 Octillion",
     "updated_at": "2026-08-03T14:48:26"
+  },
+  "201089": {
+    "as_country": "Iraq",
+    "as_domain": "eitis.net",
+    "as_name": "Experience Infinity Technology Internet Service Company Ltd.",
+    "as_number": "201089",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as201089",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:19:56"
   },
   "201131": {
     "as_country": "United Kingdom of Great Britain and Northern Ireland",
@@ -34894,6 +36334,18 @@
     "total_ipv4_ips": "1,024",
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T14:41:13"
+  },
+  "20257": {
+    "as_country": "United States of America",
+    "as_domain": "ftc-i.net",
+    "as_name": "Farmers Telephone Cooperative Inc.",
+    "as_number": "20257",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as20257",
+    "status": "ok",
+    "total_ipv4_ips": "57,344",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:08:10"
   },
   "202651": {
     "as_country": "Iraq",
@@ -35135,6 +36587,18 @@
     "total_ipv6_ips": "633.8 Octillion",
     "updated_at": "2026-08-03T16:12:08"
   },
+  "204958": {
+    "as_country": "Italy",
+    "as_domain": "ktsolutions.it",
+    "as_name": "KT Solutions S.R.L.S",
+    "as_number": "204958",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as204958",
+    "status": "ok",
+    "total_ipv4_ips": "2,816",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:20:35"
+  },
   "205016": {
     "as_country": "Sweden",
     "as_domain": "opera.com",
@@ -35303,6 +36767,18 @@
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T17:02:18"
   },
+  "206495": {
+    "as_country": "Iran (Islamic Republic of)",
+    "as_domain": "azinkia.ir",
+    "as_name": "Gostaresh Ertebat Azin Kia Company PJSC",
+    "as_number": "206495",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as206495",
+    "status": "ok",
+    "total_ipv4_ips": "3,328",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:21:00"
+  },
   "206519": {
     "as_country": "Lebanon",
     "as_domain": "zinaisp.com",
@@ -35314,6 +36790,18 @@
     "total_ipv4_ips": "1,024",
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T16:37:51"
+  },
+  "206561": {
+    "as_country": "Turkey",
+    "as_domain": "airmaxcyprus.com",
+    "as_name": "AirMax Communication Ltd",
+    "as_number": "206561",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as206561",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:21:05"
   },
   "206703": {
     "as_country": "Czechia",
@@ -35411,6 +36899,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T18:48:45"
   },
+  "208149": {
+    "as_country": "Greece",
+    "as_domain": "skytelecom.gr",
+    "as_name": "Skytelecom & SIA E.E.",
+    "as_number": "208149",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as208149",
+    "status": "ok",
+    "total_ipv4_ips": "768",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:21:13"
+  },
   "208172": {
     "as_country": "Switzerland",
     "as_domain": "protonmail.ch",
@@ -35434,6 +36934,18 @@
     "total_ipv4_ips": "2,048",
     "total_ipv6_ips": "633.8 Octillion",
     "updated_at": "2026-08-03T16:22:38"
+  },
+  "208324": {
+    "as_country": "Iraq",
+    "as_domain": "nbtele.net",
+    "as_name": "Noor Al-Bedaya for General Trading Agricultural Investments Technical Production and Distribution Internet Services General Services Information Technology and Software Ltd",
+    "as_number": "208324",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as208324",
+    "status": "ok",
+    "total_ipv4_ips": "7,936",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:16:24"
   },
   "20845": {
     "as_country": "Hungary",
@@ -35483,6 +36995,18 @@
     "total_ipv6_ips": "21.3 Nonillion",
     "updated_at": "2026-04-29T12:54:48"
   },
+  "20910": {
+    "as_country": "Latvia",
+    "as_domain": "bite.lv",
+    "as_name": "SIA Bite Latvija",
+    "as_number": "20910",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as20910",
+    "status": "ok",
+    "total_ipv4_ips": "265,216",
+    "total_ipv6_ips": "1.9 Nonillion",
+    "updated_at": "2026-08-03T17:21:18"
+  },
   "209155": {
     "as_country": "Czechia",
     "as_domain": "onehostplanet.com",
@@ -35507,6 +37031,18 @@
     "total_ipv6_ips": "158.5 Octillion",
     "updated_at": "2026-08-03T15:36:13"
   },
+  "209273": {
+    "as_country": "Iraq",
+    "as_domain": "hrins.net",
+    "as_name": "Hilal Al-Rafidain for Computer and Internet Services Co. Ltd.",
+    "as_number": "209273",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as209273",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:14:41"
+  },
   "209277": {
     "as_country": "Albania",
     "as_domain": "apt.al",
@@ -35518,6 +37054,18 @@
     "total_ipv4_ips": "2,048",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T13:09:19"
+  },
+  "209354": {
+    "as_country": "Lebanon",
+    "as_domain": "maglobal.net",
+    "as_name": "MA Global Company S.A.R.L.",
+    "as_number": "209354",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as209354",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:21:41"
   },
   "209380": {
     "as_country": "Turkey",
@@ -35639,6 +37187,18 @@
     "total_ipv6_ips": "7.3 Septillion",
     "updated_at": "2026-08-03T16:19:11"
   },
+  "209700": {
+    "as_country": "Azerbaijan",
+    "as_domain": "pasha-technology.com",
+    "as_name": "Pasha Technology LLC",
+    "as_number": "209700",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as209700",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:13:31"
+  },
   "209709": {
     "as_country": "Lithuania",
     "as_domain": "code200.global",
@@ -35747,6 +37307,18 @@
     "total_ipv6_ips": "158.5 Octillion",
     "updated_at": "2026-08-03T14:58:44"
   },
+  "210273": {
+    "as_country": "Kazakhstan",
+    "as_domain": "sas-telecom.kz",
+    "as_name": "Montazh Stroj Servis Too",
+    "as_number": "210273",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as210273",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:07:37"
+  },
   "210278": {
     "as_country": "Italy",
     "as_domain": "skytv.it",
@@ -35794,6 +37366,18 @@
     "total_ipv4_ips": "200,960",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:53:18"
+  },
+  "210546": {
+    "as_country": "United Kingdom of Great Britain and Northern Ireland",
+    "as_domain": "chsl.one",
+    "as_name": "CHSL One Ltd",
+    "as_number": "210546",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as210546",
+    "status": "ok",
+    "total_ipv4_ips": "19,456",
+    "total_ipv6_ips": "5 Octillion",
+    "updated_at": "2026-08-03T17:11:32"
   },
   "210619": {
     "as_country": "United Kingdom of Great Britain and Northern Ireland",
@@ -35866,6 +37450,18 @@
     "total_ipv4_ips": "2,560",
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T13:35:54"
+  },
+  "211057": {
+    "as_country": "Palestine, State of",
+    "as_domain": "astra.ps",
+    "as_name": "Astra for Telecommunication and IT Services",
+    "as_number": "211057",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as211057",
+    "status": "ok",
+    "total_ipv4_ips": "5,120",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:22:15"
   },
   "211309": {
     "as_country": "Norway",
@@ -35998,6 +37594,18 @@
     "total_ipv4_ips": "51,712",
     "total_ipv6_ips": "713.1 Octillion",
     "updated_at": "2026-08-03T14:10:09"
+  },
+  "212531": {
+    "as_country": "Lithuania",
+    "as_domain": "iv.lt",
+    "as_name": "UAB Interneto vizija",
+    "as_number": "212531",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as212531",
+    "status": "ok",
+    "total_ipv4_ips": "40,704",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:22:09"
   },
   "21256": {
     "as_country": "Ukraine",
@@ -36143,6 +37751,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:25:59"
   },
+  "213186": {
+    "as_country": "India",
+    "as_domain": "bendcompass.com",
+    "as_name": "Yanoor Islam Khan",
+    "as_number": "213186",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as213186",
+    "status": "ok",
+    "total_ipv4_ips": "1,536",
+    "total_ipv6_ips": "2.4 Septillion",
+    "updated_at": "2026-08-03T17:22:20"
+  },
   "213230": {
     "as_country": "Germany",
     "as_domain": "hetzner.de",
@@ -36178,6 +37798,18 @@
     "total_ipv4_ips": "4,608",
     "total_ipv6_ips": "635.1 Octillion",
     "updated_at": "2026-08-03T13:34:27"
+  },
+  "21351": {
+    "as_country": "Guadeloupe",
+    "as_domain": "mediaserv.com",
+    "as_name": "Canal + Telecom SAS",
+    "as_number": "21351",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as21351",
+    "status": "ok",
+    "total_ipv4_ips": "201,984",
+    "total_ipv6_ips": "653.6 Octillion",
+    "updated_at": "2026-08-03T17:06:38"
   },
   "213671": {
     "as_country": "United Kingdom of Great Britain and Northern Ireland",
@@ -36263,6 +37895,18 @@
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T16:41:46"
   },
+  "21450": {
+    "as_country": "Israel",
+    "as_domain": "hotmobile.co.il",
+    "as_name": "HOT Mobile Ltd.",
+    "as_number": "21450",
+    "asn_type": "(MOB) Mobile ISP",
+    "lookup_source": "https://lite.ip2location.com/as21450",
+    "status": "ok",
+    "total_ipv4_ips": "5,120",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:06:15"
+  },
   "21473": {
     "as_country": "Germany",
     "as_domain": "pfalzkom.de",
@@ -36311,6 +37955,18 @@
     "total_ipv6_ips": "78.6 Septillion",
     "updated_at": "2026-08-03T17:03:27"
   },
+  "21502": {
+    "as_country": "France",
+    "as_domain": "sfr.net",
+    "as_name": "Societe Francaise du Radiotelephone - SFR SA",
+    "as_number": "21502",
+    "asn_type": "-",
+    "lookup_source": "https://lite.ip2location.com/as21502",
+    "status": "ok",
+    "total_ipv4_ips": "10,240",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:15:42"
+  },
   "21508": {
     "as_country": "United States of America",
     "as_domain": "comcast.net",
@@ -36334,6 +37990,18 @@
     "total_ipv4_ips": "12,800",
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-04-29T12:37:27"
+  },
+  "21537": {
+    "as_country": "United States of America",
+    "as_domain": "midlandcredit.com",
+    "as_name": "Midland Credit Management Inc.",
+    "as_number": "21537",
+    "asn_type": "(COM) Commercial",
+    "lookup_source": "https://lite.ip2location.com/as21537",
+    "status": "ok",
+    "total_ipv4_ips": "768",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:22:45"
   },
   "215540": {
     "as_country": "United Kingdom of Great Britain and Northern Ireland",
@@ -36491,6 +38159,18 @@
     "total_ipv6_ips": "1.5 Nonillion",
     "updated_at": "2026-08-03T15:07:12"
   },
+  "21897": {
+    "as_country": "United States of America",
+    "as_domain": "virtua.org",
+    "as_name": "Virtua Health",
+    "as_number": "21897",
+    "asn_type": "(COM) Commercial",
+    "lookup_source": "https://lite.ip2location.com/as21897",
+    "status": "ok",
+    "total_ipv4_ips": "65,536",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:17:28"
+  },
   "21928": {
     "as_country": "United States of America",
     "as_domain": "t-mobile.com",
@@ -36502,6 +38182,18 @@
     "total_ipv4_ips": "13,187,072",
     "total_ipv6_ips": "1.3 Nonillion",
     "updated_at": "2026-04-29T11:15:55"
+  },
+  "21976": {
+    "as_country": "United States of America",
+    "as_domain": "njedge.net",
+    "as_name": "njedge.net Inc.",
+    "as_number": "21976",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as21976",
+    "status": "ok",
+    "total_ipv4_ips": "139,520",
+    "total_ipv6_ips": "158.5 Octillion",
+    "updated_at": "2026-08-03T17:23:09"
   },
   "2200": {
     "as_country": "France",
@@ -36551,6 +38243,18 @@
     "total_ipv6_ips": "18.1 Septillion",
     "updated_at": "2026-04-29T11:06:54"
   },
+  "22295": {
+    "as_country": "United States of America",
+    "as_domain": "advinservices.com",
+    "as_name": "Advin Services LLC",
+    "as_number": "22295",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as22295",
+    "status": "ok",
+    "total_ipv4_ips": "3,328",
+    "total_ipv6_ips": "76.4 Octillion",
+    "updated_at": "2026-08-03T17:23:13"
+  },
   "22302": {
     "as_country": "United States of America",
     "as_domain": "inoc.net",
@@ -36574,6 +38278,18 @@
     "total_ipv4_ips": "34,560",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:58:02"
+  },
+  "22413": {
+    "as_country": "United States of America",
+    "as_domain": "empowerbroadband.com",
+    "as_name": "Empower Delivered by Craighead Electric",
+    "as_number": "22413",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as22413",
+    "status": "ok",
+    "total_ipv4_ips": "15,872",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:17:23"
   },
   "22423": {
     "as_country": "Canada",
@@ -36683,6 +38399,18 @@
     "total_ipv6_ips": "16.1 Octillion",
     "updated_at": "2026-08-03T14:43:56"
   },
+  "22845": {
+    "as_country": "United States of America",
+    "as_domain": "vccs.edu",
+    "as_name": "Virginia Community College System",
+    "as_number": "22845",
+    "asn_type": "(EDU) University/College/School",
+    "lookup_source": "https://lite.ip2location.com/as22845",
+    "status": "ok",
+    "total_ipv4_ips": "65,792",
+    "total_ipv6_ips": "310.7 Septillion",
+    "updated_at": "2026-08-03T17:17:54"
+  },
   "22909": {
     "as_country": "United States of America",
     "as_domain": "comcast.net",
@@ -36718,6 +38446,18 @@
     "total_ipv4_ips": "590,336",
     "total_ipv6_ips": "158.5 Octillion",
     "updated_at": "2026-08-03T14:19:19"
+  },
+  "23118": {
+    "as_country": "United States of America",
+    "as_domain": "skyline.org",
+    "as_name": "Skyline Telephone",
+    "as_number": "23118",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as23118",
+    "status": "ok",
+    "total_ipv4_ips": "24,576",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:23:23"
   },
   "23201": {
     "as_country": "Paraguay",
@@ -36755,6 +38495,18 @@
     "total_ipv6_ips": "80.6 Octillion",
     "updated_at": "2026-08-03T16:10:13"
   },
+  "23473": {
+    "as_country": "United States of America",
+    "as_domain": "pavlovmedia.com",
+    "as_name": "Pavlov Media Inc",
+    "as_number": "23473",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as23473",
+    "status": "ok",
+    "total_ipv4_ips": "231,168",
+    "total_ipv6_ips": "98.1 Octillion",
+    "updated_at": "2026-08-03T17:12:30"
+  },
   "23487": {
     "as_country": "Ecuador",
     "as_domain": "claro.com.ec",
@@ -36778,6 +38530,18 @@
     "total_ipv4_ips": "203,776",
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T15:08:11"
+  },
+  "23601": {
+    "as_country": "Korea (Republic of)",
+    "as_domain": "skbroadband.com",
+    "as_name": "TSIS",
+    "as_number": "23601",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as23601",
+    "status": "ok",
+    "total_ipv4_ips": "4,608",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:12:25"
   },
   "23672": {
     "as_country": "Nepal",
@@ -36839,6 +38603,18 @@
     "total_ipv6_ips": "158.5 Octillion",
     "updated_at": "2026-04-29T11:14:43"
   },
+  "23700": {
+    "as_country": "Indonesia",
+    "as_domain": "fast.net.id",
+    "as_name": "Linknet-Fastnet ASN",
+    "as_number": "23700",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as23700",
+    "status": "ok",
+    "total_ipv4_ips": "935,424",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:14:33"
+  },
   "23729": {
     "as_country": "Bangladesh",
     "as_domain": "alobd.com",
@@ -36874,6 +38650,18 @@
     "total_ipv4_ips": "116,736",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T11:58:16"
+  },
+  "2381": {
+    "as_country": "United States of America",
+    "as_domain": "wiscnet.net",
+    "as_name": "WiscNet",
+    "as_number": "2381",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as2381",
+    "status": "ok",
+    "total_ipv4_ips": "506,880",
+    "total_ipv6_ips": "79.5 Octillion",
+    "updated_at": "2026-08-03T17:23:47"
   },
   "23860": {
     "as_country": "India",
@@ -37235,6 +39023,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T13:08:20"
   },
+  "24546": {
+    "as_country": "Singapore",
+    "as_domain": "bp.com",
+    "as_name": "BP Pte Limited Energy Company Singapore",
+    "as_number": "24546",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as24546",
+    "status": "ok",
+    "total_ipv4_ips": "2,560",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:10:36"
+  },
   "24547": {
     "as_country": "China",
     "as_domain": "chinamobile.com",
@@ -37294,6 +39094,18 @@
     "total_ipv4_ips": "3,403,008",
     "total_ipv6_ips": "961.1 Septillion",
     "updated_at": "2026-04-28T18:53:17"
+  },
+  "24651": {
+    "as_country": "Latvia",
+    "as_domain": "balticom.lv",
+    "as_name": "JSC Balticom",
+    "as_number": "24651",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as24651",
+    "status": "ok",
+    "total_ipv4_ips": "89,088",
+    "total_ipv6_ips": "1.3 Nonillion",
+    "updated_at": "2026-08-03T17:10:33"
   },
   "24691": {
     "as_country": "Togo",
@@ -37366,6 +39178,18 @@
     "total_ipv4_ips": "13,312",
     "total_ipv6_ips": "633.8 Octillion",
     "updated_at": "2026-08-03T16:33:27"
+  },
+  "24916": {
+    "as_country": "United Kingdom of Great Britain and Northern Ireland",
+    "as_domain": "orbital.net",
+    "as_name": "Orbital Net Ltd",
+    "as_number": "24916",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as24916",
+    "status": "ok",
+    "total_ipv4_ips": "34,048",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:12:18"
   },
   "24921": {
     "as_country": "Latvia",
@@ -37571,6 +39395,18 @@
     "total_ipv6_ips": "158.5 Octillion",
     "updated_at": "2026-08-03T16:59:43"
   },
+  "25447": {
+    "as_country": "Austria",
+    "as_domain": "jm-data.at",
+    "as_name": "JM-DATA GmbH",
+    "as_number": "25447",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as25447",
+    "status": "ok",
+    "total_ipv4_ips": "57,600",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:10:13"
+  },
   "25472": {
     "as_country": "Greece",
     "as_domain": "nova.gr",
@@ -37582,6 +39418,18 @@
     "total_ipv4_ips": "341,760",
     "total_ipv6_ips": "633.8 Octillion",
     "updated_at": "2026-04-29T13:11:07"
+  },
+  "25491": {
+    "as_country": "Lebanon",
+    "as_domain": "bmbgroup.com",
+    "as_name": "Basic ISP s.a.r.l.",
+    "as_number": "25491",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as25491",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:08:27"
   },
   "25513": {
     "as_country": "Russian Federation",
@@ -37691,6 +39539,18 @@
     "total_ipv6_ips": "1.4 Nonillion",
     "updated_at": "2026-08-03T15:37:02"
   },
+  "262145": {
+    "as_country": "Costa Rica",
+    "as_domain": "coopelesca.com",
+    "as_name": "Cooperativa de Electrificacion Rural de San Carlos R.L. (Coopelesca R.L.)",
+    "as_number": "262145",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as262145",
+    "status": "ok",
+    "total_ipv4_ips": "10,240",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:11:13"
+  },
   "262191": {
     "as_country": "Colombia",
     "as_domain": "libertynet.com",
@@ -37738,6 +39598,18 @@
     "total_ipv4_ips": "2,560",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:21:00"
+  },
+  "262285": {
+    "as_country": "Brazil",
+    "as_domain": "vivasinternet.com.br",
+    "as_name": "Vivas Telecomunicacoes Ltda",
+    "as_number": "262285",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as262285",
+    "status": "ok",
+    "total_ipv4_ips": "8,192",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:11:09"
   },
   "262287": {
     "as_country": "Brazil",
@@ -37822,6 +39694,30 @@
     "total_ipv4_ips": "3,072",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T17:04:52"
+  },
+  "262577": {
+    "as_country": "Brazil",
+    "as_domain": "regisinfocel.com.br",
+    "as_name": "Regis Telecom",
+    "as_number": "262577",
+    "asn_type": "(COM) Commercial",
+    "lookup_source": "https://lite.ip2location.com/as262577",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:05:04"
+  },
+  "262591": {
+    "as_country": "Brazil",
+    "as_domain": "fbnet.com.br",
+    "as_name": "Conection Servicos de Valor Adicionado Ltda",
+    "as_number": "262591",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as262591",
+    "status": "ok",
+    "total_ipv4_ips": "12,288",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:05:07"
   },
   "262604": {
     "as_country": "Brazil",
@@ -37991,6 +39887,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:40:49"
   },
+  "263268": {
+    "as_country": "Brazil",
+    "as_domain": "vitorinonet.com.br",
+    "as_name": "Vitorino Net Ltda",
+    "as_number": "263268",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as263268",
+    "status": "ok",
+    "total_ipv4_ips": "2,048",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:13:26"
+  },
   "263276": {
     "as_country": "Brazil",
     "as_domain": "bbctech.psi.br",
@@ -38002,6 +39910,30 @@
     "total_ipv4_ips": "9,216",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:26:42"
+  },
+  "263302": {
+    "as_country": "Brazil",
+    "as_domain": "torpedolinktelecom.com.br",
+    "as_name": "Torpedolink Telecom",
+    "as_number": "263302",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as263302",
+    "status": "ok",
+    "total_ipv4_ips": "2,048",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:06:05"
+  },
+  "263328": {
+    "as_country": "Brazil",
+    "as_domain": "pandanetwork.com.br",
+    "as_name": "Panda Network",
+    "as_number": "263328",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as263328",
+    "status": "ok",
+    "total_ipv4_ips": "3,072",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:06:09"
   },
   "263344": {
     "as_country": "Brazil",
@@ -38038,6 +39970,18 @@
     "total_ipv4_ips": "14,336",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:22:08"
+  },
+  "263645": {
+    "as_country": "Brazil",
+    "as_domain": "verointernet.com.br",
+    "as_name": "Vero S.A",
+    "as_number": "263645",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as263645",
+    "status": "ok",
+    "total_ipv4_ips": "2,048",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:15:06"
   },
   "263693": {
     "as_country": "Argentina",
@@ -38086,6 +40030,30 @@
     "total_ipv4_ips": "8,192",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:30:47"
+  },
+  "263762": {
+    "as_country": "Costa Rica",
+    "as_domain": "cgtelecom.cr",
+    "as_name": "Cooperativa de Electrificacion Rural de Guanacaste R.L.",
+    "as_number": "263762",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as263762",
+    "status": "ok",
+    "total_ipv4_ips": "4,096",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:25:42"
+  },
+  "263767": {
+    "as_country": "Venezuela (Bolivarian Republic of)",
+    "as_domain": "galait.net",
+    "as_name": "Corporacion Gala IT C.A.",
+    "as_number": "263767",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as263767",
+    "status": "ok",
+    "total_ipv4_ips": "4,096",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:25:38"
   },
   "263806": {
     "as_country": "Venezuela (Bolivarian Republic of)",
@@ -38146,6 +40114,18 @@
     "total_ipv4_ips": "2,048",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:52:43"
+  },
+  "263888": {
+    "as_country": "Brazil",
+    "as_domain": "venonconnect.com",
+    "as_name": "Fiuza Informatica & Telecomunicacao Ltda ME",
+    "as_number": "263888",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as263888",
+    "status": "ok",
+    "total_ipv4_ips": "2,048",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:16:52"
   },
   "263991": {
     "as_country": "Brazil",
@@ -38327,6 +40307,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T14:38:50"
   },
+  "265238": {
+    "as_country": "Brazil",
+    "as_domain": "tefnettecnologia.net.br",
+    "as_name": "Tefnet Tecnologia - Internet Service Provider",
+    "as_number": "265238",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as265238",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:17:10"
+  },
   "265406": {
     "as_country": "Brazil",
     "as_domain": "webriver.com.br",
@@ -38338,6 +40330,18 @@
     "total_ipv4_ips": "1,024",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:34:07"
+  },
+  "26548": {
+    "as_country": "United States of America",
+    "as_domain": "purevoltage.com",
+    "as_name": "PureVoltage Hosting Inc.",
+    "as_number": "26548",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as26548",
+    "status": "ok",
+    "total_ipv4_ips": "60,416",
+    "total_ipv6_ips": "25.4 Octillion",
+    "updated_at": "2026-08-03T17:17:06"
   },
   "265509": {
     "as_country": "Mexico",
@@ -38386,6 +40390,30 @@
     "total_ipv4_ips": "512",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:48:05"
+  },
+  "265798": {
+    "as_country": "Argentina",
+    "as_domain": "arlab.com.ar",
+    "as_name": "Level Seven SRL",
+    "as_number": "265798",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as265798",
+    "status": "ok",
+    "total_ipv4_ips": "2,560",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:14:30"
+  },
+  "265976": {
+    "as_country": "Brazil",
+    "as_domain": "netfulltelecomunicacoes.com.br",
+    "as_name": "Netfull Telecomunicacoes Ltda-ME",
+    "as_number": "265976",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as265976",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:24:53"
   },
   "26599": {
     "as_country": "Brazil",
@@ -38447,6 +40475,18 @@
     "total_ipv6_ips": "158.5 Octillion",
     "updated_at": "2026-08-03T16:19:03"
   },
+  "266279": {
+    "as_country": "Brazil",
+    "as_domain": "quality-telecom.net",
+    "as_name": "Quality Telecom Ltda",
+    "as_number": "266279",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as266279",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:11:27"
+  },
   "266356": {
     "as_country": "Brazil",
     "as_domain": "prontofibra.com.br",
@@ -38483,6 +40523,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:25:56"
   },
+  "266616": {
+    "as_country": "Brazil",
+    "as_domain": "cohabnetwork.com.br",
+    "as_name": "Cohab Net",
+    "as_number": "266616",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as266616",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:11:22"
+  },
   "266742": {
     "as_country": "Venezuela (Bolivarian Republic of)",
     "as_domain": "dcnnetwork.com.ve",
@@ -38495,6 +40547,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T16:41:20"
   },
+  "266743": {
+    "as_country": "Argentina",
+    "as_domain": "gigared.com.ar",
+    "as_name": "Geo S.A.",
+    "as_number": "266743",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as266743",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:22:06"
+  },
   "266769": {
     "as_country": "Argentina",
     "as_domain": "ispcomsa.com.ar",
@@ -38506,6 +40570,30 @@
     "total_ipv4_ips": "1,024",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:53:42"
+  },
+  "266781": {
+    "as_country": "Argentina",
+    "as_domain": "adc.net.ar",
+    "as_name": "Cooperativa de Elec. Obras y Serv. Publicos Guatrache Ltda",
+    "as_number": "266781",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as266781",
+    "status": "ok",
+    "total_ipv4_ips": "768",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:11:19"
+  },
+  "266853": {
+    "as_country": "Costa Rica",
+    "as_domain": "metrocom.cr",
+    "as_name": "Comunicaciones Metropolitanas Metrocom S.A.",
+    "as_number": "266853",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as266853",
+    "status": "ok",
+    "total_ipv4_ips": "6,144",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:22:29"
   },
   "266911": {
     "as_country": "Brazil",
@@ -38603,6 +40691,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:07:38"
   },
+  "267566": {
+    "as_country": "Brazil",
+    "as_domain": "qualitytelecom.com.br",
+    "as_name": "Quality Telecom",
+    "as_number": "267566",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as267566",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:20:04"
+  },
   "267643": {
     "as_country": "Brazil",
     "as_domain": "rpmtelecom.com.br",
@@ -38638,6 +40738,18 @@
     "total_ipv4_ips": "1,280",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:33:43"
+  },
+  "267834": {
+    "as_country": "Colombia",
+    "as_domain": "servycom.com.co",
+    "as_name": "Servycom Colombia S.A.S",
+    "as_number": "267834",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as267834",
+    "status": "ok",
+    "total_ipv4_ips": "1,792",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:11:36"
   },
   "267890": {
     "as_country": "Colombia",
@@ -38675,6 +40787,30 @@
     "total_ipv6_ips": "79.3 Octillion",
     "updated_at": "2026-08-03T16:12:21"
   },
+  "268098": {
+    "as_country": "Brazil",
+    "as_domain": "brasilinfo.net.br",
+    "as_name": "Brasil Informatica Ltda EPP",
+    "as_number": "268098",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as268098",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:16:15"
+  },
+  "268126": {
+    "as_country": "Brazil",
+    "as_domain": "dgnetsp.com.br",
+    "as_name": "DGNETSP Eireli",
+    "as_number": "268126",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as268126",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:20:10"
+  },
   "268158": {
     "as_country": "Brazil",
     "as_domain": "sptelecomm.com.br",
@@ -38711,6 +40847,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:02:08"
   },
+  "26827": {
+    "as_country": "United States of America",
+    "as_domain": "epbfi.com",
+    "as_name": "EPB Fiber Optics",
+    "as_number": "26827",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as26827",
+    "status": "ok",
+    "total_ipv4_ips": "110,592",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:26:08"
+  },
   "268312": {
     "as_country": "Brazil",
     "as_domain": "prnetweb.com.br",
@@ -38722,6 +40870,18 @@
     "total_ipv4_ips": "1,024",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:22:48"
+  },
+  "268341": {
+    "as_country": "Brazil",
+    "as_domain": "jcsfibra.com.br",
+    "as_name": "CS Net Comunicacao Ltda",
+    "as_number": "268341",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as268341",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:10:05"
   },
   "268423": {
     "as_country": "Brazil",
@@ -38819,6 +40979,30 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:26:36"
   },
+  "268950": {
+    "as_country": "Brazil",
+    "as_domain": "pcinternet.com.br",
+    "as_name": "Pcsupri Informatica Ltda",
+    "as_number": "268950",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as268950",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:08:53"
+  },
+  "269050": {
+    "as_country": "Brazil",
+    "as_domain": "lidernetprovedor.com.br",
+    "as_name": "Joao Rogerio Leonardo Eirelime",
+    "as_number": "269050",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as269050",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:18:02"
+  },
   "269088": {
     "as_country": "Brazil",
     "as_domain": "esmnet.net.br",
@@ -38903,6 +41087,30 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:36:24"
   },
+  "269577": {
+    "as_country": "Brazil",
+    "as_domain": "infovirtualprovedor.com.br",
+    "as_name": "Infovirtual Solucoes em Informatica Ltda ME",
+    "as_number": "269577",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as269577",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:15:38"
+  },
+  "269662": {
+    "as_country": "Brazil",
+    "as_domain": "telefibras.com.br",
+    "as_name": "Tele Fibras Internet Banda Larga Ltda",
+    "as_number": "269662",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as269662",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:22:49"
+  },
   "269782": {
     "as_country": "Venezuela (Bolivarian Republic of)",
     "as_domain": "networkspeed.com.ve",
@@ -38926,6 +41134,18 @@
     "total_ipv4_ips": "1,024",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T17:03:51"
+  },
+  "269843": {
+    "as_country": "Peru",
+    "as_domain": "bantelperu.com",
+    "as_name": "Bantel Sac",
+    "as_number": "269843",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as269843",
+    "status": "ok",
+    "total_ipv4_ips": "3,328",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:14:21"
   },
   "269853": {
     "as_country": "Ecuador",
@@ -38974,6 +41194,18 @@
     "total_ipv4_ips": "1,536",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:13:38"
+  },
+  "269934": {
+    "as_country": "Honduras",
+    "as_domain": "speedtestairnetworkhn.com",
+    "as_name": "Air Network S. de R. L. de C.V.",
+    "as_number": "269934",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as269934",
+    "status": "ok",
+    "total_ipv4_ips": "768",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:22:54"
   },
   "27": {
     "as_country": "United States of America",
@@ -39058,6 +41290,18 @@
     "total_ipv4_ips": "36,352",
     "total_ipv6_ips": "1.2 Octillion",
     "updated_at": "2026-04-29T13:17:49"
+  },
+  "270250": {
+    "as_country": "Brazil",
+    "as_domain": "in9ve.net.br",
+    "as_name": "In9Ve Informatica E Papelaria Ltda - ME",
+    "as_number": "270250",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as270250",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:13:43"
   },
   "270498": {
     "as_country": "Brazil",
@@ -39191,6 +41435,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T18:47:26"
   },
+  "271584": {
+    "as_country": "Brazil",
+    "as_domain": "acmprovedor.com.br",
+    "as_name": "ACM Provedor de Internet",
+    "as_number": "271584",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as271584",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:19:40"
+  },
   "271609": {
     "as_country": "Brazil",
     "as_domain": "vixel.com.br",
@@ -39275,6 +41531,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T16:41:16"
   },
+  "272104": {
+    "as_country": "Peru",
+    "as_domain": "latincable.pe",
+    "as_name": "LatinCable S.r.l.",
+    "as_number": "272104",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as272104",
+    "status": "ok",
+    "total_ipv4_ips": "768",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:19:11"
+  },
   "272112": {
     "as_country": "Dominican Republic",
     "as_domain": "telecabledominicano.com.do",
@@ -39322,6 +41590,30 @@
     "total_ipv4_ips": "98,816",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T16:42:14"
+  },
+  "272814": {
+    "as_country": "Venezuela (Bolivarian Republic of)",
+    "as_domain": "tovarsat.com.ve",
+    "as_name": "Tovarsat C.A.",
+    "as_number": "272814",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as272814",
+    "status": "ok",
+    "total_ipv4_ips": "1,536",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:19:15"
+  },
+  "272832": {
+    "as_country": "Guatemala",
+    "as_domain": "cibernetica.net",
+    "as_name": "Cibernet S.A.",
+    "as_number": "272832",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as272832",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:15:49"
   },
   "27284": {
     "as_country": "United States of America",
@@ -39371,6 +41663,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:51:08"
   },
+  "272951": {
+    "as_country": "Venezuela (Bolivarian Republic of)",
+    "as_domain": "intercomservicios.com",
+    "as_name": "Intercom Servicios C.A",
+    "as_number": "272951",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as272951",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:14:16"
+  },
   "272954": {
     "as_country": "Ecuador",
     "as_domain": "nedetel.net",
@@ -39383,6 +41687,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T16:44:02"
   },
+  "272992": {
+    "as_country": "Colombia",
+    "as_domain": "mediacommerce.com.co",
+    "as_name": "Cable & TV Yopal S.A.S (Internet Inalambrico)",
+    "as_number": "272992",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as272992",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:14:11"
+  },
   "273039": {
     "as_country": "Venezuela (Bolivarian Republic of)",
     "as_domain": "techpre.io",
@@ -39394,6 +41710,18 @@
     "total_ipv4_ips": "5,120",
     "total_ipv6_ips": "5 Octillion",
     "updated_at": "2026-04-29T16:41:49"
+  },
+  "273096": {
+    "as_country": "Argentina",
+    "as_domain": "wifinetsystem.com.ar",
+    "as_name": "Insaurralde Claudio Oscar",
+    "as_number": "273096",
+    "asn_type": "(COM) Commercial",
+    "lookup_source": "https://lite.ip2location.com/as273096",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:16:44"
   },
   "273142": {
     "as_country": "Ecuador",
@@ -39418,6 +41746,30 @@
     "total_ipv4_ips": "768",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T17:01:38"
+  },
+  "273244": {
+    "as_country": "Colombia",
+    "as_domain": "xpert-tic.com",
+    "as_name": "Expertos en Tecnologia Y Telecomunicaciones S.A.S",
+    "as_number": "273244",
+    "asn_type": "(COM) Commercial",
+    "lookup_source": "https://lite.ip2location.com/as273244",
+    "status": "ok",
+    "total_ipv4_ips": "2,048",
+    "total_ipv6_ips": "158.5 Octillion",
+    "updated_at": "2026-08-03T17:13:53"
+  },
+  "273309": {
+    "as_country": "Brazil",
+    "as_domain": "souuni.com.br",
+    "as_name": "Uni Telecom Ltda",
+    "as_number": "273309",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as273309",
+    "status": "ok",
+    "total_ipv4_ips": "16,384",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:05:41"
   },
   "27364": {
     "as_country": "United States of America",
@@ -39454,6 +41806,18 @@
     "total_ipv4_ips": "0",
     "total_ipv6_ips": "77.4 Septillion",
     "updated_at": "2026-08-03T14:55:25"
+  },
+  "274116": {
+    "as_country": "Peru",
+    "as_domain": "tchvsac.com",
+    "as_name": "CTV Chiclin E.I.R.L.",
+    "as_number": "274116",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as274116",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:20:01"
   },
   "27651": {
     "as_country": "Chile",
@@ -39538,6 +41902,18 @@
     "total_ipv4_ips": "221,184",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T18:53:00"
+  },
+  "27747": {
+    "as_country": "Argentina",
+    "as_domain": "telecentro.com.ar",
+    "as_name": "Telecentro S.A.",
+    "as_number": "27747",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as27747",
+    "status": "ok",
+    "total_ipv4_ips": "623,104",
+    "total_ipv6_ips": "1.3 Nonillion",
+    "updated_at": "2026-08-03T17:20:14"
   },
   "27775": {
     "as_country": "Suriname",
@@ -39683,6 +42059,30 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:12:48"
   },
+  "27947": {
+    "as_country": "Ecuador",
+    "as_domain": "telconet.net",
+    "as_name": "Telconet S.A",
+    "as_number": "27947",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as27947",
+    "status": "ok",
+    "total_ipv4_ips": "521,472",
+    "total_ipv6_ips": "158 Octillion",
+    "updated_at": "2026-08-03T17:20:19"
+  },
+  "27984": {
+    "as_country": "Argentina",
+    "as_domain": "vertv.net.ar",
+    "as_name": "Ver TV S.A.",
+    "as_number": "27984",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as27984",
+    "status": "ok",
+    "total_ipv4_ips": "76,800",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:20:24"
+  },
   "28006": {
     "as_country": "Ecuador",
     "as_domain": "cnt.com.ec",
@@ -39743,6 +42143,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T18:47:18"
   },
+  "28171": {
+    "as_country": "Brazil",
+    "as_domain": "sodobrasil.net.br",
+    "as_name": "S. O. do Brasil Telecomunicacoes Ltda ME",
+    "as_number": "28171",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as28171",
+    "status": "ok",
+    "total_ipv4_ips": "20,480",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:20:30"
+  },
   "28186": {
     "as_country": "Brazil",
     "as_domain": "itsweb.com.br",
@@ -39754,6 +42166,18 @@
     "total_ipv4_ips": "69,632",
     "total_ipv6_ips": "158.5 Octillion",
     "updated_at": "2026-08-03T16:23:28"
+  },
+  "28188": {
+    "as_country": "Brazil",
+    "as_domain": "prontonet.com.br",
+    "as_name": "Pronto Net Ltda.",
+    "as_number": "28188",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as28188",
+    "status": "ok",
+    "total_ipv4_ips": "8,704",
+    "total_ipv6_ips": "79.3 Octillion",
+    "updated_at": "2026-08-03T17:16:03"
   },
   "28198": {
     "as_country": "Brazil",
@@ -39851,6 +42275,18 @@
     "total_ipv6_ips": "157.1 Octillion",
     "updated_at": "2026-08-03T16:37:59"
   },
+  "28548": {
+    "as_country": "Mexico",
+    "as_domain": "cablevision.net.mx",
+    "as_name": "Cablevision S.A. de C.V.",
+    "as_number": "28548",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as28548",
+    "status": "ok",
+    "total_ipv4_ips": "216,832",
+    "total_ipv6_ips": "79.3 Octillion",
+    "updated_at": "2026-08-03T17:08:06"
+  },
   "28554": {
     "as_country": "Mexico",
     "as_domain": "cablemas.com.mx",
@@ -39935,6 +42371,18 @@
     "total_ipv6_ips": "713 Octillion",
     "updated_at": "2026-08-03T14:20:35"
   },
+  "28723": {
+    "as_country": "Finland",
+    "as_domain": "nokia.com",
+    "as_name": "Nokia Oyj",
+    "as_number": "28723",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as28723",
+    "status": "ok",
+    "total_ipv4_ips": "30,592",
+    "total_ipv6_ips": "559.7 Octillion",
+    "updated_at": "2026-08-03T17:22:03"
+  },
   "28753": {
     "as_country": "Germany",
     "as_domain": "leaseweb.com",
@@ -39970,6 +42418,18 @@
     "total_ipv4_ips": "323,840",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:25:47"
+  },
+  "28878": {
+    "as_country": "Netherlands",
+    "as_domain": "signet.nl",
+    "as_name": "Signet B.V.",
+    "as_number": "28878",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as28878",
+    "status": "ok",
+    "total_ipv4_ips": "48,896",
+    "total_ipv6_ips": "554.6 Octillion",
+    "updated_at": "2026-08-03T17:13:22"
   },
   "28885": {
     "as_country": "Oman",
@@ -40007,6 +42467,18 @@
     "total_ipv6_ips": "1.6 Nonillion",
     "updated_at": "2026-08-03T15:12:54"
   },
+  "29070": {
+    "as_country": "Lebanon",
+    "as_domain": "gigabitpro.net",
+    "as_name": "Gigabit S.A.L",
+    "as_number": "29070",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as29070",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:22:34"
+  },
   "29091": {
     "as_country": "Nigeria",
     "as_domain": "ipnxnigeria.net",
@@ -40019,6 +42491,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T12:39:58"
   },
+  "29167": {
+    "as_country": "Poland",
+    "as_domain": "netia.pl",
+    "as_name": "Netia SA",
+    "as_number": "29167",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as29167",
+    "status": "ok",
+    "total_ipv4_ips": "49,152",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:22:37"
+  },
   "29182": {
     "as_country": "Russian Federation",
     "as_domain": "aoiot.ru",
@@ -40030,6 +42514,30 @@
     "total_ipv4_ips": "114,176",
     "total_ipv6_ips": "1.5 Nonillion",
     "updated_at": "2026-08-03T14:34:41"
+  },
+  "29190": {
+    "as_country": "Russian Federation",
+    "as_domain": "mtsgsm.com",
+    "as_name": "MTS PJSC",
+    "as_number": "29190",
+    "asn_type": "(MOB) Mobile ISP",
+    "lookup_source": "https://lite.ip2location.com/as29190",
+    "status": "ok",
+    "total_ipv4_ips": "78,848",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:22:40"
+  },
+  "29194": {
+    "as_country": "Russian Federation",
+    "as_domain": "mtsgsm.com",
+    "as_name": "MTS PJSC",
+    "as_number": "29194",
+    "asn_type": "(MOB) Mobile ISP",
+    "lookup_source": "https://lite.ip2location.com/as29194",
+    "status": "ok",
+    "total_ipv4_ips": "33,024",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:13:17"
   },
   "29238": {
     "as_country": "Albania",
@@ -40127,6 +42635,18 @@
     "total_ipv6_ips": "5 Octillion",
     "updated_at": "2026-04-29T13:02:27"
   },
+  "29467": {
+    "as_country": "Luxembourg",
+    "as_domain": "luxnetwork.eu",
+    "as_name": "LuxNetwork S.A.",
+    "as_number": "29467",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as29467",
+    "status": "ok",
+    "total_ipv4_ips": "11,776",
+    "total_ipv6_ips": "237.7 Octillion",
+    "updated_at": "2026-08-03T17:09:35"
+  },
   "29518": {
     "as_country": "Sweden",
     "as_domain": "bredband2.com",
@@ -40187,6 +42707,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T13:04:06"
   },
+  "29684": {
+    "as_country": "Saudi Arabia",
+    "as_domain": "nour.net.sa",
+    "as_name": "Nour Internet Company for Communications and Information Technology Ltd.",
+    "as_number": "29684",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as29684",
+    "status": "ok",
+    "total_ipv4_ips": "35,072",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:10:40"
+  },
   "29695": {
     "as_country": "Norway",
     "as_domain": "lyse.no",
@@ -40198,6 +42730,18 @@
     "total_ipv4_ips": "1,098,752",
     "total_ipv6_ips": "2.7 Nonillion",
     "updated_at": "2026-04-29T13:00:22"
+  },
+  "29752": {
+    "as_country": "United States of America",
+    "as_domain": "zenlayer.com",
+    "as_name": "Zenlayer Inc",
+    "as_number": "29752",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as29752",
+    "status": "ok",
+    "total_ipv4_ips": "5,376",
+    "total_ipv6_ips": "9.7 Septillion",
+    "updated_at": "2026-08-03T17:17:59"
   },
   "29802": {
     "as_country": "United States of America",
@@ -40271,6 +42815,18 @@
     "total_ipv6_ips": "922.3 Octillion",
     "updated_at": "2026-08-03T15:57:51"
   },
+  "30041": {
+    "as_country": "United States of America",
+    "as_domain": "race.com",
+    "as_name": "Race Tech LLC",
+    "as_number": "30041",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as30041",
+    "status": "ok",
+    "total_ipv4_ips": "83,968",
+    "total_ipv6_ips": "1.3 Nonillion",
+    "updated_at": "2026-08-03T17:23:32"
+  },
   "30058": {
     "as_country": "United States of America",
     "as_domain": "fdcservers.net",
@@ -40294,6 +42850,18 @@
     "total_ipv4_ips": "8,192",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:35:16"
+  },
+  "30404": {
+    "as_country": "United States of America",
+    "as_domain": "mybluestream.com",
+    "as_name": "Blue Stream",
+    "as_number": "30404",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as30404",
+    "status": "ok",
+    "total_ipv4_ips": "217,344",
+    "total_ipv6_ips": "1.3 Nonillion",
+    "updated_at": "2026-08-03T17:07:33"
   },
   "30517": {
     "as_country": "United States of America",
@@ -40631,6 +43199,18 @@
     "total_ipv6_ips": "633.8 Octillion",
     "updated_at": "2026-04-29T11:11:06"
   },
+  "31515": {
+    "as_country": "United Kingdom of Great Britain and Northern Ireland",
+    "as_domain": "inmarsat.com",
+    "as_name": "Inmarsat Global Limited",
+    "as_number": "31515",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as31515",
+    "status": "ok",
+    "total_ipv4_ips": "65,792",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:24:57"
+  },
   "31520": {
     "as_country": "Ukraine",
     "as_domain": "datagroup.ua",
@@ -40750,6 +43330,18 @@
     "total_ipv4_ips": "5,031,936",
     "total_ipv6_ips": "1 Nonillion",
     "updated_at": "2026-04-29T18:50:33"
+  },
+  "32020": {
+    "as_country": "Bermuda",
+    "as_domain": "digicel.bm",
+    "as_name": "Transact Ltd.",
+    "as_number": "32020",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as32020",
+    "status": "ok",
+    "total_ipv4_ips": "9,216",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:15:46"
   },
   "3209": {
     "as_country": "Germany",
@@ -40918,6 +43510,18 @@
     "total_ipv4_ips": "20,685,312",
     "total_ipv6_ips": "324.5 Nonillion",
     "updated_at": "2026-04-29T11:08:11"
+  },
+  "327693": {
+    "as_country": "South Africa",
+    "as_domain": "echosp.co.za",
+    "as_name": "Echotel Pty Ltd",
+    "as_number": "327693",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as327693",
+    "status": "ok",
+    "total_ipv4_ips": "24,320",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:24:48"
   },
   "327707": {
     "as_country": "Rwanda",
@@ -41219,6 +43823,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:27:57"
   },
+  "328169": {
+    "as_country": "Eswatini",
+    "as_domain": "swazimobile.com",
+    "as_name": "Swazi Mobile Limited",
+    "as_number": "328169",
+    "asn_type": "(MOB) Mobile ISP",
+    "lookup_source": "https://lite.ip2location.com/as328169",
+    "status": "ok",
+    "total_ipv4_ips": "2,048",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:18:17"
+  },
   "328200": {
     "as_country": "Libya",
     "as_domain": "almadar.ly",
@@ -41351,6 +43967,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:16:52"
   },
+  "328427": {
+    "as_country": "Zambia",
+    "as_domain": "airlinkzambia.com",
+    "as_name": "Airlink Broadband Limited",
+    "as_number": "328427",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as328427",
+    "status": "ok",
+    "total_ipv4_ips": "2,048",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:25:51"
+  },
   "328442": {
     "as_country": "Congo (Democratic Republic of the)",
     "as_domain": "unitedrdc.com",
@@ -41459,6 +44087,30 @@
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T16:54:41"
   },
+  "328632": {
+    "as_country": "South Africa",
+    "as_domain": "rtsnet.co.za",
+    "as_name": "RTS Net Pty Ltd",
+    "as_number": "328632",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as328632",
+    "status": "ok",
+    "total_ipv4_ips": "4,096",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:25:56"
+  },
+  "328633": {
+    "as_country": "South Africa",
+    "as_domain": "mikrotiksa.com",
+    "as_name": "Mikrotiksa Networks CC",
+    "as_number": "328633",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as328633",
+    "status": "ok",
+    "total_ipv4_ips": "3,072",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:10:18"
+  },
   "328652": {
     "as_country": "Kenya",
     "as_domain": "hiranitelcom.co.ke",
@@ -41494,6 +44146,18 @@
     "total_ipv4_ips": "3,072",
     "total_ipv6_ips": "0",
     "updated_at": "2026-04-29T12:46:01"
+  },
+  "328755": {
+    "as_country": "South Sudan",
+    "as_domain": "digitelss.com",
+    "as_name": "Digitel Holdings Limited",
+    "as_number": "328755",
+    "asn_type": "(MOB) Mobile ISP",
+    "lookup_source": "https://lite.ip2location.com/as328755",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:26:00"
   },
   "328770": {
     "as_country": "Ghana",
@@ -41663,6 +44327,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:27:47"
   },
+  "328997": {
+    "as_country": "Mauritania",
+    "as_domain": "rimatel.mr",
+    "as_name": "RIMATEL-SA",
+    "as_number": "328997",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as328997",
+    "status": "ok",
+    "total_ipv4_ips": "3,072",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:06:54"
+  },
   "329014": {
     "as_country": "Kenya",
     "as_domain": "vilcom.co.ke",
@@ -41711,6 +44387,42 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T14:14:37"
   },
+  "329062": {
+    "as_country": "South Africa",
+    "as_domain": "baremetal.co.za",
+    "as_name": "Baremetal Computer Traders",
+    "as_number": "329062",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as329062",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:12:34"
+  },
+  "329089": {
+    "as_country": "South Africa",
+    "as_domain": "boostnet.co.za",
+    "as_name": "Boost Networks",
+    "as_number": "329089",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as329089",
+    "status": "ok",
+    "total_ipv4_ips": "1,280",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:25:47"
+  },
+  "329109": {
+    "as_country": "Sierra Leone",
+    "as_domain": "zoodlabs.com",
+    "as_name": "Zoodlabs(SL) Limited",
+    "as_number": "329109",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as329109",
+    "status": "ok",
+    "total_ipv4_ips": "2,560",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:06:59"
+  },
   "329110": {
     "as_country": "Kenya",
     "as_domain": "fibrelinkltd.co.ke",
@@ -41758,6 +44470,18 @@
     "total_ipv4_ips": "1,024",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T13:09:11"
+  },
+  "329181": {
+    "as_country": "South Africa",
+    "as_domain": "bluedogtech.co.za",
+    "as_name": "Bluedog Technology",
+    "as_number": "329181",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as329181",
+    "status": "ok",
+    "total_ipv4_ips": "3,072",
+    "total_ipv6_ips": "158.5 Octillion",
+    "updated_at": "2026-08-03T17:07:03"
   },
   "3292": {
     "as_country": "Denmark",
@@ -41926,6 +44650,18 @@
     "total_ipv4_ips": "3,072",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:33:50"
+  },
+  "329487": {
+    "as_country": "Nigeria",
+    "as_domain": "fibernet.ng",
+    "as_name": "Fibernet Broadband Ltd",
+    "as_number": "329487",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as329487",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:14:46"
   },
   "329504": {
     "as_country": "Kenya",
@@ -42287,6 +45023,18 @@
     "total_ipv6_ips": "164.4 Septillion",
     "updated_at": "2026-04-29T12:46:26"
   },
+  "33660": {
+    "as_country": "United States of America",
+    "as_domain": "comcast.net",
+    "as_name": "Comcast Cable Communications LLC",
+    "as_number": "33660",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as33660",
+    "status": "ok",
+    "total_ipv4_ips": "2,304",
+    "total_ipv6_ips": "60.4 Septillion",
+    "updated_at": "2026-08-03T17:05:23"
+  },
   "33661": {
     "as_country": "United States of America",
     "as_domain": "comcast.net",
@@ -42407,6 +45155,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T12:39:54"
   },
+  "33796": {
+    "as_country": "Denmark",
+    "as_domain": "bnaa.dk",
+    "as_name": "Bolignet-Aarhus F.M.B.A.",
+    "as_number": "33796",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as33796",
+    "status": "ok",
+    "total_ipv4_ips": "39,424",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:13:01"
+  },
   "33874": {
     "as_country": "Malta",
     "as_domain": "epic.com.mt",
@@ -42455,6 +45215,18 @@
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T14:56:09"
   },
+  "34058": {
+    "as_country": "Ukraine",
+    "as_domain": "lifecell.com.ua",
+    "as_name": "Limited Liability Company Lifecell",
+    "as_number": "34058",
+    "asn_type": "-",
+    "lookup_source": "https://lite.ip2location.com/as34058",
+    "status": "ok",
+    "total_ipv4_ips": "418,816",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:25:29"
+  },
   "34296": {
     "as_country": "Turkey",
     "as_domain": "milleni.com.tr",
@@ -42479,6 +45251,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:25:30"
   },
+  "34447": {
+    "as_country": "Lebanon",
+    "as_domain": "thglobalvision.net",
+    "as_name": "My ISP SARL",
+    "as_number": "34447",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as34447",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:12:57"
+  },
   "34471": {
     "as_country": "Spain",
     "as_domain": "excom.es",
@@ -42490,6 +45274,18 @@
     "total_ipv4_ips": "35,840",
     "total_ipv6_ips": "5.9 Nonillion",
     "updated_at": "2026-04-29T16:40:12"
+  },
+  "34547": {
+    "as_country": "North Macedonia",
+    "as_domain": "telesmart.mk",
+    "as_name": "Telesmart Telekom DOO",
+    "as_number": "34547",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as34547",
+    "status": "ok",
+    "total_ipv4_ips": "12,032",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:12:52"
   },
   "34557": {
     "as_country": "Tajikistan",
@@ -42562,6 +45358,18 @@
     "total_ipv4_ips": "1,467,904",
     "total_ipv6_ips": "36.1 Nonillion",
     "updated_at": "2026-04-29T12:53:40"
+  },
+  "34989": {
+    "as_country": "Norway",
+    "as_domain": "servetheworld.net",
+    "as_name": "ServeTheWorld AS",
+    "as_number": "34989",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as34989",
+    "status": "ok",
+    "total_ipv4_ips": "27,904",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:25:12"
   },
   "35000": {
     "as_country": "Russian Federation",
@@ -42766,6 +45574,18 @@
     "total_ipv4_ips": "2,710,784",
     "total_ipv6_ips": "237.7 Octillion",
     "updated_at": "2026-04-29T12:42:32"
+  },
+  "35830": {
+    "as_country": "South Africa",
+    "as_domain": "finegroupservers.com",
+    "as_name": "Fast Servers (Pty) Ltd",
+    "as_number": "35830",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as35830",
+    "status": "ok",
+    "total_ipv4_ips": "9,984",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:25:18"
   },
   "35847": {
     "as_country": "United States of America",
@@ -42994,6 +45814,18 @@
     "total_ipv4_ips": "31,488",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:20:55"
+  },
+  "36493": {
+    "as_country": "Canada",
+    "as_domain": "fibernetics.ca",
+    "as_name": "Fibernetics Corporation",
+    "as_number": "36493",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as36493",
+    "status": "ok",
+    "total_ipv4_ips": "132,352",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:25:09"
   },
   "36549": {
     "as_country": "Cayman Islands",
@@ -43331,6 +46163,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T16:41:45"
   },
+  "36963": {
+    "as_country": "Botswana",
+    "as_domain": "orange.com",
+    "as_name": "Orange Botswana (Pty) Ltd",
+    "as_number": "36963",
+    "asn_type": "(MOB) Mobile ISP",
+    "lookup_source": "https://lite.ip2location.com/as36963",
+    "status": "ok",
+    "total_ipv4_ips": "14,336",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:11:52"
+  },
   "36974": {
     "as_country": "Cote d'Ivoire",
     "as_domain": "mtn.ci",
@@ -43583,6 +46427,18 @@
     "total_ipv6_ips": "0",
     "updated_at": "2026-04-29T13:03:05"
   },
+  "37081": {
+    "as_country": "Angola",
+    "as_domain": "movicel.co.ao",
+    "as_name": "Movicel Telecommunicacoes LDA",
+    "as_number": "37081",
+    "asn_type": "(MOB) Mobile ISP",
+    "lookup_source": "https://lite.ip2location.com/as37081",
+    "status": "ok",
+    "total_ipv4_ips": "180,224",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:24:32"
+  },
   "37090": {
     "as_country": "Benin",
     "as_domain": "isoceltelecom.com",
@@ -43678,6 +46534,18 @@
     "total_ipv4_ips": "463,872",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T12:02:02"
+  },
+  "37136": {
+    "as_country": "Benin",
+    "as_domain": "moov.bj",
+    "as_name": "Etisalat Benin",
+    "as_number": "37136",
+    "asn_type": "(MOB) Mobile ISP",
+    "lookup_source": "https://lite.ip2location.com/as37136",
+    "status": "ok",
+    "total_ipv4_ips": "2,048",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:15:21"
   },
   "37141": {
     "as_country": "Guinea",
@@ -43787,6 +46655,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T12:55:44"
   },
+  "37223": {
+    "as_country": "Mozambique",
+    "as_domain": "vm.co.mz",
+    "as_name": "Vodacom Mocambique S.A",
+    "as_number": "37223",
+    "asn_type": "-",
+    "lookup_source": "https://lite.ip2location.com/as37223",
+    "status": "ok",
+    "total_ipv4_ips": "67,584",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:24:41"
+  },
   "37228": {
     "as_country": "Rwanda",
     "as_domain": "orn.rw",
@@ -43798,6 +46678,18 @@
     "total_ipv4_ips": "77,312",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:31:47"
+  },
+  "37229": {
+    "as_country": "Togo",
+    "as_domain": "moov.tg",
+    "as_name": "Atlantique Telecom Togo",
+    "as_number": "37229",
+    "asn_type": "(MOB) Mobile ISP",
+    "lookup_source": "https://lite.ip2location.com/as37229",
+    "status": "ok",
+    "total_ipv4_ips": "2,048",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:12:21"
   },
   "37266": {
     "as_country": "South Africa",
@@ -43930,6 +46822,18 @@
     "total_ipv4_ips": "107,520",
     "total_ipv6_ips": "79.3 Octillion",
     "updated_at": "2026-08-03T16:58:13"
+  },
+  "37334": {
+    "as_country": "South Africa",
+    "as_domain": "reflex.co.za",
+    "as_name": "Reflex Solutions",
+    "as_number": "37334",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as37334",
+    "status": "ok",
+    "total_ipv4_ips": "10,240",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:24:24"
   },
   "37340": {
     "as_country": "Nigeria",
@@ -44147,6 +47051,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T16:35:32"
   },
+  "37508": {
+    "as_country": "Mauritania",
+    "as_domain": "mattel.mr",
+    "as_name": "Mattel",
+    "as_number": "37508",
+    "asn_type": "(MOB) Mobile ISP",
+    "lookup_source": "https://lite.ip2location.com/as37508",
+    "status": "ok",
+    "total_ipv4_ips": "2,048",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:17:14"
+  },
   "37517": {
     "as_country": "Cabo Verde",
     "as_domain": "cvt.cv",
@@ -44171,6 +47087,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T13:15:27"
   },
+  "37524": {
+    "as_country": "Gambia",
+    "as_domain": "africell.gm",
+    "as_name": "Africell Gambia",
+    "as_number": "37524",
+    "asn_type": "(MOB) Mobile ISP",
+    "lookup_source": "https://lite.ip2location.com/as37524",
+    "status": "ok",
+    "total_ipv4_ips": "2,048",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:24:08"
+  },
   "37529": {
     "as_country": "Equatorial Guinea",
     "as_domain": "gitge.org",
@@ -44182,6 +47110,18 @@
     "total_ipv4_ips": "6,656",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T16:33:57"
+  },
+  "37531": {
+    "as_country": "Niger",
+    "as_domain": "airtel.com",
+    "as_name": "Airtel Niger",
+    "as_number": "37531",
+    "asn_type": "-",
+    "lookup_source": "https://lite.ip2location.com/as37531",
+    "status": "ok",
+    "total_ipv4_ips": "14,592",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:14:25"
   },
   "37550": {
     "as_country": "Congo",
@@ -44531,6 +47471,18 @@
     "total_ipv6_ips": "1.2 Septillion",
     "updated_at": "2026-08-03T15:48:07"
   },
+  "38193": {
+    "as_country": "Pakistan",
+    "as_domain": "tw1.com",
+    "as_name": "Transworld Associates (Pvt.) Ltd.",
+    "as_number": "38193",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as38193",
+    "status": "ok",
+    "total_ipv4_ips": "26,624",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:07:24"
+  },
   "38195": {
     "as_country": "Australia",
     "as_domain": "superloop.com",
@@ -44590,6 +47542,18 @@
     "total_ipv4_ips": "2,048",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T14:55:21"
+  },
+  "38229": {
+    "as_country": "Sri Lanka",
+    "as_domain": "ac.lk",
+    "as_name": "Lanka Education & Research Network NREN",
+    "as_number": "38229",
+    "asn_type": "(EDU) University/College/School",
+    "lookup_source": "https://lite.ip2location.com/as38229",
+    "status": "ok",
+    "total_ipv4_ips": "34,816",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:07:27"
   },
   "38235": {
     "as_country": "Cambodia",
@@ -44651,6 +47615,18 @@
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T16:41:51"
   },
+  "38333": {
+    "as_country": "Australia",
+    "as_domain": "symbionetworks.com",
+    "as_name": "Symbio Networks",
+    "as_number": "38333",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as38333",
+    "status": "ok",
+    "total_ipv4_ips": "211,968",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:12:15"
+  },
   "38442": {
     "as_country": "Fiji",
     "as_domain": "vodafone.com.fj",
@@ -44698,6 +47674,18 @@
     "total_ipv4_ips": "4,096",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:33:42"
+  },
+  "38524": {
+    "as_country": "Indonesia",
+    "as_domain": "laxo.net.id",
+    "as_name": "Laxo Global Akses PT",
+    "as_number": "38524",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as38524",
+    "status": "ok",
+    "total_ipv4_ips": "3,584",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:12:11"
   },
   "38529": {
     "as_country": "India",
@@ -45143,6 +48131,18 @@
     "total_ipv6_ips": "316.9 Octillion",
     "updated_at": "2026-08-03T16:20:14"
   },
+  "395092": {
+    "as_country": "United States of America",
+    "as_domain": "shockhosting.net",
+    "as_name": "Shock Hosting LLC",
+    "as_number": "395092",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as395092",
+    "status": "ok",
+    "total_ipv4_ips": "36,352",
+    "total_ipv6_ips": "158.5 Octillion",
+    "updated_at": "2026-08-03T17:23:28"
+  },
   "39544": {
     "as_country": "Switzerland",
     "as_domain": "voe.ch",
@@ -45178,6 +48178,18 @@
     "total_ipv4_ips": "13,824",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:35:46"
+  },
+  "395748": {
+    "as_country": "United States of America",
+    "as_domain": "gonetspeed.com",
+    "as_name": "Netspeed LLC",
+    "as_number": "395748",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as395748",
+    "status": "ok",
+    "total_ipv4_ips": "17,664",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:07:15"
   },
   "395954": {
     "as_country": "United States of America",
@@ -45311,6 +48323,18 @@
     "total_ipv6_ips": "1.5 Nonillion",
     "updated_at": "2026-08-03T16:17:23"
   },
+  "39686": {
+    "as_country": "Netherlands",
+    "as_domain": "eurofiber.nl",
+    "as_name": "Eurofiber Nederland BV",
+    "as_number": "39686",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as39686",
+    "status": "ok",
+    "total_ipv4_ips": "210,176",
+    "total_ipv6_ips": "2.3 Nonillion",
+    "updated_at": "2026-08-03T17:23:20"
+  },
   "396982": {
     "as_country": "United States of America",
     "as_domain": "google.com",
@@ -45335,6 +48359,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:54:32"
   },
+  "397303": {
+    "as_country": "United States of America",
+    "as_domain": "welink.com",
+    "as_name": "WeLink Communications Inc.",
+    "as_number": "397303",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as397303",
+    "status": "ok",
+    "total_ipv4_ips": "4,352",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:09:18"
+  },
   "397412": {
     "as_country": "United States of America",
     "as_domain": "tachus.com",
@@ -45346,6 +48382,18 @@
     "total_ipv4_ips": "115,968",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T16:33:49"
+  },
+  "397423": {
+    "as_country": "United States of America",
+    "as_domain": "tier.net",
+    "as_name": "Tier.Net Technologies LLC",
+    "as_number": "397423",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as397423",
+    "status": "ok",
+    "total_ipv4_ips": "92,160",
+    "total_ipv6_ips": "158.8 Octillion",
+    "updated_at": "2026-08-03T17:16:40"
   },
   "397504": {
     "as_country": "United States of America",
@@ -45418,6 +48466,18 @@
     "total_ipv4_ips": "54,272",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:35:53"
+  },
+  "398446": {
+    "as_country": "United States of America",
+    "as_domain": "cullmanec.com",
+    "as_name": "Cooperative Connection LLC",
+    "as_number": "398446",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as398446",
+    "status": "ok",
+    "total_ipv4_ips": "24,576",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:17:50"
   },
   "398465": {
     "as_country": "United States of America",
@@ -45562,6 +48622,18 @@
     "total_ipv4_ips": "93,184",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T14:51:37"
+  },
+  "400662": {
+    "as_country": "United States of America",
+    "as_domain": "dobson.net",
+    "as_name": "Dobson Technologies - Transport and Telecom Solutions LLC",
+    "as_number": "400662",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as400662",
+    "status": "ok",
+    "total_ipv4_ips": "47,360",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:17:47"
   },
   "4007": {
     "as_country": "Nepal",
@@ -45766,6 +48838,18 @@
     "total_ipv4_ips": "1,740,800",
     "total_ipv6_ips": "1.4 Nonillion",
     "updated_at": "2026-04-29T13:15:42"
+  },
+  "41811": {
+    "as_country": "United Kingdom of Great Britain and Northern Ireland",
+    "as_domain": "convergencegroup.co.uk",
+    "as_name": "Convergence (Group Networks) Limited",
+    "as_number": "41811",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as41811",
+    "status": "ok",
+    "total_ipv4_ips": "29,952",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:23:02"
   },
   "41935": {
     "as_country": "France",
@@ -46535,6 +49619,18 @@
     "total_ipv6_ips": "2.4 Septillion",
     "updated_at": "2026-04-29T12:04:54"
   },
+  "45325": {
+    "as_country": "Indonesia",
+    "as_domain": "pc24.net.id",
+    "as_name": "PT PC24 Telekomunikasi Indonesia",
+    "as_number": "45325",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as45325",
+    "status": "ok",
+    "total_ipv4_ips": "5,376",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:10:56"
+  },
   "45326": {
     "as_country": "Bangladesh",
     "as_domain": "bbts.net",
@@ -46955,6 +50051,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T13:51:06"
   },
+  "45891": {
+    "as_country": "Solomon Islands",
+    "as_domain": "telekom.com.sb",
+    "as_name": "Solomon Telekom Co Ltd",
+    "as_number": "45891",
+    "asn_type": "-",
+    "lookup_source": "https://lite.ip2location.com/as45891",
+    "status": "ok",
+    "total_ipv4_ips": "8,704",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:22:12"
+  },
   "45899": {
     "as_country": "Viet Nam",
     "as_domain": "vnpt.vn",
@@ -47135,6 +50243,30 @@
     "total_ipv6_ips": "316.7 Octillion",
     "updated_at": "2026-08-03T15:16:56"
   },
+  "46606": {
+    "as_country": "United States of America",
+    "as_domain": "unifiedlayer.com",
+    "as_name": "Unified Layer",
+    "as_number": "46606",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as46606",
+    "status": "ok",
+    "total_ipv4_ips": "550,912",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:11:05"
+  },
+  "46650": {
+    "as_country": "Grenada",
+    "as_domain": "columbuscommunications.com",
+    "as_name": "Columbus Communications Grenada Ltd.",
+    "as_number": "46650",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as46650",
+    "status": "ok",
+    "total_ipv4_ips": "25,088",
+    "total_ipv6_ips": "1.3 Nonillion",
+    "updated_at": "2026-08-03T17:11:01"
+  },
   "4668": {
     "as_country": "Korea (Republic of)",
     "as_domain": "lgcns.com",
@@ -47254,6 +50386,18 @@
     "total_ipv4_ips": "28,623,872",
     "total_ipv6_ips": "81.3 Nonillion",
     "updated_at": "2026-04-29T13:03:11"
+  },
+  "47160": {
+    "as_country": "France",
+    "as_domain": "moji.fr",
+    "as_name": "Moji SAS",
+    "as_number": "47160",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as47160",
+    "status": "ok",
+    "total_ipv4_ips": "6,144",
+    "total_ipv6_ips": "634.4 Octillion",
+    "updated_at": "2026-08-03T17:21:50"
   },
   "47172": {
     "as_country": "Netherlands",
@@ -47927,6 +51071,18 @@
     "total_ipv6_ips": "633.8 Octillion",
     "updated_at": "2026-08-03T15:26:50"
   },
+  "49401": {
+    "as_country": "United Kingdom of Great Britain and Northern Ireland",
+    "as_domain": "biznetuk.com",
+    "as_name": "Bink Group Ltd",
+    "as_number": "49401",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as49401",
+    "status": "ok",
+    "total_ipv4_ips": "512",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:21:32"
+  },
   "49453": {
     "as_country": "Netherlands",
     "as_domain": "global-layer.com",
@@ -47963,6 +51119,18 @@
     "total_ipv6_ips": "1.3 Nonillion",
     "updated_at": "2026-08-03T16:55:35"
   },
+  "49683": {
+    "as_country": "United Kingdom of Great Britain and Northern Ireland",
+    "as_domain": "massivegrid.com",
+    "as_name": "MassiveGrid Ltd",
+    "as_number": "49683",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as49683",
+    "status": "ok",
+    "total_ipv4_ips": "11,776",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:21:36"
+  },
   "49724": {
     "as_country": "Russian Federation",
     "as_domain": "vainahtelecom.ru",
@@ -47986,6 +51154,18 @@
     "total_ipv4_ips": "57,344",
     "total_ipv6_ips": "634.1 Octillion",
     "updated_at": "2026-08-03T16:34:40"
+  },
+  "49816": {
+    "as_country": "Russian Federation",
+    "as_domain": "mtsgsm.com",
+    "as_name": "MTS PJSC",
+    "as_number": "49816",
+    "asn_type": "(MOB) Mobile ISP",
+    "lookup_source": "https://lite.ip2location.com/as49816",
+    "status": "ok",
+    "total_ipv4_ips": "8,192",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:21:21"
   },
   "4983": {
     "as_country": "United States of America",
@@ -48047,6 +51227,18 @@
     "total_ipv6_ips": "94.1 Octillion",
     "updated_at": "2026-08-03T15:55:04"
   },
+  "50131": {
+    "as_country": "United Kingdom of Great Britain and Northern Ireland",
+    "as_domain": "spartanhost.net",
+    "as_name": "Spartan Host Ltd",
+    "as_number": "50131",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as50131",
+    "status": "ok",
+    "total_ipv4_ips": "20,992",
+    "total_ipv6_ips": "6.3 Nonillion",
+    "updated_at": "2026-08-03T17:15:34"
+  },
   "50223": {
     "as_country": "Kyrgyzstan",
     "as_domain": "megacom.kg",
@@ -48082,6 +51274,42 @@
     "total_ipv4_ips": "1,806,848",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T13:10:15"
+  },
+  "50436": {
+    "as_country": "Germany",
+    "as_domain": "blue-cable.net",
+    "as_name": "Tele Columbus AG",
+    "as_number": "50436",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as50436",
+    "status": "ok",
+    "total_ipv4_ips": "90,112",
+    "total_ipv6_ips": "14.9 Octillion",
+    "updated_at": "2026-08-03T17:15:31"
+  },
+  "50477": {
+    "as_country": "Russian Federation",
+    "as_domain": "sv-en.ru",
+    "as_name": "Svyaz-Energo Ltd.",
+    "as_number": "50477",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as50477",
+    "status": "ok",
+    "total_ipv4_ips": "20,480",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:21:25"
+  },
+  "50498": {
+    "as_country": "Russian Federation",
+    "as_domain": "ertelecom.ru",
+    "as_name": "JSC ER-Telecom Holding",
+    "as_number": "50498",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as50498",
+    "status": "ok",
+    "total_ipv4_ips": "57,600",
+    "total_ipv6_ips": "1.2 Octillion",
+    "updated_at": "2026-08-03T17:15:17"
   },
   "5056": {
     "as_country": "United States of America",
@@ -48155,6 +51383,18 @@
     "total_ipv6_ips": "633.8 Octillion",
     "updated_at": "2026-08-03T16:49:34"
   },
+  "50810": {
+    "as_country": "Iran (Islamic Republic of)",
+    "as_domain": "mobinnet.net",
+    "as_name": "Mobin Net Communication Company (Private Joint Stock)",
+    "as_number": "50810",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as50810",
+    "status": "ok",
+    "total_ipv4_ips": "138,496",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:21:10"
+  },
   "50839": {
     "as_country": "Italy",
     "as_domain": "lumanex.it",
@@ -48191,6 +51431,18 @@
     "total_ipv6_ips": "20.3 Nonillion",
     "updated_at": "2026-04-28T18:56:15"
   },
+  "50953": {
+    "as_country": "Slovakia",
+    "as_domain": "konfer.eu",
+    "as_name": "David Kondicz Trading As KONFER Networks",
+    "as_number": "50953",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as50953",
+    "status": "ok",
+    "total_ipv4_ips": "3,072",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:15:13"
+  },
   "51018": {
     "as_country": "Iraq",
     "as_domain": "sevennet.net",
@@ -48202,6 +51454,18 @@
     "total_ipv4_ips": "20,480",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:55:10"
+  },
+  "51020": {
+    "as_country": "Iraq",
+    "as_domain": "jazeeratelecom.net",
+    "as_name": "Al-Jazeera Al-Arabiya Company for Communication and Internet LTD",
+    "as_number": "51020",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as51020",
+    "status": "ok",
+    "total_ipv4_ips": "4,608",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:15:10"
   },
   "51112": {
     "as_country": "Russian Federation",
@@ -48395,6 +51659,18 @@
     "total_ipv6_ips": "1.9 Nonillion",
     "updated_at": "2026-08-03T16:34:32"
   },
+  "52075": {
+    "as_country": "France",
+    "as_domain": "wifirst.fr",
+    "as_name": "Wifirst S.A.S.",
+    "as_number": "52075",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as52075",
+    "status": "ok",
+    "total_ipv4_ips": "132,352",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:16:29"
+  },
   "52228": {
     "as_country": "Costa Rica",
     "as_domain": "cabletica.com",
@@ -48515,6 +51791,30 @@
     "total_ipv6_ips": "78.9 Octillion",
     "updated_at": "2026-04-29T16:37:35"
   },
+  "52362": {
+    "as_country": "Guatemala",
+    "as_domain": "guate.net.gt",
+    "as_name": "Servicios Innovadores de Comunicacion Y Entretenimiento S.A.",
+    "as_number": "52362",
+    "asn_type": "(MOB) Mobile ISP",
+    "lookup_source": "https://lite.ip2location.com/as52362",
+    "status": "ok",
+    "total_ipv4_ips": "9,472",
+    "total_ipv6_ips": "29.5 Octillion",
+    "updated_at": "2026-08-03T17:20:48"
+  },
+  "52369": {
+    "as_country": "Argentina",
+    "as_domain": "arecoonline.com.ar",
+    "as_name": "Neophone Argentina SRL",
+    "as_number": "52369",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as52369",
+    "status": "ok",
+    "total_ipv4_ips": "10,240",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:16:56"
+  },
   "52380": {
     "as_country": "Argentina",
     "as_domain": "sis.net.ar",
@@ -48526,6 +51826,18 @@
     "total_ipv4_ips": "3,072",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:45:30"
+  },
+  "52444": {
+    "as_country": "Argentina",
+    "as_domain": "lzsnet.com.ar",
+    "as_name": "Pogliotti & Pogliotti Construcciones S.A.",
+    "as_number": "52444",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as52444",
+    "status": "ok",
+    "total_ipv4_ips": "53,664",
+    "total_ipv6_ips": "237.7 Octillion",
+    "updated_at": "2026-08-03T17:20:51"
   },
   "52468": {
     "as_country": "Panama",
@@ -48551,6 +51863,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T16:43:17"
   },
+  "52559": {
+    "as_country": "Brazil",
+    "as_domain": "novatecnet.com.br",
+    "as_name": "Novatec Telecom Ltda",
+    "as_number": "52559",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as52559",
+    "status": "ok",
+    "total_ipv4_ips": "4,096",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:16:32"
+  },
   "52657": {
     "as_country": "Brazil",
     "as_domain": "gbsn.com.br",
@@ -48562,6 +51886,18 @@
     "total_ipv4_ips": "4,096",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:49:36"
+  },
+  "52689": {
+    "as_country": "Brazil",
+    "as_domain": "espacodigitalinfo.com.br",
+    "as_name": "Espaco Digital",
+    "as_number": "52689",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as52689",
+    "status": "ok",
+    "total_ipv4_ips": "8,192",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:20:56"
   },
   "52706": {
     "as_country": "Brazil",
@@ -48670,6 +52006,18 @@
     "total_ipv4_ips": "18,432",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T14:42:29"
+  },
+  "52999": {
+    "as_country": "Brazil",
+    "as_domain": "start.psi.br",
+    "as_name": "Start Networks S/A",
+    "as_number": "52999",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as52999",
+    "status": "ok",
+    "total_ipv4_ips": "9,216",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:20:45"
   },
   "53005": {
     "as_country": "Brazil",
@@ -48982,6 +52330,18 @@
     "total_ipv4_ips": "2,816",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T15:16:03"
+  },
+  "54600": {
+    "as_country": "United States of America",
+    "as_domain": "aquanx.com",
+    "as_name": "Peg Tech Inc",
+    "as_number": "54600",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as54600",
+    "status": "ok",
+    "total_ipv4_ips": "510,976",
+    "total_ipv6_ips": "2.4 Septillion",
+    "updated_at": "2026-08-03T17:20:38"
   },
   "54614": {
     "as_country": "Canada",
@@ -49715,6 +53075,18 @@
     "total_ipv6_ips": "3 Nonillion",
     "updated_at": "2026-08-03T14:33:43"
   },
+  "56044": {
+    "as_country": "China",
+    "as_domain": "chinamobileltd.com",
+    "as_name": "China Mobile Communications Corporation",
+    "as_number": "56044",
+    "asn_type": "(MOB) Mobile ISP",
+    "lookup_source": "https://lite.ip2location.com/as56044",
+    "status": "ok",
+    "total_ipv4_ips": "974,848",
+    "total_ipv6_ips": "2.8 Nonillion",
+    "updated_at": "2026-08-03T17:20:08"
+  },
   "56045": {
     "as_country": "China",
     "as_domain": "chinamobileltd.com",
@@ -50387,6 +53759,18 @@
     "total_ipv6_ips": "1.9 Nonillion",
     "updated_at": "2026-08-03T16:53:25"
   },
+  "58293": {
+    "as_country": "Turkey",
+    "as_domain": "alfailetisim.com.tr",
+    "as_name": "Alfa Iletisim Hizmetleri Pazarlama Ticaret A.S.",
+    "as_number": "58293",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as58293",
+    "status": "ok",
+    "total_ipv4_ips": "3,328",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:11:16"
+  },
   "58304": {
     "as_country": "Russian Federation",
     "as_domain": "krasnokamensk.ru",
@@ -50470,6 +53854,18 @@
     "total_ipv4_ips": "3,840",
     "total_ipv6_ips": "4.8 Septillion",
     "updated_at": "2026-04-29T18:51:35"
+  },
+  "58485": {
+    "as_country": "Indonesia",
+    "as_domain": "wifian.id",
+    "as_name": "WIFIAN ID",
+    "as_number": "58485",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as58485",
+    "status": "ok",
+    "total_ipv4_ips": "2,048",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:19:43"
   },
   "58495": {
     "as_country": "Indonesia",
@@ -50626,6 +54022,18 @@
     "total_ipv4_ips": "8,704",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T14:25:31"
+  },
+  "58688": {
+    "as_country": "Bangladesh",
+    "as_domain": "radiantbd.net",
+    "as_name": "Radiant Communications Ltd IIG",
+    "as_number": "58688",
+    "asn_type": "(COM) Commercial",
+    "lookup_source": "https://lite.ip2location.com/as58688",
+    "status": "ok",
+    "total_ipv4_ips": "2,048",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:06:47"
   },
   "58689": {
     "as_country": "Bangladesh",
@@ -50830,6 +54238,18 @@
     "total_ipv4_ips": "1,024",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:44:36"
+  },
+  "58890": {
+    "as_country": "Bangladesh",
+    "as_domain": "info-link.ru",
+    "as_name": "Infolink",
+    "as_number": "58890",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as58890",
+    "status": "ok",
+    "total_ipv4_ips": "2,816",
+    "total_ipv6_ips": "158.5 Octillion",
+    "updated_at": "2026-08-03T17:19:22"
   },
   "58893": {
     "as_country": "Pakistan",
@@ -51299,6 +54719,18 @@
     "total_ipv6_ips": "693.2 Octillion",
     "updated_at": "2026-04-29T12:56:11"
   },
+  "60171": {
+    "as_country": "Spain",
+    "as_domain": "afr-ix.com",
+    "as_name": "AFR-IX Telecom S.A.",
+    "as_number": "60171",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as60171",
+    "status": "ok",
+    "total_ipv4_ips": "20,224",
+    "total_ipv6_ips": "792.3 Octillion",
+    "updated_at": "2026-08-03T17:15:59"
+  },
   "60255": {
     "as_country": "United Kingdom of Great Britain and Northern Ireland",
     "as_domain": "internetty.uk",
@@ -51322,6 +54754,18 @@
     "total_ipv4_ips": "7,168",
     "total_ipv6_ips": "0",
     "updated_at": "2026-08-03T16:39:08"
+  },
+  "60282": {
+    "as_country": "United Kingdom of Great Britain and Northern Ireland",
+    "as_domain": "coventry.gov.uk",
+    "as_name": "Coventry City Council",
+    "as_number": "60282",
+    "asn_type": "(GOV) Government",
+    "lookup_source": "https://lite.ip2location.com/as60282",
+    "status": "ok",
+    "total_ipv4_ips": "1,024",
+    "total_ipv6_ips": "633.8 Octillion",
+    "updated_at": "2026-08-03T17:15:54"
   },
   "60377": {
     "as_country": "United Kingdom of Great Britain and Northern Ireland",
@@ -51383,6 +54827,18 @@
     "total_ipv6_ips": "633.8 Octillion",
     "updated_at": "2026-08-03T15:06:46"
   },
+  "61125": {
+    "as_country": "United States of America",
+    "as_domain": "sabotage.net",
+    "as_name": "Sabotage LLC",
+    "as_number": "61125",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as61125",
+    "status": "ok",
+    "total_ipv4_ips": "256",
+    "total_ipv6_ips": "1.2 Septillion",
+    "updated_at": "2026-08-03T17:18:50"
+  },
   "6128": {
     "as_country": "United States of America",
     "as_domain": "cablevision.com",
@@ -51394,6 +54850,18 @@
     "total_ipv4_ips": "4,910,336",
     "total_ipv6_ips": "1.3 Nonillion",
     "updated_at": "2026-04-29T11:05:38"
+  },
+  "61317": {
+    "as_country": "United States of America",
+    "as_domain": "hivelocity.net",
+    "as_name": "Hivelocity LLC",
+    "as_number": "61317",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as61317",
+    "status": "ok",
+    "total_ipv4_ips": "72,960",
+    "total_ipv6_ips": "585.9 Octillion",
+    "updated_at": "2026-08-03T17:18:54"
   },
   "61371025912": {
     "as_country": "",
@@ -51502,6 +54970,18 @@
     "total_ipv4_ips": "753,664",
     "total_ipv6_ips": "1.3 Nonillion",
     "updated_at": "2026-04-29T12:02:34"
+  },
+  "61901": {
+    "as_country": "Brazil",
+    "as_domain": "rmrti.com.br",
+    "as_name": "RMR Assessoria Tecnica em Teleinformatica Ltda-ME",
+    "as_number": "61901",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as61901",
+    "status": "ok",
+    "total_ipv4_ips": "3,072",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:18:59"
   },
   "62005": {
     "as_country": "Estonia",
@@ -51911,6 +55391,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-08-03T16:18:08"
   },
+  "63981": {
+    "as_country": "Hong Kong",
+    "as_domain": "haiwen-law.com",
+    "as_name": "43/F AIA Tower 183 Electric Road North Point Hong Kong",
+    "as_number": "63981",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as63981",
+    "status": "ok",
+    "total_ipv4_ips": "13,056",
+    "total_ipv6_ips": "237.7 Octillion",
+    "updated_at": "2026-08-03T17:18:39"
+  },
   "63991": {
     "as_country": "Nepal",
     "as_domain": "arrownet.com.np",
@@ -52079,6 +55571,18 @@
     "total_ipv6_ips": "633.8 Octillion",
     "updated_at": "2026-04-29T16:36:13"
   },
+  "6453": {
+    "as_country": "United States of America",
+    "as_domain": "tatacommunications.com",
+    "as_name": "Tata Communications (America) Inc",
+    "as_number": "6453",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as6453",
+    "status": "ok",
+    "total_ipv4_ips": "413,696",
+    "total_ipv6_ips": "871.5 Octillion",
+    "updated_at": "2026-08-03T17:18:42"
+  },
   "6461": {
     "as_country": "United States of America",
     "as_domain": "zayo.com",
@@ -52090,6 +55594,18 @@
     "total_ipv4_ips": "1,568,000",
     "total_ipv6_ips": "326.8 Octillion",
     "updated_at": "2026-04-29T13:05:14"
+  },
+  "6535": {
+    "as_country": "Chile",
+    "as_domain": "telmex.com",
+    "as_name": "Telmex Servicios Empresariales S.A.",
+    "as_number": "6535",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as6535",
+    "status": "ok",
+    "total_ipv4_ips": "1,133,824",
+    "total_ipv6_ips": "79 Octillion",
+    "updated_at": "2026-08-03T17:17:42"
   },
   "6568": {
     "as_country": "Bolivia (Plurinational State of)",
@@ -52258,6 +55774,18 @@
     "total_ipv4_ips": "1,241,856",
     "total_ipv6_ips": "2 Nonillion",
     "updated_at": "2026-04-29T12:56:18"
+  },
+  "6837": {
+    "as_country": "Switzerland",
+    "as_domain": "swisscom.ch",
+    "as_name": "Swisscom (Schweiz) AG",
+    "as_number": "6837",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as6837",
+    "status": "ok",
+    "total_ipv4_ips": "0",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:11:47"
   },
   "6848": {
     "as_country": "Belgium",
@@ -52498,6 +56026,18 @@
     "total_ipv4_ips": "8,368,384",
     "total_ipv6_ips": "325.4 Nonillion",
     "updated_at": "2026-04-29T13:12:51"
+  },
+  "7393": {
+    "as_country": "United States of America",
+    "as_domain": "cybercon.com",
+    "as_name": "Cybercon Inc.",
+    "as_number": "7393",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as7393",
+    "status": "ok",
+    "total_ipv4_ips": "55,552",
+    "total_ipv6_ips": "79.2 Octillion",
+    "updated_at": "2026-08-03T17:12:02"
   },
   "7418": {
     "as_country": "Chile",
@@ -52859,6 +56399,18 @@
     "total_ipv6_ips": "623.9 Octillion",
     "updated_at": "2026-04-29T12:38:19"
   },
+  "8200": {
+    "as_country": "Kazakhstan",
+    "as_domain": "wotom.net",
+    "as_name": "Uplink LLC",
+    "as_number": "8200",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as8200",
+    "status": "ok",
+    "total_ipv4_ips": "4,352",
+    "total_ipv6_ips": "0",
+    "updated_at": "2026-08-03T17:05:50"
+  },
   "8220": {
     "as_country": "United Kingdom of Great Britain and Northern Ireland",
     "as_domain": "colt.net",
@@ -53147,6 +56699,18 @@
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T12:59:21"
   },
+  "8551": {
+    "as_country": "Israel",
+    "as_domain": "bezeqint.net",
+    "as_name": "Bezeq International Ltd.",
+    "as_number": "8551",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as8551",
+    "status": "ok",
+    "total_ipv4_ips": "981,248",
+    "total_ipv6_ips": "3.2 Nonillion",
+    "updated_at": "2026-08-03T17:25:03"
+  },
   "8560": {
     "as_country": "Germany",
     "as_domain": "ionos.com",
@@ -53398,6 +56962,18 @@
     "total_ipv4_ips": "94,208",
     "total_ipv6_ips": "713.1 Octillion",
     "updated_at": "2026-08-03T15:25:25"
+  },
+  "9044": {
+    "as_country": "Switzerland",
+    "as_domain": "solnet.ch",
+    "as_name": "BSE Software GmbH",
+    "as_number": "9044",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as9044",
+    "status": "ok",
+    "total_ipv4_ips": "101,376",
+    "total_ipv6_ips": "787.3 Octillion",
+    "updated_at": "2026-08-03T17:17:32"
   },
   "9050": {
     "as_country": "Romania",
@@ -53674,6 +57250,18 @@
     "total_ipv4_ips": "14,417,280",
     "total_ipv6_ips": "237.7 Octillion",
     "updated_at": "2026-04-29T12:52:32"
+  },
+  "9326": {
+    "as_country": "Indonesia",
+    "as_domain": "centrin.net.id",
+    "as_name": "PT Centrin Utama",
+    "as_number": "9326",
+    "asn_type": "(ISP) Fixed Line ISP",
+    "lookup_source": "https://lite.ip2location.com/as9326",
+    "status": "ok",
+    "total_ipv4_ips": "37,888",
+    "total_ipv6_ips": "158.5 Octillion",
+    "updated_at": "2026-08-03T17:18:05"
   },
   "9329": {
     "as_country": "Sri Lanka",
@@ -54010,6 +57598,18 @@
     "total_ipv4_ips": "31,232",
     "total_ipv6_ips": "79.2 Octillion",
     "updated_at": "2026-04-29T16:34:33"
+  },
+  "979": {
+    "as_country": "United States of America",
+    "as_domain": "as979.net",
+    "as_name": "Netlab Global",
+    "as_number": "979",
+    "asn_type": "(DCH) Data Center/Web Hosting/Transit",
+    "lookup_source": "https://lite.ip2location.com/as979",
+    "status": "ok",
+    "total_ipv4_ips": "128,256",
+    "total_ipv6_ips": "309.5 Septillion",
+    "updated_at": "2026-08-03T17:18:21"
   },
   "9790": {
     "as_country": "New Zealand",

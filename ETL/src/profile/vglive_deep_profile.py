@@ -770,7 +770,10 @@ def write_daily_tables(
                 COUNT(*) AS rows,
                 COUNT(*) FILTER (WHERE reqPath LIKE '%.ts') AS raw_ts_rows,
                 COUNT(*) FILTER (WHERE statusCode = '200' AND reqPath LIKE '%.ts') AS status_200_ts_rows,
-                approx_count_distinct(cliIP) AS approx_unique_ips,
+                -- HyperLogLog keeps one fixed-size sketch per distinct UA. A high-cardinality
+                -- UA day can therefore exhaust RAM before DuckDB can spill. Exact distinct IPs
+                -- are both more accurate and spill-friendly for this one daily UA aggregate.
+                COUNT(DISTINCT cliIP) AS approx_unique_ips,
                 approx_count_distinct(reqHost) AS distinct_hosts
             FROM lake_rows
             WHERE statusCode = '200' AND {where_sql}
@@ -868,8 +871,10 @@ def main() -> None:
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--start", help="Start date, YYYY-MM-DD")
     parser.add_argument("--end", help="End date, YYYY-MM-DD")
-    parser.add_argument("--threads", type=int, default=8)
-    parser.add_argument("--memory-limit", default="20GB")
+    # Daily UA aggregation is the largest profile operation. Conservative defaults keep the
+    # scheduled run inside typical workstation headroom and let DuckDB use its spill directory.
+    parser.add_argument("--threads", type=int, default=2)
+    parser.add_argument("--memory-limit", default="4GB")
     parser.add_argument(
         "--temp-dir",
         type=Path,

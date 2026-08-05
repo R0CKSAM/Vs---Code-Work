@@ -349,6 +349,25 @@ def _lower_parallelism(command: list[str]) -> tuple[Optional[list[str]], list[st
         if lowered < current:
             retry[i + 1] = str(lowered)
             changes.append(f"{token} {current}->{lowered}")
+
+    # DuckDB's configured cap is a ceiling, not a reservation. On a busy workstation a
+    # 20GB cap can still make the OS reject an allocation before spill starts. Reducing it
+    # on the retry gives the engine room to use the configured temp directory safely.
+    for i, token in enumerate(retry[:-1]):
+        if token != "--memory-limit":
+            continue
+        match = re.fullmatch(r"\s*(\d+(?:\.\d+)?)\s*(GB|MB)\s*", retry[i + 1], flags=re.IGNORECASE)
+        if not match:
+            continue
+        value = float(match.group(1))
+        unit = match.group(2).upper()
+        current_mb = value * (1024 if unit == "GB" else 1)
+        lowered_mb = max(2048, current_mb / 2)
+        if lowered_mb >= current_mb:
+            continue
+        lowered_text = f"{lowered_mb / 1024:g}GB" if lowered_mb >= 1024 else f"{lowered_mb:g}MB"
+        retry[i + 1] = lowered_text
+        changes.append(f"--memory-limit {value:g}{unit}->{lowered_text}")
     return (retry, changes) if changes else (None, [])
 
 
@@ -896,12 +915,12 @@ def main() -> None:
     parser.add_argument(
         "--deep-profile-threads",
         type=int,
-        default=8,
+        default=2,
         help="Threads passed to vglive_deep_profile.py.",
     )
     parser.add_argument(
         "--deep-profile-memory",
-        default="20GB",
+        default="4GB",
         help="Memory passed to vglive_deep_profile.py.",
     )
     parser.add_argument(
