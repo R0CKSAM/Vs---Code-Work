@@ -1628,10 +1628,20 @@ def read_landing_script() -> str:
 
 
 def load_landing_report(force: bool = False) -> dict[str, Any]:
-    from landing_sync import sync_landing_data
-    if force or not LANDING_HISTORY_CSV.exists():
+    from landing_channel_tracker import process_landing_tracker_files
+
+    needs_reprocess = not LANDING_HISTORY_CSV.exists()
+    if LANDING_HISTORY_CSV.exists():
         try:
-            sync_landing_data()
+            check_df = pd.read_csv(LANDING_HISTORY_CSV, dtype=str)
+            if check_df.empty or "Market" not in check_df.columns or check_df["Market"].dropna().str.strip().eq("").all():
+                needs_reprocess = True
+        except Exception:
+            needs_reprocess = True
+
+    if needs_reprocess:
+        try:
+            process_landing_tracker_files(force_reprocess=True)
         except Exception:
             pass
 
@@ -1760,6 +1770,11 @@ def write_frequency_report_json(report: dict[str, Any] | None = None) -> Path:
     return OUTPUT_JSON
 
 
+def read_landing_tracker_script() -> str:
+    path = BASE_DIR / "static" / "landing_channel_tracker.js"
+    return path.read_text(encoding="utf-8") if path.exists() else ""
+
+
 def write_standalone_dashboard(report: dict[str, Any]) -> None:
     OUTPUT_HTML.write_text(create_standalone_dashboard(report), encoding="utf-8")
 
@@ -1772,6 +1787,7 @@ def create_standalone_dashboard(report: dict[str, Any]) -> str:
     ots_script_text = read_ots_script()
     comparison_script_text = read_comparison_script()
     landing_script_text = read_landing_script()
+    landing_tracker_script_text = read_landing_tracker_script()
 
     html = """<!DOCTYPE html>
 <html lang="en">
@@ -2044,6 +2060,46 @@ __STYLE__
         <span id="comparisonPageInfo">Page 1 of 1</span>
         <button id="comparisonNextPage" class="ghost-button" type="button">Next</button>
         <button id="comparisonExitFullscreenButton" class="ghost-button comparison-exit-fullscreen" type="button" hidden>Exit Full Screen</button>
+      </div>
+    </section>
+
+    <section class="panel landing-tracker-panel">
+      <div class="panel-heading landing-tracker-heading">
+        <div><h2>Landing Channel Change Tracker</h2></div>
+      </div>
+      <div class="landing-tracker-toolbar">
+        <label class="filter-select-field"><span>Band</span><div class="filter-select"><button id="trackerBandFilter" class="filter-select-button" type="button">All Bands</button><div id="trackerBandFilterMenu" class="filter-select-menu" hidden><input id="trackerBandFilterSearch" class="filter-menu-search" type="text" placeholder="Search band..." autocomplete="off" /><div id="trackerBandFilterOptions" class="filter-options-list"></div></div></div></label>
+        <label class="filter-select-field"><span>Market</span><div class="filter-select"><button id="trackerMarketFilter" class="filter-select-button" type="button">All Markets</button><div id="trackerMarketFilterMenu" class="filter-select-menu" hidden><input id="trackerMarketFilterSearch" class="filter-menu-search" type="text" placeholder="Search market..." autocomplete="off" /><div id="trackerMarketFilterOptions" class="filter-options-list"></div></div></div></label>
+        <label class="filter-select-field"><span>City</span><div class="filter-select"><button id="trackerCityFilter" class="filter-select-button" type="button">All Cities</button><div id="trackerCityFilterMenu" class="filter-select-menu" hidden><input id="trackerCityFilterSearch" class="filter-menu-search" type="text" placeholder="Search city..." autocomplete="off" /><div id="trackerCityFilterOptions" class="filter-options-list"></div></div></div></label>
+        <label class="filter-select-field"><span>Headend</span><div class="filter-select"><button id="trackerHeadendFilter" class="filter-select-button" type="button">All Headends</button><div id="trackerHeadendFilterMenu" class="filter-select-menu" hidden><input id="trackerHeadendFilterSearch" class="filter-menu-search" type="text" placeholder="Search headend..." autocomplete="off" /><div id="trackerHeadendFilterOptions" class="filter-options-list"></div></div></div></label>
+        <label class="filter-select-field"><span>State</span><div class="filter-select"><button id="trackerStateFilter" class="filter-select-button" type="button">All States</button><div id="trackerStateFilterMenu" class="filter-select-menu" hidden><input id="trackerStateFilterSearch" class="filter-menu-search" type="text" placeholder="Search state..." autocomplete="off" /><div id="trackerStateFilterOptions" class="filter-options-list"></div></div></div></label>
+        <label class="filter-select-field"><span>District</span><div class="filter-select"><button id="trackerDistrictFilter" class="filter-select-button" type="button">All Districts</button><div id="trackerDistrictFilterMenu" class="filter-select-menu" hidden><input id="trackerDistrictFilterSearch" class="filter-menu-search" type="text" placeholder="Search district..." autocomplete="off" /><div id="trackerDistrictFilterOptions" class="filter-options-list"></div></div></div></label>
+        <label class="filter-select-field"><span>Feed</span><div class="filter-select"><button id="trackerFeedFilter" class="filter-select-button" type="button">All Feeds</button><div id="trackerFeedFilterMenu" class="filter-select-menu" hidden><input id="trackerFeedFilterSearch" class="filter-menu-search" type="text" placeholder="Search feed..." autocomplete="off" /><div id="trackerFeedFilterOptions" class="filter-options-list"></div></div></div></label>
+        <label class="filter-select-field"><span>MSO</span><div class="filter-select"><button id="trackerMsoFilter" class="filter-select-button" type="button">All MSO</button><div id="trackerMsoFilterMenu" class="filter-select-menu" hidden><input id="trackerMsoFilterSearch" class="filter-menu-search" type="text" placeholder="Search MSO..." autocomplete="off" /><div id="trackerMsoFilterOptions" class="filter-options-list"></div></div></div></label>
+        <label class="filter-select-field"><span>Channel Type</span><div class="filter-select"><button id="trackerChannelTypeFilter" class="filter-select-button" type="button">Landing Channel 1</button><div id="trackerChannelTypeFilterMenu" class="filter-select-menu" hidden><input id="trackerChannelTypeFilterSearch" class="filter-menu-search" type="text" placeholder="Search channel type..." autocomplete="off" /><div id="trackerChannelTypeFilterOptions" class="filter-options-list"></div></div></div></label>
+        <label class="filter-select-field"><span>Week From</span><div class="filter-select"><button id="trackerWeekFromFilter" class="filter-select-button" type="button">Week From</button><div id="trackerWeekFromFilterMenu" class="filter-select-menu" hidden><input id="trackerWeekFromFilterSearch" class="filter-menu-search" type="text" placeholder="Search week..." autocomplete="off" /><div id="trackerWeekFromFilterOptions" class="filter-options-list"></div></div></div></label>
+        <label class="filter-select-field"><span>Week To</span><div class="filter-select"><button id="trackerWeekToFilter" class="filter-select-button" type="button">Week To</button><div id="trackerWeekToFilterMenu" class="filter-select-menu" hidden><input id="trackerWeekToFilterSearch" class="filter-menu-search" type="text" placeholder="Search week..." autocomplete="off" /><div id="trackerWeekToFilterOptions" class="filter-options-list"></div></div></div></label>
+
+        <label class="filter-select-field"><span>Search</span><input id="trackerSearchInput" type="text" placeholder="Search..." autocomplete="off" /></label>
+
+        <div class="landing-tracker-actions">
+          <button id="trackerResetButton" class="ghost-button" type="button">Reset</button>
+          <button id="trackerFullscreenButton" class="primary-button" type="button">Full Screen</button>
+        </div>
+      </div>
+
+      <div class="landing-tracker-table-wrap">
+        <table class="landing-tracker-table" id="landingTrackerTable">
+          <thead id="landingTrackerTableHead"></thead>
+          <tbody id="landingTrackerTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="pagination-bar">
+        <button id="trackerPrevPage" class="ghost-button" type="button">Previous</button>
+        <span id="trackerPageInfo">Page 1</span>
+        <span id="trackerResultCount" style="font-size:0.75rem; color:var(--muted); margin:0 8px;">0 records</span>
+        <button id="trackerNextPage" class="ghost-button" type="button">Next</button>
       </div>
     </section>
 
@@ -2634,11 +2690,10 @@ function closeSingleSelectMenus(exceptControl = null) {
 }
 function syncSingleSelect(control, values, placeholder, selectedValue, onSelect, labels = null) {
   const safeValues = Array.isArray(values) ? values.filter((value) => value !== null && value !== undefined && String(value).trim() !== "") : [];
-  if (selectedValue && !safeValues.includes(selectedValue)) {
-    safeValues.push(selectedValue);
-    safeValues.sort((a, b) => String(a).localeCompare(String(b)));
+  let fallback = selectedValue || "";
+  if (fallback && !safeValues.includes(fallback)) {
+    fallback = "";
   }
-  const fallback = selectedValue || "";
   updateSingleSelectButton(control, fallback, placeholder, labels);
   renderSingleSelectOptions(control, safeValues, fallback, placeholder, (value) => {
     onSelect(value);
@@ -2934,7 +2989,7 @@ function formatExcelValue(value, fallback = "NA") {
   return value === null || value === undefined || value === "" ? fallback : value;
 }
 function isAllCitiesValue(value) {
-  return String(value || "").trim().toUpperCase().replace(/\s+/g, "") === "ALLCITIES";
+  return String(value || "").trim().toUpperCase().replace(/\\s+/g, "") === "ALLCITIES";
 }
 function getFrequencyChangeStyle(previousValue, currentValue) {
   const previousMissing = previousValue === null || previousValue === undefined || previousValue === "";
@@ -3423,8 +3478,10 @@ function getOptions(key) {
   if (key === "week_from" || key === "week_to") return getConstrainedWeekOptions(key);
   if (key === "change") return ["Changed", "No Change"];
   const field = fieldMap[key];
+  if (!field) return [];
   const values = new Set();
-  (report.records || []).forEach((record) => {
+  const records = filterRecords(key);
+  records.forEach((record) => {
     const value = String(record[field] || "").trim();
     if (value) values.add(value);
   });
