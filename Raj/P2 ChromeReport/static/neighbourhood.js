@@ -34,6 +34,7 @@
       lastWeeks: [],
       lastChannel: "",
       lastWeeksForDownload: [],
+      lastHeadendForDownload: "",
       lastChannelForDownload: "",
       headendsWithChanges: null,
       channelsWithChanges: null,
@@ -238,6 +239,7 @@
       lastWeeks: [],
       lastChannel: "",
       lastWeeksForDownload: [],
+      lastHeadendForDownload: "",
       lastChannelForDownload: "",
       headendsWithChanges: null,
       channelsWithChanges: null,
@@ -536,9 +538,13 @@
       weeks.forEach((week, weekIndex) => {
         const td = document.createElement("td");
         const value = record[groupConfig.key][week];
-        td.textContent = value === null || value === undefined || value === "" ? NO_DATA_LABEL : String(value);
+        const textVal = value === null || value === undefined || value === "" ? NO_DATA_LABEL : String(value);
+        td.textContent = textVal;
         const groupEdgeClass = weekIndex === 0 ? "nbhd-group-start" : "";
         td.className = `${groupConfig.className} ${groupEdgeClass}`.trim();
+        if (textVal === NO_DATA_LABEL || textVal === "NA") {
+          td.classList.add("cell-na", "status-missing", "nbhd-cell-empty");
+        }
         if (groupConfig.key === "channels") {
           const current = String(value || "").trim();
           const previousWeek = weekIndex > 0 ? weeks[weekIndex - 1] : "";
@@ -884,6 +890,16 @@
     if (state.report.headend && !context.headends.includes(state.report.headend)) {
       state.report.headend = "";
     }
+    if (!state.report.headend && context.headends.length) {
+      state.report.headend = getPreferredReportHeadend(
+        getAllSourceRecords(),
+        context.activeWeeks,
+        state.report.channel ? [state.report.channel] : DEFAULT_REPORT_CHANNELS.map((channel) => channel.label)
+      );
+      if (!context.headends.includes(state.report.headend)) {
+        state.report.headend = context.headends[0];
+      }
+    }
 
     const allWeeks = context.allWeeks || [];
     if (!allWeeks.includes(state.report.week_from)) {
@@ -1054,7 +1070,15 @@
     const excelCell = window.__excelCell || ((value, style = "cell", options = {}) => ({ value, style, ...options }));
     const blankRow = window.__blankExcelRow || ((count = 1) => Array.from({ length: Math.max(1, count) }, () => excelCell("", "cell")));
     const reportData = buildReportNarrativesForDownload();
+    const totalHeadends = new Set(records.map((r) => String(r.head_end || "").trim()).filter(Boolean)).size;
+    const exportedAt = new Date().toLocaleString("en-IN", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false });
+
+    // ── Sheet 1: Detailed Report ──────────────────────────────────────────
+    const colCount = 3 + weeks.length * 3;
     const detailRows = [
+      [excelCell("Neighbourhood Comparison – Detailed Report", "title", { mergeAcross: colCount - 1 })],
+      [excelCell(`Exported: ${exportedAt}  |  Headends: ${totalHeadends}  |  Rows: ${records.length}`, "meta", { mergeAcross: colCount - 1 })],
+      blankRow(colCount),
       [
         excelCell("", "group", { mergeAcross: 2 }),
         excelCell("Channel", "group", { mergeAcross: Math.max(0, weeks.length - 1) }),
@@ -1070,56 +1094,71 @@
         ...weeks.map((week) => excelCell(week, "header")),
       ],
     ];
-    function getFrequencyStyle(index, values) {
+    function getFrequencyStyle(index, values, isAlt) {
       const week = weeks[index];
       const currentValue = values?.[week];
       const currentMissing = currentValue === null || currentValue === undefined || currentValue === "";
-      if (index <= 0) return currentMissing ? "neutral" : "number";
+      if (index <= 0) return currentMissing ? (isAlt ? "altRow" : "neutral") : "number";
       const previousValue = values?.[weeks[index - 1]];
       const previousMissing = previousValue === null || previousValue === undefined || previousValue === "";
-      if (previousMissing && currentMissing) return "neutral";
+      if (previousMissing && currentMissing) return isAlt ? "altRow" : "neutral";
       if (previousMissing && !currentMissing) return "positive";
       if (!previousMissing && currentMissing) return "negative";
       if (Number(currentValue) > Number(previousValue)) return "positive";
       if (Number(currentValue) < Number(previousValue)) return "negative";
       return "number";
     }
-    function getTextChangeStyle(index, values) {
+    function getTextChangeStyle(index, values, isAlt) {
       const week = weeks[index];
       const currentValue = values?.[week];
       const currentMissing = currentValue === null || currentValue === undefined || currentValue === "";
-      if (index <= 0) return currentMissing ? "neutral" : "cell";
+      if (index <= 0) return currentMissing ? (isAlt ? "altRow" : "neutral") : (isAlt ? "altRow" : "cell");
       const previousValue = values?.[weeks[index - 1]];
       const previousMissing = previousValue === null || previousValue === undefined || previousValue === "";
-      if (previousMissing && currentMissing) return "neutral";
+      if (previousMissing && currentMissing) return isAlt ? "altRow" : "neutral";
       if (previousMissing && !currentMissing) return "positive";
       if (!previousMissing && currentMissing) return "negative";
       if (String(previousValue) !== String(currentValue)) return "highlight";
-      return "cell";
+      return isAlt ? "altRow" : "cell";
     }
-    records.forEach((record) => {
+    records.forEach((record, recordIndex) => {
+      const isAlt = recordIndex % 2 === 1;
+      const rowStyle = isAlt ? "altRow" : "cell";
       detailRows.push([
-        excelCell(record.market || "", "cell"),
-        excelCell(record.city || "", "cell"),
-        excelCell(record.head_end || "", "cell"),
+        excelCell(record.market || "", rowStyle),
+        excelCell(record.city || "", rowStyle),
+        excelCell(record.head_end || "", rowStyle),
         ...weeks.map((week, weekIndex) => {
-          const baseStyle = getTextChangeStyle(weekIndex, record.channels || {});
+          const baseStyle = getTextChangeStyle(weekIndex, record.channels || {}, isAlt);
           const channelStyle = normalizeChannelKey(record.channels?.[week]) === "INDIATV" ? "highlight" : baseStyle;
           return excelCell(record.channels?.[week] ?? "NA", channelStyle);
         }),
         ...weeks.map((week, weekIndex) => {
           const value = record.frequencies?.[week];
-          return excelCell(value ?? "NA", getFrequencyStyle(weekIndex, record.frequencies || {}));
+          return excelCell(value ?? "NA", getFrequencyStyle(weekIndex, record.frequencies || {}, isAlt));
         }),
-        ...weeks.map((week, weekIndex) => excelCell(record.genres?.[week] ?? "NA", getTextChangeStyle(weekIndex, record.genres || {}))),
+        ...weeks.map((week, weekIndex) => excelCell(record.genres?.[week] ?? "NA", getTextChangeStyle(weekIndex, record.genres || {}, isAlt))),
       ]);
     });
 
+    // ── Sheet 2: Summary Report ───────────────────────────────────────────
+    const weekFrom = reportData.weeks?.[0] || "";
+    const weekTo = reportData.weeks?.[reportData.weeks.length - 1] || "";
+    const changedHeadends = new Set(reportData.rows.map((r) => r.headend)).size;
     const reportRows = [
-      [excelCell("Neighbour Change Report", "title", { mergeAcross: 5 })],
-      [excelCell(reportData.headend ? `Headend: ${reportData.headend}` : "Headend: All Headends", "meta", { mergeAcross: 5 })],
-      [excelCell(reportData.channel ? `Channel: ${reportData.channel}` : "Channel: Default 4 Channels", "meta", { mergeAcross: 5 })],
+      [excelCell("Neighbourhood Report – Summary", "title", { mergeAcross: 5 })],
+      [excelCell(`Exported: ${exportedAt}`, "meta", { mergeAcross: 5 })],
       blankRow(6),
+      [excelCell("Report Scope", "group", { mergeAcross: 5 })],
+      [excelCell("Comparison Period", "header"), excelCell(weekFrom && weekTo ? `${weekFrom}  →  ${weekTo}` : "All available weeks", "cell", { mergeAcross: 4 })],
+      [excelCell("Headend Filter", "header"), excelCell(reportData.headend || "All Headends", "cell", { mergeAcross: 4 })],
+      [excelCell("Channel Filter", "header"), excelCell(reportData.channel || "Default 4 Channels (India TV, Aaj Tak, News 18, Republic Bharat)", "cell", { mergeAcross: 4 })],
+      blankRow(6),
+      [excelCell("Statistics", "group", { mergeAcross: 5 })],
+      [excelCell("Total Neighbour Changes", "header"), excelCell(reportData.totalRows, "number", { mergeAcross: 4 })],
+      [excelCell("Headends with Changes", "header"), excelCell(changedHeadends, "number", { mergeAcross: 4 })],
+      blankRow(6),
+      [excelCell("Neighbour Change Details", "group", { mergeAcross: 5 })],
       [
         excelCell("Headend", "header"),
         excelCell("Channel", "header"),
@@ -1130,14 +1169,16 @@
       ],
     ];
     if (reportData.rows.length) {
-      reportData.rows.forEach((row) => {
+      reportData.rows.forEach((row, rowIndex) => {
+        const isAlt = rowIndex % 2 === 1;
+        const rowStyle = isAlt ? "altRow" : "cell";
         reportRows.push([
-          excelCell(row.headend, "cell"),
-          excelCell(row.channel, "cell"),
-          excelCell(row.previous_position, "textWrap"),
-          excelCell(row.current_position, "textWrap"),
+          excelCell(row.headend, rowStyle),
+          excelCell(row.channel, rowStyle),
+          excelCell(row.previous_position, isAlt ? "altRowWrap" : "textWrap"),
+          excelCell(row.current_position, isAlt ? "altRowWrap" : "textWrap"),
           excelCell(row.status, "positive"),
-          excelCell(row.summary, "textWrap"),
+          excelCell(row.summary, isAlt ? "altRowWrap" : "textWrap"),
         ]);
       });
     } else {
@@ -1151,37 +1192,78 @@
       ]);
     }
 
-    window.__downloadExcelWorkbook?.("table2_neighbourhood_export", [
+    window.__downloadExcelWorkbook?.("neighbourhood_report", [
       {
-        name: "Neighbourhood",
+        name: "Detailed Report",
         columns: [150, 140, 240, ...weeks.map(() => 150), ...weeks.map(() => 95), ...weeks.map(() => 140)],
         rows: detailRows,
       },
       {
-        name: "Report",
-        columns: [220, 150, 280, 280, 100, 420],
+        name: "Summary Report",
+        columns: [200, 160, 290, 290, 110, 450],
         rows: reportRows,
       },
     ]);
   }
   function exportReportExcel() {
     const reportData = buildReportNarrativesForDownload();
-    const headers = ["Headend", "Channel", "Previous Position", "Current Position", "Status", "Summary"];
-    const detailRows = reportData.rows.map((row) => [
-      row.headend,
-      row.channel,
-      row.previous_position,
-      row.current_position,
-      row.status,
-      row.summary,
-    ]);
-    window.__downloadExcelWorkbook?.("table2_neighbour_change_report", [
+    const excelCell = window.__excelCell || ((value, style = "cell", options = {}) => ({ value, style, ...options }));
+    const blankRow = window.__blankExcelRow || ((count = 1) => Array.from({ length: Math.max(1, count) }, () => excelCell("", "cell")));
+    const weekFrom = reportData.weeks?.[0] || "";
+    const weekTo = reportData.weeks?.[reportData.weeks.length - 1] || "";
+    const changedHeadends = new Set(reportData.rows.map((r) => r.headend)).size;
+    const exportedAt = new Date().toLocaleString("en-IN", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false });
+    const reportRows = [
+      [excelCell("Neighbourhood Report – Summary", "title", { mergeAcross: 5 })],
+      [excelCell(`Exported: ${exportedAt}`, "meta", { mergeAcross: 5 })],
+      blankRow(6),
+      [excelCell("Report Scope", "group", { mergeAcross: 5 })],
+      [excelCell("Comparison Period", "header"), excelCell(weekFrom && weekTo ? `${weekFrom}  →  ${weekTo}` : "All available weeks", "cell", { mergeAcross: 4 })],
+      [excelCell("Headend Filter", "header"), excelCell(reportData.headend || "All Headends", "cell", { mergeAcross: 4 })],
+      [excelCell("Channel Filter", "header"), excelCell(reportData.channel || "Default 4 Channels (India TV, Aaj Tak, News 18, Republic Bharat)", "cell", { mergeAcross: 4 })],
+      blankRow(6),
+      [excelCell("Statistics", "group", { mergeAcross: 5 })],
+      [excelCell("Total Neighbour Changes", "header"), excelCell(reportData.totalRows, "number", { mergeAcross: 4 })],
+      [excelCell("Headends with Changes", "header"), excelCell(changedHeadends, "number", { mergeAcross: 4 })],
+      blankRow(6),
+      [excelCell("Neighbour Change Details", "group", { mergeAcross: 5 })],
+      [
+        excelCell("Headend", "header"),
+        excelCell("Channel", "header"),
+        excelCell("Previous Position", "header"),
+        excelCell("Current Position", "header"),
+        excelCell("Status", "header"),
+        excelCell("Summary", "header"),
+      ],
+    ];
+    if (reportData.rows.length) {
+      reportData.rows.forEach((row, rowIndex) => {
+        const isAlt = rowIndex % 2 === 1;
+        const rowStyle = isAlt ? "altRow" : "cell";
+        reportRows.push([
+          excelCell(row.headend, rowStyle),
+          excelCell(row.channel, rowStyle),
+          excelCell(row.previous_position, isAlt ? "altRowWrap" : "textWrap"),
+          excelCell(row.current_position, isAlt ? "altRowWrap" : "textWrap"),
+          excelCell(row.status, "positive"),
+          excelCell(row.summary, isAlt ? "altRowWrap" : "textWrap"),
+        ]);
+      });
+    } else {
+      reportRows.push([
+        excelCell("", "cell"),
+        excelCell("", "cell"),
+        excelCell("", "cell"),
+        excelCell("", "cell"),
+        excelCell("", "cell"),
+        excelCell(reportData.message || "No report data available.", "textWrap"),
+      ]);
+    }
+    window.__downloadExcelWorkbook?.("neighbourhood_change_report", [
       {
-        name: "Report",
-        columns: [220, 150, 280, 280, 100, 420],
-        rows: reportData.rows.length
-          ? [headers, ...detailRows]
-          : [headers, ["", "", "", "", "", reportData.message || "No report data available."]],
+        name: "Summary Report",
+        columns: [200, 160, 290, 290, 110, 450],
+        rows: reportRows,
       },
     ]);
   }
@@ -1221,51 +1303,17 @@
       return result;
     }
 
-    // STRICT REQUIREMENT: By default, don't show any data
-    // Force blank report if no headend is explicitly selected
-    if (!selectedHeadend) {
-      console.log('NBHD: No headend selected, returning blank report');
-      const result = {
-        weeks,
-        headend: selectedHeadend,
-        channel: selectedChannel,
-        rows: [],
-        totalRows: 0,
-        message: "Select a headend to view the neighbour change report.",
-      };
-      state.reportCache.narratives = result;
-      state.reportCache.lastHeadend = selectedHeadend;
-      state.reportCache.lastWeeks = currentWeeks;
-      state.reportCache.lastChannel = selectedChannel;
-      return result;
-    }
-    
-    // STRICT REQUIREMENT: Only show data for the EXACT selected headend
-    // Never show data for multiple headends
-    console.log(`NBHD: Processing data for headend: ${selectedHeadend}`);
-    
     const previousWeek = weeks[0];
     const currentWeek = weeks[weeks.length - 1];
     const baseRecords = getAllSourceRecords();
-    
-    // STRICT FILTERING: Only process the selected headend
-    // This ensures we never show data for multiple headends
     const groupedRecords = new Map();
     baseRecords.forEach((record) => {
       const headend = normalizeText(record.head_end);
-      // CRITICAL: Only include records for the EXACT selected headend
-      if (!headend || headend !== selectedHeadend) return;
+      if (!headend || (selectedHeadend && headend !== selectedHeadend)) return;
       if (!groupedRecords.has(headend)) groupedRecords.set(headend, []);
       groupedRecords.get(headend).push(record);
     });
-    
-    // DEBUG: Ensure we only have one headend in groupedRecords
-    // If we have more than one, something is wrong with the filtering
-    if (groupedRecords.size > 1) {
-      console.warn(`Expected 1 headend, got ${groupedRecords.size}. Clearing to prevent showing multiple headends.`);
-      groupedRecords.clear();
-    }
-    
+
     if (!groupedRecords.size) {
       const result = {
         weeks,
@@ -1284,10 +1332,7 @@
 
     const rows = [];
     const targetChannels = getReportTargetChannels(); // This returns only 4 default channels when no channel selected
-    
-    // REQUIREMENT: Only show the 4 default channels when headend is selected
-    console.log(`NBHD: Target channels:`, targetChannels.map(c => c.label));
-    
+
     // Optimize: Pre-compute available channels for all groups
     const allAvailableChannels = new Map();
     for (const [headend, groupRecords] of groupedRecords.entries()) {
@@ -1326,14 +1371,6 @@
       });
     }
 
-    // FINAL VALIDATION: Ensure all rows are for the selected headend only
-    const headendsInRows = new Set(rows.map(row => row.headend));
-    if (headendsInRows.size > 1) {
-      console.error(`NBHD: Found rows for multiple headends:`, Array.from(headendsInRows));
-      // Filter to only keep rows for the selected headend
-      rows = rows.filter(row => row.headend === selectedHeadend);
-    }
-    
     const result = {
       weeks,
       headend: selectedHeadend,
@@ -1342,9 +1379,7 @@
       totalRows: rows.length,
       message: rows.length ? "" : `No neighbour changes detected for ${selectedChannel ? selectedChannel : "the selected channels"} in ${selectedHeadend || "all headends"}.`,
     };
-    
-    console.log(`NBHD: Final result - headend: ${selectedHeadend}, rows: ${rows.length}`);
-    
+
     // Cache the result
     state.reportCache.narratives = result;
     state.reportCache.lastHeadend = selectedHeadend;
@@ -1366,12 +1401,14 @@
       : [];
     
     const selectedChannel = normalizeText(state.report.channel);
+    const selectedHeadend = normalizeText(state.report.headend);
     const currentWeeks = [weekFrom, weekTo].filter(Boolean);
     
     // Check cache first - for download, cache is separate from display cache
     if (state.reportCache.narrativesForDownload !== null && 
         state.reportCache.lastWeeksForDownload && 
         JSON.stringify(state.reportCache.lastWeeksForDownload) === JSON.stringify(currentWeeks) &&
+        state.reportCache.lastHeadendForDownload === selectedHeadend &&
         state.reportCache.lastChannelForDownload === selectedChannel) {
       return state.reportCache.narrativesForDownload;
     }
@@ -1379,7 +1416,7 @@
     if (weeks.length < 2) {
       const result = {
         weeks,
-        headend: "",
+        headend: selectedHeadend,
         channel: selectedChannel,
         rows: [],
         totalRows: 0,
@@ -1387,6 +1424,7 @@
       };
       state.reportCache.narrativesForDownload = result;
       state.reportCache.lastWeeksForDownload = currentWeeks;
+      state.reportCache.lastHeadendForDownload = selectedHeadend;
       state.reportCache.lastChannelForDownload = selectedChannel;
       return result;
     }
@@ -1395,11 +1433,9 @@
     const currentWeek = weeks[weeks.length - 1];
     const baseRecords = getAllSourceRecords();
     const groupedRecords = new Map();
-    
-    // For download, include ALL headends (ignore the selected headend filter)
     baseRecords.forEach((record) => {
       const headend = normalizeText(record.head_end);
-      if (!headend) return;
+      if (!headend || (selectedHeadend && headend !== selectedHeadend)) return;
       if (!groupedRecords.has(headend)) groupedRecords.set(headend, []);
       groupedRecords.get(headend).push(record);
     });
@@ -1407,7 +1443,7 @@
     if (!groupedRecords.size) {
       const result = {
         weeks,
-        headend: "",
+        headend: selectedHeadend,
         channel: selectedChannel,
         rows: [],
         totalRows: 0,
@@ -1415,6 +1451,7 @@
       };
       state.reportCache.narrativesForDownload = result;
       state.reportCache.lastWeeksForDownload = currentWeeks;
+      state.reportCache.lastHeadendForDownload = selectedHeadend;
       state.reportCache.lastChannelForDownload = selectedChannel;
       return result;
     }
@@ -1462,16 +1499,17 @@
 
     const result = {
       weeks,
-      headend: "",
+      headend: selectedHeadend,
       channel: selectedChannel,
       rows,
       totalRows: rows.length,
-      message: rows.length ? "" : `No neighbour changes detected for ${selectedChannel ? selectedChannel : "the selected channels"} in all headends.`,
+      message: rows.length ? "" : `No neighbour changes detected for ${selectedChannel ? selectedChannel : "the selected channels"} in ${selectedHeadend || "all headends"}.`,
     };
     
     // Cache the result
     state.reportCache.narrativesForDownload = result;
     state.reportCache.lastWeeksForDownload = currentWeeks;
+    state.reportCache.lastHeadendForDownload = selectedHeadend;
     state.reportCache.lastChannelForDownload = selectedChannel;
     
     return result;
@@ -1693,6 +1731,7 @@
         clearTimeout(loadingTimeout);
       }, 0);
     }
+  }
 
   function resetReportFilters() {
     state.report.open = true;
@@ -1790,9 +1829,8 @@
     const filtered = filterGroupedRecords(allRecords, state.filters, visibleWeeks);
 
     function optionsFor(key, field) {
-      const scopedFilters = { ...state.filters, [key]: "" };
       return Array.from(new Set(
-        filterGroupedRecords(allRecords, scopedFilters, visibleWeeks)
+        allRecords
           .map((record) => record[field])
           .filter((value) => String(value || "").trim() !== "")
       )).sort((left, right) => left.localeCompare(right));
@@ -1806,7 +1844,7 @@
         cities: optionsFor("city", "city"),
         head_ends: optionsFor("head_end", "head_end"),
         channels: Array.from(new Set(
-          filterGroupedRecords(allRecords, state.filters, visibleWeeks)
+          allRecords
             .flatMap((record) => Object.values(record.channels || {}))
             .filter((value) => String(value || "").trim() !== "")
         )).sort((left, right) => left.localeCompare(right)),
@@ -1881,6 +1919,45 @@
         requestAnimationFrame(() => select.search?.focus());
       }
     });
+
+    select.button.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        closeMenus();
+        if (select.menu) select.menu.hidden = false;
+        if (select.search) {
+          select.search.value = "";
+          select.search.dispatchEvent(new Event("input"));
+          requestAnimationFrame(() => select.search?.focus());
+        } else {
+          const firstOpt = select.options?.querySelector("button");
+          if (firstOpt) firstOpt.focus();
+        }
+      }
+    });
+
+    if (select.menu) {
+      select.menu.addEventListener("keydown", (event) => {
+        const items = Array.from(select.options?.querySelectorAll("button") || []);
+        const activeEl = document.activeElement;
+        const currentIndex = items.indexOf(activeEl);
+
+        if (event.key === "Escape") {
+          event.preventDefault();
+          select.menu.hidden = true;
+          select.button.focus();
+        } else if (event.key === "ArrowDown") {
+          event.preventDefault();
+          const nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+          items[nextIndex]?.focus();
+        } else if (event.key === "ArrowUp") {
+          event.preventDefault();
+          const prevIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+          items[prevIndex]?.focus();
+        }
+      });
+    }
+
     if (select.search) {
       select.search.addEventListener("click", (event) => event.stopPropagation());
       select.search.addEventListener("input", () => {

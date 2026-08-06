@@ -235,7 +235,11 @@
 
   function syncSingleSelect(control, values, placeholder, selectedValue, onSelect, labels = null) {
     const safeValues = Array.isArray(values) ? values.filter((value) => normalizeText(value) !== "") : [];
-    const fallback = safeValues.includes(selectedValue) ? selectedValue : "";
+    if (selectedValue && !safeValues.includes(selectedValue)) {
+      safeValues.push(selectedValue);
+      safeValues.sort((a, b) => String(a).localeCompare(String(b)));
+    }
+    const fallback = selectedValue || "";
     updateSingleSelectButton(control, fallback, placeholder, labels);
     renderSingleSelectOptions(control, safeValues, fallback, placeholder, (value) => {
       onSelect(value);
@@ -259,11 +263,10 @@
 
   // Format one OTS value without changing the stored numeric payload.
   function formatOtsValue(value) {
-    if (value === null || value === undefined || value === "") return "-";
+    if (value === null || value === undefined || value === "") return "NA";
     return `${Number(value).toFixed(2)}%`;
   }
 
-  // Build the visible week slice from the selected from/to controls.
   function getVisibleWeeks(payload) {
     const allWeeks = payload.weeks || [];
     if (!allWeeks.length) return [];
@@ -277,15 +280,22 @@
     return allWeeks.slice(Math.max(0, allWeeks.length - 8));
   }
 
-  // Calculate the change label from the latest two visible weeks.
-function getChangeMeta(record, weeks) {
+  function getChangeMeta(record, weeks) {
     if (weeks.length < 2) {
-      return { text: "0%", type: "no_change", delta: null };
+      return { text: "NA", type: "no_change", delta: null };
     }
     const previous = record.ots_values?.[weeks[weeks.length - 2]];
     const current = record.ots_values?.[weeks[weeks.length - 1]];
-    if (previous === null || previous === undefined || current === null || current === undefined) {
-      return { text: "0%", type: "no_change", delta: null };
+    const previousMissing = previous === null || previous === undefined || previous === "";
+    const currentMissing = current === null || current === undefined || current === "";
+    if (previousMissing && currentMissing) {
+      return { text: "NA", type: "no_change", delta: null };
+    }
+    if (previousMissing && !currentMissing) {
+      return { text: `▲ +${Number(current).toFixed(2)}%`, type: "increase", delta: Number(current) };
+    }
+    if (!previousMissing && currentMissing) {
+      return { text: `▼ -${Number(previous).toFixed(2)}%`, type: "decrease", delta: -Number(previous) };
     }
     const delta = Number((Number(current) - Number(previous)).toFixed(2));
     if (delta > 0) return { text: `▲ +${delta.toFixed(2)}%`, type: "increase", delta };
@@ -536,16 +546,21 @@ function getChangeMeta(record, weeks) {
     weeks.forEach((week, weekIndex) => {
       const td = document.createElement("td");
       const value = record.ots_values?.[week];
-      td.textContent = formatOtsValue(value);
-      if (value === null || value === undefined || value === "") {
-        td.classList.add("ots-change-no_change");
+      const textVal = formatOtsValue(value);
+      td.textContent = textVal;
+      if (value === null || value === undefined || value === "" || textVal === "NA") {
+        td.classList.add("cell-na");
+        td.classList.add("status-missing");
       } else if (weekIndex > 0) {
         const previous = record.ots_values?.[weeks[weekIndex - 1]];
-        if (previous !== null && previous !== undefined && previous !== "") {
+        const previousMissing = previous === null || previous === undefined || previous === "";
+        if (!previousMissing) {
           const delta = Number(value) - Number(previous);
           if (delta > 0) td.classList.add("ots-change-increase");
           else if (delta < 0) td.classList.add("ots-change-decrease");
           else td.classList.add("ots-change-no_change");
+        } else {
+          td.classList.add("ots-change-increase");
         }
       }
       tr.appendChild(td);
@@ -555,6 +570,7 @@ function getChangeMeta(record, weeks) {
     const changeTd = document.createElement("td");
     changeTd.textContent = changeMeta.text;
     changeTd.className = `ots-change-${changeMeta.type}`;
+    if (changeMeta.text === "NA") changeTd.classList.add("cell-na");
     tr.appendChild(changeTd);
     return tr;
   }
@@ -930,14 +946,8 @@ function getChangeMeta(record, weeks) {
     const visibleWeeks = getVisibleWeeks(source);
 
     function optionValues(key) {
-      const scoped = allRecords.filter((record) => {
-        if (key !== "markets" && state.filters.markets.length && !state.filters.markets.includes(record.market)) return false;
-        if (key !== "channels" && state.filters.channels.length && !state.filters.channels.includes(record.channel)) return false;
-        if (key !== "change" && state.filters.change && !matchesChangeFilter(getChangeMeta(record, visibleWeeks).type, state.filters.change)) return false;
-        return true;
-      });
       const field = key === "markets" ? "market" : "channel";
-      return Array.from(new Set(scoped.map((record) => record[field]).filter((value) => normalizeText(value) !== ""))).sort((left, right) => left.localeCompare(right));
+      return Array.from(new Set(allRecords.map((record) => record[field]).filter((value) => normalizeText(value) !== ""))).sort((left, right) => left.localeCompare(right));
     }
 
     return {
@@ -1003,6 +1013,22 @@ function getChangeMeta(record, weeks) {
       closeMenus();
       menu.hidden = !next;
     });
+    button.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        closeMenus();
+        menu.hidden = false;
+        const firstOpt = menu.querySelector("input, button");
+        if (firstOpt) firstOpt.focus();
+      }
+    });
+    menu.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        menu.hidden = true;
+        button.focus();
+      }
+    });
   }
 
   function applySingleFilter(key, value) {
@@ -1033,6 +1059,41 @@ function getChangeMeta(record, weeks) {
         requestAnimationFrame(() => control.search?.focus());
       }
     });
+    control.button.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        closeMenus();
+        if (control.menu) control.menu.hidden = false;
+        if (control.search) {
+          control.search.value = "";
+          control.search.dispatchEvent(new Event("input"));
+          requestAnimationFrame(() => control.search?.focus());
+        } else {
+          const firstOpt = control.options?.querySelector("button");
+          if (firstOpt) firstOpt.focus();
+        }
+      }
+    });
+    if (control.menu) {
+      control.menu.addEventListener("keydown", (event) => {
+        const items = Array.from(control.options?.querySelectorAll("button") || []);
+        const activeEl = document.activeElement;
+        const currentIndex = items.indexOf(activeEl);
+        if (event.key === "Escape") {
+          event.preventDefault();
+          control.menu.hidden = true;
+          control.button.focus();
+        } else if (event.key === "ArrowDown") {
+          event.preventDefault();
+          const nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+          items[nextIndex]?.focus();
+        } else if (event.key === "ArrowUp") {
+          event.preventDefault();
+          const prevIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+          items[prevIndex]?.focus();
+        }
+      });
+    }
     if (control.search) {
       control.search.addEventListener("click", (event) => event.stopPropagation());
       control.search.addEventListener("input", () => {

@@ -13,6 +13,9 @@ def append_to_csv(dataframe: pd.DataFrame, csv_path: Path) -> int:
     prepared = dataframe.reset_index(drop=True)
     if csv_path.exists() and csv_path.stat().st_size > 0:
         existing = pd.read_csv(csv_path, low_memory=False)
+        if "Week" in prepared.columns and "Week" in existing.columns:
+            weeks_to_remove = prepared["Week"].unique()
+            existing = existing[~existing["Week"].isin(weeks_to_remove)]
         all_columns = list(dict.fromkeys([*existing.columns.tolist(), *prepared.columns.tolist()]))
         existing = existing.reindex(columns=all_columns)
         prepared = prepared.reindex(columns=all_columns)

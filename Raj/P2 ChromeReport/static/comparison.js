@@ -160,7 +160,7 @@
   }
 
   function getFilterOptions(key) {
-    const rows = activePairRows().filter((row) => rowMatches(row, key));
+    const rows = activePairRows();
     return uniqueValues(rows.map((row) => row[key])).sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
   }
 
@@ -258,6 +258,45 @@
         requestAnimationFrame(() => control.search?.focus());
       }
     });
+
+    control.button.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        closeMenus();
+        if (control.menu) control.menu.hidden = false;
+        if (control.search) {
+          control.search.value = "";
+          control.search.dispatchEvent(new Event("input"));
+          requestAnimationFrame(() => control.search?.focus());
+        } else {
+          const firstOpt = control.options?.querySelector("button");
+          if (firstOpt) firstOpt.focus();
+        }
+      }
+    });
+
+    if (control.menu) {
+      control.menu.addEventListener("keydown", (event) => {
+        const items = Array.from(control.options?.querySelectorAll("button") || []);
+        const activeEl = document.activeElement;
+        const currentIndex = items.indexOf(activeEl);
+
+        if (event.key === "Escape") {
+          event.preventDefault();
+          control.menu.hidden = true;
+          control.button.focus();
+        } else if (event.key === "ArrowDown") {
+          event.preventDefault();
+          const nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+          items[nextIndex]?.focus();
+        } else if (event.key === "ArrowUp") {
+          event.preventDefault();
+          const prevIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+          items[prevIndex]?.focus();
+        }
+      });
+    }
+
     if (control.search) {
       control.search.addEventListener("click", (event) => event.stopPropagation());
       control.search.addEventListener("input", () => {
@@ -409,13 +448,17 @@
         const meta = getFrequencyChangeMeta(row.frequency_previous, row.frequency_current);
         td.textContent = meta.text;
         td.className = `comparison-change-${meta.type}`;
+        if (meta.text === "NA") td.classList.add("cell-na");
       } else if (column.key === "rank_change") {
         const meta = getRankChangeMeta(row.rank_previous, row.rank_current);
         td.textContent = meta.text;
         td.className = `comparison-change-${meta.type}`;
+        if (meta.text === "NA") td.classList.add("cell-na");
       } else {
-        td.textContent = column.type === "number" ? formatNumberValue(row[column.key]) : normalizeText(row[column.key]);
+        const valText = column.type === "number" ? formatNumberValue(row[column.key]) : normalizeText(row[column.key]);
+        td.textContent = valText || "NA";
         td.className = column.type === "number" ? "comparison-number-cell" : "comparison-text-cell";
+        if (td.textContent === "NA") td.classList.add("cell-na");
       }
       tr.appendChild(td);
     });

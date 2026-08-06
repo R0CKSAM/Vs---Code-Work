@@ -33,6 +33,9 @@ NBHD_SCRIPT_FILE = BASE_DIR / "static" / "neighbourhood.js"
 OTS_SCRIPT_FILE = BASE_DIR / "static" / "ots.js"
 COMPARISON_SCRIPT_FILE = BASE_DIR / "static" / "comparison.js"
 NBHD_BENCHMARK_SCRIPT_FILE = BASE_DIR / "static" / "nbhd_benchmark.js"
+LANDING_SCRIPT_FILE = BASE_DIR / "static" / "landing.js"
+LANDING_ANALYSIS_DIR = BASE_DIR / "landing analysis"
+LANDING_HISTORY_CSV = HISTORY_DIR / "landing_history.csv"
 
 SOURCE_COLUMNS = [
     "WEEK LABEL",
@@ -908,8 +911,12 @@ def prepare_week_rows(path: Path, fallback_label: str) -> tuple[str, list[dict[s
 
 
 def calculate_frequency_change(previous: float | int | None, current: float | int | None) -> str:
-    if previous is None or current is None:
+    if previous is None and current is None:
         return "missing"
+    if previous is None and current is not None:
+        return "increase"
+    if previous is not None and current is None:
+        return "decrease"
     if current > previous:
         return "increase"
     if current < previous:
@@ -918,8 +925,12 @@ def calculate_frequency_change(previous: float | int | None, current: float | in
 
 
 def calculate_rank_change(previous: int | None, current: int | None) -> str:
-    if previous is None or current is None:
+    if previous is None and current is None:
         return "missing"
+    if previous is None and current is not None:
+        return "improve"
+    if previous is not None and current is None:
+        return "decline"
     if current < previous:
         return "improve"
     if current > previous:
@@ -930,8 +941,12 @@ def calculate_rank_change(previous: int | None, current: int | None) -> str:
 def calculate_band_change(previous: str | None, current: str | None) -> str:
     previous_text = normalize_text(previous)
     current_text = normalize_text(current)
-    if not previous_text or not current_text:
+    if not previous_text and not current_text:
         return "missing"
+    if not previous_text and current_text:
+        return "change"
+    if previous_text and not current_text:
+        return "change"
     if current_text == previous_text:
         return "no_change"
     return "change"
@@ -1352,8 +1367,13 @@ def filter_records(records: list[dict[str, Any]], view: str, filters: dict[str, 
             continue
         if filters["city"] and record["city"] != filters["city"] and ignore_key != "city":
             continue
-        if filters["mso_type"] and record["mso_type"] != filters["mso_type"] and ignore_key != "mso_type":
-            continue
+        if ignore_key != "mso_type":
+            if filters["mso_type"]:
+                if record["mso_type"] != filters["mso_type"]:
+                    continue
+            else:
+                if normalize_text(record.get("mso_type")).upper() == "DTH":
+                    continue
         if filters["head_end"] and record["head_end"] != filters["head_end"] and ignore_key != "head_end":
             continue
         if filters["crn_no"] and record["crn_no"] != filters["crn_no"] and ignore_key != "crn_no":
@@ -1428,22 +1448,22 @@ def paginate_records(records: list[dict[str, Any]], page: int, page_size: int) -
 
 
 def build_filters(records: list[dict[str, Any]], view: str, current_filters: dict[str, str], weeks: list[str]) -> dict[str, list[str]]:
-    def values_for(key: str, field: str) -> list[str]:
+    def values_for(field: str) -> list[str]:
         values = {
             normalize_text(record.get(field))
-            for record in filter_records(records, view, current_filters, ignore_key=key)
+            for record in records
             if normalize_text(record.get(field))
         }
         return sorted(values, key=lambda value: value.lower())
 
     return {
-        "markets": values_for("market", "market"),
-        "cities": values_for("city", "city"),
-        "mso_types": values_for("mso_type", "mso_type"),
-        "head_ends": values_for("head_end", "head_end"),
-        "crn_numbers": values_for("crn_no", "crn_no"),
-        "channels": values_for("channel_name", "channel_name"),
-        "bands": values_for("band", "band"),
+        "markets": values_for("market"),
+        "cities": values_for("city"),
+        "mso_types": values_for("mso_type"),
+        "head_ends": values_for("head_end"),
+        "crn_numbers": values_for("crn_no"),
+        "channels": values_for("channel_name"),
+        "bands": values_for("band"),
         "weeks": weeks,
         "change_options": ["Changed", "No Change"],
     }
@@ -1601,6 +1621,116 @@ def read_nbhd_benchmark_script() -> str:
     return ""
 
 
+def read_landing_script() -> str:
+    if LANDING_SCRIPT_FILE.exists():
+        return LANDING_SCRIPT_FILE.read_text(encoding="utf-8")
+    return ""
+
+
+def load_landing_report(force: bool = False) -> dict[str, Any]:
+    from landing_sync import sync_landing_data
+    if force or not LANDING_HISTORY_CSV.exists():
+        try:
+            sync_landing_data()
+        except Exception:
+            pass
+
+    if not LANDING_HISTORY_CSV.exists():
+        return {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "weeks": [],
+            "records": [],
+            "message": "No landing data found.",
+        }
+
+    try:
+        df = pd.read_csv(LANDING_HISTORY_CSV, dtype=str).fillna("")
+    except Exception:
+        return {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "weeks": [],
+            "records": [],
+            "message": "Failed to read landing data.",
+        }
+
+    if df.empty or "Week" not in df.columns:
+        return {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "weeks": [],
+            "records": [],
+            "message": "Landing history is empty.",
+        }
+
+    weeks = sorted(
+        list(df["Week"].unique()),
+        key=lambda w: (
+            int(re.search(r"\d+", w).group()) if re.search(r"\d+", w) else 0,
+            w,
+        ),
+    )
+
+    grouped: dict[tuple, dict[str, Any]] = {}
+    for _, row in df.iterrows():
+        sf_crn = str(row.get("SF CRN", row.get("SFRN NUMBER", ""))).strip()
+        put_up_lcn = str(row.get("PUT-UP LCN", row.get("Popup LCN", ""))).strip()
+        put_up_channel = str(row.get("PUT-UP CHANNEL", row.get("Popup Channel", ""))).strip()
+
+        key = (
+            row.get("Band", ""),
+            row.get("Market", ""),
+            row.get("City", ""),
+            row.get("Headend", ""),
+            row.get("State", ""),
+            row.get("District", ""),
+            row.get("Feed", ""),
+            row.get("CRN NO", ""),
+            sf_crn,
+            row.get("MSO", ""),
+        )
+        if key not in grouped:
+            grouped[key] = {
+                "band": str(row.get("Band", "")).strip(),
+                "market": str(row.get("Market", "")).strip(),
+                "city": str(row.get("City", "")).strip(),
+                "headend": str(row.get("Headend", "")).strip(),
+                "state_name": str(row.get("State", "")).strip(),
+                "district": str(row.get("District", "")).strip(),
+                "feed": str(row.get("Feed", "")).strip(),
+                "crn_no": str(row.get("CRN NO", "")).strip(),
+                "sf_crn": sf_crn,
+                "sfrn_number": sf_crn,
+                "mso": str(row.get("MSO", "")).strip(),
+                "put_up_lcn": put_up_lcn,
+                "put_up_channel": put_up_channel,
+                "weeks": {},
+            }
+        wk = str(row.get("Week", "")).strip()
+        grouped[key]["weeks"][wk] = {
+            "lcn_1": str(row.get("Landing 1 LCN", "")).strip(),
+            "channel_1": str(row.get("Landing 1 Channel", row.get("Landing 1", ""))).strip(),
+            "genre_1": str(row.get("Landing 1 Genre", "")).strip(),
+            "lcn_2": str(row.get("Landing 2 LCN", "")).strip(),
+            "channel_2": str(row.get("Landing 2 Channel", row.get("Landing 2", ""))).strip(),
+            "genre_2": str(row.get("Landing 2 Genre", "")).strip(),
+            "lcn_3": str(row.get("Landing 3 LCN", "")).strip(),
+            "channel_3": str(row.get("Landing 3 Channel", row.get("Landing 3", ""))).strip(),
+            "genre_3": str(row.get("Landing 3 Genre", "")).strip(),
+            "lcn_b1": str(row.get("Barker 1 LCN", "")).strip(),
+            "barker_1": str(row.get("Barker 1 Channel", row.get("Barker 1", ""))).strip(),
+            "lcn_b2": str(row.get("Barker 2 LCN", "")).strip(),
+            "barker_2": str(row.get("Barker 2 Channel", row.get("Barker 2", ""))).strip(),
+            "put_up_lcn": put_up_lcn,
+            "put_up_channel": put_up_channel,
+        }
+
+    return {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "weeks": weeks,
+        "records": list(grouped.values()),
+        "message": "",
+    }
+
+
 def compact_json_text(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
 
@@ -1620,6 +1750,7 @@ def build_dashboard_bundle(report: dict[str, Any] | None = None) -> dict[str, An
             {"markets": [], "channels": [], "week_from": "", "week_to": "", "change": "", "search": ""},
             force_refresh=True,
         ),
+        "landing": load_landing_report(force=True),
     }
 
 
@@ -1640,6 +1771,7 @@ def create_standalone_dashboard(report: dict[str, Any]) -> str:
     nbhd_script_text = read_nbhd_script()
     ots_script_text = read_ots_script()
     comparison_script_text = read_comparison_script()
+    landing_script_text = read_landing_script()
 
     html = """<!DOCTYPE html>
 <html lang="en">
@@ -1716,6 +1848,7 @@ __STYLE__
         </div>
         <div class="channel-report-toolbar">
           <label><span>Report Channel</span><select id="channelReportChannelFilter"></select></label>
+          <label><span>MSO Type</span><select id="channelReportMsoTypeFilter"></select></label>
           <label><span>Week From</span><select id="channelReportWeekFromFilter"></select></label>
           <label><span>Week To</span><select id="channelReportWeekToFilter"></select></label>
           <div class="action-row channel-report-actions">
@@ -1914,6 +2047,8 @@ __STYLE__
       </div>
     </section>
 
+
+
     <section class="kpi-grid bottom-kpis">
       <article class="kpi-card compact-kpi">
         <span>Total Rows</span>
@@ -2032,6 +2167,8 @@ const XLSX_STYLE_INDEX = {
   missing: 12,
   changeYes: 13,
   changeNo: 14,
+  altRow: 15,
+  altRowWrap: 16,
 };
 function buildXlsxStylesXml() {
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -2046,7 +2183,7 @@ function buildXlsxStylesXml() {
     <font><b/><sz val="11"/><color rgb="FFDC2626"/><name val="Calibri"/><family val="2"/></font>
     <font><b/><sz val="11"/><color rgb="FF8A6D1F"/><name val="Calibri"/><family val="2"/></font>
   </fonts>
-  <fills count="8">
+  <fills count="10">
     <fill><patternFill patternType="none"/></fill>
     <fill><patternFill patternType="gray125"/></fill>
     <fill><patternFill patternType="solid"><fgColor rgb="FFEAF1FF"/><bgColor indexed="64"/></patternFill></fill>
@@ -2055,6 +2192,8 @@ function buildXlsxStylesXml() {
     <fill><patternFill patternType="solid"><fgColor rgb="FFFDEAEA"/><bgColor indexed="64"/></patternFill></fill>
     <fill><patternFill patternType="solid"><fgColor rgb="FFEFF6FF"/><bgColor indexed="64"/></patternFill></fill>
     <fill><patternFill patternType="solid"><fgColor rgb="FFFFFDF0"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFF1F5FB"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFF8FAFD"/><bgColor indexed="64"/></patternFill></fill>
   </fills>
   <borders count="2">
     <border><left/><right/><top/><bottom/><diagonal/></border>
@@ -2069,7 +2208,7 @@ function buildXlsxStylesXml() {
   <cellStyleXfs count="1">
     <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
   </cellStyleXfs>
-  <cellXfs count="15">
+  <cellXfs count="17">
     <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
     <xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>
     <xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>
@@ -2085,6 +2224,8 @@ function buildXlsxStylesXml() {
     <xf numFmtId="0" fontId="7" fillId="7" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
     <xf numFmtId="0" fontId="6" fillId="7" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
     <xf numFmtId="0" fontId="5" fillId="4" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="8" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="9" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>
   </cellXfs>
   <cellStyles count="1">
     <cellStyle name="Normal" xfId="0" builtinId="0"/>
@@ -2411,12 +2552,14 @@ function sortSummaryChannels(channels) {
 }
 const channelReportState = {
   channel: "__default__",
+  mso_type: "",
   week_from: "",
   week_to: "",
   open: false,
 };
 const channelReportControls = {
   channel: document.getElementById("channelReportChannelFilter"),
+  mso_type: document.getElementById("channelReportMsoTypeFilter"),
   week_from: document.getElementById("channelReportWeekFromFilter"),
   week_to: document.getElementById("channelReportWeekToFilter"),
   container: document.getElementById("channelReportContainer"),
@@ -2491,7 +2634,11 @@ function closeSingleSelectMenus(exceptControl = null) {
 }
 function syncSingleSelect(control, values, placeholder, selectedValue, onSelect, labels = null) {
   const safeValues = Array.isArray(values) ? values.filter((value) => value !== null && value !== undefined && String(value).trim() !== "") : [];
-  const fallback = safeValues.includes(selectedValue) ? selectedValue : "";
+  if (selectedValue && !safeValues.includes(selectedValue)) {
+    safeValues.push(selectedValue);
+    safeValues.sort((a, b) => String(a).localeCompare(String(b)));
+  }
+  const fallback = selectedValue || "";
   updateSingleSelectButton(control, fallback, placeholder, labels);
   renderSingleSelectOptions(control, safeValues, fallback, placeholder, (value) => {
     onSelect(value);
@@ -2575,7 +2722,13 @@ function syncChannelReportWeeksWithTable() {
 function getChannelReportSourceRecords() {
   return (report.records || []).filter((record) => {
     for (const [key, field] of Object.entries(fieldMap)) {
+      if (key === "mso_type") continue;
       if (state.filters[key] && String(record[field] || "") !== state.filters[key]) return false;
+    }
+    if (channelReportState.mso_type) {
+      if (String(record.mso_type || "") !== channelReportState.mso_type) return false;
+    } else {
+      if (String(record.mso_type || "").trim().toUpperCase() === "DTH") return false;
     }
     return true;
   });
@@ -2587,7 +2740,7 @@ function buildChannelReportOptions() {
         .map((record) => String(record.channel_name || "").trim())
         .filter(Boolean)
     )
-  ).sort((left, right) => left.localeCompare(right));
+  ).sort((left, right) => formatChannelLabel(left).localeCompare(formatChannelLabel(right)));
   return [
     { value: "__default__", label: "Default 4 Channels" },
     ...channels.map((channel) => ({ value: channel, label: formatChannelLabel(channel) })),
@@ -2597,14 +2750,118 @@ function getChannelReportTargets() {
   if (channelReportState.channel && channelReportState.channel !== "__default__") {
     return [channelReportState.channel];
   }
-  const available = new Set(getChannelReportSourceRecords().map((record) => String(record.channel_name || "").trim()));
-  return sortSummaryChannels(DEFAULT_CHANNEL_REPORTS.filter((channel) => available.has(channel)));
+  const availableUpper = new Set(
+    getChannelReportSourceRecords().map((record) => String(record.channel_name || "").trim().toUpperCase())
+  );
+  const matched = DEFAULT_CHANNEL_REPORTS.filter((channel) => availableUpper.has(channel.toUpperCase()));
+  return sortSummaryChannels(matched.length ? matched : DEFAULT_CHANNEL_REPORTS);
 }
+let neighbourCache = new Map();
+let neighbourCacheReportRef = null;
+
+function getNeighbourForChannelInWeek(channelName, market, headend, week) {
+  if (!channelName || !market || !headend || !week) return "";
+  const sourceRecords = (typeof report !== "undefined" && report.records) ? report.records : [];
+  if (!sourceRecords.length) return "";
+
+  if (neighbourCacheReportRef !== sourceRecords) {
+    neighbourCache.clear();
+    neighbourCacheReportRef = sourceRecords;
+  }
+
+  const msoType = (channelReportState && channelReportState.mso_type)
+    ? String(channelReportState.mso_type).trim().toUpperCase()
+    : "";
+  const cacheKey = `${channelName.toUpperCase()}||${market.trim()}||${headend.trim()}||${msoType}||${week}`;
+  if (neighbourCache.has(cacheKey)) {
+    return neighbourCache.get(cacheKey);
+  }
+
+  const headendRecords = sourceRecords.filter((r) => {
+    if (String(r.market || "").trim() !== market) return false;
+    if (String(r.head_end || "").trim() !== headend) return false;
+    if (msoType) {
+      if (String(r.mso_type || "").trim().toUpperCase() !== msoType) return false;
+    } else {
+      if (String(r.mso_type || "").trim().toUpperCase() === "DTH") return false;
+    }
+    return true;
+  });
+
+  if (!headendRecords.length) {
+    neighbourCache.set(cacheKey, "");
+    return "";
+  }
+
+  const sorted = headendRecords
+    .filter((r) => r.frequencies?.[week] !== null && r.frequencies?.[week] !== undefined && r.frequencies?.[week] !== "" && String(r.frequencies?.[week]).toUpperCase() !== "NA")
+    .sort((a, b) => Number(a.frequencies[week]) - Number(b.frequencies[week]));
+
+  sorted.forEach((r, idx) => {
+    const ch = String(r.channel_name || "").trim();
+    let neighbour = "";
+    if (idx > 0) {
+      neighbour = String(sorted[idx - 1].channel_name || "").trim();
+    } else if (idx + 1 < sorted.length) {
+      neighbour = String(sorted[idx + 1].channel_name || "").trim();
+    }
+    const k = `${ch.toUpperCase()}||${market.trim()}||${headend.trim()}||${msoType}||${week}`;
+    neighbourCache.set(k, neighbour);
+  });
+
+  return neighbourCache.get(cacheKey) || "";
+}
+
+let headendAvailCache = new Map();
+let headendAvailReportRef = null;
+
+function checkHeadendBecameAvailable(market, headend, previousWeek, currentWeek) {
+  if (!market || !headend || !previousWeek || !currentWeek) return false;
+  const sourceRecords = (typeof report !== "undefined" && report.records) ? report.records : [];
+  if (!sourceRecords.length) return false;
+
+  if (headendAvailReportRef !== sourceRecords) {
+    headendAvailCache.clear();
+    headendAvailReportRef = sourceRecords;
+  }
+
+  const msoType = (channelReportState && channelReportState.mso_type)
+    ? String(channelReportState.mso_type).trim().toUpperCase()
+    : "";
+  const cacheKey = `${market.trim()}||${headend.trim()}||${msoType}||${previousWeek}||${currentWeek}`;
+  if (headendAvailCache.has(cacheKey)) {
+    return headendAvailCache.get(cacheKey);
+  }
+
+  const headendRecords = sourceRecords.filter((r) => {
+    if (String(r.market || "").trim() !== market) return false;
+    if (String(r.head_end || "").trim() !== headend) return false;
+    if (msoType) {
+      if (String(r.mso_type || "").trim().toUpperCase() !== msoType) return false;
+    } else {
+      if (String(r.mso_type || "").trim().toUpperCase() === "DTH") return false;
+    }
+    return true;
+  });
+
+  if (!headendRecords.length) {
+    headendAvailCache.set(cacheKey, false);
+    return false;
+  }
+
+  const prevHasData = headendRecords.some((r) => r.frequencies?.[previousWeek] !== null && r.frequencies?.[previousWeek] !== undefined && r.frequencies?.[previousWeek] !== "" && String(r.frequencies?.[previousWeek]).toUpperCase() !== "NA");
+  const currHasData = headendRecords.some((r) => r.frequencies?.[currentWeek] !== null && r.frequencies?.[currentWeek] !== undefined && r.frequencies?.[currentWeek] !== "" && String(r.frequencies?.[currentWeek]).toUpperCase() !== "NA");
+  const result = !prevHasData && currHasData;
+
+  headendAvailCache.set(cacheKey, result);
+  return result;
+}
+
 function buildChannelReportRows(channel, weeks) {
   const [previousWeek, currentWeek] = weeks;
   const grouped = new Map();
   getChannelReportSourceRecords().forEach((record) => {
-    if (String(record.channel_name || "").trim() !== channel) return;
+    if (String(record.channel_name || "").trim().toUpperCase() !== String(channel || "").trim().toUpperCase()) return;
     const market = String(record.market || "").trim();
     const headend = String(record.head_end || "").trim();
     const key = `${market}||${headend}`;
@@ -2616,9 +2873,24 @@ function buildChannelReportRows(channel, weeks) {
       const currentFrequency = record.frequencies?.[currentWeek];
       const previousRank = record.ranks?.[previousWeek];
       const currentRank = record.ranks?.[currentWeek];
-      const previousMissing = previousFrequency === null || previousFrequency === undefined || previousFrequency === "";
-      const currentMissing = currentFrequency === null || currentFrequency === undefined || currentFrequency === "";
-      const hasFrequencyChange = previousMissing !== currentMissing || (!previousMissing && !currentMissing && previousFrequency !== currentFrequency);
+      const previousMissing = previousFrequency === null || previousFrequency === undefined || previousFrequency === "" || String(previousFrequency).toUpperCase() === "NA";
+      const currentMissing = currentFrequency === null || currentFrequency === undefined || currentFrequency === "" || String(currentFrequency).toUpperCase() === "NA";
+      const hasFrequencyChange = previousMissing !== currentMissing || (!previousMissing && !currentMissing && String(previousFrequency) !== String(currentFrequency));
+
+      const prevRankNum = Number(previousRank);
+      const currRankNum = Number(currentRank);
+      const prevRankValid = !isNaN(prevRankNum) && previousRank !== null && previousRank !== "" && String(previousRank).toUpperCase() !== "NA";
+      const currRankValid = !isNaN(currRankNum) && currentRank !== null && currentRank !== "" && String(currentRank).toUpperCase() !== "NA";
+      const hasRankChange = prevRankValid && currRankValid && prevRankNum !== currRankNum;
+
+      const prevNeighbour = getNeighbourForChannelInWeek(channel, record.market, record.head_end, previousWeek);
+      const currNeighbour = getNeighbourForChannelInWeek(channel, record.market, record.head_end, currentWeek);
+      const prevNeighbourValid = prevNeighbour && prevNeighbour.toUpperCase() !== "NA";
+      const currNeighbourValid = currNeighbour && currNeighbour.toUpperCase() !== "NA";
+      const hasNeighbourChange = prevNeighbourValid && currNeighbourValid && prevNeighbour.toUpperCase() !== currNeighbour.toUpperCase();
+
+      const hasAnyChange = hasFrequencyChange || hasRankChange || hasNeighbourChange;
+
       return {
         channel_name: record.channel_name,
         market: record.market,
@@ -2629,6 +2901,9 @@ function buildChannelReportRows(channel, weeks) {
         previousRank,
         currentRank,
         hasFrequencyChange,
+        hasRankChange,
+        hasNeighbourChange,
+        hasAnyChange,
       };
     })
     .filter((record) => record.hasFrequencyChange)
@@ -2638,31 +2913,28 @@ function buildChannelReportRows(channel, weeks) {
       return String(left.head_end || "").localeCompare(String(right.head_end || ""));
     });
 }
-function buildChannelReportNotes(channel, rows) {
-  const changed = [];
-  const added = [];
-  const dropped = [];
-  rows.forEach((row) => {
-    const previousMissing = row.previousFrequency === null || row.previousFrequency === undefined || row.previousFrequency === "";
-    const currentMissing = row.currentFrequency === null || row.currentFrequency === undefined || row.currentFrequency === "";
-    const location = `${row.market} - ${row.head_end}`;
-    if (!previousMissing && !currentMissing && row.previousFrequency !== row.currentFrequency) changed.push(location);
-    if (previousMissing && !currentMissing) added.push(location);
-    if (!previousMissing && currentMissing) dropped.push(location);
-  });
-  const label = formatChannelLabel(channel);
+
+function buildChannelReportNotes(channel, rows, weeks) {
+  const channelName = formatChannelLabel(channel);
+  if (!rows || !rows.length) {
+    return [`${channelName} has no change`];
+  }
+
+  const [previousWeek, currentWeek] = weeks || [];
   const notes = [];
-  if (changed.length) notes.push(`${label} LCN changed in ${changed.length} head end${changed.length === 1 ? "" : "s"}: ${changed.join(", ")}`);
-  if (added.length) notes.push(`${label} became available in ${added.length} head end${added.length === 1 ? "" : "s"}: ${added.join(", ")}`);
-  if (dropped.length) notes.push(`${label} dropped from ${dropped.length} head end${dropped.length === 1 ? "" : "s"}: ${dropped.join(", ")}`);
-  if (!notes.length) notes.push(`${label} has no frequency movement in the selected weeks.`);
-  return notes;
+
+  rows.forEach((row) => {
+    notes.push(buildChannelReportRemark(row, weeks));
+  });
+
+  return notes.length ? notes : [`${channelName} has no change`];
 }
+
 function formatExcelValue(value, fallback = "NA") {
   return value === null || value === undefined || value === "" ? fallback : value;
 }
 function isAllCitiesValue(value) {
-  return String(value || "").trim().toUpperCase().replace(/\\s+/g, "") === "ALLCITIES";
+  return String(value || "").trim().toUpperCase().replace(/\s+/g, "") === "ALLCITIES";
 }
 function getFrequencyChangeStyle(previousValue, currentValue) {
   const previousMissing = previousValue === null || previousValue === undefined || previousValue === "";
@@ -2695,28 +2967,99 @@ function getSequentialTrendStyle(weeks, values, index, styleResolver, emptyFallb
   const style = styleResolver(previousValue, currentValue);
   return style === "neutral" && !currentMissing ? filledFallback : style;
 }
+function getChannelPlacementInWeek(channelName, market, headend, week) {
+  if (!channelName || !market || !headend || !week) return "";
+  const sourceRecords = (typeof report !== "undefined" && report.records) ? report.records : [];
+  if (!sourceRecords.length) return "";
+
+  const msoType = (channelReportState && channelReportState.mso_type)
+    ? String(channelReportState.mso_type).trim().toUpperCase()
+    : "";
+
+  const headendRecords = sourceRecords.filter((r) => {
+    if (String(r.market || "").trim() !== market) return false;
+    if (String(r.head_end || "").trim() !== headend) return false;
+    if (msoType) {
+      if (String(r.mso_type || "").trim().toUpperCase() !== msoType) return false;
+    } else {
+      if (String(r.mso_type || "").trim().toUpperCase() === "DTH") return false;
+    }
+    return true;
+  });
+
+  if (!headendRecords.length) return "";
+
+  const sorted = headendRecords
+    .filter((r) => r.frequencies?.[week] !== null && r.frequencies?.[week] !== undefined && r.frequencies?.[week] !== "" && String(r.frequencies?.[week]).toUpperCase() !== "NA")
+    .sort((a, b) => Number(a.frequencies[week]) - Number(b.frequencies[week]));
+
+  const idx = sorted.findIndex((r) => String(r.channel_name || "").trim().toUpperCase() === String(channelName).trim().toUpperCase());
+  const isSelf = String(channelName).trim().toUpperCase() === "INDIA TV";
+  const selfRef = isSelf ? "us" : "it";
+  if (idx < 0) return `no channel from the genre was placed beside ${selfRef}`;
+
+  const prev = idx > 0 ? String(sorted[idx - 1].channel_name || "").trim() : "";
+  const next = idx + 1 < sorted.length ? String(sorted[idx + 1].channel_name || "").trim() : "";
+
+  if (prev && next) {
+    return `between ${formatChannelLabel(prev)} & ${formatChannelLabel(next)}`;
+  } else if (prev) {
+    return `beside ${formatChannelLabel(prev)}`;
+  } else if (next) {
+    return `beside ${formatChannelLabel(next)}`;
+  }
+  return `no channel from the genre was placed beside ${selfRef}`;
+}
+
 function buildChannelReportRemark(row, weeks) {
-  const [previousWeek, currentWeek] = weeks;
-  const channel = formatChannelLabel(row.channel_name);
-  const previousMissing = row.previousFrequency === null || row.previousFrequency === undefined || row.previousFrequency === "";
-  const currentMissing = row.currentFrequency === null || row.currentFrequency === undefined || row.currentFrequency === "";
-  const parts = [];
-  if (previousMissing && !currentMissing) {
-    parts.push(`${channel} became available in this head end from ${currentWeek}.`);
-  } else if (!previousMissing && currentMissing) {
-    parts.push(`${channel} is not available in ${currentWeek} after being present in ${previousWeek}.`);
-  } else if (row.previousFrequency !== row.currentFrequency) {
-    parts.push(`${channel} frequency changed from ${row.previousFrequency} to ${row.currentFrequency}.`);
+  const channel = row.channel_name || "";
+  const channelName = formatChannelLabel(channel);
+  const isSelf = channelName === "INDIA TV";
+  const selfRefCapital = isSelf ? "we are" : "it is";
+  const [previousWeek, currentWeek] = weeks || [];
+
+  const prevLcn = row.previousFrequency;
+  const currLcn = row.currentFrequency;
+  const prevRank = row.previousRank;
+  const currRank = row.currentRank;
+
+  const prevLcnMissing = prevLcn === null || prevLcn === undefined || prevLcn === "" || String(prevLcn).toUpperCase() === "NA";
+  const currLcnMissing = currLcn === null || currLcn === undefined || currLcn === "" || String(currLcn).toUpperCase() === "NA";
+
+  let remark = "";
+
+  if (prevLcnMissing && !currLcnMissing) {
+    remark = `${channelName}'s LCN became available (NA → ${currLcn})`;
+  } else if (!prevLcnMissing && currLcnMissing) {
+    remark = `${channelName} became unavailable (${prevLcn} → NA)`;
+  } else if (!prevLcnMissing && !currLcnMissing && String(prevLcn) !== String(currLcn)) {
+    remark = `${channelName}'s LCN has changed in this head end`;
+  } else {
+    remark = `${channelName} LCN remains ${currLcn}`;
   }
-  const rankStyle = getRankChangeStyle(row.previousRank, row.currentRank);
-  if (rankStyle === "positive") {
-    parts.push(`Rank improved from ${formatExcelValue(row.previousRank, "No Rank")} to ${formatExcelValue(row.currentRank, "No Rank")}.`);
-  } else if (rankStyle === "negative") {
-    parts.push(`Rank dropped from ${formatExcelValue(row.previousRank, "No Rank")} to ${formatExcelValue(row.currentRank, "No Rank")}.`);
-  } else if (!parts.length) {
-    parts.push(`${channel} has no major change in the selected weeks.`);
+
+  const prevRankNum = Number(prevRank);
+  const currRankNum = Number(currRank);
+  const prevRankValid = !isNaN(prevRankNum) && prevRank !== null && prevRank !== "" && String(prevRank).toUpperCase() !== "NA";
+  const currRankValid = !isNaN(currRankNum) && currRank !== null && currRank !== "" && String(currRank).toUpperCase() !== "NA";
+
+  if (prevRankValid && currRankValid && prevRankNum !== currRankNum) {
+    const rankVerb = currRankNum < prevRankNum ? "its rank improved" : "its rank dropped";
+    remark += ` and ${rankVerb} from ${prevRank} to ${currRank}`;
   }
-  return parts.join(" ");
+
+  const prevPlacement = getChannelPlacementInWeek(channel, row.market, row.head_end, previousWeek);
+  const currPlacement = getChannelPlacementInWeek(channel, row.market, row.head_end, currentWeek);
+
+  if (prevPlacement.startsWith("no channel")) {
+    remark += `, previously ${prevPlacement}, now ${selfRefCapital} ${currPlacement}`;
+  } else if (prevPlacement && prevPlacement !== currPlacement) {
+    remark += `, previously it was placed ${prevPlacement}, now ${selfRefCapital} ${currPlacement}`;
+  } else if (currPlacement) {
+    remark += `, placed ${currPlacement}`;
+  }
+
+  return remark;
 }
 function exportTable1Excel() {
   syncChannelReportWeeksWithTable();
@@ -2734,7 +3077,7 @@ function exportTable1Excel() {
     });
   const visibleWeeks = getVisibleWeeks();
   const activeWeeks = getChannelReportWeekPair();
-  const channels = getChannelReportTargets();
+  const targetChannels = ["INDIA TV", "AAJ TAK", "NEWS 18 INDIA", "REPUBLIC BHARAT"];
   const frequencyExportView = { series: "frequencies", changes: "changes" };
   const rankExportView = { series: "ranks", changes: "rank_changes" };
   const detailRows = [
@@ -2770,20 +3113,20 @@ function exportTable1Excel() {
   });
 
   const reportRows = [
-    [excelCell("Channel Report", "title", { mergeAcross: 7 })],
+    [excelCell("Source: Chrome Track", "title", { mergeAcross: 7 })],
+    [excelCell("Major Change", "meta", { mergeAcross: 7 })],
     blankExcelRow(8),
   ];
 
-  channels.forEach((channel) => {
-    const rows = buildChannelReportRows(channel, activeWeeks).filter((row) => !isAllCitiesValue(row.city));
-    reportRows.push([
-      excelCell(formatChannelLabel(channel), "meta", { mergeAcross: 7 }),
-    ]);
+  targetChannels.forEach((channel) => {
+    const rows = buildChannelReportRows(channel, activeWeeks).filter((row) => !isAllCitiesValue(row.city) && row.hasFrequencyChange);
+    if (!rows.length) return;
+
     reportRows.push([
       excelCell("", "group", { mergeAcross: 2 }),
       excelCell("Freq", "group", { mergeAcross: 1 }),
       excelCell("Rank", "group", { mergeAcross: 1 }),
-      excelCell("Summary", "group"),
+      excelCell("Remark", "group"),
     ]);
     reportRows.push([
       excelCell("CHANNEL NAME", "header"),
@@ -2793,21 +3136,8 @@ function exportTable1Excel() {
       excelCell(activeWeeks[1] || "Week 2", "header"),
       excelCell(activeWeeks[0] || "Week 1", "header"),
       excelCell(activeWeeks[1] || "Week 2", "header"),
-      excelCell("Summary", "header"),
+      excelCell("Remark", "header"),
     ]);
-
-    if (!rows.length) {
-      reportRows.push([
-        excelCell("", "cell"),
-        excelCell("", "cell"),
-        excelCell("", "cell"),
-        excelCell("", "cell"),
-        excelCell("", "cell"),
-        excelCell("", "cell"),
-        excelCell("", "cell"),
-        excelCell("No frequency changes found for the selected weeks.", "textWrap"),
-      ]);
-    }
 
     rows.forEach((row) => {
       const currentFrequencyStyle = getFrequencyChangeStyle(row.previousFrequency, row.currentFrequency);
@@ -2818,6 +3148,9 @@ function exportTable1Excel() {
       const currentRankExportStyle = currentRankStyle === "neutral"
         ? (row.currentRank === null || row.currentRank === undefined || row.currentRank === "" ? "neutral" : "number")
         : currentRankStyle;
+
+      const remarkText = buildChannelReportRemark(row, activeWeeks);
+
       reportRows.push([
         excelCell(formatChannelLabel(row.channel_name), "cell"),
         excelCell(row.market || "", "cell"),
@@ -2826,15 +3159,15 @@ function exportTable1Excel() {
         excelCell(formatExcelValue(row.currentFrequency, "NA"), currentFrequencyExportStyle),
         excelCell(formatExcelValue(row.previousRank, "No Rank"), row.previousRank === null || row.previousRank === undefined || row.previousRank === "" ? "neutral" : "number"),
         excelCell(formatExcelValue(row.currentRank, "No Rank"), currentRankExportStyle),
-        excelCell(buildChannelReportRemark(row, activeWeeks), "textWrap"),
+        excelCell(remarkText, "textWrap"),
       ]);
     });
 
     reportRows.push(blankExcelRow(8));
   });
 
-  if (reportRows.length === 2) {
-    reportRows.push([excelCell("No channel report data available for the current filters.", "textWrap", { mergeAcross: 7 })]);
+  if (reportRows.length === 3) {
+    reportRows.push([excelCell("No frequency changes found for the selected channels and weeks.", "textWrap", { mergeAcross: 7 })]);
   }
 
   downloadExcelWorkbook(`table1_${getActiveBaseView()}_export`, [
@@ -2850,6 +3183,14 @@ function exportTable1Excel() {
     },
   ]);
 }
+function getChannelReportMsoTypes() {
+  const msoTypes = new Set();
+  (report.records || []).forEach((record) => {
+    const value = String(record.mso_type || "").trim();
+    if (value) msoTypes.add(value);
+  });
+  return Array.from(msoTypes).sort((a, b) => a.localeCompare(b));
+}
 function renderChannelReports() {
   if (channelReportControls.panel) {
     channelReportControls.panel.hidden = !channelReportState.open;
@@ -2864,6 +3205,7 @@ function renderChannelReports() {
   const weeks = getChannelReportWeekPair();
   const allWeeks = normalizeWeeks(report.weeks || []);
   channelReportState.channel = populateOptionList(channelReportControls.channel, buildChannelReportOptions(), channelReportState.channel || "__default__");
+  channelReportState.mso_type = populateSelect(channelReportControls.mso_type, getChannelReportMsoTypes(), "All MSO Types", channelReportState.mso_type);
   channelReportState.week_from = populateSelect(channelReportControls.week_from, allWeeks, "From Week", channelReportState.week_from);
   channelReportState.week_to = populateSelect(channelReportControls.week_to, allWeeks, "To Week", channelReportState.week_to);
   const activeWeeks = getChannelReportWeekPair();
@@ -2879,7 +3221,7 @@ function renderChannelReports() {
   }
   channels.forEach((channel) => {
     const rows = buildChannelReportRows(channel, activeWeeks);
-    const notes = buildChannelReportNotes(channel, rows);
+    const notes = buildChannelReportNotes(channel, rows, activeWeeks);
     const card = document.createElement("section");
     card.className = "channel-report-card";
 
@@ -2989,6 +3331,7 @@ function renderChannelReports() {
 }
 function resetChannelReports() {
   channelReportState.channel = "__default__";
+  channelReportState.mso_type = "";
   channelReportState.week_from = "";
   channelReportState.week_to = "";
   renderChannelReports();
@@ -3021,8 +3364,8 @@ function getDisplayStatus(record, viewConfig, weeks, weekIndex) {
   return getDisplayStatusForView(record, viewConfig, weeks, weekIndex, state.view);
 }
 function mapTableStatusToExcelStyle(status, fallback = "number") {
-  if (status === "increase" || status === "decline") return "negative";
-  if (status === "decrease" || status === "improve") return "positive";
+  if (status === "increase" || status === "improve") return "positive";
+  if (status === "decrease" || status === "decline") return "negative";
   if (status === "change") return "highlight";
   if (status === "missing") return "missing";
   if (status === "no_change") return fallback;
@@ -3048,7 +3391,15 @@ function filterRecords(ignoreKey = "") {
   return report.records.filter((record) => {
     for (const [key, field] of Object.entries(fieldMap)) {
       if (key === ignoreKey) continue;
+      if (key === "mso_type") continue;
       if (state.filters[key] && String(record[field] || "") !== state.filters[key]) return false;
+    }
+    if (ignoreKey !== "mso_type") {
+      if (state.filters.mso_type) {
+        if (String(record.mso_type || "") !== state.filters.mso_type) return false;
+      } else {
+        if (String(record.mso_type || "").trim().toUpperCase() === "DTH") return false;
+      }
     }
     if (ignoreKey !== "change" && state.filters.change) {
       if (state.filters.change === "Changed") {
@@ -3065,12 +3416,15 @@ function filterRecords(ignoreKey = "") {
     return true;
   });
 }
+function getFilteredRecords() {
+  return filterRecords();
+}
 function getOptions(key) {
   if (key === "week_from" || key === "week_to") return getConstrainedWeekOptions(key);
   if (key === "change") return ["Changed", "No Change"];
   const field = fieldMap[key];
   const values = new Set();
-  filterRecords(key).forEach((record) => {
+  (report.records || []).forEach((record) => {
     const value = String(record[field] || "").trim();
     if (value) values.add(value);
   });
@@ -3078,15 +3432,19 @@ function getOptions(key) {
 }
 function populateSelect(select, values, allLabel, selectedValue) {
   const safeValues = values.filter((value) => value !== null && value !== undefined && String(value).trim() !== "");
+  if (selectedValue && !safeValues.includes(selectedValue)) {
+    safeValues.push(selectedValue);
+    safeValues.sort((a, b) => String(a).localeCompare(String(b)));
+  }
   if (select instanceof HTMLSelectElement) {
-    const safeSelectedValue = safeValues.includes(selectedValue) ? selectedValue : "";
+    const safeSelectedValue = selectedValue || "";
     select.innerHTML = "";
     select.appendChild(createOption("", allLabel));
     safeValues.forEach((value) => select.appendChild(createOption(value, value)));
     select.value = safeSelectedValue;
     return safeSelectedValue;
   }
-  const safeSelectedValue = safeValues.includes(selectedValue) ? selectedValue : "";
+  const safeSelectedValue = selectedValue || "";
   return syncSingleSelect(select, safeValues, allLabel, safeSelectedValue, () => {}, null);
 }
 function applyFilterValue(key, value) {
@@ -3100,8 +3458,6 @@ function applyFilterValue(key, value) {
       else state.filters.week_from = state.filters.week_to;
     }
   }
-  const changedIndex = filterOrder.indexOf(key);
-  if (changedIndex >= 0) filterOrder.slice(changedIndex + 1).forEach((nextKey) => { state.filters[nextKey] = ""; });
   if (key === "week_from" && value) {
     state.filters.week_to = state.filters.week_to && getConstrainedWeekOptions("week_to").includes(state.filters.week_to) ? state.filters.week_to : value;
   }
@@ -3181,26 +3537,7 @@ function buildReportNotes(rows, weeks, channel) {
   if (weeks.length < 2) {
     return [`${channel} report needs at least two visible weeks.`];
   }
-  const [previousWeek, currentWeek] = weeks;
-  const changedHeadends = [];
-  const newHeadends = [];
-  const droppedHeadends = [];
-  rows.forEach((record) => {
-    const previous = record.frequencies?.[previousWeek];
-    const current = record.frequencies?.[currentWeek];
-    const headend = String(record.head_end || "").trim();
-    const previousMissing = previous === null || previous === undefined || previous === "";
-    const currentMissing = current === null || current === undefined || current === "";
-    if (!previousMissing && !currentMissing && previous !== current) changedHeadends.push(headend);
-    if (previousMissing && !currentMissing) newHeadends.push(headend);
-    if (!previousMissing && currentMissing) droppedHeadends.push(headend);
-  });
-  const notes = [];
-  if (changedHeadends.length) notes.push(`${channel} LCN changed in ${changedHeadends.length} head end${changedHeadends.length === 1 ? "" : "s"}: ${changedHeadends.join(", ")}`);
-  if (newHeadends.length) notes.push(`${channel} became available in ${newHeadends.length} head end${newHeadends.length === 1 ? "" : "s"}: ${newHeadends.join(", ")}`);
-  if (droppedHeadends.length) notes.push(`${channel} dropped in ${droppedHeadends.length} head end${droppedHeadends.length === 1 ? "" : "s"}: ${droppedHeadends.join(", ")}`);
-  if (!notes.length) notes.push(`${channel} has no frequency movement in ${currentWeek} compared with ${previousWeek}.`);
-  return notes;
+  return buildChannelReportNotes(channel, rows, weeks);
 }
 function buildTableHead() {
   const tableHead = document.getElementById("tableHead");
@@ -3391,8 +3728,13 @@ function renderTable(records) {
       const td = document.createElement("td");
       const value = record[viewConfig.series][week];
       const status = getDisplayStatus(record, viewConfig, visibleWeeks, index);
+      const textVal = formatWeekValue(value, status, index === 0);
+      td.textContent = textVal;
       td.classList.add(`status-${status}`);
-      td.textContent = formatWeekValue(value, status, index === 0);
+      if (status === "missing" || textVal === "NA" || value === null || value === undefined || value === "") {
+        td.classList.add("cell-na");
+        td.classList.add("status-missing");
+      }
       tr.appendChild(td);
     });
     const changeTd = document.createElement("td");
@@ -3659,6 +4001,12 @@ window.__OTS_STANDALONE_DATA__ = reportBundle.ots;
   <script>
 __OTS_SCRIPT__
   </script>
+  <script>
+window.__LANDING_STANDALONE_DATA__ = reportBundle.landing;
+  </script>
+  <script>
+__LANDING_SCRIPT__
+  </script>
 </body>
 </html>
 """
@@ -3670,6 +4018,7 @@ __OTS_SCRIPT__
         .replace("__COMPARISON_SCRIPT__", comparison_script_text)
         .replace("__NBHD_SCRIPT__", nbhd_script_text)
         .replace("__OTS_SCRIPT__", ots_script_text)
+        .replace("__LANDING_SCRIPT__", landing_script_text)
     )
 
 
@@ -3736,10 +4085,10 @@ def filter_nbhd_records(records: list[dict[str, Any]], filters: dict[str, str], 
 
 
 def build_nbhd_filters(records: list[dict[str, Any]], current_filters: dict[str, str], search: str) -> dict[str, list[str]]:
-    def values_for(key: str, field: str) -> list[str]:
+    def values_for(field: str) -> list[str]:
         values = {
             normalize_text(record.get(field))
-            for record in filter_nbhd_records(records, current_filters, search, ignore_key=key)
+            for record in records
             if normalize_text(record.get(field))
         }
         return sorted(values, key=lambda value: value.lower())
@@ -3747,16 +4096,16 @@ def build_nbhd_filters(records: list[dict[str, Any]], current_filters: dict[str,
     def channel_values() -> list[str]:
         values = {
             normalize_text(channel)
-            for record in filter_nbhd_records(records, current_filters, search, ignore_key="channel")
+            for record in records
             for channel in record.get("channels", {}).values()
             if normalize_text(channel)
         }
         return sorted(values, key=lambda value: value.lower())
 
     return {
-        "markets": values_for("market", "market"),
-        "cities": values_for("city", "city"),
-        "head_ends": values_for("head_end", "head_end"),
+        "markets": values_for("market"),
+        "cities": values_for("city"),
+        "head_ends": values_for("head_end"),
         "channels": channel_values(),
     }
 
@@ -3917,17 +4266,17 @@ def filter_ots_records(records: list[dict[str, Any]], filters: dict[str, Any], i
 
 def build_ots_filters(records: list[dict[str, Any]], current_filters: dict[str, Any]) -> dict[str, list[str]]:
     # Build dynamic filter options scoped by the current selections.
-    def values_for(key: str, field: str) -> list[str]:
+    def values_for(field: str) -> list[str]:
         values = {
             normalize_text(record.get(field))
-            for record in filter_ots_records(records, current_filters, ignore_key=key)
+            for record in records
             if normalize_text(record.get(field))
         }
         return sorted(values, key=lambda value: value.lower())
 
     return {
-        "markets": values_for("markets", "market"),
-        "channels": values_for("channels", "channel"),
+        "markets": values_for("market"),
+        "channels": values_for("channel"),
         "weeks": current_filters["all_weeks"],
         "change_options": ["", "changed", "no_change", "increase", "decrease"],
     }

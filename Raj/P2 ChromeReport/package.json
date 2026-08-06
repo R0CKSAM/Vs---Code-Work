@@ -1,0 +1,9 @@
+{
+  "name": "p2-chrome-report",
+  "version": "1.0.0",
+  "description": "Chrome Track 2.0 Report & Dashboard Automation",
+  "scripts": {
+    "sync:landing": "python landing_sync.py",
+    "build": "python app.py"
+  }
+}

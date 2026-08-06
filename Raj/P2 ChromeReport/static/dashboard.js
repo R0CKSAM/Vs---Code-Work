@@ -79,6 +79,14 @@
     const marketKey = marketKeyForDataset(dataset);
     const channelKey = channelKeyForDataset(dataset);
 
+    const validWeeks = uniqueValues(dataset.records, "Week");
+    const validMarkets = uniqueValues(dataset.records, marketKey);
+    const validChannels = uniqueValues(dataset.records, channelKey);
+
+    if (state.filters.week && !validWeeks.includes(state.filters.week)) validWeeks.push(state.filters.week);
+    if (state.filters.market && !validMarkets.includes(state.filters.market)) validMarkets.push(state.filters.market);
+    if (state.filters.channel && !validChannels.includes(state.filters.channel)) validChannels.push(state.filters.channel);
+
     weekFilterEl.innerHTML = "";
     marketFilterEl.innerHTML = "";
     channelFilterEl.innerHTML = "";
@@ -87,13 +95,13 @@
     marketFilterEl.appendChild(createOption("", "All Markets"));
     channelFilterEl.appendChild(createOption("", "All Channels"));
 
-    uniqueValues(dataset.records, "Week").forEach((value) => weekFilterEl.appendChild(createOption(value, value)));
-    uniqueValues(dataset.records, marketKey).forEach((value) => marketFilterEl.appendChild(createOption(value, value)));
-    uniqueValues(dataset.records, channelKey).forEach((value) => channelFilterEl.appendChild(createOption(value, value)));
+    validWeeks.forEach((value) => weekFilterEl.appendChild(createOption(value, value)));
+    validMarkets.forEach((value) => marketFilterEl.appendChild(createOption(value, value)));
+    validChannels.forEach((value) => channelFilterEl.appendChild(createOption(value, value)));
 
-    weekFilterEl.value = state.filters.week;
-    marketFilterEl.value = state.filters.market;
-    channelFilterEl.value = state.filters.channel;
+    weekFilterEl.value = state.filters.week || "";
+    marketFilterEl.value = state.filters.market || "";
+    channelFilterEl.value = state.filters.channel || "";
     searchInputEl.value = state.filters.search;
   }
 
@@ -156,7 +164,11 @@
         dataset.columns.forEach((column) => {
           const cell = document.createElement("td");
           const value = record[column.key];
-          cell.textContent = value === null || value === undefined ? "" : String(value);
+          const textVal = value === null || value === undefined || String(value).trim() === "" ? "NA" : String(value);
+          cell.textContent = textVal;
+          if (textVal === "NA" || textVal === "N/A") {
+            cell.classList.add("cell-na");
+          }
           row.appendChild(cell);
         });
         tableBodyEl.appendChild(row);

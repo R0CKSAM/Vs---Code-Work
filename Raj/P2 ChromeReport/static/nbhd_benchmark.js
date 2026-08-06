@@ -462,20 +462,22 @@
 
     if (column.type === "number") {
       const value = row[column.key];
-      td.className = `nbhd-benchmark-number${isMissing(value) ? " nbhd-benchmark-na" : ""}`;
+      td.className = `nbhd-benchmark-number${isMissing(value) ? " nbhd-benchmark-na cell-na" : ""}`;
       td.textContent = formatNumberValue(value);
+      if (td.textContent === "NA") td.classList.add("cell-na");
       return td;
     }
 
     if (column.type === "change") {
       const meta = row[column.key];
       td.className = `nbhd-benchmark-number nbhd-benchmark-${meta.type}`;
-      if (meta.text === "NA") td.classList.add("nbhd-benchmark-na");
+      if (meta.text === "NA") td.classList.add("cell-na");
       td.textContent = meta.text;
       return td;
     }
 
     td.className = `nbhd-benchmark-status-cell nbhd-benchmark-${row.status.type}`;
+    if (row.status.text === "NA") td.classList.add("cell-na");
     td.textContent = row.status.text;
     return td;
   }

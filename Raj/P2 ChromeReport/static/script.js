@@ -102,7 +102,11 @@ function createOption(value, label) {
 
 function populateSelect(select, values, allLabel, selectedValue) {
   const normalizedValues = Array.isArray(values) ? values.filter((value) => value !== null && value !== undefined && String(value).trim() !== "") : [];
-  const safeSelectedValue = normalizedValues.includes(selectedValue) ? selectedValue : "";
+  if (selectedValue && !normalizedValues.includes(selectedValue)) {
+    normalizedValues.push(selectedValue);
+    normalizedValues.sort((a, b) => String(a).localeCompare(String(b)));
+  }
+  const safeSelectedValue = selectedValue || "";
   select.innerHTML = "";
   select.appendChild(createOption("", allLabel));
   normalizedValues.forEach((value) => select.appendChild(createOption(value, value)));
@@ -218,7 +222,12 @@ function renderTable(weeks, table) {
       const rawStatus = index === 0 ? "baseline" : record[viewConfig.changes][week];
       const status = value === null || value === undefined || value === "" ? "missing" : rawStatus;
       td.classList.add(`status-${status}`);
-      td.textContent = formatWeekValue(value, status, index === 0);
+      const formattedVal = formatWeekValue(value, status, index === 0);
+      td.textContent = formattedVal;
+      if (status === "missing" || formattedVal === "NA" || value === null || value === undefined || value === "") {
+        td.classList.add("cell-na");
+        td.classList.add("status-missing");
+      }
       tr.appendChild(td);
     });
 
@@ -462,14 +471,25 @@ async function toggleFullscreen() {
 function autoApplySelect(select, key) {
   select.addEventListener("change", () => {
     state.filters[key] = select.value;
-    const changedIndex = filterOrder.indexOf(key);
-    if (changedIndex >= 0) {
-      filterOrder.slice(changedIndex + 1).forEach((nextKey) => {
-        state.filters[nextKey] = "";
-      });
-    }
     state.page = 1;
     fetchDashboard();
+  });
+}
+
+function bindKeyboardNavigationForSelects() {
+  const selects = [marketFilter, cityFilter, msoTypeFilter, headendFilter, crnFilter, channelFilter, bandFilter, weekFilter, changeFilter].filter(Boolean);
+  selects.forEach((select, index) => {
+    select.addEventListener("keydown", (event) => {
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        const next = selects[(index + 1) % selects.length];
+        next?.focus();
+      } else if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        const prev = selects[(index - 1 + selects.length) % selects.length];
+        prev?.focus();
+      }
+    });
   });
 }
 
@@ -483,6 +503,7 @@ function bindEvents() {
   autoApplySelect(bandFilter, "band");
   autoApplySelect(weekFilter, "week");
   autoApplySelect(changeFilter, "change");
+  bindKeyboardNavigationForSelects();
 
   document.getElementById("resetButton").addEventListener("click", () => {
     state.filters = {
