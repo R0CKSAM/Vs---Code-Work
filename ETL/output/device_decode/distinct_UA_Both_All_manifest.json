@@ -1,11 +1,11 @@
 {
-  "generated_at_utc": "2026-08-03T03:24:47.879657+00:00",
+  "generated_at_utc": "2026-08-06T10:24:58.891980+00:00",
   "reference": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\distinct_UA_Both_All.csv",
-  "profile": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\output\\device_decode\\ua_distinct_profile_all_sources_2026-08-02_to_2026-08-03.parquet",
+  "profile": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\output\\device_decode\\ua_distinct_profile_all_sources_2026-08-05_to_2026-08-06.parquet",
   "out_parquet": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\output\\device_decode\\distinct_UA_Both_All.parquet",
-  "existing_distinct_ua": 28817,
-  "profile_distinct_ua": 4171,
-  "final_distinct_ua": 29099,
-  "added_distinct_ua": 282,
+  "existing_distinct_ua": 29099,
+  "profile_distinct_ua": 3980,
+  "final_distinct_ua": 29362,
+  "added_distinct_ua": 263,
   "dry_run": false
 }

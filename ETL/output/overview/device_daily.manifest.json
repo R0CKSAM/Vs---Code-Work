@@ -1749,7 +1749,7 @@
       "mtime_ns_max": 1785553616841075000,
       "mtime_ns_sum": 7142042724906490000,
       "roots": [
-        "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE"
       ],
       "rows": 74204084,
       "sources": [
@@ -1780,6 +1780,48 @@
         "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
       ],
       "rows": 69221739,
+      "sources": [
+        "fast",
+        "stream"
+      ]
+    },
+    "2026-08-03": {
+      "bytes": 7002559890,
+      "files": 4,
+      "mtime_ns_max": 1785814474015193900,
+      "mtime_ns_sum": 7143081587575655800,
+      "roots": [
+        "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
+      ],
+      "rows": 74550105,
+      "sources": [
+        "fast",
+        "stream"
+      ]
+    },
+    "2026-08-04": {
+      "bytes": 6841812573,
+      "files": 5,
+      "mtime_ns_max": 1786010530712786100,
+      "mtime_ns_sum": 8929562346608709300,
+      "roots": [
+        "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
+      ],
+      "rows": 73029442,
+      "sources": [
+        "fast",
+        "stream"
+      ]
+    },
+    "2026-08-05": {
+      "bytes": 7003659080,
+      "files": 4,
+      "mtime_ns_max": 1786010565564723600,
+      "mtime_ns_sum": 7143944008391051200,
+      "roots": [
+        "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake"
+      ],
+      "rows": 73633670,
       "sources": [
         "fast",
         "stream"

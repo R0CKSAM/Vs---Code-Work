@@ -102,3 +102,5 @@ asn_lookup_cache.json
 ETL/tools/node/node.exe
 ETL/tools/rclone/rclone.exe
 **/__pycache__/
+# Additional virtualenv directories
+venv310/

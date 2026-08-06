@@ -1,16 +1,16 @@
 {
-  "generated_at_utc": "2026-08-03T08:01:25.388769+00:00",
+  "generated_at_utc": "2026-08-06T10:27:06.109793+00:00",
   "input": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\distinct_UA_Both_All.csv",
   "api_url": "https://whatmyuseragent.com/api",
   "api_cache": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\cache\\device_decode\\whatmyuseragent_all_distinct_ua_cache.parquet",
   "stats": {
-    "distinct_ua_rows": 29099,
-    "valid_distinct_ua_rows": 28940,
+    "distinct_ua_rows": 29362,
+    "valid_distinct_ua_rows": 29203,
     "combined_api_cached_before": 25584,
-    "new_candidates_this_run": 3513,
-    "own_full_cache_rows": 24879,
-    "combined_api_cached_after": 25584,
-    "remaining_valid_after": 3356,
-    "elapsed_seconds": 5.77
+    "new_candidates_this_run": 25,
+    "own_full_cache_rows": 24904,
+    "combined_api_cached_after": 25609,
+    "remaining_valid_after": 3594,
+    "elapsed_seconds": 126.61
   }
 }

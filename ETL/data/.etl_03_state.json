@@ -2052,10 +2052,10 @@
     "signature": "9faf8d1b6e01b398c8b8adc9bd4330ca",
     "src_prefix": "part_fast_2026_08_03",
     "rows": 51668574,
-    "removed_previous_files": 0,
+    "removed_previous_files": 1,
     "promoted_files": 2,
-    "elapsed_sec": 220.86,
-    "processed_at_utc": "2026-08-04T03:33:53.289924+00:00"
+    "elapsed_sec": 127.61,
+    "processed_at_utc": "2026-08-06T12:35:36.433606+00:00"
   },
   "stream_2026_08_03_final_clean.parquet": {
     "status": "ok",
@@ -2066,10 +2066,10 @@
     "signature": "008083341e713b20628e4ff096f9da49",
     "src_prefix": "part_stream_2026_08_03",
     "rows": 22991710,
-    "removed_previous_files": 0,
+    "removed_previous_files": 1,
     "promoted_files": 2,
-    "elapsed_sec": 40.78,
-    "processed_at_utc": "2026-08-04T03:34:34.120495+00:00"
+    "elapsed_sec": 35.02,
+    "processed_at_utc": "2026-08-06T12:36:11.466891+00:00"
   },
   "fast_2026_08_04_final_clean.parquet": {
     "status": "ok",
@@ -2082,8 +2082,8 @@
     "rows": 51116586,
     "removed_previous_files": 0,
     "promoted_files": 2,
-    "elapsed_sec": 186.7,
-    "processed_at_utc": "2026-08-05T03:34:34.007280+00:00"
+    "elapsed_sec": 102.25,
+    "processed_at_utc": "2026-08-06T08:56:27.070517+00:00"
   },
   "stream_2026_08_04_final_clean.parquet": {
     "status": "ok",
@@ -2094,9 +2094,37 @@
     "signature": "6ebf2324f26b4f5e03f4225901ca9477",
     "src_prefix": "part_stream_2026_08_04",
     "rows": 21998176,
-    "removed_previous_files": 0,
+    "removed_previous_files": 1,
     "promoted_files": 2,
-    "elapsed_sec": 37.83,
-    "processed_at_utc": "2026-08-05T03:35:11.853355+00:00"
+    "elapsed_sec": 62.6,
+    "processed_at_utc": "2026-08-05T07:52:05.423271+00:00"
+  },
+  "fast_2026_08_05_final_clean.parquet": {
+    "status": "ok",
+    "partition_version": 3,
+    "partition_timezone": "Asia/Kolkata",
+    "source_key": "fast",
+    "file_prefix": "part_fast_2026_08_05",
+    "signature": "bc22ec4f1e67151132475ab694e90ae7",
+    "src_prefix": "part_fast_2026_08_05",
+    "rows": 51133613,
+    "removed_previous_files": 2,
+    "promoted_files": 3,
+    "elapsed_sec": 127.4,
+    "processed_at_utc": "2026-08-06T10:02:11.001015+00:00"
+  },
+  "stream_2026_08_05_final_clean.parquet": {
+    "status": "ok",
+    "partition_version": 3,
+    "partition_timezone": "Asia/Kolkata",
+    "source_key": "stream",
+    "file_prefix": "part_stream_2026_08_05",
+    "signature": "537fb1eca6e2ebb4f2f68fc5fdf7223b",
+    "src_prefix": "part_stream_2026_08_05",
+    "rows": 22415720,
+    "removed_previous_files": 1,
+    "promoted_files": 2,
+    "elapsed_sec": 34.99,
+    "processed_at_utc": "2026-08-06T10:02:45.998405+00:00"
   }
 }

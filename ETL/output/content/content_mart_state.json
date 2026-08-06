@@ -1319,8 +1319,38 @@
       "output_counts": {
         "rows": 175
       }
+    },
+    "stream/2026-08-04": {
+      "source": "stream",
+      "date": "2026-08-04",
+      "file_count": 2,
+      "bytes": 857852688,
+      "max_mtime_ns": 1785916325227401000,
+      "output_counts": {
+        "rows": 1266
+      }
+    },
+    "stream/2026-08-05": {
+      "source": "stream",
+      "date": "2026-08-05",
+      "file_count": 2,
+      "bytes": 869238763,
+      "max_mtime_ns": 1786010565564723600,
+      "output_counts": {
+        "rows": 1341
+      }
+    },
+    "stream/2026-08-06": {
+      "source": "stream",
+      "date": "2026-08-06",
+      "file_count": 1,
+      "bytes": 61095433,
+      "max_mtime_ns": 1786010565815883100,
+      "output_counts": {
+        "rows": 191
+      }
     }
   },
-  "updated_at_utc": "2026-08-03T03:56:28.634706+00:00",
+  "updated_at_utc": "2026-08-06T10:58:44.744387+00:00",
   "mart_version": 3
 }
