@@ -86,37 +86,37 @@
     return match ? parseInt(match[0], 10) : 0;
   }
 
+  function syncDefaultWeekFilters() {
+    const allWeeks = state.payload?.weeks || [];
+    if (allWeeks.length === 0) return;
+
+    if (!state.filters.week_from || !allWeeks.includes(state.filters.week_from)) {
+      state.filters.week_from = allWeeks.length >= 2 ? allWeeks[allWeeks.length - 2] : allWeeks[0];
+    }
+    if (!state.filters.week_to || !allWeeks.includes(state.filters.week_to)) {
+      state.filters.week_to = allWeeks[allWeeks.length - 1];
+    }
+  }
+
   function getVisibleWeeks() {
     const allWeeks = state.payload?.weeks || [];
     if (allWeeks.length === 0) return [];
 
-    let fromWk = state.filters.week_from;
-    let toWk = state.filters.week_to;
+    syncDefaultWeekFilters();
 
-    // Default to the latest two weeks if not explicitly selected
-    if (!fromWk || !toWk) {
-      if (allWeeks.length >= 2) {
-        fromWk = fromWk || allWeeks[allWeeks.length - 2];
-        toWk = toWk || allWeeks[allWeeks.length - 1];
-      } else {
-        fromWk = fromWk || allWeeks[0];
-        toWk = toWk || allWeeks[0];
-      }
+    let fromIdx = allWeeks.indexOf(state.filters.week_from);
+    let toIdx = allWeeks.indexOf(state.filters.week_to);
+
+    if (fromIdx === -1) fromIdx = allWeeks.length >= 2 ? allWeeks.length - 2 : 0;
+    if (toIdx === -1) toIdx = allWeeks.length - 1;
+
+    if (fromIdx > toIdx) {
+      const tmp = fromIdx;
+      fromIdx = toIdx;
+      toIdx = tmp;
     }
 
-    const fromIdx = allWeeks.indexOf(fromWk);
-    const toIdx = allWeeks.indexOf(toWk);
-
-    if (fromIdx !== -1 && toIdx !== -1 && fromIdx <= toIdx) {
-      return allWeeks.slice(fromIdx, toIdx + 1);
-    }
-
-    if (fromIdx !== -1 && toIdx !== -1 && fromIdx > toIdx) {
-      // If week_from > week_to, swap them gracefully
-      return allWeeks.slice(toIdx, fromIdx + 1);
-    }
-
-    return allWeeks.slice(Math.max(0, allWeeks.length - 2));
+    return allWeeks.slice(fromIdx, toIdx + 1);
   }
 
   function getFilteredSourceRecords(ignoreKey = "") {
@@ -446,9 +446,10 @@
   }
 
   function syncFilterLabels() {
+    syncDefaultWeekFilters();
     const allWeeks = state.payload?.weeks || [];
-    const defaultFrom = allWeeks.length >= 2 ? allWeeks[allWeeks.length - 2] : (allWeeks[0] || "Week From");
-    const defaultTo = allWeeks.length >= 1 ? allWeeks[allWeeks.length - 1] : "Week To";
+    const defaultFrom = state.filters.week_from || (allWeeks.length >= 2 ? allWeeks[allWeeks.length - 2] : (allWeeks[0] || "Week From"));
+    const defaultTo = state.filters.week_to || (allWeeks.length >= 1 ? allWeeks[allWeeks.length - 1] : "Week To");
 
     const placeholders = {
       band: "All Bands",
@@ -471,8 +472,8 @@
 
   function bindControls() {
     const allWeeks = state.payload?.weeks || [];
-    const defaultFrom = allWeeks.length >= 2 ? allWeeks[allWeeks.length - 2] : (allWeeks[0] || "Week From");
-    const defaultTo = allWeeks.length >= 1 ? allWeeks[allWeeks.length - 1] : "Week To";
+    const defaultFrom = state.filters.week_from || (allWeeks.length >= 2 ? allWeeks[allWeeks.length - 2] : (allWeeks[0] || "Week From"));
+    const defaultTo = state.filters.week_to || (allWeeks.length >= 1 ? allWeeks[allWeeks.length - 1] : "Week To");
 
     const placeholders = {
       band: "All Bands",
@@ -506,7 +507,6 @@
 
     if (resetButton) {
       resetButton.addEventListener("click", () => {
-        const weeks = state.payload?.weeks || [];
         state.filters = {
           band: [],
           market: [],
@@ -517,10 +517,11 @@
           feed: [],
           mso: [],
           channel_type: "landing_1",
-          week_from: weeks.length >= 2 ? weeks[weeks.length - 2] : (weeks[0] || ""),
-          week_to: weeks.length >= 1 ? weeks[weeks.length - 1] : "",
+          week_from: "",
+          week_to: "",
           search: "",
         };
+        syncDefaultWeekFilters();
         if (searchInput) searchInput.value = "";
         state.page = 1;
         render();
@@ -572,28 +573,16 @@
       state.payload = state.initial;
     }
 
-    const weeks = state.payload?.weeks || [];
-    if (weeks.length >= 2 && !state.filters.week_from && !state.filters.week_to) {
-      state.filters.week_from = weeks[weeks.length - 2];
-      state.filters.week_to = weeks[weeks.length - 1];
-    } else if (weeks.length === 1 && !state.filters.week_from && !state.filters.week_to) {
-      state.filters.week_from = weeks[0];
-      state.filters.week_to = weeks[0];
-    }
-
     bindControls();
     if (state.payload) {
+      syncDefaultWeekFilters();
       render();
     }
   }
 
   window.initLandingTrackerDashboard = function (data) {
     if (data) state.payload = data;
-    const weeks = state.payload?.weeks || [];
-    if (weeks.length >= 2 && !state.filters.week_from && !state.filters.week_to) {
-      state.filters.week_from = weeks[weeks.length - 2];
-      state.filters.week_to = weeks[weeks.length - 1];
-    }
+    syncDefaultWeekFilters();
     render();
   };
 

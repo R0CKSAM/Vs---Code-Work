@@ -2738,143 +2738,318 @@ body.ots-fullscreen-active {
   text-decoration: underline;
 }
 
-/* Landing Channel Change Tracker Styles */
+/* ═══════════════════════════════════════════════════════════
+   Landing Channel Change Tracker — Enterprise Filter Toolbar
+   ═══════════════════════════════════════════════════════════ */
+
+/* Panel container */
 .landing-tracker-panel {
   background: var(--card);
   border: 1px solid var(--line);
   box-shadow: var(--shadow);
   border-radius: 16px;
-  padding: 12px 14px;
+  padding: 14px 16px 12px;
   margin-top: 16px;
 }
 
+/* Fullscreen mode */
 .landing-tracker-fullscreen {
   position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
+  inset: 0 !important;
   z-index: 9999 !important;
   margin: 0 !important;
   border-radius: 0 !important;
-  padding: 14px !important;
+  padding: 14px 16px 12px !important;
   background: #f8fafc !important;
   overflow: auto !important;
+  width: 100vw !important;
+  height: 100vh !important;
 }
 
+/* ── Toolbar container ────────────────────────────────────── */
 .landing-tracker-toolbar {
-  display: flex !important;
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  align-items: flex-end !important;
-  gap: 5px !important;
-  margin-bottom: 10px !important;
-  width: 100% !important;
-  overflow-x: auto !important;
-  padding-bottom: 4px !important;
+  display: grid;
+  grid-template-columns:
+    /* Small: Band, Channel Type, Week From, Week To */
+    minmax(80px, 0.8fr)
+    /* Medium: Market, State, Feed, District */
+    minmax(90px, 1fr)
+    minmax(110px, 1.2fr)
+    minmax(90px, 1fr)
+    minmax(90px, 1fr)
+    minmax(90px, 1fr)
+    minmax(90px, 1fr)
+    /* Large: City, Headend, MSO, Search */
+    minmax(110px, 1.2fr)
+    minmax(110px, 1.2fr)
+    /* Small: Channel Type */
+    minmax(100px, 1fr)
+    /* Small: Week From, Week To */
+    minmax(88px, 0.9fr)
+    minmax(88px, 0.9fr)
+    /* Large: Search */
+    minmax(120px, 1.4fr)
+    /* Actions: Reset + Fullscreen */
+    auto;
+  align-items: end;
+  gap: 8px 10px;
+  margin-bottom: 12px;
+  width: 100%;
 }
 
-.landing-tracker-toolbar .filter-select-field {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 2px !important;
-  flex: 1 1 0px !important;
-  min-width: 76px !important;
-  width: auto !important;
+/* ── Each filter field wrapper ─────────────────────────────── */
+.tracker-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  position: relative;   /* ← critical for dropdown positioning */
 }
 
-.landing-tracker-toolbar .filter-select-field span {
-  font-size: 0.63rem !important;
-  font-weight: 700 !important;
-  color: var(--muted) !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
+/* Field label */
+.tracker-field-label {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
 }
 
-.landing-tracker-toolbar .filter-select-button {
-  width: 100% !important;
-  min-height: 27px !important;
-  padding: 3px 20px 3px 8px !important;
-  font-size: 0.68rem !important;
-  text-align: left !important;
-  text-overflow: ellipsis !important;
-  overflow: hidden !important;
-  white-space: nowrap !important;
-  border-radius: 9999px !important;
-  border: 1px solid #cbd5e1 !important;
-  background: #ffffff !important;
-  position: relative !important;
+/* ── Dropdown button ──────────────────────────────────────── */
+.tracker-select-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 34px;
+  padding: 0 10px 0 10px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.72rem;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
 }
 
-.landing-tracker-toolbar .filter-select-button::after {
-  content: "▼" !important;
-  position: absolute !important;
-  right: 7px !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  font-size: 0.55rem !important;
-  color: var(--muted) !important;
-  pointer-events: none !important;
+.tracker-select-btn:hover {
+  border-color: var(--primary);
+  transform: none;
 }
 
-.landing-tracker-toolbar input {
-  width: 100% !important;
-  min-height: 27px !important;
-  padding: 3px 8px !important;
-  font-size: 0.68rem !important;
-  border-radius: 9999px !important;
-  border: 1px solid #cbd5e1 !important;
-  background: #ffffff !important;
+.tracker-select-btn:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(47, 103, 234, 0.12);
 }
 
+/* Chevron arrow */
+.tracker-select-btn::after {
+  content: "▾";
+  flex-shrink: 0;
+  margin-left: 5px;
+  font-size: 0.65rem;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+/* ── Search input ─────────────────────────────────────────── */
+.tracker-search-input {
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.72rem;
+  color: var(--text);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+  min-height: unset !important;
+}
+
+.tracker-search-input::placeholder {
+  color: #94a3b8;
+}
+
+.tracker-search-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(47, 103, 234, 0.12);
+}
+
+/* ── Action buttons group ─────────────────────────────────── */
 .landing-tracker-actions {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  gap: 4px !important;
-  flex: 0 0 auto !important;
-  align-self: flex-end !important;
-  white-space: nowrap !important;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
-.landing-tracker-actions button {
-  min-height: 27px !important;
-  padding: 4px 10px !important;
-  font-size: 0.68rem !important;
-  border-radius: 9999px !important;
-  white-space: nowrap !important;
+.landing-tracker-actions .ghost-button,
+.landing-tracker-actions .primary-button {
+  height: 34px;
+  padding: 0 14px;
+  font-size: 0.72rem;
+  border-radius: 10px;
+  white-space: nowrap;
+  min-height: unset;
+  line-height: 1;
+  display: flex;
+  align-items: center;
 }
 
+/* ── Dropdown menu popup ──────────────────────────────────── */
+.tracker-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 100%;
+  width: max-content;
+  max-width: 280px;
+  z-index: 9000;   /* ← high z-index, above all other elements */
+  max-height: 260px;
+  overflow: auto;
+  padding: 6px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(15, 23, 42, 0.06);
+}
+
+.tracker-menu[hidden] {
+  display: none !important;
+}
+
+/* ── Menu search box ──────────────────────────────────────── */
+.tracker-menu-search {
+  width: 100%;
+  height: 30px;
+  padding: 0 8px;
+  margin-bottom: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.71rem;
+  color: var(--text);
+  min-height: unset !important;
+}
+
+.tracker-menu-search:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* ── Menu options list ───────────────────────────────────── */
+.tracker-options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Select All / Clear actions */
+.filter-actions-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 4px 6px 6px;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 4px;
+}
+
+.filter-option-action {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 0.71rem;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.filter-option-action:hover {
+  background: #eef3ff;
+  text-decoration: none;
+  transform: none;
+}
+
+/* Checkbox / radio rows */
+.filter-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 8px;
+  border-radius: 7px;
+  font-size: 0.73rem;
+  cursor: pointer;
+  color: var(--text);
+  transition: background 100ms ease;
+  user-select: none;
+}
+
+.filter-checkbox-row:hover {
+  background: #f1f5f9;
+}
+
+.filter-checkbox-row input[type="checkbox"],
+.filter-checkbox-row input[type="radio"] {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  accent-color: var(--primary);
+  border-radius: 4px;
+  border: 1px solid #cbd5e1 !important;
+  min-height: unset !important;
+  padding: 0 !important;
+}
+
+/* ── Table wrap ──────────────────────────────────────────── */
 .landing-tracker-table-wrap {
-  position: relative !important;
-  max-width: 100% !important;
-  max-height: 70vh !important;
-  overflow: auto !important;
-  border: 1px solid var(--line) !important;
-  border-radius: 12px !important;
-  background: #ffffff !important;
+  position: relative;
+  max-width: 100%;
+  max-height: 70vh;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #ffffff;
+  margin-top: 0;
 }
 
+/* ── Data table ───────────────────────────────────────────── */
 .landing-tracker-table {
-  width: max-content !important;
-  min-width: 100% !important;
-  border-collapse: separate !important;
-  border-spacing: 0 !important;
-  font-size: 0.73rem !important;
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.73rem;
 }
 
 .landing-tracker-table th,
 .landing-tracker-table td {
-  padding: 6px 10px !important;
-  border-bottom: 1px solid #e8edf5 !important;
-  border-right: 1px solid #e8edf5 !important;
-  vertical-align: middle !important;
-  white-space: nowrap !important;
+  padding: 6px 10px;
+  border-bottom: 1px solid #e8edf5;
+  border-right: 1px solid #e8edf5;
+  vertical-align: middle;
+  white-space: nowrap;
 }
 
 .landing-tracker-table tbody tr:nth-child(even) {
-  background-color: #fafbfc !important;
+  background-color: #fafbfc;
 }
 
 .landing-tracker-table tbody tr:hover {
@@ -2882,20 +3057,70 @@ body.ots-fullscreen-active {
 }
 
 .landing-tracker-table thead th {
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 10 !important;
-  background: #e8f8ef !important;
-  color: #164e63 !important;
-  font-weight: 800 !important;
-  border-bottom: 2px solid #b7e4c7 !important;
-  font-size: 0.7rem !important;
-  text-transform: uppercase !important;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #e8f8ef;
+  color: #164e63;
+  font-weight: 800;
+  border-bottom: 2px solid #b7e4c7;
+  font-size: 0.7rem;
+  text-transform: uppercase;
 }
 
+/* Week header columns */
+.tracker-week-head {
+  background: #d8f3dc !important;
+  color: #1b4d3e !important;
+  border-left: 2px solid #b7e4c7 !important;
+  min-width: 180px;
+}
+
+/* Changed cell highlight */
 .tracker-cell-changed {
   background-color: #fdeaea !important;
   color: #dc2626 !important;
   font-weight: 800 !important;
 }
+
+/* ── Responsive breakpoints ─────────────────────────────── */
+
+/* Tablet — wrap into 2 rows */
+@media (max-width: 1400px) {
+  .landing-tracker-toolbar {
+    grid-template-columns: repeat(7, minmax(80px, 1fr)) auto;
+  }
+  .landing-tracker-actions {
+    align-items: center;
+  }
+}
+
+/* Smaller tablet — 4 per row */
+@media (max-width: 960px) {
+  .landing-tracker-toolbar {
+    grid-template-columns: repeat(4, minmax(80px, 1fr)) auto;
+  }
+  .landing-tracker-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+}
+
+/* Mobile — full width each */
+@media (max-width: 600px) {
+  .landing-tracker-toolbar {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .landing-tracker-actions {
+    grid-column: 1 / -1;
+    justify-content: stretch;
+  }
+  .landing-tracker-actions .ghost-button,
+  .landing-tracker-actions .primary-button {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
 
