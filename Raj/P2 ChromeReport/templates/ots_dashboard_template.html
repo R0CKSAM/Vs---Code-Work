@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OTS Distribution Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --border: rgba(255, 255, 255, 0.1);
+    }
+    
+    * { box-sizing: border-box; }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Manrope', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .header {
+      padding: 24px 32px;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    
+    .header p {
+      margin: 4px 0 0;
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+    
+    .container {
+      flex: 1;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .chart-card {
+      flex: 1;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    
+    .chart-header {
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .chart-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      margin: 0;
+    }
+    
+    .chart-wrap {
+      flex: 1;
+      position: relative;
+      min-height: 400px;
+    }
+
+    /* Ensure plotly fills the container smoothly */
+    .plotly-graph-div {
+      width: 100% !important;
+      height: 100% !important;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div>
+      <h1>OTS Distribution</h1>
+      <p>Interactive tracking of Opportunity To See across markets</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="chart-card">
+      <div class="chart-header">
+        <h2 class="chart-title">Market: {{MARKET_NAME}}</h2>
+      </div>
+      <div class="chart-wrap">
+        {{PLOTLY_GRAPH}}
+      </div>
+    </div>
+  </main>
+
+</body>
+</html>

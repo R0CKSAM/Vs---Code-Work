@@ -2409,6 +2409,9 @@
       if (compact === "na") {
         return "NA";
       }
+      if (compact.includes("speednews") && compact.includes("indiatv")) {
+        return display;
+      }
       if (compact.includes("news18india")) {
         return "News18 India";
       }

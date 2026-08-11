@@ -1,0 +1,72 @@
+/* Graph View container */
+.ots-graph-wrap {
+  position: relative;
+  width: 100%;
+  height: 600px; /* Fixed height for ECharts */
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  margin-top: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#otsGraphContainer {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+}
+
+.ots-graph-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 10;
+  font-weight: 600;
+  color: var(--primary, #2f67ea);
+}
+
+.ots-graph-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  z-index: 5;
+  font-weight: 500;
+  color: var(--muted, #64748b);
+}
+
+/* View Switcher */
+.ots-view-toggle {
+  display: flex;
+  background: #e2e8f0;
+  padding: 4px;
+  border-radius: 8px;
+  gap: 4px;
+  align-items: center;
+}
+
+.ots-view-toggle button {
+  background: transparent;
+  border: none;
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted, #64748b);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ots-view-toggle button.active {
+  background: #ffffff;
+  color: var(--primary, #2f67ea);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}

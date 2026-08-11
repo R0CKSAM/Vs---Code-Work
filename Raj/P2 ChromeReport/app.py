@@ -1775,6 +1775,16 @@ def read_landing_tracker_script() -> str:
     return path.read_text(encoding="utf-8") if path.exists() else ""
 
 
+def read_plotly_graph_script() -> str:
+    path = BASE_DIR / "static" / "plotly_graph.js"
+    return path.read_text(encoding="utf-8") if path.exists() else ""
+
+
+def read_plotly_graph_style() -> str:
+    path = BASE_DIR / "static" / "plotly_graph.css"
+    return path.read_text(encoding="utf-8") if path.exists() else ""
+
+
 def write_standalone_dashboard(report: dict[str, Any]) -> None:
     OUTPUT_HTML.write_text(create_standalone_dashboard(report), encoding="utf-8")
 
@@ -1788,6 +1798,8 @@ def create_standalone_dashboard(report: dict[str, Any]) -> str:
     comparison_script_text = read_comparison_script()
     landing_script_text = read_landing_script()
     landing_tracker_script_text = read_landing_tracker_script()
+    plotly_script_text = read_plotly_graph_script()
+    plotly_style_text = read_plotly_graph_style()
 
     html = """<!DOCTYPE html>
 <html lang="en">
@@ -1943,6 +1955,10 @@ __STYLE__
       <section class="panel ots-panel">
         <div class="panel-heading ots-heading">
           <div><h2>OTS Comparison</h2></div>
+          <div class="ots-view-toggle">
+            <button id="btnViewTable" class="active" onclick="window.ChromeReportGraph.toggleView('table')">Table View</button>
+            <button id="btnViewGraph" onclick="window.ChromeReportGraph.toggleView('graph')">Graph View</button>
+          </div>
         <div class="table-meta">
           <span id="otsResultCount">0 records</span>
         </div>
@@ -1978,6 +1994,11 @@ __STYLE__
           <thead id="otsTableHead"></thead>
           <tbody id="otsTableBody"></tbody>
         </table>
+      </div>
+      <div id="otsGraphWrap" class="ots-graph-wrap" hidden>
+        <div id="otsGraphLoading" class="ots-graph-loading">Loading Plotly...</div>
+        <div id="otsGraphEmpty" class="ots-graph-empty" hidden></div>
+        <div id="otsGraphContainer"></div>
       </div>
       <div class="pagination-bar ots-pagination-bar">
         <button id="otsPrevPage" class="ghost-button" type="button">Previous</button>
@@ -4069,12 +4090,15 @@ __LANDING_SCRIPT__
   <script>
 __LANDING_TRACKER_SCRIPT__
   </script>
+  <script>
+__PLOTLY_GRAPH_SCRIPT__
+  </script>
 </body>
 </html>
 """
 
     return (
-        html.replace("__STYLE__", style_text)
+        html.replace("__STYLE__", style_text + "\n" + plotly_style_text)
         .replace("__DEFAULT_CHANNEL_REPORTS__", default_channel_reports_js)
         .replace("__NBHD_BENCHMARK_SCRIPT__", nbhd_benchmark_script_text)
         .replace("__COMPARISON_SCRIPT__", comparison_script_text)
@@ -4082,6 +4106,7 @@ __LANDING_TRACKER_SCRIPT__
         .replace("__OTS_SCRIPT__", ots_script_text)
         .replace("__LANDING_SCRIPT__", landing_script_text)
         .replace("__LANDING_TRACKER_SCRIPT__", landing_tracker_script_text)
+        .replace("__PLOTLY_GRAPH_SCRIPT__", plotly_script_text)
     )
 
 
