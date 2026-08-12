@@ -1527,6 +1527,110 @@ body.nbhd-fullscreen-active {
   margin-top: 10px;
 }
 
+.nbhd-comparison-report-actions {
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.nbhd-position-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.nbhd-position-kpi-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 12px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+}
+
+.nbhd-position-kpi-card span {
+  display: block;
+  min-height: 32px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.nbhd-position-kpi-card strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--text);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.nbhd-position-kpi-card small {
+  display: block;
+  margin-top: 5px;
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.nbhd-position-section-title {
+  margin: 4px 0 0;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.nbhd-comparison-report-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.nbhd-comparison-report-table th,
+.nbhd-comparison-report-table td {
+  padding: 8px 10px;
+  border-right: 1px solid #e4ebf5;
+  border-bottom: 1px solid #e4ebf5;
+  text-align: left;
+  font-size: 0.74rem;
+}
+
+.nbhd-comparison-report-table th {
+  background: #fbfcff;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.nbhd-comparison-report-table th:last-child,
+.nbhd-comparison-report-table td:last-child {
+  border-right: 0;
+}
+
+.nbhd-comparison-report-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.nbhd-comparison-report-total {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fbfcff;
+  padding: 10px 12px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+@media (max-width: 900px) {
+  .nbhd-position-kpi-grid {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .nbhd-position-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .nbhd-report-group {
   border: 1px solid var(--line);
   border-radius: 16px;
@@ -3122,5 +3226,3 @@ body.ots-fullscreen-active {
     justify-content: center;
   }
 }
-
-

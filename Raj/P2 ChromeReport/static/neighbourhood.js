@@ -25,6 +25,9 @@
       week_from: "",
       week_to: "",
     },
+    comparisonReport: {
+      open: false,
+    },
     reportCache: {
       context: null,
       lastPayload: null,
@@ -49,6 +52,7 @@
     { label: "REPUBLIC BHARAT", key: "REPUBLICBHARAT" },
   ];
   const DEFAULT_REPORT_CHANNEL_KEYS = DEFAULT_REPORT_CHANNELS.map((channel) => channel.key);
+  const INDIA_TV_CHANNEL_KEY = "INDIATV";
 
   function getSingleSelectControl(id) {
     return {
@@ -73,12 +77,20 @@
   const weekToFilter = getSingleSelectControl("nbhdWeekToFilter");
   const changeFilter = getSingleSelectControl("nbhdChangeFilter");
   const reportToggleButton = document.getElementById("nbhdReportToggleButton");
+  const comparisonReportToggleButton = document.getElementById("nbhdComparisonReportToggleButton");
   const reportLauncher = document.getElementById("nbhdReportLauncher");
   const reportPanel = document.getElementById("nbhdReportPanel");
   const reportMeta = document.getElementById("nbhdReportMeta");
   const reportCount = document.getElementById("nbhdReportCount");
   const reportStatus = document.getElementById("nbhdReportStatusMessage");
   const reportContent = document.getElementById("nbhdReportContent");
+  const comparisonReportPanel = document.getElementById("nbhdComparisonReportPanel");
+  const comparisonReportMeta = document.getElementById("nbhdComparisonReportMeta");
+  const comparisonReportCount = document.getElementById("nbhdComparisonReportCount");
+  const comparisonReportStatus = document.getElementById("nbhdComparisonReportStatusMessage");
+  const comparisonReportContent = document.getElementById("nbhdComparisonReportContent");
+  const comparisonReportDownloadButton = document.getElementById("nbhdComparisonReportDownloadButton");
+  const comparisonReportHideButton = document.getElementById("nbhdComparisonReportHideButton");
   const reportHeadendFilter = getSingleSelectControl("nbhdReportHeadendFilter");
   const reportChannelFilter = getSingleSelectControl("nbhdReportChannelFilter");
   const reportWeekFromFilter = getSingleSelectControl("nbhdReportWeekFromFilter");
@@ -679,6 +691,7 @@
     resultCount.textContent = `${new Intl.NumberFormat().format(state.payload.table.total_count)} rows`;
     renderTable(state.payload);
     renderReportPanel();
+    renderComparisonReportPanel();
   }
 
   function normalizeChannelKey(value) {
@@ -1011,15 +1024,19 @@
 
   function buildHeadendMaps(records, week) {
     const byPosition = new Map();
+    const genresByPosition = new Map();
     const channelPositions = new Map();
+    const frequenciesByPosition = new Map();
     records.forEach((record) => {
       const channel = normalizeText(record.channels?.[week]);
       const position = Number(record.position);
       if (!channel || Number.isNaN(position)) return;
       byPosition.set(position, channel);
+      genresByPosition.set(position, normalizeText(record.genres?.[week]));
+      frequenciesByPosition.set(position, record.frequencies?.[week]);
       channelPositions.set(normalizeChannelKey(channel), position);
     });
-    return { byPosition, channelPositions };
+    return { byPosition, genresByPosition, channelPositions, frequenciesByPosition };
   }
 
   function neighborAt(mapState, position, offset) {
@@ -1043,8 +1060,21 @@
       reportPanel.style.display = open ? "block" : "none";
     }
     if (reportLauncher) {
-      reportLauncher.hidden = open;
-      reportLauncher.style.display = open ? "none" : "flex";
+      const hideLauncher = open || state.comparisonReport.open;
+      reportLauncher.hidden = hideLauncher;
+      reportLauncher.style.display = hideLauncher ? "none" : "flex";
+    }
+  }
+  function setComparisonReportVisibility(open) {
+    state.comparisonReport.open = open;
+    if (comparisonReportPanel) {
+      comparisonReportPanel.hidden = !open;
+      comparisonReportPanel.style.display = open ? "block" : "none";
+    }
+    if (reportLauncher) {
+      const hideLauncher = open || state.report.open;
+      reportLauncher.hidden = hideLauncher;
+      reportLauncher.style.display = hideLauncher ? "none" : "flex";
     }
   }
   function showReportError(message) {
@@ -1058,6 +1088,14 @@
   function closeReportPanel() {
     state.report.open = false;
     setReportVisibility(false);
+    scheduleRender(state.payload);
+    requestAnimationFrame(() => {
+      reportLauncher?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }
+  function closeComparisonReportPanel() {
+    state.comparisonReport.open = false;
+    setComparisonReportVisibility(false);
     scheduleRender(state.payload);
     requestAnimationFrame(() => {
       reportLauncher?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -1515,6 +1553,462 @@
     return result;
   }
 
+  function getComparisonSourcePayload() {
+    return normalizePayloadShape(window.__NBHD_STANDALONE_DATA__ || state.payload || { weeks: [] });
+  }
+
+  function getFrequencySourcePayload() {
+    const bundle = window.__CHROME_REPORT_DATA__ || {};
+    const frequency = bundle.frequency || {};
+    return {
+      weeks: Array.isArray(frequency.weeks) ? frequency.weeks.filter((value) => normalizeText(value) !== "") : [],
+      records: Array.isArray(frequency.records) ? frequency.records : [],
+    };
+  }
+
+  function getNeighbourhoodHeadendSet() {
+    const payload = getComparisonSourcePayload();
+    const records = Array.isArray(payload.table?.records) ? payload.table.records : [];
+    return new Set(records.map((record) => normalizeText(record.head_end)).filter(Boolean));
+  }
+
+  function buildFrequencyHeadendMaps(records, week) {
+    const byPosition = new Map();
+    const genresByPosition = new Map();
+    const channelPositions = new Map();
+    const positions = [];
+    records.forEach((record) => {
+      const channel = normalizeText(record.channel_name);
+      const position = Number(record.frequencies?.[week]);
+      if (!channel || Number.isNaN(position)) return;
+      byPosition.set(position, channel);
+      genresByPosition.set(position, normalizeText(record.genre));
+      channelPositions.set(normalizeChannelKey(channel), position);
+      positions.push(position);
+    });
+    positions.sort((left, right) => left - right);
+    return { byPosition, genresByPosition, channelPositions, positions };
+  }
+
+  function getNearestPosition(mapState, position, direction) {
+    const positions = Array.isArray(mapState?.positions) ? mapState.positions : [];
+    if (!positions.length || Number.isNaN(Number(position))) return null;
+    if (direction < 0) {
+      for (let index = positions.length - 1; index >= 0; index -= 1) {
+        if (positions[index] < position) return positions[index];
+      }
+      return null;
+    }
+    for (let index = 0; index < positions.length; index += 1) {
+      if (positions[index] > position) return positions[index];
+    }
+    return null;
+  }
+
+  function getAdjacentChannel(mapState, position, direction) {
+    const adjacentPosition = getNearestPosition(mapState, position, direction);
+    if (adjacentPosition === null || adjacentPosition === undefined) return "";
+    return normalizeText(mapState.byPosition.get(adjacentPosition));
+  }
+
+  function getAdjacentGenre(mapState, position, direction) {
+    const adjacentPosition = getNearestPosition(mapState, position, direction);
+    if (adjacentPosition === null || adjacentPosition === undefined) return "";
+    return normalizeText(mapState.genresByPosition.get(adjacentPosition));
+  }
+
+  function normalizeGenreFamily(value) {
+    const genre = normalizeText(value);
+    if (!genre || genre.toUpperCase() === "NA" || genre.toUpperCase() === "BLANK") return "Missing";
+    if (genre.toUpperCase().includes("NEWS")) return "News";
+    return genre;
+  }
+
+  function isNewsGenre(value) {
+    return normalizeGenreFamily(value) === "News";
+  }
+
+  function formatPercent(value, total) {
+    if (!total) return "0.0%";
+    return `${((value / total) * 100).toFixed(1)}%`;
+  }
+
+  function comparisonMetric(label, count, total) {
+    return {
+      label,
+      count,
+      percent: formatPercent(count, total),
+    };
+  }
+
+  function isMissingGenreValue(value) {
+    const family = normalizeGenreFamily(value);
+    return family === "Missing";
+  }
+
+  function classifyIndiaTvPosition(indiaGenre, aboveChannel, aboveGenre, belowChannel, belowGenre) {
+    const hasAbove = normalizeText(aboveChannel) !== "";
+    const hasBelow = normalizeText(belowChannel) !== "";
+    const indiaIsNews = isNewsGenre(indiaGenre);
+    const aboveIsNews = isNewsGenre(aboveGenre);
+    const belowIsNews = isNewsGenre(belowGenre);
+    const aboveFamily = normalizeGenreFamily(aboveGenre);
+    const belowFamily = normalizeGenreFamily(belowGenre);
+
+    if (hasAbove && hasBelow && aboveIsNews && belowIsNews) {
+      return "Surrounded by News";
+    }
+    if (hasAbove && hasBelow && aboveFamily !== belowFamily) {
+      return "Between Different Genres";
+    }
+    if (indiaIsNews && hasAbove && !aboveIsNews) {
+      return "India TV Starts News";
+    }
+    return "Other";
+  }
+
+  function buildIndiaTvGenreComparisonReport() {
+    const payload = getComparisonSourcePayload();
+    const weeks = (payload.weeks || []).filter((value) => normalizeText(value) !== "");
+    const currentWeek = weeks[weeks.length - 1] || "";
+    const records = getAllSourceRecords();
+    const groupedRecords = new Map();
+
+    records.forEach((record) => {
+      const market = normalizeText(record.market);
+      const city = normalizeText(record.city);
+      const headend = normalizeText(record.head_end);
+      if (!market || !city || !headend) return;
+      const groupKeyValue = `${market}||${city}||${headend}`;
+      if (!groupedRecords.has(groupKeyValue)) {
+        groupedRecords.set(groupKeyValue, { market, city, headend, records: [] });
+      }
+      groupedRecords.get(groupKeyValue).records.push(record);
+    });
+
+    const detailedRows = [];
+    groupedRecords.forEach((group) => {
+      const currentMap = buildHeadendMaps(group.records, currentWeek);
+      const indiaTvPosition = currentMap.channelPositions.get(INDIA_TV_CHANNEL_KEY);
+
+      if (indiaTvPosition === undefined) {
+        detailedRows.push({
+          market: group.market,
+          city: group.city,
+          headend: group.headend,
+          indiaPosition: "",
+          indiaFrequency: "",
+          channelAbove: "",
+          genreAbove: "",
+          indiaGenre: "",
+          channelBelow: "",
+          genreBelow: "",
+          classification: "Other",
+          indiaTvMissing: true,
+        });
+        return;
+      }
+
+      const indiaGenre = normalizeText(currentMap.genresByPosition.get(indiaTvPosition));
+      const channelAbove = normalizeText(currentMap.byPosition.get(indiaTvPosition - 1));
+      const genreAbove = normalizeText(currentMap.genresByPosition.get(indiaTvPosition - 1));
+      const channelBelow = normalizeText(currentMap.byPosition.get(indiaTvPosition + 1));
+      const genreBelow = normalizeText(currentMap.genresByPosition.get(indiaTvPosition + 1));
+
+      detailedRows.push({
+        market: group.market,
+        city: group.city,
+        headend: group.headend,
+        indiaPosition: indiaTvPosition,
+        indiaFrequency: currentMap.frequenciesByPosition.get(indiaTvPosition),
+        channelAbove,
+        genreAbove,
+        indiaGenre,
+        channelBelow,
+        genreBelow,
+        classification: classifyIndiaTvPosition(indiaGenre, channelAbove, genreAbove, channelBelow, genreBelow),
+        indiaTvMissing: false,
+      });
+    });
+
+    const rows = detailedRows.slice();
+
+    rows.sort((left, right) => (
+      left.market.localeCompare(right.market, undefined, { numeric: true })
+      || left.city.localeCompare(right.city, undefined, { numeric: true })
+      || left.headend.localeCompare(right.headend, undefined, { numeric: true })
+    ));
+
+    const totalHeadends = rows.length;
+    const betweenDifferentGenresCount = rows.filter((row) => row.classification === "Between Different Genres").length;
+    const otherCount = rows.filter((row) => row.classification === "Other").length;
+    const filteredRows = rows.filter((row) => (
+      (row.classification === "Between Different Genres" || row.classification === "Other")
+      && normalizeGenreFamily(row.genreBelow) !== "News"
+    ));
+    const uniqueCombinations = new Map();
+    filteredRows.forEach((row) => {
+      const key = [
+        normalizeText(row.headend),
+        normalizeText(row.indiaFrequency),
+        normalizeText(row.channelAbove),
+        normalizeText(row.genreAbove),
+        normalizeText(row.channelBelow),
+        normalizeText(row.genreBelow),
+        normalizeText(row.classification),
+      ].join("||");
+      if (!uniqueCombinations.has(key)) {
+        uniqueCombinations.set(key, {
+          headend: row.headend,
+          indiaPosition: row.indiaPosition,
+          indiaFrequency: row.indiaFrequency,
+          channelAbove: row.channelAbove,
+          genreAbove: row.genreAbove,
+          channelBelow: row.channelBelow,
+          genreBelow: row.genreBelow,
+          classification: row.classification,
+          locations: [],
+        });
+      }
+      uniqueCombinations.get(key).locations.push(`${row.market} | ${row.city}`);
+    });
+    const uniqueRows = Array.from(uniqueCombinations.values()).sort((left, right) => (
+      left.classification.localeCompare(right.classification, undefined, { numeric: true })
+      || left.headend.localeCompare(right.headend, undefined, { numeric: true })
+      || String(left.indiaFrequency || "").localeCompare(String(right.indiaFrequency || ""), undefined, { numeric: true })
+      || left.channelAbove.localeCompare(right.channelAbove, undefined, { numeric: true })
+      || left.channelBelow.localeCompare(right.channelBelow, undefined, { numeric: true })
+    ));
+    const startingRows = rows.filter((row) => (
+      normalizeText(row.genreBelow).toUpperCase() === "HINDI NEWS"
+      && normalizeText(row.genreAbove).toUpperCase() !== "HINDI NEWS"
+    ));
+    const uniqueStartingCombinations = new Map();
+    startingRows.forEach((row) => {
+      const key = [
+        normalizeText(row.headend),
+        normalizeText(row.indiaFrequency),
+        normalizeText(row.channelAbove),
+        normalizeText(row.genreAbove),
+        normalizeText(row.channelBelow),
+        normalizeText(row.genreBelow),
+        normalizeText(row.classification),
+      ].join("||");
+      if (!uniqueStartingCombinations.has(key)) {
+        uniqueStartingCombinations.set(key, {
+          headend: row.headend,
+          indiaPosition: row.indiaPosition,
+          indiaFrequency: row.indiaFrequency,
+          channelAbove: row.channelAbove,
+          genreAbove: row.genreAbove,
+          channelBelow: row.channelBelow,
+          genreBelow: row.genreBelow,
+          classification: row.classification,
+          locations: [],
+        });
+      }
+      uniqueStartingCombinations.get(key).locations.push(`${row.market} | ${row.city}`);
+    });
+    const uniqueStartingRows = Array.from(uniqueStartingCombinations.values()).sort((left, right) => (
+      left.headend.localeCompare(right.headend, undefined, { numeric: true })
+      || String(left.indiaFrequency || "").localeCompare(String(right.indiaFrequency || ""), undefined, { numeric: true })
+      || left.channelAbove.localeCompare(right.channelAbove, undefined, { numeric: true })
+      || left.channelBelow.localeCompare(right.channelBelow, undefined, { numeric: true })
+    ));
+    const uniqueHeadendCount = new Set(uniqueRows.map((row) => normalizeText(row.headend)).filter(Boolean)).size;
+    const uniqueLcnCount = new Set(uniqueRows.map((row) => normalizeText(row.indiaFrequency)).filter(Boolean)).size;
+    const filteredBetweenDifferentGenresCount = uniqueRows.filter((row) => row.classification === "Between Different Genres").length;
+    const filteredOtherCount = uniqueRows.filter((row) => row.classification === "Other").length;
+
+    return {
+      week: currentWeek,
+      metrics: [
+        comparisonMetric("Unique Combinations", uniqueRows.length, totalHeadends),
+        comparisonMetric("Unique Headends", uniqueHeadendCount, totalHeadends),
+        comparisonMetric("Unique India TV LCNs", uniqueLcnCount, totalHeadends),
+        comparisonMetric("India TV Between Different Genres", filteredBetweenDifferentGenresCount, totalHeadends),
+        comparisonMetric("Other", filteredOtherCount, totalHeadends),
+      ],
+      rows: uniqueRows,
+      totalHeadends,
+      betweenDifferentGenresCount: filteredBetweenDifferentGenresCount,
+      otherCount: filteredOtherCount,
+      flaggedHeadends: uniqueRows.length,
+      uniqueHeadendCount,
+      uniqueLcnCount,
+      startingRows: uniqueStartingRows,
+      startingCount: uniqueStartingRows.length,
+    };
+  }
+
+  function exportComparisonReportExcel() {
+    const reportData = buildIndiaTvGenreComparisonReport();
+    if (!reportData.rows.length) return;
+    const excelCell = window.__excelCell || ((value, style = "cell", options = {}) => ({ value, style, ...options }));
+    const blankRow = window.__blankExcelRow || ((count = 1) => Array.from({ length: Math.max(1, count) }, () => excelCell("", "cell")));
+    const primaryRows = [
+      [excelCell(`India TV Genre Positioning Analysis - ${reportData.week || "Latest"}`, "title", { mergeAcross: 3 })],
+      [excelCell(`Unique combinations: ${reportData.flaggedHeadends} | Unique headends: ${reportData.uniqueHeadendCount} | Unique India TV LCNs: ${reportData.uniqueLcnCount}`, "meta", { mergeAcross: 3 })],
+      blankRow(4),
+      [
+        excelCell("Headend Name", "header"),
+        excelCell("India TV LCN No", "header"),
+        excelCell("Channel Above - Genre", "header"),
+        excelCell("Channel Below - Genre", "header"),
+      ],
+      ...reportData.rows.map((row, index) => {
+        const rowStyle = index % 2 === 0 ? "cell" : "altRow";
+        return [
+          excelCell(row.headend || "", rowStyle),
+          excelCell(row.indiaFrequency ?? "", rowStyle),
+          excelCell(`${row.channelAbove || "NA"} - ${row.genreAbove || "NA"}`, rowStyle),
+          excelCell(`${row.channelBelow || "NA"} - ${row.genreBelow || "NA"}`, rowStyle),
+        ];
+      }),
+    ];
+    const startingSheetRows = [
+      [excelCell(`Starting Channel Cases - ${reportData.week || "Latest"}`, "title", { mergeAcross: 3 })],
+      [excelCell(`Unique combinations: ${reportData.startingCount}`, "meta", { mergeAcross: 3 })],
+      blankRow(4),
+      [
+        excelCell("Headend Name", "header"),
+        excelCell("India TV LCN No", "header"),
+        excelCell("Channel Above - Genre", "header"),
+        excelCell("Channel Below - Genre", "header"),
+      ],
+      ...reportData.startingRows.map((row, index) => {
+        const rowStyle = index % 2 === 0 ? "cell" : "altRow";
+        return [
+          excelCell(row.headend || "", rowStyle),
+          excelCell(row.indiaFrequency ?? "", rowStyle),
+          excelCell(`${row.channelAbove || "NA"} - ${row.genreAbove || "NA"}`, rowStyle),
+          excelCell(`${row.channelBelow || "NA"} - ${row.genreBelow || "NA"}`, rowStyle),
+        ];
+      }),
+    ];
+    window.__downloadExcelWorkbook?.("india_tv_genre_unique_combinations", [
+      {
+        name: "Unique Combinations",
+        rows: primaryRows,
+      },
+      {
+        name: "Starting Channel",
+        rows: startingSheetRows,
+      },
+    ]);
+  }
+
+  function renderComparisonReportPanel() {
+    if (!comparisonReportPanel || !comparisonReportContent) return;
+    setComparisonReportVisibility(state.comparisonReport.open);
+    if (!state.comparisonReport.open) return;
+
+    const reportData = buildIndiaTvGenreComparisonReport();
+    if (comparisonReportMeta) {
+      comparisonReportMeta.textContent = reportData.week
+        ? `Genre positioning analysis for India TV in ${reportData.week}. Showing only Between Different Genres and Other.`
+        : "Genre positioning analysis for India TV.";
+    }
+    if (comparisonReportCount) {
+      comparisonReportCount.textContent = `${reportData.flaggedHeadends} headend${reportData.flaggedHeadends === 1 ? "" : "s"}`;
+    }
+    if (comparisonReportStatus) {
+      comparisonReportStatus.hidden = !reportData.rows.length;
+      comparisonReportStatus.textContent = reportData.rows.length
+        ? `Unique combinations: ${reportData.flaggedHeadends} | Unique headends: ${reportData.uniqueHeadendCount} | Unique India TV LCNs: ${reportData.uniqueLcnCount} | Between Different Genres: ${reportData.betweenDifferentGenresCount} | Other: ${reportData.otherCount}`
+        : "";
+    }
+
+    if (!reportData.rows.length) {
+      comparisonReportContent.innerHTML = '<div class="nbhd-report-empty">No headends are classified as Between Different Genres or Other.</div>';
+      return;
+    }
+
+    const table = document.createElement("table");
+    table.className = "nbhd-comparison-report-table";
+    const thead = document.createElement("thead");
+    const headerRow = document.createElement("tr");
+    [
+      "Headend Name",
+      "India TV LCN No",
+      "Channel Above - Genre",
+      "Channel Below - Genre",
+    ].forEach((label) => {
+      const th = document.createElement("th");
+      th.textContent = label;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+
+    const tbody = document.createElement("tbody");
+    reportData.rows.forEach((row) => {
+      const tr = document.createElement("tr");
+      [
+        row.headend,
+        row.indiaFrequency ?? "NA",
+        `${row.channelAbove || "NA"} - ${row.genreAbove || "NA"}`,
+        `${row.channelBelow || "NA"} - ${row.genreBelow || "NA"}`,
+      ].forEach((value) => {
+        const td = document.createElement("td");
+        td.textContent = value;
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+
+    const detailTitle = document.createElement("h4");
+    detailTitle.className = "nbhd-position-section-title";
+    detailTitle.textContent = "Unique Combination Detail";
+
+    const startingTitle = document.createElement("h4");
+    startingTitle.className = "nbhd-position-section-title";
+    startingTitle.textContent = `Starting Channel Detail (${reportData.startingCount})`;
+
+    const startingTable = document.createElement("table");
+    startingTable.className = "nbhd-comparison-report-table";
+    const startingHead = document.createElement("thead");
+    const startingHeaderRow = document.createElement("tr");
+    [
+      "Headend Name",
+      "India TV LCN No",
+      "Channel Above - Genre",
+      "Channel Below - Genre",
+    ].forEach((label) => {
+      const th = document.createElement("th");
+      th.textContent = label;
+      startingHeaderRow.appendChild(th);
+    });
+    startingHead.appendChild(startingHeaderRow);
+    const startingBody = document.createElement("tbody");
+    if (reportData.startingRows.length) {
+      reportData.startingRows.forEach((row) => {
+        const tr = document.createElement("tr");
+        [
+          row.headend,
+          row.indiaFrequency ?? "NA",
+          `${row.channelAbove || "NA"} - ${row.genreAbove || "NA"}`,
+          `${row.channelBelow || "NA"} - ${row.genreBelow || "NA"}`,
+        ].forEach((value) => {
+          const td = document.createElement("td");
+          td.textContent = value;
+          tr.appendChild(td);
+        });
+        startingBody.appendChild(tr);
+      });
+    } else {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 4;
+      td.textContent = "No starting-channel combinations found.";
+      tr.appendChild(td);
+      startingBody.appendChild(tr);
+    }
+    startingTable.append(startingHead, startingBody);
+
+    table.append(thead, tbody);
+    comparisonReportContent.replaceChildren(detailTitle, table, startingTitle, startingTable);
+  }
+
   function renderReportPanel() {
     if (!reportPanel || !reportContent) return;
     setReportVisibility(state.report.open);
@@ -1745,12 +2239,25 @@
 
   function openReportPanel() {
     state.report.open = true;
+    state.comparisonReport.open = false;
+    setComparisonReportVisibility(false);
     setReportVisibility(true);
     reportContent.replaceChildren();
     renderReportStatus("");
     scheduleRender(state.payload);
     requestAnimationFrame(() => {
       reportPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  function openComparisonReportPanel() {
+    state.comparisonReport.open = true;
+    state.report.open = false;
+    setReportVisibility(false);
+    setComparisonReportVisibility(true);
+    renderComparisonReportPanel();
+    requestAnimationFrame(() => {
+      comparisonReportPanel?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   }
 
@@ -2184,8 +2691,17 @@
   if (reportToggleButton) {
     reportToggleButton.addEventListener("click", openReportPanel);
   }
+  if (comparisonReportToggleButton) {
+    comparisonReportToggleButton.addEventListener("click", openComparisonReportPanel);
+  }
   if (reportHideButton) {
     reportHideButton.addEventListener("click", closeReportPanel);
+  }
+  if (comparisonReportHideButton) {
+    comparisonReportHideButton.addEventListener("click", closeComparisonReportPanel);
+  }
+  if (comparisonReportDownloadButton) {
+    comparisonReportDownloadButton.addEventListener("click", exportComparisonReportExcel);
   }
   if (reportResetButton) {
     reportResetButton.addEventListener("click", resetReportFilters);

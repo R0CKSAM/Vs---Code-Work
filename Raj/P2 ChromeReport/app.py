@@ -1925,7 +1925,25 @@ __STYLE__
         </div>
         <div id="nbhdReportLauncher" class="nbhd-report-launcher">
           <button id="nbhdReportToggleButton" class="primary-button" type="button">Neighbour Change Report</button>
+          <button id="nbhdComparisonReportToggleButton" class="ghost-button" type="button">India TV Genre Analysis</button>
         </div>
+        <section id="nbhdComparisonReportPanel" class="panel nbhd-report-panel" hidden>
+          <div class="panel-heading nbhd-report-heading">
+            <div>
+              <h3>India TV Genre Positioning Analysis</h3>
+              <p id="nbhdComparisonReportMeta" class="panel-subtitle">Automated analysis of India TV's position against the genres immediately above and below it.</p>
+            </div>
+            <div class="table-meta">
+              <span id="nbhdComparisonReportCount">0 headends</span>
+            </div>
+          </div>
+          <div class="action-row nbhd-comparison-report-actions">
+            <button id="nbhdComparisonReportDownloadButton" class="ghost-button" type="button">Download Report</button>
+            <button id="nbhdComparisonReportHideButton" class="primary-button" type="button">Hide</button>
+          </div>
+          <div id="nbhdComparisonReportStatusMessage" class="status-message" hidden></div>
+          <div id="nbhdComparisonReportContent" class="nbhd-report-stack"></div>
+        </section>
         <section id="nbhdReportPanel" class="panel nbhd-report-panel" hidden>
           <div class="panel-heading nbhd-report-heading">
             <div>
