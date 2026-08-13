@@ -442,6 +442,10 @@ def test_parse_nct_csv_validates_and_normalizes_story_segments(
             "assist_used": ["FOOTAGE"],
             "split": ["NORMAL"],
             "Story_Format": ["REPORT"],
+            "Start Half Hour": ["06:00:00"],
+            "Dur in Mins": [1 / 6],
+            "AMA": [1234],
+            "UR": [5678],
         }
     )
     preamble = "\n".join(
@@ -475,6 +479,57 @@ def test_parse_nct_csv_validates_and_normalizes_story_segments(
     assert metadata["missing_selected_channels"] == ["ABP NEWS"]
 
 
+def test_parse_nct_excel_accepts_split_data_genre_aliases(tmp_path: Path) -> None:
+    source = tmp_path / "NCT Split Data.xlsx"
+    pd.DataFrame(
+        {
+            "channel": ["INDIA TV"],
+            "Story": ["TEST STORY"],
+            "Sub_Story": ["TEST SUB-STORY"],
+            "content_type_1": ["POLITICS"],
+            "content_type_2": ["NO NEWS CONTENT"],
+            "pgm_name": ["TEST PROGRAM"],
+            "Pgm_Start_Time": ["06:00:00"],
+            "Pgm_End_Time": ["06:30:00"],
+            "clip_start_time": ["06:01:00"],
+            "clip_end_time": ["06:01:10"],
+            "pgm_date": ["01-08-2026"],
+            "week": [""],
+            "geography": ["INDIAN"],
+            "title": ["."],
+            "grap_type": ["Duration"],
+            "duration": ["00:00:10"],
+            "duration_seconds": [10],
+            "personality": [""],
+            "guest": [""],
+            "anchor": ["TEST ANCHOR"],
+            "reporter": [""],
+            "logistics": ["IN STUDIO"],
+            "telecast_format": ["HEADLINES"],
+            "assist_used": ["FOOTAGE"],
+            "split": ["NORMAL"],
+            "Story_Format": ["REPORT"],
+            "Start Half Hour": ["06:00:00"],
+            "Dur in Mins": [1 / 6],
+            "AMA": [1234],
+            "UR": [5678],
+        }
+    ).to_excel(source, index=False)
+
+    segments, metadata = asrun.parse_nct_csv(source, source.name)
+
+    assert len(segments) == 1
+    assert segments.loc[0, "primary_genre"] == "POLITICS"
+    assert segments.loc[0, "secondary_genre"] == "NO NEWS CONTENT"
+    assert segments.loc[0, "source_start_half_hour"] == "06:00:00"
+    assert float(segments.loc[0, "source_duration_minutes"]) == pytest.approx(1 / 6)
+    assert segments.loc[0, "source_ama"] == "1234"
+    assert segments.loc[0, "source_ur"] == "5678"
+    assert metadata["declared_start"] == "2026-08-01"
+    assert metadata["declared_end"] == "2026-08-01"
+    assert metadata["selected_channels"] == ["INDIA TV"]
+
+
 def test_nct_missing_channels_ignores_display_case_differences() -> None:
     """NCT metadata casing must not create a false missing-channel warning."""
     missing = asrun.missing_channel_labels(
@@ -483,6 +538,24 @@ def test_nct_missing_channels_ignores_display_case_differences() -> None:
     )
 
     assert missing == ["NDTV INDIA"]
+
+
+def test_minute_counts_by_date_exposes_partial_days() -> None:
+    frame = pd.DataFrame(
+        {
+            "minute_ist": [
+                "2026-08-07 00:00:00",
+                "2026-08-07 00:01:00",
+                "2026-08-07 00:01:00",
+                "2026-08-08 00:00:00",
+            ]
+        }
+    )
+
+    assert asrun.minute_counts_by_date(frame) == {
+        "2026-08-07": 2,
+        "2026-08-08": 1,
+    }
 
 
 def test_render_dashboard_wires_complete_reset_and_fatal_error(
@@ -558,6 +631,12 @@ def test_render_dashboard_groups_sections_into_three_pages(
     assert "$('dashboardPageAudience').append(" in html
     assert "$('dashboardPageDelivery').append(" in html
     assert "$('dashboardPageContent').append(nodes.nct,nodes.scope)" in html
+    assert "nodes.combined.id='allDeliveredEventsPanel'" in html
+    assert "nodes.fctAudience.id='allFctMonitoredEventsPanel'" in html
+    assert "nodes.fct.id='fctSourceEventsPanel'" in html
+    assert "function placeSharedContextSections(page)" not in html
+    assert "content.insertBefore(combined,scope)" not in html
+    assert "content.insertBefore(fctAudience,scope)" not in html
     assert (
         "ensureScopePanel();ensureGlobalAudienceFilters();"
         "ensureDashboardPages();initializeNctLazyLoad()"
@@ -652,6 +731,29 @@ def test_write_nct_payload_script_partitions_rows_by_date(tmp_path: Path) -> Non
         )
         rows.append(row)
     target = tmp_path / "nct_story_data.js"
+    viewer_minute = pd.DataFrame(
+        [
+            {
+                "log_date": "2026-07-28",
+                "minute_ist": pd.Timestamp("2026-07-28 10:00:00"),
+                "source": "fast",
+                "platform_name": "Samsung TV Plus",
+                "channel_name": "India TV",
+                "distinct_cliips": 125,
+            }
+        ]
+    )
+    amagi_minute = pd.DataFrame(
+        [
+            {
+                "log_date": "2026-07-28",
+                "minute_ist": pd.Timestamp("2026-07-28 10:00:00"),
+                "platform_name": "Samsung TV Plus",
+                "channel_name": "India TV",
+                "concurrent_viewers": 75,
+            }
+        ]
+    )
 
     asrun.write_nct_payload_script(
         target,
@@ -660,6 +762,8 @@ def test_write_nct_payload_script_partitions_rows_by_date(tmp_path: Path) -> Non
             "reason": "",
             "segments": pd.DataFrame(rows, columns=columns),
         },
+        viewer_minute,
+        amagi_minute,
     )
 
     manifest_text = target.read_text(encoding="utf-8")
@@ -667,12 +771,32 @@ def test_write_nct_payload_script_partitions_rows_by_date(tmp_path: Path) -> Non
     assert manifest["partitioned"] is True
     assert manifest["segment_count"] == 2
     assert manifest["segments"] == []
+    assert manifest["audience_schema"]["viewer"][0] == "minute_ist"
     assert sorted(manifest["dates"]) == ["2026-07-28", "2026-07-29"]
     for date_value, relative_path in manifest["dates"].items():
         chunk_text = (tmp_path / relative_path).read_text(encoding="utf-8")
         marker = f'window.__NCT_STORY_PARTITIONS__["{date_value}"]='
-        chunk_rows = json.loads(chunk_text.split(marker, 1)[1].rstrip(";"))
+        story_json = chunk_text.split(marker, 1)[1].split(
+            ";window.__NCT_AUDIENCE_PARTITIONS__", 1
+        )[0]
+        chunk_rows = json.loads(story_json)
         assert [row["log_date"] for row in chunk_rows] == [date_value]
+        audience_marker = f'window.__NCT_AUDIENCE_PARTITIONS__["{date_value}"]='
+        audience = json.loads(chunk_text.split(audience_marker, 1)[1].rstrip(";"))
+        if date_value == "2026-07-28":
+            assert audience["viewer"][0][1:] == [
+                "fast",
+                "Samsung TV Plus",
+                "India TV",
+                125,
+            ]
+            assert audience["amagi"][0][1:] == [
+                "Samsung TV Plus",
+                "India TV",
+                75,
+            ]
+        else:
+            assert audience == {"viewer": [], "amagi": []}
 
 
 def test_render_dashboard_keeps_fct_multiselects_independent(
@@ -832,6 +956,31 @@ def test_render_dashboard_adds_interval_weighted_nct_story_performance(
     assert "const NCT_SEGMENT_BATCH=200;" in html
     assert 'id="nctSegmentExpand"' in html
     assert 'id="nctSegmentTable"' in html
+    assert 'id="exportNctAudienceCsv"' in html
+    assert 'id="exportNctAudienceBreakdownCsv"' in html
+    assert "Export platform/channel CSV" in html
+    assert "exportNctCsv').addEventListener('click',()=>runWithDashboardSources(" in html
+    assert "'Selected FAST Platforms','Selected FAST Channels','Selected STREAM Platforms'" in html
+    assert "'FAST Viewer-Minutes','STREAM Viewer-Minutes','AMAGI Viewer-Minutes'" in html
+    assert "integer(metric.youtube.total),integer(metric.combined.total)" in html
+    assert "'Start Half Hour','Dur in Mins','AMA','UR','NCT Date From','NCT Date To'" in html
+    assert "NCT Monitored Content Occurrences" in html
+    assert "Full NCT clip duration" in html
+    assert "FAST<br>Viewer-min" in html
+    assert "function nctOccurrenceAudienceStates(){" in html
+    assert "function nctOccurrenceMetric(state,startMillis,endMillis" in html
+    assert "const states=nctOccurrenceAudienceStates();" in html
+    assert "Viewer-minutes = sum of minute concurrency x overlapping seconds / 60." in html
+    assert "'Selected YouTube Video IDs','FAST Viewer-Minutes','STREAM Viewer-Minutes'" in html
+    assert "'FAST Coverage Percent'" not in html
+    assert "function nctSegmentAudienceMetrics(row,states){" in html
+    assert "function exportNctAudienceCsv(){" in html
+    assert "function nctOccurrenceBreakdownStates(range){" in html
+    assert "function exportNctAudienceBreakdownCsv(){" in html
+    assert "'Audience Source','Audience Platform','Audience Channel'" in html
+    assert "'nct_content_occurrence_platform_channel_'" in html
+    assert "'YouTube Viewer-Minutes','Combined Viewer-Minutes',\n  ];" in html
+    assert "'Combined Viewer-Minutes','Combined Available Sources'" not in html
     assert "function renderNctSegments(rows){" in html
     assert "function toggleNctSegments(){" in html
     assert "Scroll to load more; CSV exports the complete filtered result." in html
@@ -854,7 +1003,12 @@ def test_render_dashboard_adds_interval_weighted_nct_story_performance(
     assert "function exportNctStoryAudienceCsv(){" in html
     assert "Selected Average Minute Audience" in html
     assert "Selected Performance Index" in html
-    assert "Selected Audience Coverage Percent" in html
+    assert "Selected Audience Coverage Percent" not in html
+    assert "FAST Coverage Percent" not in html
+    assert "STREAM Coverage Percent" not in html
+    assert "AMAGI Coverage Percent" not in html
+    assert "YouTube Coverage Percent" not in html
+    assert "Combined Coverage Percent" not in html
     assert "Selected FAST Platforms" in html
     assert "Selected YouTube Channels" in html
     assert "Selected YouTube Video IDs" in html

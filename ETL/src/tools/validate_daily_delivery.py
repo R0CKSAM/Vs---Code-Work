@@ -238,8 +238,67 @@ def partition_score(item: PartitionEvidence) -> tuple[int, float, int, int]:
     return (int(item.full_day), item.coverage_seconds, item.rows, -item.priority)
 
 
-def choose_partition(candidates: list[PartitionEvidence]) -> PartitionEvidence | None:
-    return max(candidates, key=partition_score) if candidates else None
+def choose_partition(
+    candidates: list[PartitionEvidence],
+    start_tolerance_minutes: int,
+    end_tolerance_minutes: int,
+) -> PartitionEvidence | None:
+    if not candidates:
+        return None
+
+    winners: dict[str, tuple[FileEvidence, PartitionEvidence]] = {}
+    for candidate in candidates:
+        for item in candidate.files:
+            key = Path(item.path).name.casefold()
+            existing = winners.get(key)
+            coverage = (item.end_epoch or 0.0) - (item.start_epoch or 0.0)
+            score = (coverage, item.rows, -candidate.priority)
+            if existing is not None:
+                old_item, old_candidate = existing
+                old_coverage = (old_item.end_epoch or 0.0) - (old_item.start_epoch or 0.0)
+                if score <= (old_coverage, old_item.rows, -old_candidate.priority):
+                    continue
+            winners[key] = (item, candidate)
+
+    selected_files = [item[0] for item in winners.values()]
+    starts = [item.start_epoch for item in selected_files if item.start_epoch is not None]
+    ends = [item.end_epoch for item in selected_files if item.end_epoch is not None]
+    start_epoch = min(starts) if starts else None
+    end_epoch = max(ends) if ends else None
+    target = date.fromisoformat(candidates[0].date)
+    day_start = datetime.combine(target, time.min, tzinfo=IST).timestamp()
+    day_end = datetime.combine(target, time.max, tzinfo=IST).timestamp()
+    coverage_seconds, max_gap_seconds, overlap_seconds = merge_intervals(selected_files)
+    start_gap = ((start_epoch - day_start) / 60) if start_epoch is not None else None
+    end_gap = ((day_end - end_epoch) / 60) if end_epoch is not None else None
+    full_day = bool(
+        start_epoch is not None
+        and end_epoch is not None
+        and start_gap <= start_tolerance_minutes
+        and end_gap <= end_tolerance_minutes
+        and max_gap_seconds <= max(start_tolerance_minutes, end_tolerance_minutes) * 60
+    )
+    roots = list(dict.fromkeys(item[1].root for item in winners.values()))
+    day_dirs = list(dict.fromkeys(item[1].day_dir for item in winners.values()))
+    return PartitionEvidence(
+        source=candidates[0].source,
+        date=candidates[0].date,
+        root="; ".join(roots),
+        day_dir="; ".join(day_dirs),
+        priority=min(item[1].priority for item in winners.values()),
+        files=sorted(selected_files, key=lambda item: (Path(item.path).name.casefold(), item.path)),
+        rows=sum(item.rows for item in selected_files),
+        start_ist=format_epoch(start_epoch),
+        end_ist=format_epoch(end_epoch),
+        start_epoch=start_epoch,
+        end_epoch=end_epoch,
+        coverage_seconds=round(coverage_seconds, 3),
+        start_gap_minutes=round(start_gap, 3) if start_gap is not None else None,
+        end_gap_minutes=round(end_gap, 3) if end_gap is not None else None,
+        max_internal_gap_minutes=round(max_gap_seconds / 60, 3),
+        overlap_minutes=round(overlap_seconds / 60, 3),
+        full_day=full_day,
+    )
 
 
 def source_result(
@@ -265,7 +324,7 @@ def source_result(
         )
         is not None
     ]
-    selected = choose_partition(candidates)
+    selected = choose_partition(candidates, start_tolerance_minutes, end_tolerance_minutes)
     if selected is None:
         return {
             "source": source,
@@ -283,9 +342,6 @@ def source_result(
         reasons.append(
             f"coverage {selected.start_ist or 'unknown'} to {selected.end_ist or 'unknown'}"
         )
-    if selected.overlap_minutes > max_overlap_minutes:
-        status = "DUPLICATE"
-        reasons.append(f"{selected.overlap_minutes:.1f} overlapping file-minutes")
     unreadable = [item.path for item in selected.files if item.start_epoch is None or item.rows <= 0]
     if unreadable:
         status = "FAILED"
@@ -367,6 +423,7 @@ def channel_anomalies(
     threshold_pct: float,
     min_baseline_days: int,
     min_median_rows: int,
+    min_active_ratio: float = 0.7,
 ) -> tuple[list[dict[str, Any]], list[str]]:
     frame = load_channel_daily(profile_dir)
     warnings: list[str] = []
@@ -385,6 +442,12 @@ def channel_anomalies(
         & data["log_date"].between(start, end)
         & ~data["channel_name"].isin(["Unknown / NA", "Others", "Other"])
     ]
+    source_history_days = (
+        data.loc[data["log_date"] < end]
+        .groupby("source", observed=True)["log_date"]
+        .nunique()
+        .to_dict()
+    )
     anomalies: list[dict[str, Any]] = []
     for (source, channel), group in data.groupby(["source", "channel_name"], observed=True):
         target_rows = float(group.loc[group["log_date"] == end, "raw_ts_chunks"].sum())
@@ -392,6 +455,10 @@ def channel_anomalies(
         history = history.groupby("log_date", observed=True)["raw_ts_chunks"].sum()
         nonzero = history[history > 0]
         if len(nonzero) < min_baseline_days:
+            continue
+        available_days = int(source_history_days.get(source, 0))
+        active_ratio = (len(nonzero) / available_days) if available_days else 0.0
+        if active_ratio < min_active_ratio:
             continue
         normal = float(median(nonzero.tolist()))
         if normal < min_median_rows:
@@ -405,6 +472,8 @@ def channel_anomalies(
                 "target_raw_ts_chunks": int(target_rows),
                 "median_raw_ts_chunks": int(normal),
                 "baseline_nonzero_days": int(len(nonzero)),
+                "baseline_available_days": available_days,
+                "baseline_active_ratio": round(active_ratio, 4),
                 "pct_of_normal": round(pct, 2),
                 "status": "ANOMALY",
             })
@@ -465,6 +534,12 @@ def main() -> None:
     parser.add_argument("--channel-threshold-pct", type=float, default=5.0)
     parser.add_argument("--channel-min-baseline-days", type=int, default=3)
     parser.add_argument("--channel-min-median-rows", type=int, default=1000)
+    parser.add_argument(
+        "--channel-min-active-ratio",
+        type=float,
+        default=0.7,
+        help="Minimum share of available baseline days on which a channel must be active.",
+    )
     parser.add_argument("--reconcile-tolerance-pct", type=float, default=0.1)
     parser.add_argument("--reconcile-tolerance-rows", type=int, default=100)
     parser.add_argument("--fail-on-channel-anomaly", action="store_true")
@@ -512,6 +587,7 @@ def main() -> None:
             args.channel_threshold_pct,
             args.channel_min_baseline_days,
             args.channel_min_median_rows,
+            args.channel_min_active_ratio,
         )
         warnings.extend(channel_warnings)
 

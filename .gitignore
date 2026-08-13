@@ -11,6 +11,8 @@ duckdb_temp_storage_*
 # Python cache
 __pycache__/
 *.pyc
+.pytest_cache/
+**/.pytest_cache/
 
 # Data files
 *.parquet
@@ -21,9 +23,11 @@ __pycache__/
 ETL/data/raw/
 ETL/data/stage/
 ETL/data/lake/
+ETL/data/.etl_*_state.json
 ETL/output/cache/
 ETL/output/state/
 ETL/output/**/_duckdb_tmp/
+ETL/output/pytest_tmp*/
 
 # Optional: screenshots / design refs
 SS/
@@ -42,6 +46,8 @@ ETL/extras/output_archives/
 ETL/extras/one_off_data/
 # Manual storage-cleanup quarantine can contain millions of generated files.
 ETL/extras/DELETE_REVIEW_*/
+ETL/extras/delete/
+ETL/extras/test_tmp/
 ETL/Twitter/seen_posts.json
 
 # Generated dashboard HTML can exceed GitHub's file-size limit.
@@ -62,6 +68,7 @@ ETL/asrun_demo/output/*.html
 ETL/asrun_demo/output/*.js
 ETL/asrun_demo/output/data/
 ETL/asrun_demo/data/raw/ASRUN-*.txt
+ETL/asrun_demo/data/parsed/*_manifest.json
 ETL/asrun_demo/.pytest_tmp*/
 ETL/output/test_tmp/
 ETL/extras/**/test_artifacts/
@@ -89,6 +96,10 @@ ETL/extras/code_backups/
 ETL/extras/validation/chrome_*/
 ETL/extras/validation/master_dashboard/
 ETL/extras/validation/*.png
+ETL/output/browser_audit_*.png
+
+# YT4 deployment bundles are reproducible from the tracked source files.
+ETL/YT/*_remote_bundle.zip
 
 # DuckDB cache/database files
 *.duckdb

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from datetime import datetime, time, timedelta, timezone
 from pathlib import Path
 from urllib.parse import unquote, unquote_plus
@@ -171,6 +172,20 @@ def _sql_path(path: Path) -> str:
 
 def parquet_glob(lake_path: str | Path) -> str:
     return _sql_path(Path(lake_path) / "**" / "*.parquet")
+
+
+def parquet_source_sql(
+    lake_path: str | Path,
+    parquet_files: Iterable[str | Path] | None = None,
+) -> str:
+    """Return a DuckDB read_parquet argument for a lake glob or exact files."""
+
+    if parquet_files is None:
+        return f"'{parquet_glob(lake_path)}'"
+    values = [f"'{_sql_path(Path(path))}'" for path in parquet_files]
+    if not values:
+        raise ValueError("No Parquet files were selected.")
+    return "[" + ",".join(values) + "]"
 
 
 def normalize_token(value: object) -> str:
@@ -506,9 +521,10 @@ def profile_querystr_channels(
     end_date=None,
     top_n: int = 5000,
     ts_only: bool = False,
+    parquet_files: Iterable[str | Path] | None = None,
 ) -> pd.DataFrame:
     """Profile pDash-style pure channel names from queryStr without changing mappings."""
-    glob = parquet_glob(lake_path)
+    source_sql = parquet_source_sql(lake_path, parquet_files)
     con = duckdb.connect()
     con.execute("PRAGMA threads=8")
 
@@ -544,7 +560,7 @@ def profile_querystr_channels(
                     {device_qs} AS device_name,
                     {session_qs} AS session_id,
                     {device_id_qs} AS device_id
-                FROM read_parquet('{glob}', hive_partitioning=1)
+                FROM read_parquet({source_sql}, hive_partitioning=1, union_by_name=1)
                 WHERE statusCode = '200'
                   {path_filter}
                   AND queryStr IS NOT NULL

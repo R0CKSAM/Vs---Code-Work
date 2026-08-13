@@ -11,11 +11,15 @@ from pathlib import Path
 from build_concurrency import (
     DEFAULT_LAKE_FOLDER,
     DEFAULT_OUT_DIR,
+    add_archive_lake_argument,
     checked_dates,
+    configure_lake_selection,
     connect,
     date_filter_sql,
+    lake_manifest_fields,
     minute_ist_sql,
     minute_utc_sql,
+    parquet_source_sql,
     platform_key_sql,
     platform_name_sql,
     q,
@@ -67,7 +71,7 @@ def resolved_platform_key_sql(source: str) -> str:
 
 def build_manifest_minute_table(con, args: argparse.Namespace) -> None:
     start, end = checked_dates(args)
-    lake_glob = q(args.lake / "**" / "part_*.parquet")
+    lake_source = parquet_source_sql(args.selected_lake_files)
     candidate_expr = channel_candidate_sql("reqPath")
     partition_filter = date_filter_sql(start, end)
     platform_name_expr = resolved_platform_name_sql(args.source)
@@ -90,7 +94,7 @@ def build_manifest_minute_table(con, args: argparse.Namespace) -> None:
                 {candidate_expr} AS candidate_id,
                 {platform_name_expr} AS platform_name,
                 {platform_key_expr} AS platform_key
-            FROM read_parquet('{lake_glob}', hive_partitioning=1, union_by_name=1)
+            FROM read_parquet({lake_source}, hive_partitioning=1, union_by_name=1)
             WHERE {source_filter(args.source)}
               AND ({partition_filter})
               AND lower(COALESCE(CAST(reqPath AS VARCHAR), '')) LIKE '%.m3u8'
@@ -139,6 +143,7 @@ def write_manifest(args: argparse.Namespace, new_rows: int, output_path: Path) -
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "source": args.source,
         "lake": str(args.lake.resolve()),
+        **lake_manifest_fields(args),
         "output": str(output_path.resolve()),
         "date_range_replaced": {"start": args.start or "", "end": args.end or ""},
         "metric_notes": {
@@ -157,6 +162,7 @@ def write_manifest(args: argparse.Namespace, new_rows: int, output_path: Path) -
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build minute-level manifest request aggregates.")
     parser.add_argument("--lake", type=Path, default=DEFAULT_LAKE_FOLDER)
+    add_archive_lake_argument(parser)
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
     parser.add_argument("--source", choices=["fast", "stream"], required=True)
     parser.add_argument("--start", default=None, help="IST lake date start, YYYY-MM-DD.")
@@ -176,6 +182,7 @@ def main() -> None:
         raise SystemExit(f"Lake folder not found: {args.lake}")
 
     start, end = checked_dates(args)
+    configure_lake_selection(args)
     args.out_dir.mkdir(parents=True, exist_ok=True)
     con = connect(args)
     try:

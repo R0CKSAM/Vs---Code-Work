@@ -72,7 +72,7 @@ class DailyDeliveryValidationTests(unittest.TestCase):
             self.assertEqual(result["status"], "PARTIAL")
             self.assertTrue(result["hard_failure"])
 
-    def test_large_overlap_is_duplicate(self) -> None:
+    def test_file_time_overlap_alone_is_not_duplicate_proof(self) -> None:
         with tempfile.TemporaryDirectory(dir=TEST_TEMP_ROOT) as temp:
             root = Path(temp)
             day = date(2026, 8, 10)
@@ -91,7 +91,30 @@ class DailyDeliveryValidationTests(unittest.TestCase):
                 [epoch("2026-08-10T00:10:00"), epoch("2026-08-10T23:59:59")],
             )
             result = validator.source_result([root], "stream", day, 15, 15, 30)
-            self.assertEqual(result["status"], "DUPLICATE")
+            self.assertEqual(result["status"], "PASS")
+
+    def test_complementary_hot_and_archive_files_are_merged(self) -> None:
+        with tempfile.TemporaryDirectory(dir=TEST_TEMP_ROOT) as temp:
+            primary = Path(temp) / "primary"
+            archive = Path(temp) / "archive"
+            day = date(2026, 8, 12)
+            write_part(
+                archive,
+                "fast",
+                day,
+                "part_fast_2026_08_11_0.parquet",
+                [epoch("2026-08-12T00:00:00"), epoch("2026-08-12T05:29:59")],
+            )
+            write_part(
+                primary,
+                "fast",
+                day,
+                "part_fast_2026_08_12_0.parquet",
+                [epoch("2026-08-12T05:20:00"), epoch("2026-08-12T23:59:59")],
+            )
+            result = validator.source_result([primary, archive], "fast", day, 15, 15, 30)
+            self.assertEqual(result["status"], "PASS")
+            self.assertEqual(len(result["selected"]["files"]), 2)
 
     def test_complete_archive_beats_partial_primary(self) -> None:
         with tempfile.TemporaryDirectory(dir=TEST_TEMP_ROOT) as temp:
@@ -102,14 +125,14 @@ class DailyDeliveryValidationTests(unittest.TestCase):
                 primary,
                 "fast",
                 day,
-                "part_partial.parquet",
+                "part_fast_2026_07_31_0.parquet",
                 [epoch("2026-07-31T00:00:00"), epoch("2026-07-31T05:29:59")],
             )
             write_part(
                 archive,
                 "fast",
                 day,
-                "part_full.parquet",
+                "part_fast_2026_07_31_0.parquet",
                 [epoch("2026-07-31T00:00:00"), epoch("2026-07-31T23:59:59")],
             )
             result = validator.source_result([primary, archive], "fast", day, 15, 15, 30)
@@ -151,6 +174,47 @@ class DailyDeliveryValidationTests(unittest.TestCase):
             self.assertFalse(warnings)
             self.assertEqual(len(anomalies), 1)
             self.assertEqual(anomalies[0]["channel"], "India TV")
+
+    def test_event_channel_is_not_treated_as_daily_outage(self) -> None:
+        with tempfile.TemporaryDirectory(dir=TEST_TEMP_ROOT) as temp:
+            profile = Path(temp) / "watch_hours" / "profile"
+            daily = profile.parent / "daily_tables"
+            daily.mkdir(parents=True)
+            rows = []
+            for day in range(1, 10):
+                rows.append({
+                    "log_date": f"2026-08-{day:02d}",
+                    "source": "stream",
+                    "channel_name": "India TV",
+                    "raw_ts_chunks": 10000,
+                })
+            rows.append({
+                "log_date": "2026-08-10",
+                "source": "stream",
+                "channel_name": "India TV",
+                "raw_ts_chunks": 10000,
+            })
+            for day in range(1, 6):
+                rows.append({
+                    "log_date": f"2026-08-{day:02d}",
+                    "source": "stream",
+                    "channel_name": "Veto Cricket Live",
+                    "raw_ts_chunks": 3000,
+                })
+            pd.DataFrame(rows).to_parquet(daily / "channel_audience_daily.parquet", index=False)
+
+            anomalies, warnings = validator.channel_anomalies(
+                profile,
+                date(2026, 8, 10),
+                ["stream"],
+                baseline_days=28,
+                threshold_pct=5,
+                min_baseline_days=3,
+                min_median_rows=1000,
+            )
+
+            self.assertFalse(warnings)
+            self.assertEqual(anomalies, [])
 
 
 if __name__ == "__main__":

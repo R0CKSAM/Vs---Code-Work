@@ -12,12 +12,16 @@ import pandas as pd
 from build_concurrency import (
     DEFAULT_LAKE_FOLDER,
     DEFAULT_OUT_DIR,
+    add_archive_lake_argument,
     checked_dates,
+    configure_lake_selection,
     connect,
     date_filter_sql,
+    lake_manifest_fields,
     minute_ist_sql,
     platform_key_sql,
     platform_name_sql,
+    parquet_source_sql,
     q,
     source_filter,
     table_count,
@@ -138,7 +142,8 @@ def ensure_lookup_table(con, lookup_path: Path) -> None:
 
 def build_device_table(con, args: argparse.Namespace) -> None:
     start, end = checked_dates(args)
-    lake_glob = q(args.lake / "**" / "part_*.parquet")
+    configure_lake_selection(args)
+    lake_source = parquet_source_sql(args.selected_lake_files)
     partition_filter = date_filter_sql(start, end)
     candidate_expr = channel_candidate_sql("reqPath")
     hours_expr = f"{HOURS_PER_TS_SEGMENT:.16f}"
@@ -198,7 +203,7 @@ END
                 {ua_norm_expr} AS ua_norm,
                 COALESCE(NULLIF(regexp_replace(CAST(statusCode AS VARCHAR), '\\.0$', ''), ''), 'Unknown') AS statusCode,
                 {candidate_expr} AS candidate_id
-            FROM read_parquet('{lake_glob}', hive_partitioning=1, union_by_name=1)
+            FROM read_parquet({lake_source}, hive_partitioning=1, union_by_name=1)
             WHERE {source_filter(args.source)}
               AND ({partition_filter})
               AND lower(COALESCE(reqPath, '')) LIKE '%.ts'
@@ -273,6 +278,7 @@ def write_manifest(args: argparse.Namespace, new_rows: int, output_path: Path) -
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "source": args.source,
         "lake": str(args.lake.resolve()),
+        **lake_manifest_fields(args),
         "ua_lookup": str(args.ua_lookup.resolve()) if args.ua_lookup.exists() else "",
         "output": str(output_path.resolve()),
         "date_range_replaced": {
@@ -294,6 +300,7 @@ def write_manifest(args: argparse.Namespace, new_rows: int, output_path: Path) -
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build FAST platform/channel decoded UA device daily mart.")
     parser.add_argument("--lake", type=Path, default=DEFAULT_LAKE_FOLDER)
+    add_archive_lake_argument(parser)
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
     parser.add_argument("--ua-lookup", type=Path, default=DEFAULT_LOOKUP)
     parser.add_argument("--source", choices=["fast"], default="fast")

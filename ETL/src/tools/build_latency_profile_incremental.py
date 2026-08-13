@@ -18,11 +18,18 @@ ETL_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = ETL_ROOT / "src"
 DASHBOARD_DIR = SRC_ROOT / "dashboards" / "latencyDashboard"
 PROFILE_ROOT = SRC_ROOT / "profile"
-for path in [ETL_ROOT, SRC_ROOT, DASHBOARD_DIR, PROFILE_ROOT]:
+COMMON_ROOT = SRC_ROOT / "common"
+for path in [ETL_ROOT, SRC_ROOT, DASHBOARD_DIR, PROFILE_ROOT, COMMON_ROOT]:
     if str(path) not in sys.path:
         sys.path.insert(0, str(path))
 
 import generate_latency as latency  # noqa: E402
+from lake_partitions import (  # noqa: E402
+    LakePartition,
+    discover_partitions,
+    resolve_lake_roots,
+    split_path_list,
+)
 from vglive_core import DEFAULT_LAKE_FOLDER  # noqa: E402
 
 
@@ -144,6 +151,30 @@ def signature_for_day(lake: Path, source: str, day_value: date) -> dict:
     }
 
 
+def signature_for_partition(partition: LakePartition) -> dict:
+    items = []
+    total_bytes = 0
+    max_mtime_ns = 0
+    for file in partition.files:
+        stat = file.stat()
+        total_bytes += int(stat.st_size)
+        max_mtime_ns = max(max_mtime_ns, int(stat.st_mtime_ns))
+        items.append(
+            {
+                "path": str(file),
+                "name": file.name,
+                "bytes": int(stat.st_size),
+                "mtime_ns": int(stat.st_mtime_ns),
+            }
+        )
+    return {
+        "file_count": len(items),
+        "total_bytes": total_bytes,
+        "max_mtime_ns": max_mtime_ns,
+        "files": items,
+    }
+
+
 def part_dir(parts_root: Path, source: str, day_value: date) -> Path:
     return parts_root / f"source={source}" / f"log_date={day_value.isoformat()}"
 
@@ -177,13 +208,15 @@ def start_heartbeat(
     return thread
 
 
-def process_day(args: argparse.Namespace, source: str, day_value: date, out_folder: Path) -> dict:
+def process_day(args: argparse.Namespace, partition: LakePartition, out_folder: Path) -> dict:
+    day_value = date(partition.year, partition.month, partition.day)
     ns = argparse.Namespace(
         lake=args.lake,
+        input_files=partition.files,
         start=day_value.isoformat(),
         end=day_value.isoformat(),
         window_days=0,
-        source=source,
+        source=partition.source,
         top_n=args.top_n,
         threads=args.threads,
         memory_limit=args.memory_limit,
@@ -323,6 +356,12 @@ def render_html(args: argparse.Namespace) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Incrementally build latency profile tables.")
     parser.add_argument("--lake", type=Path, default=DEFAULT_LAKE_FOLDER)
+    parser.add_argument(
+        "--archive-lake",
+        action="append",
+        default=[],
+        help="Optional archive lake root(s). Can be repeated or comma/semicolon separated.",
+    )
     parser.add_argument("--source", choices=["fast", "stream"], default="fast")
     parser.add_argument("--start", default=None)
     parser.add_argument("--end", default=None)
@@ -359,28 +398,38 @@ def main() -> None:
     if not args.lake.exists():
         raise SystemExit(f"Lake folder not found: {args.lake}")
 
-    days = discover_days(args.lake, args.source, start, end)
+    requested_archives: list[Path] = []
+    for value in args.archive_lake:
+        requested_archives.extend(split_path_list(value))
+    lake_roots = resolve_lake_roots(args.lake, requested_archives or None)
+    partitions = discover_partitions(
+        lake_roots,
+        source=args.source,
+        start=start,
+        end=end,
+    )
     if args.max_days and args.max_days > 0:
-        days = days[: args.max_days]
-    if not days:
+        partitions = partitions[: args.max_days]
+    if not partitions:
         raise SystemExit(f"No lake days found for source={args.source}.")
 
     state = read_json(args.state, {"version": 1, "days": {}})
     state.setdefault("days", {})
 
     log(
-        f"Latency incremental start: source={args.source}, days={len(days)}, "
-        f"range={days[0]} -> {days[-1]}, force={args.force}"
+        f"Latency incremental start: source={args.source}, days={len(partitions)}, "
+        f"range={partitions[0].date_text} -> {partitions[-1].date_text}, force={args.force}"
     )
     started_all = time.time()
     processed = 0
     skipped = 0
     failed = 0
 
-    for index, day_value in enumerate(days, start=1):
-        percent = index / len(days) * 100
-        key = f"{args.source}|{day_value.isoformat()}"
-        signature = signature_for_day(args.lake, args.source, day_value)
+    for index, partition in enumerate(partitions, start=1):
+        day_value = date(partition.year, partition.month, partition.day)
+        percent = index / len(partitions) * 100
+        key = f"{partition.source}|{partition.date_text}"
+        signature = signature_for_partition(partition)
         previous = state["days"].get(key, {})
         up_to_date = (
             not args.force
@@ -391,14 +440,14 @@ def main() -> None:
         if up_to_date:
             skipped += 1
             log(
-                f"[skip] {index}/{len(days)} {percent:.1f}% source={args.source} "
+                f"[skip] {index}/{len(partitions)} {percent:.1f}% source={args.source} "
                 f"date={day_value} files={signature['file_count']} bytes={signature['total_bytes']:,}"
             )
             continue
 
         label = f"source={args.source} date={day_value}"
         log(
-            f"[progress] {index}/{len(days)} {percent:.1f}% processing {label} "
+            f"[progress] {index}/{len(partitions)} {percent:.1f}% processing {label} "
             f"files={signature['file_count']} bytes={signature['total_bytes']:,}"
         )
         stop_event = threading.Event()
@@ -406,13 +455,13 @@ def main() -> None:
             stop_event,
             label,
             index,
-            len(days),
+            len(partitions),
             time.time(),
             args.heartbeat_seconds,
         )
         day_started = time.time()
         try:
-            result = process_day(args, args.source, day_value, part_dir(args.parts_dir, args.source, day_value))
+            result = process_day(args, partition, part_dir(args.parts_dir, partition.source, day_value))
             duration = time.time() - day_started
             processed += 1
             state["days"][key] = {
@@ -427,9 +476,9 @@ def main() -> None:
             if not args.dry_run:
                 write_json(args.state, state)
             avg = (time.time() - started_all) / index
-            eta = avg * (len(days) - index)
+            eta = avg * (len(partitions) - index)
             log(
-                f"[done] {index}/{len(days)} {percent:.1f}% {label} "
+                f"[done] {index}/{len(partitions)} {percent:.1f}% {label} "
                 f"rows={result.get('base_rows', 0):,} duration={fmt_seconds(duration)} "
                 f"overall_elapsed={fmt_seconds(time.time() - started_all)} eta={fmt_seconds(eta)}"
             )
@@ -445,7 +494,7 @@ def main() -> None:
             }
             if not args.dry_run:
                 write_json(args.state, state)
-            log(f"[failed] {index}/{len(days)} {percent:.1f}% {label}: {exc}")
+            log(f"[failed] {index}/{len(partitions)} {percent:.1f}% {label}: {exc}")
             raise
         finally:
             stop_event.set()

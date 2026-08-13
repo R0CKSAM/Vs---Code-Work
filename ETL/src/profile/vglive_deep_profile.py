@@ -6,6 +6,7 @@ import sys
 import tempfile
 from datetime import datetime
 from pathlib import Path
+from typing import Iterable
 
 import duckdb
 import pandas as pd
@@ -19,6 +20,16 @@ from vglive_core import (
     build_partition_filter,
     channel_candidate_sql,
     profile_querystr_channels,
+)
+
+ETL_ROOT = Path(__file__).resolve().parents[2]
+if str(ETL_ROOT) not in sys.path:
+    sys.path.insert(0, str(ETL_ROOT))
+
+from src.common.lake_partitions import (  # noqa: E402
+    discover_partitions,
+    resolve_lake_roots,
+    split_path_list,
 )
 
 
@@ -174,14 +185,23 @@ def register_maps(con: duckdb.DuckDBPyConnection) -> None:
     con.execute("CREATE OR REPLACE TEMP TABLE host_candidate_map AS SELECT * FROM host_candidate_map_df")
 
 
-def write_schema(con: duckdb.DuckDBPyConnection, glob: str, out: Path) -> None:
-    df = con.execute(f"DESCRIBE SELECT * FROM read_parquet('{glob}', hive_partitioning=1) LIMIT 0").fetchdf()
+def parquet_source_sql(files: Iterable[Path]) -> str:
+    values = [f"'{q(path)}'" for path in files]
+    if not values:
+        raise SystemExit("No winning lake Parquet files were found for the selected range.")
+    return "[" + ",".join(values) + "]"
+
+
+def write_schema(con: duckdb.DuckDBPyConnection, source_sql: str, out: Path) -> None:
+    df = con.execute(
+        f"DESCRIBE SELECT * FROM read_parquet({source_sql}, hive_partitioning=1, union_by_name=1) LIMIT 0"
+    ).fetchdf()
     write_frame(df, out / "schema.csv")
 
 
-def write_file_inventory(lake: Path, out: Path) -> None:
+def write_file_inventory(files: Iterable[Path], out: Path) -> None:
     rows = []
-    for file in lake.glob("**/*.parquet"):
+    for file in files:
         date = ""
         parts = {piece.split("=", 1)[0]: piece.split("=", 1)[1] for piece in file.parts if "=" in piece}
         if {"year", "month", "day"} <= set(parts):
@@ -198,8 +218,10 @@ def write_file_inventory(lake: Path, out: Path) -> None:
     write_frame(df, out / "file_inventory.csv")
 
 
-def write_column_fill(con: duckdb.DuckDBPyConnection, glob: str, out: Path, where_sql: str) -> None:
-    schema = con.execute(f"DESCRIBE SELECT * FROM read_parquet('{glob}', hive_partitioning=1) LIMIT 0").fetchdf()
+def write_column_fill(con: duckdb.DuckDBPyConnection, source_sql: str, out: Path, where_sql: str) -> None:
+    schema = con.execute(
+        f"DESCRIBE SELECT * FROM read_parquet({source_sql}, hive_partitioning=1, union_by_name=1) LIMIT 0"
+    ).fetchdf()
     columns = [row["column_name"] for _, row in schema.iterrows()]
     select_parts = ["COUNT(*) AS total_rows"]
     for column in columns:
@@ -210,7 +232,7 @@ def write_column_fill(con: duckdb.DuckDBPyConnection, glob: str, out: Path, wher
     result = con.execute(
         f"""
         SELECT {", ".join(select_parts)}
-        FROM read_parquet('{glob}', hive_partitioning=1)
+        FROM read_parquet({source_sql}, hive_partitioning=1, union_by_name=1)
         WHERE {where_sql}
         """
     ).fetchone()
@@ -880,6 +902,12 @@ def main() -> None:
     global ACTIVE_OUTPUT_FORMAT
     parser = argparse.ArgumentParser(description="Build deep aggregate profiles for the VgLive lake.")
     parser.add_argument("--lake", type=Path, default=DEFAULT_LAKE_FOLDER)
+    parser.add_argument(
+        "--archive-lake",
+        action="append",
+        default=[],
+        help="Optional archive lake root(s); repeat or separate with semicolons/commas.",
+    )
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--start", help="Start date, YYYY-MM-DD")
     parser.add_argument("--end", help="End date, YYYY-MM-DD")
@@ -964,8 +992,17 @@ def main() -> None:
     temp_dir = args.temp_dir.expanduser().resolve()
     temp_dir.mkdir(parents=True, exist_ok=True)
 
-    # Ignore 03.py's in-progress tmp files; final lake partitions use part_*.parquet.
-    glob = q(args.lake / "**" / "part_*.parquet")
+    explicit_archive_roots: list[Path] = []
+    for value in args.archive_lake:
+        explicit_archive_roots.extend(split_path_list(value))
+    lake_roots = resolve_lake_roots(args.lake, explicit_archive_roots or None)
+    partitions = discover_partitions(
+        lake_roots,
+        start=start_date,
+        end=end_date,
+    )
+    selected_files = tuple(file for partition in partitions for file in partition.files)
+    source_sql = parquet_source_sql(selected_files)
     partition_filter = build_partition_filter(start_date, end_date)
     where_sql = partition_filter
     date_label = "all_dates" if start_date is None else f"{start_date}_to_{end_date}"
@@ -982,6 +1019,8 @@ def main() -> None:
         con.execute("PRAGMA disable_progress_bar")
 
     print(f"Lake: {args.lake}")
+    print(f"Lake roots: {', '.join(str(root) for root in lake_roots)}")
+    print(f"Winning partitions: {len(partitions)} ({len(selected_files)} parquet files)")
     print(f"Out: {out}")
     print(f"Date scope: {date_label}")
     print(f"Threads: {args.threads}")
@@ -995,7 +1034,7 @@ def main() -> None:
 
     con.execute(f"""
         CREATE OR REPLACE VIEW lake_rows AS
-        SELECT * FROM read_parquet('{glob}', hive_partitioning=1)
+        SELECT * FROM read_parquet({source_sql}, hive_partitioning=1, union_by_name=1)
     """)
     register_maps(con)
 
@@ -1017,11 +1056,11 @@ def main() -> None:
         print("Deep profile daily-table subset complete.")
         return
 
-    write_schema(con, glob, out)
-    write_file_inventory(args.lake, out)
+    write_schema(con, source_sql, out)
+    write_file_inventory(selected_files, out)
     column_fill_path = out / "column_fill_rate.csv"
     if refresh_artifact(args.column_fill, column_fill_path, ["column_name", "total_rows", "non_empty_rows", "empty_rows", "non_empty_pct"]):
-        write_column_fill(con, glob, out, where_sql)
+        write_column_fill(con, source_sql, out, where_sql)
 
     copy_query(
         con,
@@ -1449,6 +1488,7 @@ def main() -> None:
             end_date=end_date,
             top_n=max(int(args.top_n), 5000),
             ts_only=False,
+            parquet_files=selected_files,
         )
         write_frame(querystr_df, querystr_profile_path)
 

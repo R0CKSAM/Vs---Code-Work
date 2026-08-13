@@ -125,7 +125,7 @@ FCT_INTERNAL_CATEGORIES = frozenset(
     }
 )
 FCT_MART_VERSION = 3
-NCT_MART_VERSION = 3
+NCT_MART_VERSION = 5
 YOUTUBE_MART_VERSION = 3
 AMAGI_MART_VERSION = 2
 
@@ -183,6 +183,14 @@ NCT_REQUIRED_COLUMNS = {
     "assist_used",
     "split",
     "Story_Format",
+}
+NCT_OPTIONAL_COLUMNS = {
+    "week",
+    "grap_type",
+    "Start Half Hour",
+    "Dur in Mins",
+    "AMA",
+    "UR",
 }
 
 # These labels have an explicit name match only; Samsung variants remain separate
@@ -957,6 +965,14 @@ def empty_nct_segments() -> pd.DataFrame:
             "assist_used",
             "split",
             "story_format",
+            "source_program_date",
+            "source_week",
+            "source_duration",
+            "source_graph_type",
+            "source_start_half_hour",
+            "source_duration_minutes",
+            "source_ama",
+            "source_ur",
             "source_file",
             "source_row",
         ]
@@ -1024,23 +1040,52 @@ def read_nct_header(path: Path) -> tuple[int, str, dict[str, Any]]:
 
 
 def parse_nct_csv(path: Path, source_name: str) -> tuple[pd.DataFrame, dict[str, Any]]:
-    """Normalize one NCT story-duration export and preserve its reported IST clock."""
-    header_index, encoding, metadata = read_nct_header(path)
-    raw = pd.read_csv(
-        path,
-        skiprows=header_index,
-        encoding=encoding,
-        dtype=object,
-        low_memory=False,
-    )
+    """Normalize one CSV/Excel NCT export and preserve its reported IST clock."""
+    suffix = path.suffix.casefold()
+    if suffix == ".csv":
+        header_index, encoding, metadata = read_nct_header(path)
+        raw = pd.read_csv(
+            path,
+            skiprows=header_index,
+            encoding=encoding,
+            dtype=object,
+            low_memory=False,
+        )
+    elif suffix in {".xlsx", ".xlsm"}:
+        header_index = 0
+        metadata = {
+            "selected_channels": [],
+            "declared_start": "",
+            "declared_end": "",
+            "declared_start_time": "",
+            "declared_end_time": "",
+            "downloaded_on": "",
+        }
+        sheets = pd.read_excel(path, sheet_name=None, dtype=object)
+        nonempty = [frame for frame in sheets.values() if not frame.empty]
+        if not nonempty:
+            raise ValueError(f"{path.name} contains no NCT data rows")
+        raw = pd.concat(nonempty, ignore_index=True)
+    else:
+        raise ValueError(f"Unsupported NCT source format: {path.suffix}")
+
     raw.columns = [str(column).strip() for column in raw.columns]
+    raw = raw.rename(
+        columns={
+            "content_type_1": "story_genre_1",
+            "content_type_2": "story_genre_2",
+        }
+    )
     missing = sorted(NCT_REQUIRED_COLUMNS.difference(raw.columns))
     if missing:
         raise ValueError(
             f"{path.name} is missing NCT column(s): {', '.join(missing)}"
         )
     source_rows = len(raw)
-    frame = raw.loc[:, sorted(NCT_REQUIRED_COLUMNS)].copy()
+    available_optional = NCT_OPTIONAL_COLUMNS.intersection(raw.columns)
+    frame = raw.loc[:, sorted(NCT_REQUIRED_COLUMNS | available_optional)].copy()
+    for column in NCT_OPTIONAL_COLUMNS.difference(frame.columns):
+        frame[column] = pd.NA
     frame["source_row"] = pd.Series(
         range(header_index + 2, header_index + 2 + len(frame)),
         index=frame.index,
@@ -1173,6 +1218,19 @@ def parse_nct_csv(path: Path, source_name: str) -> tuple[pd.DataFrame, dict[str,
     for source_column, target_column in text_columns.items():
         values = frame[source_column].fillna("").astype("string").str.strip()
         frame[target_column] = values.mask(values.isin({"", "."}), pd.NA)
+    source_text_columns = {
+        "week": "source_week",
+        "duration": "source_duration",
+        "grap_type": "source_graph_type",
+        "Start Half Hour": "source_start_half_hour",
+        "Dur in Mins": "source_duration_minutes",
+        "AMA": "source_ama",
+        "UR": "source_ur",
+    }
+    frame["source_program_date"] = date_values.mask(date_values.eq(""), pd.NA)
+    for source_column, target_column in source_text_columns.items():
+        values = frame[source_column].fillna("").astype("string").str.strip()
+        frame[target_column] = values.mask(values.eq(""), pd.NA)
     if frame["channel_name"].isna().any():
         raise ValueError(f"{path.name} contains blank NCT channel values")
 
@@ -1204,7 +1262,13 @@ def parse_nct_csv(path: Path, source_name: str) -> tuple[pd.DataFrame, dict[str,
     actual_channels = sorted(
         segments["channel_name"].dropna().astype(str).unique().tolist()
     )
-    selected_channels = metadata["selected_channels"]
+    selected_channels = metadata["selected_channels"] or actual_channels
+    metadata["selected_channels"] = selected_channels
+    valid_source_dates = source_date.dropna()
+    if not metadata["declared_start"] and not valid_source_dates.empty:
+        metadata["declared_start"] = valid_source_dates.min().date().isoformat()
+    if not metadata["declared_end"] and not valid_source_dates.empty:
+        metadata["declared_end"] = valid_source_dates.max().date().isoformat()
     metadata.update(
         {
             "source_rows": int(source_rows),
@@ -1311,7 +1375,7 @@ def build_nct_story_mart() -> dict[str, Any]:
     paths = sorted(
         path
         for path in NCT_ROOT.rglob("*")
-        if path.is_file() and path.suffix.casefold() == ".csv"
+        if path.is_file() and path.suffix.casefold() in {".csv", ".xlsx", ".xlsm"}
     )
     if not paths:
         return nct_result(
@@ -1323,7 +1387,7 @@ def build_nct_story_mart() -> dict[str, Any]:
             missing_selected_channels=[],
             declared_start="",
             declared_end="",
-        ) | {"reason": "No NCT .csv exports were found."}
+        ) | {"reason": "No NCT CSV or Excel exports were found."}
 
     PARSED_DIR.mkdir(parents=True, exist_ok=True)
     mart_path = PARSED_DIR / "nct_story_segments.parquet"
@@ -1813,12 +1877,35 @@ def records(frame: pd.DataFrame, columns: list[str]) -> list[dict[str, Any]]:
     return clean.to_dict(orient="records")
 
 
+def array_records(frame: pd.DataFrame, columns: list[str]) -> list[list[Any]]:
+    """Convert repeated minute rows to compact, JSON-safe positional arrays."""
+    if frame.empty:
+        return []
+    clean = frame.loc[:, columns].copy()
+    for column in clean.columns:
+        if pd.api.types.is_datetime64_any_dtype(clean[column]):
+            clean[column] = clean[column].dt.strftime("%Y-%m-%dT%H:%M:%S.%f").str[:-3]
+    clean = clean.astype("object").where(pd.notna(clean), None)
+    return clean.values.tolist()
+
+
 def distinct_iso_dates(frame: pd.DataFrame, column: str) -> list[str]:
     """Return sorted calendar dates represented by valid source rows."""
     if frame.empty or column not in frame.columns:
         return []
     values = pd.to_datetime(frame[column], errors="coerce")
     return sorted(values.dropna().dt.strftime("%Y-%m-%d").unique().tolist())
+
+
+def minute_counts_by_date(frame: pd.DataFrame) -> dict[str, int]:
+    """Return distinct time-point counts so partial calendar days stay visible."""
+    if frame.empty or "minute_ist" not in frame.columns:
+        return {}
+    minutes = pd.to_datetime(frame["minute_ist"], errors="coerce").dropna()
+    if minutes.empty:
+        return {}
+    counts = minutes.groupby(minutes.dt.strftime("%Y-%m-%d")).nunique()
+    return {str(log_date): int(count) for log_date, count in counts.items()}
 
 
 def fixed_five_minute_sum(
@@ -1978,6 +2065,14 @@ def build_payload(
             "fct": distinct_iso_dates(fct["events"], "log_date"),
             "youtube": distinct_iso_dates(youtube["minute"], "log_date"),
             "nct": distinct_iso_dates(nct["segments"], "log_date"),
+        },
+        "minute_coverage": {
+            "fast": minute_counts_by_date(
+                viewer_payload.loc[viewer_payload["source"].eq("fast")]
+            ),
+            "stream": minute_counts_by_date(
+                viewer_payload.loc[viewer_payload["source"].eq("stream")]
+            ),
         },
         "kpis": {
             "all_events": int(len(events)),
@@ -2181,9 +2276,16 @@ def write_dashboard_sidecars(chunks: dict[str, Any]) -> dict[str, Path]:
     return paths
 
 
-def write_nct_payload_script(path: Path, nct: dict[str, Any]) -> None:
-    """Publish a lightweight NCT manifest plus independently loadable daily rows."""
+def write_nct_payload_script(
+    path: Path,
+    nct: dict[str, Any],
+    viewer_minute: pd.DataFrame | None = None,
+    amagi_minute: pd.DataFrame | None = None,
+) -> None:
+    """Publish daily NCT rows with their full-resolution audience evidence."""
     segment_columns = [
+        "program_start_ist",
+        "program_end_ist",
         "clip_start_ist",
         "clip_end_ist",
         "log_date",
@@ -2194,6 +2296,7 @@ def write_nct_payload_script(path: Path, nct: dict[str, Any]) -> None:
         "primary_genre",
         "secondary_genre",
         "geography",
+        "title",
         "duration_seconds",
         "anchor",
         "reporter",
@@ -2204,10 +2307,30 @@ def write_nct_payload_script(path: Path, nct: dict[str, Any]) -> None:
         "assist_used",
         "split",
         "story_format",
+        "source_program_date",
+        "source_week",
+        "source_duration",
+        "source_graph_type",
+        "source_start_half_hour",
+        "source_duration_minutes",
+        "source_ama",
+        "source_ur",
         "source_file",
         "source_row",
     ]
-    segments = nct["segments"]
+    segments = nct["segments"].copy()
+    for column in set(segment_columns).difference(segments.columns):
+        segments[column] = pd.NA
+    viewer_minute = viewer_minute if viewer_minute is not None else pd.DataFrame()
+    amagi_minute = amagi_minute if amagi_minute is not None else pd.DataFrame()
+    viewer_by_date = {
+        str(log_date).strip(): daily
+        for log_date, daily in viewer_minute.groupby("log_date", sort=False, dropna=False)
+    } if not viewer_minute.empty else {}
+    amagi_by_date = {
+        str(log_date).strip(): daily
+        for log_date, daily in amagi_minute.groupby("log_date", sort=False, dropna=False)
+    } if not amagi_minute.empty else {}
     partitions: dict[str, str] = {}
     if not segments.empty:
         for log_date, daily in segments.groupby("log_date", sort=True, dropna=False):
@@ -2222,11 +2345,43 @@ def write_nct_payload_script(path: Path, nct: dict[str, Any]) -> None:
                 ensure_ascii=True,
                 separators=(",", ":"),
             ).replace("</", "<\\/")
+            audience = {
+                # log_date is implied by the daily partition. Positional arrays
+                # avoid repeating six field names across millions of minute rows.
+                "viewer": array_records(
+                    viewer_by_date.get(date_value, pd.DataFrame()),
+                    [
+                        "minute_ist",
+                        "source",
+                        "platform_name",
+                        "channel_name",
+                        "distinct_cliips",
+                    ],
+                ),
+                "amagi": array_records(
+                    amagi_by_date.get(date_value, pd.DataFrame()),
+                    [
+                        "minute_ist",
+                        "platform_name",
+                        "channel_name",
+                        "concurrent_viewers",
+                    ],
+                ),
+            }
+            encoded_audience = json.dumps(
+                audience,
+                ensure_ascii=True,
+                separators=(",", ":"),
+            ).replace("</", "<\\/")
             atomic_write_text(
                 chunk_path,
                 "window.__NCT_STORY_PARTITIONS__="
                 "window.__NCT_STORY_PARTITIONS__||{};"
-                f"window.__NCT_STORY_PARTITIONS__[{json.dumps(date_value)}]={encoded};",
+                f"window.__NCT_STORY_PARTITIONS__[{json.dumps(date_value)}]={encoded};"
+                "window.__NCT_AUDIENCE_PARTITIONS__="
+                "window.__NCT_AUDIENCE_PARTITIONS__||{};"
+                f"window.__NCT_AUDIENCE_PARTITIONS__[{json.dumps(date_value)}]="
+                f"{encoded_audience};",
             )
             partitions[date_value] = relative_path.as_posix()
 
@@ -2236,6 +2391,21 @@ def write_nct_payload_script(path: Path, nct: dict[str, Any]) -> None:
         "partitioned": True,
         "segment_count": int(len(segments)),
         "dates": partitions,
+        "audience_schema": {
+            "viewer": [
+                "minute_ist",
+                "source",
+                "platform_name",
+                "channel_name",
+                "distinct_cliips",
+            ],
+            "amagi": [
+                "minute_ist",
+                "platform_name",
+                "channel_name",
+                "concurrent_viewers",
+            ],
+        },
         # Retain this key so older dashboard code degrades to an empty dataset
         # instead of failing if the manifest and HTML are briefly out of sync.
         "segments": [],
@@ -3337,7 +3507,7 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
 .nct-segment-section { margin-top: 10px; }
 .nct-segment-columns, .nct-segment-row {
   display: grid;
-  grid-template-columns: 120px 92px minmax(150px, .85fr) minmax(190px, 1.2fr) minmax(120px, .7fr) 65px;
+  grid-template-columns: 112px 86px minmax(128px, .75fr) minmax(180px, 1.1fr) minmax(105px, .62fr) 60px repeat(4, 82px) 96px;
   gap: 8px;
   align-items: center;
 }
@@ -3345,9 +3515,32 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
 .nct-segment-row { min-height: 45px; padding: 6px 2px; border-bottom: 1px solid var(--line); font-size: 10px; }
 .nct-segment-row > span { min-width: 0; overflow-wrap: anywhere; }
 .nct-segment-row small { display: block; color: var(--muted); font-size: 9px; }
-.nct-segment-columns span:last-child, .nct-segment-row span:last-child {
+.nct-segment-columns span:nth-child(n+6), .nct-segment-row span:nth-child(n+6) {
   text-align: right;
 }
+.nct-segment-row .combined-value {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 4px 6px;
+  border-left: 3px solid transparent;
+  border-radius: 3px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.nct-segment-columns .fast-col { color: #6d28d9; border-bottom: 2px solid #7c3aed; }
+.nct-segment-columns .stream-col { color: #be185d; border-bottom: 2px solid #db2777; }
+.nct-segment-columns .amagi-col { color: #c2410c; border-bottom: 2px solid #ea580c; }
+.nct-segment-columns .youtube-col { color: #854d0e; border-bottom: 2px solid #eab308; }
+.nct-segment-columns .total-col { color: #334155; border-bottom: 2px solid #64748b; }
+.nct-segment-row .fast-col { color: #5b21b6; background: #f5f3ff; border-left-color: #7c3aed; }
+.nct-segment-row .stream-col { color: #9d174d; background: #fdf2f8; border-left-color: #db2777; }
+.nct-segment-row .amagi-col { color: #9a3412; background: #fff7ed; border-left-color: #ea580c; }
+.nct-segment-row .youtube-col { color: #854d0e; background: #fef9c3; border-left-color: #eab308; }
+.nct-segment-row .combined-col { color: #1e293b; background: #f1f5f9; border-left-color: #64748b; }
+.nct-segment-row .audience-unavailable { color: var(--muted); font-size: 9px; font-weight: 500; }
 .nct-preview-note { margin-top: 6px; color: var(--muted); font-size: 10px; }
 .nct-context { margin-top: 10px; }
 .nct-context-control { min-width: 190px; }
@@ -3574,9 +3767,15 @@ body.nct-chart-expanded::before {
   }
   .nct-story-audience-row .story-label { grid-column: 1 / -1; }
   .nct-story-audience-row > span:not(:first-child) { text-align: left; }
-  .nct-segment-columns, .nct-segment-row { grid-template-columns: 94px minmax(0, 1fr) 62px; }
+  .nct-segment-columns, .nct-segment-row {
+    grid-template-columns: 94px minmax(120px, 1fr) repeat(5, minmax(72px, auto));
+    min-width: 640px;
+  }
+  .nct-segment-table { overflow-x: auto; }
   .nct-segment-columns span:nth-child(2), .nct-segment-row span:nth-child(2),
-  .nct-segment-columns span:nth-child(5), .nct-segment-row span:nth-child(5) { display: none; }
+  .nct-segment-columns span:nth-child(3), .nct-segment-row span:nth-child(3),
+  .nct-segment-columns span:nth-child(5), .nct-segment-row span:nth-child(5),
+  .nct-segment-columns span:nth-child(6), .nct-segment-row span:nth-child(6) { display: none; }
   .nct-context-head { align-items: flex-start; flex-direction: column; }
   .nct-context-columns, .nct-context-row { grid-template-columns: 94px 86px minmax(0, 1fr); }
   .nct-context-columns span:nth-child(3), .nct-context-row span:nth-child(3),
@@ -4717,6 +4916,15 @@ function dateContinuity(dateValues,start,end){const expected=inclusiveIsoDates(s
 function usedDateContinuity(dateValues,start,end,trueBounds){const selected=inclusiveIsoDates(start,end),sourceFirst=isoDatePart(trueBounds?.start),sourceLast=isoDatePart(trueBounds?.end);if(!selected.length)return {valid:false,total:0,present:0,missing:[],outside:0};if(!sourceFirst||!sourceLast)return {...dateContinuity(dateValues,start,end),outside:0};const overlapStart=selected[0]>sourceFirst?selected[0]:sourceFirst,overlapEnd=selected[selected.length-1]<sourceLast?selected[selected.length-1]:sourceLast;if(overlapStart>overlapEnd)return {valid:true,total:0,present:0,missing:[],outside:selected.length,noOverlap:true};const value=dateContinuity(dateValues,overlapStart,overlapEnd);value.outside=selected.length-value.total;return value;}
 function continuityLine(label,coverage){if(!coverage.valid)return '<span class="scope-continuity-line"><strong>'+esc(label)+':</strong> No range</span>';if(coverage.noOverlap)return '<span class="scope-continuity-line"><strong>'+esc(label)+': Outside source range</strong> · '+fmt(coverage.outside)+' selected dates</span>';const outside=coverage.outside?' · '+fmt(coverage.outside)+' outside source range':'';if(!coverage.missing.length)return '<span class="scope-continuity-line complete"><strong>'+esc(label)+': Complete</strong> · '+fmt(coverage.present)+'/'+fmt(coverage.total)+' dates'+outside+'</span>';const preview=coverage.missing.slice(0,4).map(shortDate).join(', '),more=coverage.missing.length>4?' +'+fmt(coverage.missing.length-4)+' more':'';return '<span class="scope-continuity-line gap"><strong>'+esc(label)+': '+fmt(coverage.missing.length)+' gap'+(coverage.missing.length===1?'':'s')+'</strong> · '+fmt(coverage.present)+'/'+fmt(coverage.total)+' dates<span title="'+esc(coverage.missing.map(shortDate).join(', '))+'"> · '+esc(preview+more)+'</span>'+outside+'</span>';}
 function scopeContinuityHtml(dateValues,trueBounds,usedStart,usedEnd){const effectiveTrue=trueBounds||coverageBounds(dateValues);return '<span class="scope-continuity">'+continuityLine('True',dateContinuity(dateValues,effectiveTrue?.start,effectiveTrue?.end))+continuityLine('Used',usedDateContinuity(dateValues,usedStart,usedEnd,effectiveTrue))+'</span>';}
+function minuteCompletenessHtml(counts,usedStart,usedEnd){
+  if(!counts||!usedStart||!usedEnd)return '';
+  const partial=Object.entries(counts)
+    .filter(([dateValue,count])=>dateValue>=usedStart&&dateValue<=usedEnd&&Number(count)<288)
+    .sort(([left],[right])=>left.localeCompare(right));
+  if(!partial.length)return '<span class="scope-continuity-line complete"><strong>5-minute buckets: Complete</strong> · 288 per represented day</span>';
+  const detail=partial.map(([dateValue,count])=>shortDate(dateValue)+' ('+fmt(count)+'/288)').join(', ');
+  return '<span class="scope-continuity-line gap" title="'+esc(detail)+'"><strong>5-minute buckets: '+fmt(partial.length)+' partial day'+(partial.length===1?'':'s')+'</strong> · '+esc(detail)+'</span>';
+}
 function selectedViewerRows(source){const channels=selectedMulti(source==='fast'?'fastChannel':'streamChannel'),platforms=source==='fast'?selectedMulti('fastPlatform'):null;return viewerScope(source).filter(row=>(!platforms||platforms.has(String(row.platform_name)))&&channels.has(String(row.channel_name)));}
 function selectedAmagiRows(){const platforms=selectedMulti('amagiPlatform'),channels=selectedMulti('amagiChannel'),from=$('from').value,to=$('to').value;return (AMAGI.minute||[]).filter(row=>String(row.log_date)>=from&&String(row.log_date)<=to&&platforms.has(String(row.platform_name))&&channels.has(String(row.channel_name)));}
 let youtubeDateMode='follow';
@@ -5686,6 +5894,7 @@ function selectedYoutubeRows(){
 function renderScopeValidation(){
   ensureScopePanel();
   const coverage=DATA.date_coverage||{};
+  const minuteCoverage=DATA.minute_coverage||{};
   const asrunRows=filtered(),asrunTrue=sourceBounds(DATA.events||[],'on_air_start_ist','on_air_end_ist'),asrunUsed=sourceBounds(asrunRows,'on_air_start_ist','on_air_end_ist');
   const fastTrue=sourceBounds((DATA.viewer_minute||[]).filter(row=>row.source==='fast'),'minute_ist')||coverageBounds(coverage.fast),fastUsedRows=selectedViewerRows('fast'),fastUsed=sourceBounds(fastUsedRows,'minute_ist');
   const streamTrue=sourceBounds((DATA.viewer_minute||[]).filter(row=>row.source==='stream'),'minute_ist')||coverageBounds(coverage.stream),streamUsedRows=selectedViewerRows('stream'),streamUsed=sourceBounds(streamUsedRows,'minute_ist');
@@ -5696,17 +5905,18 @@ function renderScopeValidation(){
   const youtube=DATA.youtube||{},youtubeTrue=youtube.true_start&&youtube.true_end?{start:youtube.true_start,end:youtube.true_end}:null,youtubeUsedRows=selectedYoutubeRows(),youtubeUsed=sourceBounds(youtubeUsedRows,'timestamp_ist');
   const masterStart=$('from').value,masterEnd=$('to').value;
   const rows=[
-    ['ASRUN delivered ad events',asrunTrue,asrunUsed,asrunRows.length,coverage.asrun,masterStart,masterEnd,'Date, ad type, ad ID, creative title'],
-    ['FAST fixed 5-minute audience buckets',fastTrue,fastUsed,fastUsedRows.length,coverage.fast,masterStart,masterEnd,'ASRUN date + FAST platform/channel'],
-    ['STREAM fixed 5-minute audience buckets',streamTrue,streamUsed,streamUsedRows.length,coverage.stream,masterStart,masterEnd,'ASRUN date + STREAM channel'],
-    ['AMAGI actual 5-minute audience buckets',amagiTrue,amagiUsed,amagiUsedRows.length,coverage.amagi,masterStart,masterEnd,'ASRUN date + AMAGI platform/channel'],
-    ['FCT monitored ad occurrences',fctTrue,fctUsed,fctUsedCount,coverage.fct,fctStart,fctEnd,'Independent FCT date + all selected FCT dimensions'],
-    ['YouTube live audience',youtubeTrue,youtubeUsed,youtubeUsedRows.length,coverage.youtube,$('youtubeFrom').value,$('youtubeTo').value,'Effective YouTube date + video filter'],
+    ['ASRUN delivered ad events',asrunTrue,asrunUsed,asrunRows.length,coverage.asrun,masterStart,masterEnd,'Date, ad type, ad ID, creative title',null],
+    ['FAST fixed 5-minute audience buckets',fastTrue,fastUsed,fastUsedRows.length,coverage.fast,masterStart,masterEnd,'ASRUN date + FAST platform/channel',minuteCoverage.fast],
+    ['STREAM fixed 5-minute audience buckets',streamTrue,streamUsed,streamUsedRows.length,coverage.stream,masterStart,masterEnd,'ASRUN date + STREAM channel',minuteCoverage.stream],
+    ['AMAGI actual 5-minute audience buckets',amagiTrue,amagiUsed,amagiUsedRows.length,coverage.amagi,masterStart,masterEnd,'ASRUN date + AMAGI platform/channel',null],
+    ['FCT monitored ad occurrences',fctTrue,fctUsed,fctUsedCount,coverage.fct,fctStart,fctEnd,'Independent FCT date + all selected FCT dimensions',null],
+    ['YouTube live audience',youtubeTrue,youtubeUsed,youtubeUsedRows.length,coverage.youtube,$('youtubeFrom').value,$('youtubeTo').value,'Effective YouTube date + video filter',null],
   ];
-  $('dataScopeRows').innerHTML=rows.map(row=>'<tr><td><strong>'+esc(row[0])+'</strong></td><td>'+esc(scopeRangeText(row[1]))+'</td><td>'+esc(scopeRangeText(row[2]))+'</td><td>'+(typeof row[3]==='number'?fmt(row[3]):esc(row[3]))+'</td><td>'+scopeContinuityHtml(row[4],row[1],row[5],row[6])+'</td><td class="scope-muted">'+esc(row[7])+'</td></tr>').join('');
+  $('dataScopeRows').innerHTML=rows.map(row=>'<tr><td><strong>'+esc(row[0])+'</strong></td><td>'+esc(scopeRangeText(row[1]))+'</td><td>'+esc(scopeRangeText(row[2]))+'</td><td>'+(typeof row[3]==='number'?fmt(row[3]):esc(row[3]))+'</td><td>'+scopeContinuityHtml(row[4],row[1],row[5],row[6])+minuteCompletenessHtml(row[8],row[5],row[6])+'</td><td class="scope-muted">'+esc(row[7])+'</td></tr>').join('');
 }
 const NCT=DATA.nct||{};
 let nctPayload=null;
+let nctAudienceMinutePayload={viewer:[],amagi:[]};
 let nctLoadPromise=null;
 let nctManifest=null;
 let nctManifestPromise=null;
@@ -5732,7 +5942,9 @@ const NCT_RANK_CONFIG={
 const nctRankExpanded={program:false,genre:false,geography:false};
 let nctStoryAudienceExpanded=false;
 let nctAudienceStateCache={key:null,value:null};
+let nctOccurrenceAudienceStateCache={key:null,value:null};
 let nctStoryAudienceCache={key:null,value:null};
+let nctSegmentAudienceCache={key:null,value:new Map()};
 const NCT_SEGMENT_LIMIT=15;
 const NCT_SEGMENT_BATCH=200;
 let nctSegmentsExpanded=false;
@@ -5744,7 +5956,9 @@ let nctContextRowsCache=[];
 const NCT_STORY_SOURCE_FILTER_IDS=['nctYoutubeVideo'];
 function resetNctAudienceCaches(){
   nctAudienceStateCache={key:null,value:null};
+  nctOccurrenceAudienceStateCache={key:null,value:null};
   nctStoryAudienceCache={key:null,value:null};
+  nctSegmentAudienceCache={key:null,value:new Map()};
 }
 function preserveNctAllSelections(){
   for(const id of [
@@ -5932,13 +6146,19 @@ function ensureNctPanel(){
     +'<div class="nct-preview-note nct-story-audience-note" '
     +'id="nctStoryAudienceNote"></div></div>'
     +'<div class="nct-segment-section nct-rank-card">'
-    +'<div class="nct-rank-head"><div><h3>Story Clip Records</h3>'
-    +'<small>Latest matching NCT clips for the current filters</small></div>'
-    +'<button class="nct-rank-toggle" id="nctSegmentExpand" type="button">Expand All</button></div>'
+    +'<div class="nct-rank-head"><div><h3>NCT Monitored Content Occurrences</h3>'
+    +'<small>Full NCT clip duration | FAST + STREAM + AMAGI + selected YouTube minute-by-minute viewer-minutes</small></div>'
+    +'<div class="panel-actions"><button id="exportNctAudienceCsv" type="button">Export CSV</button>'
+    +'<button id="exportNctAudienceBreakdownCsv" type="button">Export platform/channel CSV</button>'
+    +'<button class="nct-rank-toggle" id="nctSegmentExpand" type="button">Expand All</button></div></div>'
     +'<div class="nct-segment-table" id="nctSegmentTable">'
     +'<div class="nct-segment-columns"><span>Clip start IST</span><span>Channel</span>'
     +'<span>Program</span><span>Story / Sub-story</span><span>Genre / Geography</span>'
-    +'<span>Duration</span></div>'
+    +'<span>Duration</span><span class="fast-col" title="FAST viewer-minutes">FAST<br>Viewer-min</span>'
+    +'<span class="stream-col" title="STREAM viewer-minutes">STREAM<br>Viewer-min</span>'
+    +'<span class="amagi-col" title="AMAGI viewer-minutes">AMAGI<br>Viewer-min</span>'
+    +'<span class="youtube-col" title="Selected YouTube viewer-minutes">YOUTUBE<br>Viewer-min</span>'
+    +'<span class="total-col" title="Combined viewer-minutes">Combined<br>Viewer-min</span></div>'
     +'<div class="nct-segment-list" id="nctSegmentRows"></div></div>'
     +'<div class="nct-preview-note nct-story-audience-note" id="nctSegmentNote"></div></div>'
     +'<div class="nct-context"><div class="nct-context-head"><div><h3>Delivered Ad Content Context</h3>'
@@ -5968,10 +6188,21 @@ function ensureNctPanel(){
     button.addEventListener('click',()=>setNctDateMode(button.dataset.nctDateMode));
   }
   initializeNctStoryDropdown();
-  $('exportNctCsv').addEventListener('click',()=>loadNctData().then(exportNctCsv));
+  $('exportNctCsv').addEventListener('click',()=>runWithDashboardSources(
+    [loadAudienceDashboardData,loadYoutubeDashboardData,loadNctData],
+    exportNctCsv,
+  ));
   $('exportNctStoryAudienceCsv').addEventListener('click',()=>runWithDashboardSources(
     [loadAudienceDashboardData,loadYoutubeDashboardData,loadNctData],
     exportNctStoryAudienceCsv,
+  ));
+  $('exportNctAudienceCsv').addEventListener('click',()=>runWithDashboardSources(
+    [loadAudienceDashboardData,loadYoutubeDashboardData,loadNctData],
+    exportNctAudienceCsv,
+  ));
+  $('exportNctAudienceBreakdownCsv').addEventListener('click',()=>runWithDashboardSources(
+    [loadAudienceDashboardData,loadYoutubeDashboardData,loadNctData],
+    exportNctAudienceBreakdownCsv,
   ));
   $('exportNctContextCsv').addEventListener('click',()=>loadNctData().then(exportNctContextCsv));
   $('nctContextChannel').addEventListener('change',()=>{
@@ -6159,8 +6390,15 @@ function loadNctPartition(dateValue,file){
         return;
       }
       for(const row of rows)nctPayload.segments.push(row);
+      const audience=window.__NCT_AUDIENCE_PARTITIONS__?.[dateValue]||{};
+      for(const row of (audience.viewer||[]))nctAudienceMinutePayload.viewer.push(row);
+      for(const row of (audience.amagi||[]))nctAudienceMinutePayload.amagi.push(row);
       delete window.__NCT_STORY_PARTITIONS__[dateValue];
+      if(window.__NCT_AUDIENCE_PARTITIONS__){
+        delete window.__NCT_AUDIENCE_PARTITIONS__[dateValue];
+      }
       nctLoadedDates.add(dateValue);
+      resetNctAudienceCaches();
       resolve();
     };
     script.onerror=()=>reject(new Error('NCT daily partition could not be loaded: '+file));
@@ -6567,6 +6805,56 @@ function nctAudienceStates(){
   nctAudienceStateCache={key,value};
   return value;
 }
+function nctOccurrenceViewerMinuteMap(source,range){
+  const channelId=source==='fast'?'fastChannel':'streamChannel';
+  const channels=selectedMulti(channelId),allChannels=multiSelectionIsAll(channelId);
+  const platforms=source==='fast'?selectedMulti('fastPlatform'):null;
+  const allPlatforms=source!=='fast'||multiSelectionIsAll('fastPlatform');
+  const map=new Map();
+  for(const row of nctAudienceMinutePayload.viewer){
+    const [minute,rowSource,platform,channel,count]=row;
+    if(rowSource!==source)continue;
+    const date=String(minute||'').slice(0,10);
+    if(date<range.start||date>range.end)continue;
+    if(source==='fast'&&!allPlatforms&&!platforms.has(String(platform)))continue;
+    if(!allChannels&&!channels.has(String(channel)))continue;
+    const key=minuteKey(minute);
+    map.set(key,(map.get(key)||0)+Number(count||0));
+  }
+  return {map,bounds:null};
+}
+function nctOccurrenceAmagiMinuteMap(range){
+  const platforms=selectedMulti('amagiPlatform');
+  const channels=selectedMulti('amagiChannel');
+  const allPlatforms=multiSelectionIsAll('amagiPlatform');
+  const allChannels=multiSelectionIsAll('amagiChannel');
+  const map=new Map();
+  for(const row of nctAudienceMinutePayload.amagi){
+    const [minute,platform,channel,count]=row;
+    const date=String(minute||'').slice(0,10);
+    if(date<range.start||date>range.end)continue;
+    if(!allPlatforms&&!platforms.has(String(platform)))continue;
+    if(!allChannels&&!channels.has(String(channel)))continue;
+    const key=minuteKey(minute);
+    map.set(key,(map.get(key)||0)+Number(count||0));
+  }
+  return {map,bounds:null};
+}
+function nctOccurrenceAudienceStates(){
+  const range=nctEffectiveRange();
+  const key=['occurrence',nctAudienceSelectionKey(range),nctLoadedDates.size].join('\u0000');
+  if(nctOccurrenceAudienceStateCache.key===key
+    &&nctOccurrenceAudienceStateCache.value){
+    return nctOccurrenceAudienceStateCache.value;
+  }
+  const value={key};
+  value.fast=nctPrepareAudienceState(nctOccurrenceViewerMinuteMap('fast',range));
+  value.stream=nctPrepareAudienceState(nctOccurrenceViewerMinuteMap('stream',range));
+  value.amagi=nctPrepareAudienceState(nctOccurrenceAmagiMinuteMap(range));
+  value.youtube=nctPrepareAudienceState(nctYoutubeAudienceMinuteMap(range));
+  nctOccurrenceAudienceStateCache={key,value};
+  return value;
+}
 function nctStoryAudienceRows(rows){
   const states=nctAudienceStates();
   const cacheKey=[nctFilterCache.key||'',states.key].join('\u0000');
@@ -6715,7 +7003,94 @@ function renderNctStoryAudience(rows){
       +'as directional when monitored time is below 5 minutes.'
     :'No story audience observations match the current filters.';
 }
-function nctSegmentLine(row){
+function nctOccurrenceMetric(state,startMillis,endMillis,coveredMinutesOverride=null){
+  const durationMinutes=Math.max(0,(endMillis-startMillis)/60000);
+  const interval=nctAudienceInterval(state,startMillis,endMillis);
+  const coveredMinutes=coveredMinutesOverride===null
+    ?interval.coveredMinutes
+    :Math.max(0,Math.min(durationMinutes,coveredMinutesOverride));
+  return {
+    total:coveredMinutes>0?interval.viewerMinutes:null,
+    durationMinutes,
+    coveredMinutes,
+    coveragePercent:durationMinutes?coveredMinutes/durationMinutes*100:0,
+  };
+}
+function nctYoutubeCoveredMinutes(startMillis,endMillis){
+  const bounds=youtubeTrueBounds();
+  if(!bounds.start||!bounds.end)return 0;
+  const sourceStart=naiveMillis(bounds.start+'T00:00:00');
+  const sourceEnd=naiveMillis(bounds.end+'T00:00:00')+86400000;
+  return Math.max(0,Math.min(endMillis,sourceEnd)-Math.max(startMillis,sourceStart))/60000;
+}
+function nctClipInterval(row){
+  const start=naiveMillis(String(row.clip_start_ist||'').replace(' ','T'));
+  let end=naiveMillis(String(row.clip_end_ist||'').replace(' ','T'));
+  if(!Number.isFinite(end)||end<=start){
+    end=start+Math.max(0,Number(row.duration_seconds||0))*1000;
+  }
+  return {start,end};
+}
+function nctSegmentAudienceMetrics(row,states){
+  if(nctSegmentAudienceCache.key!==states.key){
+    nctSegmentAudienceCache={key:states.key,value:new Map()};
+  }
+  const cacheKey=[
+    row.source_file||'',row.source_row||'',row.clip_start_ist||'',row.clip_end_ist||'',
+  ].join('\u0000');
+  if(nctSegmentAudienceCache.value.has(cacheKey)){
+    return nctSegmentAudienceCache.value.get(cacheKey);
+  }
+  const {start,end}=nctClipInterval(row);
+  const metrics={
+    fast:nctOccurrenceMetric(states.fast,start,end),
+    stream:nctOccurrenceMetric(states.stream,start,end),
+    amagi:nctOccurrenceMetric(states.amagi,start,end),
+  };
+  metrics.youtube=nctOccurrenceMetric(
+    states.youtube,start,end,nctYoutubeCoveredMinutes(start,end)
+  );
+  const available=['fast','stream','amagi','youtube'].filter(
+    source=>metrics[source].total!==null
+  );
+  const durationMinutes=Math.max(0,(end-start)/60000);
+  const coveredSourceMinutes=['fast','stream','amagi','youtube'].reduce(
+    (sum,source)=>sum+metrics[source].coveredMinutes,0
+  );
+  metrics.combined={
+    total:available.length
+      ?available.reduce((sum,source)=>sum+Number(metrics[source].total),0):null,
+    availableSources:available,
+    durationMinutes,
+    coveredMinutes:coveredSourceMinutes,
+    coveragePercent:durationMinutes?coveredSourceMinutes/(durationMinutes*4)*100:0,
+  };
+  nctSegmentAudienceCache.value.set(cacheKey,metrics);
+  return metrics;
+}
+function nctSegmentAudienceCell(source,metric){
+  const label=nctStoryBasisLabel(source),available=metric.total!==null;
+  const roundedCoverage=Math.round(metric.coveragePercent||0);
+  const coverage=source==='combined'
+    ?(metric.availableSources.length
+      ?'Combined viewer-minutes from: '
+        +metric.availableSources.map(nctStoryBasisLabel).join(', ')
+        +'. Average four-source duration coverage: '+roundedCoverage+'%.'
+      :'No selected audience source covers this clip duration.')
+    :'Viewer-minutes = sum of minute concurrency x overlapping seconds / 60. '
+      +'Clip-duration coverage: '+roundedCoverage+'%. '
+      +(source==='youtube'
+        ?'Collected YouTube minutes with no selected live stream count as zero.'
+        :'Missing source minutes are not converted to zero.');
+  return '<span class="combined-value '+source+'-col'
+    +(available?'':' audience-unavailable')
+    +(available&&roundedCoverage<100?' audience-partial':'')
+    +'" data-label="'+esc(label)
+    +'" title="'+esc(coverage)+'">'
+    +(available?fmt(Math.round(metric.total)):'Not available')+'</span>';
+}
+function nctSegmentLine(row,states){
+  const metrics=nctSegmentAudienceMetrics(row,states);
   return '<div class="nct-segment-row"><span>'
     +formatIstSeconds(row.clip_start_ist)+'</span>'
     +'<span>'+esc(nctText(row,'channel_name'))+'</span>'
@@ -6725,14 +7100,21 @@ function nctSegmentLine(row){
     +esc(nctText(row,'sub_story'))+'</small></span>'
     +'<span>'+esc(nctText(row,'primary_genre'))+'<small>'
     +esc(nctText(row,'geography'))+'</small></span>'
-    +'<span>'+fmt(row.duration_seconds||0)+' sec</span></div>';
+    +'<span>'+fmt(row.duration_seconds||0)+' sec</span>'
+    +nctSegmentAudienceCell('fast',metrics.fast)
+    +nctSegmentAudienceCell('stream',metrics.stream)
+    +nctSegmentAudienceCell('amagi',metrics.amagi)
+    +nctSegmentAudienceCell('youtube',metrics.youtube)
+    +nctSegmentAudienceCell('combined',metrics.combined)
+    +'</div>';
 }
 function renderNctSegmentList(preserveScroll=true){
   const list=$('nctSegmentRows'),table=$('nctSegmentTable');
   const scrollTop=preserveScroll?table.scrollTop:0;
   const visible=nctSegmentRowsCache.slice(0,nctSegmentRenderCount);
+  const states=nctOccurrenceAudienceStates();
   list.innerHTML=visible.length
-    ?visible.map(nctSegmentLine).join('')
+    ?visible.map(row=>nctSegmentLine(row,states)).join('')
     :'<div class="audience-empty">No NCT segments match the selected filters.</div>';
   table.classList.toggle(
     'expandable',nctSegmentRowsCache.length>NCT_SEGMENT_LIMIT
@@ -6747,9 +7129,11 @@ function renderNctSegmentList(preserveScroll=true){
   button.setAttribute('aria-expanded',String(nctSegmentsExpanded));
   $('nctSegmentNote').textContent=nctSegmentsExpanded
     ?'Showing latest '+fmt(visible.length)+' of '+fmt(nctSegmentRowsCache.length)
-      +' matching clips. Scroll to load more; CSV exports the complete filtered result.'
+      +' matching NCT clips. Scroll to load more; CSV exports the complete filtered result.'
     :'Showing latest '+fmt(visible.length)+' of '+fmt(nctSegmentRowsCache.length)
-      +' matching clips. Expand All keeps the complete list inside this scroll area.';
+      +' matching NCT clips. Viewer-minutes sum every overlapping source minute, '
+      +'weighted by the seconds of the clip inside that minute. Values are rounded '
+      +'to integers after summing; Combined is not cross-source deduplicated.';
 }
 function renderNctSegments(rows){
   nctSegmentRowsCache=rows.slice().sort(
@@ -6909,17 +7293,206 @@ function toggleNctChart(){
 }
 function exportNctCsv(){
   const range=nctEffectiveRange(),rows=nctFilteredRows();
-  const header=['NCT Date From','NCT Date To','Clip Start IST','Clip End IST','Channel','Program','Story','Sub-story','Primary Genre','Secondary Genre','Geography','Duration Seconds','Anchor','Reporter','Personality','Guest','Logistics','Telecast Format','Assist Used','Split','Story Format','Source File','Source Row'];
-  const values=rows.map(row=>[
-    range.start,range.end,formatIstSeconds(row.clip_start_ist),formatIstSeconds(row.clip_end_ist),
-    nctText(row,'channel_name'),nctText(row,'program_name'),nctText(row,'story'),
-    nctText(row,'sub_story'),nctText(row,'primary_genre'),nctText(row,'secondary_genre'),
-    nctText(row,'geography'),row.duration_seconds,nctText(row,'anchor'),
-    nctText(row,'reporter'),nctText(row,'personality'),nctText(row,'guest'),
-    nctText(row,'logistics'),nctText(row,'telecast_format'),nctText(row,'assist_used'),
-    nctText(row,'split'),nctText(row,'story_format'),nctText(row,'source_file'),row.source_row,
-  ]);
+  const states=nctOccurrenceAudienceStates();
+  const selection=id=>[...selectedMulti(id)].sort().join(' | ');
+  const sourceTime=value=>String(value||'').slice(11,19);
+  const header=[
+    'channel','Story','Sub_Story','content_type_1','content_type_2','pgm_name',
+    'Pgm_Start_Time','Pgm_End_Time','clip_start_time','clip_end_time','pgm_date','week',
+    'geography','title','duration','duration_seconds','grap_type','personality','guest',
+    'anchor','reporter','logistics','telecast_format','assist_used','split','Story_Format',
+    'Start Half Hour','Dur in Mins','AMA','UR','NCT Date From','NCT Date To',
+    'Source File','Source Row',
+    'Selected FAST Platforms','Selected FAST Channels','Selected STREAM Platforms',
+    'Selected STREAM Channels','Selected AMAGI Platforms','Selected AMAGI Channels',
+    'Selected YouTube Platforms','Selected YouTube Channels','Selected YouTube Video IDs',
+    'Metric Basis','FAST Viewer-Minutes','STREAM Viewer-Minutes','AMAGI Viewer-Minutes',
+    'YouTube Viewer-Minutes','Combined Viewer-Minutes',
+  ];
+  const streamChannels=selectedMulti('streamChannel');
+  const streamPlatforms=[...new Set(
+    nctAudienceMinutePayload.viewer
+      .filter(row=>row[1]==='stream'
+        &&String(row[0]||'').slice(0,10)>=range.start
+        &&String(row[0]||'').slice(0,10)<=range.end
+        &&streamChannels.has(String(row[3]||'Unknown / NA')))
+      .map(row=>String(row[2]||'Unknown / NA'))
+  )].sort().join(' | ');
+  const values=rows.map(row=>{
+    const metric=nctSegmentAudienceMetrics(row,states);
+    const integer=value=>value===null?'':Math.round(Number(value));
+    return [
+      nctText(row,'channel_name'),nctText(row,'story'),nctText(row,'sub_story'),
+      nctText(row,'primary_genre'),nctText(row,'secondary_genre'),
+      nctText(row,'program_name'),sourceTime(row.program_start_ist),
+      sourceTime(row.program_end_ist),sourceTime(row.clip_start_ist),
+      sourceTime(row.clip_end_ist),nctText(row,'source_program_date'),
+      nctText(row,'source_week'),nctText(row,'geography'),nctText(row,'title'),
+      nctText(row,'source_duration'),row.duration_seconds,
+      nctText(row,'source_graph_type'),nctText(row,'personality'),nctText(row,'guest'),
+      nctText(row,'anchor'),nctText(row,'reporter'),nctText(row,'logistics'),
+      nctText(row,'telecast_format'),nctText(row,'assist_used'),nctText(row,'split'),
+      nctText(row,'story_format'),nctText(row,'source_start_half_hour'),
+      nctText(row,'source_duration_minutes'),nctText(row,'source_ama'),
+      nctText(row,'source_ur'),range.start,range.end,nctText(row,'source_file'),row.source_row,
+      selection('fastPlatform'),selection('fastChannel'),streamPlatforms,
+      selection('streamChannel'),selection('amagiPlatform'),selection('amagiChannel'),
+      'YouTube',selection('youtubeChannel'),selection('nctYoutubeVideo'),
+      'Viewer-minutes = sum of minute concurrency x clip overlap seconds / 60; Combined sums available sources without cross-source deduplication',
+      integer(metric.fast.total),integer(metric.stream.total),integer(metric.amagi.total),
+      integer(metric.youtube.total),integer(metric.combined.total),
+    ];
+  });
   downloadCsv('nct_story_segments_'+range.start+'_to_'+range.end+'.csv',header,values);
+}
+function exportNctAudienceCsv(){
+  const range=nctEffectiveRange(),rows=nctFilteredRows().slice().sort(
+    (a,b)=>String(a.clip_start_ist).localeCompare(String(b.clip_start_ist))
+  );
+  const states=nctOccurrenceAudienceStates();
+  const selection=id=>[...selectedMulti(id)].sort().join(' | ');
+  const header=[
+    'NCT Date From','NCT Date To','Clip Start IST','Clip End IST','Channel','Program',
+    'Story','Sub-story','Primary Genre','Geography','Duration Seconds',
+    'Selected FAST Platforms','Selected FAST Channels','Selected STREAM Channels',
+    'Selected AMAGI Platforms','Selected AMAGI Channels','Selected YouTube Channels',
+    'Selected YouTube Video IDs','FAST Viewer-Minutes','STREAM Viewer-Minutes',
+    'AMAGI Viewer-Minutes','YouTube Viewer-Minutes','Combined Viewer-Minutes',
+  ];
+  const values=rows.map(row=>{
+    const metric=nctSegmentAudienceMetrics(row,states);
+    const integer=value=>value===null?'':Math.round(Number(value));
+    return [
+      range.start,range.end,formatIstSeconds(row.clip_start_ist),
+      formatIstSeconds(row.clip_end_ist),nctText(row,'channel_name'),
+      nctText(row,'program_name'),nctText(row,'story'),nctText(row,'sub_story'),
+      nctText(row,'primary_genre'),nctText(row,'geography'),row.duration_seconds,
+      selection('fastPlatform'),selection('fastChannel'),selection('streamChannel'),
+      selection('amagiPlatform'),selection('amagiChannel'),selection('youtubeChannel'),
+      selection('nctYoutubeVideo'),integer(metric.fast.total),
+      integer(metric.stream.total),integer(metric.amagi.total),
+      integer(metric.youtube.total),integer(metric.combined.total),
+    ];
+  });
+  downloadCsv(
+    'nct_content_occurrence_audience_'+range.start+'_to_'+range.end+'.csv',
+    header,
+    values,
+  );
+}
+function nctOccurrenceBreakdownStates(range){
+  const scopes=new Map();
+  const ensureScope=(source,platform,channel,videoId='',videoTitle='')=>{
+    const key=[source,platform,channel,source==='YOUTUBE'?'':videoId].join('\u0000');
+    if(!scopes.has(key)){
+      scopes.set(key,{
+        source,platform,channel,map:new Map(),videoIds:new Set(),videoTitles:new Set(),
+      });
+    }
+    const scope=scopes.get(key);
+    if(videoId)scope.videoIds.add(videoId);
+    if(videoTitle)scope.videoTitles.add(videoTitle);
+    return scope;
+  };
+  const addMinute=(scope,minute,value)=>{
+    const key=minuteKey(minute);
+    scope.map.set(key,(scope.map.get(key)||0)+Number(value||0));
+  };
+  const fastPlatforms=selectedMulti('fastPlatform');
+  const fastChannels=selectedMulti('fastChannel');
+  const streamChannels=selectedMulti('streamChannel');
+  for(const row of nctAudienceMinutePayload.viewer){
+    const [minute,source,platformValue,channelValue,count]=row;
+    const date=String(minute||'').slice(0,10);
+    if(date<range.start||date>range.end)continue;
+    const platform=String(platformValue||'Unknown / NA');
+    const channel=String(channelValue||'Unknown / NA');
+    if(source==='fast'){
+      if(!fastPlatforms.has(platform)||!fastChannels.has(channel))continue;
+      addMinute(ensureScope('FAST',platform,channel),minute,count);
+    }else if(source==='stream'){
+      if(!streamChannels.has(channel))continue;
+      addMinute(ensureScope('STREAM',platform,channel),minute,count);
+    }
+  }
+  const amagiPlatforms=selectedMulti('amagiPlatform');
+  const amagiChannels=selectedMulti('amagiChannel');
+  for(const row of nctAudienceMinutePayload.amagi){
+    const [minute,platformValue,channelValue,count]=row;
+    const date=String(minute||'').slice(0,10);
+    if(date<range.start||date>range.end)continue;
+    const platform=String(platformValue||'Unknown / NA');
+    const channel=String(channelValue||'Unknown / NA');
+    if(!amagiPlatforms.has(platform)||!amagiChannels.has(channel))continue;
+    addMinute(ensureScope('AMAGI',platform,channel),minute,count);
+  }
+  const youtube=DATA.youtube||{};
+  const youtubeChannels=selectedMulti('youtubeChannel');
+  const youtubeVideos=selectedMulti('nctYoutubeVideo');
+  for(const channel of youtubeChannels){
+    ensureScope('YOUTUBE','YouTube',channel);
+  }
+  for(const row of (youtube.video_minute||[])){
+    const date=String(row.log_date||'');
+    if(date<range.start||date>range.end)continue;
+    const channel=String(row.youtube_channel||'Unknown / NA');
+    const videoId=String(row.video_id||'');
+    if(!youtubeChannels.has(channel)||!youtubeVideos.has(videoId))continue;
+    const title=youtubeVideoTitle(youtube,videoId,date);
+    addMinute(
+      ensureScope('YOUTUBE','YouTube',channel,videoId,title),
+      row.timestamp_ist,row.concurrent_viewers,
+    );
+  }
+  return [...scopes.values()].map(scope=>({
+    ...scope,
+    videoId:[...scope.videoIds].sort().join(' | '),
+    videoTitle:[...scope.videoTitles].sort().join(' | '),
+    state:nctPrepareAudienceState({map:scope.map,bounds:null}),
+  })).sort((left,right)=>
+    left.source.localeCompare(right.source)
+    ||left.platform.localeCompare(right.platform)
+    ||left.channel.localeCompare(right.channel)
+    ||left.videoId.localeCompare(right.videoId)
+  );
+}
+function exportNctAudienceBreakdownCsv(){
+  const range=nctEffectiveRange();
+  const clips=nctFilteredRows().slice().sort(
+    (left,right)=>String(left.clip_start_ist).localeCompare(String(right.clip_start_ist))
+  );
+  const scopes=nctOccurrenceBreakdownStates(range);
+  const header=[
+    'NCT Date From','NCT Date To','Clip Start IST','Clip End IST','NCT Channel',
+    'Program','Story','Sub-story','Primary Genre','Geography','Duration Seconds',
+    'Audience Source','Audience Platform','Audience Channel','YouTube Video ID',
+    'YouTube Video Title','Viewer-Minutes','Metric Basis','Source File','Source Row',
+  ];
+  const values=[];
+  for(const clip of clips){
+    const {start,end}=nctClipInterval(clip);
+    for(const scope of scopes){
+      const metric=nctOccurrenceMetric(
+        scope.state,start,end,
+        scope.source==='YOUTUBE'?nctYoutubeCoveredMinutes(start,end):null,
+      );
+      values.push([
+        range.start,range.end,formatIstSeconds(clip.clip_start_ist),
+        formatIstSeconds(clip.clip_end_ist),nctText(clip,'channel_name'),
+        nctText(clip,'program_name'),nctText(clip,'story'),nctText(clip,'sub_story'),
+        nctText(clip,'primary_genre'),nctText(clip,'geography'),clip.duration_seconds,
+        scope.source,scope.platform,scope.channel,scope.videoId,scope.videoTitle,
+        metric.total===null?'':Math.round(metric.total),
+        'Viewer-minutes = sum of minute concurrency x clip overlap seconds / 60; rounded after the full clip-duration sum',
+        nctText(clip,'source_file'),clip.source_row,
+      ]);
+    }
+  }
+  downloadCsv(
+    'nct_content_occurrence_platform_channel_'+range.start+'_to_'+range.end+'.csv',
+    header,
+    values,
+  );
 }
 function exportNctStoryAudienceCsv(){
   const range=nctEffectiveRange(),basis=nctStoryAudienceBasis();
@@ -6939,13 +7512,9 @@ function exportNctStoryAudienceCsv(){
     'Monitored Duration Seconds','Monitored Hours','Story Clip Count',
     'Selected Viewer Minutes','Selected Viewer Hours','Selected Average Minute Audience',
     'Selected Viewing Share Percent','Airtime Share Percent',
-    'Selected Performance Index','Selected Audience Coverage Percent',
-    'FAST Viewer Hours','FAST AMA','FAST Coverage Percent',
-    'STREAM Viewer Hours','STREAM AMA','STREAM Coverage Percent',
-    'AMAGI Viewer Hours','AMAGI AMA','AMAGI Coverage Percent',
-    'YouTube Viewer Hours','YouTube AMA',
-    'YouTube Coverage Percent','Combined Viewer Hours','Combined AMA',
-    'Combined Coverage Percent',
+    'Selected Performance Index','FAST Viewer Hours','FAST AMA',
+    'STREAM Viewer Hours','STREAM AMA','AMAGI Viewer Hours','AMAGI AMA',
+    'YouTube Viewer Hours','YouTube AMA','Combined Viewer Hours','Combined AMA',
   ];
   const values=rows.map((row,index)=>{
     const selected=row.metrics[basis];
@@ -6955,7 +7524,6 @@ function exportNctStoryAudienceCsv(){
       return [
         Number(metric.viewerHours.toFixed(4)),
         metric.ama===null?(zeroMissing?0:''):Number(metric.ama.toFixed(4)),
-        Number(metric.coverage.toFixed(4)),
       ];
     };
     const zeroSelected=basis==='youtube';
@@ -6969,7 +7537,6 @@ function exportNctStoryAudienceCsv(){
       selected.viewingShare===null?(zeroSelected?0:''):Number(selected.viewingShare.toFixed(4)),
       Number(row.airtimeShare.toFixed(4)),
       selected.performanceIndex===null?(zeroSelected?0:''):Number(selected.performanceIndex.toFixed(4)),
-      Number(selected.coverage.toFixed(4)),
       ...sourceValues('fast'),...sourceValues('stream'),...sourceValues('amagi'),
       ...sourceValues('youtube'),...sourceValues('combined'),
     ];
@@ -7338,6 +7905,9 @@ function ensureDashboardPages(){
   if(missing.length){
     throw new Error('Dashboard page sections are missing: '+missing.join(', '));
   }
+  nodes.combined.id='allDeliveredEventsPanel';
+  nodes.fctAudience.id='allFctMonitoredEventsPanel';
+  nodes.fct.id='fctSourceEventsPanel';
   // Source controls already live in the global header. Remove the three
   // duplicate source event panels and keep only their consolidated result.
   nodes.audience.remove();
@@ -7590,16 +8160,21 @@ def main() -> None:
         if fct["available"]
         else []
     )
+    nct = timed_step("NCT story mart", build_nct_story_mart)
+    nct_ranges = (
+        [(str(nct["true_start"])[:10], str(nct["true_end"])[:10])]
+        if nct["available"]
+        else []
+    )
     viewer_minute = timed_step(
         "Audience Operations viewer-minute snapshot",
         load_viewer_minute_snapshot,
         events,
         args.identity_minute,
-        fct_ranges,
+        [*fct_ranges, *nct_ranges],
     )
     youtube = timed_step("YouTube concurrency marts", build_youtube_marts)
     amagi = timed_step("Amagi concurrency mart", build_amagi_minute_mart, events)
-    nct = timed_step("NCT story mart", build_nct_story_mart)
     viewer_snapshot_path = PARSED_DIR / "audience_ops_identity_minute_asrun_dates.parquet"
     atomic_write_parquet(viewer_snapshot_path, viewer_minute)
     payload = timed_step(
@@ -7620,7 +8195,12 @@ def main() -> None:
     write_payload_script(payload_path, core_payload)
     sidecar_paths = write_dashboard_sidecars(source_chunks)
     nct_payload_path = OUTPUT_DIR / "nct_story_data.js"
-    write_nct_payload_script(nct_payload_path, nct)
+    write_nct_payload_script(
+        nct_payload_path,
+        nct,
+        viewer_minute,
+        amagi["minute"],
+    )
     html_path = OUTPUT_DIR / "asrun_delivery_demo.html"
     html_path.write_text(render_dashboard(core_payload), encoding="utf-8")
     print(f"Parsed events : {len(events):,}")

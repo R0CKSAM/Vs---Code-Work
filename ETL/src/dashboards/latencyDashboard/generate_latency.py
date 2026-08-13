@@ -119,6 +119,16 @@ def sql_text(value: str | Path) -> str:
     return "'" + str(value).replace("'", "''") + "'"
 
 
+def parquet_reader_sql(args: argparse.Namespace) -> str:
+    """Build a DuckDB reader for either explicit merged parts or one lake."""
+    input_files = tuple(Path(path) for path in getattr(args, "input_files", ()) or ())
+    if input_files:
+        paths = ", ".join(sql_text(q(path)) for path in input_files)
+        return f"read_parquet([{paths}], hive_partitioning=1, union_by_name=1)"
+    glob = q(args.lake / "**" / "part_*.parquet")
+    return f"read_parquet('{glob}', hive_partitioning=1, union_by_name=1)"
+
+
 def assert_safe_source(source: str) -> str:  # FIX-1
     if source not in SAFE_SOURCE_VALUES:  # FIX-1
         raise ValueError(f"Unsafe source value for SQL: {source!r}")  # FIX-1
@@ -326,7 +336,7 @@ def build_tables(args: argparse.Namespace) -> dict[str, pd.DataFrame]:
     start, end = checked_dates(args)
     # A lake writer creates tmp_*.parquet before atomically promoting part files.
     # Latency calculations must never read an in-progress temporary partition.
-    glob = q(args.lake / "**" / "part_*.parquet")
+    parquet_reader = parquet_reader_sql(args)
     partition_filter = build_partition_filter(start, end) if start and end else "1=1"
     source_filter = source_filter_sql(args.source)
     candidate_expr = channel_candidate_sql(assert_safe_sql_column("reqPath"))  # FIX-1
@@ -363,7 +373,7 @@ def build_tables(args: argparse.Namespace) -> dict[str, pd.DataFrame]:
                     TRY_CAST(tlsOverheadTimeMSec AS DOUBLE) AS tlsOverhead_ms,
                     TRY_CAST(totalBytes AS DOUBLE) AS totalBytes_value,
                     TRY_CAST(reqTimeSec AS DOUBLE) AS req_epoch
-                FROM read_parquet('{glob}', hive_partitioning=1, union_by_name=1)
+                FROM {parquet_reader}
                 WHERE ({partition_filter})
                   AND ({source_filter})
                   AND TRY_CAST(reqTimeSec AS DOUBLE) IS NOT NULL

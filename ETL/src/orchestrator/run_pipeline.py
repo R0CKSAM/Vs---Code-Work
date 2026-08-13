@@ -1003,8 +1003,8 @@ def main() -> None:
     parser.add_argument(
         "--lake-repair-lookback-days",
         type=int,
-        default=4,
-        help="When running a daily ETL, also recheck this many recent final_clean days for incomplete lake partitions.",
+        default=14,
+        help="When running a daily ETL, recheck this many recent days in lake and downstream incremental marts.",
     )
 
     # Deep profile controls
@@ -1275,6 +1275,9 @@ def main() -> None:
     if default_archive_lake.exists():
         archive_lake_roots.append(default_archive_lake.resolve())
     archive_lake_roots = list(dict.fromkeys(root for root in archive_lake_roots if root.exists() and root != lake_root))
+    # Record automatic as well as explicit archives so run-state data reflects
+    # the actual roots used by downstream readers.
+    args.archive_lake = [str(root) for root in archive_lake_roots]
     archive_lake_env = ";".join(str(root) for root in archive_lake_roots)
     overview_lake_root = (
         Path(args.overview_lake_root).expanduser().resolve()
@@ -2496,13 +2499,10 @@ def main() -> None:
         latency_start = args.latency_start
         latency_end = args.latency_end
         if not (latency_start and latency_end) and args.etl1_daily_date:
-            daily_dates = _daily_profile_dates(lake_root, date.fromisoformat(args.etl1_daily_date))
-            if daily_dates:
-                latency_start = min(daily_dates).isoformat()
-                latency_end = max(daily_dates).isoformat()
-            else:
-                latency_start = args.etl1_daily_date
-                latency_end = args.etl1_daily_date
+            target_day = date.fromisoformat(args.etl1_daily_date)
+            lookback_days = max(1, int(args.lake_repair_lookback_days))
+            latency_start = (target_day - timedelta(days=lookback_days - 1)).isoformat()
+            latency_end = (target_day + timedelta(days=1)).isoformat()
 
         latency_sources = ["fast", "stream"] if args.latency_source == "both" else [args.latency_source]
         for latency_source in latency_sources:
@@ -2536,6 +2536,8 @@ def main() -> None:
                 "--memory-limit",
                 args.latency_memory,
             ]
+            for archive_root in archive_lake_roots:
+                latency_cmd.extend(["--archive-lake", str(archive_root)])
             if source_start and source_end:
                 latency_cmd.extend(["--start", source_start, "--end", source_end])
             elif args.latency_window_days and args.latency_window_days > 0:
@@ -2565,13 +2567,10 @@ def main() -> None:
         identity_start = args.identity_start
         identity_end = args.identity_end
         if not (identity_start and identity_end) and args.etl1_daily_date:
-            daily_dates = _daily_profile_dates(lake_root, date.fromisoformat(args.etl1_daily_date))
-            if daily_dates:
-                identity_start = min(daily_dates).isoformat()
-                identity_end = max(daily_dates).isoformat()
-            else:
-                identity_start = args.etl1_daily_date
-                identity_end = args.etl1_daily_date
+            target_day = date.fromisoformat(args.etl1_daily_date)
+            lookback_days = max(1, int(args.lake_repair_lookback_days))
+            identity_start = (target_day - timedelta(days=lookback_days - 1)).isoformat()
+            identity_end = (target_day + timedelta(days=1)).isoformat()
 
         identity_cmd = [
             python,
@@ -2587,6 +2586,8 @@ def main() -> None:
             "--memory-limit",
             args.identity_memory,
         ]
+        for archive_root in archive_lake_roots:
+            identity_cmd.extend(["--archive-lake", str(archive_root)])
         if args.identity_source:
             identity_cmd.extend(["--source", args.identity_source])
         if identity_start and identity_end:

@@ -1,0 +1,9 @@
+# One YouTube channel or video URL per line.
+https://www.youtube.com/@indiatv
+https://www.youtube.com/@aajtak
+https://www.youtube.com/@ABPNews
+https://www.youtube.com/@news18india
+https://www.youtube.com/@ZeeNews
+https://www.youtube.com/@RepublicBharat
+https://www.youtube.com/@TV9Bharatvarsh
+https://www.youtube.com/@NDTVindia

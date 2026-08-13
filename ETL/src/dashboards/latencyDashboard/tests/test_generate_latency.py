@@ -39,3 +39,23 @@ def test_load_tables_from_profile_missing_summary_raises_file_not_found(tmp_path
     with patch.object(generate_latency, "read_profile_table", return_value=object()):  # FIX-M3
         with pytest.raises(FileNotFoundError):  # FIX-M3
             generate_latency.load_tables_from_profile(profile_dir)  # FIX-M3
+
+
+def test_parquet_reader_sql_uses_explicit_merged_partition_files(tmp_path):
+    first = tmp_path / "current" / "part_day_0.parquet"
+    second = tmp_path / "archive" / "part_day_1.parquet"
+    args = argparse.Namespace(lake=tmp_path / "lake", input_files=(first, second))
+
+    reader = generate_latency.parquet_reader_sql(args)
+
+    assert str(first).replace("\\", "/") in reader
+    assert str(second).replace("\\", "/") in reader
+    assert "**/part_*.parquet" not in reader
+
+
+def test_parquet_reader_sql_keeps_glob_for_standalone_dashboard(tmp_path):
+    args = argparse.Namespace(lake=tmp_path / "lake")
+
+    reader = generate_latency.parquet_reader_sql(args)
+
+    assert "**/part_*.parquet" in reader

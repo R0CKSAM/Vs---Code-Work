@@ -121,23 +121,29 @@ def discover_partitions(
 
 
 def partition_signature(partition: Partition) -> dict[str, Any]:
-    sizes = []
-    mtimes = []
+    files = []
     for file in partition.files:
         try:
             stat = file.stat()
         except OSError:
             continue
-        sizes.append(stat.st_size)
-        mtimes.append(stat.st_mtime_ns)
+        files.append(
+            {
+                "path": str(file),
+                "name": file.name,
+                "bytes": int(stat.st_size),
+                "mtime_ns": int(stat.st_mtime_ns),
+            }
+        )
     return {
         "source": partition.source,
         "date": partition.date_text,
         "lake_root": str(partition.root),
         "partition_path": str(partition.day_dir),
-        "file_count": len(sizes),
-        "bytes": int(sum(sizes)),
-        "max_mtime_ns": int(max(mtimes) if mtimes else 0),
+        "file_count": len(files),
+        "bytes": int(sum(item["bytes"] for item in files)),
+        "max_mtime_ns": int(max((item["mtime_ns"] for item in files), default=0)),
+        "files": files,
     }
 
 
@@ -511,7 +517,7 @@ def main() -> None:
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "lake": str(args.lake),
         "lake_roots": [str(root) for root in lake_roots],
-        "partition_policy": "first existing source/date wins; current lake is checked before archive lakes",
+        "partition_policy": "merge complementary current/archive files; choose the strongest duplicate filename",
         "out_dir": str(args.out_dir),
         "source": args.source or "all",
         "start": args.start or "",

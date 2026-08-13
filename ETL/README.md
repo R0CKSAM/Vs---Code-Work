@@ -37,6 +37,16 @@ Preferred local data layout:
 - `ETL\data\asn` (CSV/JSON lookup data only)
 - `ETL\data\raw`
 
+Optional hot/archive layout when D drive space is limited:
+
+- Keep current partitions in `ETL\data\lake\source=fast|stream`.
+- Keep historical partitions in `Z:\Veto Logs Backup\DO NOT DELETE\source=fast|stream`.
+- Complementary files for the same source/date are merged across hot and
+  archive roots. When the same filename exists in both places, only the copy
+  with the broadest timestamp coverage (then row count/size) is selected.
+- Do not move the active date while an ETL process or
+  `output\state\pipeline.lock` is present.
+
 This runs:
 
 1) `001.py`  (raw `.gz` to parquet; defaults to `data\raw\Veto Logs Backup` when present)
@@ -154,6 +164,8 @@ python run.py dashboards -- --overview-html ".\output\overview\overview_dashboar
 ## Environment overrides used by dashboard scripts
 
 - `VG_ETL_BASE`
+- `VG_ETL_ARCHIVE_LAKE_ROOTS` (semicolon-separated archive roots; the standard
+  `Z:\Veto Logs Backup\DO NOT DELETE` root is detected automatically)
 - `VG_DUCKDB_TEMP_DIR` (optional DuckDB spill directory; by default the pipeline uses `output\\cache\\duckdb_temp\\deep_profile` on the ETL drive)
 - `VG_DASH_PROFILE_DIR`
 - `VG_DASH_WATCH_OUT`

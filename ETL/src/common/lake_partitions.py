@@ -1,9 +1,10 @@
 """Helpers for reading the active lake plus optional archive lake roots.
 
-The ETL can move older lake days to slower/archive storage.  These helpers
-resolve one winning partition per source/date so dashboards can read the full
-history without double-counting dates that exist in both current and archive
-roots.
+The ETL can move older lake files to slower/archive storage. A single IST day
+may contain files produced from two adjacent raw dates, and those files can be
+split across the hot and archive roots during a move. These helpers merge the
+unique files for each source/date while selecting only one copy of a repeated
+filename.
 """
 
 from __future__ import annotations
@@ -34,6 +35,8 @@ class LakePartition:
     day_dir: Path
     files: tuple[Path, ...]
     priority: int
+    roots: tuple[Path, ...] = ()
+    day_dirs: tuple[Path, ...] = ()
 
     @property
     def date_text(self) -> str:
@@ -130,12 +133,74 @@ def _safe_partition_row_count(files: tuple[Path, ...]) -> int:
     return total
 
 
-def _partition_score(partition: LakePartition) -> tuple[int, int, int]:
-    """Higher score wins; lower priority wins only when completeness ties."""
+def _safe_file_coverage_seconds(path: Path) -> float:
+    try:
+        import pyarrow.parquet as pq
+
+        metadata = pq.read_metadata(path)
+        minimums: list[float] = []
+        maximums: list[float] = []
+        for row_group_index in range(metadata.num_row_groups):
+            row_group = metadata.row_group(row_group_index)
+            for column_index in range(row_group.num_columns):
+                column = row_group.column(column_index)
+                if column.path_in_schema != "reqTimeSec" or column.statistics is None:
+                    continue
+                try:
+                    minimums.append(float(column.statistics.min))
+                    maximums.append(float(column.statistics.max))
+                except (TypeError, ValueError):
+                    continue
+        return max(maximums) - min(minimums) if minimums and maximums else 0.0
+    except Exception:
+        return 0.0
+
+
+def _file_score(path: Path, priority: int) -> tuple[float, int, int, int]:
+    """Higher score wins for duplicate filenames across lake roots."""
+    try:
+        size = int(path.stat().st_size)
+    except OSError:
+        size = 0
     return (
-        _safe_partition_row_count(partition.files),
-        len(partition.files),
-        -partition.priority,
+        _safe_file_coverage_seconds(path),
+        _safe_partition_row_count((path,)),
+        size,
+        -priority,
+    )
+
+
+def _merge_partition_candidates(candidates: list[LakePartition]) -> LakePartition:
+    """Merge complementary files and keep one best copy per logical filename."""
+    winners: dict[str, tuple[Path, LakePartition]] = {}
+    for candidate in candidates:
+        for path in candidate.files:
+            key = path.name.casefold()
+            existing = winners.get(key)
+            if existing is not None:
+                existing_path, existing_partition = existing
+                if _file_score(path, candidate.priority) <= _file_score(
+                    existing_path, existing_partition.priority
+                ):
+                    continue
+            winners[key] = (path, candidate)
+
+    selected = sorted(winners.values(), key=lambda item: (item[0].name.casefold(), str(item[0])))
+    representative = min((item[1] for item in selected), key=lambda item: item.priority)
+    selected_candidates = [item[1] for item in selected]
+    roots = tuple(dict.fromkeys(item.root for item in selected_candidates))
+    day_dirs = tuple(dict.fromkeys(item.day_dir for item in selected_candidates))
+    return LakePartition(
+        representative.source,
+        representative.year,
+        representative.month,
+        representative.day,
+        representative.root,
+        representative.day_dir,
+        tuple(item[0] for item in selected),
+        representative.priority,
+        roots,
+        day_dirs,
     )
 
 
@@ -156,7 +221,7 @@ def discover_partitions(
     start: str | date | None = None,
     end: str | date | None = None,
 ) -> list[LakePartition]:
-    """Discover one winning partition per source/date across current/archive roots."""
+    """Discover one merged, deduplicated partition per source/date."""
     allowed_sources = {str(item).lower().removeprefix("source=") for item in sources or [] if str(item).strip()}
     if source:
         allowed_sources.add(str(source).lower().removeprefix("source="))
@@ -166,7 +231,7 @@ def discover_partitions(
     start_date = start if isinstance(start, date) else parse_date(start)
     end_date = end if isinstance(end, date) else parse_date(end)
 
-    selected: dict[tuple[str, str], LakePartition] = {}
+    candidates: dict[tuple[str, str], list[LakePartition]] = {}
     for priority, raw_root in enumerate(lake_roots):
         root = Path(raw_root)
         if not root.exists():
@@ -208,12 +273,10 @@ def discover_partitions(
                 date_text = f"{yy:04d}-{mm:02d}-{dd:02d}"
                 key = (source_name, date_text)
                 candidate = LakePartition(source_name, yy, mm, dd, root, day_dir, files, priority)
-                existing = selected.get(key)
-                if existing is not None and _partition_score(candidate) <= _partition_score(existing):
-                    continue
-                selected[key] = candidate
+                candidates.setdefault(key, []).append(candidate)
 
-    return sorted(selected.values(), key=lambda p: (p.year, p.month, p.day, p.source))
+    selected = [_merge_partition_candidates(items) for items in candidates.values()]
+    return sorted(selected, key=lambda p: (p.year, p.month, p.day, p.source))
 
 
 def partition_for_date(lake_roots: Iterable[Path], source: str, date_text: str) -> LakePartition | None:
@@ -222,4 +285,8 @@ def partition_for_date(lake_roots: Iterable[Path], source: str, date_text: str) 
 
 
 def parquet_globs(partitions: Iterable[LakePartition]) -> list[str]:
-    return [str(part.day_dir / "part_*.parquet").replace("\\", "/").replace("'", "''") for part in partitions]
+    return [
+        str(path).replace("\\", "/").replace("'", "''")
+        for part in partitions
+        for path in part.files
+    ]

@@ -15,8 +15,16 @@ import pandas as pd
 
 ETL_ROOT = Path(__file__).resolve().parents[2]
 PROFILE_ROOT = ETL_ROOT / "src" / "profile"
+if str(ETL_ROOT) not in sys.path:
+    sys.path.insert(0, str(ETL_ROOT))
 if str(PROFILE_ROOT) not in sys.path:
     sys.path.insert(0, str(PROFILE_ROOT))
+
+from src.common.lake_partitions import (  # noqa: E402
+    discover_partitions,
+    resolve_lake_roots,
+    split_path_list,
+)
 
 from vglive_core import (  # noqa: E402
     DEFAULT_LAKE_FOLDER,
@@ -35,6 +43,56 @@ SEGMENTS_PER_MINUTE = 10.0
 
 def q(path: Path | str) -> str:
     return str(path).replace("\\", "/").replace("'", "''")
+
+
+def parquet_source_sql(files: list[Path]) -> str:
+    if not files:
+        raise SystemExit("No winning lake Parquet files were found for the selected concurrency range.")
+    return "[" + ",".join(f"'{q(path)}'" for path in files) + "]"
+
+
+def add_archive_lake_argument(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--archive-lake",
+        action="append",
+        default=[],
+        help="Optional archive lake root(s); repeat or separate with semicolons/commas.",
+    )
+
+
+def configure_lake_selection(args: argparse.Namespace) -> None:
+    start, end = checked_dates(args)
+    explicit_archive_roots: list[Path] = []
+    for value in getattr(args, "archive_lake", []):
+        explicit_archive_roots.extend(split_path_list(value))
+    args.lake_roots = resolve_lake_roots(args.lake, explicit_archive_roots or None)
+    args.selected_partitions = discover_partitions(
+        args.lake_roots,
+        source=args.source,
+        start=start,
+        end=end,
+    )
+    args.selected_lake_files = [
+        file for partition in args.selected_partitions for file in partition.files
+    ]
+    if not args.selected_lake_files:
+        raise SystemExit(
+            f"No {args.source.upper()} lake partitions found across: "
+            + ", ".join(str(path) for path in args.lake_roots)
+        )
+    print(
+        f"Lake roots: {', '.join(str(path) for path in args.lake_roots)} | "
+        f"winning partitions={len(args.selected_partitions)} | "
+        f"files={len(args.selected_lake_files)}"
+    )
+
+
+def lake_manifest_fields(args: argparse.Namespace) -> dict:
+    return {
+        "lake_roots": [str(path) for path in args.lake_roots],
+        "winning_partition_count": len(args.selected_partitions),
+        "selected_parquet_file_count": len(args.selected_lake_files),
+    }
 
 
 def sql_text(value: str | Path) -> str:
@@ -165,7 +223,7 @@ def resolved_platform_key_sql(source: str) -> str:
 
 def build_new_tables(con: duckdb.DuckDBPyConnection, args: argparse.Namespace) -> None:
     start, end = checked_dates(args)
-    lake_glob = q(args.lake / "**" / "part_*.parquet")
+    lake_source = parquet_source_sql(args.selected_lake_files)
     candidate_expr = channel_candidate_sql("reqPath")
     partition_filter = date_filter_sql(start, end)
 
@@ -183,7 +241,7 @@ def build_new_tables(con: duckdb.DuckDBPyConnection, args: argparse.Namespace) -
                 NULLIF(trim(regexp_replace(COALESCE(CAST(UA AS VARCHAR), ''), '\\s+', ' ', 'g')), '') AS UA,
                 COALESCE(NULLIF(regexp_replace(CAST(statusCode AS VARCHAR), '\\.0$', ''), ''), 'Unknown') AS statusCode,
                 {candidate_expr} AS candidate_id
-            FROM read_parquet('{lake_glob}', hive_partitioning=1, union_by_name=1)
+            FROM read_parquet({lake_source}, hive_partitioning=1, union_by_name=1)
             WHERE {source_filter(args.source)}
               AND ({partition_filter})
               AND lower(COALESCE(reqPath, '')) LIKE '%.ts'
@@ -442,6 +500,7 @@ def write_manifest(
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "source": args.source,
         "lake": str(args.lake.resolve()),
+        **lake_manifest_fields(args),
         "date_range_replaced": {
             "start": start.isoformat() if start else "",
             "end": end.isoformat() if end else "",
@@ -473,6 +532,7 @@ def write_manifest(
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build minute-level concurrency parquet outputs.")
     parser.add_argument("--lake", type=Path, default=DEFAULT_LAKE_FOLDER)
+    add_archive_lake_argument(parser)
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
     parser.add_argument("--source", choices=["fast", "stream"], default="fast")
     parser.add_argument("--start", default=None, help="IST lake date start, YYYY-MM-DD.")
@@ -488,6 +548,7 @@ def main() -> None:
         raise SystemExit(f"Lake folder not found: {args.lake}")
 
     start, end = checked_dates(args)
+    configure_lake_selection(args)
     args.out_dir.mkdir(parents=True, exist_ok=True)
     con = connect(args)
     try:
