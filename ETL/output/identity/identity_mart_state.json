@@ -1675,15 +1675,99 @@
       "date": "2026-08-06",
       "lake_root": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
       "partition_path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=08\\day=06",
-      "file_count": 1,
-      "bytes": 61095433,
-      "max_mtime_ns": 1786010565815883100,
+      "file_count": 2,
+      "bytes": 832086163,
+      "max_mtime_ns": 1786088087938844200,
       "output_counts": {
-        "identity_device_daily": 596,
-        "identity_session_daily": 604,
-        "identity_ipua_daily": 626
+        "identity_device_daily": 15749,
+        "identity_session_daily": 20066,
+        "identity_ipua_daily": 18195
+      }
+    },
+    "stream/2026-08-07": {
+      "source": "stream",
+      "date": "2026-08-07",
+      "lake_root": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
+      "partition_path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=08\\day=07",
+      "file_count": 1,
+      "bytes": 56488066,
+      "max_mtime_ns": 1786088088095226600,
+      "output_counts": {
+        "identity_device_daily": 520,
+        "identity_session_daily": 531,
+        "identity_ipua_daily": 546
+      }
+    },
+    "stream/2026-08-08": {
+      "source": "stream",
+      "date": "2026-08-08",
+      "lake_root": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
+      "partition_path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=08\\day=08",
+      "file_count": 1,
+      "bytes": 652738558,
+      "max_mtime_ns": 1786356600289601400,
+      "output_counts": {
+        "identity_device_daily": 13827,
+        "identity_session_daily": 16865,
+        "identity_ipua_daily": 15704
+      }
+    },
+    "stream/2026-08-09": {
+      "source": "stream",
+      "date": "2026-08-09",
+      "lake_root": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
+      "partition_path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=08\\day=09",
+      "file_count": 1,
+      "bytes": 58487050,
+      "max_mtime_ns": 1786356600300331800,
+      "output_counts": {
+        "identity_device_daily": 610,
+        "identity_session_daily": 638,
+        "identity_ipua_daily": 652
+      }
+    },
+    "stream/2026-08-10": {
+      "source": "stream",
+      "date": "2026-08-10",
+      "lake_root": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
+      "partition_path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=08\\day=10",
+      "file_count": 2,
+      "bytes": 850511277,
+      "max_mtime_ns": 1786437273649821300,
+      "output_counts": {
+        "identity_device_daily": 14642,
+        "identity_session_daily": 18659,
+        "identity_ipua_daily": 16973
+      }
+    },
+    "stream/2026-08-11": {
+      "source": "stream",
+      "date": "2026-08-11",
+      "lake_root": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
+      "partition_path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=08\\day=11",
+      "file_count": 2,
+      "bytes": 885783972,
+      "max_mtime_ns": 1786524502674646900,
+      "output_counts": {
+        "identity_device_daily": 15009,
+        "identity_session_daily": 18753,
+        "identity_ipua_daily": 17249
+      }
+    },
+    "stream/2026-08-12": {
+      "source": "stream",
+      "date": "2026-08-12",
+      "lake_root": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
+      "partition_path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=08\\day=12",
+      "file_count": 1,
+      "bytes": 57657472,
+      "max_mtime_ns": 1786524502757077200,
+      "output_counts": {
+        "identity_device_daily": 496,
+        "identity_session_daily": 504,
+        "identity_ipua_daily": 506
       }
     }
   },
-  "updated_at_utc": "2026-08-06T10:55:32.863147+00:00"
+  "updated_at_utc": "2026-08-12T10:59:52.268251+00:00"
 }

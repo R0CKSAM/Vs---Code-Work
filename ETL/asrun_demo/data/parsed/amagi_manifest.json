@@ -1,8 +1,8 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "available": true,
   "source_root": "Z:\\Veto Logs Backup\\DO NOT DELETE\\source=amagi",
-  "files": 14,
+  "files": 21,
   "skipped": [],
   "fingerprints": {
     "concurreny_metrics - 2026-07-21T09_00_04Z_0cb117fe-a022-457b-8b36-685571a0a51a_2026-07-21.csv": {
@@ -60,6 +60,34 @@
     "concurreny_metrics - 2026-08-03T09_00_05Z_7d06de76-a5c9-418e-82b8-428d1bfe2761_2026-08-03.csv": {
       "size": 1330575,
       "mtime_ns": 1785750288244642400
+    },
+    "concurreny_metrics - 2026-08-04T09_00_04Z_c5bc2150-cb79-4475-95ca-3e780b5fe89e_2026-08-04.csv": {
+      "size": 1330443,
+      "mtime_ns": 1786435548582885500
+    },
+    "concurreny_metrics - 2026-08-05T09_00_03Z_c6ebc27b-db5c-4cbd-8948-ccffdc8236c2_2026-08-05.csv": {
+      "size": 1330195,
+      "mtime_ns": 1786021810945171800
+    },
+    "concurreny_metrics - 2026-08-06T09_00_03Z_73db6d45-3bb9-4dd3-b852-26de55fedf0d_2026-08-06.csv": {
+      "size": 1329975,
+      "mtime_ns": 1786021791728574300
+    },
+    "concurreny_metrics - 2026-08-07T09_00_04Z_3710ff4c-bfef-43a9-8e18-ff9ee53a9545_2026-08-07.csv": {
+      "size": 1330661,
+      "mtime_ns": 1786096307253378000
+    },
+    "concurreny_metrics - 2026-08-08T09_00_07Z_6954ba4d-4020-4f6a-8308-6bfa36a24e3d_2026-08-08.csv": {
+      "size": 1330100,
+      "mtime_ns": 1786435375116781200
+    },
+    "concurreny_metrics - 2026-08-09T09_00_05Z_464749ea-3640-43b6-9236-d098a29d1b41_2026-08-09.csv": {
+      "size": 1330006,
+      "mtime_ns": 1786435337362692000
+    },
+    "concurreny_metrics - 2026-08-10T09_00_15Z_c6e4122d-44bc-4f02-a6b2-d9ef834761dd_2026-08-10.csv": {
+      "size": 1330435,
+      "mtime_ns": 1786361053378941600
     }
   },
   "readable_files": [
@@ -76,6 +104,13 @@
     "concurreny_metrics - 2026-07-31T09_00_03Z_6434c70a-9a09-4356-9cc2-aae6669ba5d0_2026-07-31.csv",
     "concurreny_metrics - 2026-08-01T09_00_03Z_0bbfe5d2-9db3-4990-888f-e6ba82b0b9ca_2026-08-01.csv",
     "concurreny_metrics - 2026-08-02T09_00_03Z_c0d0a4c4-c013-4594-80f5-b5afb27e290e_2026-08-02.csv",
-    "concurreny_metrics - 2026-08-03T09_00_05Z_7d06de76-a5c9-418e-82b8-428d1bfe2761_2026-08-03.csv"
+    "concurreny_metrics - 2026-08-03T09_00_05Z_7d06de76-a5c9-418e-82b8-428d1bfe2761_2026-08-03.csv",
+    "concurreny_metrics - 2026-08-04T09_00_04Z_c5bc2150-cb79-4475-95ca-3e780b5fe89e_2026-08-04.csv",
+    "concurreny_metrics - 2026-08-05T09_00_03Z_c6ebc27b-db5c-4cbd-8948-ccffdc8236c2_2026-08-05.csv",
+    "concurreny_metrics - 2026-08-06T09_00_03Z_73db6d45-3bb9-4dd3-b852-26de55fedf0d_2026-08-06.csv",
+    "concurreny_metrics - 2026-08-07T09_00_04Z_3710ff4c-bfef-43a9-8e18-ff9ee53a9545_2026-08-07.csv",
+    "concurreny_metrics - 2026-08-08T09_00_07Z_6954ba4d-4020-4f6a-8308-6bfa36a24e3d_2026-08-08.csv",
+    "concurreny_metrics - 2026-08-09T09_00_05Z_464749ea-3640-43b6-9236-d098a29d1b41_2026-08-09.csv",
+    "concurreny_metrics - 2026-08-10T09_00_15Z_c6e4122d-44bc-4f02-a6b2-d9ef834761dd_2026-08-10.csv"
   ]
 }

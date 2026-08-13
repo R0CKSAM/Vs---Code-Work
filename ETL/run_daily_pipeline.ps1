@@ -31,10 +31,18 @@
     [switch]$StrictPipeline,
     [switch]$SingleSourceMode,
     [int]$Etl1Workers = 2,
-    [int]$DeepProfileThreads = 4,
-    [string]$DeepProfileMemory = "20GB",
-    [string]$DeepProfileMaxTempSize = "40GB",
+    [int]$DeepProfileThreads = 2,
+    [string]$DeepProfileMemory = "4GB",
+    [string]$DeepProfileMaxTempSize = "200GB",
     [string]$DeepProfileTempDir = "",
+    [int]$ConcurrencyThreads = 2,
+    [string]$ConcurrencyMemory = "4GB",
+    [int]$LatencyThreads = 2,
+    [string]$LatencyMemory = "4GB",
+    [int]$IdentityThreads = 2,
+    [string]$IdentityMemory = "4GB",
+    [int]$ContentThreads = 2,
+    [string]$ContentMemory = "4GB",
     [ValidateSet("zstd", "snappy", "lz4", "gzip", "brotli", "none")]
     [string]$Etl1Compression = "zstd"
 )
@@ -74,6 +82,8 @@ $DefaultOverviewLakeRoot = if ($OverviewLakeRoot) {
 }
 $env:VG_OVERVIEW_LAKE_ROOT = $DefaultOverviewLakeRoot
 $env:VG_OVERVIEW_SOURCES = $OverviewSources
+$PreferredSharedTempRoot = "Z:\Veto Logs Backup\DO NOT DELETE\Temp"
+$PreferredSharedTempDir = Join-Path $PreferredSharedTempRoot "VetoETL\duckdb\deep_profile"
 $DefaultTempCandidates = @()
 if ($env:VG_DUCKDB_TEMP_DIR) {
     $DefaultTempCandidates += $env:VG_DUCKDB_TEMP_DIR
@@ -130,6 +140,10 @@ $DefaultDeepProfileTempDir = if ($DeepProfileTempDir) {
     $DeepProfileTempDir
 } elseif ($env:VG_DUCKDB_TEMP_DIR) {
     $env:VG_DUCKDB_TEMP_DIR
+} elseif (Test-Path $PreferredSharedTempRoot) {
+    # This shared path has capacity for large DuckDB spill files; keep scratch
+    # isolated beneath VetoETL so archive/source data is never touched.
+    $PreferredSharedTempDir
 } else {
     Resolve-DefaultDuckDbTempDir -Candidates $DefaultTempCandidates
 }
@@ -419,7 +433,17 @@ try {
         "--deep-profile-threads", $DeepProfileThreads.ToString(),
         "--deep-profile-memory", $DeepProfileMemory,
         "--deep-profile-temp-dir", $DefaultDeepProfileTempDir,
-        "--deep-profile-max-temp-size", $DeepProfileMaxTempSize
+        "--deep-profile-max-temp-size", $DeepProfileMaxTempSize,
+        # These marts run after the profile but can otherwise each request
+        # more RAM than this workstation has free. Their spill files use Z:.
+        "--concurrency-threads", $ConcurrencyThreads.ToString(),
+        "--concurrency-memory", $ConcurrencyMemory,
+        "--latency-threads", $LatencyThreads.ToString(),
+        "--latency-memory", $LatencyMemory,
+        "--identity-threads", $IdentityThreads.ToString(),
+        "--identity-memory", $IdentityMemory,
+        "--content-threads", $ContentThreads.ToString(),
+        "--content-memory", $ContentMemory
     )
     if (-not $SkipUaProfile) {
         $pipelineArgs += @(

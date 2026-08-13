@@ -200,7 +200,9 @@ def discover_partitions(
                 day_value = date(yy, mm, dd)
                 if not _date_in_range(day_value, start_date, end_date):
                     continue
-                files = tuple(sorted(day_dir.glob("*.parquet")))
+                # 03.py writes tmp_*.parquet beside final parts before promotion.
+                # Readers must only see atomically promoted part files.
+                files = tuple(sorted(day_dir.glob("part_*.parquet")))
                 if not files:
                     continue
                 date_text = f"{yy:04d}-{mm:02d}-{dd:02d}"
@@ -220,4 +222,4 @@ def partition_for_date(lake_roots: Iterable[Path], source: str, date_text: str) 
 
 
 def parquet_globs(partitions: Iterable[LakePartition]) -> list[str]:
-    return [str(part.day_dir / "*.parquet").replace("\\", "/").replace("'", "''") for part in partitions]
+    return [str(part.day_dir / "part_*.parquet").replace("\\", "/").replace("'", "''") for part in partitions]

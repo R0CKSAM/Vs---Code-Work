@@ -73,7 +73,7 @@ def discover_days(lake: Path, sources: list[str], start: date | None, end: date 
     for source in sources:
         root = lake / f"source={source}"
         for folder in root.glob("year=*/month=*/day=*"):
-            if not folder.is_dir() or not any(folder.glob("*.parquet")):
+            if not folder.is_dir() or not any(folder.glob("part_*.parquet")):
                 continue
             try:
                 values = {
@@ -99,7 +99,7 @@ def source_list(value: str) -> list[str]:
 
 
 def signature_for_day(lake: Path, source: str, day_value: date) -> dict:
-    files = sorted(day_path(lake, source, day_value).glob("*.parquet"))
+    files = sorted(day_path(lake, source, day_value).glob("part_*.parquet"))
     total_bytes = 0
     max_mtime_ns = 0
     for file in files:
@@ -140,7 +140,7 @@ def atomic_write_parquet(frame: pd.DataFrame, path: Path) -> None:
 
 def day_sql(args: argparse.Namespace, source: str, day_value: date) -> str:
     folder = day_path(args.lake, source, day_value)
-    parquet_glob = q(folder / "*.parquet")
+    parquet_glob = q(folder / "part_*.parquet")
     day_expr = ua_profile.ist_date_expr("reqTimeSec")
     day_sql_literal = sql_text(day_value.isoformat())
     source_literal = sql_text(source)

@@ -127,7 +127,11 @@ FCT_INTERNAL_CATEGORIES = frozenset(
 FCT_MART_VERSION = 3
 NCT_MART_VERSION = 3
 YOUTUBE_MART_VERSION = 3
-AMAGI_MART_VERSION = 1
+AMAGI_MART_VERSION = 2
+
+# Amagi has delivered both UTC-labelled and PST-labelled exports. Normalize
+# both to the canonical UTC column before applying the existing IST conversion.
+AMAGI_TIMESTAMP_COLUMNS = ("timestamp (UTC)", "timestamp (PST)")
 CORE_PAYLOAD_FILENAME = "asrun_delivery_data.js"
 DASHBOARD_SIDECARS = {
     "viewer": {
@@ -446,7 +450,6 @@ def build_amagi_minute_mart(events: pd.DataFrame) -> dict[str, Any]:
     required = {
         "channel_name",
         "platform_name",
-        "timestamp (UTC)",
         "No. of Concurrent Viewers",
     }
     for source_name in sorted(set(path_by_name).difference(unchanged)):
@@ -456,10 +459,29 @@ def build_amagi_minute_mart(events: pd.DataFrame) -> dict[str, Any]:
         except (OSError, UnicodeDecodeError, pd.errors.ParserError) as exc:
             skipped.append(f"{source_name}: {exc}")
             continue
-        if not required.issubset(frame.columns):
+        timestamp_column = next(
+            (column for column in AMAGI_TIMESTAMP_COLUMNS if column in frame.columns),
+            None,
+        )
+        if not required.issubset(frame.columns) or timestamp_column is None:
             skipped.append(f"{source_name}: missing required columns")
             continue
         parsed = frame.loc[:, sorted(required)].copy()
+        if timestamp_column == "timestamp (UTC)":
+            parsed["timestamp (UTC)"] = frame[timestamp_column]
+        else:
+            # The PST-labelled export contains local Pacific wall-clock time.
+            # Use the IANA zone so daylight-saving dates are handled correctly.
+            pacific = pd.to_datetime(frame[timestamp_column], errors="coerce")
+            parsed["timestamp (UTC)"] = (
+                pacific.dt.tz_localize(
+                    "America/Los_Angeles",
+                    ambiguous="NaT",
+                    nonexistent="NaT",
+                )
+                .dt.tz_convert("UTC")
+                .dt.strftime("%Y-%m-%d %H:%M:%S")
+            )
         parsed["source_file"] = source_name
         frames.append(parsed)
         readable_files.add(source_name)

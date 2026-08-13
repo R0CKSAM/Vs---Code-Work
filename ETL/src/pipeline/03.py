@@ -30,10 +30,12 @@ if not _env_base:
 LAKE_FOLDER = BASE_FOLDER / "lake"
 STATE_FILE = BASE_FOLDER / ".etl_03_state.json"
 
-THREADS = int(os.getenv("VG_ETL_THREADS", "12"))
-MEMORY = os.getenv("VG_ETL_MEMORY", "28GB")
+# Daily partitioning is one source file at a time. Conservative limits keep the
+# workstation responsive and let DuckDB spill rather than competing with dashboards.
+THREADS = int(os.getenv("VG_ETL_THREADS", "2"))
+MEMORY = os.getenv("VG_ETL_MEMORY", "6GB")
 TEMP_DIR = Path(os.getenv("VG_ETL_DUCKDB_TEMP", str(ETL_ROOT / "output" / "cache" / "duckdb_temp"))).expanduser()
-MAX_TEMP_SIZE = os.getenv("VG_ETL_DUCKDB_MAX_TEMP", "120GB")
+MAX_TEMP_SIZE = os.getenv("VG_ETL_DUCKDB_MAX_TEMP", "40GB")
 COMPRESSION = os.getenv("VG_ETL_COMPRESSION", "ZSTD")
 COMP_LEVEL = int(os.getenv("VG_ETL_COMP_LEVEL", "3"))
 FINAL_SUFFIX = "_final_clean.parquet"

@@ -1,11 +1,11 @@
 {
-  "generated_at_utc": "2026-08-06T10:39:35.890106+00:00",
+  "generated_at_utc": "2026-08-12T10:10:07.523285+00:00",
   "source": "fast",
   "lake": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
   "output": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\output\\watch_hours\\concurrency\\fast_platform_channel_manifest_daily.parquet",
   "date_range_replaced": {
-    "start": "2026-08-05",
-    "end": "2026-08-06"
+    "start": "2026-08-11",
+    "end": "2026-08-12"
   },
   "metric_notes": {
     "m3u8_rows": "All FAST .m3u8 playlist/manifest request rows at platform/channel grain.",

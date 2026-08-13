@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import atexit
 import csv
 import json
 import os
@@ -11,7 +12,7 @@ import re
 import shutil
 import subprocess
 import sys
-import tempfile
+import uuid
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Optional
@@ -47,12 +48,13 @@ def _python_exec(project_root: Path) -> str:
     return sys.executable
 
 
-def _default_duckdb_temp_dir() -> Path:
+def _default_duckdb_temp_dir(output_root: Path) -> Path:
     env_dir = os.getenv("VG_DUCKDB_TEMP_DIR")
     if env_dir:
         return Path(env_dir).expanduser().resolve()
-    base = Path(os.getenv("LOCALAPPDATA") or tempfile.gettempdir())
-    return (base / "VetoETL" / "duckdb_temp" / "deep_profile").resolve()
+    # Large minute-level marts can spill well beyond the free space on C:. Keep
+    # scratch beside the ETL output by default so a portable ETL uses its data drive.
+    return (output_root / "cache" / "duckdb_temp" / "deep_profile").resolve()
 
 
 def _append_temp_dir(cmd: list[str], temp_dir: Path | None) -> None:
@@ -75,6 +77,76 @@ def _safe_state_name(name: str) -> str:
     if not cleaned:
         raise SystemExit("--state-name must contain at least one letter, digit, dot, underscore, or dash.")
     return cleaned
+
+
+def _process_is_running(pid: int) -> bool:
+    """Return whether a recorded local PID still owns a live process."""
+    if pid <= 0:
+        return False
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        # The process exists but belongs to a user we cannot inspect.
+        return True
+    except OSError:
+        return False
+    return True
+
+
+class PipelineRunLock:
+    """A small cross-process lock that prevents overlapping ETL writers/readers."""
+
+    def __init__(self, output_root: Path) -> None:
+        self.path = output_root / "state" / "pipeline.lock"
+        self.token = uuid.uuid4().hex
+        self.acquired = False
+
+    def acquire(self) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "pid": os.getpid(),
+            "started_at": datetime.now().isoformat(timespec="seconds"),
+            "token": self.token,
+        }
+        for _ in range(2):
+            try:
+                with self.path.open("x", encoding="utf-8") as fh:
+                    json.dump(payload, fh)
+                self.acquired = True
+                atexit.register(self.release)
+                return
+            except FileExistsError:
+                try:
+                    existing = json.loads(self.path.read_text(encoding="utf-8"))
+                    existing_pid = int(existing.get("pid", 0))
+                except (OSError, ValueError, json.JSONDecodeError, TypeError):
+                    existing_pid = 0
+                if _process_is_running(existing_pid):
+                    raise SystemExit(
+                        "Another ETL pipeline is already running "
+                        f"(PID {existing_pid}). Wait for it to finish before starting another run."
+                    )
+                # A previous process died without cleanup. Remove only this stale lock,
+                # then retry the atomic create so a concurrent new run cannot be overwritten.
+                try:
+                    self.path.unlink()
+                except FileNotFoundError:
+                    continue
+        raise SystemExit(f"Could not acquire ETL pipeline lock: {self.path}")
+
+    def release(self) -> None:
+        if not self.acquired:
+            return
+        try:
+            existing = json.loads(self.path.read_text(encoding="utf-8"))
+            if existing.get("token") == self.token:
+                self.path.unlink(missing_ok=True)
+        except (OSError, ValueError, json.JSONDecodeError, TypeError):
+            pass
+        finally:
+            self.acquired = False
 
 
 def _split_path_list(value: str | None) -> list[Path]:
@@ -142,6 +214,11 @@ def _classify_failure(text: str) -> dict[str, str]:
             "disk_space",
             ["no space left on device", "not enough space", "disk full", "there is not enough space"],
             "Disk is full or temp output cannot be written. Free space on the ETL drive and rerun the failed step.",
+        ),
+        (
+            "lake_writer_conflict",
+            ["tmp_part_", "file is already open", "being used by another process"],
+            "A lake writer was still promoting partitions. Wait for the active ETL run to finish; the pipeline lock prevents a second run from starting.",
         ),
         (
             "missing_input",
@@ -326,6 +403,41 @@ def _validate_stage_lake_rows(lake_root: Path, stage_jobs: list[dict[str, str]])
         )
 
 
+def _daily_delivery_validation_cmd(
+    python: str,
+    script: Path,
+    lake_root: Path,
+    archive_roots: list[Path],
+    target_date: str,
+    sources: str,
+    output_dir: Path,
+    mode: str,
+    profile_dir: Path | None = None,
+    fail_on_channel_anomaly: bool = False,
+) -> list[str]:
+    cmd = [
+        python,
+        str(script),
+        "--lake",
+        str(lake_root),
+        "--date",
+        target_date,
+        "--sources",
+        sources,
+        "--mode",
+        mode,
+        "--output-dir",
+        str(output_dir),
+    ]
+    for root in archive_roots:
+        cmd.extend(["--archive-lake", str(root)])
+    if profile_dir is not None:
+        cmd.extend(["--profile-dir", str(profile_dir)])
+    if fail_on_channel_anomaly:
+        cmd.append("--fail-on-channel-anomaly")
+    return cmd
+
+
 def _lower_parallelism(command: list[str]) -> tuple[Optional[list[str]], list[str]]:
     retry = list(command)
     changes: list[str] = []
@@ -350,24 +462,9 @@ def _lower_parallelism(command: list[str]) -> tuple[Optional[list[str]], list[st
             retry[i + 1] = str(lowered)
             changes.append(f"{token} {current}->{lowered}")
 
-    # DuckDB's configured cap is a ceiling, not a reservation. On a busy workstation a
-    # 20GB cap can still make the OS reject an allocation before spill starts. Reducing it
-    # on the retry gives the engine room to use the configured temp directory safely.
-    for i, token in enumerate(retry[:-1]):
-        if token != "--memory-limit":
-            continue
-        match = re.fullmatch(r"\s*(\d+(?:\.\d+)?)\s*(GB|MB)\s*", retry[i + 1], flags=re.IGNORECASE)
-        if not match:
-            continue
-        value = float(match.group(1))
-        unit = match.group(2).upper()
-        current_mb = value * (1024 if unit == "GB" else 1)
-        lowered_mb = max(2048, current_mb / 2)
-        if lowered_mb >= current_mb:
-            continue
-        lowered_text = f"{lowered_mb / 1024:g}GB" if lowered_mb >= 1024 else f"{lowered_mb:g}MB"
-        retry[i + 1] = lowered_text
-        changes.append(f"--memory-limit {value:g}{unit}->{lowered_text}")
+    # Keep the configured memory ceiling on retry. Lowering threads reduces
+    # concurrent allocations; lowering the ceiling after an OOM can make a
+    # single large hash aggregation strictly less likely to finish.
     return (retry, changes) if changes else (None, [])
 
 
@@ -516,6 +613,7 @@ class RunRecorder:
 
 
 RUN_RECORDER: Optional[RunRecorder] = None
+PIPELINE_LOCK: Optional[PipelineRunLock] = None
 
 
 def record_skip(step_name: str, reason: str) -> None:
@@ -835,6 +933,16 @@ def main() -> None:
         "--skip-master",
         action="store_true",
         help="Skip Veto Master Dashboard generation.",
+    )
+    parser.add_argument(
+        "--skip-data-validation",
+        action="store_true",
+        help="Skip daily source coverage and profile reconciliation gates.",
+    )
+    parser.add_argument(
+        "--strict-channel-validation",
+        action="store_true",
+        help="Treat a canonical channel-volume anomaly as a hard daily ETL failure.",
     )
 
     # 001.py controls
@@ -1157,7 +1265,7 @@ def main() -> None:
     deep_profile_temp_dir = (
         Path(args.deep_profile_temp_dir).expanduser().resolve()
         if args.deep_profile_temp_dir
-        else _default_duckdb_temp_dir()
+        else _default_duckdb_temp_dir(output_root)
     )
     lake_root = base_root / "lake"
     archive_lake_roots: list[Path] = []
@@ -1175,7 +1283,9 @@ def main() -> None:
     )
     output_root.mkdir(parents=True, exist_ok=True)
     log_dir = output_root / "logs"
-    global RUN_RECORDER
+    global RUN_RECORDER, PIPELINE_LOCK
+    PIPELINE_LOCK = PipelineRunLock(output_root)
+    PIPELINE_LOCK.acquire()
     RUN_RECORDER = RunRecorder(output_root, args, base_root, lake_root)
 
     src_root = workspace / "src"
@@ -1280,6 +1390,12 @@ def main() -> None:
             "VG_DUCKDB_FALLBACK_TEMP_DIR": str(
                 output_root / "cache" / "duckdb_temp" / "fallback"
             ),
+            # 03.py uses its own environment names. Keep its partition writer
+            # within the same workstation-safe resource envelope as profiling.
+            "VG_ETL_THREADS": str(min(max(1, int(args.etl1_workers or 2)), 2)),
+            "VG_ETL_MEMORY": "6GB",
+            "VG_ETL_DUCKDB_TEMP": str(deep_profile_temp_dir / "pipeline_stage"),
+            "VG_ETL_DUCKDB_MAX_TEMP": "40GB",
             "PYTHONIOENCODING": "utf-8",
             "PYTHONUTF8": "1",
         }
@@ -1323,6 +1439,10 @@ def main() -> None:
     profile_merge_script = _local_script(
         etl_root,
         str(Path("src") / "profile" / "merge_watch_profile_delta.py"),
+    )
+    delivery_validator_script = _local_script(
+        etl_root,
+        str(Path("src") / "tools" / "validate_daily_delivery.py"),
     )
     overview_generator_script = _local_script(
         etl_root,
@@ -1549,6 +1669,24 @@ def main() -> None:
         )
         if args.etl1_daily_date:
             _validate_stage_lake_rows(lake_root, stage_jobs)
+            if not args.skip_data_validation:
+                validation_sources = ",".join(source_key for source_key, _ in daily_sources)
+                run(
+                    _daily_delivery_validation_cmd(
+                        python=python,
+                        script=delivery_validator_script,
+                        lake_root=lake_root,
+                        archive_roots=archive_lake_roots,
+                        target_date=args.etl1_daily_date,
+                        sources=validation_sources,
+                        output_dir=output_root / "validation" / "daily_delivery",
+                        mode="structural",
+                    ),
+                    cwd=etl_root,
+                    env=env,
+                    step_name="daily_delivery_structural_validation",
+                    log_dir=log_dir,
+                )
     else:
         print("\n[skip] ETL stages skipped.")
 
@@ -1660,6 +1798,33 @@ def main() -> None:
             )
     else:
         print("\n[skip] deep profile step skipped.")
+
+    if (
+        args.etl1_daily_date
+        and not args.skip_data_validation
+        and not args.skip_deep_profile
+    ):
+        validation_sources = (
+            "fast,stream" if args.etl1_sources == "both" else args.etl1_sources
+        )
+        run(
+            _daily_delivery_validation_cmd(
+                python=python,
+                script=delivery_validator_script,
+                lake_root=lake_root,
+                archive_roots=archive_lake_roots,
+                target_date=args.etl1_daily_date,
+                sources=validation_sources,
+                output_dir=output_root / "validation" / "daily_delivery",
+                mode="full",
+                profile_dir=profile_dir,
+                fail_on_channel_anomaly=args.strict_channel_validation,
+            ),
+            cwd=etl_root,
+            env=env,
+            step_name="daily_delivery_profile_validation",
+            log_dir=log_dir,
+        )
 
     if not args.skip_device_snapshot:
         snapshot_cmd = [
@@ -2378,6 +2543,9 @@ def main() -> None:
                 if latest_latency:
                     latency_start_date = latest_latency - timedelta(days=args.latency_window_days - 1)
                     latency_cmd.extend(["--start", latency_start_date.isoformat(), "--end", latest_latency.isoformat()])
+            # Latency builds can spill during high-cardinality geography aggregation.
+            # Keep that spill on the configured shared scratch volume, not D:.
+            _append_temp_dir(latency_cmd, deep_profile_temp_dir)
             if args.dry_run:
                 latency_cmd.append("--dry-run")
             run(
@@ -2423,6 +2591,8 @@ def main() -> None:
             identity_cmd.extend(["--source", args.identity_source])
         if identity_start and identity_end:
             identity_cmd.extend(["--start", identity_start, "--end", identity_end])
+        # Keep identity aggregation spill files off the constrained ETL drive.
+        _append_temp_dir(identity_cmd, deep_profile_temp_dir)
         if args.dry_run:
             identity_cmd.append("--dry-run")
         identity_ok = run(
@@ -2502,6 +2672,8 @@ def main() -> None:
         ]
         if content_start and content_end:
             content_cmd.extend(["--start", content_start, "--end", content_end])
+        # Content-title grouping can also spill on high-volume STREAM days.
+        _append_temp_dir(content_cmd, deep_profile_temp_dir)
         if args.dry_run:
             content_cmd.append("--dry-run")
         content_ok = run(
@@ -2626,4 +2798,7 @@ if __name__ == "__main__":
             )
             RUN_RECORDER.finish("failed")
         raise
+    finally:
+        if PIPELINE_LOCK is not None:
+            PIPELINE_LOCK.release()
 

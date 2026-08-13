@@ -121,6 +121,15 @@ Daily download check flow:
 - after each sync, local file count must match that source's starting remote count
 - verification retries `-VerifyRetries 3`; each mismatch reruns sync
 - after verified, ETL waits `-PostVerifyDelaySeconds 60`
+- after lake partitioning, the daily delivery gate verifies FAST/STREAM time coverage,
+  internal gaps, overlapping files, and archive alternatives before profiling
+- after the watch profile is merged, the gate reconciles source row totals and checks
+  canonical channel volumes before any dashboard is published
+- validation reports are written to `output\validation\daily_delivery`
+
+Channel-volume findings are review warnings by default. Make them blocking for a
+scheduled production run with `--strict-channel-validation`. Use
+`--skip-data-validation` only for an intentional recovery or diagnostic run.
 
 Optional remote stability wait for cautious scheduled runs:
 
@@ -145,6 +154,7 @@ python run.py dashboards -- --overview-html ".\output\overview\overview_dashboar
 ## Environment overrides used by dashboard scripts
 
 - `VG_ETL_BASE`
+- `VG_DUCKDB_TEMP_DIR` (optional DuckDB spill directory; by default the pipeline uses `output\\cache\\duckdb_temp\\deep_profile` on the ETL drive)
 - `VG_DASH_PROFILE_DIR`
 - `VG_DASH_WATCH_OUT`
 - `VG_DASH_OVERVIEW_BASE`

@@ -28,36 +28,12 @@
     }
   },
   "file_metadata": {
-    "YT_NEWS_15072026 to 18072026.xlsx": {
-      "declared_start": "2026-07-15",
-      "declared_end": "2026-07-18",
-      "source_rows": 9458,
-      "valid_rows": 9247,
-      "excluded_rows": 211,
-      "range_source": "filename",
-      "parsed_sheets": [
-        "Sheet1"
-      ],
-      "ignored_sheets": []
-    },
     "YT_NEWS_19072026 to 21072026.xlsx": {
       "declared_start": "2026-07-19",
       "declared_end": "2026-07-21",
       "source_rows": 6644,
       "valid_rows": 6459,
       "excluded_rows": 185,
-      "range_source": "filename",
-      "parsed_sheets": [
-        "Sheet1"
-      ],
-      "ignored_sheets": []
-    },
-    "YT_NEWS_22072026 to 25072026.xlsx": {
-      "declared_start": "2026-07-22",
-      "declared_end": "2026-07-25",
-      "source_rows": 8819,
-      "valid_rows": 8557,
-      "excluded_rows": 262,
       "range_source": "filename",
       "parsed_sheets": [
         "Sheet1"
@@ -80,6 +56,30 @@
         "S3",
         "S4"
       ]
+    },
+    "YT_NEWS_15072026 to 18072026.xlsx": {
+      "declared_start": "2026-07-15",
+      "declared_end": "2026-07-18",
+      "source_rows": 9458,
+      "valid_rows": 9247,
+      "excluded_rows": 211,
+      "range_source": "filename",
+      "parsed_sheets": [
+        "Sheet1"
+      ],
+      "ignored_sheets": []
+    },
+    "YT_NEWS_22072026 to 25072026.xlsx": {
+      "declared_start": "2026-07-22",
+      "declared_end": "2026-07-25",
+      "source_rows": 8819,
+      "valid_rows": 8557,
+      "excluded_rows": 262,
+      "range_source": "filename",
+      "parsed_sheets": [
+        "Sheet1"
+      ],
+      "ignored_sheets": []
     },
     "sheet2_processed_20260714_121100.xlsx": {
       "declared_start": "2026-07-01",
@@ -106,5 +106,5 @@
       "ignored_sheets": []
     }
   },
-  "generated_at_ist": "2026-08-06T15:34:34.612522+05:30"
+  "generated_at_ist": "2026-08-11T13:38:58.781273+05:30"
 }

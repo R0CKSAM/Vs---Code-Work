@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-08-06T10:27:11.822780+00:00",
+  "generated_at_utc": "2026-08-12T16:54:57.900173+00:00",
   "input": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\distinct_UA_Both_All.csv",
   "map": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\config\\device_decode\\amazon_fire_tv_models.csv",
   "api_url": "https://whatmyuseragent.com/api",
@@ -14,16 +14,16 @@
     "all_distinct_api_cache": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\cache\\device_decode\\whatmyuseragent_all_distinct_ua_cache.parquet"
   },
   "stats": {
-    "input_rows": 29362,
-    "decoded_rows": 29131,
-    "local_decoded_rows": 4091,
-    "api_decoded_rows": 25040,
-    "unknown_rows": 208,
-    "malformed_rows": 23,
-    "api_cache_rows": 24904,
+    "input_rows": 30581,
+    "decoded_rows": 30260,
+    "local_decoded_rows": 5179,
+    "api_decoded_rows": 25081,
+    "unknown_rows": 277,
+    "malformed_rows": 44,
+    "api_cache_rows": 24973,
     "local_verified_api_crosscheck_rows": 162,
     "all_distinct_api_cache_rows": 0,
-    "combined_api_cache_rows": 25062,
-    "elapsed_seconds": 4.95
+    "combined_api_cache_rows": 25131,
+    "elapsed_seconds": 4.01
   }
 }

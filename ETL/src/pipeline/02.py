@@ -234,7 +234,13 @@ def dedupe_bucketed(
 
     hash_expr = "hash(" + ", ".join(sql_ident(c) for c in columns) + ")"
 
-    bucket_dir = tmp_output_file.with_name(f"{tmp_output_file.stem}.dedupe_parts")
+    # Bucket parts are disposable scratch and can be as large as the final file.
+    # Keep them in DuckDB's configured temp area so a constrained data drive only
+    # needs room for the final atomic output.
+    bucket_key = hashlib.blake2b(
+        str(tmp_output_file.resolve()).encode("utf-8"), digest_size=8
+    ).hexdigest()
+    bucket_dir = TEMP_DIR / "dedupe_parts" / f"{tmp_output_file.stem}_{bucket_key}"
     for idx, compression in enumerate(COMPRESSION_CHAIN):
         shutil.rmtree(bucket_dir, ignore_errors=True)
         bucket_dir.mkdir(parents=True, exist_ok=True)

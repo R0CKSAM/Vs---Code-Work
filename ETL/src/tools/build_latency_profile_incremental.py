@@ -101,7 +101,7 @@ def discover_days(lake: Path, source: str, start: date | None, end: date | None)
     root = lake / f"source={source}"
     days: list[date] = []
     for folder in root.glob("year=*/month=*/day=*"):
-        if not folder.is_dir() or not any(folder.glob("*.parquet")):
+        if not folder.is_dir() or not any(folder.glob("part_*.parquet")):
             continue
         try:
             parts = {
@@ -121,7 +121,7 @@ def discover_days(lake: Path, source: str, start: date | None, end: date | None)
 
 
 def signature_for_day(lake: Path, source: str, day_value: date) -> dict:
-    files = sorted(day_path(lake, source, day_value).glob("*.parquet"))
+    files = sorted(day_path(lake, source, day_value).glob("part_*.parquet"))
     items = []
     total_bytes = 0
     max_mtime_ns = 0

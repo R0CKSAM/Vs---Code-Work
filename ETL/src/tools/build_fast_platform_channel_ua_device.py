@@ -138,7 +138,7 @@ def ensure_lookup_table(con, lookup_path: Path) -> None:
 
 def build_device_table(con, args: argparse.Namespace) -> None:
     start, end = checked_dates(args)
-    lake_glob = q(args.lake / "**" / "*.parquet")
+    lake_glob = q(args.lake / "**" / "part_*.parquet")
     partition_filter = date_filter_sql(start, end)
     candidate_expr = channel_candidate_sql("reqPath")
     hours_expr = f"{HOURS_PER_TS_SEGMENT:.16f}"

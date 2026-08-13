@@ -324,7 +324,9 @@ def fetch_df(con: duckdb.DuckDBPyConnection, sql: str) -> pd.DataFrame:
 
 def build_tables(args: argparse.Namespace) -> dict[str, pd.DataFrame]:
     start, end = checked_dates(args)
-    glob = q(args.lake / "**" / "*.parquet")
+    # A lake writer creates tmp_*.parquet before atomically promoting part files.
+    # Latency calculations must never read an in-progress temporary partition.
+    glob = q(args.lake / "**" / "part_*.parquet")
     partition_filter = build_partition_filter(start, end) if start and end else "1=1"
     source_filter = source_filter_sql(args.source)
     candidate_expr = channel_candidate_sql(assert_safe_sql_column("reqPath"))  # FIX-1

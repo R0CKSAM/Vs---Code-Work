@@ -27,7 +27,7 @@ from vglive_core import channel_candidate_sql
 
 def build_identity_table(con, args: argparse.Namespace) -> None:
     start, end = checked_dates(args)
-    lake_glob = q(args.lake / "**" / "*.parquet")
+    lake_glob = q(args.lake / "**" / "part_*.parquet")
     partition_filter = date_filter_sql(start, end)
     candidate_expr = channel_candidate_sql("reqPath")
 

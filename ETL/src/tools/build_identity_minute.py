@@ -55,7 +55,7 @@ def resolved_platform_key_sql(source: str) -> str:
 
 def build_identity_minute_table(con, args: argparse.Namespace) -> None:
     start, end = checked_dates(args)
-    lake_glob = q(args.lake / "**" / "*.parquet")
+    lake_glob = q(args.lake / "**" / "part_*.parquet")
     partition_filter = date_filter_sql(start, end)
     candidate_expr = channel_candidate_sql("reqPath")
     session_expr = normalized_identity_sql("session_id")

@@ -30,7 +30,7 @@ def int_sum_sql(column_name: str) -> str:
 
 def build_bandwidth_table(con, args: argparse.Namespace) -> None:
     start, end = checked_dates(args)
-    lake_glob = q(args.lake / "**" / "*.parquet")
+    lake_glob = q(args.lake / "**" / "part_*.parquet")
     partition_filter = date_filter_sql(start, end)
     candidate_expr = channel_candidate_sql("reqPath")
 

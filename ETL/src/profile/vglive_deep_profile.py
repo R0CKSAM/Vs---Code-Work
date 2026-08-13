@@ -303,6 +303,7 @@ def write_daily_tables(
     ext_expr: str,
     quality_expr: str,
     only_tables: set[str] | None = None,
+    include_forensic_query_keys: bool = False,
 ) -> None:
     daily_out = out.parent / "daily_tables"
     daily_out.mkdir(parents=True, exist_ok=True)
@@ -853,6 +854,17 @@ def write_daily_tables(
         """,
     }
 
+    if not include_forensic_query_keys:
+        if only_tables is not None and "query_param_keys_daily" in only_tables:
+            raise SystemExit(
+                "query_param_keys_daily is a forensic-only table. "
+                "Rerun with --include-forensic-query-keys to build it explicitly."
+            )
+        # Splitting every query string into key/value pairs can spill tens of GB for
+        # one day. It is not consumed by the stakeholder dashboards, so keep it out
+        # of routine incremental ETL and generate it only for an explicit investigation.
+        queries.pop("query_param_keys_daily", None)
+
     if only_tables:
         unknown = sorted(only_tables - set(queries))
         if unknown:
@@ -928,6 +940,11 @@ def main() -> None:
         default=None,
         help="Write only the listed daily_tables and skip the wider profile artifacts.",
     )
+    parser.add_argument(
+        "--include-forensic-query-keys",
+        action="store_true",
+        help="Build the expensive full query-string key inventory for a deliberate forensic investigation.",
+    )
     args = parser.parse_args()
     ACTIVE_OUTPUT_FORMAT = args.output_format
     if args.full_refresh:
@@ -947,7 +964,8 @@ def main() -> None:
     temp_dir = args.temp_dir.expanduser().resolve()
     temp_dir.mkdir(parents=True, exist_ok=True)
 
-    glob = q(args.lake / "**" / "*.parquet")
+    # Ignore 03.py's in-progress tmp files; final lake partitions use part_*.parquet.
+    glob = q(args.lake / "**" / "part_*.parquet")
     partition_filter = build_partition_filter(start_date, end_date)
     where_sql = partition_filter
     date_label = "all_dates" if start_date is None else f"{start_date}_to_{end_date}"
@@ -986,7 +1004,15 @@ def main() -> None:
     if args.only_daily_tables:
         only_tables = set(args.only_daily_tables)
         print(f"Only daily tables: {', '.join(sorted(only_tables))}")
-        write_daily_tables(con, out, where_sql, ext_expr, quality_expr, only_tables=only_tables)
+        write_daily_tables(
+            con,
+            out,
+            where_sql,
+            ext_expr,
+            quality_expr,
+            only_tables=only_tables,
+            include_forensic_query_keys=args.include_forensic_query_keys,
+        )
         con.close()
         print("Deep profile daily-table subset complete.")
         return
@@ -1426,7 +1452,14 @@ def main() -> None:
         )
         write_frame(querystr_df, querystr_profile_path)
 
-    write_daily_tables(con, out, where_sql, ext_expr, quality_expr)
+    write_daily_tables(
+        con,
+        out,
+        where_sql,
+        ext_expr,
+        quality_expr,
+        include_forensic_query_keys=args.include_forensic_query_keys,
+    )
 
     con.close()
     print("Deep profile complete.")

@@ -67,7 +67,7 @@ def resolved_platform_key_sql(source: str) -> str:
 
 def build_manifest_minute_table(con, args: argparse.Namespace) -> None:
     start, end = checked_dates(args)
-    lake_glob = q(args.lake / "**" / "*.parquet")
+    lake_glob = q(args.lake / "**" / "part_*.parquet")
     candidate_expr = channel_candidate_sql("reqPath")
     partition_filter = date_filter_sql(start, end)
     platform_name_expr = resolved_platform_name_sql(args.source)

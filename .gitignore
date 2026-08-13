@@ -40,6 +40,9 @@ superset/
 ETL/extras/apps/Banner Maker/
 ETL/extras/output_archives/
 ETL/extras/one_off_data/
+# Manual storage-cleanup quarantine can contain millions of generated files.
+ETL/extras/DELETE_REVIEW_*/
+ETL/Twitter/seen_posts.json
 
 # Generated dashboard HTML can exceed GitHub's file-size limit.
 ETL/output/**/*.html

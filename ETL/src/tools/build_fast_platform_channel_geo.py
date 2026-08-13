@@ -38,7 +38,7 @@ def decoded_geo_sql(column_expr: str) -> str:
 
 def build_geo_table(con, args: argparse.Namespace) -> None:
     start, end = checked_dates(args)
-    lake_glob = q(args.lake / "**" / "*.parquet")
+    lake_glob = q(args.lake / "**" / "part_*.parquet")
     partition_filter = date_filter_sql(start, end)
     candidate_expr = channel_candidate_sql("reqPath")
     hours_expr = f"{HOURS_PER_TS_SEGMENT:.16f}"

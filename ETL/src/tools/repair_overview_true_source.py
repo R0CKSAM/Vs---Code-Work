@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import importlib.util
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -249,6 +250,18 @@ def main() -> None:
     con.execute("SET threads=2")
     con.execute("SET memory_limit='8GB'")
     con.execute("SET preserve_insertion_order=false")
+    # Targeted repairs can still spill on a high-volume completed day. Honour the
+    # pipeline scratch settings so a constrained local ETL drive is not the limit.
+    temp_dir = os.getenv("VG_DUCKDB_TEMP_DIR")
+    if temp_dir:
+        temp_path = Path(temp_dir).expanduser().resolve()
+        temp_path.mkdir(parents=True, exist_ok=True)
+        safe_temp_path = str(temp_path).replace("'", "''")
+        con.execute(f"SET temp_directory='{safe_temp_path}'")
+    max_temp_size = os.getenv("VG_DUCKDB_MAX_TEMP_SIZE")
+    if max_temp_size:
+        safe_max_temp_size = str(max_temp_size).replace("'", "''")
+        con.execute(f"SET max_temp_directory_size='{safe_max_temp_size}'")
     try:
         reader = reader_sql(selected, lake_helpers)
         exact_source_df = exact_query(con, reader, group_source=True)
