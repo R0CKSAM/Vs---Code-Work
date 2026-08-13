@@ -57,15 +57,23 @@ def parse_landing_excel(file_path: Path) -> list[dict[str, Any]]:
             header_idx = idx
             break
 
+    # Some landing files use a grouped header row immediately above the field-name row.
+    # If we detect landing/barker group labels there, treat the sheet as a two-level header.
+    group_header_idx = header_idx
+    if header_idx > 0:
+        prev_row_str = " ".join([clean_str(x).upper() for x in df_raw.iloc[header_idx - 1].values])
+        if any(g in prev_row_str for g in ["BARKER 1", "BARKER 2", "LANDING 1", "LANDING 2", "LANDING 3"]):
+            group_header_idx = header_idx - 1
+
     is_two_level = False
-    if header_idx + 1 < len(df_raw):
-        r0_str = " ".join([clean_str(x).upper() for x in df_raw.iloc[header_idx].values])
-        r1_str = " ".join([clean_str(x).upper() for x in df_raw.iloc[header_idx + 1].values])
+    if group_header_idx + 1 < len(df_raw):
+        r0_str = " ".join([clean_str(x).upper() for x in df_raw.iloc[group_header_idx].values])
+        r1_str = " ".join([clean_str(x).upper() for x in df_raw.iloc[group_header_idx + 1].values])
         if any(g in r0_str for g in ["BARKER 1", "BARKER 2", "LANDING 1", "LANDING 2", "LANDING 3"]) and any(s in r1_str for s in ["LCN", "CHANNEL", "GENRE"]):
             is_two_level = True
 
     if is_two_level:
-        df = pd.read_excel(file_path, header=[header_idx, header_idx + 1])
+        df = pd.read_excel(file_path, header=[group_header_idx, group_header_idx + 1])
         flat_cols: list[str] = []
         current_group = ""
         for top, sub in df.columns:
@@ -250,9 +258,9 @@ def process_landing_tracker_files(force_reprocess: bool = False) -> dict[str, An
             all_records.extend(records)
             processed_log.add(file_path.name)
             processed_count += 1
-            print(f"  ✓ {len(records):,} records imported for {week_label}")
+            print(f"  OK {len(records):,} records imported for {week_label}")
         except Exception as err:
-            print(f"  ✗ Error reading {file_path.name}: {err}")
+            print(f"  ERROR reading {file_path.name}: {err}")
 
     if all_records:
         df_out = pd.DataFrame(all_records)

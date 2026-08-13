@@ -2,6 +2,7 @@
   const root = document.getElementById("nbhdTable");
   if (!root) return;
   const NO_DATA_LABEL = "NA";
+  const DEFAULT_VISIBLE_WEEK_COUNT = 2;
 
   const state = {
     payload: null,
@@ -13,6 +14,7 @@
       week_to: "",
       change: "",
     },
+    hasCustomWeekRange: false,
     page: 1,
     pageSize: 30,
     loading: false,
@@ -270,6 +272,7 @@
       return {
         generated_at: "",
         weeks: [],
+        visible_weeks: [],
         filters: { markets: [], cities: [], head_ends: [] },
         table: { records: [], total_count: 0 },
         message: "",
@@ -290,6 +293,7 @@
     return {
       ...payload,
       weeks: Array.isArray(payload.weeks) ? payload.weeks : [],
+      visible_weeks: Array.isArray(payload.visible_weeks) ? payload.visible_weeks.filter((value) => String(value || "").trim() !== "") : [],
       filters: {
         ...(payload.filters || {}),
         markets: Array.isArray(payload.filters?.markets) ? payload.filters.markets : markets,
@@ -389,7 +393,48 @@
       const end = Math.max(fromIndex, toIndex);
       return allWeeks.slice(start, end + 1);
     }
-    return allWeeks.slice(Math.max(0, allWeeks.length - 4));
+    if (payload.visible_weeks?.length) {
+      return payload.visible_weeks.filter((week) => allWeeks.includes(week));
+    }
+    return allWeeks.slice(Math.max(0, allWeeks.length - DEFAULT_VISIBLE_WEEK_COUNT));
+  }
+
+  function syncDefaultWeekFilters(payload) {
+    const allWeeks = payload?.weeks || [];
+    if (!allWeeks.length) {
+      state.filters.week_from = "";
+      state.filters.week_to = "";
+      state.hasCustomWeekRange = false;
+      return;
+    }
+
+    const latestWeeks = payload?.visible_weeks?.length
+      ? payload.visible_weeks.filter((week) => allWeeks.includes(week))
+      : allWeeks.slice(Math.max(0, allWeeks.length - DEFAULT_VISIBLE_WEEK_COUNT));
+    const defaultFrom = latestWeeks[0] || "";
+    const defaultTo = latestWeeks[latestWeeks.length - 1] || defaultFrom;
+    const hasValidFrom = state.filters.week_from && allWeeks.includes(state.filters.week_from);
+    const hasValidTo = state.filters.week_to && allWeeks.includes(state.filters.week_to);
+
+    if (!state.hasCustomWeekRange) {
+      state.filters.week_from = defaultFrom;
+      state.filters.week_to = defaultTo;
+      return;
+    }
+
+    if (!hasValidFrom && !hasValidTo) {
+      state.hasCustomWeekRange = false;
+      state.filters.week_from = defaultFrom;
+      state.filters.week_to = defaultTo;
+      return;
+    }
+
+    if (!hasValidFrom) {
+      state.filters.week_from = hasValidTo ? state.filters.week_to : defaultFrom;
+    }
+    if (!hasValidTo) {
+      state.filters.week_to = hasValidFrom ? state.filters.week_from : defaultTo;
+    }
   }
 
   function hasChangeInWeeks(record, weeks) {
@@ -682,6 +727,7 @@
   function render(payload) {
     state.payload = normalizePayloadShape(payload);
     state.pageSize = getPageSize();
+    syncDefaultWeekFilters(state.payload);
     
     // Invalidate report cache when new data is loaded
     invalidateReportCache();
@@ -2401,6 +2447,7 @@
   function applyFilter(key, value) {
     state.filters[key] = value;
     if (key === "week_from" || key === "week_to") {
+      state.hasCustomWeekRange = Boolean(state.filters.week_from || state.filters.week_to);
       const weeks = state.payload?.weeks || window.__NBHD_STANDALONE_DATA__?.weeks || [];
       const fromIndex = state.filters.week_from && weeks.includes(state.filters.week_from) ? weeks.indexOf(state.filters.week_from) : -1;
       const toIndex = state.filters.week_to && weeks.includes(state.filters.week_to) ? weeks.indexOf(state.filters.week_to) : -1;
@@ -2639,6 +2686,7 @@
     state.filters.week_from = "";
     state.filters.week_to = "";
     state.filters.change = "";
+    state.hasCustomWeekRange = false;
     state.page = 1;
     fetchPayload(false);
   }

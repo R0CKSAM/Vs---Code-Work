@@ -16,7 +16,7 @@
       channel_type: "landing_1",
       week_from: "",
       week_to: "",
-      search: "",
+      change: "",
     },
     page: 1,
     pageSize: 30,
@@ -30,8 +30,8 @@
   const pageInfo = document.getElementById("trackerPageInfo");
   const prevPageBtn = document.getElementById("trackerPrevPage");
   const nextPageBtn = document.getElementById("trackerNextPage");
-  const searchInput = document.getElementById("trackerSearchInput");
   const resetButton = document.getElementById("trackerResetButton");
+  const downloadButton = document.getElementById("trackerDownloadButton");
   const fullscreenBtn = document.getElementById("trackerFullscreenButton");
   const panel = root.closest(".landing-tracker-panel");
 
@@ -60,6 +60,7 @@
     channel_type: getMultiSelect("trackerChannelTypeFilter"),
     week_from: getMultiSelect("trackerWeekFromFilter"),
     week_to: getMultiSelect("trackerWeekToFilter"),
+    change: getMultiSelect("trackerChangeFilter"),
   };
 
   function closeAllMenus(except = null) {
@@ -123,7 +124,7 @@
     const allRecords = state.payload?.records || [];
     return allRecords.filter((rec) => {
       for (const key of Object.keys(controls)) {
-        if (key === ignoreKey || key === "channel_type" || key === "week_from" || key === "week_to") continue;
+        if (key === ignoreKey || key === "channel_type" || key === "week_from" || key === "week_to" || key === "change") continue;
         const sel = state.filters[key];
         if (Array.isArray(sel) && sel.length > 0) {
           const recVal = normalizeText(rec[key]);
@@ -132,6 +133,59 @@
       }
       return true;
     });
+  }
+
+  function getWeekChannelName(weekObj, channelTypeKey) {
+    if (channelTypeKey === "landing_1") return weekObj.channel_1 || "";
+    if (channelTypeKey === "landing_2") return weekObj.channel_2 || "";
+    if (channelTypeKey === "landing_3") return weekObj.channel_3 || "";
+    if (channelTypeKey === "barker_1") return weekObj.barker_1 || "";
+    if (channelTypeKey === "barker_2") return weekObj.barker_2 || "";
+    return "";
+  }
+
+  function hasChannelChange(record, visibleWeeks) {
+    if (!record || !Array.isArray(visibleWeeks) || visibleWeeks.length < 2) return false;
+    const channelTypeKey = state.filters.channel_type || "landing_1";
+    let previousName = "";
+
+    for (let index = 0; index < visibleWeeks.length; index += 1) {
+      const weekObj = record.weeks?.[visibleWeeks[index]] || {};
+      const currentName = normalizeText(getWeekChannelName(weekObj, channelTypeKey)).toUpperCase();
+      if (index > 0 && previousName && currentName && previousName !== currentName) {
+        return true;
+      }
+      previousName = currentName;
+    }
+    return false;
+  }
+
+  function getWeekCellParts(weekObj, channelTypeKey) {
+    let channelName = "";
+    let lcnVal = "";
+    let genreVal = "";
+
+    if (channelTypeKey === "landing_1") {
+      channelName = weekObj.channel_1 || "";
+      lcnVal = weekObj.lcn_1 || "";
+      genreVal = weekObj.genre_1 || "";
+    } else if (channelTypeKey === "landing_2") {
+      channelName = weekObj.channel_2 || "";
+      lcnVal = weekObj.lcn_2 || "";
+      genreVal = weekObj.genre_2 || "";
+    } else if (channelTypeKey === "landing_3") {
+      channelName = weekObj.channel_3 || "";
+      lcnVal = weekObj.lcn_3 || "";
+      genreVal = weekObj.genre_3 || "";
+    } else if (channelTypeKey === "barker_1") {
+      channelName = weekObj.barker_1 || "";
+      lcnVal = weekObj.lcn_b1 || "";
+    } else if (channelTypeKey === "barker_2") {
+      channelName = weekObj.barker_2 || "";
+      lcnVal = weekObj.lcn_b2 || "";
+    }
+
+    return { channelName, lcnVal, genreVal };
   }
 
   function getAvailableOptionsFor(key) {
@@ -147,6 +201,12 @@
     if (key === "week_from" || key === "week_to") {
       const weeks = state.payload?.weeks || [];
       return weeks.map((w) => ({ value: w, label: w }));
+    }
+    if (key === "change") {
+      return [
+        { value: "Changed", label: "Changed" },
+        { value: "No Change", label: "No Change" },
+      ];
     }
 
     const scopedRecords = getFilteredSourceRecords(key);
@@ -166,7 +226,7 @@
 
     const frag = document.createDocumentFragment();
 
-    const isSingleSelect = (key === "channel_type" || key === "week_from" || key === "week_to");
+    const isSingleSelect = (key === "channel_type" || key === "week_from" || key === "week_to" || key === "change");
 
     if (!isSingleSelect) {
       const selectAllBtn = document.createElement("button");
@@ -294,11 +354,11 @@
 
   function filterRecords() {
     if (!state.payload?.records) return [];
-    const q = normalizeText(state.filters.search).toLowerCase();
+    const visibleWeeks = getVisibleWeeks();
 
     return state.payload.records.filter((rec) => {
       for (const key of Object.keys(controls)) {
-        if (key === "channel_type" || key === "week_from" || key === "week_to") continue;
+        if (key === "channel_type" || key === "week_from" || key === "week_to" || key === "change") continue;
         const sel = state.filters[key];
         if (Array.isArray(sel) && sel.length > 0) {
           const recVal = normalizeText(rec[key]);
@@ -306,13 +366,9 @@
         }
       }
 
-      if (q) {
-        const haystack = [
-          rec.band, rec.market, rec.city, rec.headend, rec.state_name, rec.district, rec.feed, rec.mso,
-          ...Object.values(rec.weeks || {}).flatMap((w) => [w.channel_1, w.lcn_1, w.genre_1, w.channel_2, w.lcn_2, w.genre_2, w.channel_3, w.lcn_3, w.genre_3]),
-        ].map(normalizeText).join(" ").toLowerCase();
-        if (!haystack.includes(q)) return false;
-      }
+      const rowChanged = hasChannelChange(rec, visibleWeeks);
+      if (state.filters.change === "Changed" && !rowChanged) return false;
+      if (state.filters.change === "No Change" && rowChanged) return false;
       return true;
     });
   }
@@ -383,25 +439,7 @@
         let lcnVal = "";
         let genreVal = "";
 
-        if (channelTypeKey === "landing_1") {
-          channelName = weekObj.channel_1 || "";
-          lcnVal = weekObj.lcn_1 || "";
-          genreVal = weekObj.genre_1 || "";
-        } else if (channelTypeKey === "landing_2") {
-          channelName = weekObj.channel_2 || "";
-          lcnVal = weekObj.lcn_2 || "";
-          genreVal = weekObj.genre_2 || "";
-        } else if (channelTypeKey === "landing_3") {
-          channelName = weekObj.channel_3 || "";
-          lcnVal = weekObj.lcn_3 || "";
-          genreVal = weekObj.genre_3 || "";
-        } else if (channelTypeKey === "barker_1") {
-          channelName = weekObj.barker_1 || "";
-          lcnVal = weekObj.lcn_b1 || "";
-        } else if (channelTypeKey === "barker_2") {
-          channelName = weekObj.barker_2 || "";
-          lcnVal = weekObj.lcn_b2 || "";
-        }
+        ({ channelName, lcnVal, genreVal } = getWeekCellParts(weekObj, channelTypeKey));
 
         const tdWeek = document.createElement("td");
         const cellParts = [];
@@ -445,6 +483,75 @@
     syncFilterLabels();
   }
 
+  function exportTrackerExcel() {
+    const downloader = window.__downloadExcelWorkbook;
+    const excelCell = window.__excelCell || ((value, style = "cell", options = {}) => ({ value, style, ...options }));
+    if (!downloader) return;
+
+    const visibleWeeks = getVisibleWeeks();
+    const filteredRecords = filterRecords();
+    const channelTypeKey = state.filters.channel_type || "landing_1";
+    const channelTypeLabel = {
+      landing_1: "Landing Channel 1",
+      landing_2: "Landing Channel 2",
+      landing_3: "Landing Channel 3",
+      barker_1: "Barker 1",
+      barker_2: "Barker 2",
+    }[channelTypeKey] || channelTypeKey;
+
+    const headerRow = [
+      excelCell("Band", "header"),
+      excelCell("Market", "header"),
+      excelCell("City", "header"),
+      excelCell("Headend", "header"),
+      excelCell("State", "header"),
+      excelCell("District", "header"),
+      excelCell("MSO", "header"),
+      excelCell("Change Status", "header"),
+      ...visibleWeeks.map((week) => excelCell(`${week} (${channelTypeLabel})`, "header")),
+    ];
+
+    const rows = filteredRecords.map((rec, rowIndex) => {
+      const rowChanged = hasChannelChange(rec, visibleWeeks);
+      const rowStyle = rowIndex % 2 === 0 ? "cell" : "altRow";
+      const baseCells = [
+        excelCell(rec.band || "", rowStyle),
+        excelCell(rec.market || "", rowStyle),
+        excelCell(rec.city || "", rowStyle),
+        excelCell(rec.headend || "", rowStyle),
+        excelCell(rec.state_name || "", rowStyle),
+        excelCell(rec.district || "", rowStyle),
+        excelCell(rec.mso || "", rowStyle),
+        excelCell(rowChanged ? "Changed" : "No Change", rowChanged ? "positive" : "neutral"),
+      ];
+
+      const weekCells = visibleWeeks.map((week) => {
+        const weekObj = rec.weeks?.[week] || {};
+        const { channelName, lcnVal, genreVal } = getWeekCellParts(weekObj, channelTypeKey);
+        const parts = [];
+        if (channelName) parts.push(channelName);
+        if (lcnVal) parts.push(lcnVal);
+        if (genreVal) parts.push(genreVal);
+        return excelCell(parts.length ? parts.join(" - ") : "--", rowStyle);
+      });
+
+      return [...baseCells, ...weekCells];
+    });
+
+    downloader("landing_channel_change_tracker", [
+      {
+        name: "Landing Tracker",
+        columns: [95, 120, 120, 150, 110, 120, 140, 95, ...visibleWeeks.map(() => 220)],
+        rows: [
+          [excelCell("Landing Channel Change Tracker", "title", { mergeAcross: Math.max(0, headerRow.length - 1) })],
+          [excelCell(`Channel Type: ${channelTypeLabel} | Weeks: ${visibleWeeks.join(" to ") || "N/A"} | Rows: ${filteredRecords.length}`, "meta", { mergeAcross: Math.max(0, headerRow.length - 1) })],
+          headerRow,
+          ...rows,
+        ],
+      },
+    ]);
+  }
+
   function syncFilterLabels() {
     syncDefaultWeekFilters();
     const allWeeks = state.payload?.weeks || [];
@@ -463,6 +570,7 @@
       channel_type: "Landing Channel 1",
       week_from: defaultFrom,
       week_to: defaultTo,
+      change: "All Changes",
     };
     Object.keys(controls).forEach((key) => {
       const selected = state.filters[key];
@@ -487,6 +595,7 @@
       channel_type: "Landing Channel 1",
       week_from: defaultFrom,
       week_to: defaultTo,
+      change: "All Changes",
     };
 
     Object.keys(controls).forEach((key) => {
@@ -496,14 +605,6 @@
     document.addEventListener("click", (e) => {
       if (!e.target.closest(".filter-select")) closeAllMenus();
     });
-
-    if (searchInput) {
-      searchInput.addEventListener("input", () => {
-        state.filters.search = searchInput.value;
-        state.page = 1;
-        render();
-      });
-    }
 
     if (resetButton) {
       resetButton.addEventListener("click", () => {
@@ -519,13 +620,16 @@
           channel_type: "landing_1",
           week_from: "",
           week_to: "",
-          search: "",
+          change: "",
         };
         syncDefaultWeekFilters();
-        if (searchInput) searchInput.value = "";
         state.page = 1;
         render();
       });
+    }
+
+    if (downloadButton) {
+      downloadButton.addEventListener("click", exportTrackerExcel);
     }
 
     if (prevPageBtn) {

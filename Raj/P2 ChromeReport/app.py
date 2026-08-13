@@ -32,6 +32,7 @@ STYLE_FILE = BASE_DIR / "static" / "style.css"
 NBHD_SCRIPT_FILE = BASE_DIR / "static" / "neighbourhood.js"
 OTS_SCRIPT_FILE = BASE_DIR / "static" / "ots.js"
 COMPARISON_SCRIPT_FILE = BASE_DIR / "static" / "comparison.js"
+NBHD_WEEKWISE_SCRIPT_FILE = BASE_DIR / "static" / "nbhd_weekwise.js"
 NBHD_BENCHMARK_SCRIPT_FILE = BASE_DIR / "static" / "nbhd_benchmark.js"
 LANDING_SCRIPT_FILE = BASE_DIR / "static" / "landing.js"
 LANDING_ANALYSIS_DIR = BASE_DIR / "landing analysis"
@@ -103,6 +104,10 @@ COMPARISON_REPORT_CACHE: dict[str, Any] = {
     "report": None,
 }
 NBHD_BENCHMARK_REPORT_CACHE: dict[str, Any] = {
+    "signature": None,
+    "report": None,
+}
+NBHD_WEEKWISE_REPORT_CACHE: dict[str, Any] = {
     "signature": None,
     "report": None,
 }
@@ -484,6 +489,232 @@ def extract_nbhd_window(rows: list[dict[str, Any]], radius: int = 4) -> list[tup
     return [(row_index + 1, sorted_rows[row_index]) for row_index in sorted(window_indexes)]
 
 
+def enumerate_nbhd_positions(rows: list[dict[str, Any]]) -> list[tuple[int, dict[str, Any]]]:
+    sorted_rows = get_nbhd_sorted_rows(rows)
+    return [(row_index + 1, row) for row_index, row in enumerate(sorted_rows)]
+
+
+NBHD_WEEKWISE_COLUMNS = [
+    "week",
+    "market",
+    "city",
+    "head_end",
+    "c1",
+    "c2",
+    "c3",
+    "c4",
+    "c5",
+    "c6",
+    "c7",
+    "c8",
+    "c9",
+    "genre1",
+    "genre2",
+    "genre3",
+    "genre4",
+    "genre5",
+    "genre6",
+    "genre7",
+    "genre8",
+    "genre9",
+]
+
+NBHD_WEEKWISE_COLUMN_LABELS = {
+    "week": "Week No",
+    "market": "Market",
+    "city": "City",
+    "head_end": "Headend",
+    "c1": "C-1",
+    "c2": "C-2",
+    "c3": "C-3",
+    "c4": "C-4",
+    "c5": "C-5 (INDIA TV)",
+    "c6": "C-6",
+    "c7": "C-7",
+    "c8": "C-8",
+    "c9": "C-9",
+    "genre1": "Genre 1",
+    "genre2": "Genre 2",
+    "genre3": "Genre 3",
+    "genre4": "Genre 4",
+    "genre5": "Genre 5",
+    "genre6": "Genre 6",
+    "genre7": "Genre 7",
+    "genre8": "Genre 8",
+    "genre9": "Genre 9",
+}
+
+
+def build_nbhd_weekwise_row(
+    week_label: str,
+    market: str,
+    city: str,
+    head_end: str,
+    rows: list[dict[str, Any]],
+) -> dict[str, Any]:
+    sorted_rows = get_nbhd_sorted_rows(rows)
+    india_index = next(
+        (index for index, row in enumerate(sorted_rows) if normalize_text(row.get("channel")).upper() == "INDIA TV"),
+        None,
+    )
+
+    output = {
+        "row_key": "||".join((week_label, market, city, head_end)),
+        "week": week_label,
+        "market": market,
+        "city": city,
+        "head_end": head_end,
+    }
+    for slot in range(1, 10):
+        output[f"c{slot}"] = ""
+        output[f"genre{slot}"] = ""
+
+    if india_index is not None:
+        slot_map = {
+            0: 5,
+            -4: 1,
+            -3: 2,
+            -2: 3,
+            -1: 4,
+            1: 6,
+            2: 7,
+            3: 8,
+            4: 9,
+        }
+        for relative_index, slot in slot_map.items():
+            source_index = india_index + relative_index
+            if source_index < 0 or source_index >= len(sorted_rows):
+                continue
+            row = sorted_rows[source_index]
+            output[f"c{slot}"] = normalize_text(row.get("channel"))
+            output[f"genre{slot}"] = normalize_text(row.get("genre"))
+        return output
+
+    sequential_slots = [1, 2, 3, 4, 6, 7, 8, 9]
+    for source_index, slot in enumerate(sequential_slots):
+        if source_index >= len(sorted_rows):
+            break
+        row = sorted_rows[source_index]
+        output[f"c{slot}"] = normalize_text(row.get("channel"))
+        output[f"genre{slot}"] = normalize_text(row.get("genre"))
+    return output
+
+
+def build_nbhd_weekwise_report() -> dict[str, Any]:
+    if history_files_ready():
+        history_path = resolve_history_path(HISTORY_NBHD_CSV, LEGACY_HISTORY_NBHD_CSV)
+        dataframe = read_history_csv(history_path)
+        if dataframe.empty:
+            return {
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "weeks": [],
+                "columns": NBHD_WEEKWISE_COLUMNS,
+                "column_labels": NBHD_WEEKWISE_COLUMN_LABELS,
+                "records": [],
+                "message": "NBHD history CSV is empty.",
+                "source_directory": str(history_path),
+            }
+
+        grouped_rows: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
+        for row in dataframe.to_dict(orient="records"):
+            week_label = normalize_text(row.get("Week"))
+            market = normalize_text(row.get("Market"))
+            city = normalize_text(row.get("City"))
+            head_end = normalize_text(row.get("Head-End"))
+            channel = normalize_text(row.get("Channel"))
+            if not week_label or not market or not city or not head_end or not channel:
+                continue
+            tv_ch_no = normalize_number(row.get("TV CH. No."))
+            frequency = normalize_number(row.get("Frequency"))
+            grouped_rows.setdefault((week_label, market, city, head_end), []).append(
+                {
+                    "market": market,
+                    "city": city,
+                    "head_end": head_end,
+                    "channel": channel,
+                    "genre": normalize_text(row.get("Genre")),
+                    "frequency": frequency,
+                    "tv_ch_no": tv_ch_no,
+                    "order_token": tv_ch_no if tv_ch_no is not None else frequency,
+                }
+            )
+
+        records = [
+            build_nbhd_weekwise_row(week_label, market, city, head_end, rows)
+            for (week_label, market, city, head_end), rows in grouped_rows.items()
+        ]
+        weeks = sorted({record["week"] for record in records}, key=week_sort_key)
+        return {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "weeks": weeks,
+            "columns": NBHD_WEEKWISE_COLUMNS,
+            "column_labels": NBHD_WEEKWISE_COLUMN_LABELS,
+            "records": sorted(
+                records,
+                key=lambda item: (
+                    week_sort_key(item["week"]),
+                    item["market"].lower(),
+                    item["city"].lower(),
+                    item["head_end"].lower(),
+                ),
+            ),
+            "message": "",
+            "source_directory": str(history_path),
+        }
+
+    week_files = get_nbhd_week_files()
+    if not week_files:
+        return {
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "weeks": [],
+            "columns": NBHD_WEEKWISE_COLUMNS,
+            "column_labels": NBHD_WEEKWISE_COLUMN_LABELS,
+            "records": [],
+            "message": "Add weekly NBHD files to generate the week-wise neighbourhood comparison report.",
+            "source_directory": str(get_nbhd_source_dir()),
+        }
+
+    grouped_rows: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
+    for week_label, rows in [prepare_nbhd_week_rows(path) for path in week_files]:
+        for row in rows:
+            key = (week_label, row["market"], row["city"], row["head_end"])
+            grouped_rows.setdefault(key, []).append(row)
+
+    records = [
+        build_nbhd_weekwise_row(week_label, market, city, head_end, rows)
+        for (week_label, market, city, head_end), rows in grouped_rows.items()
+    ]
+    weeks = sorted({record["week"] for record in records}, key=week_sort_key)
+    return {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "weeks": weeks,
+        "columns": NBHD_WEEKWISE_COLUMNS,
+        "column_labels": NBHD_WEEKWISE_COLUMN_LABELS,
+        "records": sorted(
+            records,
+            key=lambda item: (
+                week_sort_key(item["week"]),
+                item["market"].lower(),
+                item["city"].lower(),
+                item["head_end"].lower(),
+            ),
+        ),
+        "message": "",
+        "source_directory": str(get_nbhd_source_dir()),
+    }
+
+
+def load_nbhd_weekwise_report(force: bool = False) -> dict[str, Any]:
+    signature = get_history_signature() if history_files_ready() else get_signature(get_nbhd_week_files())
+    if not force and NBHD_WEEKWISE_REPORT_CACHE["report"] is not None and NBHD_WEEKWISE_REPORT_CACHE["signature"] == signature:
+        return NBHD_WEEKWISE_REPORT_CACHE["report"]
+
+    report = build_nbhd_weekwise_report()
+    NBHD_WEEKWISE_REPORT_CACHE["signature"] = signature
+    NBHD_WEEKWISE_REPORT_CACHE["report"] = report
+    return report
+
+
 def build_nbhd_report() -> dict[str, Any]:
     if history_files_ready():
         history_path = resolve_history_path(HISTORY_NBHD_CSV, LEGACY_HISTORY_NBHD_CSV)
@@ -525,7 +756,7 @@ def build_nbhd_report() -> dict[str, Any]:
                 grouped.setdefault((row["market"], row["city"], row["head_end"]), []).append(row)
 
             for (market, city, head_end), group_rows in grouped.items():
-                for offset, nbhd_row in extract_nbhd_window(group_rows):
+                for offset, nbhd_row in enumerate_nbhd_positions(group_rows):
                     row_key = "||".join((market, city, head_end, str(offset)))
                     record = merged.setdefault(
                         row_key,
@@ -584,7 +815,7 @@ def build_nbhd_report() -> dict[str, Any]:
             grouped.setdefault((row["market"], row["city"], row["head_end"]), []).append(row)
 
         for (market, city, head_end), group_rows in grouped.items():
-            for offset, nbhd_row in extract_nbhd_window(group_rows):
+            for offset, nbhd_row in enumerate_nbhd_positions(group_rows):
                 row_key = "||".join((market, city, head_end, str(offset)))
                 record = merged.setdefault(
                     row_key,
@@ -1756,6 +1987,7 @@ def build_dashboard_bundle(report: dict[str, Any] | None = None) -> dict[str, An
         "comparison": load_comparison_report(force=True, report=frequency_report),
         "nbhd_benchmark": load_nbhd_benchmark_report(force=True),
         "nbhd": build_nbhd_api_payload({"market": "", "city": "", "head_end": "", "channel": ""}, "", force_refresh=True),
+        "nbhd_weekwise": load_nbhd_weekwise_report(force=True),
         "ots": build_ots_api_payload(
             {"markets": [], "channels": [], "week_from": "", "week_to": "", "change": "", "search": ""},
             force_refresh=True,
@@ -1775,6 +2007,10 @@ def read_landing_tracker_script() -> str:
     return path.read_text(encoding="utf-8") if path.exists() else ""
 
 
+def read_nbhd_weekwise_script() -> str:
+    return NBHD_WEEKWISE_SCRIPT_FILE.read_text(encoding="utf-8") if NBHD_WEEKWISE_SCRIPT_FILE.exists() else ""
+
+
 def read_plotly_graph_script() -> str:
     path = BASE_DIR / "static" / "plotly_graph.js"
     return path.read_text(encoding="utf-8") if path.exists() else ""
@@ -1790,10 +2026,13 @@ def write_standalone_dashboard(report: dict[str, Any]) -> None:
 
 
 def create_standalone_dashboard(report: dict[str, Any]) -> str:
+    dashboard_bundle = build_dashboard_bundle(report)
+    embedded_bundle_script = f"window.__CHROME_REPORT_DATA__ = {compact_inline_json(dashboard_bundle)};"
     style_text = read_style()
     default_channel_reports_js = json.dumps(sort_summary_channels(["INDIA TV", "AAJ TAK", "NEWS 18 INDIA", "REPUBLIC BHARAT"]))
     nbhd_benchmark_script_text = read_nbhd_benchmark_script()
     nbhd_script_text = read_nbhd_script()
+    nbhd_weekwise_script_text = read_nbhd_weekwise_script()
     ots_script_text = read_ots_script()
     comparison_script_text = read_comparison_script()
     landing_script_text = read_landing_script()
@@ -1926,6 +2165,7 @@ __STYLE__
         <div id="nbhdReportLauncher" class="nbhd-report-launcher">
           <button id="nbhdReportToggleButton" class="primary-button" type="button">Neighbour Change Report</button>
           <button id="nbhdComparisonReportToggleButton" class="ghost-button" type="button">India TV Genre Analysis</button>
+          <button id="nbhdWeekwiseToggleButton" class="ghost-button" type="button">Weekly Analysis</button>
         </div>
         <section id="nbhdComparisonReportPanel" class="panel nbhd-report-panel" hidden>
           <div class="panel-heading nbhd-report-heading">
@@ -1968,19 +2208,50 @@ __STYLE__
           <div id="nbhdReportStatusMessage" class="status-message" hidden></div>
           <div id="nbhdReportContent" class="nbhd-report-stack"></div>
         </section>
+        <section id="nbhdWeekwisePanel" class="panel nbhd-weekwise-panel" hidden>
+          <div class="panel-heading nbhd-weekwise-heading">
+            <div>
+              <h2>Week-wise Neighbourhood Comparison Report</h2>
+              <p id="nbhdWeekwiseMeta" class="panel-subtitle">Filter by week, market, city, headend, channel, or genre with Excel-style multi-select controls.</p>
+            </div>
+            <div class="table-meta">
+              <span id="nbhdWeekwiseResultCount">0 rows</span>
+            </div>
+          </div>
+          <div class="comparison-toolbar nbhd-weekwise-toolbar">
+            <div class="nbhd-weekwise-toolbar-meta">
+              <span id="nbhdWeekwiseActiveFilters" class="nbhd-weekwise-summary-pill">All rows visible</span>
+              <span id="nbhdWeekwiseTotalCount" class="nbhd-weekwise-summary-pill muted">0 total records</span>
+            </div>
+            <div class="action-row comparison-actions">
+              <button id="nbhdWeekwiseResetButton" class="ghost-button" type="button">Reset All Filters</button>
+              <button id="nbhdWeekwiseDownloadButton" class="ghost-button" type="button">Download Excel</button>
+              <button id="nbhdWeekwiseHideButton" class="ghost-button" type="button">Hide</button>
+              <button id="nbhdWeekwiseFullscreenButton" class="primary-button" type="button">Full Screen</button>
+            </div>
+          </div>
+          <div id="nbhdWeekwiseStatusMessage" class="status-message" hidden></div>
+          <div class="comparison-table-wrap nbhd-weekwise-table-wrap">
+            <table id="nbhdWeekwiseTable" class="comparison-table nbhd-weekwise-table">
+              <thead id="nbhdWeekwiseTableHead"></thead>
+              <tbody id="nbhdWeekwiseTableBody"></tbody>
+            </table>
+          </div>
+          <div class="pagination-bar comparison-pagination-bar nbhd-weekwise-footer">
+            <span id="nbhdWeekwisePageInfo">Showing 0 of 0</span>
+            <span id="nbhdWeekwiseLoadState" class="nbhd-weekwise-load-state">No data available.</span>
+            <button id="nbhdWeekwiseExitFullscreenButton" class="ghost-button comparison-exit-fullscreen" type="button" hidden>Exit Full Screen</button>
+          </div>
+        </section>
       </section>
 
       <section class="panel ots-panel">
         <div class="panel-heading ots-heading">
           <div><h2>OTS Comparison</h2></div>
-          <div class="ots-view-toggle">
-            <button id="btnViewTable" class="active" onclick="window.ChromeReportGraph.toggleView('table')">Table View</button>
-            <button id="btnViewGraph" onclick="window.ChromeReportGraph.toggleView('graph')">Graph View</button>
+          <div class="table-meta">
+            <span id="otsResultCount">0 records</span>
           </div>
-        <div class="table-meta">
-          <span id="otsResultCount">0 records</span>
         </div>
-      </div>
       <div class="ots-toolbar">
         <label class="ots-multiselect-field">
           <span>Market</span>
@@ -2003,6 +2274,7 @@ __STYLE__
           <button id="otsResetButton" class="ghost-button" type="button">Reset Filters</button>
           <button id="otsDownloadButton" class="ghost-button" type="button">Download Excel</button>
           <button id="otsRefreshButton" class="ghost-button" type="button">Refresh</button>
+          <button id="otsGraphButton" class="ghost-button" type="button">Graph</button>
           <button id="otsFullscreenButton" class="primary-button" type="button">Full Screen</button>
         </div>
       </div>
@@ -2014,7 +2286,44 @@ __STYLE__
         </table>
       </div>
       <div id="otsGraphWrap" class="ots-graph-wrap" hidden>
-        <div id="otsGraphLoading" class="ots-graph-loading">Loading Plotly...</div>
+        <div class="ots-graph-toolbar">
+          <label class="ots-multiselect-field">
+            <span>Market</span>
+            <div class="ots-multiselect">
+              <button id="otsGraphMarketButton" class="ots-select-button" type="button">Delhi</button>
+              <div id="otsGraphMarketMenu" class="ots-multiselect-menu ots-graph-filter-menu" hidden>
+                <div class="ots-graph-filter-head">
+                  <strong>Market</strong>
+                  <span id="otsGraphMarketSummary">All</span>
+                </div>
+                <input id="otsGraphMarketSearch" class="ots-menu-search" type="text" placeholder="Search market..." autocomplete="off" />
+                <div id="otsGraphMarketOptions" class="ots-options-list"></div>
+              </div>
+            </div>
+          </label>
+          <label class="ots-multiselect-field">
+            <span>Channel</span>
+            <div class="ots-multiselect">
+              <button id="otsGraphChannelButton" class="ots-select-button" type="button">4 selected</button>
+              <div id="otsGraphChannelMenu" class="ots-multiselect-menu ots-graph-filter-menu" hidden>
+                <div class="ots-graph-filter-head">
+                  <strong>Channel</strong>
+                  <span id="otsGraphChannelSummary">4 selected</span>
+                </div>
+                <input id="otsGraphChannelSearch" class="ots-menu-search" type="text" placeholder="Search channel..." autocomplete="off" />
+                <div class="ots-graph-filter-actions">
+                  <button id="otsGraphChannelSelectAll" class="ghost-button" type="button">Select All</button>
+                  <button id="otsGraphChannelClear" class="ghost-button" type="button">Clear</button>
+                </div>
+                <div id="otsGraphChannelOptions" class="ots-options-list"></div>
+              </div>
+            </div>
+          </label>
+          <div class="action-row ots-graph-actions">
+            <button id="otsGraphCloseButton" class="ghost-button" type="button">Close Graph</button>
+          </div>
+        </div>
+        <div id="otsGraphLoading" class="ots-graph-loading">Loading chart...</div>
         <div id="otsGraphEmpty" class="ots-graph-empty" hidden></div>
         <div id="otsGraphContainer"></div>
       </div>
@@ -2066,7 +2375,6 @@ __STYLE__
         <div id="otsReportStatusMessage" class="status-message" hidden></div>
         <div id="otsReportContent" class="ots-report-stack"></div>
       </section>
-    </section>
 
     <section class="panel comparison-panel">
       <div class="panel-heading comparison-heading">
@@ -2118,11 +2426,11 @@ __STYLE__
         <div class="tracker-field"><span class="tracker-field-label">Channel Type</span><div class="filter-select"><button id="trackerChannelTypeFilter" class="tracker-select-btn" type="button">Landing Channel 1</button><div id="trackerChannelTypeFilterMenu" class="tracker-menu" hidden><input id="trackerChannelTypeFilterSearch" class="tracker-menu-search" type="text" placeholder="Search channel type..." autocomplete="off" /><div id="trackerChannelTypeFilterOptions" class="tracker-options-list"></div></div></div></div>
         <div class="tracker-field"><span class="tracker-field-label">Week From</span><div class="filter-select"><button id="trackerWeekFromFilter" class="tracker-select-btn" type="button">Week From</button><div id="trackerWeekFromFilterMenu" class="tracker-menu" hidden><input id="trackerWeekFromFilterSearch" class="tracker-menu-search" type="text" placeholder="Search week..." autocomplete="off" /><div id="trackerWeekFromFilterOptions" class="tracker-options-list"></div></div></div></div>
         <div class="tracker-field"><span class="tracker-field-label">Week To</span><div class="filter-select"><button id="trackerWeekToFilter" class="tracker-select-btn" type="button">Week To</button><div id="trackerWeekToFilterMenu" class="tracker-menu" hidden><input id="trackerWeekToFilterSearch" class="tracker-menu-search" type="text" placeholder="Search week..." autocomplete="off" /><div id="trackerWeekToFilterOptions" class="tracker-options-list"></div></div></div></div>
-        
-        <div class="tracker-field"><span class="tracker-field-label">Search</span><input id="trackerSearchInput" class="tracker-search-input" type="text" placeholder="Search..." autocomplete="off" /></div>
+        <div class="tracker-field"><span class="tracker-field-label">Change</span><div class="filter-select"><button id="trackerChangeFilter" class="tracker-select-btn" type="button">All Changes</button><div id="trackerChangeFilterMenu" class="tracker-menu" hidden><input id="trackerChangeFilterSearch" class="tracker-menu-search" type="text" placeholder="Search change..." autocomplete="off" /><div id="trackerChangeFilterOptions" class="tracker-options-list"></div></div></div></div>
 
         <div class="landing-tracker-actions">
           <button id="trackerResetButton" class="ghost-button" type="button">Reset</button>
+          <button id="trackerDownloadButton" class="ghost-button" type="button">Download Excel</button>
           <button id="trackerFullscreenButton" class="primary-button" type="button">Full Screen</button>
         </div>
       </div>
@@ -2184,7 +2492,9 @@ __STYLE__
     <tr><td colspan="100%" class="empty-state">No records match the current filters.</td></tr>
   </template>
 
-  <script src="./frequency_report.json"></script>
+  <script>
+__EMBEDDED_BUNDLE_SCRIPT__
+  </script>
   <script>
 const reportBundle = window.__CHROME_REPORT_DATA__ || {
   frequency: { generated_at: "", weeks: [], records: [], message: "Dashboard data file could not be loaded." },
@@ -4093,6 +4403,12 @@ window.__NBHD_STANDALONE_DATA__ = reportBundle.nbhd;
 __NBHD_SCRIPT__
   </script>
   <script>
+window.__NBHD_WEEKWISE_INITIAL_DATA__ = reportBundle.nbhd_weekwise;
+  </script>
+  <script>
+__NBHD_WEEKWISE_SCRIPT__
+  </script>
+  <script>
 window.__OTS_STANDALONE_DATA__ = reportBundle.ots;
   </script>
   <script>
@@ -4121,10 +4437,12 @@ __PLOTLY_GRAPH_SCRIPT__
         .replace("__NBHD_BENCHMARK_SCRIPT__", nbhd_benchmark_script_text)
         .replace("__COMPARISON_SCRIPT__", comparison_script_text)
         .replace("__NBHD_SCRIPT__", nbhd_script_text)
+        .replace("__NBHD_WEEKWISE_SCRIPT__", nbhd_weekwise_script_text)
         .replace("__OTS_SCRIPT__", ots_script_text)
         .replace("__LANDING_SCRIPT__", landing_script_text)
         .replace("__LANDING_TRACKER_SCRIPT__", landing_tracker_script_text)
         .replace("__PLOTLY_GRAPH_SCRIPT__", plotly_script_text)
+        .replace("__EMBEDDED_BUNDLE_SCRIPT__", embedded_bundle_script)
     )
 
 
@@ -4232,14 +4550,23 @@ def serialize_nbhd_records(records: list[dict[str, Any]], weeks: list[str]) -> l
     ]
 
 
+def nbhd_default_visible_weeks(weeks: list[str], count: int = 2) -> list[str]:
+    clean_weeks = [normalize_text(week) for week in weeks if normalize_text(week)]
+    if not clean_weeks:
+        return []
+    return clean_weeks[max(0, len(clean_weeks) - count) :]
+
+
 def build_nbhd_api_payload(filters: dict[str, str], search: str, force_refresh: bool = False) -> dict[str, Any]:
     report = load_nbhd_report(force=force_refresh)
     weeks = report.get("weeks", [])
     records = report.get("records", [])
     filtered = filter_nbhd_records(records, filters, search)
+    visible_weeks = nbhd_default_visible_weeks(weeks)
     return {
         "generated_at": report.get("generated_at"),
         "weeks": weeks,
+        "visible_weeks": visible_weeks,
         "filters": build_nbhd_filters(records, filters, search),
         "search": search,
         "source_directory": report.get("source_directory", str(get_nbhd_source_dir())),

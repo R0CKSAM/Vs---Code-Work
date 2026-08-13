@@ -1,37 +1,324 @@
-.ots-view-toggle {
+.ots-graph-wrap {
+  margin-top: 8px;
+  border-radius: 16px;
+  background: #ffffff;
+  padding: 10px 10px 12px;
+  min-height: 0;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.ots-graph-toolbar {
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) minmax(220px, 280px) auto;
+  gap: 8px;
+  align-items: end;
+  margin-bottom: 10px;
+}
+
+.ots-graph-actions {
+  justify-content: flex-end;
+}
+
+.ghost-button.active {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
+  color: #fff;
+  border-color: transparent;
+}
+
+.ots-graph-filter-menu {
+  min-width: 260px;
+  max-width: 320px;
+  max-height: min(420px, calc(100vh - 140px));
+  overflow: hidden;
+  padding: 0;
+}
+
+.ots-graph-filter-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 8px;
+  background: #fff;
+  border-bottom: 1px solid #e7edf6;
+}
+
+.ots-graph-filter-head strong,
+.ots-graph-filter-head span {
+  font-size: 0.72rem;
+}
+
+.ots-graph-filter-actions {
+  position: sticky;
+  top: 47px;
+  z-index: 2;
   display: flex;
   gap: 8px;
-}
-.ots-view-toggle button {
-  padding: 6px 12px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
+  padding: 8px 12px;
   background: #fff;
-  cursor: pointer;
+  border-bottom: 1px solid #eef3f9;
 }
-.ots-view-toggle button.active {
-  background: #007bff;
-  color: white;
-  border-color: #007bff;
+
+.ots-graph-filter-actions .ghost-button {
+  flex: 1 1 0;
 }
-.ots-graph-wrap {
-  width: 100%;
-  min-height: 500px;
-  position: relative;
-  background: #fff;
-  border: 1px solid #eee;
-  border-radius: 8px;
-  padding: 16px;
-  margin-top: 16px;
+
+.ots-graph-wrap .ots-menu-search {
+  margin: 8px 12px;
+  width: calc(100% - 24px);
 }
+
+.ots-graph-wrap .ots-options-list {
+  max-height: min(260px, calc(100vh - 250px));
+  padding: 4px 12px 12px;
+  overflow: auto;
+}
+
+.ots-graph-loading,
 .ots-graph-empty {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 500px;
-  color: #666;
+  min-height: 0;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.96);
 }
+
+.ots-graph-loading {
+  position: absolute;
+  inset: 0;
+  display: none;
+  place-items: center;
+  color: var(--muted);
+  font-size: 0.78rem;
+  z-index: 2;
+}
+
+.ots-graph-loading[hidden],
+.ots-graph-empty[hidden],
+.ots-graph-wrap[hidden],
+#otsGraphContainer[hidden] {
+  display: none !important;
+}
+
+.ots-graph-empty {
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: var(--muted);
+  padding: 24px;
+  min-height: 260px;
+  border: 1px dashed #d6deeb;
+}
+
+.ots-graph-empty strong {
+  display: block;
+  color: var(--text);
+  font-size: 0.92rem;
+  margin-bottom: 6px;
+}
+
+.ots-graph-empty span {
+  display: block;
+  font-size: 0.76rem;
+}
+
 #otsGraphContainer {
   width: 100%;
-  height: 500px;
+  min-height: 420px;
+  height: min(56vh, 600px);
+}
+
+.ots-graph-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+}
+
+.ots-graph-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.ots-graph-plot-bg {
+  fill: #ffffff;
+}
+
+.ots-graph-row-bg {
+  fill: #fcfdff;
+}
+
+.ots-graph-row-bg.alt {
+  fill: #f8fbff;
+}
+
+.ots-graph-row-divider {
+  stroke: #e2e8f0;
+  stroke-width: 1;
+}
+
+.ots-graph-row-guide {
+  stroke: #e9eff7;
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+}
+
+.ots-graph-grid-row text,
+.ots-graph-axis-label,
+.ots-graph-point text {
+  font-family: "Manrope", sans-serif;
+  font-size: 11px;
+  fill: #64748b;
+}
+
+.ots-graph-channel-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  fill: #172033;
+  letter-spacing: 0.01em;
+}
+
+.ots-graph-scale-label {
+  font-family: "Manrope", sans-serif;
+  font-size: 10.5px;
+  fill: #7a8698;
+}
+
+.ots-graph-axis {
+  stroke: #cbd5e1;
+  stroke-width: 1.2;
+}
+
+.ots-graph-axis-label {
+  font-size: 11px;
+  fill: #52627b;
+}
+
+.ots-graph-axis-label.dense {
+  font-size: 10px;
+}
+
+.ots-graph-line {
+  fill: none;
+  stroke: var(--line-color, #3b82f6);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  stroke-dasharray: 1600;
+  stroke-dashoffset: 1600;
+  animation: otsGraphLineIn 360ms ease forwards;
+  animation-delay: var(--line-delay, 0ms);
+}
+
+.ots-graph-point {
+  cursor: pointer;
+}
+
+.ots-graph-point circle {
+  stroke: #ffffff;
+  stroke-width: 1.7;
+  transition: transform 140ms ease, filter 140ms ease;
+  transform-origin: center;
+}
+
+.ots-graph-point:hover circle {
+  transform: scale(1.14);
+  filter: drop-shadow(0 4px 10px rgba(15, 23, 42, 0.18));
+}
+
+.ots-graph-tooltip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 10px));
+  min-width: 120px;
+  max-width: 220px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid #d8e2ef;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.12);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.ots-graph-tooltip strong,
+.ots-graph-tooltip span {
+  display: block;
+  font-family: "Manrope", sans-serif;
+}
+
+.ots-graph-tooltip strong {
+  color: #172033;
+  font-size: 0.75rem;
+  margin-bottom: 4px;
+}
+
+.ots-graph-tooltip span {
+  color: #52627b;
+  font-size: 0.71rem;
+}
+
+@keyframes otsGraphLineIn {
+  from {
+    opacity: 0;
+    stroke-dashoffset: 1600;
+  }
+  to {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+}
+
+.ots-panel-fullscreen .ots-graph-wrap,
+.ots-panel:fullscreen .ots-graph-wrap,
+.ots-panel:-webkit-full-screen .ots-graph-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: calc(100vh - 170px);
+  margin-top: 6px;
+}
+
+.ots-panel-fullscreen #otsGraphContainer,
+.ots-panel:fullscreen #otsGraphContainer,
+.ots-panel:-webkit-full-screen #otsGraphContainer {
+  height: calc(100vh - 220px);
+  min-height: 500px;
+}
+
+@media (max-width: 1080px) {
+  .ots-graph-toolbar {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+
+  .ots-graph-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 860px) {
+  .ots-graph-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .ots-graph-actions {
+    justify-content: stretch;
+  }
+
+  .ots-graph-actions .ghost-button {
+    width: 100%;
+  }
+
+  #otsGraphContainer {
+    min-height: 340px;
+    height: 48vh;
+  }
+
+  .ots-graph-stage {
+    min-height: 320px;
+  }
 }

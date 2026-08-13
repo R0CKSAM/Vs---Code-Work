@@ -767,6 +767,442 @@ body.comparison-resizing .comparison-resize-handle::after {
   padding-bottom: 10px;
 }
 
+.nbhd-weekwise-toolbar {
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid #d9e3f0;
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(244, 248, 255, 0.98) 100%);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+}
+
+.nbhd-weekwise-panel {
+  position: relative;
+  margin-top: 10px;
+  padding: 14px;
+}
+
+.nbhd-weekwise-panel[hidden] {
+  display: none !important;
+}
+
+.nbhd-weekwise-heading h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.nbhd-weekwise-toolbar-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.nbhd-weekwise-summary-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid #d6deeb;
+  border-radius: 999px;
+  background: #fff;
+  color: #23344d;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.nbhd-weekwise-summary-pill.muted {
+  color: #60738f;
+  background: #f6f9fd;
+}
+
+.nbhd-weekwise-table-wrap {
+  position: relative;
+  margin-top: 10px;
+  border-radius: 18px;
+  border: 1px solid #d9e3f0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  background:
+    linear-gradient(180deg, rgba(250, 252, 255, 0.96) 0%, rgba(255, 255, 255, 0.98) 100%);
+}
+
+.nbhd-weekwise-table {
+  table-layout: fixed;
+}
+
+.nbhd-weekwise-table th,
+.nbhd-weekwise-table td {
+  padding: 4px 5px;
+  border-bottom: 1px solid #e5ebf3;
+  font-size: 0.62rem;
+  line-height: 1.02;
+}
+
+.nbhd-weekwise-table tbody tr:nth-child(even) td {
+  background: #fcfdff;
+}
+
+.nbhd-weekwise-table tbody tr:hover td {
+  background: #f5f9ff;
+}
+
+.nbhd-weekwise-header-cell {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.nbhd-weekwise-header-copy {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.nbhd-weekwise-header-title {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 800;
+  font-size: 0.61rem;
+}
+
+.nbhd-weekwise-header-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 15px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #edf2f9;
+  color: #5a6f90;
+  font-size: 0.54rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nbhd-weekwise-header-badge.active {
+  background: #e5f0ff;
+  color: #214c92;
+}
+
+.nbhd-weekwise-filter {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.nbhd-weekwise-filter-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 3px;
+  border: 1px solid #d6deeb;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: border-color 140ms ease, background 140ms ease, box-shadow 140ms ease;
+}
+
+.nbhd-weekwise-filter-button:hover {
+  border-color: #adc2de;
+  background: #f9fbff;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+}
+
+.nbhd-weekwise-filter-button.active {
+  border-color: #7ea2d8;
+  background: #eaf3ff;
+  box-shadow: 0 8px 16px rgba(59, 130, 246, 0.12);
+}
+
+.nbhd-weekwise-filter-icon {
+  position: relative;
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+}
+
+.nbhd-weekwise-filter-icon::before {
+  content: "";
+  position: absolute;
+  left: 1px;
+  top: 0;
+  width: 8px;
+  height: 2px;
+  background: #5a6f90;
+  border-radius: 2px;
+}
+
+.nbhd-weekwise-filter-icon::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  width: 0;
+  height: 0;
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-top: 6px solid #5a6f90;
+}
+
+.nbhd-weekwise-filter-count {
+  min-width: 10px;
+  color: #214c92;
+  font-size: 0.5rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.nbhd-weekwise-filter-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 280px;
+  z-index: 30;
+  padding-top: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 20px 44px rgba(15, 23, 42, 0.18);
+}
+
+.nbhd-weekwise-floating-menu {
+  position: absolute;
+  z-index: 2500;
+  border: 1px solid #d9e3f0;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.99);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 24px 50px rgba(15, 23, 42, 0.18);
+  overflow: hidden;
+  transform-origin: top right;
+  animation: nbhdWeekwiseMenuIn 140ms ease;
+}
+
+@keyframes nbhdWeekwiseMenuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.nbhd-weekwise-filter-menu-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  padding: 12px 12px 8px;
+  border-bottom: 1px solid #e5ebf3;
+  background: linear-gradient(180deg, #f8fbff 0%, #f2f7ff 100%);
+}
+
+.nbhd-weekwise-filter-menu-header strong {
+  color: #17345f;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.nbhd-weekwise-filter-state {
+  color: #617692;
+  font-size: 0.67rem;
+  font-weight: 700;
+}
+
+.nbhd-weekwise-filter-actions {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px 0;
+}
+
+.nbhd-weekwise-filter-actions .ghost-button {
+  padding: 6px 8px;
+  font-size: 0.7rem;
+  border-radius: 10px;
+}
+
+.nbhd-weekwise-options-list {
+  max-height: 320px;
+  padding: 8px 12px 12px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.nbhd-weekwise-option {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  padding: 7px 8px;
+  border-radius: 10px;
+  font-size: 0.74rem;
+  color: #22324b;
+  transition: background 120ms ease;
+}
+
+.nbhd-weekwise-option:hover {
+  background: #f4f8ff;
+}
+
+.nbhd-weekwise-option.disabled {
+  opacity: 0.62;
+}
+
+.nbhd-weekwise-option input {
+  margin-top: 2px;
+}
+
+.nbhd-weekwise-sticky-col {
+  position: sticky;
+  z-index: 3;
+  background: #fff;
+}
+
+.nbhd-weekwise-table thead .nbhd-weekwise-sticky-col {
+  z-index: 6;
+  background: linear-gradient(180deg, #f9fbff 0%, #f2f7ff 100%);
+}
+
+.nbhd-weekwise-sticky-week {
+  left: 0;
+}
+
+.nbhd-weekwise-sticky-market {
+  left: 110px;
+}
+
+.nbhd-weekwise-sticky-city {
+  left: 330px;
+}
+
+.nbhd-weekwise-sticky-head-end {
+  left: 480px;
+  box-shadow: 2px 0 0 #d9e2ef, 12px 0 24px rgba(15, 23, 42, 0.04);
+}
+
+.nbhd-weekwise-sticky-body {
+  z-index: 2;
+}
+
+.nbhd-weekwise-india-tv {
+  background: #e8f7ea !important;
+  color: #1c6a35;
+  font-weight: 800;
+  box-shadow: inset 0 0 0 1px rgba(34, 139, 68, 0.12);
+}
+
+.nbhd-weekwise-news-genre {
+  background: #ffe8e8 !important;
+  color: #8a3c3c;
+}
+
+.nbhd-weekwise-non-news-genre {
+  background: #f3ecff !important;
+  color: #5a3f8c;
+}
+
+.nbhd-weekwise-table .comparison-text-cell {
+  color: #23344d;
+}
+
+.nbhd-weekwise-table .comparison-cell-na {
+  background: #fff8bf !important;
+  color: #8a6b00;
+}
+
+.nbhd-weekwise-panel .comparison-pagination-bar {
+  margin-top: 10px;
+  padding: 8px 4px 0;
+}
+
+.nbhd-weekwise-footer {
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.nbhd-weekwise-load-state {
+  color: #60738f;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.nbhd-weekwise-panel .comparison-actions {
+  flex-wrap: wrap;
+}
+
+.nbhd-weekwise-panel .comparison-actions button {
+  min-width: 118px;
+}
+
+.nbhd-weekwise-panel .filter-menu-search {
+  margin: 10px 12px 0;
+  width: calc(100% - 24px);
+  border-radius: 12px;
+  border: 1px solid #d6deeb;
+  background: #fff;
+}
+
+.nbhd-weekwise-panel .empty-state {
+  padding: 28px 16px;
+  color: #60738f;
+  font-size: 0.8rem;
+}
+
+.nbhd-weekwise-panel-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 1600;
+  display: flex !important;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 12px;
+  border-radius: 0;
+  background: linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
+}
+
+.nbhd-weekwise-panel-fullscreen .nbhd-weekwise-table-wrap,
+.nbhd-weekwise-panel:fullscreen .nbhd-weekwise-table-wrap,
+.nbhd-weekwise-panel:-webkit-full-screen .nbhd-weekwise-table-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  height: 100%;
+}
+
+.nbhd-weekwise-panel-fullscreen .nbhd-weekwise-footer,
+.nbhd-weekwise-panel:fullscreen .nbhd-weekwise-footer,
+.nbhd-weekwise-panel:-webkit-full-screen .nbhd-weekwise-footer {
+  margin-top: auto;
+  padding-bottom: 10px;
+}
+
+.nbhd-weekwise-panel-fullscreen #nbhdWeekwiseHideButton,
+.nbhd-weekwise-panel:fullscreen #nbhdWeekwiseHideButton,
+.nbhd-weekwise-panel:-webkit-full-screen #nbhdWeekwiseHideButton {
+  display: none !important;
+}
+
 body.comparison-fullscreen-active {
   overflow: hidden;
 }
@@ -1125,6 +1561,12 @@ td.status-missing,
 td.cell-na {
   background: var(--missing-bg) !important;
   color: var(--missing-text) !important;
+  font-weight: 700;
+}
+
+.nbhd-weekwise-table td.comparison-cell-na {
+  background: #fff8bf !important;
+  color: #8a6b00 !important;
   font-weight: 700;
 }
 
@@ -2057,15 +2499,33 @@ body.ots-resizing * {
 
 .ots-panel-fullscreen {
   position: fixed;
-  inset: 6px;
-  z-index: 1200;
-  margin-top: 0;
-  padding: 8px;
+  inset: 0;
+  z-index: 99999;
+  margin: 0;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  border-radius: 18px;
-  background: linear-gradient(180deg, #fbfcff 0%, var(--bg) 100%);
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.24);
+  border-radius: 0;
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  max-height: none;
+  overflow: hidden;
+  background: #fbfcff;
+  box-shadow: none;
+}
+
+.ots-panel-fullscreen .ots-heading,
+.ots-panel-fullscreen .ots-toolbar,
+.ots-panel-fullscreen .ots-pagination-bar,
+.ots-panel:fullscreen .ots-heading,
+.ots-panel:fullscreen .ots-toolbar,
+.ots-panel:fullscreen .ots-pagination-bar,
+.ots-panel:-webkit-full-screen .ots-heading,
+.ots-panel:-webkit-full-screen .ots-toolbar,
+.ots-panel:-webkit-full-screen .ots-pagination-bar {
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
 .ots-panel:fullscreen,
@@ -2088,13 +2548,41 @@ body.ots-fullscreen-active {
   overflow: hidden;
 }
 
+body.ots-fullscreen-active .app-shell {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+body.ots-fullscreen-active .ots-panel-fullscreen,
+body.ots-fullscreen-active .ots-panel-fullscreen * {
+  visibility: visible;
+  pointer-events: auto;
+}
+
 .ots-panel:fullscreen .ots-table-wrap,
 .ots-panel:-webkit-full-screen .ots-table-wrap,
 .ots-panel-fullscreen .ots-table-wrap {
   flex: 1 1 auto;
   max-height: none;
   min-height: 0;
-  margin-top: 4px;
+  margin-top: 6px;
+  overflow: auto;
+  border-radius: 14px;
+  border: 1px solid #d9e3f0;
+  background: #fff;
+}
+
+.ots-panel-fullscreen .ots-report-launcher,
+.ots-panel-fullscreen .ots-report-panel,
+.ots-panel:fullscreen .ots-report-launcher,
+.ots-panel:fullscreen .ots-report-panel,
+.ots-panel:-webkit-full-screen .ots-report-launcher,
+.ots-panel:-webkit-full-screen .ots-report-panel {
+  display: none !important;
+}
+
+.ots-panel-fullscreen-placeholder {
+  display: none;
 }
 
 .ots-option-row {
@@ -2874,30 +3362,23 @@ body.ots-fullscreen-active {
 .landing-tracker-toolbar {
   display: grid;
   grid-template-columns:
-    /* Small: Band, Channel Type, Week From, Week To */
-    minmax(80px, 0.8fr)
-    /* Medium: Market, State, Feed, District */
-    minmax(90px, 1fr)
-    minmax(110px, 1.2fr)
-    minmax(90px, 1fr)
-    minmax(90px, 1fr)
-    minmax(90px, 1fr)
-    minmax(90px, 1fr)
-    /* Large: City, Headend, MSO, Search */
-    minmax(110px, 1.2fr)
-    minmax(110px, 1.2fr)
-    /* Small: Channel Type */
-    minmax(100px, 1fr)
-    /* Small: Week From, Week To */
-    minmax(88px, 0.9fr)
-    minmax(88px, 0.9fr)
-    /* Large: Search */
-    minmax(120px, 1.4fr)
-    /* Actions: Reset + Fullscreen */
+    minmax(72px, 0.72fr)
+    minmax(84px, 0.92fr)
+    minmax(92px, 1fr)
+    minmax(98px, 1fr)
+    minmax(84px, 0.9fr)
+    minmax(84px, 0.9fr)
+    minmax(84px, 0.9fr)
+    minmax(92px, 1fr)
+    minmax(92px, 1fr)
+    minmax(96px, 0.95fr)
+    minmax(84px, 0.82fr)
+    minmax(84px, 0.82fr)
+    minmax(84px, 0.82fr)
     auto;
   align-items: end;
-  gap: 8px 10px;
-  margin-bottom: 12px;
+  gap: 6px 8px;
+  margin-bottom: 10px;
   width: 100%;
 }
 
@@ -2913,7 +3394,7 @@ body.ots-fullscreen-active {
 /* Field label */
 .tracker-field-label {
   display: block;
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   font-weight: 700;
   color: var(--muted);
   text-transform: uppercase;
@@ -2930,13 +3411,13 @@ body.ots-fullscreen-active {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  height: 34px;
-  padding: 0 10px 0 10px;
+  height: 30px;
+  padding: 0 8px 0 8px;
   background: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: 10px;
   font: inherit;
-  font-size: 0.72rem;
+  font-size: 0.67rem;
   color: var(--text);
   cursor: pointer;
   text-align: left;
@@ -2998,17 +3479,17 @@ body.ots-fullscreen-active {
   display: flex;
   flex-direction: row;
   align-items: flex-end;
-  gap: 6px;
+  gap: 4px;
   flex-shrink: 0;
   white-space: nowrap;
 }
 
 .landing-tracker-actions .ghost-button,
 .landing-tracker-actions .primary-button {
-  height: 34px;
-  padding: 0 14px;
-  font-size: 0.72rem;
-  border-radius: 10px;
+  height: 30px;
+  padding: 0 10px;
+  font-size: 0.67rem;
+  border-radius: 8px;
   white-space: nowrap;
   min-height: unset;
   line-height: 1;
@@ -3192,7 +3673,7 @@ body.ots-fullscreen-active {
 /* Tablet — wrap into 2 rows */
 @media (max-width: 1400px) {
   .landing-tracker-toolbar {
-    grid-template-columns: repeat(7, minmax(80px, 1fr)) auto;
+    grid-template-columns: repeat(7, minmax(78px, 1fr)) auto;
   }
   .landing-tracker-actions {
     align-items: center;
@@ -3202,7 +3683,7 @@ body.ots-fullscreen-active {
 /* Smaller tablet — 4 per row */
 @media (max-width: 960px) {
   .landing-tracker-toolbar {
-    grid-template-columns: repeat(4, minmax(80px, 1fr)) auto;
+    grid-template-columns: repeat(4, minmax(78px, 1fr)) auto;
   }
   .landing-tracker-actions {
     grid-column: 1 / -1;

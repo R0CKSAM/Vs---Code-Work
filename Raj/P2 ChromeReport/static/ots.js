@@ -73,18 +73,45 @@
   const refreshButton = document.getElementById("otsRefreshButton");
   const resetButton = document.getElementById("otsResetButton");
   const fullscreenButton = document.getElementById("otsFullscreenButton");
+  const graphButton = document.getElementById("otsGraphButton");
   const exitFullscreenButton = document.getElementById("otsExitFullscreenButton");
   const prevPageButton = document.getElementById("otsPrevPage");
   const nextPageButton = document.getElementById("otsNextPage");
   const pageInfo = document.getElementById("otsPageInfo");
   const tableWrap = root.closest(".ots-table-wrap");
   const panel = root.closest(".ots-panel");
+  const graphWrap = document.getElementById("otsGraphWrap");
+  const graphLoading = document.getElementById("otsGraphLoading");
+  const graphEmpty = document.getElementById("otsGraphEmpty");
+  const graphContainer = document.getElementById("otsGraphContainer");
+  const graphMarketButton = document.getElementById("otsGraphMarketButton");
+  const graphMarketMenu = document.getElementById("otsGraphMarketMenu");
+  const graphMarketSearch = document.getElementById("otsGraphMarketSearch");
+  const graphMarketOptions = document.getElementById("otsGraphMarketOptions");
+  const graphMarketSummary = document.getElementById("otsGraphMarketSummary");
+  const graphChannelButton = document.getElementById("otsGraphChannelButton");
+  const graphChannelMenu = document.getElementById("otsGraphChannelMenu");
+  const graphChannelSearch = document.getElementById("otsGraphChannelSearch");
+  const graphChannelOptions = document.getElementById("otsGraphChannelOptions");
+  const graphChannelSummary = document.getElementById("otsGraphChannelSummary");
+  const graphChannelSelectAll = document.getElementById("otsGraphChannelSelectAll");
+  const graphChannelClear = document.getElementById("otsGraphChannelClear");
+  const graphCloseButton = document.getElementById("otsGraphCloseButton");
   const MIN_COLUMN_WIDTH = 80;
   const DEFAULT_COLUMN_WIDTHS = {
     market: 150,
     channel: 180,
     change: 110,
   };
+  const DEFAULT_GRAPH_MARKET = "Delhi";
+  const DEFAULT_GRAPH_CHANNELS = ["INDIA TV", "AAJ TAK", "NEWS 18 INDIA", "REPUBLIC BHARAT"];
+  const DEFAULT_GRAPH_COLORS = {
+    "INDIATV": "#F97316",
+    "AAJTAK": "#EF4444",
+    "NEWS18INDIA": "#3B82F6",
+    "REPUBLICBHARAT": "#EAB308",
+  };
+  const EXTRA_GRAPH_COLORS = ["#14B8A6", "#8B5CF6", "#EC4899", "#22C55E", "#0EA5E9", "#F59E0B", "#6366F1", "#84CC16"];
   let activeResize = null;
 
   const fullscreenState = {
@@ -93,6 +120,16 @@
     tableScrollTop: 0,
     tableScrollLeft: 0,
     usingNativeFullscreen: false,
+    parent: null,
+    nextSibling: null,
+    placeholder: null,
+  };
+  const graphState = {
+    open: false,
+    initialized: false,
+    market: "",
+    channels: [],
+    colorMap: {},
   };
   let renderFrame = null;
 
@@ -120,6 +157,27 @@
 
   function normalizeChannelKey(value) {
     return normalizeText(value).toUpperCase().replace(/[^A-Z0-9]+/g, "");
+  }
+
+  function parseWeekLabel(value) {
+    const match = String(value || "").match(/Wk-(\d+)'(\d+)/i);
+    if (!match) return null;
+    return {
+      week: Number(match[1]),
+      year: Number(match[2]),
+    };
+  }
+
+  function sortWeeksChronologically(weeks) {
+    return (Array.isArray(weeks) ? weeks.slice() : []).sort((left, right) => {
+      const leftParsed = parseWeekLabel(left);
+      const rightParsed = parseWeekLabel(right);
+      if (leftParsed && rightParsed) {
+        if (leftParsed.year !== rightParsed.year) return leftParsed.year - rightParsed.year;
+        if (leftParsed.week !== rightParsed.week) return leftParsed.week - rightParsed.week;
+      }
+      return String(left).localeCompare(String(right), undefined, { numeric: true });
+    });
   }
 
   function formatChannelLabel(value) {
@@ -615,6 +673,7 @@
     resultCount.textContent = `${new Intl.NumberFormat().format(payload.table.total_count || 0)} records`;
     renderTable(payload);
     renderReportPanel();
+    renderGraphPanel();
   }
 
   function getAllSourceRecords() {
@@ -623,6 +682,340 @@
       return source.table?.records || source.records || [];
     }
     return state.payload?.table?.records || [];
+  }
+
+  function getGraphSourceRecords() {
+    return getAllSourceRecords();
+  }
+
+  function getGraphVisibleWeeks() {
+    const payload = state.payload || window.__OTS_STANDALONE_DATA__ || { weeks: [] };
+    return sortWeeksChronologically(getVisibleWeeks(payload));
+  }
+
+  function getGraphMarkets() {
+    return Array.from(new Set(getGraphSourceRecords().map((record) => normalizeText(record.market)).filter(Boolean)))
+      .sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
+  }
+
+  function getGraphChannelsForMarket(market) {
+    return Array.from(new Set(
+      getGraphSourceRecords()
+        .filter((record) => !market || normalizeText(record.market).toLowerCase() === normalizeText(market).toLowerCase())
+        .map((record) => normalizeText(record.channel))
+        .filter(Boolean)
+    )).sort((left, right) => left.localeCompare(right, undefined, { numeric: true }));
+  }
+
+  function getDefaultGraphMarket(markets) {
+    return markets.find((value) => normalizeText(value).toLowerCase() === DEFAULT_GRAPH_MARKET.toLowerCase()) || markets[0] || "";
+  }
+
+  function getDefaultGraphChannels(options) {
+    const matched = DEFAULT_GRAPH_CHANNELS
+      .map((channel) => options.find((option) => normalizeChannelKey(option) === normalizeChannelKey(channel)))
+      .filter(Boolean);
+    return (matched.length ? matched : options.slice(0, 4)).slice(0, 8);
+  }
+
+  function ensureGraphColor(channel) {
+    const key = normalizeChannelKey(channel);
+    if (!key) return "#64748B";
+    if (!graphState.colorMap[key]) {
+      graphState.colorMap[key] = DEFAULT_GRAPH_COLORS[key]
+        || EXTRA_GRAPH_COLORS[Object.keys(graphState.colorMap).length % EXTRA_GRAPH_COLORS.length];
+    }
+    return graphState.colorMap[key];
+  }
+
+  function getGraphContext() {
+    const markets = getGraphMarkets();
+    const market = markets.includes(graphState.market) ? graphState.market : getDefaultGraphMarket(markets);
+    const channels = getGraphChannelsForMarket(market);
+    return { markets, market, channels };
+  }
+
+  function syncGraphSelections(forceReset = false) {
+    const context = getGraphContext();
+    if (!graphState.initialized || forceReset) {
+      graphState.market = context.market;
+      graphState.channels = getDefaultGraphChannels(context.channels);
+      graphState.initialized = true;
+    } else {
+      graphState.market = context.market;
+      graphState.channels = graphState.channels.filter((channel) => context.channels.includes(channel));
+      if (!graphState.channels.length && context.channels.length) {
+        graphState.channels = getDefaultGraphChannels(context.channels);
+      }
+    }
+    graphState.channels.forEach((channel) => ensureGraphColor(channel));
+    return {
+      ...context,
+      market: graphState.market,
+      channels: getGraphChannelsForMarket(graphState.market),
+    };
+  }
+
+  function updateGraphButtons(context) {
+    if (graphMarketButton) graphMarketButton.textContent = graphState.market || "Select Market";
+    if (graphMarketSummary) graphMarketSummary.textContent = graphState.market || "None";
+    if (graphChannelButton) {
+      if (!graphState.channels.length) graphChannelButton.textContent = "0 selected";
+      else if (graphState.channels.length === context.channels.length && context.channels.length) graphChannelButton.textContent = "All Channels";
+      else graphChannelButton.textContent = `${graphState.channels.length} selected`;
+    }
+    if (graphChannelSummary) {
+      if (!graphState.channels.length) graphChannelSummary.textContent = "0 selected";
+      else if (graphState.channels.length === context.channels.length && context.channels.length) graphChannelSummary.textContent = "All";
+      else graphChannelSummary.textContent = `${graphState.channels.length} selected`;
+    }
+    if (graphButton) {
+      graphButton.textContent = "Graph";
+      graphButton.classList.toggle("active", graphState.open);
+    }
+  }
+
+  function renderGraphMarketOptions(context) {
+    if (!graphMarketOptions) return;
+    const query = normalizeText(graphMarketSearch?.value || "").toLowerCase();
+    const fragment = document.createDocumentFragment();
+    context.markets
+      .filter((value) => !query || value.toLowerCase().includes(query))
+      .forEach((value) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `filter-option-row${value === graphState.market ? " active" : ""}`;
+        button.textContent = value;
+        button.addEventListener("click", () => {
+          graphState.market = value;
+          const nextChannels = getGraphChannelsForMarket(graphState.market);
+          graphState.channels = graphState.channels.filter((channel) => nextChannels.includes(channel));
+          if (!graphState.channels.length) graphState.channels = getDefaultGraphChannels(nextChannels);
+          closeMenus();
+          renderGraphPanel();
+        });
+        fragment.appendChild(button);
+      });
+    graphMarketOptions.replaceChildren(fragment);
+  }
+
+  function renderGraphChannelOptions(context) {
+    if (!graphChannelOptions) return;
+    const query = normalizeText(graphChannelSearch?.value || "").toLowerCase();
+    const selected = new Set(graphState.channels);
+    const fragment = document.createDocumentFragment();
+    context.channels
+      .filter((value) => !query || value.toLowerCase().includes(query))
+      .forEach((value) => {
+        const label = document.createElement("label");
+        label.className = "ots-option-row";
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = selected.has(value);
+        input.addEventListener("change", () => {
+          const next = new Set(graphState.channels);
+          if (input.checked) next.add(value);
+          else next.delete(value);
+          graphState.channels = context.channels.filter((channel) => next.has(channel));
+          ensureGraphColor(value);
+          renderGraphPanel();
+        });
+        const text = document.createElement("span");
+        text.textContent = value;
+        label.append(input, text);
+        fragment.appendChild(label);
+      });
+    graphChannelOptions.replaceChildren(fragment);
+  }
+
+  function setGraphVisibility() {
+    if (tableWrap) tableWrap.hidden = graphState.open;
+    if (graphWrap) graphWrap.hidden = !graphState.open;
+    if (pageInfo?.closest(".ots-pagination-bar")) pageInfo.closest(".ots-pagination-bar").hidden = graphState.open;
+  }
+
+  function openGraph() {
+    graphState.open = true;
+    syncGraphSelections(false);
+    setGraphVisibility();
+    renderGraphPanel();
+  }
+
+  function closeGraph() {
+    graphState.open = false;
+    setGraphVisibility();
+    closeMenus();
+  }
+
+  async function renderGraphChart(context) {
+    if (!graphContainer || !graphLoading || !graphEmpty) return;
+    graphLoading.hidden = true;
+    if (!graphState.channels.length) {
+      graphContainer.style.display = "none";
+      graphContainer.replaceChildren();
+      graphEmpty.hidden = false;
+      graphEmpty.innerHTML = "<strong>No channels selected</strong><span>Select one or more channels to view OTS trends.</span>";
+      return;
+    }
+
+    graphEmpty.hidden = true;
+    graphContainer.style.display = "none";
+
+    const weeks = getGraphVisibleWeeks();
+    const marketRecords = getGraphSourceRecords().filter((record) => normalizeText(record.market) === normalizeText(graphState.market));
+    const series = graphState.channels.map((channel) => {
+      const record = marketRecords.find((item) => normalizeChannelKey(item.channel) === normalizeChannelKey(channel));
+      const values = weeks.map((week, index) => {
+        const raw = record?.ots_values?.[week];
+        return {
+          week,
+          index,
+          value: raw === null || raw === undefined || raw === "" ? null : Number(raw),
+        };
+      });
+      return {
+        name: channel,
+        color: ensureGraphColor(channel),
+        values,
+      };
+    });
+
+    const width = Math.max(graphContainer.clientWidth || 920, 720);
+    const activeSeries = series.filter((channelSeries) => channelSeries.values.some((entry) => entry.value !== null));
+    if (!activeSeries.length) {
+      graphContainer.style.display = "none";
+      graphContainer.replaceChildren();
+      graphEmpty.hidden = false;
+      graphEmpty.innerHTML = "<strong>No OTS data available</strong><span>The selected market and channels do not have graphable weekly values.</span>";
+      return;
+    }
+
+    const rowCount = Math.max(activeSeries.length, 1);
+    const rowHeight = fullscreenState.active ? 140 : 118;
+    const viewportDrivenHeight = Math.round((fullscreenState.active ? window.innerHeight * 0.72 : window.innerHeight * 0.52) || 0);
+    const minHeight = rowCount * rowHeight + 120;
+    const height = Math.max(graphContainer.clientHeight || 0, viewportDrivenHeight, minHeight, 520);
+    const margin = { top: 18, right: 56, bottom: weeks.length > 10 ? 86 : 66, left: 190 };
+    const innerWidth = Math.max(width - margin.left - margin.right, 240);
+    const innerHeight = Math.max(height - margin.top - margin.bottom, 180);
+    const stepX = weeks.length > 1 ? innerWidth / (weeks.length - 1) : 0;
+    const pointRadius = activeSeries.length <= 4 ? 4.5 : 3.5;
+    const showPointLabels = weeks.length <= 6 && activeSeries.length <= 4;
+    const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "\"": "&quot;",
+      "'": "&#39;",
+    }[char]));
+    const xForIndex = (index) => margin.left + (weeks.length === 1 ? innerWidth / 2 : stepX * index);
+    const rowBand = innerHeight / rowCount;
+    const rowInnerPadding = Math.min(18, rowBand * 0.16);
+    const valueToRowY = (rowIndex, value) => {
+      const clamped = Math.max(0, Math.min(100, value));
+      const rowTop = margin.top + (rowIndex * rowBand) + rowInnerPadding;
+      const rowInnerHeight = Math.max(rowBand - (rowInnerPadding * 2), 18);
+      return rowTop + rowInnerHeight - ((clamped / 100) * rowInnerHeight);
+    };
+
+    const gridMarkup = activeSeries.map((channelSeries, rowIndex) => {
+      const rowTop = margin.top + (rowIndex * rowBand);
+      const rowBottom = rowTop + rowBand;
+      const rowMid = rowTop + (rowBand / 2);
+      const tickMarkup = [0, 20, 40, 60, 80, 100].map((tick) => {
+        const tickY = valueToRowY(rowIndex, tick);
+        return `
+          <line class="ots-graph-row-guide" x1="${margin.left}" y1="${tickY}" x2="${margin.left + innerWidth}" y2="${tickY}"></line>
+          <text x="${margin.left + innerWidth + 10}" y="${tickY + 3.5}" class="ots-graph-scale-label">${tick}%</text>`;
+      }).join("");
+      return `
+        <g class="ots-graph-grid-row">
+          <rect x="${margin.left}" y="${rowTop}" width="${innerWidth}" height="${rowBand}" class="ots-graph-row-bg${rowIndex % 2 === 1 ? " alt" : ""}"></rect>
+          <line x1="${margin.left}" y1="${rowBottom}" x2="${margin.left + innerWidth}" y2="${rowBottom}" class="ots-graph-row-divider"></line>
+          ${tickMarkup}
+          <text x="${margin.left - 14}" y="${rowMid + 4}" text-anchor="end" class="ots-graph-channel-label">${esc(channelSeries.name)}</text>
+        </g>`;
+    }).join("");
+
+    const xAxisMarkup = weeks.map((week, index) => {
+      const x = xForIndex(index);
+      if (weeks.length > 10) {
+        return `<text class="ots-graph-axis-label dense" x="${x}" y="${margin.top + innerHeight + 34}" text-anchor="end" transform="rotate(-28 ${x} ${margin.top + innerHeight + 34})">${esc(week)}</text>`;
+      }
+      return `<text class="ots-graph-axis-label" x="${x}" y="${margin.top + innerHeight + 30}" text-anchor="middle">${esc(week)}</text>`;
+    }).join("");
+
+    const lineMarkup = [];
+    const pointMarkup = [];
+
+    activeSeries.forEach((channelSeries, seriesIndex) => {
+      const validPoints = channelSeries.values.filter((entry) => entry.value !== null);
+      if (!validPoints.length) return;
+      const path = validPoints.map((entry, pointIndex) => `${pointIndex === 0 ? "M" : "L"} ${xForIndex(entry.index)} ${valueToRowY(seriesIndex, entry.value)}`).join(" ");
+      lineMarkup.push(`<path class="ots-graph-line" d="${path}" style="--line-color:${channelSeries.color}; --line-delay:${seriesIndex * 50}ms"></path>`);
+      validPoints.forEach((entry) => {
+        const x = xForIndex(entry.index);
+        const y = valueToRowY(seriesIndex, entry.value);
+        pointMarkup.push(`
+          <g class="ots-graph-point" data-week="${esc(entry.week)}" data-channel="${esc(channelSeries.name)}" data-value="${entry.value.toFixed(2)}">
+            <circle cx="${x}" cy="${y}" r="${pointRadius}" fill="${channelSeries.color}"></circle>
+            ${showPointLabels ? `<text x="${x}" y="${y - 10}" text-anchor="middle" fill="${channelSeries.color}">${Math.round(entry.value)}%</text>` : ""}
+          </g>`);
+      });
+    });
+
+    graphContainer.innerHTML = `
+      <div class="ots-graph-stage">
+        <svg class="ots-graph-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" aria-label="OTS summary graph">
+          <rect x="${margin.left}" y="${margin.top}" width="${innerWidth}" height="${innerHeight}" class="ots-graph-plot-bg"></rect>
+          ${gridMarkup}
+          <line class="ots-graph-axis" x1="${margin.left}" y1="${margin.top + innerHeight}" x2="${margin.left + innerWidth}" y2="${margin.top + innerHeight}"></line>
+          ${xAxisMarkup}
+          ${lineMarkup.join("")}
+          ${pointMarkup.join("")}
+        </svg>
+        <div class="ots-graph-tooltip" hidden></div>
+      </div>
+    `;
+
+    const stage = graphContainer.querySelector(".ots-graph-stage");
+    const tooltip = graphContainer.querySelector(".ots-graph-tooltip");
+    const points = graphContainer.querySelectorAll(".ots-graph-point");
+    points.forEach((point) => {
+      const showTooltip = (event) => {
+        if (!tooltip || !stage) return;
+        const week = point.getAttribute("data-week") || "";
+        const channel = point.getAttribute("data-channel") || "";
+        const value = point.getAttribute("data-value") || "";
+        tooltip.innerHTML = `<strong>${week}</strong><span>${channel}</span><span>OTS: ${value}%</span>`;
+        tooltip.hidden = false;
+        const stageRect = stage.getBoundingClientRect();
+        const source = event.touches?.[0] || event;
+        const left = Math.min(stageRect.width - 12, Math.max(12, source.clientX - stageRect.left));
+        const top = Math.max(12, source.clientY - stageRect.top - 16);
+        tooltip.style.left = `${left}px`;
+        tooltip.style.top = `${top}px`;
+      };
+      point.addEventListener("mouseenter", showTooltip);
+      point.addEventListener("mousemove", showTooltip);
+      point.addEventListener("touchstart", showTooltip, { passive: true });
+      point.addEventListener("mouseleave", () => {
+        if (tooltip) tooltip.hidden = true;
+      });
+    });
+
+    graphLoading.hidden = true;
+    graphContainer.style.display = "block";
+  }
+
+  function renderGraphPanel() {
+    const context = syncGraphSelections(false);
+    updateGraphButtons(context);
+    renderGraphMarketOptions(context);
+    renderGraphChannelOptions(context);
+    if (!graphState.open) return;
+    setGraphVisibility();
+    renderGraphChart(context);
   }
 
   function getReportVisibleWeeks() {
@@ -1003,6 +1396,8 @@
     if (changeFilter?.menu) changeFilter.menu.hidden = true;
     if (reportMarketFilter?.menu) reportMarketFilter.menu.hidden = true;
     if (reportChannelFilter?.menu) reportChannelFilter.menu.hidden = true;
+    if (graphMarketMenu) graphMarketMenu.hidden = true;
+    if (graphChannelMenu) graphChannelMenu.hidden = true;
   }
 
   function bindMenu(button, menu) {
@@ -1116,6 +1511,21 @@
       fullscreenState.windowScrollY = window.scrollY || window.pageYOffset || 0;
       fullscreenState.tableScrollTop = tableWrap.scrollTop;
       fullscreenState.tableScrollLeft = tableWrap.scrollLeft;
+      if (!fullscreenState.parent) {
+        fullscreenState.parent = panel.parentNode;
+        fullscreenState.nextSibling = panel.nextSibling;
+      }
+      if (!fullscreenState.placeholder) {
+        const placeholder = document.createElement("div");
+        placeholder.className = "ots-panel-fullscreen-placeholder";
+        fullscreenState.placeholder = placeholder;
+      }
+      if (fullscreenState.parent && fullscreenState.placeholder.parentNode !== fullscreenState.parent) {
+        fullscreenState.parent.insertBefore(fullscreenState.placeholder, panel);
+      }
+      if (panel.parentNode !== document.body) {
+        document.body.appendChild(panel);
+      }
       fullscreenState.active = true;
       document.body.classList.add("ots-fullscreen-active");
       panel.classList.add("ots-panel-fullscreen");
@@ -1125,6 +1535,12 @@
       fullscreenState.active = false;
       document.body.classList.remove("ots-fullscreen-active");
       panel.classList.remove("ots-panel-fullscreen");
+      if (fullscreenState.placeholder?.parentNode) {
+        fullscreenState.placeholder.parentNode.insertBefore(panel, fullscreenState.placeholder);
+        fullscreenState.placeholder.remove();
+      } else if (fullscreenState.parent) {
+        fullscreenState.parent.insertBefore(panel, fullscreenState.nextSibling);
+      }
     }
 
     state.page = 1;
@@ -1135,6 +1551,9 @@
       }
       tableWrap.scrollTop = fullscreenState.tableScrollTop;
       tableWrap.scrollLeft = fullscreenState.tableScrollLeft;
+      if (graphState.open && graphContainer) {
+        renderGraphPanel();
+      }
     });
     syncFullscreenButtons();
   }
@@ -1171,8 +1590,8 @@
       setFullscreen(false);
       return;
     }
-    const entered = await enterNativeFullscreen();
-    if (!entered) setFullscreen(true);
+    // Prefer the CSS-isolated fullscreen mode first so only the OTS panel is shown.
+    setFullscreen(true);
   }
 
   function resetFilters() {
@@ -1191,6 +1610,8 @@
   bindMenu(channelButton, channelMenu);
   bindMenu(reportMarketFilter?.button, reportMarketFilter?.menu);
   bindMenu(reportChannelFilter?.button, reportChannelFilter?.menu);
+  bindMenu(graphMarketButton, graphMarketMenu);
+  bindMenu(graphChannelButton, graphChannelMenu);
   bindSingleSelect(weekFromFilter, "week_from", "From Week");
   bindSingleSelect(weekToFilter, "week_to", "To Week");
   bindSingleSelect(changeFilter, "change", "All Changes", { changed: "Changed", increase: "Increase", decrease: "Decrease", no_change: "No Change" });
@@ -1203,9 +1624,32 @@
   if (channelSearchInput) channelSearchInput.addEventListener("input", () => renderMultiSelectOptions(channelOptions, state.payload?.filters?.channels || [], state.filters.channels, "channels", channelSearchInput.value));
   if (reportMarketFilter?.search) reportMarketFilter.search.addEventListener("input", () => renderReportPanel());
   if (reportChannelFilter?.search) reportChannelFilter.search.addEventListener("input", () => renderReportPanel());
+  if (graphMarketSearch) graphMarketSearch.addEventListener("input", () => renderGraphPanel());
+  if (graphChannelSearch) graphChannelSearch.addEventListener("input", () => renderGraphPanel());
+  if (graphChannelSelectAll) {
+    graphChannelSelectAll.addEventListener("click", () => {
+      const context = syncGraphSelections(false);
+      graphState.channels = context.channels.slice();
+      graphState.channels.forEach((channel) => ensureGraphColor(channel));
+      renderGraphPanel();
+    });
+  }
+  if (graphChannelClear) {
+    graphChannelClear.addEventListener("click", () => {
+      graphState.channels = [];
+      renderGraphPanel();
+    });
+  }
   if (refreshButton) refreshButton.addEventListener("click", () => fetchPayload(true));
   if (resetButton) resetButton.addEventListener("click", resetFilters);
   if (fullscreenButton) fullscreenButton.addEventListener("click", toggleFullscreen);
+  if (graphButton) {
+    graphButton.addEventListener("click", () => {
+      if (graphState.open) closeGraph();
+      else openGraph();
+    });
+  }
+  if (graphCloseButton) graphCloseButton.addEventListener("click", closeGraph);
   if (reportToggleButton) reportToggleButton.addEventListener("click", openReportPanel);
   if (reportHideButton) reportHideButton.addEventListener("click", closeReportPanel);
   if (reportResetButton) reportResetButton.addEventListener("click", resetReportFilters);
@@ -1240,6 +1684,9 @@
   window.addEventListener("resize", () => {
     if (!state.payload) return;
     scheduleRender(state.payload);
+    if (graphState.open && graphContainer) {
+      renderGraphPanel();
+    }
   });
   document.addEventListener("fullscreenchange", () => {
     const isPanelFullscreen = document.fullscreenElement === panel;
