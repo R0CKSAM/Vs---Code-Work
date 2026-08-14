@@ -8206,5 +8206,41 @@
     "second_landing_channel": null,
     "barker_channel": null,
     "second_barker_channel": null
+  },
+  {
+    "headend_id": "HED000685",
+    "network_name": "GTPL",
+    "headend_location": "Anantnag",
+    "state": "Jammu & Kashmir",
+    "barc_market": "Urban/Rural",
+    "stbs": 21000,
+    "landing_channel": "News 18 India",
+    "second_landing_channel": "Sony",
+    "barker_channel": null,
+    "second_barker_channel": null
+  },
+  {
+    "headend_id": "HED000686",
+    "network_name": "GTPL",
+    "headend_location": "Ramnagar",
+    "state": "Jammu & Kashmir",
+    "barc_market": "Urban",
+    "stbs": 800,
+    "landing_channel": "News 18 India",
+    "second_landing_channel": "Sony",
+    "barker_channel": null,
+    "second_barker_channel": null
+  },
+  {
+    "headend_id": "HED000687",
+    "network_name": "TC NETWORK",
+    "headend_location": "CHURCHANDP UR- MANIPUR",
+    "state": "Manipur",
+    "barc_market": "ASSAM/NORTHEAST/SIKKIM",
+    "stbs": 3000,
+    "landing_channel": null,
+    "second_landing_channel": null,
+    "barker_channel": null,
+    "second_barker_channel": null
   }
 ]

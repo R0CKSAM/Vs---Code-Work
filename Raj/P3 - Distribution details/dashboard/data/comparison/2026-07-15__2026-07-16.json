@@ -29403,6 +29403,609 @@
     "status": "Removed"
   },
   {
+    "headend_id": "HED000509",
+    "lcn": "100",
+    "week_from": "2026-07-15",
+    "week_from_channel": "News18 India",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "705",
+    "week_from": "2026-07-15",
+    "week_from_channel": "Zee News",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "706",
+    "week_from": "2026-07-15",
+    "week_from_channel": "Abp News",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "707",
+    "week_from": "2026-07-15",
+    "week_from_channel": "R.Bharat",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "709",
+    "week_from": "2026-07-15",
+    "week_from_channel": "Aaj Tak",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "710",
+    "week_from": "2026-07-15",
+    "week_from_channel": "India Tv",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "711",
+    "week_from": "2026-07-15",
+    "week_from_channel": "NDTV India",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "712",
+    "week_from": "2026-07-15",
+    "week_from_channel": "Times Now Navbharat",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "713",
+    "week_from": "2026-07-15",
+    "week_from_channel": "News Nation",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "714",
+    "week_from": "2026-07-15",
+    "week_from_channel": "Tv9 Bharatvarsh",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "715",
+    "week_from": "2026-07-15",
+    "week_from_channel": "Good News Today",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "716",
+    "week_from": "2026-07-15",
+    "week_from_channel": "News 24",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "720",
+    "week_from": "2026-07-15",
+    "week_from_channel": "Zee Bharat",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "721",
+    "week_from": "2026-07-15",
+    "week_from_channel": "Zee Delhi NCR",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "920",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Star Plus",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "921",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Zee TV",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "922",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Colors",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "923",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Sony",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "924",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD & TV",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "925",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Star Bharat",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "926",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD SAB",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "928",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Star Gold",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "929",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Zee Cinema",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "930",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD MAX",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "931",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD & Pictures",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "932",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Star Gold 2",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "933",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD & Xplor",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "935",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Star Pravah",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "936",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Zee marathi",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "937",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD COLORS MARATHI",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "938",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD ZEE TALKIES",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "940",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Star Jalsha",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "941",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Zee Bangla",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "942",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Star JALSHA MOVIES",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "944",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Star Movies",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "945",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Star Movies Select",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "948",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Star Suvarna",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "955",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD ZEE TELUGU",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "957",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD GEMINI TV",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "958",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Star Maa",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "959",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD ETV Plus",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "960",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD GEMINI MOVIES",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "961",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD ETV Cinema",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "962",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Star Maa Movies",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "963",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD ZEE CINEMALU",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "964",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD GEMINI MUSIC",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "966",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD India Tv Speed News",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "967",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD sansad tv",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "969",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Star Sports1 hindi",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "970",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Sony Sports Ten3",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "971",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Star Sports1",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "972",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Star Sports2",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "973",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Sony Sports Ten5",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "974",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Sony Sports Ten1",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "975",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Sony Sports Ten2",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "976",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Star Sports Select1",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "977",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Star Sports Select2",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "979",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Star Sports1 Telugu",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "980",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD NGC",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "981",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Discovery World",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "982",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Sony BBC Earth",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "983",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD ANIMAL PLANET WORLD",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "984",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD NAT GEO WILD",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "985",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD Zee zest",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "986",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD TLC",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "989",
+    "week_from": "2026-07-15",
+    "week_from_channel": "HD DD News",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000509",
+    "lcn": "999",
+    "week_from": "2026-07-15",
+    "week_from_channel": "Customer Supports",
+    "week_to": "2026-07-16",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
     "headend_id": "HED000523",
     "lcn": "1",
     "week_from": "2026-07-15",

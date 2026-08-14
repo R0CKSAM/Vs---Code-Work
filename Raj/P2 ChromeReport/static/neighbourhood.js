@@ -19,7 +19,7 @@
     pageSize: 30,
     loading: false,
     standalone: Boolean(window.__NBHD_STANDALONE_DATA__),
-    initial: window.__NBHD_INITIAL_DATA__ || null,
+    initial: window.__NBHD_INITIAL_DATA__ || window.__NBHD_STANDALONE_DATA__ || null,
     report: {
       open: false,
       headend: "",
@@ -1247,6 +1247,11 @@
         excelCell("Summary", "header"),
       ],
     ];
+    if (!reportData.rows.length) {
+      reportRows.push(blankRow(6));
+      reportRows.push([excelCell("However, no neighbourhood change.", "textWrap", { mergeAcross: 5 })]);
+      reportRows.push(blankRow(6));
+    }
     if (reportData.rows.length) {
       reportData.rows.forEach((row, rowIndex) => {
         const isAlt = rowIndex % 2 === 1;
@@ -1315,6 +1320,11 @@
         excelCell("Summary", "header"),
       ],
     ];
+    if (!reportData.rows.length) {
+      reportRows.push(blankRow(6));
+      reportRows.push([excelCell("However, no neighbourhood change.", "textWrap", { mergeAcross: 5 })]);
+      reportRows.push(blankRow(6));
+    }
     if (reportData.rows.length) {
       reportData.rows.forEach((row, rowIndex) => {
         const isAlt = rowIndex % 2 === 1;

@@ -2,6 +2,7 @@ const DATA_PATHS = {
   filters: "./data/filters.json",
   headends: "./data/headends.json",
   comparisonIndex: "./data/comparison/index.json",
+  stbHistory: "../processed/headend_weekly_history.json",
 };
 
 const state = {
@@ -17,11 +18,16 @@ const state = {
   headends: [],
   comparison: [],
   comparisonIndex: [],
+  stbHistory: [],
+  stbRows: [],
+  stbWeeks: [],
   filteredHeadends: [],
   filteredComparison: [],
+  filteredStbRows: [],
   tables: {
     headends: null,
     comparison: null,
+    stb: null,
   },
   selects: {
     lcn: null,
@@ -36,13 +42,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   bindEvents();
   showLoading("headends");
   showLoading("comparison");
+  showLoading("stb");
   try {
     await initializeDashboard();
   } catch (error) {
     showError("headends", `Dashboard initialization failed. ${error.message}`);
     showError("comparison", `Dashboard initialization failed. ${error.message}`);
+    showError("stb", `Dashboard initialization failed. ${error.message}`);
     hideLoading("headends");
     hideLoading("comparison");
+    hideLoading("stb");
   }
 });
 
@@ -66,6 +75,16 @@ function bindEvents() {
     await loadComparison();
   });
 
+  document.getElementById("stbStateFilter").addEventListener("change", filterStbComparison);
+  document.getElementById("stbMarketFilter").addEventListener("change", filterStbComparison);
+  document.getElementById("stbLocationFilter").addEventListener("change", filterStbComparison);
+  document.getElementById("stbNetworkFilter").addEventListener("change", filterStbComparison);
+  document.getElementById("stbChangeFilter").addEventListener("change", filterStbComparison);
+  document.getElementById("resetStbFilters").addEventListener("click", resetStbFilters);
+  document.getElementById("toggleStbFullscreen").addEventListener("click", () => {
+    toggleCardFullscreen("stbCard", "toggleStbFullscreen");
+  });
+
   document.getElementById("exportHeadendsCsv").addEventListener("click", () => {
     exportRows(state.filteredHeadends, headendColumns(), "headends.csv");
   });
@@ -78,10 +97,12 @@ function bindEvents() {
   document.getElementById("exportComparisonExcel").addEventListener("click", () => {
     exportRows(state.filteredComparison, comparisonColumns(), "comparison.xls", "\t");
   });
+
+  document.addEventListener("fullscreenchange", syncFullscreenButtons);
 }
 
 async function initializeDashboard() {
-  await Promise.allSettled([loadFilters(), loadHeadends()]);
+  await Promise.allSettled([loadFilters(), loadHeadends(), loadStbHistory()]);
   loadDashboardSummary();
 }
 
@@ -149,6 +170,32 @@ async function loadHeadends() {
     renderHeadendTable([]);
   } finally {
     hideLoading("headends");
+  }
+}
+
+async function loadStbHistory() {
+  try {
+    clearError("stb");
+    const rows = await loadJson(DATA_PATHS.stbHistory);
+    state.stbHistory = ensureArray(rows);
+    const built = buildStbComparisonRows(state.stbHistory);
+    state.stbRows = built.rows;
+    state.stbWeeks = built.weeks;
+    populateSelect("stbStateFilter", uniqueSortedValues(state.stbRows, "state"), "All States");
+    populateSelect("stbMarketFilter", uniqueSortedValues(state.stbRows, "barc_market"), "All Markets");
+    populateSelect("stbLocationFilter", uniqueSortedValues(state.stbRows, "headend_location"), "All Locations");
+    populateSelect("stbNetworkFilter", uniqueSortedValues(state.stbRows, "network_name"), "All Networks");
+    state.filteredStbRows = [...state.stbRows];
+    renderStbComparisonTable(state.filteredStbRows);
+  } catch (error) {
+    state.stbHistory = [];
+    state.stbRows = [];
+    state.stbWeeks = [];
+    state.filteredStbRows = [];
+    showError("stb", `STB comparison data could not be loaded. ${error.message}`);
+    renderStbComparisonTable([]);
+  } finally {
+    hideLoading("stb");
   }
 }
 
@@ -347,6 +394,85 @@ function renderComparisonTable(rows) {
   toggleHidden("comparisonEmpty", rows.length !== 0);
 }
 
+function renderStbComparisonTable(rows) {
+  if (state.tables.stb) {
+    state.tables.stb.destroy();
+    state.tables.stb = null;
+  }
+
+  const tableElement = document.getElementById("stbTable");
+  const tbody = tableElement.querySelector("tbody");
+  const visibleWeeks = state.stbWeeks;
+  const headRow = `
+    <tr>
+      <th>State</th>
+      <th>BARC Market</th>
+      <th>Headend Location</th>
+      <th>Network Name</th>
+      <th>Headend ID</th>
+      ${visibleWeeks.map((week) => `<th>${escapeHtml(week)}</th>`).join("")}
+      <th>Change</th>
+    </tr>
+  `;
+  tableElement.querySelector("thead").innerHTML = headRow;
+  tbody.innerHTML = "";
+
+  if (!hasDataTables) {
+    rows.forEach((row) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml(row.state)}</td>
+        <td>${escapeHtml(row.barc_market)}</td>
+        <td>${escapeHtml(row.headend_location)}</td>
+        <td>${escapeHtml(row.network_name)}</td>
+        <td>${escapeHtml(row.headend_id)}</td>
+        ${visibleWeeks.map((week) => `<td>${renderStbCell(row, week)}</td>`).join("")}
+        <td>${renderStatusBadge(row.change_label)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+    document.getElementById("stbRecordCount").textContent = formatNumber(rows.length);
+    toggleHidden("stbEmpty", rows.length !== 0);
+    return;
+  }
+
+  const columns = [
+    { data: "state", title: "State" },
+    { data: "barc_market", title: "BARC Market" },
+    { data: "headend_location", title: "Headend Location" },
+    { data: "network_name", title: "Network Name" },
+    { data: "headend_id", title: "Headend ID" },
+    ...visibleWeeks.map((week) => ({
+      data: null,
+      title: week,
+      render: (_value, _type, row) => renderStbCell(row, week),
+    })),
+    { data: "change_label", title: "Change", render: (value) => renderStatusBadge(value) },
+  ];
+
+  state.tables.stb = new DataTable(tableElement, {
+    data: rows,
+    responsive: false,
+    autoWidth: false,
+    scrollX: true,
+    pageLength: 10,
+    lengthMenu: [10, 25, 50, 100],
+    deferRender: true,
+    columns,
+    language: {
+      emptyTable: "No STB comparison records available.",
+      zeroRecords: "No STB comparison records match the current search.",
+      search: "",
+      searchPlaceholder: "Search STB comparison...",
+    },
+    order: [[0, "asc"], [3, "asc"]],
+    columnDefs: [{ orderable: false, targets: columns.length - 1 }],
+  });
+
+  document.getElementById("stbRecordCount").textContent = formatNumber(rows.length);
+  toggleHidden("stbEmpty", rows.length !== 0);
+}
+
 function filterComparison() {
   const selectedPair = resolveSelectedComparisonPair();
   if (!selectedPair) {
@@ -374,6 +500,25 @@ function filterComparison() {
   renderComparisonTable(state.filteredComparison);
 }
 
+function filterStbComparison() {
+  const stateValue = document.getElementById("stbStateFilter").value;
+  const market = document.getElementById("stbMarketFilter").value;
+  const location = document.getElementById("stbLocationFilter").value;
+  const network = document.getElementById("stbNetworkFilter").value;
+  const change = document.getElementById("stbChangeFilter").value;
+
+  state.filteredStbRows = state.stbRows.filter((row) => {
+    const matchesState = !stateValue || row.state === stateValue;
+    const matchesMarket = !market || row.barc_market === market;
+    const matchesLocation = !location || row.headend_location === location;
+    const matchesNetwork = !network || row.network_name === network;
+    const matchesChange = !change || row.change_label === change;
+    return matchesState && matchesMarket && matchesLocation && matchesNetwork && matchesChange;
+  });
+
+  renderStbComparisonTable(state.filteredStbRows);
+}
+
 function resetDistributionFilters() {
   document.getElementById("locationFilter").value = "";
   document.getElementById("stateFilter").value = "";
@@ -394,6 +539,16 @@ function resetComparisonFilters() {
   }
   showLoading("comparison");
   loadComparison();
+}
+
+function resetStbFilters() {
+  document.getElementById("stbStateFilter").value = "";
+  document.getElementById("stbMarketFilter").value = "";
+  document.getElementById("stbLocationFilter").value = "";
+  document.getElementById("stbNetworkFilter").value = "";
+  document.getElementById("stbChangeFilter").value = "";
+  state.filteredStbRows = [...state.stbRows];
+  renderStbComparisonTable(state.filteredStbRows);
 }
 
 function showLoading(section) {
@@ -554,6 +709,144 @@ function normalizeComparisonRecord(row) {
   };
 }
 
+function buildStbComparisonRows(rows) {
+  const byHeadend = new Map();
+
+  rows.forEach((row) => {
+    const headendId = asText(row.headend_id);
+    const weekLabel = asText(row.week_label);
+    if (!headendId || !weekLabel) {
+      return;
+    }
+
+    const entry = byHeadend.get(headendId) || {
+      state: asText(row.state),
+      barc_market: asText(row.barc_market),
+      headend_location: asText(row.headend_location),
+      network_name: asText(row.network_name),
+      headend_id: headendId,
+      weeks: {},
+    };
+
+    const currentWeek = entry.weeks[weekLabel];
+    const incomingDate = asText(row.date);
+    const currentDate = currentWeek?.date || "";
+    if (!currentWeek || incomingDate >= currentDate) {
+      entry.state = entry.state || asText(row.state);
+      entry.barc_market = entry.barc_market || asText(row.barc_market);
+      entry.headend_location = entry.headend_location || asText(row.headend_location);
+      entry.network_name = entry.network_name || asText(row.network_name);
+      entry.weeks[weekLabel] = {
+        stbs: normalizeStbValue(row.stbs),
+        date: incomingDate,
+      };
+    }
+
+    byHeadend.set(headendId, entry);
+  });
+
+  const weeks = Array.from(
+    new Set(
+      Array.from(byHeadend.values()).flatMap((row) => Object.keys(row.weeks))
+    )
+  ).sort(compareWeekLabels);
+
+  const builtRows = Array.from(byHeadend.values()).map((row) => ({
+    ...row,
+    change_label: stbChangeLabel(row, weeks),
+  }));
+
+  builtRows.sort((left, right) =>
+    [
+      left.state,
+      left.barc_market,
+      left.headend_location,
+      left.network_name,
+      left.headend_id,
+    ]
+      .join("||")
+      .localeCompare(
+        [
+          right.state,
+          right.barc_market,
+          right.headend_location,
+          right.network_name,
+          right.headend_id,
+        ].join("||"),
+        undefined,
+        { sensitivity: "base", numeric: true }
+      )
+  );
+
+  return { rows: builtRows, weeks };
+}
+
+function compareWeekLabels(left, right) {
+  const leftMatch = String(left || "").match(/^(\d{4})'Week(\d{1,2})$/i);
+  const rightMatch = String(right || "").match(/^(\d{4})'Week(\d{1,2})$/i);
+
+  if (leftMatch && rightMatch) {
+    const leftYear = Number(leftMatch[1]);
+    const rightYear = Number(rightMatch[1]);
+    if (leftYear !== rightYear) {
+      return leftYear - rightYear;
+    }
+    return Number(leftMatch[2]) - Number(rightMatch[2]);
+  }
+
+  return String(left || "").localeCompare(String(right || ""), undefined, {
+    sensitivity: "base",
+    numeric: true,
+  });
+}
+
+function normalizeStbValue(value) {
+  if (value == null || value === "" || Number.isNaN(Number(value))) {
+    return null;
+  }
+  return Number(value);
+}
+
+function stbChangeLabel(row, weeks) {
+  const values = weeks.map((week) => row.weeks[week]?.stbs ?? null);
+  const present = values.filter((value) => value != null);
+  if (present.length <= 1) {
+    return "No Change";
+  }
+  const hasChange = present.some((value, index) => index > 0 && value !== present[index - 1]);
+  return hasChange ? "Change" : "No Change";
+}
+
+function renderStbCell(row, week) {
+  const value = row.weeks[week]?.stbs ?? null;
+  const current = value == null ? null : Number(value);
+  const previousWeek = findPreviousWeek(state.stbWeeks, week);
+  const previous = previousWeek ? row.weeks[previousWeek]?.stbs ?? null : null;
+  const classes = ["stb-cell"];
+
+  if (current == null) {
+    classes.push("is-missing");
+  } else if (previous != null && Number(previous) !== current) {
+    classes.push("is-changed");
+  }
+
+  return `<span class="${classes.join(" ")}">${escapeHtml(current == null ? "NA" : formatNumber(current))}</span>`;
+}
+
+function findPreviousWeek(weeks, targetWeek) {
+  const index = weeks.indexOf(targetWeek);
+  if (index <= 0) {
+    return null;
+  }
+  return weeks[index - 1];
+}
+
+function uniqueSortedValues(rows, key) {
+  return Array.from(new Set(rows.map((row) => asText(row[key])).filter(Boolean))).sort((left, right) =>
+    left.localeCompare(right, undefined, { sensitivity: "base", numeric: true })
+  );
+}
+
 function renderStatusBadge(status) {
   const safeStatus = status || "Unknown";
   const badgeClass = {
@@ -561,8 +854,47 @@ function renderStatusBadge(status) {
     Changed: "badge-changed",
     Added: "badge-added",
     Removed: "badge-removed",
+    Change: "badge-changed",
+    "No Change": "badge-same",
   }[safeStatus] || "badge-removed";
   return `<span class="status-badge ${badgeClass}">${escapeHtml(safeStatus)}</span>`;
+}
+
+async function toggleCardFullscreen(cardId, buttonId) {
+  const card = document.getElementById(cardId);
+  const button = document.getElementById(buttonId);
+  const isActive = document.fullscreenElement === card || card.classList.contains("card-fullscreen");
+
+  if (isActive) {
+    if (document.fullscreenElement === card && document.exitFullscreen) {
+      await document.exitFullscreen();
+    }
+    card.classList.remove("card-fullscreen");
+    button.textContent = "Full Screen";
+    document.body.classList.remove("fullscreen-active");
+    return;
+  }
+
+  card.classList.add("card-fullscreen");
+  button.textContent = "Exit Full Screen";
+  document.body.classList.add("fullscreen-active");
+
+  if (card.requestFullscreen) {
+    try {
+      await card.requestFullscreen();
+    } catch (_error) {
+      return;
+    }
+  }
+}
+
+function syncFullscreenButtons() {
+  const card = document.getElementById("stbCard");
+  const button = document.getElementById("toggleStbFullscreen");
+  const active = document.fullscreenElement === card;
+  card.classList.toggle("card-fullscreen", active);
+  button.textContent = active ? "Exit Full Screen" : "Full Screen";
+  document.body.classList.toggle("fullscreen-active", Boolean(document.fullscreenElement));
 }
 
 function exportRows(rows, columns, filename, delimiter = ",") {

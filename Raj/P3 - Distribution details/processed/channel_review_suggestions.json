@@ -2522,6 +2522,13 @@
   },
   {
     "group": [
+      "Jk 24 News",
+      "Jk 24*& News"
+    ],
+    "suggested_canonical": "Jk 24 News"
+  },
+  {
+    "group": [
       "Jk 24 X 7",
       "Jk 24x7"
     ],
@@ -3456,6 +3463,13 @@
       "﻿﻿﻿﻿﻿mastiii"
     ],
     "suggested_canonical": "Mastiii"
+  },
+  {
+    "group": [
+      "Media 9",
+      "Media9"
+    ],
+    "suggested_canonical": "Media 9"
   },
   {
     "group": [
@@ -6192,18 +6206,14 @@
   },
   {
     "group": [
+      "Zee Bihar / Jhar",
       "Zee Bihar Jha",
-      "Zee Bihar/Jha",
-      "Zee Bihar/Jhar"
-    ],
-    "suggested_canonical": "Zee Bihar Jha"
-  },
-  {
-    "group": [
       "Zee Bihar Jhr",
+      "Zee Bihar/Jha",
+      "Zee Bihar/Jhar",
       "Zee Bihar/Jhr"
     ],
-    "suggested_canonical": "Zee Bihar Jhr"
+    "suggested_canonical": "Zee Bihar / Jhar"
   },
   {
     "group": [

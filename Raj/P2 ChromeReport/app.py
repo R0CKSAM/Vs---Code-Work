@@ -4415,6 +4415,7 @@ window.__COMPARISON_INITIAL_DATA__ = reportBundle.comparison;
 __COMPARISON_SCRIPT__
   </script>
   <script>
+window.__NBHD_INITIAL_DATA__ = reportBundle.nbhd;
 window.__NBHD_STANDALONE_DATA__ = reportBundle.nbhd;
   </script>
   <script>

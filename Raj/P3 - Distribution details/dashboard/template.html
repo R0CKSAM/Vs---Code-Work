@@ -937,6 +937,67 @@
       text-align: center;
     }
 
+    #stbComparisonTable {
+      min-width: 1260px;
+    }
+
+    #stbComparisonTable th,
+    #stbComparisonTable td {
+      font-size: 0.72rem;
+      padding: 5px 7px;
+      line-height: 1.12;
+    }
+
+    #stbComparisonTable th {
+      font-size: 0.7rem;
+    }
+
+    #stbComparisonTable thead tr:first-child th {
+      height: 36px;
+      vertical-align: middle;
+    }
+
+    #stbComparisonTable .subhead-row th {
+      font-size: 0.67rem;
+      background: #dcefe6;
+      color: #2f6d5d;
+      top: 36px;
+      padding-top: 6px;
+      padding-bottom: 6px;
+      height: 32px;
+      vertical-align: middle;
+    }
+
+    #stbComparisonTable .week-group-header {
+      font-size: 0.72rem;
+      min-width: 132px;
+      text-align: center;
+    }
+
+    #stbComparisonTable .stb-column {
+      min-width: 120px;
+      text-align: right;
+    }
+
+    .stb-value {
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      display: inline-block;
+      padding: 1px 5px;
+      border-radius: 8px;
+    }
+
+    .stb-value.na-value {
+      color: #5d766e;
+      font-style: italic;
+      font-weight: 600;
+    }
+
+    .stb-value.changed-cell {
+      background: #fff1cf;
+      color: #9a5a00;
+    }
+
     #channelTable .channel-value {
       padding: 1px 5px;
     }
@@ -998,6 +1059,178 @@
       color: #c94949;
     }
 
+    .report-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 20, 18, 0.48);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 20px;
+    }
+
+    .report-modal-backdrop.open {
+      display: flex;
+    }
+
+    .report-modal {
+      width: min(900px, 100%);
+      max-height: min(88vh, 920px);
+      overflow: auto;
+      background: #fff;
+      border: 1px solid rgba(46, 107, 94, 0.14);
+      border-radius: 18px;
+      box-shadow: 0 24px 48px rgba(15, 23, 42, 0.2);
+      padding: 18px;
+    }
+
+    .report-modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .report-modal-title {
+      margin: 0;
+      font-size: 1.3rem;
+    }
+
+    .report-modal-close {
+      min-width: auto;
+      padding: 8px 12px;
+    }
+
+    .report-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .report-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .report-field label {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #2c4f46;
+    }
+
+    .report-field select,
+    .report-field input {
+      min-height: 40px;
+      font-size: 0.86rem;
+      border-radius: 12px;
+    }
+
+    .report-location-box {
+      border: 1px solid rgba(46, 107, 94, 0.16);
+      border-radius: 14px;
+      background: #f9fbfa;
+      padding: 12px;
+    }
+
+    .report-location-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .report-location-search {
+      flex: 1 1 220px;
+    }
+
+    .report-link {
+      border: 0;
+      padding: 0;
+      background: transparent;
+      color: var(--accent);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .report-link:hover {
+      transform: none;
+      box-shadow: none;
+      text-decoration: underline;
+    }
+
+    .report-location-list {
+      max-height: 240px;
+      overflow: auto;
+      display: grid;
+      gap: 6px;
+      padding-right: 4px;
+    }
+
+    .report-location-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 8px;
+      border-radius: 10px;
+      background: #fff;
+      border: 1px solid rgba(46, 107, 94, 0.08);
+      font-size: 0.84rem;
+    }
+
+    .report-location-item input {
+      width: auto;
+      margin: 0;
+      min-height: auto;
+    }
+
+    .report-modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .dashboard-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 18px;
+    }
+
+    .report-helper {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
+    .report-status {
+      margin-top: 10px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--accent-strong);
+    }
+
+    .report-status.error {
+      color: #a32020;
+    }
+
+    .report-status.success {
+      color: #1f7a39;
+    }
+
+    .report-download-btn[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
     @media (max-width: 980px) {
       .hero {
         grid-template-columns: 1fr;
@@ -1056,6 +1289,14 @@
 
       .kpi-grid {
         grid-template-columns: 1fr 1fr;
+      }
+
+      .report-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .report-modal-footer {
+        flex-direction: column-reverse;
       }
     }
   </style>
@@ -1269,6 +1510,132 @@
         </table>
       </div>
     </section>
+
+    <section class="panel" id="table4Panel">
+      <div class="panel-header">
+        <div class="table2-header-inline">
+          <h2 class="table2-title">Weekly STB Comparison</h2>
+          <div class="filters">
+            <div class="field compact-filter">
+              <label for="table4StateFilter">State</label>
+              <select id="table4StateFilter"></select>
+            </div>
+            <div class="field compact-filter">
+              <label for="table4BarcFilter">BARC Market</label>
+              <select id="table4BarcFilter"></select>
+            </div>
+            <div class="field compact-filter">
+              <label for="table4LocationFilter">Headend Location</label>
+              <select id="table4LocationFilter"></select>
+            </div>
+            <div class="field compact-filter">
+              <label for="table4NetworkFilter">Network Name</label>
+              <select id="table4NetworkFilter"></select>
+            </div>
+            <div class="field compact-filter">
+              <label for="table4WeekFromFilter">Week From</label>
+              <select id="table4WeekFromFilter"></select>
+            </div>
+            <div class="field compact-filter">
+              <label for="table4WeekToFilter">Week To</label>
+              <select id="table4WeekToFilter"></select>
+            </div>
+            <div class="field compact-filter">
+              <label for="table4ChangeStatusFilter">Change</label>
+              <select id="table4ChangeStatusFilter"></select>
+            </div>
+            <div class="field compact-filter">
+              <label for="resetTable4Filters">Reset</label>
+              <div class="actions compact-actions">
+                <button class="btn-primary compact-btn" id="resetTable4Filters" type="button">Reset</button>
+              </div>
+            </div>
+            <div class="field compact-filter">
+              <label for="table4FullscreenBtn">View</label>
+              <div class="actions compact-actions">
+                <button class="btn-secondary compact-btn" id="table4FullscreenBtn" type="button">Full Screen</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-titlebar">
+        <span>Weekly STB Details</span>
+        <span id="table4BarLabel">Headend-wise STB Movement</span>
+      </div>
+      <div class="table-wrap">
+        <table id="stbComparisonTable">
+          <thead id="stbComparisonTableHead"></thead>
+          <tbody id="stbComparisonTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+    </div>
+
+    <div class="report-modal-backdrop" id="reportModalBackdrop">
+      <div class="report-modal" role="dialog" aria-modal="true" aria-labelledby="reportModalTitle">
+        <div class="report-modal-header">
+          <div>
+            <h2 class="report-modal-title" id="reportModalTitle">Download Weekly Channel Report</h2>
+            <p class="report-helper">Choose the reporting period, locations, and change status, then download an Excel report.</p>
+          </div>
+          <button class="btn-secondary report-modal-close" id="closeReportModalBtn" type="button">Close</button>
+        </div>
+
+        <div class="report-grid">
+          <div class="report-field">
+            <label for="reportFromWeek">From Week</label>
+            <select id="reportFromWeek"></select>
+          </div>
+          <div class="report-field">
+            <label for="reportToWeek">To Week</label>
+            <select id="reportToWeek"></select>
+          </div>
+        </div>
+
+        <div class="report-field">
+          <label for="reportLocationSearch">Location</label>
+          <div class="report-location-box">
+            <div class="report-location-toolbar">
+              <input id="reportLocationSearch" class="report-location-search" type="search" placeholder="Search locations">
+              <button class="report-link" id="selectAllReportLocations" type="button">Select All</button>
+              <button class="report-link" id="clearAllReportLocations" type="button">Clear All</button>
+            </div>
+            <div class="report-location-list" id="reportLocationList"></div>
+          </div>
+        </div>
+
+        <div class="report-field">
+          <label for="reportChannelSearch">Channel</label>
+          <div class="report-location-box">
+            <div class="report-location-toolbar">
+              <input id="reportChannelSearch" class="report-location-search" type="search" placeholder="Search channels">
+              <button class="report-link" id="selectAllReportChannels" type="button">Select All</button>
+              <button class="report-link" id="clearAllReportChannels" type="button">Clear All</button>
+            </div>
+            <div class="report-location-list" id="reportChannelList"></div>
+          </div>
+        </div>
+
+        <div class="report-grid">
+          <div class="report-field">
+            <label for="reportChangeStatus">Change Status</label>
+            <select id="reportChangeStatus">
+              <option value="All">All</option>
+              <option value="Change">Change</option>
+              <option value="No Change">No Change</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="report-status" id="reportStatusMessage"></div>
+
+        <div class="report-modal-footer">
+          <button class="btn-secondary" id="cancelReportDownloadBtn" type="button">Cancel</button>
+          <button class="btn-primary report-download-btn" id="confirmReportDownloadBtn" type="button" disabled>Download Excel</button>
+        </div>
+      </div>
     </div>
 
     <section class="kpi-section">
@@ -1302,12 +1669,16 @@
           <div class="metric-value" id="visibleHeadendsKpi">0</div>
         </div>
       </div>
+      <div class="dashboard-actions">
+        <button class="btn-primary" id="downloadWeeklyReportBtn" type="button">Download Report</button>
+      </div>
     </section>
   </div>
 
   <script id="shared-dashboard-state">
     window.__DASHBOARD_SHARED_STATE__ = null;
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
   <script>
     const DISTRIBUTION_MASTER = __DISTRIBUTION_MASTER_JSON__;
     const CHANNEL_WEEKLY = __CHANNEL_WEEKLY_JSON__;
@@ -1358,6 +1729,7 @@
       headendSort: { key: "state", direction: "asc" },
       channelSort: { key: "lcn_no", direction: "asc" },
       table3Sort: { key: "headend_id", direction: "asc" },
+      table4Sort: { key: "headend_id", direction: "asc" },
       table2Page: 1,
       table2PageSize: 250,
       table3Filters: {
@@ -1369,6 +1741,22 @@
         week_from: "",
         week_to: "",
         change_status: "",
+      },
+      table4Filters: {
+        state: "",
+        barc_market: "",
+        headend_location: "",
+        network_name: "",
+        week_from: "",
+        week_to: "",
+        change_status: "",
+      },
+      reportModal: {
+        selectedLocations: [],
+        selectedChannels: [],
+        search: "",
+        channelSearch: "",
+        isOpen: false,
       },
     };
 
@@ -1385,6 +1773,7 @@
       selectedHeadendRows: document.getElementById("selectedHeadendRows"),
       visibleHeadendsKpi: document.getElementById("visibleHeadendsKpi"),
       downloadDashboardBtn: document.getElementById("downloadDashboardBtn"),
+      downloadWeeklyReportBtn: document.getElementById("downloadWeeklyReportBtn"),
       table1Panel: document.getElementById("table1Panel"),
       table1FullscreenBtn: document.getElementById("table1FullscreenBtn"),
       table2Panel: document.getElementById("table2Panel"),
@@ -1420,11 +1809,41 @@
       table3BarLabel: document.getElementById("table3BarLabel"),
       landingBarkerTableHead: document.getElementById("landingBarkerTableHead"),
       landingBarkerTableBody: document.getElementById("landingBarkerTableBody"),
+      table4Panel: document.getElementById("table4Panel"),
+      table4StateFilter: document.getElementById("table4StateFilter"),
+      table4BarcFilter: document.getElementById("table4BarcFilter"),
+      table4LocationFilter: document.getElementById("table4LocationFilter"),
+      table4NetworkFilter: document.getElementById("table4NetworkFilter"),
+      table4WeekFromFilter: document.getElementById("table4WeekFromFilter"),
+      table4WeekToFilter: document.getElementById("table4WeekToFilter"),
+      table4ChangeStatusFilter: document.getElementById("table4ChangeStatusFilter"),
+      resetTable4Filters: document.getElementById("resetTable4Filters"),
+      table4FullscreenBtn: document.getElementById("table4FullscreenBtn"),
+      table4BarLabel: document.getElementById("table4BarLabel"),
+      stbComparisonTableHead: document.getElementById("stbComparisonTableHead"),
+      stbComparisonTableBody: document.getElementById("stbComparisonTableBody"),
+      reportModalBackdrop: document.getElementById("reportModalBackdrop"),
+      closeReportModalBtn: document.getElementById("closeReportModalBtn"),
+      cancelReportDownloadBtn: document.getElementById("cancelReportDownloadBtn"),
+      confirmReportDownloadBtn: document.getElementById("confirmReportDownloadBtn"),
+      reportFromWeek: document.getElementById("reportFromWeek"),
+      reportToWeek: document.getElementById("reportToWeek"),
+      reportLocationSearch: document.getElementById("reportLocationSearch"),
+      reportLocationList: document.getElementById("reportLocationList"),
+      reportChannelSearch: document.getElementById("reportChannelSearch"),
+      reportChannelList: document.getElementById("reportChannelList"),
+      reportChangeStatus: document.getElementById("reportChangeStatus"),
+      reportStatusMessage: document.getElementById("reportStatusMessage"),
+      selectAllReportLocations: document.getElementById("selectAllReportLocations"),
+      clearAllReportLocations: document.getElementById("clearAllReportLocations"),
+      selectAllReportChannels: document.getElementById("selectAllReportChannels"),
+      clearAllReportChannels: document.getElementById("clearAllReportChannels"),
     };
 
     const RESERVED_CHANNEL_KEYS = new Set(["headend_id", "lcn_no", "weeks"]);
     const HEADEND_FILTER_KEYS = ["state", "barc_market", "headend_location", "network_name"];
     const TABLE3_FILTER_KEYS = ["state", "barc_market", "headend_location", "network_name"];
+    const TABLE4_FILTER_KEYS = ["state", "barc_market", "headend_location", "network_name"];
     const TABLE3_CHANNEL_TYPES = {
       landing_channel_1: {
         label: "Landing Channel 1",
@@ -1535,7 +1954,7 @@
       clonedDocument.querySelectorAll(".table-panel-fullscreen").forEach(element => {
         element.classList.remove("table-panel-fullscreen");
       });
-      clonedDocument.querySelectorAll("#table1FullscreenBtn, #table2FullscreenBtn, #table3FullscreenBtn").forEach(button => {
+      clonedDocument.querySelectorAll("#table1FullscreenBtn, #table2FullscreenBtn, #table3FullscreenBtn, #table4FullscreenBtn").forEach(button => {
         button.textContent = "Full Screen";
       });
 
@@ -1585,6 +2004,509 @@
       link.download = filename;
       link.click();
       URL.revokeObjectURL(url);
+    }
+
+    function allReportLocations() {
+      return uniqueValues(state.headendRows, "headend_location").filter(value => value !== "NA");
+    }
+
+    function allReportChannels() {
+      const channels = new Set();
+      state.channelRows.forEach(row => {
+        Object.values(row.weeks || {}).forEach(payload => {
+          const channelName = canonicalChannelDisplay(payload?.channel_name || "");
+          if (channelName && channelName !== "NA") {
+            channels.add(channelName);
+          }
+        });
+      });
+      return [...channels].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+    }
+
+    function setReportStatus(message = "", kind = "") {
+      elements.reportStatusMessage.textContent = message;
+      elements.reportStatusMessage.className = `report-status${kind ? ` ${kind}` : ""}`;
+    }
+
+    function updateReportDownloadButtonState() {
+      const fromWeek = elements.reportFromWeek.value;
+      const toWeek = elements.reportToWeek.value;
+      const hasLocations = state.reportModal.selectedLocations.length > 0;
+      const hasChannels = state.reportModal.selectedChannels.length > 0;
+      const isValidRange = !fromWeek || !toWeek ? false : compareWeekLabels(fromWeek, toWeek) <= 0;
+      elements.confirmReportDownloadBtn.disabled = !(hasLocations && hasChannels && isValidRange);
+    }
+
+    function renderReportLocationList() {
+      const search = state.reportModal.search.trim().toLowerCase();
+      const locations = allReportLocations().filter(location => !search || location.toLowerCase().includes(search));
+
+      if (!locations.length) {
+        elements.reportLocationList.innerHTML = `<div class="report-helper">No locations match your search.</div>`;
+        updateReportDownloadButtonState();
+        return;
+      }
+
+      const selected = new Set(state.reportModal.selectedLocations);
+      elements.reportLocationList.innerHTML = locations.map(location => `
+        <label class="report-location-item">
+          <input type="checkbox" value="${location.replace(/"/g, "&quot;")}" ${selected.has(location) ? "checked" : ""}>
+          <span>${location}</span>
+        </label>
+      `).join("");
+
+      elements.reportLocationList.querySelectorAll("input[type='checkbox']").forEach(input => {
+        input.addEventListener("change", () => {
+          const next = new Set(state.reportModal.selectedLocations);
+          if (input.checked) {
+            next.add(input.value);
+          } else {
+            next.delete(input.value);
+          }
+          state.reportModal.selectedLocations = allReportLocations().filter(location => next.has(location));
+          updateReportDownloadButtonState();
+        });
+      });
+
+      updateReportDownloadButtonState();
+    }
+
+    function renderReportChannelList() {
+      const search = state.reportModal.channelSearch.trim().toLowerCase();
+      const channels = allReportChannels().filter(channel => !search || channel.toLowerCase().includes(search));
+
+      if (!channels.length) {
+        elements.reportChannelList.innerHTML = `<div class="report-helper">No channels match your search.</div>`;
+        updateReportDownloadButtonState();
+        return;
+      }
+
+      const selected = new Set(state.reportModal.selectedChannels);
+      elements.reportChannelList.innerHTML = channels.map(channel => `
+        <label class="report-location-item">
+          <input type="checkbox" value="${channel.replace(/"/g, "&quot;")}" ${selected.has(channel) ? "checked" : ""}>
+          <span>${channel}</span>
+        </label>
+      `).join("");
+
+      elements.reportChannelList.querySelectorAll("input[type='checkbox']").forEach(input => {
+        input.addEventListener("change", () => {
+          const next = new Set(state.reportModal.selectedChannels);
+          if (input.checked) {
+            next.add(input.value);
+          } else {
+            next.delete(input.value);
+          }
+          state.reportModal.selectedChannels = allReportChannels().filter(channel => next.has(channel));
+          updateReportDownloadButtonState();
+        });
+      });
+
+      updateReportDownloadButtonState();
+    }
+
+    function openReportModal() {
+      const weeks = allWeekColumns();
+      fillSelectSimple(elements.reportFromWeek, weeks, "Select From Week", elements.reportFromWeek.value || weeks[0] || "");
+      fillSelectSimple(elements.reportToWeek, weeks, "Select To Week", elements.reportToWeek.value || weeks[weeks.length - 1] || "");
+      if (!state.reportModal.selectedLocations.length) {
+        state.reportModal.selectedLocations = [...allReportLocations()];
+      }
+      if (!state.reportModal.selectedChannels.length) {
+        state.reportModal.selectedChannels = [...allReportChannels()];
+      }
+      state.reportModal.isOpen = true;
+      elements.reportChangeStatus.value = elements.reportChangeStatus.value || "All";
+      setReportStatus();
+      renderReportLocationList();
+      renderReportChannelList();
+      elements.reportModalBackdrop.classList.add("open");
+      document.body.classList.add("fullscreen-active");
+    }
+
+    function closeReportModal() {
+      state.reportModal.isOpen = false;
+      elements.reportModalBackdrop.classList.remove("open");
+      if (!document.fullscreenElement) {
+        document.body.classList.remove("fullscreen-active");
+      }
+      setReportStatus();
+    }
+
+    function previousWeekForReport(targetWeek) {
+      const weeks = allWeekColumns();
+      const index = weeks.indexOf(targetWeek);
+      if (index <= 0) {
+        return "";
+      }
+      return weeks[index - 1];
+    }
+
+    function reportDateForWeek(week, mode = "max") {
+      const dates = state.headendWeeklyRows
+        .filter(row => row.week_label === week && row.date)
+        .map(row => row.date)
+        .sort();
+      if (!dates.length) {
+        return week;
+      }
+      return mode === "min" ? dates[0] : dates[dates.length - 1];
+    }
+
+    function formatReportDate(value) {
+      if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return value || "NA";
+      }
+      const [year, month, day] = value.split("-").map(Number);
+      const date = new Date(year, month - 1, day);
+      return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).replace(/ /g, "-");
+    }
+
+    function parseReportDateValue(value) {
+      if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        return null;
+      }
+      const [year, month, day] = value.split("-").map(Number);
+      return new Date(year, month - 1, day);
+    }
+
+    function reportChannelRowsForExport(fromWeek, toWeek, selectedLocations, selectedChannels, changeFilter) {
+      const selectedLocationSet = new Set(selectedLocations);
+      const selectedChannelSet = new Set(selectedChannels);
+      const selectedHeadends = state.headendRows
+        .filter(row => selectedLocationSet.has(filterComparableValue(row.headend_location)))
+        .map(row => row.headend_id);
+      const selectedHeadendSet = new Set(selectedHeadends);
+      const metaByHeadend = new Map(
+        state.headendRows
+          .filter(row => selectedHeadendSet.has(row.headend_id))
+          .map(row => [row.headend_id, row])
+      );
+
+      const targetWeeks = allWeekColumns().filter(week =>
+        compareWeekLabels(week, fromWeek) >= 0 && compareWeekLabels(week, toWeek) <= 0
+      );
+
+      const rows = [];
+
+      selectedHeadends.forEach(headendId => {
+        const meta = metaByHeadend.get(headendId);
+        if (!meta) {
+          return;
+        }
+
+        const weekMaps = new Map();
+        state.channelRows
+          .filter(row => row.headend_id === headendId)
+          .forEach(row => {
+            Object.entries(row.weeks || {}).forEach(([week, payload]) => {
+              const channelName = canonicalChannelDisplay(payload?.channel_name || "");
+              if (!channelName || channelName === "NA" || !selectedChannelSet.has(channelName)) {
+                return;
+              }
+              const lcnValue = row.lcn_no;
+              const bucket = weekMaps.get(week) || new Map();
+              const existing = bucket.get(channelName);
+              const currentNumber = Number(lcnValue);
+              const existingNumber = Number(existing?.position);
+              if (!existing || (Number.isFinite(currentNumber) && (!Number.isFinite(existingNumber) || currentNumber < existingNumber))) {
+                bucket.set(channelName, {
+                  position: lcnValue,
+                  updated_date: payload?.date_posted || meta.date || "",
+                });
+              }
+              weekMaps.set(week, bucket);
+            });
+          });
+
+        targetWeeks.forEach(currentWeek => {
+          const previousWeek = previousWeekForReport(currentWeek);
+          const previousMap = previousWeek ? weekMaps.get(previousWeek) || new Map() : new Map();
+          const currentMap = weekMaps.get(currentWeek) || new Map();
+          const channelNames = new Set([...previousMap.keys(), ...currentMap.keys()]);
+
+          channelNames.forEach(channelName => {
+            const previousEntry = previousMap.get(channelName);
+            const currentEntry = currentMap.get(channelName);
+            const previousPosition = previousEntry?.position ?? "";
+            const currentPosition = currentEntry?.position ?? "";
+
+            let changeStatus = "No Change";
+            if (!previousEntry && currentEntry) {
+              changeStatus = "New";
+            } else if (previousEntry && !currentEntry) {
+              changeStatus = "Removed";
+            } else if (String(previousPosition) !== String(currentPosition)) {
+              changeStatus = "Change";
+            }
+
+            const includeRow =
+              changeFilter === "All" ||
+              (changeFilter === "No Change" && changeStatus === "No Change") ||
+              (changeFilter === "Change" && changeStatus !== "No Change");
+
+            if (!includeRow) {
+              return;
+            }
+
+            const prevNum = Number(previousPosition);
+            const currNum = Number(currentPosition);
+            const positionChange =
+              Number.isFinite(prevNum) && Number.isFinite(currNum) ? currNum - prevNum : "";
+            rows.push({
+              __headendId: displayValue(meta.headend_id),
+              State: displayValue(meta.state),
+              "BARC Market": displayValue(meta.barc_market),
+              "Headend Location": displayValue(meta.headend_location),
+              "Network Name": displayValue(meta.network_name),
+              "Channel Name": channelName,
+              Week: currentWeek,
+              "Updated Date": currentEntry?.updated_date || reportDateForWeek(currentWeek, "max") || "",
+              "Previous Position": previousPosition || "",
+              Current: currentPosition || "",
+              "Position Change": positionChange,
+              "Change Status": changeStatus,
+              STBs: Number(meta.stbs || 0),
+            });
+          });
+        });
+      });
+
+      return rows;
+    }
+
+    function reportSummaryRows(reportRows) {
+      const headendIds = new Set(reportRows.map(row => row.__headendId));
+      const changedRows = reportRows.filter(row => row["Change Status"] !== "No Change");
+      const changedHeadends = new Set(changedRows.map(row => row.__headendId));
+      return [
+        ["Total Headends", headendIds.size],
+        ["Total STBs", [...headendIds].reduce((sum, id) => sum + Number((reportRows.find(row => row.__headendId === id) || {}).STBs || 0), 0)],
+        ["Total Channels", reportRows.length],
+        ["Channels Changed", changedRows.length],
+        ["Channels With No Change", reportRows.filter(row => row["Change Status"] === "No Change").length],
+        ["STBs Affected", [...changedHeadends].reduce((sum, id) => sum + Number((reportRows.find(row => row.__headendId === id) || {}).STBs || 0), 0)],
+        ["Number of Headends Affected", changedHeadends.size],
+      ];
+    }
+
+    function reportHeadendSummaryRows(reportRows) {
+      const grouped = new Map();
+      reportRows.forEach(row => {
+        const key = [row.State, row["BARC Market"], row["Headend Location"], row["Network Name"], row.__headendId].join("||");
+        const current = grouped.get(key) || {
+          State: row.State,
+          "BARC Market": row["BARC Market"],
+          "Headend Location": row["Headend Location"],
+          Network: row["Network Name"],
+          "Total STBs": row.STBs,
+          "Channels Changed": 0,
+          "STBs Affected": 0,
+        };
+        if (row["Change Status"] !== "No Change") {
+          current["Channels Changed"] += 1;
+          current["STBs Affected"] = row.STBs;
+        }
+        grouped.set(key, current);
+      });
+      return [...grouped.values()];
+    }
+
+    function applyWorksheetHeaderStyles(row) {
+      row.eachCell(cell => {
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2E6B5E" } };
+        cell.alignment = { vertical: "middle", horizontal: "center" };
+        cell.border = {
+          top: { style: "thin", color: { argb: "FFD5E4DE" } },
+          left: { style: "thin", color: { argb: "FFD5E4DE" } },
+          bottom: { style: "thin", color: { argb: "FFD5E4DE" } },
+          right: { style: "thin", color: { argb: "FFD5E4DE" } },
+        };
+      });
+    }
+
+    function applyReportRowStyles(sheet, dataStartRow, dataRows) {
+      dataRows.forEach((row, index) => {
+        const excelRow = sheet.getRow(dataStartRow + index);
+        const status = row["Change Status"];
+        const currentCell = excelRow.getCell(8);
+        const statusCell = excelRow.getCell(9);
+        const positionDelta = Number(row["Position Change"]);
+        if (status === "Change" && Number.isFinite(positionDelta) && positionDelta < 0) {
+          currentCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFCDEFD2" } };
+          currentCell.font = { color: { argb: "FF1F7A39" }, bold: true };
+          statusCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFCDEFD2" } };
+          statusCell.font = { color: { argb: "FF1F7A39" }, bold: true };
+        } else if (status === "Change" && Number.isFinite(positionDelta) && positionDelta > 0) {
+          currentCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF4CCCC" } };
+          currentCell.font = { color: { argb: "FF990000" }, bold: true };
+          statusCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF4CCCC" } };
+          statusCell.font = { color: { argb: "FF990000" }, bold: true };
+        } else if (status === "Removed") {
+          currentCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFE1C9" } };
+          currentCell.font = { color: { argb: "FFB45F06" }, bold: true };
+          statusCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFE1C9" } };
+          statusCell.font = { color: { argb: "FFB45F06" }, bold: true };
+        } else if (status === "New") {
+          currentCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD8E9FF" } };
+          currentCell.font = { color: { argb: "FF0B5394" }, bold: true };
+          statusCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD8E9FF" } };
+          statusCell.font = { color: { argb: "FF0B5394" }, bold: true };
+        } else {
+          currentCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE8E8E8" } };
+          currentCell.font = { color: { argb: "FF666666" }, bold: true };
+          statusCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE8E8E8" } };
+          statusCell.font = { color: { argb: "FF666666" }, bold: true };
+        }
+
+        const updatedDate = parseReportDateValue(row["Updated Date"]);
+        if (updatedDate) {
+          excelRow.getCell(6).value = updatedDate;
+          excelRow.getCell(6).numFmt = "dd-mmm-yyyy";
+        }
+        if (typeof row.STBs === "number") {
+          excelRow.getCell(10).numFmt = "#,##0";
+        }
+      });
+    }
+
+    async function downloadWeeklyChannelReport() {
+      if (typeof ExcelJS === "undefined") {
+        setReportStatus("Excel export library could not be loaded.", "error");
+        return;
+      }
+
+      const fromWeek = elements.reportFromWeek.value;
+      const toWeek = elements.reportToWeek.value;
+      const locations = [...state.reportModal.selectedLocations];
+      const channels = [...state.reportModal.selectedChannels];
+      const changeFilter = elements.reportChangeStatus.value || "All";
+
+      if (!fromWeek || !toWeek || compareWeekLabels(fromWeek, toWeek) > 0 || !locations.length || !channels.length) {
+        setReportStatus("Please select a valid From Week, To Week, at least one location, and at least one channel.", "error");
+        updateReportDownloadButtonState();
+        return;
+      }
+
+      const reportRows = reportChannelRowsForExport(fromWeek, toWeek, locations, channels, changeFilter);
+      if (!reportRows.length) {
+        setReportStatus("No data available for the selected filters.", "error");
+        return;
+      }
+
+      setReportStatus("Preparing report...", "");
+      elements.confirmReportDownloadBtn.disabled = true;
+
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = "Codex Dashboard";
+      workbook.created = new Date();
+
+      const rangeFromDate = formatReportDate(reportDateForWeek(fromWeek, "min"));
+      const rangeToDate = formatReportDate(reportDateForWeek(toWeek, "max"));
+      const selectedLocationsLabel = locations.join(", ");
+      const selectedChannelsLabel = channels.join(", ");
+
+      try {
+        const reportSheet = workbook.addWorksheet("Report", {
+          views: [{ state: "frozen", ySplit: 6 }],
+        });
+
+        reportSheet.mergeCells("A1:J1");
+        reportSheet.getCell("A1").value = "Weekly Channel Analysis";
+        reportSheet.getCell("A1").font = { bold: true, size: 16 };
+        reportSheet.getCell("A1").alignment = { horizontal: "center" };
+        reportSheet.mergeCells("A2:J2");
+        reportSheet.getCell("A2").value = `From: ${rangeFromDate}    To: ${rangeToDate}`;
+        reportSheet.mergeCells("A3:J3");
+        reportSheet.getCell("A3").value = `Locations: ${selectedLocationsLabel}`;
+        reportSheet.mergeCells("A4:J4");
+        reportSheet.getCell("A4").value = `Channels: ${selectedChannelsLabel}`;
+        reportSheet.mergeCells("A5:J5");
+        reportSheet.getCell("A5").value = `Change Filter: ${changeFilter}`;
+
+        const reportColumns = [
+          "State", "BARC Market", "Headend Location", "Network Name",
+          "Channel Name", "Updated Date", "Previous Position", "Current",
+          "Change Status", "STBs",
+        ];
+        reportSheet.addRow(reportColumns);
+        applyWorksheetHeaderStyles(reportSheet.getRow(6));
+        reportRows.forEach(row => {
+          reportSheet.addRow(reportColumns.map(column => row[column]));
+        });
+        reportSheet.autoFilter = {
+          from: { row: 6, column: 1 },
+          to: { row: 6, column: reportColumns.length },
+        };
+        reportSheet.columns = reportColumns.map((column, index) => ({
+          header: column,
+          key: column,
+          width: [18, 18, 22, 24, 24, 16, 18, 14, 16, 12][index],
+        }));
+        applyReportRowStyles(reportSheet, 7, reportRows);
+
+        const summarySheet = workbook.addWorksheet("Summary");
+        summarySheet.addRow(["Weekly Channel Analysis Summary"]);
+        summarySheet.getRow(1).font = { bold: true, size: 15 };
+        summarySheet.addRow(["From Week", rangeFromDate]);
+        summarySheet.addRow(["To Week", rangeToDate]);
+        summarySheet.addRow(["Locations", selectedLocationsLabel]);
+        summarySheet.addRow(["Channels", selectedChannelsLabel]);
+        summarySheet.addRow(["Change Filter", changeFilter]);
+        summarySheet.addRow([]);
+        summarySheet.addRow(["Metric", "Value"]);
+        applyWorksheetHeaderStyles(summarySheet.getRow(8));
+        reportSummaryRows(reportRows).forEach(([metric, value]) => {
+          const row = summarySheet.addRow([metric, value]);
+          if (typeof value === "number") {
+            row.getCell(2).numFmt = "#,##0";
+          }
+        });
+        summarySheet.columns = [{ width: 28 }, { width: 18 }];
+
+        const headendSummarySheet = workbook.addWorksheet("Headend Summary");
+        const headendSummaryColumns = ["State", "BARC Market", "Headend Location", "Network", "Total STBs", "Channels Changed", "STBs Affected"];
+        headendSummarySheet.addRow(headendSummaryColumns);
+        applyWorksheetHeaderStyles(headendSummarySheet.getRow(1));
+        reportHeadendSummaryRows(reportRows).forEach(row => {
+          headendSummarySheet.addRow(headendSummaryColumns.map(column => row[column]));
+        });
+        headendSummarySheet.views = [{ state: "frozen", ySplit: 1 }];
+        headendSummarySheet.autoFilter = {
+          from: { row: 1, column: 1 },
+          to: { row: 1, column: headendSummaryColumns.length },
+        };
+        headendSummarySheet.columns = [
+          { width: 18 }, { width: 20 }, { width: 22 }, { width: 26 },
+          { width: 14 }, { width: 18 }, { width: 16 },
+        ];
+        [5, 6, 7].forEach(columnIndex => {
+          for (let rowIndex = 2; rowIndex <= headendSummarySheet.rowCount; rowIndex += 1) {
+            headendSummarySheet.getRow(rowIndex).getCell(columnIndex).numFmt = "#,##0";
+          }
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+        const fileSuffix = locations.length === allReportLocations().length && channels.length === allReportChannels().length ? "" : "_Selected-Filters";
+        const filename = `weekly_channel_analysis_${rangeFromDate}_to_${rangeToDate}${fileSuffix}.xlsx`.replace(/\s+/g, "_");
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(url);
+
+        setReportStatus("Report downloaded successfully.", "success");
+      } catch (error) {
+        console.error("Weekly report export failed.", error);
+        setReportStatus("Unable to generate the Excel report.", "error");
+      } finally {
+        updateReportDownloadButtonState();
+      }
     }
 
     function filteredHeadends() {
@@ -2339,6 +3261,208 @@
       renderTable3();
     }
 
+    function table4ComparableWeekRows(excludedKey = "") {
+      return state.headendWeeklyRows.filter(row => {
+        return TABLE4_FILTER_KEYS.every(key => {
+          if (key === excludedKey) {
+            return true;
+          }
+          const selectedValue = state.table4Filters[key];
+          return !selectedValue || filterComparableValue(row[key]) === selectedValue;
+        });
+      });
+    }
+
+    function table4AllWeeks() {
+      return [...new Set(state.headendWeeklyRows.map(row => row.week_label).filter(Boolean))].sort(compareWeekLabels);
+    }
+
+    function sanitizeTable4WeekRange(changedField = "") {
+      const weekFrom = state.table4Filters.week_from;
+      const weekTo = state.table4Filters.week_to;
+
+      if (!weekFrom || !weekTo || compareWeekLabels(weekFrom, weekTo) <= 0) {
+        return;
+      }
+
+      if (changedField === "week_from") {
+        state.table4Filters.week_to = weekFrom;
+        return;
+      }
+
+      if (changedField === "week_to") {
+        state.table4Filters.week_from = weekTo;
+        return;
+      }
+
+      state.table4Filters.week_to = weekFrom;
+    }
+
+    function updateTable4Filters() {
+      fillSelectSimple(elements.table4StateFilter, uniqueValues(table4ComparableWeekRows("state"), "state"), "All States", state.table4Filters.state);
+      fillSelectSimple(elements.table4BarcFilter, uniqueValues(table4ComparableWeekRows("barc_market"), "barc_market"), "All BARC Markets", state.table4Filters.barc_market);
+      fillSelectSimple(elements.table4LocationFilter, uniqueValues(table4ComparableWeekRows("headend_location"), "headend_location"), "All Locations", state.table4Filters.headend_location);
+      fillSelectSimple(elements.table4NetworkFilter, uniqueValues(table4ComparableWeekRows("network_name"), "network_name"), "All Networks", state.table4Filters.network_name);
+      const weekOptions = table4AllWeeks();
+      fillWeekSelect(elements.table4WeekFromFilter, weekOptions, "All Weeks", state.table4Filters.week_from);
+      fillWeekSelect(elements.table4WeekToFilter, weekOptions, "All Weeks", state.table4Filters.week_to);
+      fillSelectSimple(elements.table4ChangeStatusFilter, ["Change", "No Change"], "All Status", state.table4Filters.change_status);
+    }
+
+    function filteredTable4Rows() {
+      return sortRows(state.headendWeeklyRows.filter(row => {
+        if (state.table4Filters.state && filterComparableValue(row.state) !== state.table4Filters.state) return false;
+        if (state.table4Filters.barc_market && filterComparableValue(row.barc_market) !== state.table4Filters.barc_market) return false;
+        if (state.table4Filters.headend_location && filterComparableValue(row.headend_location) !== state.table4Filters.headend_location) return false;
+        if (state.table4Filters.network_name && filterComparableValue(row.network_name) !== state.table4Filters.network_name) return false;
+        if (state.table4Filters.week_from && compareWeekLabels(row.week_label, state.table4Filters.week_from) < 0) return false;
+        if (state.table4Filters.week_to && compareWeekLabels(row.week_label, state.table4Filters.week_to) > 0) return false;
+        return true;
+      }), state.table4Sort);
+    }
+
+    function table4GroupedRows(rows, weeks) {
+      const byHeadend = new Map();
+
+      rows.forEach(row => {
+        const key = row.headend_id;
+        const existing = byHeadend.get(key) || {
+          state: row.state,
+          barc_market: row.barc_market,
+          headend_location: row.headend_location,
+          network_name: row.network_name,
+          headend_id: row.headend_id,
+          weeks: {},
+        };
+        existing.weeks[row.week_label] = {
+          stbs: row.stbs,
+          date: row.date,
+        };
+        byHeadend.set(key, existing);
+      });
+
+      return sortRows([...byHeadend.values()].map(row => ({
+        ...row,
+        change_status: table4ChangeStatus(row, weeks),
+      })), state.table4Sort);
+    }
+
+    function table4WeekValue(row, week) {
+      return row.weeks?.[week]?.stbs;
+    }
+
+    function table4ChangeStatus(row, weeks) {
+      const values = weeks.map(week => {
+        const value = table4WeekValue(row, week);
+        return value == null || value === "" ? "" : String(value);
+      }).filter(Boolean);
+
+      if (values.length <= 1) {
+        return "No Change";
+      }
+
+      return new Set(values).size > 1 || values.length !== weeks.length ? "Change" : "No Change";
+    }
+
+    function table4WeekChanged(row, week, weeks) {
+      const currentIndex = weeks.indexOf(week);
+      if (currentIndex <= 0) {
+        return false;
+      }
+      const previousWeek = weeks[currentIndex - 1];
+      const currentValue = table4WeekValue(row, week);
+      const previousValue = table4WeekValue(row, previousWeek);
+      if (currentValue == null && previousValue == null) {
+        return false;
+      }
+      return String(currentValue ?? "") !== String(previousValue ?? "");
+    }
+
+    function renderTable4() {
+      const rows = filteredTable4Rows();
+      const weeks = table4AllWeeks().filter(week => {
+        if (state.table4Filters.week_from && compareWeekLabels(week, state.table4Filters.week_from) < 0) {
+          return false;
+        }
+        if (state.table4Filters.week_to && compareWeekLabels(week, state.table4Filters.week_to) > 0) {
+          return false;
+        }
+        return true;
+      });
+      let groupedRows = table4GroupedRows(rows, weeks);
+      if (state.table4Filters.change_status) {
+        groupedRows = groupedRows.filter(row => row.change_status === state.table4Filters.change_status);
+      }
+      elements.table4BarLabel.textContent = `${groupedRows.length.toLocaleString()} Headend Rows`;
+      elements.stbComparisonTableHead.innerHTML = `
+        <tr>
+          <th data-table="stb-comparison" data-key="state">State</th>
+          <th data-table="stb-comparison" data-key="barc_market">BARC Market</th>
+          <th data-table="stb-comparison" data-key="headend_location">Headend Location</th>
+          <th data-table="stb-comparison" data-key="network_name">Network Name</th>
+          <th data-table="stb-comparison" data-key="headend_id">Headend ID</th>
+          ${weeks.map(week => `<th class="week-group-header">${formatWeekCompact(week)}</th>`).join("")}
+          <th data-table="stb-comparison" data-key="change_status">Change</th>
+        </tr>
+        <tr class="subhead-row">
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          <th></th>
+          ${weeks.map(() => `<th class="stb-column">STBs</th>`).join("")}
+          <th></th>
+        </tr>
+      `;
+
+      if (!groupedRows.length) {
+        elements.stbComparisonTableBody.innerHTML = `<tr><td colspan="${6 + weeks.length}" class="table-empty">No weekly STB rows match the current filters.</td></tr>`;
+        return;
+      }
+
+      elements.stbComparisonTableBody.innerHTML = groupedRows.map(row => {
+        const changeStatus = renderChangeStatusCell(row.change_status);
+        const weekCells = weeks.map(week => {
+          const value = table4WeekValue(row, week);
+          const display = value == null || value === "" ? "NA" : formatNumber(value);
+          const className = [
+            display === "NA" ? "stb-value na-value" : "stb-value",
+            table4WeekChanged(row, week, weeks) ? "changed-cell" : "",
+          ].filter(Boolean).join(" ");
+          return `<td class="stb-column"><span class="${className}">${displayValue(display)}</span></td>`;
+        }).join("");
+
+        return `
+          <tr>
+            <td>${displayValue(row.state)}</td>
+            <td>${displayValue(row.barc_market)}</td>
+            <td>${displayValue(row.headend_location)}</td>
+            <td>${displayValue(row.network_name)}</td>
+            <td>${displayValue(row.headend_id)}</td>
+            ${weekCells}
+            <td class="${changeStatus.cellClass}">${changeStatus.content}</td>
+          </tr>
+        `;
+      }).join("");
+
+      bindHeaderSorting();
+      makeTableResizable("stbComparisonTable");
+    }
+
+    function resetTable4Filters() {
+      state.table4Filters = {
+        state: "",
+        barc_market: "",
+        headend_location: "",
+        network_name: "",
+        week_from: "",
+        week_to: "",
+        change_status: "",
+      };
+      updateTable4Filters();
+      renderTable4();
+    }
+
     function formatWeekLabel(weekLabel) {
       return weekLabel;
     }
@@ -2943,6 +4067,10 @@
       updateTable2FilterOptions();
       updateDependentHeadendFilters();
       updateTable3Filters();
+      updateTable4Filters();
+      state.reportModal.selectedLocations = [...allReportLocations()];
+      state.reportModal.selectedChannels = [...allReportChannels()];
+      updateReportDownloadButtonState();
     }
 
     function resetHeadendFilters() {
@@ -3007,12 +4135,12 @@
         return;
       }
 
-      [elements.table1Panel, elements.table2Panel, elements.table3Panel].forEach(otherPanel => {
+      [elements.table1Panel, elements.table2Panel, elements.table3Panel, elements.table4Panel].forEach(otherPanel => {
         if (otherPanel !== panel) {
           otherPanel.classList.remove("table-panel-fullscreen");
         }
       });
-      [elements.table1FullscreenBtn, elements.table2FullscreenBtn, elements.table3FullscreenBtn].forEach(otherButton => {
+      [elements.table1FullscreenBtn, elements.table2FullscreenBtn, elements.table3FullscreenBtn, elements.table4FullscreenBtn].forEach(otherButton => {
         if (otherButton !== button) {
           otherButton.textContent = "Full Screen";
         }
@@ -3035,8 +4163,48 @@
 
     function bindEvents() {
       document.getElementById("resetHeadendFilters").addEventListener("click", resetHeadendFilters);
+      elements.downloadWeeklyReportBtn.addEventListener("click", openReportModal);
+      elements.closeReportModalBtn.addEventListener("click", closeReportModal);
+      elements.cancelReportDownloadBtn.addEventListener("click", closeReportModal);
+      elements.confirmReportDownloadBtn.addEventListener("click", downloadWeeklyChannelReport);
+      elements.reportFromWeek.addEventListener("change", updateReportDownloadButtonState);
+      elements.reportToWeek.addEventListener("change", updateReportDownloadButtonState);
+      elements.reportChangeStatus.addEventListener("change", () => {
+        setReportStatus();
+        updateReportDownloadButtonState();
+      });
+      elements.reportLocationSearch.addEventListener("input", () => {
+        state.reportModal.search = elements.reportLocationSearch.value || "";
+        renderReportLocationList();
+      });
+      elements.reportChannelSearch.addEventListener("input", () => {
+        state.reportModal.channelSearch = elements.reportChannelSearch.value || "";
+        renderReportChannelList();
+      });
+      elements.selectAllReportLocations.addEventListener("click", () => {
+        state.reportModal.selectedLocations = [...allReportLocations()];
+        renderReportLocationList();
+      });
+      elements.clearAllReportLocations.addEventListener("click", () => {
+        state.reportModal.selectedLocations = [];
+        renderReportLocationList();
+      });
+      elements.selectAllReportChannels.addEventListener("click", () => {
+        state.reportModal.selectedChannels = [...allReportChannels()];
+        renderReportChannelList();
+      });
+      elements.clearAllReportChannels.addEventListener("click", () => {
+        state.reportModal.selectedChannels = [];
+        renderReportChannelList();
+      });
+      elements.reportModalBackdrop.addEventListener("click", event => {
+        if (event.target === elements.reportModalBackdrop) {
+          closeReportModal();
+        }
+      });
       elements.resetTable2Filters.addEventListener("click", clearHeadendSelection);
       elements.resetTable3Filters.addEventListener("click", resetTable3Filters);
+      elements.resetTable4Filters.addEventListener("click", resetTable4Filters);
       elements.table2PrevPage.addEventListener("click", () => {
         if (state.table2Page > 1) {
           state.table2Page -= 1;
@@ -3057,6 +4225,9 @@
       elements.table3FullscreenBtn.addEventListener("click", () => {
         togglePanelFullscreen(elements.table3Panel, elements.table3FullscreenBtn);
       });
+      elements.table4FullscreenBtn.addEventListener("click", () => {
+        togglePanelFullscreen(elements.table4Panel, elements.table4FullscreenBtn);
+      });
       [
         ["state", elements.table3StateFilter],
         ["barc_market", elements.table3BarcFilter],
@@ -3073,11 +4244,35 @@
           renderTable3();
         });
       });
+      [
+        ["state", elements.table4StateFilter],
+        ["barc_market", elements.table4BarcFilter],
+        ["headend_location", elements.table4LocationFilter],
+        ["network_name", elements.table4NetworkFilter],
+        ["week_from", elements.table4WeekFromFilter],
+        ["week_to", elements.table4WeekToFilter],
+        ["change_status", elements.table4ChangeStatusFilter],
+      ].forEach(([key, element]) => {
+        element.addEventListener("change", () => {
+          state.table4Filters[key] = element.value;
+          if (key === "week_from" || key === "week_to") {
+            sanitizeTable4WeekRange(key);
+          }
+          updateTable4Filters();
+          renderTable4();
+        });
+      });
       document.addEventListener("fullscreenchange", () => {
         const fullscreenElement = document.fullscreenElement;
         updateFullscreenState(elements.table1Panel, elements.table1FullscreenBtn, fullscreenElement === elements.table1Panel);
         updateFullscreenState(elements.table2Panel, elements.table2FullscreenBtn, fullscreenElement === elements.table2Panel);
         updateFullscreenState(elements.table3Panel, elements.table3FullscreenBtn, fullscreenElement === elements.table3Panel);
+        updateFullscreenState(elements.table4Panel, elements.table4FullscreenBtn, fullscreenElement === elements.table4Panel);
+      });
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && state.reportModal.isOpen) {
+          closeReportModal();
+        }
       });
     }
 
@@ -3088,6 +4283,7 @@
     renderHeadendTable();
     renderChannelTable();
     renderTable3();
+    renderTable4();
 
     document.addEventListener("click", event => {
       document.querySelectorAll(".multiselect.open").forEach(container => {

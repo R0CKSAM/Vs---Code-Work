@@ -18,7 +18,7 @@
         <p class="eyebrow">Static JSON Dashboard</p>
         <h1>Channel Distribution Dashboard</h1>
         <p class="subtitle">
-          Interactive distribution and week-wise comparison views built with HTML, CSS, and vanilla JavaScript.
+          Interactive distribution, channel comparison, and STB comparison views built with HTML, CSS, and vanilla JavaScript.
         </p>
       </div>
       <div class="summary-grid">
@@ -180,6 +180,90 @@
                   <th>Channel (Week From)</th>
                   <th>Channel (Week To)</th>
                   <th>Status</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-card" id="stbCard">
+        <div class="section-header">
+          <div>
+            <p class="section-eyebrow">Table 3</p>
+            <h2>Week-wise STB Comparison</h2>
+            <p class="section-copy">Track week-over-week STB movement for each headend using the weekly intake history.</p>
+          </div>
+          <div class="record-pill">
+            <span>Visible Records</span>
+            <strong id="stbRecordCount">0</strong>
+          </div>
+        </div>
+
+        <div class="filter-card">
+          <div class="filter-grid filter-grid-stb">
+            <label class="field">
+              <span>State</span>
+              <select id="stbStateFilter">
+                <option value="">All States</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>BARC Market</span>
+              <select id="stbMarketFilter">
+                <option value="">All Markets</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Headend Location</span>
+              <select id="stbLocationFilter">
+                <option value="">All Locations</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Network Name</span>
+              <select id="stbNetworkFilter">
+                <option value="">All Networks</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Change</span>
+              <select id="stbChangeFilter">
+                <option value="">All</option>
+                <option value="Change">Change</option>
+                <option value="No Change">No Change</option>
+              </select>
+            </label>
+          </div>
+          <div class="button-row">
+            <button type="button" class="btn btn-secondary" id="resetStbFilters">Reset</button>
+            <button type="button" class="btn btn-ghost" id="toggleStbFullscreen">Full Screen</button>
+          </div>
+        </div>
+
+        <div class="status-stack">
+          <div class="status-message error hidden" id="stbError"></div>
+          <div class="status-message empty hidden" id="stbEmpty">
+            No STB comparison rows match the current filters.
+          </div>
+        </div>
+
+        <div class="table-card">
+          <div class="loading-overlay hidden" id="stbLoading">
+            <div class="spinner"></div>
+            <span>Loading STB comparison...</span>
+          </div>
+          <div class="table-scroll">
+            <table id="stbTable" class="display compact dashboard-table">
+              <thead>
+                <tr>
+                  <th>State</th>
+                  <th>BARC Market</th>
+                  <th>Headend Location</th>
+                  <th>Network Name</th>
+                  <th>Headend ID</th>
+                  <th>Change</th>
                 </tr>
               </thead>
               <tbody></tbody>

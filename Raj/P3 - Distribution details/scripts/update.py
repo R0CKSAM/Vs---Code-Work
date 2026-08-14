@@ -6,6 +6,7 @@ import logging
 import re
 from collections import Counter
 from datetime import datetime
+from time import perf_counter
 from pathlib import Path
 from typing import Any
 
@@ -34,6 +35,7 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
 )
 LOGGER = logging.getLogger("update")
+NORMALIZATION_WARNING_LIMIT = 25
 
 
 def ensure_directories() -> None:
@@ -47,13 +49,22 @@ def ensure_directories() -> None:
 def load_json(path: Path, default: Any) -> Any:
     if not path.exists():
         return default
+    start = perf_counter()
     with path.open("r", encoding="utf-8") as file:
-        return json.load(file)
+        payload = json.load(file)
+    elapsed = perf_counter() - start
+    if elapsed >= 0.5:
+        LOGGER.info("Loaded %s in %.2fs", path.name, elapsed)
+    return payload
 
 
 def write_json(path: Path, payload: Any) -> None:
+    start = perf_counter()
     with path.open("w", encoding="utf-8") as file:
         json.dump(payload, file, ensure_ascii=False, indent=2)
+    elapsed = perf_counter() - start
+    if elapsed >= 0.5:
+        LOGGER.info("Wrote %s in %.2fs", path.name, elapsed)
 
 
 def canonical_workbook_stem(path: Path) -> str:
@@ -344,8 +355,16 @@ def log_normalization_warnings(aggregate: dict[str, Counter[str]]) -> None:
         counter = active_fields.get(field)
         if not counter:
             continue
-        LOGGER.warning("  %s:", field)
-        for raw_value, count in counter.most_common():
+        total_unique = len(counter)
+        total_rows = sum(counter.values())
+        LOGGER.warning(
+            "  %s: %s unique values across %s rows%s",
+            field,
+            total_unique,
+            total_rows,
+            f" (showing top {NORMALIZATION_WARNING_LIMIT})" if total_unique > NORMALIZATION_WARNING_LIMIT else "",
+        )
+        for raw_value, count in counter.most_common(NORMALIZATION_WARNING_LIMIT):
             LOGGER.warning("    %s (%s rows)", raw_value, count)
 
 
