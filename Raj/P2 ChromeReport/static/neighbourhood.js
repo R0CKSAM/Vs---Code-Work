@@ -527,6 +527,7 @@
       { label: "MARKET", className: "sticky-col sticky-market" },
       { label: "CITY", className: "sticky-col sticky-city" },
       { label: "HEADEND", className: "sticky-col sticky-headend" },
+      { label: "CHANNEL NAME", className: "sticky-col sticky-channel sticky-body" },
     ].forEach((column) => {
       const th = document.createElement("th");
       th.textContent = column.label;
@@ -536,7 +537,6 @@
     });
 
     [
-      { label: "Channel", key: "channel", className: "nbhd-group-channel" },
       { label: "Frequency", key: "frequency", className: "nbhd-group-frequency" },
       { label: "Genre", key: "genre", className: "nbhd-group-genre" },
     ].forEach((group) => {
@@ -572,6 +572,7 @@
       { value: record.market, className: "sticky-col sticky-market sticky-body" },
       { value: record.city, className: "sticky-col sticky-city sticky-body" },
       { value: record.head_end, className: "sticky-col sticky-headend sticky-body" },
+      { value: record.channel_name || "", className: "sticky-col sticky-channel sticky-body" },
     ].forEach((column) => {
       const td = document.createElement("td");
       td.textContent = column.value || "";
@@ -580,7 +581,6 @@
     });
 
     const groups = [
-      { key: "channels", className: "nbhd-group-channel" },
       { key: "frequencies", className: "nbhd-group-frequency" },
       { key: "genres", className: "nbhd-group-genre" },
     ];
@@ -700,7 +700,7 @@
       if (nextPageButton) nextPageButton.disabled = true;
       const tr = document.createElement("tr");
       const td = document.createElement("td");
-      td.colSpan = 3 + Math.max(weeks.length, 1) * 3;
+      td.colSpan = 4 + Math.max(weeks.length, 1) * 2;
       td.className = "empty-state";
       td.textContent = "No neighbourhood rows match the current filters.";
       tr.appendChild(td);
@@ -1158,14 +1158,13 @@
     const exportedAt = new Date().toLocaleString("en-IN", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false });
 
     // ── Sheet 1: Detailed Report ──────────────────────────────────────────
-    const colCount = 3 + weeks.length * 3;
+    const colCount = 4 + weeks.length * 2;
     const detailRows = [
       [excelCell("Neighbourhood Comparison – Detailed Report", "title", { mergeAcross: colCount - 1 })],
       [excelCell(`Exported: ${exportedAt}  |  Headends: ${totalHeadends}  |  Rows: ${records.length}`, "meta", { mergeAcross: colCount - 1 })],
       blankRow(colCount),
       [
-        excelCell("", "group", { mergeAcross: 2 }),
-        excelCell("Channel", "group", { mergeAcross: Math.max(0, weeks.length - 1) }),
+        excelCell("", "group", { mergeAcross: 3 }),
         excelCell("Frequency", "group", { mergeAcross: Math.max(0, weeks.length - 1) }),
         excelCell("Genre", "group", { mergeAcross: Math.max(0, weeks.length - 1) }),
       ],
@@ -1173,7 +1172,7 @@
         excelCell("MARKET", "header"),
         excelCell("CITY", "header"),
         excelCell("HEADEND", "header"),
-        ...weeks.map((week) => excelCell(week, "header")),
+        excelCell("CHANNEL NAME", "header"),
         ...weeks.map((week) => excelCell(week, "header")),
         ...weeks.map((week) => excelCell(week, "header")),
       ],
@@ -1212,11 +1211,7 @@
         excelCell(record.market || "", rowStyle),
         excelCell(record.city || "", rowStyle),
         excelCell(record.head_end || "", rowStyle),
-        ...weeks.map((week, weekIndex) => {
-          const baseStyle = getTextChangeStyle(weekIndex, record.channels || {}, isAlt);
-          const channelStyle = normalizeChannelKey(record.channels?.[week]) === "INDIATV" ? "highlight" : baseStyle;
-          return excelCell(record.channels?.[week] ?? "NA", channelStyle);
-        }),
+        excelCell(record.channel_name || "", normalizeChannelKey(record.channel_name) === "INDIATV" ? "highlight" : rowStyle),
         ...weeks.map((week, weekIndex) => {
           const value = record.frequencies?.[week];
           return excelCell(value ?? "NA", getFrequencyStyle(weekIndex, record.frequencies || {}, isAlt));
@@ -2324,7 +2319,7 @@
   }
 
   function sortGroupRecords(records) {
-    return records.slice().sort((left, right) => Number(left.position || 0) - Number(right.position || 0));
+    return records.slice().sort((left, right) => normalizeText(left.channel_name).localeCompare(normalizeText(right.channel_name), undefined, { numeric: true }));
   }
 
   function recordMatchesBaseFilters(record, filters) {

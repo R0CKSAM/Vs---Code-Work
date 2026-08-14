@@ -494,6 +494,10 @@ def enumerate_nbhd_positions(rows: list[dict[str, Any]]) -> list[tuple[int, dict
     return [(row_index + 1, row) for row_index, row in enumerate(sorted_rows)]
 
 
+def build_nbhd_channel_rows(group_rows: list[dict[str, Any]]) -> list[tuple[int, dict[str, Any]]]:
+    return enumerate_nbhd_positions(group_rows)
+
+
 NBHD_WEEKWISE_COLUMNS = [
     "week",
     "market",
@@ -756,8 +760,9 @@ def build_nbhd_report() -> dict[str, Any]:
                 grouped.setdefault((row["market"], row["city"], row["head_end"]), []).append(row)
 
             for (market, city, head_end), group_rows in grouped.items():
-                for offset, nbhd_row in enumerate_nbhd_positions(group_rows):
-                    row_key = "||".join((market, city, head_end, str(offset)))
+                for offset, nbhd_row in build_nbhd_channel_rows(group_rows):
+                    channel = normalize_text(nbhd_row["channel"])
+                    row_key = comparison_record_key(market, city, head_end, channel)
                     record = merged.setdefault(
                         row_key,
                         {
@@ -765,17 +770,23 @@ def build_nbhd_report() -> dict[str, Any]:
                             "market": market,
                             "city": city,
                             "head_end": head_end,
+                            "channel_name": channel,
                             "position": offset,
+                            "positions": {},
                             "is_reference": False,
                             "channels": {},
                             "genres": {},
                             "frequencies": {},
                         },
                     )
-                    record["channels"][week_label] = normalize_text(nbhd_row["channel"])
+                    if not normalize_text(record.get("channel_name")):
+                        record["channel_name"] = channel
+                    record["position"] = offset
+                    record["positions"][week_label] = offset
+                    record["channels"][week_label] = channel
                     record["genres"][week_label] = normalize_text(nbhd_row["genre"])
                     record["frequencies"][week_label] = nbhd_row["frequency"]
-                    if normalize_text(nbhd_row["channel"]).upper() in FOCUS_CHANNELS:
+                    if channel.upper() in FOCUS_CHANNELS:
                         record["is_reference"] = True
 
         records = list(merged.values())
@@ -794,7 +805,7 @@ def build_nbhd_report() -> dict[str, Any]:
                     item["market"].lower(),
                     item["city"].lower(),
                     item["head_end"].lower(),
-                    item.get("position", 0),
+                    normalize_text(item.get("channel_name")).lower(),
                 ),
             ),
             "message": "",
@@ -815,8 +826,9 @@ def build_nbhd_report() -> dict[str, Any]:
             grouped.setdefault((row["market"], row["city"], row["head_end"]), []).append(row)
 
         for (market, city, head_end), group_rows in grouped.items():
-            for offset, nbhd_row in enumerate_nbhd_positions(group_rows):
-                row_key = "||".join((market, city, head_end, str(offset)))
+            for offset, nbhd_row in build_nbhd_channel_rows(group_rows):
+                channel = normalize_text(nbhd_row["channel"])
+                row_key = comparison_record_key(market, city, head_end, channel)
                 record = merged.setdefault(
                     row_key,
                     {
@@ -824,17 +836,23 @@ def build_nbhd_report() -> dict[str, Any]:
                         "market": market,
                         "city": city,
                         "head_end": head_end,
+                        "channel_name": channel,
                         "position": offset,
+                        "positions": {},
                         "is_reference": False,
                         "channels": {},
                         "genres": {},
                         "frequencies": {},
                     },
                 )
-                record["channels"][week_label] = normalize_text(nbhd_row["channel"])
+                if not normalize_text(record.get("channel_name")):
+                    record["channel_name"] = channel
+                record["position"] = offset
+                record["positions"][week_label] = offset
+                record["channels"][week_label] = channel
                 record["genres"][week_label] = normalize_text(nbhd_row["genre"])
                 record["frequencies"][week_label] = nbhd_row["frequency"]
-                if normalize_text(nbhd_row["channel"]).upper() in FOCUS_CHANNELS:
+                if channel.upper() in FOCUS_CHANNELS:
                     record["is_reference"] = True
 
     records = list(merged.values())
@@ -853,7 +871,7 @@ def build_nbhd_report() -> dict[str, Any]:
                 item["market"].lower(),
                 item["city"].lower(),
                 item["head_end"].lower(),
-                item.get("position", 0),
+                normalize_text(item.get("channel_name")).lower(),
             ),
         ),
         "message": "",
@@ -4540,6 +4558,7 @@ def serialize_nbhd_records(records: list[dict[str, Any]], weeks: list[str]) -> l
             "market": record["market"],
             "city": record["city"],
             "head_end": record["head_end"],
+            "channel_name": record.get("channel_name", ""),
             "position": record.get("position", 0),
             "is_reference": bool(record.get("is_reference")),
             "channels": {week: record["channels"].get(week, "") for week in weeks},
@@ -4554,7 +4573,7 @@ def nbhd_default_visible_weeks(weeks: list[str], count: int = 2) -> list[str]:
     clean_weeks = [normalize_text(week) for week in weeks if normalize_text(week)]
     if not clean_weeks:
         return []
-    return clean_weeks[max(0, len(clean_weeks) - count) :]
+    return clean_weeks
 
 
 def build_nbhd_api_payload(filters: dict[str, str], search: str, force_refresh: bool = False) -> dict[str, Any]:

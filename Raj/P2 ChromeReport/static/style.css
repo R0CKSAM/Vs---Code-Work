@@ -1844,7 +1844,9 @@ body.nbhd-fullscreen-active {
 .nbhd-table th.sticky-city,
 .nbhd-table td.sticky-city,
 .nbhd-table th.sticky-headend,
-.nbhd-table td.sticky-headend {
+.nbhd-table td.sticky-headend,
+.nbhd-table th.sticky-channel,
+.nbhd-table td.sticky-channel {
   border-right: 4px solid #9fb4d1 !important;
 }
 
@@ -1866,6 +1868,11 @@ body.nbhd-fullscreen-active {
 .sticky-headend {
   left: 270px;
   min-width: 150px;
+}
+
+.sticky-channel {
+  left: 420px;
+  min-width: 180px;
 }
 
 .nbhd-table thead .sticky-col {
