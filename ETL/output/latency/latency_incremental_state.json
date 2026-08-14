@@ -2940,8 +2940,8 @@
     },
     "fast|2026-07-31": {
       "date": "2026-07-31",
-      "duration_seconds": 520.646,
-      "processed_at": "2026-08-01T09:18:49",
+      "duration_seconds": 1503.48,
+      "processed_at": "2026-08-14T11:54:48",
       "result": {
         "base_rows": 52760618,
         "rows": {
@@ -2961,12 +2961,14 @@
           {
             "bytes": 98740700,
             "mtime_ns": 1785467742038349600,
-            "name": "part_fast_2026_07_30_0.parquet"
+            "name": "part_fast_2026_07_30_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=07\\day=31\\part_fast_2026_07_30_0.parquet"
           },
           {
             "bytes": 6113192761,
             "mtime_ns": 1785553592674760700,
-            "name": "part_fast_2026_07_31_0.parquet"
+            "name": "part_fast_2026_07_31_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=07\\day=31\\part_fast_2026_07_31_0.parquet"
           }
         ],
         "max_mtime_ns": 1785553592674760700,
@@ -2977,8 +2979,8 @@
     },
     "fast|2026-08-01": {
       "date": "2026-08-01",
-      "duration_seconds": 504.167,
-      "processed_at": "2026-08-02T09:19:08",
+      "duration_seconds": 1309.876,
+      "processed_at": "2026-08-14T12:16:38",
       "result": {
         "base_rows": 50874722,
         "rows": {
@@ -2998,12 +3000,14 @@
           {
             "bytes": 118369628,
             "mtime_ns": 1785553592764647000,
-            "name": "part_fast_2026_07_31_0.parquet"
+            "name": "part_fast_2026_07_31_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=01\\part_fast_2026_07_31_0.parquet"
           },
           {
             "bytes": 5867657943,
             "mtime_ns": 1785639954160852100,
-            "name": "part_fast_2026_08_01_0.parquet"
+            "name": "part_fast_2026_08_01_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=01\\part_fast_2026_08_01_0.parquet"
           }
         ],
         "max_mtime_ns": 1785639954160852100,
@@ -3014,8 +3018,8 @@
     },
     "fast|2026-08-02": {
       "date": "2026-08-02",
-      "duration_seconds": 495.376,
-      "processed_at": "2026-08-03T09:20:50",
+      "duration_seconds": 1127.362,
+      "processed_at": "2026-08-14T12:35:26",
       "result": {
         "base_rows": 49972091,
         "rows": {
@@ -3035,88 +3039,110 @@
           {
             "bytes": 123808641,
             "mtime_ns": 1785639954255905200,
-            "name": "part_fast_2026_08_01_0.parquet"
+            "name": "part_fast_2026_08_01_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=02\\part_fast_2026_08_01_0.parquet"
           },
           {
-            "bytes": 5786587364,
-            "mtime_ns": 1785726325811409400,
-            "name": "part_fast_2026_08_02_0.parquet"
+            "bytes": 5786545064,
+            "mtime_ns": 1786090903674508600,
+            "name": "part_fast_2026_08_02_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=02\\part_fast_2026_08_02_0.parquet"
           }
         ],
-        "max_mtime_ns": 1785726325811409400,
-        "total_bytes": 5910396005
+        "max_mtime_ns": 1786090903674508600,
+        "total_bytes": 5910353705
       },
       "source": "fast",
       "status": "done"
     },
     "fast|2026-08-03": {
       "date": "2026-08-03",
-      "duration_seconds": 18.38,
-      "processed_at": "2026-08-03T09:21:08",
+      "duration_seconds": 1225.388,
+      "processed_at": "2026-08-14T12:55:51",
       "result": {
-        "base_rows": 1807896,
+        "base_rows": 51895527,
         "rows": {
-          "cache_daily": 17,
-          "channel_daily": 21,
-          "daily": 15,
-          "geo_daily": 158,
-          "host_daily": 24,
-          "hourly": 25,
-          "status_daily": 18,
+          "cache_daily": 21,
+          "channel_daily": 23,
+          "daily": 17,
+          "geo_daily": 248,
+          "host_daily": 31,
+          "hourly": 66,
+          "status_daily": 22,
           "summary": 1
         }
       },
       "signature": {
-        "file_count": 1,
+        "file_count": 2,
         "files": [
           {
-            "bytes": 112155282,
-            "mtime_ns": 1785726325795234800,
-            "name": "part_fast_2026_08_02_0.parquet"
+            "bytes": 112189339,
+            "mtime_ns": 1786090903461110600,
+            "name": "part_fast_2026_08_02_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=03\\part_fast_2026_08_02_0.parquet"
+          },
+          {
+            "bytes": 6005620331,
+            "mtime_ns": 1786090889088332800,
+            "name": "part_fast_2026_08_03_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=03\\part_fast_2026_08_03_0.parquet"
           }
         ],
-        "max_mtime_ns": 1785726325795234800,
-        "total_bytes": 112155282
+        "max_mtime_ns": 1786090903461110600,
+        "total_bytes": 6117809670
       },
       "source": "fast",
       "status": "done"
     },
     "fast|2026-08-04": {
       "date": "2026-08-04",
-      "duration_seconds": 16.505,
-      "processed_at": "2026-08-05T13:38:01",
+      "duration_seconds": 1141.469,
+      "processed_at": "2026-08-14T13:14:52",
       "result": {
-        "base_rows": 1580061,
+        "base_rows": 50970934,
         "rows": {
-          "cache_daily": 6,
-          "channel_daily": 10,
-          "daily": 4,
-          "geo_daily": 151,
-          "host_daily": 14,
-          "hourly": 14,
-          "status_daily": 7,
+          "cache_daily": 11,
+          "channel_daily": 13,
+          "daily": 7,
+          "geo_daily": 254,
+          "host_daily": 21,
+          "hourly": 56,
+          "status_daily": 12,
           "summary": 1
         }
       },
       "signature": {
-        "file_count": 1,
+        "file_count": 3,
         "files": [
           {
-            "bytes": 92145530,
-            "mtime_ns": 1785814430078350100,
-            "name": "part_fast_2026_08_03_0.parquet"
+            "bytes": 92207363,
+            "mtime_ns": 1786090889273851900,
+            "name": "part_fast_2026_08_03_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=04\\part_fast_2026_08_03_0.parquet"
+          },
+          {
+            "bytes": 5891808974,
+            "mtime_ns": 1786006586746461400,
+            "name": "part_fast_2026_08_04_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=04\\part_fast_2026_08_04_0.parquet"
+          },
+          {
+            "bytes": 5381,
+            "mtime_ns": 1786010530712786100,
+            "name": "part_fast_2026_08_05_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=04\\part_fast_2026_08_05_0.parquet"
           }
         ],
-        "max_mtime_ns": 1785814430078350100,
-        "total_bytes": 92145530
+        "max_mtime_ns": 1786090889273851900,
+        "total_bytes": 5984021718
       },
       "source": "fast",
       "status": "done"
     },
     "fast|2026-08-05": {
       "date": "2026-08-05",
-      "duration_seconds": 569.415,
-      "processed_at": "2026-08-06T16:22:16",
+      "duration_seconds": 932.418,
+      "processed_at": "2026-08-14T13:30:25",
       "result": {
         "base_rows": 51187947,
         "rows": {
@@ -3136,12 +3162,14 @@
           {
             "bytes": 105245162,
             "mtime_ns": 1786006586879141300,
-            "name": "part_fast_2026_08_04_0.parquet"
+            "name": "part_fast_2026_08_04_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=05\\part_fast_2026_08_04_0.parquet"
           },
           {
             "bytes": 6029175155,
             "mtime_ns": 1786010530701095000,
-            "name": "part_fast_2026_08_05_0.parquet"
+            "name": "part_fast_2026_08_05_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=05\\part_fast_2026_08_05_0.parquet"
           }
         ],
         "max_mtime_ns": 1786010530701095000,
@@ -3152,8 +3180,8 @@
     },
     "fast|2026-08-06": {
       "date": "2026-08-06",
-      "duration_seconds": 982.976,
-      "processed_at": "2026-08-07T17:51:51",
+      "duration_seconds": 941.304,
+      "processed_at": "2026-08-14T13:46:06",
       "result": {
         "base_rows": 54223621,
         "rows": {
@@ -3173,12 +3201,14 @@
           {
             "bytes": 100632103,
             "mtime_ns": 1786010530795279800,
-            "name": "part_fast_2026_08_05_0.parquet"
+            "name": "part_fast_2026_08_05_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=06\\part_fast_2026_08_05_0.parquet"
           },
           {
             "bytes": 6524411591,
             "mtime_ns": 1786088047964145300,
-            "name": "part_fast_2026_08_06_0.parquet"
+            "name": "part_fast_2026_08_06_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=06\\part_fast_2026_08_06_0.parquet"
           }
         ],
         "max_mtime_ns": 1786088047964145300,
@@ -3189,96 +3219,131 @@
     },
     "fast|2026-08-07": {
       "date": "2026-08-07",
-      "duration_seconds": 27.615,
-      "processed_at": "2026-08-07T17:52:19",
+      "duration_seconds": 841.857,
+      "processed_at": "2026-08-14T14:00:08",
       "result": {
-        "base_rows": 1762088,
+        "base_rows": 55655274,
         "rows": {
-          "cache_daily": 15,
+          "cache_daily": 16,
           "channel_daily": 15,
           "daily": 9,
-          "geo_daily": 158,
-          "host_daily": 20,
-          "hourly": 21,
-          "status_daily": 15,
+          "geo_daily": 265,
+          "host_daily": 22,
+          "hourly": 59,
+          "status_daily": 16,
           "summary": 1
         }
       },
       "signature": {
-        "file_count": 1,
+        "file_count": 2,
         "files": [
           {
             "bytes": 107949616,
             "mtime_ns": 1786088048185365700,
-            "name": "part_fast_2026_08_06_0.parquet"
+            "name": "part_fast_2026_08_06_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=07\\part_fast_2026_08_06_0.parquet"
+          },
+          {
+            "bytes": 6503014532,
+            "mtime_ns": 1786681315879105600,
+            "name": "part_fast_2026_08_07_0.parquet",
+            "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=fast\\year=2026\\month=08\\day=07\\part_fast_2026_08_07_0.parquet"
           }
         ],
-        "max_mtime_ns": 1786088048185365700,
-        "total_bytes": 107949616
+        "max_mtime_ns": 1786681315879105600,
+        "total_bytes": 6610964148
       },
       "source": "fast",
       "status": "done"
     },
     "fast|2026-08-08": {
       "date": "2026-08-08",
-      "duration_seconds": 942.38,
-      "processed_at": "2026-08-10T17:02:02",
+      "duration_seconds": 734.648,
+      "processed_at": "2026-08-14T14:12:23",
       "result": {
-        "base_rows": 48402743,
+        "base_rows": 50247329,
         "rows": {
-          "cache_daily": 6,
-          "channel_daily": 10,
-          "daily": 4,
-          "geo_daily": 221,
-          "host_daily": 12,
-          "hourly": 40,
-          "status_daily": 7,
+          "cache_daily": 8,
+          "channel_daily": 11,
+          "daily": 5,
+          "geo_daily": 242,
+          "host_daily": 14,
+          "hourly": 52,
+          "status_daily": 9,
           "summary": 1
         }
       },
       "signature": {
-        "file_count": 1,
+        "file_count": 2,
         "files": [
           {
-            "bytes": 5832551518,
-            "mtime_ns": 1786356549705503200,
-            "name": "part_fast_2026_08_08_0.parquet"
+            "bytes": 114558009,
+            "mtime_ns": 1786681316018756100,
+            "name": "part_fast_2026_08_07_0.parquet",
+            "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=fast\\year=2026\\month=08\\day=08\\part_fast_2026_08_07_0.parquet"
+          },
+          {
+            "bytes": 5832671401,
+            "mtime_ns": 1786681499651569900,
+            "name": "part_fast_2026_08_08_0.parquet",
+            "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=fast\\year=2026\\month=08\\day=08\\part_fast_2026_08_08_0.parquet"
           }
         ],
-        "max_mtime_ns": 1786356549705503200,
-        "total_bytes": 5832551518
+        "max_mtime_ns": 1786681499651569900,
+        "total_bytes": 5947229410
       },
       "source": "fast",
       "status": "done"
     },
     "fast|2026-08-09": {
       "date": "2026-08-09",
-      "error": "fetch_df failed: OutOfMemoryException:              WITH top_geo AS (                 SELECT country, state, city, COUNT(*) AS rows                 FROM latency_base                 GROUP BY 1,2,3                 ORDER BY rows DESC        ",
-      "failed_at": "2026-08-10T19:32:02",
+      "duration_seconds": 711.745,
+      "processed_at": "2026-08-14T14:24:15",
+      "result": {
+        "base_rows": 48957423,
+        "rows": {
+          "cache_daily": 23,
+          "channel_daily": 22,
+          "daily": 15,
+          "geo_daily": 267,
+          "host_daily": 29,
+          "hourly": 76,
+          "status_daily": 24,
+          "summary": 1
+        }
+      },
       "signature": {
-        "file_count": 2,
+        "file_count": 3,
         "files": [
           {
-            "bytes": 107820856,
-            "mtime_ns": 1786356549729918800,
-            "name": "part_fast_2026_08_08_0.parquet"
+            "bytes": 107821586,
+            "mtime_ns": 1786681500304432000,
+            "name": "part_fast_2026_08_08_0.parquet",
+            "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=fast\\year=2026\\month=08\\day=09\\part_fast_2026_08_08_0.parquet"
           },
           {
-            "bytes": 5694227562,
-            "mtime_ns": 1786365563863086900,
-            "name": "part_fast_2026_08_09_0.parquet"
+            "bytes": 5694661564,
+            "mtime_ns": 1786681688922837900,
+            "name": "part_fast_2026_08_09_0.parquet",
+            "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=fast\\year=2026\\month=08\\day=09\\part_fast_2026_08_09_0.parquet"
+          },
+          {
+            "bytes": 212692,
+            "mtime_ns": 1786524441458071000,
+            "name": "part_fast_2026_08_11_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=09\\part_fast_2026_08_11_0.parquet"
           }
         ],
-        "max_mtime_ns": 1786365563863086900,
-        "total_bytes": 5802048418
+        "max_mtime_ns": 1786681688922837900,
+        "total_bytes": 5802695842
       },
       "source": "fast",
-      "status": "failed"
+      "status": "done"
     },
     "fast|2026-08-10": {
       "date": "2026-08-10",
-      "duration_seconds": 703.2,
-      "processed_at": "2026-08-13T19:41:11",
+      "duration_seconds": 898.631,
+      "processed_at": "2026-08-14T14:39:13",
       "result": {
         "base_rows": 56348493,
         "rows": {
@@ -3299,7 +3364,7 @@
             "bytes": 95602626,
             "mtime_ns": 1786365563910965100,
             "name": "part_fast_2026_08_09_0.parquet",
-            "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=fast\\year=2026\\month=08\\day=10\\part_fast_2026_08_09_0.parquet"
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=10\\part_fast_2026_08_09_0.parquet"
           },
           {
             "bytes": 6592755033,
@@ -3316,8 +3381,8 @@
     },
     "fast|2026-08-11": {
       "date": "2026-08-11",
-      "duration_seconds": 753.842,
-      "processed_at": "2026-08-13T19:53:45",
+      "duration_seconds": 803.936,
+      "processed_at": "2026-08-14T14:52:37",
       "result": {
         "base_rows": 57832233,
         "rows": {
@@ -3341,22 +3406,22 @@
             "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=fast\\year=2026\\month=08\\day=11\\part_fast_2026_08_10_0.parquet"
           },
           {
-            "bytes": 6805297564,
-            "mtime_ns": 1786524441252110000,
+            "bytes": 6805400744,
+            "mtime_ns": 1786681928746470000,
             "name": "part_fast_2026_08_11_0.parquet",
             "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=fast\\year=2026\\month=08\\day=11\\part_fast_2026_08_11_0.parquet"
           }
         ],
-        "max_mtime_ns": 1786622151019031600,
-        "total_bytes": 6907793392
+        "max_mtime_ns": 1786681928746470000,
+        "total_bytes": 6907896572
       },
       "source": "fast",
       "status": "done"
     },
     "fast|2026-08-12": {
       "date": "2026-08-12",
-      "duration_seconds": 690.712,
-      "processed_at": "2026-08-13T20:05:16",
+      "duration_seconds": 762.571,
+      "processed_at": "2026-08-14T15:05:20",
       "result": {
         "base_rows": 54822768,
         "rows": {
@@ -3374,8 +3439,8 @@
         "file_count": 2,
         "files": [
           {
-            "bytes": 112511739,
-            "mtime_ns": 1786524441391855300,
+            "bytes": 112569001,
+            "mtime_ns": 1786681928858184200,
             "name": "part_fast_2026_08_11_0.parquet",
             "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=fast\\year=2026\\month=08\\day=12\\part_fast_2026_08_11_0.parquet"
           },
@@ -3386,8 +3451,80 @@
             "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=fast\\year=2026\\month=08\\day=12\\part_fast_2026_08_12_0.parquet"
           }
         ],
-        "max_mtime_ns": 1786598575395343500,
-        "total_bytes": 6510961549
+        "max_mtime_ns": 1786681928858184200,
+        "total_bytes": 6511018811
+      },
+      "source": "fast",
+      "status": "done"
+    },
+    "fast|2026-08-13": {
+      "date": "2026-08-13",
+      "duration_seconds": 957.987,
+      "processed_at": "2026-08-14T15:21:18",
+      "result": {
+        "base_rows": 55468487,
+        "rows": {
+          "cache_daily": 8,
+          "channel_daily": 10,
+          "daily": 4,
+          "geo_daily": 248,
+          "host_daily": 20,
+          "hourly": 58,
+          "status_daily": 9,
+          "summary": 1
+        }
+      },
+      "signature": {
+        "file_count": 2,
+        "files": [
+          {
+            "bytes": 104850085,
+            "mtime_ns": 1786598575527245100,
+            "name": "part_fast_2026_08_12_0.parquet",
+            "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=fast\\year=2026\\month=08\\day=13\\part_fast_2026_08_12_0.parquet"
+          },
+          {
+            "bytes": 6357811634,
+            "mtime_ns": 1786682155340124000,
+            "name": "part_fast_2026_08_13_0.parquet",
+            "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=fast\\year=2026\\month=08\\day=13\\part_fast_2026_08_13_0.parquet"
+          }
+        ],
+        "max_mtime_ns": 1786682155340124000,
+        "total_bytes": 6462661719
+      },
+      "source": "fast",
+      "status": "done"
+    },
+    "fast|2026-08-14": {
+      "date": "2026-08-14",
+      "duration_seconds": 14.634,
+      "processed_at": "2026-08-14T15:21:32",
+      "result": {
+        "base_rows": 1769129,
+        "rows": {
+          "cache_daily": 7,
+          "channel_daily": 10,
+          "daily": 4,
+          "geo_daily": 166,
+          "host_daily": 14,
+          "hourly": 15,
+          "status_daily": 7,
+          "summary": 1
+        }
+      },
+      "signature": {
+        "file_count": 1,
+        "files": [
+          {
+            "bytes": 105947849,
+            "mtime_ns": 1786682155439997900,
+            "name": "part_fast_2026_08_13_0.parquet",
+            "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=fast\\year=2026\\month=08\\day=14\\part_fast_2026_08_13_0.parquet"
+          }
+        ],
+        "max_mtime_ns": 1786682155439997900,
+        "total_bytes": 105947849
       },
       "source": "fast",
       "status": "done"
@@ -8160,13 +8297,13 @@
     },
     "stream|2026-07-31": {
       "date": "2026-07-31",
-      "duration_seconds": 97.215,
-      "processed_at": "2026-08-01T09:21:13",
+      "duration_seconds": 102.336,
+      "processed_at": "2026-08-14T15:33:14",
       "result": {
         "base_rows": 21442028,
         "rows": {
           "cache_daily": 6,
-          "channel_daily": 82,
+          "channel_daily": 88,
           "daily": 3,
           "geo_daily": 307,
           "host_daily": 58,
@@ -8181,12 +8318,14 @@
           {
             "bytes": 37327369,
             "mtime_ns": 1785467773352304700,
-            "name": "part_stream_2026_07_30_0.parquet"
+            "name": "part_stream_2026_07_30_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=07\\day=31\\part_stream_2026_07_30_0.parquet"
           },
           {
             "bytes": 803909722,
             "mtime_ns": 1785553616841075000,
-            "name": "part_stream_2026_07_31_0.parquet"
+            "name": "part_stream_2026_07_31_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=07\\day=31\\part_stream_2026_07_31_0.parquet"
           }
         ],
         "max_mtime_ns": 1785553616841075000,
@@ -8197,13 +8336,13 @@
     },
     "stream|2026-08-01": {
       "date": "2026-08-01",
-      "duration_seconds": 94.079,
-      "processed_at": "2026-08-02T09:21:29",
+      "duration_seconds": 100.527,
+      "processed_at": "2026-08-14T15:34:54",
       "result": {
         "base_rows": 20435805,
         "rows": {
           "cache_daily": 9,
-          "channel_daily": 84,
+          "channel_daily": 90,
           "daily": 4,
           "geo_daily": 314,
           "host_daily": 67,
@@ -8218,12 +8357,14 @@
           {
             "bytes": 63068976,
             "mtime_ns": 1785553616911798100,
-            "name": "part_stream_2026_07_31_0.parquet"
+            "name": "part_stream_2026_07_31_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=01\\part_stream_2026_07_31_0.parquet"
           },
           {
             "bytes": 733374976,
             "mtime_ns": 1785639978403277000,
-            "name": "part_stream_2026_08_01_0.parquet"
+            "name": "part_stream_2026_08_01_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=01\\part_stream_2026_08_01_0.parquet"
           }
         ],
         "max_mtime_ns": 1785639978403277000,
@@ -8234,13 +8375,13 @@
     },
     "stream|2026-08-02": {
       "date": "2026-08-02",
-      "duration_seconds": 87.849,
-      "processed_at": "2026-08-03T09:23:04",
+      "duration_seconds": 86.782,
+      "processed_at": "2026-08-14T15:36:21",
       "result": {
         "base_rows": 19247273,
         "rows": {
           "cache_daily": 7,
-          "channel_daily": 83,
+          "channel_daily": 89,
           "daily": 4,
           "geo_daily": 308,
           "host_daily": 64,
@@ -8255,56 +8396,65 @@
           {
             "bytes": 62674098,
             "mtime_ns": 1785639978493475700,
-            "name": "part_stream_2026_08_01_0.parquet"
+            "name": "part_stream_2026_08_01_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=02\\part_stream_2026_08_01_0.parquet"
           },
           {
-            "bytes": 686195132,
-            "mtime_ns": 1785726358053275400,
-            "name": "part_stream_2026_08_02_0.parquet"
+            "bytes": 686526236,
+            "mtime_ns": 1786090937175397200,
+            "name": "part_stream_2026_08_02_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=02\\part_stream_2026_08_02_0.parquet"
           }
         ],
-        "max_mtime_ns": 1785726358053275400,
-        "total_bytes": 748869230
+        "max_mtime_ns": 1786090937175397200,
+        "total_bytes": 749200334
       },
       "source": "stream",
       "status": "done"
     },
     "stream|2026-08-03": {
       "date": "2026-08-03",
-      "duration_seconds": 7.653,
-      "processed_at": "2026-08-03T09:23:11",
+      "duration_seconds": 108.796,
+      "processed_at": "2026-08-14T15:38:10",
       "result": {
-        "base_rows": 1482244,
+        "base_rows": 22652701,
         "rows": {
-          "cache_daily": 4,
-          "channel_daily": 75,
-          "daily": 2,
-          "geo_daily": 150,
-          "host_daily": 49,
-          "hourly": 12,
-          "status_daily": 10,
+          "cache_daily": 7,
+          "channel_daily": 92,
+          "daily": 4,
+          "geo_daily": 313,
+          "host_daily": 101,
+          "hourly": 61,
+          "status_daily": 21,
           "summary": 1
         }
       },
       "signature": {
-        "file_count": 1,
+        "file_count": 2,
         "files": [
           {
-            "bytes": 54636392,
-            "mtime_ns": 1785726357909729200,
-            "name": "part_stream_2026_08_02_0.parquet"
+            "bytes": 54643818,
+            "mtime_ns": 1786090936968720800,
+            "name": "part_stream_2026_08_02_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=03\\part_stream_2026_08_02_0.parquet"
+          },
+          {
+            "bytes": 830259087,
+            "mtime_ns": 1786090930021428000,
+            "name": "part_stream_2026_08_03_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=03\\part_stream_2026_08_03_0.parquet"
           }
         ],
-        "max_mtime_ns": 1785726357909729200,
-        "total_bytes": 54636392
+        "max_mtime_ns": 1786090936968720800,
+        "total_bytes": 884902905
       },
       "source": "stream",
       "status": "done"
     },
     "stream|2026-08-04": {
       "date": "2026-08-04",
-      "duration_seconds": 97.243,
-      "processed_at": "2026-08-05T13:40:13",
+      "duration_seconds": 108.159,
+      "processed_at": "2026-08-14T15:39:58",
       "result": {
         "base_rows": 22055845,
         "rows": {
@@ -8322,26 +8472,28 @@
         "file_count": 2,
         "files": [
           {
-            "bytes": 68126479,
-            "mtime_ns": 1785814473843710700,
-            "name": "part_stream_2026_08_03_0.parquet"
+            "bytes": 68121842,
+            "mtime_ns": 1786090929980457200,
+            "name": "part_stream_2026_08_03_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=04\\part_stream_2026_08_03_0.parquet"
           },
           {
             "bytes": 789726209,
             "mtime_ns": 1785916325227401000,
-            "name": "part_stream_2026_08_04_0.parquet"
+            "name": "part_stream_2026_08_04_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=04\\part_stream_2026_08_04_0.parquet"
           }
         ],
-        "max_mtime_ns": 1785916325227401000,
-        "total_bytes": 857852688
+        "max_mtime_ns": 1786090929980457200,
+        "total_bytes": 857848051
       },
       "source": "stream",
       "status": "done"
     },
     "stream|2026-08-05": {
       "date": "2026-08-05",
-      "duration_seconds": 106.069,
-      "processed_at": "2026-08-06T16:24:52",
+      "duration_seconds": 102.443,
+      "processed_at": "2026-08-14T15:41:41",
       "result": {
         "base_rows": 22444044,
         "rows": {
@@ -8361,12 +8513,14 @@
           {
             "bytes": 64404803,
             "mtime_ns": 1785916325246091300,
-            "name": "part_stream_2026_08_04_0.parquet"
+            "name": "part_stream_2026_08_04_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=05\\part_stream_2026_08_04_0.parquet"
           },
           {
             "bytes": 804833960,
             "mtime_ns": 1786010565564723600,
-            "name": "part_stream_2026_08_05_0.parquet"
+            "name": "part_stream_2026_08_05_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=05\\part_stream_2026_08_05_0.parquet"
           }
         ],
         "max_mtime_ns": 1786010565564723600,
@@ -8377,8 +8531,8 @@
     },
     "stream|2026-08-06": {
       "date": "2026-08-06",
-      "duration_seconds": 340.117,
-      "processed_at": "2026-08-07T17:58:42",
+      "duration_seconds": 100.299,
+      "processed_at": "2026-08-14T15:43:21",
       "result": {
         "base_rows": 21473494,
         "rows": {
@@ -8398,12 +8552,14 @@
           {
             "bytes": 61095433,
             "mtime_ns": 1786010565815883100,
-            "name": "part_stream_2026_08_05_0.parquet"
+            "name": "part_stream_2026_08_05_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=06\\part_stream_2026_08_05_0.parquet"
           },
           {
             "bytes": 770990730,
             "mtime_ns": 1786088087938844200,
-            "name": "part_stream_2026_08_06_0.parquet"
+            "name": "part_stream_2026_08_06_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=06\\part_stream_2026_08_06_0.parquet"
           }
         ],
         "max_mtime_ns": 1786088087938844200,
@@ -8414,104 +8570,131 @@
     },
     "stream|2026-08-07": {
       "date": "2026-08-07",
-      "duration_seconds": 20.082,
-      "processed_at": "2026-08-07T17:59:02",
+      "duration_seconds": 94.153,
+      "processed_at": "2026-08-14T15:44:55",
       "result": {
-        "base_rows": 1625473,
+        "base_rows": 21731323,
         "rows": {
-          "cache_daily": 6,
-          "channel_daily": 86,
-          "daily": 3,
-          "geo_daily": 183,
-          "host_daily": 57,
-          "hourly": 15,
-          "status_daily": 13,
+          "cache_daily": 16,
+          "channel_daily": 92,
+          "daily": 8,
+          "geo_daily": 323,
+          "host_daily": 65,
+          "hourly": 58,
+          "status_daily": 23,
           "summary": 1
         }
       },
       "signature": {
-        "file_count": 1,
+        "file_count": 2,
         "files": [
           {
             "bytes": 56488066,
             "mtime_ns": 1786088088095226600,
-            "name": "part_stream_2026_08_06_0.parquet"
+            "name": "part_stream_2026_08_06_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=07\\part_stream_2026_08_06_0.parquet"
+          },
+          {
+            "bytes": 763581531,
+            "mtime_ns": 1786551212732132900,
+            "name": "part_stream_2026_08_07_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=07\\part_stream_2026_08_07_0.parquet"
           }
         ],
-        "max_mtime_ns": 1786088088095226600,
-        "total_bytes": 56488066
+        "max_mtime_ns": 1786551212732132900,
+        "total_bytes": 820069597
       },
       "source": "stream",
       "status": "done"
     },
     "stream|2026-08-08": {
       "date": "2026-08-08",
-      "duration_seconds": 260.374,
-      "processed_at": "2026-08-10T17:06:55",
+      "duration_seconds": 85.68,
+      "processed_at": "2026-08-14T15:46:21",
       "result": {
-        "base_rows": 17026367,
+        "base_rows": 18707439,
         "rows": {
-          "cache_daily": 11,
-          "channel_daily": 91,
+          "cache_daily": 13,
+          "channel_daily": 99,
           "daily": 8,
-          "geo_daily": 307,
-          "host_daily": 63,
-          "hourly": 46,
-          "status_daily": 22,
+          "geo_daily": 341,
+          "host_daily": 74,
+          "hourly": 65,
+          "status_daily": 23,
           "summary": 1
         }
       },
       "signature": {
-        "file_count": 1,
+        "file_count": 2,
         "files": [
+          {
+            "bytes": 57558664,
+            "mtime_ns": 1786551212853524800,
+            "name": "part_stream_2026_08_07_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=08\\part_stream_2026_08_07_0.parquet"
+          },
           {
             "bytes": 652738558,
             "mtime_ns": 1786356600289601400,
-            "name": "part_stream_2026_08_08_0.parquet"
+            "name": "part_stream_2026_08_08_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=08\\part_stream_2026_08_08_0.parquet"
           }
         ],
-        "max_mtime_ns": 1786356600289601400,
-        "total_bytes": 652738558
+        "max_mtime_ns": 1786551212853524800,
+        "total_bytes": 710297222
       },
       "source": "stream",
       "status": "done"
     },
     "stream|2026-08-09": {
       "date": "2026-08-09",
-      "duration_seconds": 24.426,
-      "processed_at": "2026-08-10T17:07:19",
+      "duration_seconds": 73.557,
+      "processed_at": "2026-08-14T15:47:34",
       "result": {
-        "base_rows": 1598243,
+        "base_rows": 17911447,
         "rows": {
-          "cache_daily": 6,
-          "channel_daily": 88,
-          "daily": 4,
-          "geo_daily": 171,
-          "host_daily": 58,
-          "hourly": 17,
-          "status_daily": 14,
+          "cache_daily": 23,
+          "channel_daily": 104,
+          "daily": 17,
+          "geo_daily": 322,
+          "host_daily": 80,
+          "hourly": 85,
+          "status_daily": 35,
           "summary": 1
         }
       },
       "signature": {
-        "file_count": 1,
+        "file_count": 3,
         "files": [
           {
             "bytes": 58487050,
             "mtime_ns": 1786356600300331800,
-            "name": "part_stream_2026_08_08_0.parquet"
+            "name": "part_stream_2026_08_08_0.parquet",
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=09\\part_stream_2026_08_08_0.parquet"
+          },
+          {
+            "bytes": 631412529,
+            "mtime_ns": 1786682289672300600,
+            "name": "part_stream_2026_08_09_0.parquet",
+            "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=08\\day=09\\part_stream_2026_08_09_0.parquet"
+          },
+          {
+            "bytes": 9143,
+            "mtime_ns": 1786682340964388800,
+            "name": "part_stream_2026_08_11_0.parquet",
+            "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=08\\day=09\\part_stream_2026_08_11_0.parquet"
           }
         ],
-        "max_mtime_ns": 1786356600300331800,
-        "total_bytes": 58487050
+        "max_mtime_ns": 1786682340964388800,
+        "total_bytes": 689908722
       },
       "source": "stream",
       "status": "done"
     },
     "stream|2026-08-10": {
       "date": "2026-08-10",
-      "duration_seconds": 113.618,
-      "processed_at": "2026-08-13T20:07:50",
+      "duration_seconds": 91.103,
+      "processed_at": "2026-08-14T15:49:06",
       "result": {
         "base_rows": 22515834,
         "rows": {
@@ -8532,7 +8715,7 @@
             "bytes": 56242677,
             "mtime_ns": 1786365593198529900,
             "name": "part_stream_2026_08_09_0.parquet",
-            "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=08\\day=10\\part_stream_2026_08_09_0.parquet"
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=10\\part_stream_2026_08_09_0.parquet"
           },
           {
             "bytes": 794268600,
@@ -8549,8 +8732,8 @@
     },
     "stream|2026-08-11": {
       "date": "2026-08-11",
-      "duration_seconds": 117.335,
-      "processed_at": "2026-08-13T20:09:47",
+      "duration_seconds": 88.491,
+      "processed_at": "2026-08-14T15:50:34",
       "result": {
         "base_rows": 23545160,
         "rows": {
@@ -8574,22 +8757,22 @@
             "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=08\\day=11\\part_stream_2026_08_10_0.parquet"
           },
           {
-            "bytes": 820229167,
-            "mtime_ns": 1786524502674646900,
+            "bytes": 820381793,
+            "mtime_ns": 1786682340865839100,
             "name": "part_stream_2026_08_11_0.parquet",
             "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=08\\day=11\\part_stream_2026_08_11_0.parquet"
           }
         ],
-        "max_mtime_ns": 1786524502674646900,
-        "total_bytes": 885783972
+        "max_mtime_ns": 1786682340865839100,
+        "total_bytes": 885936598
       },
       "source": "stream",
       "status": "done"
     },
     "stream|2026-08-12": {
       "date": "2026-08-12",
-      "duration_seconds": 110.325,
-      "processed_at": "2026-08-13T20:11:38",
+      "duration_seconds": 92.51,
+      "processed_at": "2026-08-14T15:52:07",
       "result": {
         "base_rows": 22359737,
         "rows": {
@@ -8610,7 +8793,7 @@
             "bytes": 57657472,
             "mtime_ns": 1786524502757077200,
             "name": "part_stream_2026_08_11_0.parquet",
-            "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=08\\day=12\\part_stream_2026_08_11_0.parquet"
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=12\\part_stream_2026_08_11_0.parquet"
           },
           {
             "bytes": 780121781,
@@ -8621,6 +8804,78 @@
         ],
         "max_mtime_ns": 1786598622197724600,
         "total_bytes": 837779253
+      },
+      "source": "stream",
+      "status": "done"
+    },
+    "stream|2026-08-13": {
+      "date": "2026-08-13",
+      "duration_seconds": 91.207,
+      "processed_at": "2026-08-14T15:53:38",
+      "result": {
+        "base_rows": 22521498,
+        "rows": {
+          "cache_daily": 7,
+          "channel_daily": 93,
+          "daily": 4,
+          "geo_daily": 302,
+          "host_daily": 65,
+          "hourly": 57,
+          "status_daily": 20,
+          "summary": 1
+        }
+      },
+      "signature": {
+        "file_count": 2,
+        "files": [
+          {
+            "bytes": 57678036,
+            "mtime_ns": 1786598622423875500,
+            "name": "part_stream_2026_08_12_0.parquet",
+            "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=08\\day=13\\part_stream_2026_08_12_0.parquet"
+          },
+          {
+            "bytes": 789957808,
+            "mtime_ns": 1786682391075785300,
+            "name": "part_stream_2026_08_13_0.parquet",
+            "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=08\\day=13\\part_stream_2026_08_13_0.parquet"
+          }
+        ],
+        "max_mtime_ns": 1786682391075785300,
+        "total_bytes": 847635844
+      },
+      "source": "stream",
+      "status": "done"
+    },
+    "stream|2026-08-14": {
+      "date": "2026-08-14",
+      "duration_seconds": 5.597,
+      "processed_at": "2026-08-14T15:53:43",
+      "result": {
+        "base_rows": 1638045,
+        "rows": {
+          "cache_daily": 5,
+          "channel_daily": 87,
+          "daily": 3,
+          "geo_daily": 167,
+          "host_daily": 55,
+          "hourly": 16,
+          "status_daily": 13,
+          "summary": 1
+        }
+      },
+      "signature": {
+        "file_count": 1,
+        "files": [
+          {
+            "bytes": 56810839,
+            "mtime_ns": 1786682391174712600,
+            "name": "part_stream_2026_08_13_0.parquet",
+            "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=08\\day=14\\part_stream_2026_08_13_0.parquet"
+          }
+        ],
+        "max_mtime_ns": 1786682391174712600,
+        "total_bytes": 56810839
       },
       "source": "stream",
       "status": "done"

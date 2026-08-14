@@ -2,6 +2,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$Channel,
     [string[]]$Input = @(),
+    [string]$RawRoot = "",
     [switch]$DetailedLogs
 )
 
@@ -14,10 +15,24 @@ if (-not (Test-Path -LiteralPath $Python)) {
     throw "Python virtual environment not found: $Python"
 }
 if ($Input.Count -eq 0) {
-    $Input = @(Get-ChildItem (Join-Path $PSScriptRoot "data\raw") -Filter "ASRUN-*.txt" -File | ForEach-Object FullName)
+    if (-not $RawRoot) {
+        $RawRoot = if ($env:VG_ASRUN_RAW_DIR) {
+            $env:VG_ASRUN_RAW_DIR
+        } else {
+            "Z:\Veto Logs Backup\DO NOT DELETE\source=AsRUN"
+        }
+    }
+    if (-not (Test-Path -LiteralPath $RawRoot)) {
+        throw "ASRUN source folder not found: $RawRoot"
+    }
+    $Input = @(
+        Get-ChildItem -LiteralPath $RawRoot -Filter "ASRUN-*.txt" -File |
+            Sort-Object Name |
+            ForEach-Object FullName
+    )
 }
 if ($Input.Count -eq 0) {
-    throw "Put ASRUN .txt files in $PSScriptRoot\data\raw or supply -Input."
+    throw "No ASRUN-DDMMYY.txt files found in $RawRoot. Add source files there or supply -Input."
 }
 
 $BuilderArgs = @($Builder, "--channel", $Channel, "--input") + $Input

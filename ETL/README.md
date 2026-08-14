@@ -66,6 +66,33 @@ python run.py overview        # rebuild overview data + dashboard
 python run.py sync-yesterday  # rclone yesterday, then pipeline
 ```
 
+## Crash recovery and missed-day catch-up
+
+`run_recovery_pipeline.ps1` is the scheduled entry point. It keeps a durable
+checkpoint in `output\state\recovery_backlog.json`, runs missing dates oldest
+first, and calls `run_daily_pipeline.ps1 -Date YYYY-MM-DD` for each date. A
+crash never advances the checkpoint, so the same date resumes after restart.
+
+Intermediate backlog dates skip final watch/overview rendering and lake
+archiving. The last backlog date performs the full refresh and archive. ETL
+dates run serially because the lake/profile writers are stateful; the existing
+pipeline lock plus a recovery mutex prevents duplicate runs.
+
+Install or refresh the Windows task:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install_recovery_task.ps1
+```
+
+The task runs at 7:00 AM and when `Intern` logs on after a restart. It uses an
+interactive user trigger because mapped `Z:` is unavailable to SYSTEM before
+login. Missed starts run as soon as possible, and failures retry every 15
+minutes. Preview the detected backlog without processing data:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\run_recovery_pipeline.ps1 -DryRun
+```
+
 Pass advanced pipeline options after `--`:
 
 ```powershell
@@ -88,6 +115,8 @@ python run.py all -- --base ".\data"
 - `--etl1-prefs-file` to choose the `001.py` column preference JSON
 - `--stage-threads`, `--stage-memory`, and `--stage-max-temp-size` to raise 02/03 DuckDB resources for large repairs
 - `--stage-compression snappy` for faster temporary final-clean writes when storage is available
+- `--cleanup-daily-intermediates` to remove a validated daily run's raw `.gz` and stage parquet files after all outputs finish
+- `--plan-daily-intermediate-cleanup` to validate and report reclaimable storage without deleting anything
 
 ## Path controls
 
@@ -139,6 +168,9 @@ Daily download check flow:
 - after the watch profile is merged, the gate reconciles source row totals and checks
   canonical channel volumes before any dashboard is published
 - validation reports are written to `output\validation\daily_delivery`
+- normal `sync-yesterday` runs then delete only the processed date's raw `.gz`, stage
+  parquet, and final-clean files; the validated lake and a per-file manifest under
+  `output\cleanup` are retained
 
 Channel-volume findings are review warnings by default. Make them blocking for a
 scheduled production run with `--strict-channel-validation`. Use
@@ -154,13 +186,27 @@ Fast/manual run switches:
 
 ```powershell
 python run.py sync-yesterday -- -SkipVerifyAfterSync -SkipPostVerifyDelay
+python run.py sync-yesterday -- -KeepProcessedInputs  # disable automatic cleanup for this run
+python run.py sync-yesterday -- -SkipLakeArchive      # keep all lake partitions on D for this run
 ```
+
+Cleanup is refused unless the full-day source checks and exact profile reconciliation
+both pass. It is also disabled for partial/micro-batch runs. Once intermediates are
+removed, dashboard and mart reruns still work from the lake, but rebuilding that lake
+partition requires downloading the raw day again.
 
 The scheduled daily launcher defaults to the tested fast workstation profile:
 
-- 6 raw-conversion workers
-- 6 DuckDB threads and an 18 GB memory ceiling for ETL stages, profiling, and marts
+- 10 raw-conversion workers
+- 10 DuckDB threads and a 22 GB memory ceiling for ETL stages, profiling, and marts
 - up to 200 GB of DuckDB spill under `Z:\Veto Logs Backup\DO NOT DELETE\Temp` when available
+- two hot IST lake dates on D; older validated partitions are verified and archived to
+  `Z:\Veto Logs Backup\DO NOT DELETE` after a successful daily pipeline
+
+The lake archive runs a dry plan before execution, preserves the more complete
+copy of any repeated logical Parquet file, and moves displaced archive versions
+under `delete temp\lake_conflicts` for rollback review. Override the defaults with
+`-ArchiveLakeRoot` and `-HotLakeRetentionDays` (minimum 2).
 
 All limits remain explicit PowerShell parameters. For example, a lower-resource run can use:
 

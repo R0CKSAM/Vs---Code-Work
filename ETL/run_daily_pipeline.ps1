@@ -30,24 +30,29 @@
     [switch]$RunDeviceDecode,
     [switch]$StrictPipeline,
     [switch]$SingleSourceMode,
-    # Fast workstation defaults: tuned for the 6-core / 32 GB ETL host.
+    # Aggressive workstation defaults: tuned for the 6-core / 12-thread, 32 GB ETL host.
     # Every value remains overridable for a constrained or concurrent run.
-    [int]$Etl1Workers = 6,
-    [int]$StageThreads = 6,
-    [string]$StageMemory = "18GB",
+    [int]$Etl1Workers = 10,
+    [int]$StageThreads = 10,
+    [string]$StageMemory = "22GB",
     [string]$StageMaxTempSize = "200GB",
-    [int]$DeepProfileThreads = 6,
-    [string]$DeepProfileMemory = "18GB",
+    [int]$DeepProfileThreads = 10,
+    [string]$DeepProfileMemory = "22GB",
     [string]$DeepProfileMaxTempSize = "200GB",
     [string]$DeepProfileTempDir = "",
-    [int]$ConcurrencyThreads = 6,
-    [string]$ConcurrencyMemory = "18GB",
-    [int]$LatencyThreads = 6,
-    [string]$LatencyMemory = "18GB",
-    [int]$IdentityThreads = 6,
-    [string]$IdentityMemory = "18GB",
-    [int]$ContentThreads = 6,
-    [string]$ContentMemory = "18GB",
+    [int]$ConcurrencyThreads = 10,
+    [string]$ConcurrencyMemory = "22GB",
+    [int]$LatencyThreads = 10,
+    [string]$LatencyMemory = "22GB",
+    [int]$IdentityThreads = 10,
+    [string]$IdentityMemory = "22GB",
+    [int]$ContentThreads = 10,
+    [string]$ContentMemory = "22GB",
+    [switch]$KeepProcessedInputs,
+    [string]$ArchiveLakeRoot = "Z:\Veto Logs Backup\DO NOT DELETE",
+    [ValidateRange(2, 31)]
+    [int]$HotLakeRetentionDays = 2,
+    [switch]$SkipLakeArchive,
     [ValidateSet("zstd", "snappy", "lz4", "gzip", "brotli", "none")]
     [string]$Etl1Compression = "zstd"
 )
@@ -434,6 +439,14 @@ try {
     if ($Etl1Compression) {
         $pipelineArgs += @("--etl1-compression", $Etl1Compression)
     }
+    if (-not $SingleSourceMode) {
+        if ($KeepProcessedInputs) {
+            Write-Host "[$(Get-Date -Format o)] Retention: keeping raw and stage intermediates by request."
+        } else {
+            $pipelineArgs += "--cleanup-daily-intermediates"
+            Write-Host "[$(Get-Date -Format o)] Retention: validated daily raw/stage intermediates will be removed after pipeline success."
+        }
+    }
     $pipelineArgs += @(
         "--stage-threads", $StageThreads.ToString(),
         "--stage-memory", $StageMemory,
@@ -471,6 +484,44 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "run_pipeline.py failed with exit code $LASTEXITCODE" }
 
     Write-Host "[$(Get-Date -Format o)] Pipeline completed."
+
+    if (-not $SingleSourceMode -and -not $SkipLakeArchive) {
+        $HotLakeRoot = Join-Path $DefaultLocalRoot "lake"
+        $LakeArchiver = Join-Path $WorkspaceRoot "src\tools\archive_lake_partitions.py"
+        $ArchiveThrough = $TargetDate.Date.AddDays(1 - $HotLakeRetentionDays)
+        $ArchiveAuditDir = Join-Path $WorkspaceRoot "output\lake_archive"
+        $ArchiveQuarantine = Join-Path $ArchiveLakeRoot "delete temp\lake_conflicts"
+        $PipelineLock = Join-Path $WorkspaceRoot "output\state\pipeline.lock"
+
+        if (-not (Test-Path -LiteralPath $ArchiveLakeRoot)) {
+            Write-Warning "Lake archive skipped because the archive root is unavailable: $ArchiveLakeRoot"
+        } elseif (-not (Test-Path -LiteralPath $LakeArchiver)) {
+            Write-Warning "Lake archive skipped because the archiver is missing: $LakeArchiver"
+        } else {
+            $ArchiveArgs = @(
+                $LakeArchiver,
+                "--source-root", $HotLakeRoot,
+                "--archive-root", $ArchiveLakeRoot,
+                "--through", $ArchiveThrough.ToString("yyyy-MM-dd"),
+                "--sources", "fast,stream",
+                "--quarantine-root", $ArchiveQuarantine,
+                "--audit-dir", $ArchiveAuditDir,
+                "--pipeline-lock", $PipelineLock
+            )
+            Write-Host "[$(Get-Date -Format o)] Lake retention: keeping $HotLakeRetentionDays IST partition dates hot; archiving through $($ArchiveThrough.ToString('yyyy-MM-dd'))."
+            & $DefaultVenvPython @ArchiveArgs
+            if ($LASTEXITCODE -ne 0) {
+                throw "Lake archive dry run failed with exit code $LASTEXITCODE"
+            }
+            & $DefaultVenvPython @ArchiveArgs --execute
+            if ($LASTEXITCODE -ne 0) {
+                throw "Lake archive transfer failed with exit code $LASTEXITCODE"
+            }
+            Write-Host "[$(Get-Date -Format o)] Lake retention completed."
+        }
+    } elseif ($SkipLakeArchive) {
+        Write-Host "[$(Get-Date -Format o)] Lake retention skipped by request."
+    }
 } catch {
     Write-Error "[FAILED] $($_.Exception.Message)"
     throw

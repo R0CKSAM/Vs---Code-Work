@@ -39,7 +39,8 @@ except ModuleNotFoundError:
 LOGGER = logging.getLogger("veto.asrun")
 HERE = Path(__file__).resolve()
 DEMO_ROOT = HERE.parents[1]
-RAW_DIR = DEMO_ROOT / "data" / "raw"
+DEFAULT_ASRUN_RAW_DIR = Path(r"Z:\Veto Logs Backup\DO NOT DELETE\source=AsRUN")
+RAW_DIR = Path(os.getenv("VG_ASRUN_RAW_DIR", str(DEFAULT_ASRUN_RAW_DIR)))
 PARSED_DIR = DEMO_ROOT / "data" / "parsed"
 CONFIG_DIR = DEMO_ROOT / "config"
 OUTPUT_DIR = DEMO_ROOT / "output"
@@ -2794,7 +2795,8 @@ body.youtube-chart-expanded { overflow: hidden; }
 @media (max-width: 460px) {
   .title-group { display: block; }
   .source-label { display: block; margin-top: 2px; }
-  .meta { display: grid; gap: 2px; }
+  .meta { display: grid; gap: 2px; white-space: normal; }
+  .meta > span { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
   .filters .period-field { flex-basis: calc(50% - 32px); }
   .grid { grid-template-columns: 1fr; }
   .youtube-metrics { grid-template-columns: 1fr; }
@@ -8106,7 +8108,12 @@ bootstrapDashboard();
 def main() -> None:
     """Build source marts, write lazy payload sidecars, and publish the dashboard."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--input", type=Path, nargs="+", help="One or more ASRUN .txt files. Defaults to data/raw/*.txt.")
+    parser.add_argument(
+        "--input",
+        type=Path,
+        nargs="+",
+        help=f"One or more ASRUN .txt files. Defaults to {RAW_DIR}\\ASRUN-*.txt.",
+    )
     parser.add_argument("--channel", required=True, help="Canonical Veto channel for these ASRUN files.")
     parser.add_argument(
         "--identity-minute",

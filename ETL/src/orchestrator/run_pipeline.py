@@ -1037,6 +1037,20 @@ def main() -> None:
         default=14,
         help="When running a daily ETL, recheck this many recent days in lake and downstream incremental marts.",
     )
+    cleanup_group = parser.add_mutually_exclusive_group()
+    cleanup_group.add_argument(
+        "--cleanup-daily-intermediates",
+        action="store_true",
+        help=(
+            "After a successful validated daily pipeline, delete that date's raw .gz, "
+            "stage parquet, and final-clean files. The lake and an audit manifest are retained."
+        ),
+    )
+    cleanup_group.add_argument(
+        "--plan-daily-intermediate-cleanup",
+        action="store_true",
+        help="Validate and write the daily cleanup manifest without deleting files.",
+    )
 
     # Deep profile controls
     parser.add_argument(
@@ -1486,6 +1500,10 @@ def main() -> None:
         etl_root,
         str(Path("src") / "tools" / "validate_daily_delivery.py"),
     )
+    cleanup_intermediates_script = _local_script(
+        etl_root,
+        str(Path("src") / "tools" / "cleanup_daily_intermediates.py"),
+    )
     overview_generator_script = _local_script(
         etl_root,
         str(Path("src") / "overview" / "overViewGenerator.py"),
@@ -1583,6 +1601,9 @@ def main() -> None:
         str(Path("src") / "dashboards" / "masterDashboard" / "generate_master_dashboard.py"),
     )
 
+    daily_raw_root: Path | None = None
+    daily_sources: list[tuple[str, str]] = []
+    batch_id = ""
     if not args.skip_etl:
         if args.etl1_daily_date:
             try:
@@ -1600,7 +1621,6 @@ def main() -> None:
             batch_id = _safe_source_slug(args.etl1_batch_id) if args.etl1_batch_id else ""
             active_source_ids: list[str] = []
             stage_jobs: list[dict[str, str]] = []
-            daily_sources = []
             if args.etl1_sources in ("both", "stream"):
                 daily_sources.append(("stream", args.etl1_stream_name))
             if args.etl1_sources in ("both", "fast"):
@@ -2565,10 +2585,17 @@ def main() -> None:
             source_end = latency_end
             latency_step_threads = max(1, int(args.latency_threads))
             if latency_source == "fast":
-                # FAST latency days are much larger than STREAM; clamping only
-                # this source prevents DuckDB memory pressure without slowing
-                # the smaller STREAM pass.
-                latency_step_threads = min(latency_step_threads, 2)
+                # FAST days are larger than STREAM. A well-provisioned daily run
+                # can safely use four workers, while recovery runs with a small
+                # memory ceiling retain the conservative two-worker clamp.
+                latency_memory_gb = _parse_memory_limit_gb(args.latency_memory)
+                if latency_memory_gb and latency_memory_gb >= 20:
+                    fast_thread_cap = 6
+                elif latency_memory_gb and latency_memory_gb >= 12:
+                    fast_thread_cap = 4
+                else:
+                    fast_thread_cap = 2
+                latency_step_threads = min(latency_step_threads, fast_thread_cap)
             latency_cmd = [
                 python,
                 str(latency_incremental_script),
@@ -2829,6 +2856,47 @@ def main() -> None:
         )
     else:
         print("\n[skip] watch-hours dashboard skipped.")
+
+    cleanup_requested = args.cleanup_daily_intermediates or args.plan_daily_intermediate_cleanup
+    if cleanup_requested:
+        if args.skip_etl or not args.etl1_daily_date or daily_raw_root is None:
+            raise SystemExit("Daily intermediate cleanup requires a non-skipped --etl1-daily-date run.")
+        if batch_id:
+            raise SystemExit("Daily intermediate cleanup is disabled for partial/micro-batch runs.")
+        if args.skip_data_validation:
+            raise SystemExit("Daily intermediate cleanup requires data validation.")
+
+        cleanup_cmd = [
+            python,
+            str(cleanup_intermediates_script),
+            "--base",
+            str(base_root),
+            "--lake",
+            str(lake_root),
+            "--raw-root",
+            str(daily_raw_root),
+            "--date",
+            args.etl1_daily_date,
+            "--sources",
+            ",".join(source_key for source_key, _ in daily_sources),
+            "--stream-name",
+            args.etl1_stream_name,
+            "--fast-name",
+            args.etl1_fast_name,
+            "--validation-report",
+            str(output_root / "validation" / "daily_delivery" / "daily_delivery_validation_latest.json"),
+            "--audit-dir",
+            str(output_root / "cleanup"),
+        ]
+        if args.cleanup_daily_intermediates and not args.dry_run:
+            cleanup_cmd.append("--execute")
+        run(
+            cleanup_cmd,
+            cwd=etl_root,
+            env=env,
+            step_name="daily_intermediate_cleanup",
+            log_dir=log_dir,
+        )
 
     print("\nPipeline complete.")
     if RUN_RECORDER is not None:

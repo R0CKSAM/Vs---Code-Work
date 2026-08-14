@@ -5,7 +5,8 @@ inside the daily FAST/STREAM ETL yet.
 
 ## Folder layout
 
-- `data/raw`: daily ASRUN text files.
+- `Z:\Veto Logs Backup\DO NOT DELETE\source=AsRUN`: authoritative daily ASRUN text files.
+- `data/raw`: retained only as an empty repository placeholder.
 - `data/parsed`: normalized Parquet data produced from those files.
 - `config/creative_brand_map.csv`: optional manual creative-to-brand mapping.
 - `output`: the static stakeholder HTML dashboard and a CSV export.
@@ -13,22 +14,31 @@ inside the daily FAST/STREAM ETL yet.
 
 ## Daily standalone run
 
-1. Put each daily file in `data/raw` using exactly `ASRUN-DDMMYY.txt`, for example `ASRUN-160726.txt`.
+1. Put each daily file in `Z:\Veto Logs Backup\DO NOT DELETE\source=AsRUN` using exactly `ASRUN-DDMMYY.txt`, for example `ASRUN-160726.txt`.
 2. From `ETL`, run:
 
 ```powershell
 .\asrun_demo\run_demo.ps1 -Channel "Unassigned - stakeholder mapping required"
 ```
 
-The runner reads every valid daily ASRUN file in `data/raw`, rebuilds the combined
+The runner reads every valid daily ASRUN file in the Z-drive source folder, rebuilds the combined
 Parquet, CSV, and static HTML dashboard, and overwrites only the demo outputs.
 It is fully standalone today; it is not part of the daily FAST/STREAM ETL yet.
+
+Override the source folder for a one-off run with `-RawRoot`, or set
+`VG_ASRUN_RAW_DIR` for a persistent environment-specific override:
+
+```powershell
+.\asrun_demo\run_demo.ps1 `
+  -Channel "Unassigned - stakeholder mapping required" `
+  -RawRoot "X:\alternate\source=AsRUN"
+```
 
 To run a specific file manually:
 
 ```powershell
 .\venv\Scripts\python.exe .\asrun_demo\src\build_asrun_demo.py `
-  --input .\asrun_demo\data\raw\ASRUN-150726.txt `
+  --input "Z:\Veto Logs Backup\DO NOT DELETE\source=AsRUN\ASRUN-150726.txt" `
   --channel "Unassigned - stakeholder mapping required"
 ```
 
