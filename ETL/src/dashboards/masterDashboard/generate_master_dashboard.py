@@ -180,6 +180,7 @@ def load_common_module(module_name: str, file_name: str) -> Any:
 
 _chartjs = load_common_module("veto_master_chartjs", "chartjs.py")
 _render = load_common_module("veto_master_render", "render.py")
+_publication_dates = load_common_module("veto_master_publication_dates", "publication_dates.py")
 load_chartjs = _chartjs.load_chartjs
 chartjs_script = _render.chartjs_script
 json_blob = _render.json_blob
@@ -263,7 +264,7 @@ def common_source_ranges(
     frames: dict[str, pd.DataFrame],
     identity_available: bool,
 ) -> list[dict[str, str]]:
-    latest_completed = (datetime.now(IST_ZONE).date() - timedelta(days=1)).isoformat()
+    latest_completed = _publication_dates.latest_completed_ist_date_text()
     bounds = {name: source_bounds(frame) for name, frame in frames.items()}
     sources = sorted(set(bounds["watch_source"]) & set(bounds["watch_channel"]) & set(bounds["views_source"]) & set(bounds["views_channel"]))
     ranges: list[dict[str, str]] = []
@@ -1228,7 +1229,7 @@ def build_data(output_root: Path, title: str) -> tuple[dict[str, Any], pd.DataFr
     )
     source_daily_records = dataframe_records(source_daily)
     channel_daily_records = dataframe_records(channel_daily)
-    latest_completed = (created.date() - timedelta(days=1)).isoformat()
+    latest_completed = _publication_dates.latest_completed_ist_date_text()
 
     metric_columns = ["watch_hours", "clips_watched", "ip_users", "total_views"]
     source_metrics = source_daily[metric_columns].apply(pd.to_numeric, errors="coerce")

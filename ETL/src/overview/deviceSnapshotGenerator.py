@@ -35,21 +35,22 @@ DEFAULT_DAILY_CSV_OUT = Path(os.getenv("VG_DEVICE_DAILY_OUT", str(ETL_ROOT / "ou
 IST_OFFSET_SECONDS = 19_800
 
 
-def load_lake_partitions_module():
-    module_path = ETL_ROOT / "src" / "common" / "lake_partitions.py"
-    spec = importlib.util.spec_from_file_location("veto_device_lake_partitions", module_path)
+def load_common_module(module_name: str, file_name: str):
+    module_path = ETL_ROOT / "src" / "common" / file_name
+    spec = importlib.util.spec_from_file_location(module_name, module_path)
     if spec is None or spec.loader is None:
-        raise RuntimeError(f"Cannot load lake partition helpers: {module_path}")
+        raise RuntimeError(f"Cannot load common ETL helper: {module_path}")
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
 
 
-_lake_partitions = load_lake_partitions_module()
+_lake_partitions = load_common_module("veto_device_lake_partitions", "lake_partitions.py")
 discover_lake_partitions = _lake_partitions.discover_partitions
 parquet_globs = _lake_partitions.parquet_globs
 resolve_lake_roots = _lake_partitions.resolve_lake_roots
+_publication_dates = load_common_module("veto_device_publication_dates", "publication_dates.py")
 DAILY_COLUMNS = [
     "source",
     "device_id",
@@ -109,8 +110,7 @@ def ist_date_sql(epoch_expr: str) -> str:
 
 
 def latest_completed_ist_date() -> str:
-    now_ist = datetime.now(timezone.utc) + timedelta(seconds=IST_OFFSET_SECONDS)
-    return (now_ist.date() - timedelta(days=1)).isoformat()
+    return _publication_dates.latest_completed_ist_date_text()
 
 
 def log_step(step: int, total: int, message: str) -> None:

@@ -48,11 +48,13 @@ def _load_common_module(module_name: str, file_name: str) -> Any:
 
 _chartjs_module = _load_common_module("veto_common_chartjs", "chartjs.py")
 _render_module = _load_common_module("veto_common_render", "render.py")
+_publication_dates_module = _load_common_module("veto_common_publication_dates", "publication_dates.py")
 
 load_chartjs = _chartjs_module.load_chartjs
 chartjs_script = _render_module.chartjs_script
 json_blob = _render_module.json_blob
 render_template = _render_module.render_template
+latest_completed_ist_date_text = _publication_dates_module.latest_completed_ist_date_text
 
 DEFAULT_CHARTJS_CACHE = ETL_ROOT / "output" / "cache" / "chartjs" / "chart.umd.min.js"
 
@@ -173,7 +175,7 @@ def read_optional_parquet(path: Path) -> pd.DataFrame:
 
 def latest_completed_ist_date() -> str:
     """Static concurrency reports should only expose fully completed IST dates."""
-    return (datetime.now(IST).date() - timedelta(days=1)).isoformat()
+    return latest_completed_ist_date_text()
 
 
 def filter_completed_frame(df: pd.DataFrame, date_col: str = "log_date") -> pd.DataFrame:

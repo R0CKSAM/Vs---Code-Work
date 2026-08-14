@@ -30,19 +30,24 @@
     [switch]$RunDeviceDecode,
     [switch]$StrictPipeline,
     [switch]$SingleSourceMode,
-    [int]$Etl1Workers = 2,
-    [int]$DeepProfileThreads = 2,
-    [string]$DeepProfileMemory = "4GB",
+    # Fast workstation defaults: tuned for the 6-core / 32 GB ETL host.
+    # Every value remains overridable for a constrained or concurrent run.
+    [int]$Etl1Workers = 6,
+    [int]$StageThreads = 6,
+    [string]$StageMemory = "18GB",
+    [string]$StageMaxTempSize = "200GB",
+    [int]$DeepProfileThreads = 6,
+    [string]$DeepProfileMemory = "18GB",
     [string]$DeepProfileMaxTempSize = "200GB",
     [string]$DeepProfileTempDir = "",
-    [int]$ConcurrencyThreads = 2,
-    [string]$ConcurrencyMemory = "4GB",
-    [int]$LatencyThreads = 2,
-    [string]$LatencyMemory = "4GB",
-    [int]$IdentityThreads = 2,
-    [string]$IdentityMemory = "4GB",
-    [int]$ContentThreads = 2,
-    [string]$ContentMemory = "4GB",
+    [int]$ConcurrencyThreads = 6,
+    [string]$ConcurrencyMemory = "18GB",
+    [int]$LatencyThreads = 6,
+    [string]$LatencyMemory = "18GB",
+    [int]$IdentityThreads = 6,
+    [string]$IdentityMemory = "18GB",
+    [int]$ContentThreads = 6,
+    [string]$ContentMemory = "18GB",
     [ValidateSet("zstd", "snappy", "lz4", "gzip", "brotli", "none")]
     [string]$Etl1Compression = "zstd"
 )
@@ -430,6 +435,9 @@ try {
         $pipelineArgs += @("--etl1-compression", $Etl1Compression)
     }
     $pipelineArgs += @(
+        "--stage-threads", $StageThreads.ToString(),
+        "--stage-memory", $StageMemory,
+        "--stage-max-temp-size", $StageMaxTempSize,
         "--deep-profile-threads", $DeepProfileThreads.ToString(),
         "--deep-profile-memory", $DeepProfileMemory,
         "--deep-profile-temp-dir", $DefaultDeepProfileTempDir,
@@ -445,6 +453,7 @@ try {
         "--content-threads", $ContentThreads.ToString(),
         "--content-memory", $ContentMemory
     )
+    Write-Host "[$(Get-Date -Format o)] Performance: ETL1=$Etl1Workers workers; stages=$StageThreads threads/$StageMemory; profile=$DeepProfileThreads threads/$DeepProfileMemory; marts=$ConcurrencyThreads threads/$ConcurrencyMemory; spill=$DefaultDeepProfileTempDir (max $DeepProfileMaxTempSize)."
     if (-not $SkipUaProfile) {
         $pipelineArgs += @(
             "--run-ua-profile",

@@ -15,7 +15,7 @@ import sys
 import uuid
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Iterable, Optional
 
 import pyarrow.parquet as pq
 
@@ -850,10 +850,19 @@ def _profile_ready(profile_dir: Path) -> bool:
     return all(path.exists() and path.stat().st_size > 0 for path in required_profile + required_daily)
 
 
-def _daily_profile_dates(lake_root: Path, target_date: date) -> list[date]:
+def _daily_profile_dates(
+    lake_root: Path,
+    target_date: date,
+    archive_roots: Iterable[Path] = (),
+) -> list[date]:
     # A UTC raw day can write into two IST lake partitions: D and D+1.
     candidates = [target_date, target_date + timedelta(days=1)]
-    return [day for day in candidates if _lake_day_exists(lake_root, day)]
+    lake_roots = [lake_root, *archive_roots]
+    return [
+        day
+        for day in candidates
+        if any(_lake_day_exists(root, day) for root in lake_roots)
+    ]
 
 
 def main() -> None:
@@ -1001,6 +1010,28 @@ def main() -> None:
         help="Daily source folders to process when --etl1-daily-date is set.",
     )
     parser.add_argument(
+        "--stage-threads",
+        type=int,
+        default=None,
+        help="DuckDB thread count for 02.py dedupe and 03.py lake partitioning.",
+    )
+    parser.add_argument(
+        "--stage-memory",
+        default=None,
+        help="DuckDB memory limit for 02.py and 03.py, for example 18GB.",
+    )
+    parser.add_argument(
+        "--stage-max-temp-size",
+        default=None,
+        help="DuckDB spill limit for 02.py and 03.py, for example 200GB.",
+    )
+    parser.add_argument(
+        "--stage-compression",
+        choices=["zstd", "snappy", "lz4", "none"],
+        default=None,
+        help="02.py final-clean compression. Snappy is faster; ZSTD is smaller.",
+    )
+    parser.add_argument(
         "--lake-repair-lookback-days",
         type=int,
         default=14,
@@ -1118,6 +1149,11 @@ def main() -> None:
         help="Comma-separated source= folders allowed for Overview archive scans.",
     )
     parser.add_argument("--dry-run", action="store_true", help="Run dashboards in validation mode where supported.")
+    parser.add_argument(
+        "--publish-through",
+        default=None,
+        help="Cap every static dashboard at this completed IST date (YYYY-MM-DD).",
+    )
     parser.add_argument(
         "--state-name",
         default="pipeline",
@@ -1388,17 +1424,18 @@ def main() -> None:
             "VG_ETL_ARCHIVE_LAKE_ROOTS": archive_lake_env,
             "VG_OVERVIEW_LAKE_ROOT": str(overview_lake_root),
             "VG_OVERVIEW_SOURCES": args.overview_sources or "",
+            "VG_DASH_COMPLETED_THROUGH": args.publish_through or "",
             "VG_DUCKDB_TEMP_DIR": str(deep_profile_temp_dir),
             "VG_DUCKDB_MAX_TEMP_SIZE": str(args.deep_profile_max_temp_size),
             "VG_DUCKDB_FALLBACK_TEMP_DIR": str(
                 output_root / "cache" / "duckdb_temp" / "fallback"
             ),
-            # 03.py uses its own environment names. Keep its partition writer
-            # within the same workstation-safe resource envelope as profiling.
-            "VG_ETL_THREADS": str(min(max(1, int(args.etl1_workers or 2)), 2)),
-            "VG_ETL_MEMORY": "6GB",
+            # 02.py and 03.py share these controls. Defaults stay conservative;
+            # repair runs can opt into the workstation's full safe envelope.
+            "VG_ETL_THREADS": str(max(1, int(args.stage_threads or 2))),
+            "VG_ETL_MEMORY": str(args.stage_memory or "6GB"),
             "VG_ETL_DUCKDB_TEMP": str(deep_profile_temp_dir / "pipeline_stage"),
-            "VG_ETL_DUCKDB_MAX_TEMP": "40GB",
+            "VG_ETL_DUCKDB_MAX_TEMP": str(args.stage_max_temp_size or "40GB"),
             "PYTHONIOENCODING": "utf-8",
             "PYTHONUTF8": "1",
         }
@@ -1430,6 +1467,8 @@ def main() -> None:
         env["VG_ETL_001_BATCH_SIZE"] = str(args.etl1_batch_size)
     if args.etl1_compression:
         env["VG_ETL_001_COMPRESSION"] = args.etl1_compression
+    if args.stage_compression:
+        env["VG_ETL_STAGE_COMPRESSION"] = args.stage_compression
     if args.etl1_add_meta:
         env["VG_ETL_001_ADD_META"] = "1"
 
@@ -1699,7 +1738,11 @@ def main() -> None:
     if not args.skip_deep_profile:
         daily_profile_dates: list[date] = []
         if args.etl1_daily_date:
-            daily_profile_dates = _daily_profile_dates(lake_root, date.fromisoformat(args.etl1_daily_date))
+            daily_profile_dates = _daily_profile_dates(
+                lake_root,
+                date.fromisoformat(args.etl1_daily_date),
+                archive_lake_roots,
+            )
 
         use_incremental_profile = (
             args.deep_profile_mode == "incremental"
@@ -1865,7 +1908,11 @@ def main() -> None:
         ua_source = args.ua_profile_source or "both"
         if not (ua_start and ua_end):
             if args.etl1_daily_date:
-                daily_dates = _daily_profile_dates(lake_root, date.fromisoformat(args.etl1_daily_date))
+                daily_dates = _daily_profile_dates(
+                    lake_root,
+                    date.fromisoformat(args.etl1_daily_date),
+                    archive_lake_roots,
+                )
                 if daily_dates:
                     ua_start = min(daily_dates).isoformat()
                     ua_end = max(daily_dates).isoformat()
@@ -1891,7 +1938,7 @@ def main() -> None:
             "--memory-limit",
             "12GB",
             "--temp-dir",
-            str(output_root / "cache" / "duckdb_temp"),
+            str(deep_profile_temp_dir),
         ]
         if ua_start and ua_end:
             ua_cmd.extend(["--start", ua_start, "--end", ua_end])
@@ -2030,7 +2077,7 @@ def main() -> None:
             "--memory-limit",
             str(args.device_decode_memory),
             "--temp-dir",
-            str(output_root / "cache" / "duckdb_temp"),
+            str(deep_profile_temp_dir),
             "--max-temp-size",
             str(args.device_decode_max_temp_size),
         ]
@@ -2053,7 +2100,11 @@ def main() -> None:
     def overview_report_command() -> list[str]:
         if args.etl1_daily_date and not (args.overview_year or args.overview_month):
             target_date = date.fromisoformat(args.etl1_daily_date)
-            repair_candidates = _daily_profile_dates(lake_root, target_date) or [target_date]
+            repair_candidates = _daily_profile_dates(
+                lake_root,
+                target_date,
+                archive_lake_roots,
+            ) or [target_date]
             completed_cutoff = date.today() - timedelta(days=1)
             repair_dates = [day for day in repair_candidates if day <= completed_cutoff]
             if not repair_dates and target_date <= completed_cutoff:
@@ -2134,7 +2185,11 @@ def main() -> None:
             concurrency_end = args.concurrency_end
             if not (concurrency_start and concurrency_end):
                 if args.etl1_daily_date:
-                    daily_dates = _daily_profile_dates(lake_root, date.fromisoformat(args.etl1_daily_date))
+                    daily_dates = _daily_profile_dates(
+                        lake_root,
+                        date.fromisoformat(args.etl1_daily_date),
+                        archive_lake_roots,
+                    )
                     if daily_dates:
                         concurrency_start = min(daily_dates).isoformat()
                         concurrency_end = max(daily_dates).isoformat()
@@ -2647,7 +2702,11 @@ def main() -> None:
         content_start = args.content_start
         content_end = args.content_end
         if not (content_start and content_end) and args.etl1_daily_date:
-            daily_dates = _daily_profile_dates(lake_root, date.fromisoformat(args.etl1_daily_date))
+            daily_dates = _daily_profile_dates(
+                lake_root,
+                date.fromisoformat(args.etl1_daily_date),
+                archive_lake_roots,
+            )
             if daily_dates:
                 content_start = min(daily_dates).isoformat()
                 content_end = max(daily_dates).isoformat()

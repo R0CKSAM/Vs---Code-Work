@@ -13,6 +13,7 @@ from urllib.parse import unquote_plus
 import pandas as pd
 
 from common.source_ranges import combined_range, true_source_ranges_from_lake
+from common.publication_dates import latest_completed_ist_date_text
 
 from .aggregations import (
     add_status_meanings,
@@ -133,7 +134,7 @@ def _compact_daily_tables(tables: dict[str, list[dict]]) -> tuple[dict[str, list
 
 def _latest_completed_date_text() -> str:
     """Return the latest full IST date; static dashboards must not embed partial today data."""
-    return (datetime.now(IST).date() - timedelta(days=1)).isoformat()
+    return latest_completed_ist_date_text()
 
 
 def _filter_completed_date_frame(df: pd.DataFrame, date_col: str) -> pd.DataFrame:

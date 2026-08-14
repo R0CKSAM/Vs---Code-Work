@@ -46,6 +46,7 @@ from lake_partitions import (  # noqa: E402
     resolve_lake_roots,
     split_path_list,
 )
+from publication_dates import latest_completed_ist_date_text  # noqa: E402
 
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # LOGGING
@@ -82,16 +83,15 @@ OVERVIEW_SOURCE_FILTER = parse_source_filter(os.getenv("VG_OVERVIEW_SOURCES"))
 
 def latest_completed_ist_date() -> str:
     """Return the latest full IST day that dashboards are allowed to publish."""
-    ist_today = (datetime.now(timezone.utc) + IST_OFFSET).date()
-    return (ist_today - timedelta(days=1)).isoformat()
+    return latest_completed_ist_date_text()
 
 
 def recent_completed_ist_dates(days: int = 7) -> set[str]:
     """Dates that are cheap and important enough to keep exact in daily dashboards."""
-    ist_today = (datetime.now(timezone.utc) + IST_OFFSET).date()
+    completed = datetime.strptime(latest_completed_ist_date(), "%Y-%m-%d").date()
     return {
-        (ist_today - timedelta(days=offset)).isoformat()
-        for offset in range(1, max(1, days) + 1)
+        (completed - timedelta(days=offset)).isoformat()
+        for offset in range(max(1, days))
     }
 
 

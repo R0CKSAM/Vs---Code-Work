@@ -65,6 +65,7 @@ def _ensure_package(package_name: str, package_dir: Path) -> None:
 
 _chartjs_module = _load_module("veto_common_chartjs", SRC_ROOT / "common" / "chartjs.py")
 _source_ranges_module = _load_module("veto_common_source_ranges", SRC_ROOT / "common" / "source_ranges.py")
+_publication_dates_module = _load_module("veto_common_publication_dates_overview", SRC_ROOT / "common" / "publication_dates.py")
 _render_module = _load_module("veto_common_render", SRC_ROOT / "common" / "render.py")
 _ensure_package("veto_overview_lib", HERE / "lib")
 _extract_module = _load_module("veto_overview_lib.extract", HERE / "lib" / "extract.py")
@@ -73,6 +74,7 @@ _device_module = _load_module("veto_overview_lib.device", HERE / "lib" / "device
 load_chartjs = _chartjs_module.load_chartjs
 combined_range = _source_ranges_module.combined_range
 true_source_ranges_from_lake = _source_ranges_module.true_source_ranges_from_lake
+latest_completed_ist_date_text = _publication_dates_module.latest_completed_ist_date_text
 chartjs_script = _render_module.chartjs_script
 json_blob = _render_module.json_blob
 render_template = _render_module.render_template
@@ -304,6 +306,13 @@ def main() -> None:
     except FileNotFoundError as exc:
         raise SystemExit(f"ERROR: {exc}") from exc
 
+    publication_cutoff = latest_completed_ist_date_text()
+    data_rows = [
+        row
+        for row in data_rows
+        if str(row.get("date", "")).strip()[:10] <= publication_cutoff
+    ]
+
     missing_device_files = [
         str(path)
         for path in [device_snapshot_csv, device_daily_csv]
@@ -366,6 +375,8 @@ def main() -> None:
     lake_root = Path(os.getenv("VG_ETL_LAKE_ROOT", str(ETL_ROOT / "data" / "lake"))).expanduser().resolve()
     source_true_ranges = true_source_ranges_from_lake(source_dates, lake_root)
     true_data_range = combined_range(source_true_ranges)
+    if true_data_range.get("first") and true_data_range.get("last"):
+        data_time_range = f'{true_data_range["first"]} -> {true_data_range["last"]}'
 
     generated_at = datetime.now()
     data_blob = json_blob({

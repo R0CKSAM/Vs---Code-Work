@@ -29,6 +29,7 @@ if __package__:  # FIX-2
     from ...common.chartjs import load_chartjs  # type: ignore[import-not-found] # FIX-2
     from ...common.render import json_blob, render_template  # type: ignore[import-not-found] # FIX-2
     from ...common.source_ranges import true_source_ranges_from_lake  # type: ignore[import-not-found] # FIX-2
+    from ...common.publication_dates import latest_completed_ist_date_text  # type: ignore[import-not-found]
     from ...profile.vglive_core import (  # type: ignore[import-not-found] # FIX-2
         DEFAULT_LAKE_FOLDER,  # FIX-2
         HOST_MAP,  # FIX-2
@@ -51,11 +52,13 @@ else:  # FIX-2
     _chartjs_module = _load_module("veto_common_chartjs_latency", SRC_ROOT / "common" / "chartjs.py")  # FIX-2
     _render_module = _load_module("veto_common_render_latency", SRC_ROOT / "common" / "render.py")  # FIX-2
     _source_ranges_module = _load_module("veto_common_source_ranges_latency", SRC_ROOT / "common" / "source_ranges.py")  # FIX-2
+    _publication_dates_module = _load_module("veto_common_publication_dates_latency", SRC_ROOT / "common" / "publication_dates.py")
     _core_module = _load_module("veto_profile_vglive_core_latency", PROFILE_ROOT / "vglive_core.py")  # FIX-2
     load_chartjs = _chartjs_module.load_chartjs  # FIX-2
     json_blob = _render_module.json_blob  # FIX-2
     render_template = _render_module.render_template  # FIX-2
     true_source_ranges_from_lake = _source_ranges_module.true_source_ranges_from_lake  # FIX-2
+    latest_completed_ist_date_text = _publication_dates_module.latest_completed_ist_date_text
     DEFAULT_LAKE_FOLDER = _core_module.DEFAULT_LAKE_FOLDER  # FIX-2
     HOST_MAP = _core_module.HOST_MAP  # FIX-2
     PATH_MAP = _core_module.PATH_MAP  # FIX-2
@@ -541,7 +544,7 @@ def clean_records(df: pd.DataFrame, columns: list[str] | None = None) -> list[di
 
 def latest_completed_ist_date() -> str:
     """Static reports are completed-day views; today's partition is still in progress."""
-    return (datetime.now(IST_ZONE).date() - timedelta(days=1)).isoformat()
+    return latest_completed_ist_date_text()
 
 
 def filter_completed_frame(df: pd.DataFrame, date_col: str = "log_date") -> pd.DataFrame:

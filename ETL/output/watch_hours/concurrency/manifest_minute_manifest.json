@@ -1,11 +1,17 @@
 {
-  "generated_at_utc": "2026-08-12T17:32:19.471904+00:00",
+  "generated_at_utc": "2026-08-14T05:36:23.506093+00:00",
   "source": "stream",
   "lake": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
+  "lake_roots": [
+    "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
+    "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE"
+  ],
+  "winning_partition_count": 2,
+  "selected_parquet_file_count": 3,
   "output": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\output\\watch_hours\\concurrency\\manifest_minute.parquet",
   "date_range_replaced": {
-    "start": "2026-08-07",
-    "end": "2026-08-08"
+    "start": "2026-08-13",
+    "end": "2026-08-14"
   },
   "metric_notes": {
     "m3u8_rows": "All .m3u8 manifest request rows per IST minute.",
@@ -14,5 +20,5 @@
     "unique_ips": "Distinct cliIP values per minute.",
     "unique_ipua_pairs": "Distinct cliIP + normalized UA signatures per minute."
   },
-  "new_rows": 160447
+  "new_rows": 100231
 }

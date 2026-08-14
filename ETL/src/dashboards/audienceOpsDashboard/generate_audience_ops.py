@@ -66,12 +66,14 @@ def _load_common_module(module_name: str, file_name: str) -> Any:
 _chartjs_module = _load_common_module("veto_common_chartjs", "chartjs.py")
 _render_module = _load_common_module("veto_common_render", "render.py")
 _source_ranges_module = _load_common_module("veto_common_source_ranges_audience", "source_ranges.py")
+_publication_dates_module = _load_common_module("veto_common_publication_dates_audience", "publication_dates.py")
 
 load_chartjs = _chartjs_module.load_chartjs
 chartjs_script = _render_module.chartjs_script
 json_blob = _render_module.json_blob
 render_template = _render_module.render_template
 archive_true_source_ranges_from_lake = _source_ranges_module.true_source_ranges_from_lake
+latest_completed_ist_date = _publication_dates_module.latest_completed_ist_date
 
 
 def get_duckdb() -> Any | None:
@@ -1379,7 +1381,7 @@ def top_table(df: pd.DataFrame, group_cols: list[str], metric: str, limit: int =
 
 
 def completed_date_window(primary: pd.DataFrame, fallback_frames: list[pd.DataFrame]) -> tuple[Any, Any]:
-    latest_completed = datetime.now(IST_ZONE).date() - timedelta(days=1)
+    latest_completed = latest_completed_ist_date()
 
     def collect_dates(frame: pd.DataFrame) -> list[Any]:
         if frame.empty or "log_date" not in frame.columns:
@@ -1534,7 +1536,12 @@ def build_data(args: argparse.Namespace) -> dict[str, Any]:
     region_channel_device = filter_date_window(region_channel_device, min_date, max_date)
     ua_playtime = filter_frame_dict_dates(ua_playtime, min_date, max_date)
     latency = filter_frame_dict_dates(latency, min_date, max_date)
-    concurrency = filter_frame_dict_dates(concurrency, min_date, max_date)
+    concurrency = filter_frame_dict_dates(
+        concurrency,
+        min_date,
+        max_date,
+        {"status_detail": "d"},
+    )
     identity = filter_frame_dict_dates(identity, min_date, max_date)
     content = filter_date_window(content, min_date, max_date)
     for name, date_col in {"summary": "log_date", "ua": "first_date", "top_ua": "first_date"}.items():

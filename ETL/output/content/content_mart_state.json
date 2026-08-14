@@ -1403,14 +1403,14 @@
     "stream/2026-08-12": {
       "source": "stream",
       "date": "2026-08-12",
-      "file_count": 1,
-      "bytes": 57657472,
-      "max_mtime_ns": 1786524502757077200,
+      "file_count": 2,
+      "bytes": 837779253,
+      "max_mtime_ns": 1786598622197724600,
       "output_counts": {
-        "rows": 173
+        "rows": 1203
       }
     }
   },
-  "updated_at_utc": "2026-08-12T11:05:31.214569+00:00",
+  "updated_at_utc": "2026-08-13T14:46:02.588465+00:00",
   "mart_version": 3
 }

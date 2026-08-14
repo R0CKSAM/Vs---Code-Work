@@ -1,11 +1,17 @@
 {
-  "generated_at_utc": "2026-08-12T10:15:03.472153+00:00",
+  "generated_at_utc": "2026-08-14T05:58:48.134474+00:00",
   "source": "fast",
   "lake": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
+  "lake_roots": [
+    "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
+    "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE"
+  ],
+  "winning_partition_count": 2,
+  "selected_parquet_file_count": 3,
   "output": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\output\\watch_hours\\concurrency\\fast_platform_channel_cmcd_daily.parquet",
   "date_range_replaced": {
-    "start": "2026-08-11",
-    "end": "2026-08-12"
+    "start": "2026-08-13",
+    "end": "2026-08-14"
   },
   "metric_notes": {
     "distinct_cmcd_sessions": "Approximate daily distinct CMCD sid values on FAST .ts rows, using DuckDB approx_count_distinct to keep large-day ETL memory-safe. This is playback-session telemetry, not app queryStr session_id.",

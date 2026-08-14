@@ -84,7 +84,10 @@ python run.py all -- --base ".\data"
 - `--overview-data-dir` (defaults to `output\overview`)
 - `--overview-html` (defaults to `output\overview\overview_dashboard.html`)
 - `--dry-run` to validate dashboards without writing
+- `--publish-through YYYY-MM-DD` to publish a validated completed-day cutoff while newer dates are being repaired
 - `--etl1-prefs-file` to choose the `001.py` column preference JSON
+- `--stage-threads`, `--stage-memory`, and `--stage-max-temp-size` to raise 02/03 DuckDB resources for large repairs
+- `--stage-compression snappy` for faster temporary final-clean writes when storage is available
 
 ## Path controls
 
@@ -153,6 +156,18 @@ Fast/manual run switches:
 python run.py sync-yesterday -- -SkipVerifyAfterSync -SkipPostVerifyDelay
 ```
 
+The scheduled daily launcher defaults to the tested fast workstation profile:
+
+- 6 raw-conversion workers
+- 6 DuckDB threads and an 18 GB memory ceiling for ETL stages, profiling, and marts
+- up to 200 GB of DuckDB spill under `Z:\Veto Logs Backup\DO NOT DELETE\Temp` when available
+
+All limits remain explicit PowerShell parameters. For example, a lower-resource run can use:
+
+```powershell
+python run.py sync-yesterday -- -Etl1Workers 2 -StageThreads 2 -StageMemory 6GB -DeepProfileThreads 2 -DeepProfileMemory 6GB -ConcurrencyThreads 2 -ConcurrencyMemory 6GB
+```
+
 Choose dashboard/profile output locations:
 
 ```powershell
@@ -170,4 +185,5 @@ python run.py dashboards -- --overview-html ".\output\overview\overview_dashboar
 - `VG_DASH_PROFILE_DIR`
 - `VG_DASH_WATCH_OUT`
 - `VG_DASH_OVERVIEW_BASE`
+- `VG_DASH_COMPLETED_THROUGH` (optional validated completed-day cutoff, `YYYY-MM-DD`)
 
