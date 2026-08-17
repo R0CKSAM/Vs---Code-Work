@@ -201,11 +201,9 @@ def lake_day_signatures(partitions: list) -> dict[str, dict]:
                 "rows": 0,
                 "mtime_ns_sum": 0,
                 "mtime_ns_max": 0,
-                "roots": [],
                 "sources": [],
             },
         )
-        rec["roots"].append(str(partition.root))
         rec["sources"].append(partition.source)
         for parquet_file in partition.files:
             try:
@@ -221,9 +219,15 @@ def lake_day_signatures(partitions: list) -> dict[str, dict]:
             except FileNotFoundError:
                 continue
     for rec in signatures.values():
-        rec["roots"] = sorted(set(rec["roots"]))
         rec["sources"] = sorted(set(rec["sources"]))
     return dict(sorted(signatures.items()))
+
+
+def comparable_day_signature(signature: dict | None) -> dict:
+    """Ignore lake-root location so archiving does not trigger recomputation."""
+    if not isinstance(signature, dict):
+        return {}
+    return {key: value for key, value in signature.items() if key != "roots"}
 
 
 def existing_daily_dates(con: duckdb.DuckDBPyConnection, daily_csv: Path) -> set[str]:
@@ -450,7 +454,7 @@ def run_snapshot(
             changed_dates = {
                 day
                 for day, signature in day_signatures.items()
-                if previous_manifest.get(day) != signature
+                if comparable_day_signature(previous_manifest.get(day)) != signature
             }
             removed_dates = (
                 set()

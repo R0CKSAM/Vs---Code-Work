@@ -34,7 +34,9 @@ MAX_TEMP_SIZE = os.getenv("VG_ETL_DUCKDB_MAX_TEMP", "120GB")
 COMPRESSION = os.getenv("VG_ETL_STAGE_COMPRESSION", "ZSTD")
 COMP_LEVEL = int(os.getenv("VG_ETL_STAGE_COMP_LEVEL", "3"))
 DEDUPE_MODE = os.getenv("VG_ETL_DEDUPE_MODE", "auto").strip().lower()
-DEDUPE_BUCKETS = int(os.getenv("VG_ETL_DEDUPE_BUCKETS", "32"))
+# The daily host gives this stage 24 GB. Eight buckets keep the largest FAST
+# bucket comfortably bounded while avoiding the former 32 complete input scans.
+DEDUPE_BUCKETS = int(os.getenv("VG_ETL_DEDUPE_BUCKETS", "8"))
 DEDUPE_BUCKET_THRESHOLD_ROWS = int(os.getenv("VG_ETL_DEDUPE_BUCKET_THRESHOLD_ROWS", "15000000"))
 SHOW_PROGRESS = os.getenv("VG_ETL_PROGRESS", "0").strip().lower() in {"1", "true", "yes", "on"}
 PROCESS_SOURCES = {

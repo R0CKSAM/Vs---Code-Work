@@ -78,6 +78,26 @@ archiving. The last backlog date performs the full refresh and archive. ETL
 dates run serially because the lake/profile writers are stateful; the existing
 pipeline lock plus a recovery mutex prevents duplicate runs.
 
+Each download is verified against a fresh remote snapshot using both file
+count and total bytes. A date checkpoint is committed only when the same
+recovery attempt creates fresh full-day validation evidence with exact FAST
+and STREAM row reconciliation. Old validation reports cannot complete a new
+attempt. PowerShell argument-shape guards prevent switches or dates from being
+mistaken for remote roots or local paths.
+
+Backlog recovery prefetches up to six source/date folders concurrently. With
+three missing dates, that means FAST and STREAM for all three dates can run as
+six independent jobs; every job keeps 16 transfers and 32 checkers. Once all
+downloads validate, ETL dates remain serial so the stage state, lake promotion,
+and cleanup checkpoints cannot race.
+
+The daily workstation profile uses 11 workers for `001.py`, 11 DuckDB threads
+and 24 GB for `02.py`/`03.py`, and Snappy for the temporary `001.py` parquet.
+The retained final-clean/lake compression remains unchanged. Intermediate
+dates build their required daily marts but defer the top-level watch, overview,
+audience, and master dashboards; the newest backlog date performs the complete
+dashboard refresh once.
+
 Install or refresh the Windows task:
 
 ```powershell
@@ -92,6 +112,16 @@ minutes. Preview the detected backlog without processing data:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\run_recovery_pipeline.ps1 -DryRun
 ```
+
+Explicit high-throughput recovery settings:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\run_recovery_pipeline.ps1 `
+  -MaxParallelDownloads 6 -DownloadTransfers 16 -DownloadCheckers 32
+```
+
+Per-source download logs are written under `output\logs\downloads`; validated
+count/byte results are stored under `output\state\downloads`.
 
 Pass advanced pipeline options after `--`:
 

@@ -8,7 +8,7 @@ import json
 import os
 import re
 import shutil
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -49,30 +49,25 @@ def source_lake_rows(
     raw_date: date,
 ) -> tuple[int, list[Path]]:
     files_by_relative_path: dict[Path, Path] = {}
-    # A UTC raw day can only contribute to IST lake partitions D and D+1.
+    # Follow the batch prefix across every event-date partition. Source folders
+    # occasionally contain late-arriving records from much older dates, and 03.py
+    # correctly routes those rows by reqTimeSec rather than raw folder date.
     for lake_root in lake_roots:
-        for lake_date in (raw_date, raw_date + timedelta(days=1)):
-            day_dir = (
-                lake_root
-                / f"source={source}"
-                / f"year={lake_date:%Y}"
-                / f"month={lake_date:%m}"
-                / f"day={lake_date:%d}"
-            )
-            if not day_dir.is_dir():
-                continue
-            for prefix in lake_prefixes(source, source_id):
-                for path in day_dir.glob(f"{prefix}_*.parquet"):
-                    if not path.is_file():
-                        continue
-                    relative_path = path.relative_to(lake_root)
-                    existing = files_by_relative_path.get(relative_path)
-                    if existing is not None and existing.resolve() != path.resolve():
-                        raise SystemExit(
-                            "Cleanup refused: duplicate retained lake partition exists in multiple roots: "
-                            f"{relative_path}"
-                        )
-                    files_by_relative_path[relative_path] = path
+        source_root = lake_root / f"source={source}"
+        if not source_root.is_dir():
+            continue
+        for prefix in lake_prefixes(source, source_id):
+            for path in source_root.glob(f"year=*/month=*/day=*/{prefix}_*.parquet"):
+                if not path.is_file():
+                    continue
+                relative_path = path.relative_to(lake_root)
+                existing = files_by_relative_path.get(relative_path)
+                if existing is not None and existing.resolve() != path.resolve():
+                    raise SystemExit(
+                        "Cleanup refused: duplicate retained lake partition exists in multiple roots: "
+                        f"{relative_path}"
+                    )
+                files_by_relative_path[relative_path] = path
     ordered = sorted(files_by_relative_path.values())
     return sum(parquet_rows(path) for path in ordered), ordered
 

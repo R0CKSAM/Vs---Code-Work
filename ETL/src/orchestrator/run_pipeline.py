@@ -2155,45 +2155,12 @@ def main() -> None:
             "--yes",
             "--auto",
         ]
-    overview_report_ok = False
     if not args.skip_overview:
-        overview_report_ok = run(
-            overview_report_command(),
-            cwd=etl_root,
-            env=env,
-            step_name="overview_report_xlsx",
-            log_dir=log_dir,
-            allow_failure=args.continue_on_error,
-            retry_on_memory=True,
-        )
-
-        overview_cmd = [
-            python,
-            str(overview_dashboard_dir / "generate_dashboard.py"),
-            "--data-dir",
-            str(overview_data_dir),
-            str(overview_data_dir / "overview_report.xlsx"),
-            str(overview_html),
-        ]
-        if args.dry_run:
-            overview_cmd.append("--dry-run")
-        if overview_report_ok:
-            run(
-                overview_cmd,
-                cwd=overview_dashboard_dir,
-                env=env,
-                step_name="overview_dashboard_html",
-                log_dir=log_dir,
-                allow_failure=args.continue_on_error,
-            )
-        else:
-            reason = "overview_report_xlsx failed; skipped HTML refresh to avoid publishing stale overview data"
-            print(f"\n[skip] overview_dashboard_html: {reason}")
-            record_skip("overview_dashboard_html", reason)
+        print("\n[defer] overview refresh will run once after latency and identity marts.")
     else:
         print("\n[skip] overview step skipped.")
 
-    if not args.skip_watch and not args.skip_concurrency:
+    if not args.skip_concurrency:
         fast_lake = lake_root / "source=fast"
         stream_lake = lake_root / "source=stream"
         if args.dry_run:
@@ -2690,7 +2657,7 @@ def main() -> None:
     else:
         print("\n[skip] identity mart skipped.")
 
-    if identity_ok and not args.skip_overview:
+    if not args.skip_overview:
         overview_report_after_ok = run(
             overview_report_command(),
             cwd=etl_root,

@@ -1,4 +1,4 @@
-[CmdletBinding()]
+[CmdletBinding(PositionalBinding = $false)]
 param(
     [Nullable[datetime]]$StartDate = $null,
     [Nullable[datetime]]$ThroughDate = $null,
@@ -6,19 +6,33 @@ param(
     [int]$MaxCatchUpDays = 31,
     [ValidateRange(1, 366)]
     [int]$BootstrapLookbackDays = 60,
+    [ValidateRange(1, 6)]
+    [int]$MaxParallelDownloads = 6,
+    [ValidateRange(1, 128)]
+    [int]$DownloadTransfers = 16,
+    [ValidateRange(1, 256)]
+    [int]$DownloadCheckers = 32,
     [switch]$DryRun,
     [switch]$Force
 )
 
+if ($args.Count -gt 0) {
+    throw "Unexpected positional arguments. Use named parameters such as -StartDate or -ThroughDate. Received: $($args -join ' ')"
+}
+
 $ErrorActionPreference = "Stop"
 $WorkspaceRoot = $PSScriptRoot
 $DailyScript = Join-Path $WorkspaceRoot "run_daily_pipeline.ps1"
+$PrefetchScript = Join-Path $WorkspaceRoot "prefetch_daily_sources.ps1"
 $StateDir = Join-Path $WorkspaceRoot "output\state"
 $DailyStateDir = Join-Path $StateDir "daily_runs"
 $RecoveryStatePath = Join-Path $StateDir "recovery_backlog.json"
 $ValidationRoot = Join-Path $WorkspaceRoot "output\validation"
 $LogDir = Join-Path $WorkspaceRoot "output\logs"
 $TargetThroughDate = if ($ThroughDate) { $ThroughDate.Date } else { (Get-Date).Date.AddDays(-1) }
+if ($TargetThroughDate -ge (Get-Date).Date) {
+    throw "Through date must be a completed day before today: $($TargetThroughDate.ToString('yyyy-MM-dd'))"
+}
 
 function Write-JsonAtomic {
     param(
@@ -48,7 +62,10 @@ function Read-RecoveryState {
 }
 
 function Get-ValidationEvidence {
-    param([Parameter(Mandatory = $true)][datetime]$Date)
+    param(
+        [Parameter(Mandatory = $true)][datetime]$Date,
+        [Nullable[datetime]]$NotBefore = $null
+    )
 
     if (-not (Test-Path -LiteralPath $ValidationRoot)) { return $null }
     $iso = $Date.ToString("yyyy-MM-dd")
@@ -60,6 +77,9 @@ function Get-ValidationEvidence {
     )
 
     foreach ($candidate in $candidates) {
+        if ($NotBefore -and $candidate.LastWriteTimeUtc -lt $NotBefore.Value.ToUniversalTime()) {
+            continue
+        }
         try {
             $report = Get-Content -Raw -LiteralPath $candidate.FullName | ConvertFrom-Json
         } catch {
@@ -93,6 +113,7 @@ function Get-ValidationEvidence {
                 Kind = "validation"
                 Path = $candidate.FullName
                 OverallStatus = $report.overall_status
+                LastWriteTimeUtc = $candidate.LastWriteTimeUtc.ToString("o")
             }
         }
     }
@@ -138,7 +159,8 @@ function Save-RecoveryState {
 function Save-DailyCheckpoint {
     param(
         [Parameter(Mandatory = $true)][datetime]$Date,
-        [Parameter(Mandatory = $true)]$Evidence
+        [Parameter(Mandatory = $true)]$Evidence,
+        [string]$AttemptId = ""
     )
 
     $iso = $Date.ToString("yyyy-MM-dd")
@@ -150,13 +172,34 @@ function Save-DailyCheckpoint {
         completed_at_ist = (Get-Date).ToString("o")
         validation_status = $Evidence.OverallStatus
         validation_report = $Evidence.Path
+        recovery_attempt_id = $AttemptId
         computer = $env:COMPUTERNAME
+    }
+}
+
+function Assert-DailyScriptContract {
+    $requiredParameters = @(
+        "Date",
+        "SkipDownload",
+        "SkipPostVerifyDelay",
+        "SkipWatch",
+        "SkipOverview",
+        "SkipLakeArchive"
+    )
+    $command = Get-Command -Name $DailyScript -CommandType ExternalScript
+    $missing = @($requiredParameters | Where-Object { -not $command.Parameters.ContainsKey($_) })
+    if ($missing.Count) {
+        throw "Daily pipeline parameter contract is incompatible. Missing: $($missing -join ', ')"
     }
 }
 
 if (-not (Test-Path -LiteralPath $DailyScript)) {
     throw "Daily pipeline launcher is missing: $DailyScript"
 }
+if (-not (Test-Path -LiteralPath $PrefetchScript)) {
+    throw "Parallel prefetch launcher is missing: $PrefetchScript"
+}
+Assert-DailyScriptContract
 New-Item -ItemType Directory -Path $StateDir, $DailyStateDir, $LogDir -Force | Out-Null
 
 $mutex = [System.Threading.Mutex]::new($false, "Local\VetoETLRecoveryBacklog")
@@ -247,8 +290,36 @@ try {
     }
     Write-Host "[$(Get-Date -Format o)] Pending ETL dates: $pendingText"
     if ($DryRun) {
+        Write-Host "Dry-run prefetch plan: $($pendingDates.Count * 2) source/date jobs, max $MaxParallelDownloads parallel, each transfers=$DownloadTransfers/checkers=$DownloadCheckers."
         Write-Host "Dry run complete; no ETL or checkpoint files were changed."
         exit 0
+    }
+
+    if ($pendingDates.Count) {
+        $state["current_date"] = $null
+        $state["download_dates"] = @($pendingDates | ForEach-Object { $_.ToString("yyyy-MM-dd") })
+        $state["download_jobs"] = $pendingDates.Count * 2
+        $state["max_parallel_downloads"] = $MaxParallelDownloads
+        $state["download_transfers_each"] = $DownloadTransfers
+        $state["download_checkers_each"] = $DownloadCheckers
+        $state["last_error"] = $null
+        Save-RecoveryState -State $state -Status "downloading"
+
+        Write-Host "[$(Get-Date -Format o)] Starting validated parallel prefetch for $($pendingDates.Count) date(s)."
+        $prefetchArguments = @{
+            Dates = [datetime[]]@($pendingDates)
+            MaxParallelDownloads = $MaxParallelDownloads
+            Transfers = $DownloadTransfers
+            Checkers = $DownloadCheckers
+        }
+        $global:LASTEXITCODE = 0
+        & $PrefetchScript @prefetchArguments
+        if ($LASTEXITCODE -ne 0) {
+            throw "Parallel recovery prefetch returned exit code $LASTEXITCODE."
+        }
+        $state["download_dates"] = @()
+        $state["download_jobs"] = 0
+        Save-RecoveryState -State $state -Status "downloads_complete"
     }
 
     $finalPendingDate = if ($pendingDates.Count) { $pendingDates[$pendingDates.Count - 1] } else { $null }
@@ -266,26 +337,40 @@ try {
         }
 
         $isFinalPendingDate = $finalPendingDate -and $dateValue.Date -eq $finalPendingDate.Date
-        $dailyArguments = @("-Date", $iso, "-SkipPostVerifyDelay")
+        $attemptStartedAt = Get-Date
+        $attemptId = "{0}_{1}" -f $iso.Replace("-", ""), $attemptStartedAt.ToString("yyyyMMdd_HHmmss_fff")
+        $dailyArguments = @{
+            Date = $dateValue
+            SkipPostVerifyDelay = $true
+            SkipDownload = $true
+        }
         if (-not $isFinalPendingDate) {
-            $dailyArguments += @("-SkipWatch", "-SkipOverview", "-SkipLakeArchive")
+            $dailyArguments["SkipWatch"] = $true
+            $dailyArguments["SkipOverview"] = $true
+            $dailyArguments["SkipLakeArchive"] = $true
         }
 
         $state["current_date"] = $iso
-        $state["last_started_at_ist"] = (Get-Date).ToString("o")
+        $state["current_attempt_id"] = $attemptId
+        $state["last_started_at_ist"] = $attemptStartedAt.ToString("o")
         $state["last_error"] = $null
         Save-RecoveryState -State $state -Status "running"
 
-        Write-Host "[$(Get-Date -Format o)] Running ETL for $iso. Final backlog date: $isFinalPendingDate"
+        Write-Host "[$(Get-Date -Format o)] Running ETL for $iso. Attempt: $attemptId. Final backlog date: $isFinalPendingDate"
+        $global:LASTEXITCODE = 0
         & $DailyScript @dailyArguments
-
-        $evidence = Get-ValidationEvidence -Date $dateValue
-        if (-not $evidence) {
-            throw "ETL returned for $iso without exact full-day validation evidence."
+        if ($LASTEXITCODE -ne 0) {
+            throw "Daily pipeline returned exit code $LASTEXITCODE for $iso."
         }
-        Save-DailyCheckpoint -Date $dateValue -Evidence $evidence
+
+        $evidence = Get-ValidationEvidence -Date $dateValue -NotBefore $attemptStartedAt
+        if (-not $evidence) {
+            throw "ETL returned for $iso without fresh exact full-day validation evidence for attempt $attemptId."
+        }
+        Save-DailyCheckpoint -Date $dateValue -Evidence $evidence -AttemptId $attemptId
         $state["last_successful_date"] = $iso
         $state["current_date"] = $null
+        $state["current_attempt_id"] = $null
         $state["last_finished_at_ist"] = (Get-Date).ToString("o")
         $state["last_error"] = $null
         Save-RecoveryState -State $state -Status "catching_up"
@@ -300,7 +385,7 @@ try {
     Write-Host "[$(Get-Date -Format o)] Recovery runner completed. Remaining backlog days: $remaining"
 } catch {
     $failure = $_.Exception.Message
-    Write-Error "Recovery runner failed: $failure"
+    [Console]::Error.WriteLine("Recovery runner failed: $failure")
     if (-not $DryRun) {
         try {
             $failedState = Read-RecoveryState
@@ -308,7 +393,7 @@ try {
             $failedState["last_failed_at_ist"] = (Get-Date).ToString("o")
             Save-RecoveryState -State $failedState -Status "failed"
         } catch {
-            Write-Error "Could not persist recovery failure state: $($_.Exception.Message)"
+            [Console]::Error.WriteLine("Could not persist recovery failure state: $($_.Exception.Message)")
         }
     }
     exit 1

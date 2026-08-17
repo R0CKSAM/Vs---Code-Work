@@ -55,14 +55,24 @@ class CleanupDailyIntermediatesTest(unittest.TestCase):
                 / "day=13"
                 / "part_stream_2026_08_13_0.parquet"
             )
+            late_lake_file = (
+                lake
+                / "source=stream"
+                / "year=2026"
+                / "month=08"
+                / "day=04"
+                / "part_stream_2026_08_13_0.parquet"
+            )
             raw_file = raw_root / "Veto Stream Backup" / "08" / "13" / "sample.log.gz"
             diagnostic_file = stage_file.parent / "conversion_errors.csv"
-            for path in (final_file, stage_file, lake_file, raw_file):
+            for path in (final_file, stage_file, lake_file, late_lake_file, raw_file):
                 path.parent.mkdir(parents=True, exist_ok=True)
 
             table = pa.table({"value": [1, 2, 3]})
-            for path in (final_file, stage_file, lake_file):
+            pq.write_table(pa.table({"value": [1, 2, 3, 4]}), final_file)
+            for path in (stage_file, lake_file):
                 pq.write_table(table, path)
+            pq.write_table(pa.table({"value": [4]}), late_lake_file)
             with gzip.open(raw_file, "wt", encoding="utf-8") as handle:
                 handle.write("sample\n")
             diagnostic_file.write_text("file,error\n", encoding="utf-8")
@@ -118,6 +128,7 @@ class CleanupDailyIntermediatesTest(unittest.TestCase):
             self.assertFalse(stage_file.exists())
             self.assertFalse(raw_file.exists())
             self.assertTrue(lake_file.exists())
+            self.assertTrue(late_lake_file.exists())
             self.assertTrue(diagnostic_file.exists())
 
             manifests = sorted(audit.glob("cleanup_*.json"))

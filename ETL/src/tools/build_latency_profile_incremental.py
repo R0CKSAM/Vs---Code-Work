@@ -161,7 +161,6 @@ def signature_for_partition(partition: LakePartition) -> dict:
         max_mtime_ns = max(max_mtime_ns, int(stat.st_mtime_ns))
         items.append(
             {
-                "path": str(file),
                 "name": file.name,
                 "bytes": int(stat.st_size),
                 "mtime_ns": int(stat.st_mtime_ns),
@@ -172,6 +171,29 @@ def signature_for_partition(partition: LakePartition) -> dict:
         "total_bytes": total_bytes,
         "max_mtime_ns": max_mtime_ns,
         "files": items,
+    }
+
+
+def comparable_signature(signature: dict | None) -> dict:
+    """Return a signature that is stable when a lake day moves to archive."""
+    signature = signature if isinstance(signature, dict) else {}
+    files = []
+    for item in signature.get("files", []):
+        if not isinstance(item, dict):
+            continue
+        files.append(
+            {
+                "name": item.get("name"),
+                "bytes": int(item.get("bytes") or 0),
+                "mtime_ns": int(item.get("mtime_ns") or 0),
+            }
+        )
+    files.sort(key=lambda item: (str(item["name"]), item["bytes"], item["mtime_ns"]))
+    return {
+        "file_count": int(signature.get("file_count") or len(files)),
+        "total_bytes": int(signature.get("total_bytes") or 0),
+        "max_mtime_ns": int(signature.get("max_mtime_ns") or 0),
+        "files": files,
     }
 
 
@@ -433,7 +455,7 @@ def main() -> None:
         previous = state["days"].get(key, {})
         up_to_date = (
             not args.force
-            and previous.get("signature") == signature
+            and comparable_signature(previous.get("signature")) == comparable_signature(signature)
             and previous.get("status") == "done"
             and part_ready(args.parts_dir, args.source, day_value)
         )

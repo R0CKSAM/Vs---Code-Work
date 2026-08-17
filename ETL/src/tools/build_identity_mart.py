@@ -129,7 +129,6 @@ def partition_signature(partition: Partition) -> dict[str, Any]:
             continue
         files.append(
             {
-                "path": str(file),
                 "name": file.name,
                 "bytes": int(stat.st_size),
                 "mtime_ns": int(stat.st_mtime_ns),
@@ -138,11 +137,34 @@ def partition_signature(partition: Partition) -> dict[str, Any]:
     return {
         "source": partition.source,
         "date": partition.date_text,
-        "lake_root": str(partition.root),
-        "partition_path": str(partition.day_dir),
         "file_count": len(files),
         "bytes": int(sum(item["bytes"] for item in files)),
         "max_mtime_ns": int(max((item["mtime_ns"] for item in files), default=0)),
+        "files": files,
+    }
+
+
+def comparable_partition_signature(signature: dict[str, Any] | None) -> dict[str, Any]:
+    """Ignore hot/archive paths while retaining content-change detection."""
+    signature = signature if isinstance(signature, dict) else {}
+    files = []
+    for item in signature.get("files", []):
+        if not isinstance(item, dict):
+            continue
+        files.append(
+            {
+                "name": item.get("name"),
+                "bytes": int(item.get("bytes") or 0),
+                "mtime_ns": int(item.get("mtime_ns") or 0),
+            }
+        )
+    files.sort(key=lambda item: (str(item["name"]), item["bytes"], item["mtime_ns"]))
+    return {
+        "source": signature.get("source"),
+        "date": signature.get("date"),
+        "file_count": int(signature.get("file_count") or len(files)),
+        "bytes": int(signature.get("bytes") or 0),
+        "max_mtime_ns": int(signature.get("max_mtime_ns") or 0),
         "files": files,
     }
 
@@ -478,9 +500,9 @@ def main() -> None:
     for partition in partitions:
         sig = partition_signature(partition)
         prev = state["partitions"].get(partition.key)
-        prev_sig = {key: prev.get(key) for key in sig} if isinstance(prev, dict) else None
+        prev_sig = comparable_partition_signature(prev)
         outputs_exist = all(part_path(args.out_dir, table, partition).exists() for table in TABLES)
-        if args.force or prev_sig != sig or not outputs_exist:
+        if args.force or prev_sig != comparable_partition_signature(sig) or not outputs_exist:
             to_process.append(partition)
 
     print(f"Lake      : {args.lake}")

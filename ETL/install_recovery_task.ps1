@@ -1,4 +1,4 @@
-[CmdletBinding()]
+[CmdletBinding(PositionalBinding = $false)]
 param(
     [string]$TaskName = "Veto ETL Daily 7AM IST",
     [datetime]$DailyAt = "07:00",
@@ -8,6 +8,10 @@ param(
     [ValidateRange(1, 120)]
     [int]$RestartMinutes = 15
 )
+
+if ($args.Count -gt 0) {
+    throw "Unexpected positional arguments. Use named parameters such as -TaskName or -DailyAt. Received: $($args -join ' ')"
+}
 
 $ErrorActionPreference = "Stop"
 $WorkspaceRoot = $PSScriptRoot

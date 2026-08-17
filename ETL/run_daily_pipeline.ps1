@@ -21,6 +21,13 @@
     [switch]$SkipRemoteStableCheck,
     [switch]$SkipVerifyAfterSync,
     [switch]$SkipPostVerifyDelay,
+    [switch]$SkipDownload,
+    [ValidateRange(1, 6)]
+    [int]$MaxParallelDownloads = 2,
+    [ValidateRange(1, 128)]
+    [int]$DownloadTransfers = 16,
+    [ValidateRange(1, 256)]
+    [int]$DownloadCheckers = 32,
     [switch]$SkipWatch,
     [switch]$SkipOverview,
     [switch]$SkipUaProfile,
@@ -32,9 +39,9 @@
     [switch]$SingleSourceMode,
     # Aggressive workstation defaults: tuned for the 6-core / 12-thread, 32 GB ETL host.
     # Every value remains overridable for a constrained or concurrent run.
-    [int]$Etl1Workers = 10,
-    [int]$StageThreads = 10,
-    [string]$StageMemory = "22GB",
+    [int]$Etl1Workers = 11,
+    [int]$StageThreads = 11,
+    [string]$StageMemory = "24GB",
     [string]$StageMaxTempSize = "200GB",
     [int]$DeepProfileThreads = 10,
     [string]$DeepProfileMemory = "22GB",
@@ -54,8 +61,25 @@
     [int]$HotLakeRetentionDays = 2,
     [switch]$SkipLakeArchive,
     [ValidateSet("zstd", "snappy", "lz4", "gzip", "brotli", "none")]
-    [string]$Etl1Compression = "zstd"
+    [string]$Etl1Compression = "snappy",
+    [ValidateSet("zstd", "snappy", "lz4", "none")]
+    [string]$StageCompression = "snappy"
 )
+
+if ($args.Count -gt 0) {
+    throw "Unexpected positional arguments. Use named parameters such as -Date YYYY-MM-DD. Received: $($args -join ' ')"
+}
+
+foreach ($remoteValue in @($RemoteRoot, $StreamRemoteRoot, $FastRemoteRoot)) {
+    if (-not $remoteValue -or $remoteValue.StartsWith("-") -or $remoteValue -notmatch "^[^\\/:]+:.+") {
+        throw "Invalid rclone remote root parameter: '$remoteValue'"
+    }
+}
+foreach ($configuredPath in @($LocalRoot, $RawRoot, $OverviewLakeRoot, $PrefsFile, $VenvPython, $DeepProfileTempDir, $ArchiveLakeRoot)) {
+    if ($configuredPath -and $configuredPath.StartsWith("-")) {
+        throw "Invalid path parameter: '$configuredPath'"
+    }
+}
 
 $ErrorActionPreference = "Stop"
 $WorkspaceRoot = $PSScriptRoot
@@ -175,7 +199,7 @@ if (Test-Path $PortableRcloneConfig) {
 }
 
 function Invoke-Rclone {
-    param(
+param(
         [Parameter(Mandatory = $true)]
         [string[]]$Arguments,
         [Parameter(Mandatory = $true)]
@@ -280,10 +304,12 @@ function Sync-RemoteDay {
     )
 }
 
-function Test-LocalMatchesExpectedCount {
+function Test-LocalMatchesExpectedSnapshot {
     param(
         [Parameter(Mandatory = $true)]
         [int64]$ExpectedCount,
+        [Parameter(Mandatory = $true)]
+        [int64]$ExpectedBytes,
         [Parameter(Mandatory = $true)]
         [string]$LocalPath,
         [Parameter(Mandatory = $true)]
@@ -299,22 +325,24 @@ function Test-LocalMatchesExpectedCount {
 
     $maxRetries = [Math]::Max(1, $VerifyRetries)
     for ($attempt = 1; $attempt -le $maxRetries; $attempt++) {
-        Write-Host "[$(Get-Date -Format o)] ${SourceName}: local file-count verification attempt $attempt/$maxRetries"
+        Write-Host "[$(Get-Date -Format o)] ${SourceName}: remote/local snapshot verification attempt $attempt/$maxRetries"
+        $remoteStats = Get-RcloneSize -Path $RemotePath -Label "$SourceName remote verification"
         $localStats = Get-RcloneSize -Path $LocalPath -Label "$SourceName local"
 
-        Write-Host "[$(Get-Date -Format o)] ${SourceName}: expected remote count from start=$ExpectedCount"
+        Write-Host "[$(Get-Date -Format o)] ${SourceName}: start remote count=$ExpectedCount, bytes=$ExpectedBytes"
+        Write-Host "[$(Get-Date -Format o)] ${SourceName}: current remote count=$($remoteStats.Count), bytes=$($remoteStats.Bytes)"
         Write-Host "[$(Get-Date -Format o)] ${SourceName}: local count=$($localStats.Count), bytes=$($localStats.Bytes)"
 
-        if ($localStats.Count -eq $ExpectedCount) {
-            Write-Host "[$(Get-Date -Format o)] ${SourceName}: local folder verified by file count."
+        if ($localStats.Count -eq $remoteStats.Count -and $localStats.Bytes -eq $remoteStats.Bytes) {
+            Write-Host "[$(Get-Date -Format o)] ${SourceName}: local folder verified by file count and total bytes."
             return
         }
 
         if ($attempt -eq $maxRetries) {
-            throw "local verification failed after $maxRetries attempt(s): expected remote count $ExpectedCount, local count $($localStats.Count)"
+            throw "local verification failed after $maxRetries attempt(s): remote count/bytes $($remoteStats.Count)/$($remoteStats.Bytes), local count/bytes $($localStats.Count)/$($localStats.Bytes)"
         }
 
-        Write-Host "[$(Get-Date -Format o)] ${SourceName}: file-count mismatch. Re-running sync."
+        Write-Host "[$(Get-Date -Format o)] ${SourceName}: snapshot mismatch. Re-running sync."
         Sync-RemoteDay -RemotePath $RemotePath -LocalPath $LocalPath -SourceName $SourceName
         if ($VerifyWaitMinutes -gt 0) {
             Write-Host "[$(Get-Date -Format o)] ${SourceName}: waiting $VerifyWaitMinutes minute(s) before next verification."
@@ -328,6 +356,14 @@ if ($Date) {
     $TargetDate = $Date.Date
 } else {
     $TargetDate = (Get-Date).AddDays(-1 * [Math]::Abs($LookbackDays))
+}
+if ($TargetDate -ge (Get-Date).Date) {
+    throw "Target date must be a completed day before today: $($TargetDate.ToString('yyyy-MM-dd'))"
+}
+foreach ($pathValue in @($DefaultLocalRoot, $RawBaseRoot, $DefaultOverviewLakeRoot)) {
+    if (-not $pathValue -or $pathValue.StartsWith("-")) {
+        throw "Invalid ETL path parameter: '$pathValue'"
+    }
 }
 $month = $TargetDate.ToString("MM")
 $day = $TargetDate.ToString("dd")
@@ -351,6 +387,11 @@ if ($SingleSourceMode) {
         LocalRoot = Join-Path $RawBaseRoot $FastLocalName
     }
 }
+foreach ($source in $sources) {
+    if (-not $source.RemoteRoot -or $source.RemoteRoot.StartsWith("-") -or $source.RemoteRoot -notmatch "^[^\\/:]+:.+") {
+        throw "Invalid rclone remote root for $($source.Name): '$($source.RemoteRoot)'"
+    }
+}
 
 $logFolder = Join-Path $WorkspaceRoot "output\logs"
 $logFile = Join-Path $logFolder ("run_{0}.log" -f (Get-Date -Format "yyyyMMdd_HHmmss"))
@@ -370,29 +411,69 @@ try {
         Write-Host "[$(Get-Date -Format o)] Raw root    : $RawBaseRoot"
     }
 
-    foreach ($source in $sources) {
-        $sourceRemoteRoot = $source.RemoteRoot.TrimEnd("/")
-        $remotePath = "$sourceRemoteRoot/$month/$day"
-        $localPath = Join-Path $source.LocalRoot (Join-Path $month $day)
-
-        Write-Host "[$(Get-Date -Format o)] [$($source.Name)] Target remote: $remotePath"
-        Write-Host "[$(Get-Date -Format o)] [$($source.Name)] Target local : $localPath"
-
-        if ($WaitForRemoteStable) {
-            Wait-RemoteStable -RemotePath $remotePath -SourceName $source.Name
-        } else {
-            Write-Host "[$(Get-Date -Format o)] [$($source.Name)] Remote stability wait skipped by default. Capturing remote file count once."
+    if ($SkipDownload) {
+        if ($SingleSourceMode) { throw "-SkipDownload is not supported with -SingleSourceMode." }
+        $downloadResultRoot = Join-Path $WorkspaceRoot "output\state\downloads"
+        foreach ($source in @("stream", "fast")) {
+            $resultPath = Join-Path $downloadResultRoot ("{0}_{1}.json" -f $TargetDate.ToString("yyyy-MM-dd"), $source)
+            if (-not (Test-Path -LiteralPath $resultPath)) {
+                throw "Validated prefetch result is missing for $source/$($TargetDate.ToString('yyyy-MM-dd')): $resultPath"
+            }
+            try { $downloadResult = Get-Content -Raw -LiteralPath $resultPath | ConvertFrom-Json } catch {
+                throw "Validated prefetch result is unreadable: $resultPath"
+            }
+            if (
+                $downloadResult.status -ne "complete" -or
+                $downloadResult.verified -ne $true -or
+                $downloadResult.source -ne $source -or
+                $downloadResult.date -ne $TargetDate.ToString("yyyy-MM-dd") -or
+                [int64]$downloadResult.remote_count -le 0 -or
+                [int64]$downloadResult.remote_count -ne [int64]$downloadResult.local_count -or
+                [int64]$downloadResult.remote_bytes -ne [int64]$downloadResult.local_bytes -or
+                -not (Test-Path -LiteralPath $downloadResult.local_path)
+            ) {
+                throw "Validated prefetch result did not pass integrity checks: $resultPath"
+            }
         }
-
-        $remoteStartStats = Get-RcloneSize -Path $remotePath -Label "$($source.Name) remote"
-        if ($remoteStartStats.Count -le 0) {
-            throw "remote file count is zero for $remotePath"
+        Write-Host "[$(Get-Date -Format o)] Download phase skipped after verified FAST and STREAM prefetch evidence."
+    } elseif (-not $SingleSourceMode) {
+        $prefetchScript = Join-Path $WorkspaceRoot "prefetch_daily_sources.ps1"
+        if (-not (Test-Path -LiteralPath $prefetchScript)) { throw "Parallel prefetch launcher is missing: $prefetchScript" }
+        $prefetchArguments = @{
+            Dates = @($TargetDate)
+            StreamRemoteRoot = $StreamRemoteRoot
+            FastRemoteRoot = $FastRemoteRoot
+            RawRoot = $RawBaseRoot
+            StreamLocalName = $StreamLocalName
+            FastLocalName = $FastLocalName
+            RcloneExe = $RcloneExe
+            MaxParallelDownloads = $MaxParallelDownloads
+            Transfers = $DownloadTransfers
+            Checkers = $DownloadCheckers
+            VerifyRetries = $VerifyRetries
+            VerifyWaitMinutes = $VerifyWaitMinutes
+            WaitForRemoteStable = $WaitForRemoteStable.IsPresent
+            StableChecks = $StableChecks
+            StableWaitMinutes = $StableWaitMinutes
+            SkipVerifyAfterSync = $SkipVerifyAfterSync.IsPresent
         }
-        Write-Host "[$(Get-Date -Format o)] [$($source.Name)] Start remote count=$($remoteStartStats.Count), bytes=$($remoteStartStats.Bytes)"
+        if (Test-Path -LiteralPath $PortableRcloneConfig) { $prefetchArguments["RcloneConfig"] = $PortableRcloneConfig }
+        $global:LASTEXITCODE = 0
+        & $prefetchScript @prefetchArguments
+        if ($LASTEXITCODE -ne 0) { throw "Parallel prefetch failed with exit code $LASTEXITCODE" }
+    } else {
+        foreach ($source in $sources) {
+            $sourceRemoteRoot = $source.RemoteRoot.TrimEnd("/")
+            $remotePath = "$sourceRemoteRoot/$month/$day"
+            $localPath = Join-Path $source.LocalRoot (Join-Path $month $day)
 
-        Sync-RemoteDay -RemotePath $remotePath -LocalPath $localPath -SourceName $source.Name
-        Write-Host "[$(Get-Date -Format o)] [$($source.Name)] rclone sync done."
-        Test-LocalMatchesExpectedCount -ExpectedCount $remoteStartStats.Count -LocalPath $localPath -RemotePath $remotePath -SourceName $source.Name
+            Write-Host "[$(Get-Date -Format o)] [$($source.Name)] Target remote: $remotePath"
+            Write-Host "[$(Get-Date -Format o)] [$($source.Name)] Target local : $localPath"
+            $remoteStartStats = Get-RcloneSize -Path $remotePath -Label "$($source.Name) remote"
+            if ($remoteStartStats.Count -le 0) { throw "remote file count is zero for $remotePath" }
+            Sync-RemoteDay -RemotePath $remotePath -LocalPath $localPath -SourceName $source.Name
+            Test-LocalMatchesExpectedSnapshot -ExpectedCount $remoteStartStats.Count -ExpectedBytes $remoteStartStats.Bytes -LocalPath $localPath -RemotePath $remotePath -SourceName $source.Name
+        }
     }
 
     if (-not $SkipPostVerifyDelay) {
@@ -407,8 +488,13 @@ try {
     $env:VG_OVERVIEW_SOURCES = $OverviewSources
     $pipeline = Join-Path $PSScriptRoot "src\orchestrator\run_pipeline.py"
     $watchArgs = @()
+    $isIntermediateRecovery = $SkipDownload -and $SkipWatch -and $SkipOverview -and $SkipLakeArchive
     if ($SkipWatch) { $watchArgs += "--skip-watch" }
     if ($SkipOverview) { $watchArgs += "--skip-overview" }
+    if ($isIntermediateRecovery) {
+        $watchArgs += @("--skip-audience", "--skip-master")
+        Write-Host "[$(Get-Date -Format o)] Intermediate recovery date: daily marts remain enabled; top-level dashboard rendering is deferred."
+    }
     if (-not $RunDeviceDecode) { $watchArgs += "--skip-device-decode-profile" }
     if (-not $StrictPipeline) { $watchArgs += "--continue-on-error" }
     if ($StrictPipeline) {
@@ -420,7 +506,10 @@ try {
     $pipelineArgs = @(
         "--base", $DefaultLocalRoot,
         "--overview-lake-root", $DefaultOverviewLakeRoot,
-        "--overview-sources", $OverviewSources
+        "--overview-sources", $OverviewSources,
+        # Raw day D legitimately creates an early-IST D+1 spillover partition.
+        # Retain it for the next run, but never publish it as a completed day.
+        "--publish-through", $TargetDate.ToString("yyyy-MM-dd")
     )
     if (-not $SingleSourceMode) {
         $pipelineArgs += @(
@@ -438,6 +527,9 @@ try {
     }
     if ($Etl1Compression) {
         $pipelineArgs += @("--etl1-compression", $Etl1Compression)
+    }
+    if ($StageCompression) {
+        $pipelineArgs += @("--stage-compression", $StageCompression)
     }
     if (-not $SingleSourceMode) {
         if ($KeepProcessedInputs) {

@@ -1841,29 +1841,24 @@
     "stream/2026-08-09": {
       "source": "stream",
       "date": "2026-08-09",
-      "lake_root": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
-      "partition_path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=08\\day=09",
       "file_count": 3,
-      "bytes": 689908722,
-      "max_mtime_ns": 1786682340964388800,
+      "bytes": 690095497,
+      "max_mtime_ns": 1786954549591694500,
       "files": [
         {
-          "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=09\\part_stream_2026_08_08_0.parquet",
           "name": "part_stream_2026_08_08_0.parquet",
           "bytes": 58487050,
           "mtime_ns": 1786356600300331800
         },
         {
-          "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=08\\day=09\\part_stream_2026_08_09_0.parquet",
           "name": "part_stream_2026_08_09_0.parquet",
-          "bytes": 631412529,
-          "mtime_ns": 1786682289672300600
+          "bytes": 631599304,
+          "mtime_ns": 1786954549591694500
         },
         {
-          "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=08\\day=09\\part_stream_2026_08_11_0.parquet",
           "name": "part_stream_2026_08_11_0.parquet",
           "bytes": 9143,
-          "mtime_ns": 1786682340964388800
+          "mtime_ns": 1786524502768182700
         }
       ],
       "output_counts": {
@@ -1987,25 +1982,70 @@
     "stream/2026-08-14": {
       "source": "stream",
       "date": "2026-08-14",
-      "lake_root": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
-      "partition_path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=08\\day=14",
-      "file_count": 1,
-      "bytes": 56810839,
-      "max_mtime_ns": 1786682391174712600,
+      "file_count": 2,
+      "bytes": 825058157,
+      "max_mtime_ns": 1786954586539745000,
       "files": [
         {
-          "path": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake\\source=stream\\year=2026\\month=08\\day=14\\part_stream_2026_08_13_0.parquet",
           "name": "part_stream_2026_08_13_0.parquet",
           "bytes": 56810839,
           "mtime_ns": 1786682391174712600
+        },
+        {
+          "name": "part_stream_2026_08_14_0.parquet",
+          "bytes": 768247318,
+          "mtime_ns": 1786954586539745000
         }
       ],
       "output_counts": {
-        "identity_device_daily": 540,
-        "identity_session_daily": 556,
-        "identity_ipua_daily": 567
+        "identity_device_daily": 14186,
+        "identity_session_daily": 17709,
+        "identity_ipua_daily": 16189
+      }
+    },
+    "stream/2026-08-15": {
+      "source": "stream",
+      "date": "2026-08-15",
+      "file_count": 2,
+      "bytes": 1056337010,
+      "max_mtime_ns": 1786961089807330500,
+      "files": [
+        {
+          "name": "part_stream_2026_08_14_0.parquet",
+          "bytes": 62657769,
+          "mtime_ns": 1786954586579129700
+        },
+        {
+          "name": "part_stream_2026_08_15_0.parquet",
+          "bytes": 993679241,
+          "mtime_ns": 1786961089807330500
+        }
+      ],
+      "output_counts": {
+        "identity_device_daily": 18331,
+        "identity_session_daily": 23748,
+        "identity_ipua_daily": 21375
+      }
+    },
+    "stream/2026-08-16": {
+      "source": "stream",
+      "date": "2026-08-16",
+      "file_count": 1,
+      "bytes": 55407557,
+      "max_mtime_ns": 1786961089926180800,
+      "files": [
+        {
+          "name": "part_stream_2026_08_15_0.parquet",
+          "bytes": 55407557,
+          "mtime_ns": 1786961089926180800
+        }
+      ],
+      "output_counts": {
+        "identity_device_daily": 449,
+        "identity_session_daily": 460,
+        "identity_ipua_daily": 469
       }
     }
   },
-  "updated_at_utc": "2026-08-14T10:26:06.267559+00:00"
+  "updated_at_utc": "2026-08-17T11:03:46.150382+00:00"
 }
