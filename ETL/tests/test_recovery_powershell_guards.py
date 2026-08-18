@@ -17,6 +17,11 @@ TEST_TEMP_ROOT = Path(tempfile.gettempdir()) / "veto_etl_tests"
 
 
 class RecoveryPowerShellGuardsTest(unittest.TestCase):
+    def test_fresh_validation_timestamp_does_not_dereference_nullable_value(self) -> None:
+        source = RECOVERY_SCRIPT.read_text(encoding="utf-8")
+        self.assertNotIn("$NotBefore.Value.ToUniversalTime()", source)
+        self.assertIn("([datetime]$NotBefore).ToUniversalTime()", source)
+
     def test_scripts_parse_without_errors(self) -> None:
         escaped_paths = [
             str(path).replace("'", "''")

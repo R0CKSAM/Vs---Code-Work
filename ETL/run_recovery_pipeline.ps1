@@ -70,6 +70,9 @@ function Get-ValidationEvidence {
     if (-not (Test-Path -LiteralPath $ValidationRoot)) { return $null }
     $iso = $Date.ToString("yyyy-MM-dd")
     $underscored = $Date.ToString("yyyy_MM_dd")
+    # PowerShell unwraps Nullable[datetime] parameters to DateTime values.
+    # Calling .Value therefore returns null on a supplied timestamp.
+    $notBeforeUtc = if ($null -ne $NotBefore) { ([datetime]$NotBefore).ToUniversalTime() } else { $null }
     $candidates = @(
         Get-ChildItem -LiteralPath $ValidationRoot -Recurse -File -Filter "*.json" -ErrorAction SilentlyContinue |
             Where-Object { $_.Name.Contains($iso) -or $_.Name.Contains($underscored) } |
@@ -77,7 +80,7 @@ function Get-ValidationEvidence {
     )
 
     foreach ($candidate in $candidates) {
-        if ($NotBefore -and $candidate.LastWriteTimeUtc -lt $NotBefore.Value.ToUniversalTime()) {
+        if ($notBeforeUtc -and $candidate.LastWriteTimeUtc -lt $notBeforeUtc) {
             continue
         }
         try {
