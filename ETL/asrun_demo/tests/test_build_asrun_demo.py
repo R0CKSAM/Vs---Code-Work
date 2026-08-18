@@ -579,6 +579,42 @@ def test_render_dashboard_wires_complete_reset_and_fatal_error(
     assert "Filters changed from the default view; click to restore defaults" in html
 
 
+def test_render_dashboard_exports_missing_asrun_audience_as_zero(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """ASRUN source cells and exports must remain numeric when no minute matches."""
+    chartjs = tmp_path / "chart.umd.min.js"
+    chartjs.write_text("window.Chart=function(){};", encoding="utf-8")
+    monkeypatch.setattr(asrun, "CHARTJS_CACHE", chartjs)
+
+    html = asrun.render_dashboard({"channels": ["Test Channel"]})
+
+    assert "coverage=new Set(allRows.map(row=>minuteKey(row.minute_ist)))" not in html
+    assert "window.keys.some(key=>!coverage.has(key))" not in html
+    assert "map=state&&state.map instanceof Map?state.map:new Map()" in html
+    assert "return {value:fmt(total),window:window.label,total,available:true}" in html
+    assert "total+=Number(map.get(key)||0)" in html
+    assert 'src="asrun_delivery_data.js?v=unversioned"' in html
+
+
+def test_split_dashboard_payload_versions_lazy_sidecars() -> None:
+    """Every rebuild must force local-file browsers to load the new source arrays."""
+    payload = {
+        "generated_at_ist": "18/08/26 12:24:33 PM IST",
+        "viewer_minute": [],
+        "amagi": {"minute": []},
+        "fct": {"events": []},
+        "youtube": {key: [] for key in asrun.YOUTUBE_PAYLOAD_ARRAYS},
+    }
+
+    core, _chunks = asrun.split_dashboard_payload(payload)
+
+    assert {
+        config["file"].split("?v=")[1]
+        for config in core["sidecars"].values()
+    } == {"180826122433PMIST"}
+
+
 def test_delivery_filters_are_bidirectional_and_empty_multiselects_stay_empty(
     tmp_path: Path, monkeypatch
 ) -> None:

@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "generated_at_ist": "2026-08-18T13:42:33+05:30",
+  "mode": "structural",
+  "date": "2026-08-04",
+  "sources": [
+    "fast",
+    "stream"
+  ],
+  "lake_roots": [
+    "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\data\\lake",
+    "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE"
+  ],
+  "overall_status": "PASS",
+  "hard_failure_count": 0,
+  "channel_anomaly_count": 0,
+  "warnings": [],
+  "source_results": [
+    {
+      "source": "fast",
+      "status": "PASS",
+      "hard_failure": false,
+      "message": "Full-day source coverage passed.",
+      "selected": {
+        "source": "fast",
+        "date": "2026-08-04",
+        "root": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE",
+        "day_dir": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=04",
+        "priority": 1,
+        "files": [
+          {
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=04\\part_fast_2026_08_03_0.parquet",
+            "rows": 1580062,
+            "start_ist": "2026-08-04T00:00:00+05:30",
+            "end_ist": "2026-08-04T05:29:49+05:30",
+            "start_epoch": 1785781800.0,
+            "end_epoch": 1785801589.929
+          },
+          {
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=04\\part_fast_2026_08_04_0.parquet",
+            "rows": 49391899,
+            "start_ist": "2026-08-04T05:21:42+05:30",
+            "end_ist": "2026-08-04T23:59:59+05:30",
+            "start_epoch": 1785801102.141,
+            "end_epoch": 1785868199.994
+          },
+          {
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=04\\part_fast_2026_08_05_0.parquet",
+            "rows": 1,
+            "start_ist": "2026-08-04T19:22:19+05:30",
+            "end_ist": "2026-08-04T19:22:19+05:30",
+            "start_epoch": 1785851539.687,
+            "end_epoch": 1785851539.687
+          },
+          {
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=04\\part_fast_2026_08_14_0.parquet",
+            "rows": 73,
+            "start_ist": "2026-08-04T19:40:23+05:30",
+            "end_ist": "2026-08-04T19:47:41+05:30",
+            "start_epoch": 1785852623.884,
+            "end_epoch": 1785853061.978
+          }
+        ],
+        "rows": 50972035,
+        "start_ist": "2026-08-04T00:00:00+05:30",
+        "end_ist": "2026-08-04T23:59:59+05:30",
+        "start_epoch": 1785781800.0,
+        "end_epoch": 1785868199.994,
+        "coverage_seconds": 86399.994,
+        "start_gap_minutes": 0.0,
+        "end_gap_minutes": 0.0,
+        "max_internal_gap_minutes": 0.0,
+        "overlap_minutes": 15.431,
+        "full_day": true
+      },
+      "candidates": [
+        {
+          "source": "fast",
+          "date": "2026-08-04",
+          "root": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE",
+          "day_dir": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=04",
+          "priority": 1,
+          "files": [
+            {
+              "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=04\\part_fast_2026_08_03_0.parquet",
+              "rows": 1580062,
+              "start_ist": "2026-08-04T00:00:00+05:30",
+              "end_ist": "2026-08-04T05:29:49+05:30",
+              "start_epoch": 1785781800.0,
+              "end_epoch": 1785801589.929
+            },
+            {
+              "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=04\\part_fast_2026_08_04_0.parquet",
+              "rows": 49391899,
+              "start_ist": "2026-08-04T05:21:42+05:30",
+              "end_ist": "2026-08-04T23:59:59+05:30",
+              "start_epoch": 1785801102.141,
+              "end_epoch": 1785868199.994
+            },
+            {
+              "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=04\\part_fast_2026_08_05_0.parquet",
+              "rows": 1,
+              "start_ist": "2026-08-04T19:22:19+05:30",
+              "end_ist": "2026-08-04T19:22:19+05:30",
+              "start_epoch": 1785851539.687,
+              "end_epoch": 1785851539.687
+            },
+            {
+              "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=fast\\year=2026\\month=08\\day=04\\part_fast_2026_08_14_0.parquet",
+              "rows": 73,
+              "start_ist": "2026-08-04T19:40:23+05:30",
+              "end_ist": "2026-08-04T19:47:41+05:30",
+              "start_epoch": 1785852623.884,
+              "end_epoch": 1785853061.978
+            }
+          ],
+          "rows": 50972035,
+          "start_ist": "2026-08-04T00:00:00+05:30",
+          "end_ist": "2026-08-04T23:59:59+05:30",
+          "start_epoch": 1785781800.0,
+          "end_epoch": 1785868199.994,
+          "coverage_seconds": 86399.994,
+          "start_gap_minutes": 0.0,
+          "end_gap_minutes": 0.0,
+          "max_internal_gap_minutes": 0.0,
+          "overlap_minutes": 15.431,
+          "full_day": true
+        }
+      ]
+    },
+    {
+      "source": "stream",
+      "status": "PASS",
+      "hard_failure": false,
+      "message": "Full-day source coverage passed.",
+      "selected": {
+        "source": "stream",
+        "date": "2026-08-04",
+        "root": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE",
+        "day_dir": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=04",
+        "priority": 1,
+        "files": [
+          {
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=04\\part_stream_2026_08_03_0.parquet",
+            "rows": 1820260,
+            "start_ist": "2026-08-04T00:00:00+05:30",
+            "end_ist": "2026-08-04T05:29:54+05:30",
+            "start_epoch": 1785781800.0,
+            "end_epoch": 1785801594.862
+          },
+          {
+            "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=04\\part_stream_2026_08_04_0.parquet",
+            "rows": 20237220,
+            "start_ist": "2026-08-04T05:21:44+05:30",
+            "end_ist": "2026-08-04T23:59:59+05:30",
+            "start_epoch": 1785801104.216,
+            "end_epoch": 1785868199.992
+          }
+        ],
+        "rows": 22057480,
+        "start_ist": "2026-08-04T00:00:00+05:30",
+        "end_ist": "2026-08-04T23:59:59+05:30",
+        "start_epoch": 1785781800.0,
+        "end_epoch": 1785868199.992,
+        "coverage_seconds": 86399.992,
+        "start_gap_minutes": 0.0,
+        "end_gap_minutes": 0.0,
+        "max_internal_gap_minutes": 0.0,
+        "overlap_minutes": 8.177,
+        "full_day": true
+      },
+      "candidates": [
+        {
+          "source": "stream",
+          "date": "2026-08-04",
+          "root": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE",
+          "day_dir": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=04",
+          "priority": 1,
+          "files": [
+            {
+              "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=04\\part_stream_2026_08_03_0.parquet",
+              "rows": 1820260,
+              "start_ist": "2026-08-04T00:00:00+05:30",
+              "end_ist": "2026-08-04T05:29:54+05:30",
+              "start_epoch": 1785781800.0,
+              "end_epoch": 1785801594.862
+            },
+            {
+              "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=08\\day=04\\part_stream_2026_08_04_0.parquet",
+              "rows": 20237220,
+              "start_ist": "2026-08-04T05:21:44+05:30",
+              "end_ist": "2026-08-04T23:59:59+05:30",
+              "start_epoch": 1785801104.216,
+              "end_epoch": 1785868199.992
+            }
+          ],
+          "rows": 22057480,
+          "start_ist": "2026-08-04T00:00:00+05:30",
+          "end_ist": "2026-08-04T23:59:59+05:30",
+          "start_epoch": 1785781800.0,
+          "end_epoch": 1785868199.992,
+          "coverage_seconds": 86399.992,
+          "start_gap_minutes": 0.0,
+          "end_gap_minutes": 0.0,
+          "max_internal_gap_minutes": 0.0,
+          "overlap_minutes": 8.177,
+          "full_day": true
+        }
+      ]
+    }
+  ],
+  "profile_reconciliation": [],
+  "channel_anomalies": []
+}

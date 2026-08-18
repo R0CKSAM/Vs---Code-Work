@@ -8,42 +8,41 @@ $CHARTJS_TAG
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--ink:#172033;--muted:#64748b;--panel:#fff;--line:#d8e1ee;--brand:#173b5c;--brand2:#1f6f8b;--accent:#c9a227;--bg:#eef3f8}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;-webkit-text-size-adjust:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;-webkit-text-size-adjust:100%;font-size:12px}
 body.modal-open{position:fixed;width:100%;left:0;right:0;overflow:hidden;overscroll-behavior:none}
 .topbar{background:var(--brand);color:#fff;padding:18px 30px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;border-bottom:4px solid var(--accent);box-shadow:0 8px 22px rgba(15,23,42,.16)}
 .title-block{display:flex;flex-direction:column;gap:3px}
 .topbar h1{font-size:20px;font-weight:700;letter-spacing:0}.topbar .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#cbd5e1;font-weight:700}.header-meta{display:flex;flex-direction:column;align-items:flex-end;gap:3px;text-align:right;max-width:min(980px,72vw);line-height:1.35}.topbar .sub{font-size:12px;color:#dbe7f2}.range-pill{font-size:12px;font-weight:700;color:#fff}
-#main{padding:22px 28px;max-width:1760px;margin:0 auto}
-.sticky-controls{position:relative;z-index:45;background:#eef3f8;padding:8px 0;margin:0 0 16px;border-bottom:1px solid rgba(216,225,238,.9);transition:box-shadow .18s ease,background-color .18s ease,padding .18s ease}
-.sticky-controls.is-fixed{position:fixed;top:0;left:0;right:0;width:100%;margin:0;padding:10px 28px;background:#eef3f8;border-bottom:1px solid #d8e1ee;box-shadow:0 10px 26px rgba(15,23,42,.16);animation:stickyHeaderIn .16s ease-out}
+#main{padding:6px 8px;max-width:none;margin:0 auto}
+.sticky-controls{position:relative;z-index:45;background:#eef3f8;padding:4px 0;margin:0 0 6px;border-bottom:1px solid rgba(216,225,238,.9)}
+.sticky-controls.is-fixed{position:fixed;top:0;left:0;right:0;width:100%;margin:0;padding:4px 8px;background:#eef3f8;border-bottom:1px solid #d8e1ee;box-shadow:0 2px 5px rgba(15,23,42,.12)}
 .sticky-spacer{display:none;height:0}
 .sticky-spacer.active{display:block}
-.sticky-controls .filter-group{margin:0 auto;max-width:1760px;transition:box-shadow .18s ease,border-color .18s ease}
-.sticky-controls.is-fixed .filter-group{box-shadow:0 2px 8px rgba(15,23,42,.08);border-color:#cbd5e1}
-@keyframes stickyHeaderIn{from{opacity:.92;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
-.meta-strip{background:var(--panel);border-radius:8px;border:1px solid var(--line);padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px 18px;font-size:12px;color:#475569;box-shadow:0 1px 2px rgba(15,23,42,.05)}
+.sticky-controls .filter-group{margin:0 auto;max-width:none}
+.sticky-controls.is-fixed .filter-group{border-color:#cbd5e1}
+.meta-strip{background:var(--panel);border-radius:3px;border:1px solid var(--line);padding:5px 8px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 12px;font-size:10px;color:#475569;box-shadow:none}
 .meta-items{display:flex;flex-wrap:wrap;gap:8px 26px;align-items:center}
 .meta-strip b{color:var(--ink);font-weight:700}
-.control-row{display:flex;flex-direction:column;gap:12px;margin-bottom:18px}
-.cards{display:flex;flex-direction:column;gap:14px;width:100%}
+.control-row{display:flex;flex-direction:column;gap:5px;margin-bottom:7px}
+.cards{display:flex;flex-direction:column;gap:7px;width:100%}
 .kpi-section{min-width:0}
-.kpi-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin:0 0 7px}
-.kpi-section-head h2{font-size:12px;font-weight:850;color:#24324a;letter-spacing:.02em;text-transform:uppercase}
+.kpi-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin:0 0 3px}
+.kpi-section-head h2{font-size:10px;font-weight:850;color:#24324a;letter-spacing:.02em;text-transform:uppercase}
 .kpi-section-head span{display:none}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;width:100%}
-.card{min-width:0;max-width:100%;overflow:hidden;background:var(--panel);border-radius:8px;border:1px solid var(--line);padding:11px 12px;text-align:center;transition:all 0.3s;box-shadow:0 1px 2px rgba(15,23,42,.05);border-top:3px solid currentColor}
-.clbl{font-size:10.5px;color:var(--muted);margin-bottom:7px;display:flex;align-items:flex-start;justify-content:center;text-align:center;gap:6px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;line-height:1.15;min-height:24px;overflow-wrap:anywhere}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:5px;width:100%}
+.card{min-width:0;max-width:100%;overflow:hidden;background:var(--panel);border-radius:3px;border:1px solid var(--line);padding:6px 7px;text-align:center;box-shadow:none;border-top:2px solid currentColor}
+.clbl{font-size:8.5px;color:var(--muted);margin-bottom:3px;display:flex;align-items:flex-start;justify-content:center;text-align:center;gap:4px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;line-height:1.1;min-height:18px;overflow-wrap:anywhere}
 .cdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.cval{font-size:25px;font-weight:800;line-height:1.05;max-width:100%;overflow-wrap:anywhere;word-break:break-word;font-variant-numeric:tabular-nums}
-.csub{font-size:10px;color:#64748b;margin-top:6px;line-height:1.2;font-weight:700;overflow-wrap:anywhere}
-.charts{display:flex;flex-wrap:wrap;justify-content:center;align-items:stretch;gap:16px;margin-bottom:18px}
-.cbox{flex:1 1 calc((100% - 16px)/2);min-width:320px;background:var(--panel);border-radius:8px;border:1px solid var(--line);padding:15px 17px;box-shadow:0 1px 2px rgba(15,23,42,.05)}
-.cbox h3{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:#24324a}
-.cbox canvas{width:100%!important;height:clamp(170px,22vh,240px)!important}
+.cval{font-size:20px;font-weight:800;line-height:1.05;max-width:100%;overflow-wrap:anywhere;word-break:break-word;font-variant-numeric:tabular-nums}
+.csub{font-size:8.5px;color:#64748b;margin-top:3px;line-height:1.15;font-weight:700;overflow-wrap:anywhere}
+.charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:6px;margin-bottom:7px}
+.cbox{min-width:0;background:var(--panel);border-radius:3px;border:1px solid var(--line);padding:7px 8px;box-shadow:none}
+.cbox h3{font-size:10px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;gap:6px;color:#24324a}
+.cbox canvas{width:100%!important;height:clamp(135px,18vh,190px)!important}
 .chart-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
 .chart-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .chart-days{color:#94a3b8;font-weight:500;font-size:11px}
-.expand-btn{border:1px solid #cbd5e1;background:#fff;color:#1F3864;border-radius:5px;padding:3px 8px;font-size:10px;font-weight:800;cursor:pointer}
+.expand-btn{border:1px solid #cbd5e1;background:#fff;color:#1F3864;border-radius:3px;padding:2px 5px;font-size:9px;font-weight:800;cursor:pointer}
 .expand-btn:hover{background:#edf2f7;border-color:#94a3b8}
 .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:50;display:none;align-items:center;justify-content:center;padding:22px;overscroll-behavior:contain}
 .modal-backdrop.open{display:flex}
@@ -61,9 +60,9 @@ body.modal-open{position:fixed;width:100%;left:0;right:0;overflow:hidden;overscr
 .stat-chip span{font-size:16px;font-weight:800;color:#1e293b}
 .modal-chart-wrap{min-height:0;flex:1;border:1px solid #e2e8f0;border-radius:8px;padding:12px;background:#fff}
 .modal-chart-wrap canvas{width:100%!important;height:100%!important}
-.table-wrap{background:var(--panel);border-radius:8px;border:1px solid var(--line);overflow:hidden;margin-bottom:18px;box-shadow:0 2px 8px rgba(15,23,42,.06)}
-.thead{padding:13px 17px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:15px;background:#f8fafc}
-.thead h3{font-size:14px;font-weight:700;color:#24324a}
+.table-wrap{background:var(--panel);border-radius:3px;border:1px solid var(--line);overflow:hidden;margin-bottom:7px;box-shadow:none}
+.thead{padding:6px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);flex-wrap:wrap;gap:6px;background:#f8fafc}
+.thead h3{font-size:11px;font-weight:700;color:#24324a}
 .table-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto}
 .table-summary{font-size:11px;color:#64748b;font-weight:750;line-height:1.3}
 .drop-label{display:flex;flex-direction:column;align-items:center;gap:4px;line-height:1.1;font-weight:800}
@@ -71,24 +70,24 @@ body.modal-open{position:fixed;width:100%;left:0;right:0;overflow:hidden;overscr
 .drop-select{width:100%;max-width:68px;border:1px solid #fdba74;background:#fff;color:#7c2d12;border-radius:6px;padding:3px 5px;font-size:9.5px;font-weight:800;outline:none;cursor:pointer;text-align:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.7)}
 .drop-select:hover{border-color:#f97316;background:#fffbeb}
 .drop-select:focus{border-color:#ea580c;box-shadow:0 0 0 2px rgba(249,115,22,.18)}
-.filter-group{display:flex;align-items:center;gap:8px;background:#fff;padding:11px 12px;border-radius:8px;border:1px solid var(--line);border-top:3px solid var(--accent);box-shadow:0 1px 2px rgba(15,23,42,.05);width:100%;overflow-x:auto;white-space:nowrap}
-.filter-group input[type="date"],.filter-group select{border:1px solid #cbd5e1;padding:5px 6px;border-radius:4px;font-size:11px;outline:none;font-family:inherit;color:#1F3864;font-weight:700;cursor:pointer;min-width:116px;background:#fff}
+.filter-group{display:flex;align-items:center;gap:5px;background:#fff;padding:5px 7px;border-radius:3px;border:1px solid var(--line);border-top:2px solid var(--accent);box-shadow:none;width:100%;overflow-x:auto;white-space:nowrap;flex-wrap:nowrap}
+.filter-group input[type="date"],.filter-group select{border:1px solid #cbd5e1;padding:3px 4px;border-radius:3px;font-size:10px;outline:none;font-family:inherit;color:#1F3864;font-weight:700;cursor:pointer;min-width:106px;background:#fff}
 .filter-group select{min-width:72px}
-.filter-group span{font-size:11px;color:#64748b;font-weight:700;white-space:nowrap}
+.filter-group span{font-size:10px;color:#64748b;font-weight:700;white-space:nowrap}
 .date-end-wrap{display:inline-flex;align-items:center;gap:6px;line-height:1;vertical-align:middle}
-.filter-group .to-label{display:inline-flex;align-items:center;align-self:center;font-size:11px;color:#64748b;font-weight:700;line-height:1}
-.filter-sep{width:1px;height:24px;background:#d8e1ee}
-.btn-preset{background:#fff;border:1px solid #cbd5e1;padding:4px 10px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;color:#555;transition:all 0.2s}
+.filter-group .to-label{display:inline-flex;align-items:center;align-self:center;font-size:10px;color:#64748b;font-weight:700;line-height:1}
+.filter-sep{width:1px;height:20px;background:#d8e1ee}
+.btn-preset{background:#fff;border:1px solid #cbd5e1;padding:3px 6px;border-radius:3px;font-size:10px;font-weight:600;cursor:pointer;color:#555}
 .btn-preset:hover{background:#edf2f7;color:#1F3864}
 .btn-preset.active{background:#1F3864;color:#fff;border-color:#1F3864}
-.tbl-c{overflow-x:auto;max-height:650px;overflow-y:auto;background:#fff}
-table{width:100%;border-collapse:separate;border-spacing:0;font-size:10px;table-layout:fixed}
+.tbl-c{overflow-x:auto;max-height:72vh;overflow-y:auto;background:#fff}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:9px;table-layout:fixed}
 thead{position:sticky;top:0;z-index:5}
 thead tr:first-child th{padding:5px 5px;font-size:9px;font-weight:700;color:#fff;text-align:center;white-space:normal;border-right:1px solid rgba(255,255,255,.25);border-bottom:1px solid #b8c4d4}
 thead tr:last-child th{padding:6px 4px;text-align:center;font-size:9px;font-weight:600;color:#334155;border-right:1px solid #cbd5e1;border-bottom:1px solid #b8c4d4;white-space:normal;line-height:1.15;background:#f8fafc;cursor:pointer;user-select:none;overflow-wrap:anywhere;word-break:normal}
 thead tr:last-child th:hover{background:#edf2f7}
 thead tr:last-child th:first-child{text-align:center}
-td{padding:6px 4px;text-align:center;vertical-align:middle;border-right:1px solid #dbe3ef;border-bottom:1px solid #dbe3ef;white-space:normal;line-height:1.2;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
+td{padding:4px 3px;text-align:center;vertical-align:middle;border-right:1px solid #dbe3ef;border-bottom:1px solid #dbe3ef;white-space:normal;line-height:1.15;overflow:visible;text-overflow:clip;overflow-wrap:anywhere}
 th:first-child,td:first-child{border-left:1px solid #dbe3ef}
 td:first-child{text-align:center;font-weight:500;position:sticky;left:0;background:#fff;z-index:1;width:72px}
 tr:nth-child(even) td:first-child{background:#fafafa}
@@ -98,47 +97,51 @@ tr.drop-row td{background:#fff7ed!important;color:#7c2d12!important;font-weight:
 tr.drop-row td:first-child{text-align:center;padding:6px 5px}
 .chg-pos{color:#166534!important}.chg-neg{color:#b91c1c!important}.chg-flat{color:#57534e!important}
 .pct{color:#185FA5;font-weight:500}
-.footer{text-align:center;font-size:11px;color:#94a3b8;padding:8px 0 20px}
+.footer{margin-top:4px;padding:5px 8px 7px;text-align:center;font-size:9px;color:#64748b;border-top:1px solid var(--line)}
+.footer-title{font-size:14px;font-weight:800;color:#24324a;margin-bottom:5px}.footer-range{font-weight:700;color:#475569;line-height:1.45}.footer-updated{display:block;margin-top:3px;color:#94a3b8}
 th.b{background:#1F3864} th.g{background:#2e6b10} th.m{background:#7c3aed} th.a{background:#9a6000} th.p{background:#4a41a8}
 @media (max-width:1450px){#main{padding:18px 20px}.topbar{padding:16px 22px}.cards{gap:12px}.kpi-grid{grid-template-columns:repeat(auto-fit,minmax(136px,1fr));gap:8px}.card{padding:10px 9px}.clbl{font-size:9.5px}.cval{font-size:21px}.csub{font-size:9.5px}.charts{gap:12px}.cbox{padding:13px 14px}.tbl-c{max-height:610px}table{font-size:9.5px}thead tr:last-child th{font-size:8.5px;padding:5px 3px}td{padding:5px 3px}}
 @media (max-width:1180px){.kpi-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.cbox{flex-basis:calc((100% - 12px)/2);min-width:300px}.header-meta{max-width:100%;align-items:flex-start;text-align:left}}
 @media (min-width:1500px){.cbox{flex-basis:calc((100% - 32px)/3)}.tbl-c{max-height:720px}}
 @media (min-width:1900px){#main{max-width:1880px}.cbox{flex-basis:calc((100% - 64px)/5);min-width:0}.cbox canvas{height:clamp(190px,23vh,270px)!important}.tbl-c{max-height:760px}body{font-size:14px}}
 @media (min-width:2200px){#main{max-width:2200px}.cbox canvas{height:clamp(220px,24vh,310px)!important}.tbl-c{max-height:880px}.chart-modal{width:min(1500px,94vw);height:min(900px,92vh)}}
-@media (max-width:1050px){#main{padding:16px}.sticky-controls{max-height:none;overflow:visible;margin:0 0 14px}.sticky-controls.is-fixed{left:0;right:0;width:100%;padding:8px 16px}.kpi-grid{grid-template-columns:repeat(auto-fit,minmax(155px,1fr))}.cbox{flex-basis:100%;min-width:0}.topbar{padding:16px 18px}.topbar h1{font-size:18px}.header-meta{align-items:flex-start;max-width:100%;text-align:left}.meta-strip{align-items:flex-start}.filter-group{width:100%;overflow-x:visible;white-space:normal;flex-wrap:wrap}.control-row{align-items:stretch}}
+@media (max-width:1050px){#main{padding:16px}.sticky-controls{max-height:none;overflow:visible;margin:0 0 14px}.sticky-controls.is-fixed{left:0;right:0;width:100%;padding:8px 16px}.kpi-grid{grid-template-columns:repeat(auto-fit,minmax(155px,1fr))}.charts{grid-template-columns:1fr}.cbox{min-width:0}.topbar{padding:16px 18px}.topbar h1{font-size:18px}.header-meta{align-items:flex-start;max-width:100%;text-align:left}.meta-strip{align-items:flex-start}.filter-group{width:100%;overflow-x:visible;white-space:normal;flex-wrap:wrap}.control-row{align-items:stretch}}
 @media (max-width:760px){.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi-section-head{align-items:flex-start;flex-direction:column}.kpi-section-head span{text-align:left}.cval{font-size:20px}.modal-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.modal-range{width:100%;margin-left:0}.chart-modal{height:94vh}.modal-backdrop{padding:10px}}
 @media (max-width:420px){.card{padding:9px 7px}.clbl{font-size:8.8px}.cval{font-size:18px}.csub{font-size:8.8px}}
 @media print{body{background:#fff}.topbar,.meta-strip,.card,.cbox,.table-wrap{box-shadow:none}.filter-group{display:none}.tbl-c{max-height:none;overflow:visible}}
 html,body{max-width:100%;overflow-x:hidden}
 #main,.topbar,.sticky-controls,.meta-strip,.filter-group,.cards,.cbox,.table-wrap,.tbl-c,.chart-modal,.modal-body,.modal-chart-wrap{max-width:100%;min-width:0}
 .sticky-controls.is-fixed{max-width:none}
-.filter-group{overflow-x:visible!important;white-space:normal!important;flex-wrap:wrap!important}
+.filter-group{overflow-x:auto!important;white-space:nowrap!important;flex-wrap:nowrap!important}
 .tbl-c,.table-wrap{overflow-x:hidden!important;overflow-y:auto}
 table{min-width:0!important;max-width:100%;table-layout:fixed}
 th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
 td:first-child{position:static}
+/* Dense desktop baseline: dashboards are used for scanning, not presentation. */
+@media (min-width:1051px){
+  #main{padding:6px 8px;max-width:none}
+  .cards{gap:7px}.kpi-grid{gap:5px}
+  .kpi-section.active-end .kpi-grid{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .kpi-section.range-values .kpi-grid{grid-template-columns:repeat(10,minmax(0,1fr))}
+  .card{padding:6px 7px}.clbl{font-size:8.5px}.cval{font-size:20px}.csub{font-size:8.5px}
+  .charts{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.cbox{min-width:0;padding:7px 8px}
+  .cbox canvas{height:clamp(135px,18vh,190px)!important}.tbl-c{max-height:72vh}
+  table{font-size:9px}thead tr:last-child th{font-size:8px;padding:4px 3px}td{padding:4px 3px}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media (max-width:1050px){.filter-group{overflow-x:visible!important;white-space:normal!important;flex-wrap:wrap!important}}
 </style>
 </head>
 <body>
-<div class="topbar">
-  <div class="title-block">
-    <h1>Overview Dashboard Veto</h1>
-  </div>
-  <div class="header-meta">
-    <span class="range-pill" id="rangeLbl"></span>
-    <span class="sub" id="genLbl"></span>
-  </div>
-</div>
 <div id="main">
-  <div class="meta-strip" id="metaWrap">
-    <div class="meta-items" id="metaStrip"></div>
-  </div>
   <div class="sticky-controls">
     <div class="filter-group">
        <span>Source</span>
-       <button class="btn-preset" id="srcAll" onclick="setSourceFilter('all')">ALL</button>
-       <button class="btn-preset active" id="srcStream" onclick="setSourceFilter('stream')">STREAM</button>
-       <button class="btn-preset" id="srcFast" onclick="setSourceFilter('fast')">FAST</button>
+       <select id="sourceSelect" aria-label="Source" onchange="setSourceFilter(this.value)">
+         <option value="all">All sources</option>
+         <option value="stream" selected>STREAM</option>
+         <option value="fast">FAST</option>
+       </select>
        <span class="filter-sep"></span>
        <button class="btn-preset" id="btnAll" onclick="setPreset('all')">ALL</button>
        <button class="btn-preset" id="btn30" onclick="setPreset(30)">30D</button>
@@ -166,8 +169,7 @@ td:first-child{position:static}
   <div class="charts">
     <div class="cbox"><h3><span>Daily Row Volume</span><span class="chart-actions"><span class="chart-days" id="cH1"></span><button class="expand-btn" onclick="openChartModal('cRows')">Expand</button></span></h3><canvas id="cRows" height="170"></canvas></div>
     <div class="cbox"><h3><span>Data Density Profile</span><span class="chart-actions"><span class="chart-days" id="cH2"></span><button class="expand-btn" onclick="openChartModal('cBytes')">Expand</button></span></h3><canvas id="cBytes" height="170"></canvas></div>
-    <div class="cbox"><h3><span>Session Not Found</span><span class="chart-actions"><span class="chart-days" id="cH3"></span><button class="expand-btn" onclick="openChartModal('cSessNone')">Expand</button></span></h3><canvas id="cSessNone" height="170"></canvas></div>
-    <div class="cbox"><h3><span>Session Available &amp; Missing</span><span class="chart-actions"><span class="chart-days" id="cH4"></span><button class="expand-btn" onclick="openChartModal('cSessFound')">Expand</button></span></h3><canvas id="cSessFound" height="170"></canvas></div>
+    <div class="cbox"><h3><span>Session Availability</span><span class="chart-actions"><span class="chart-days" id="cH3"></span><button class="expand-btn" onclick="openChartModal('cSessions')">Expand</button></span></h3><canvas id="cSessions" height="170"></canvas></div>
     <div class="cbox"><h3><span>Unique Visitors &amp; Devices</span><span class="chart-actions"><span class="chart-days" id="cH5"></span><button class="expand-btn" onclick="openChartModal('cIP')">Expand</button></span></h3><canvas id="cIP" height="170"></canvas></div>
   </div>
 
@@ -182,6 +184,12 @@ td:first-child{position:static}
     </div>
     <div class="tbl-c"><table id="tbl"></table></div>
   </div>
+  <footer class="footer" id="dashboardFooter">
+    <div class="footer-title">Overview Dashboard Veto</div>
+    <div class="footer-range" id="rangeLbl"></div>
+    <span class="footer-updated" id="genLbl"></span>
+    <div class="meta-items" id="metaStrip"></div>
+  </footer>
 </div>
 <div class="modal-backdrop" id="chartModal">
   <div class="chart-modal">
@@ -435,7 +443,7 @@ if (visibleMeta.length > 0) {
   document.getElementById('metaStrip').innerHTML = visibleMeta
     .map(([k, v]) => `<span><b>${k}:</b> ${v}</span>`).join('');
 } else {
-  document.getElementById('metaWrap').style.display = 'none';
+  document.getElementById('metaStrip').style.display = 'none';
 }
 
 const stickyControls = document.querySelector('.sticky-controls');
@@ -500,38 +508,82 @@ function getScaleStats() {
 }
 
 // ── Chart setup ───────────────────────────────────────────────────────────────
-const CD = {tension: .35, fill: true, pointRadius: 1.5, pointHoverRadius: 4, borderWidth: 1.5, animation: {duration: 400}};
+function trendPointColor(context) {
+  const value = Number(context.dataset.data[context.dataIndex]);
+  const average = Number(context.chart.data.datasets[context.datasetIndex + 1]?.data?.[context.dataIndex]);
+  if (!Number.isFinite(value) || !Number.isFinite(average)) return '#6b7280';
+  return value >= average ? '#0f9488' : '#f15a2a';
+}
+function chartLabelValue(value, yfmt) {
+  if (yfmt === 'gib') return fmtData(value);
+  if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M';
+  if (value >= 1e3) return (value / 1e3).toFixed(1) + 'K';
+  return fmt(Math.round(value));
+}
+const lineValueLabels = {
+  id: 'lineValueLabels',
+  afterDatasetsDraw(chart, args, options) {
+    if (!options || !options.enabled) return;
+    const dataset = chart.data.datasets[0];
+    const values = dataset.data.map((value, index) => ({value: Number(value), index}))
+      .filter(item => Number.isFinite(item.value));
+    if (!values.length) return;
+    const highest = values.reduce((best, item) => item.value > best.value ? item : best);
+    const lowest = values.reduce((best, item) => item.value < best.value ? item : best);
+    const latest = values[values.length - 1];
+    const indices = [...new Set([highest.index, lowest.index, latest.index])];
+    const points = chart.getDatasetMeta(0).data;
+    const averageValues = chart.data.datasets[1]?.data || [];
+    const ctx = chart.ctx;
+    ctx.save();
+    ctx.font = '700 9px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
+    ctx.textAlign = 'center';
+    indices.forEach(index => {
+      const point = points[index];
+      const value = Number(dataset.data[index]);
+      if (!point || !Number.isFinite(value)) return;
+      const average = Number(averageValues[index]);
+      const above = !Number.isFinite(average) || value >= average;
+      const props = point.getProps(['x', 'y'], true);
+      const y = Math.max(chart.chartArea.top + 10, Math.min(chart.chartArea.bottom - 3, props.y + (above ? -9 : 13)));
+      ctx.fillStyle = above ? '#087f78' : '#d94f25';
+      ctx.fillText(chartLabelValue(value, options.yfmt), props.x, y);
+    });
+    ctx.restore();
+  }
+};
+if (typeof Chart !== 'undefined') Chart.register(lineValueLabels);
+const CD = {tension: 0, fill: false, pointRadius: 3.5, pointHoverRadius: 5, borderWidth: 1.5, pointBackgroundColor: trendPointColor, pointBorderColor: trendPointColor, pointBorderWidth: 1, spanGaps: false, animation: false};
 
-const mkOpt = (yfmt, expanded = false) => ({
+const mkOpt = (yfmt, expanded = false, highlightLabels = false) => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    legend: {position: 'bottom', labels: {font: {size: expanded ? 11 : 9.5}, boxWidth: 8, padding: 6}}
+    legend: {position: 'bottom', labels: {font: {size: expanded ? 11 : 9.5}, boxWidth: 8, padding: 6}},
+    lineValueLabels: {enabled: highlightLabels && !expanded, yfmt: yfmt}
   },
   scales: {
-    x: {ticks: {font: {size: 8.5}, maxTicksLimit: 12}, grid: {color: '#f5f5f5'}},
-    y: {ticks: {font: {size: 8.5}, callback: v => yfmt === 'gib' ? fmtData(v) : v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'K' : v}, grid: {color: '#f5f5f5'}}
+    x: {ticks: {font: {size: 8.5}, maxTicksLimit: 12, autoSkip: true}, grid: {color: '#d5dce1', borderDash: [2,4]}},
+    y: {ticks: {font: {size: 8.5}, maxTicksLimit: 5, callback: v => yfmt === 'gib' ? fmtData(v) : v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'K' : v}, grid: {color: '#d5dce1', borderDash: [2,4]}}
   }
 });
 
 const chartDefs = {
-  cRows:    {title: 'Daily Row Volume',           keys: ['rows'],                yfmt: null,  datasets: [
-    {label: 'Total rows',     borderColor: '#185FA5', backgroundColor: 'rgba(24,95,165,.04)', ...CD},
-    {label: 'Avg',            borderColor: 'rgba(24,95,165,.6)',  borderWidth: 1.5, borderDash: [5,5], pointRadius: 0, fill: false}
+  cRows:    {title: 'Daily Row Volume',           keys: ['rows'],                yfmt: null, highlightLabels: true, datasets: [
+    {label: 'Total rows',     borderColor: '#69737a', backgroundColor: 'transparent', ...CD},
+    {label: 'Average',        borderColor: '#7da4c3',  borderWidth: 1.5, borderDash: [5,5], pointRadius: 0, fill: false}
   ]},
-  cBytes:   {title: 'Data Density Profile',        keys: ['bytes'],               yfmt: 'gib', datasets: [
-    {label: 'Data Volume',    borderColor: '#1D9E75', backgroundColor: 'rgba(29,158,117,.04)', ...CD},
-    {label: 'Avg',            borderColor: 'rgba(29,158,117,.6)', borderWidth: 1.5, borderDash: [5,5], pointRadius: 0, fill: false}
+  cBytes:   {title: 'Data Density Profile',        keys: ['bytes'],               yfmt: 'gib', highlightLabels: true, datasets: [
+    {label: 'Data Volume',    borderColor: '#69737a', backgroundColor: 'transparent', ...CD},
+    {label: 'Average',        borderColor: '#7da4c3', borderWidth: 1.5, borderDash: [5,5], pointRadius: 0, fill: false}
   ]},
-  cSessNone:{title: 'Session Not Found',           keys: ['sess_none'],           yfmt: null,  datasets: [
-    {label: 'Sess Not Found', borderColor: '#b71c1c', backgroundColor: 'transparent', ...CD},
-    {label: 'Avg',            borderColor: 'rgba(183,28,28,.5)',  borderWidth: 1.5, borderDash: [5,5], pointRadius: 0, fill: false}
-  ]},
-  cSessFound:{title: 'Session Available & Missing',keys: ['sess_avail','sess_na'],yfmt: null,  datasets: [
+  cSessions:{title: 'Session Availability',        keys: ['sess_avail','sess_na','sess_none'],yfmt: null,  datasets: [
     {label: 'Sess Avail',     borderColor: '#2e6b10', backgroundColor: 'transparent', ...CD},
     {label: 'Avg',            borderColor: 'rgba(46,107,16,.5)',  borderWidth: 1.5, borderDash: [5,5], pointRadius: 0, fill: false},
     {label: 'Sess Missing',   borderColor: '#9a6000', backgroundColor: 'transparent', ...CD},
-    {label: 'Avg',            borderColor: 'rgba(154,96,0,.5)',   borderWidth: 1.5, borderDash: [5,5], pointRadius: 0, fill: false}
+    {label: 'Avg',            borderColor: 'rgba(154,96,0,.5)',   borderWidth: 1.5, borderDash: [5,5], pointRadius: 0, fill: false},
+    {label: 'Sess Not Found', borderColor: '#b71c1c', backgroundColor: 'transparent', ...CD},
+    {label: 'Avg',            borderColor: 'rgba(183,28,28,.5)',  borderWidth: 1.5, borderDash: [5,5], pointRadius: 0, fill: false}
   ]},
   cIP:      {title: 'Unique Visitors & Devices',   keys: ['dist_ip','dist_dev'],  yfmt: null,  datasets: [
     {label: 'Distinct cliIP', borderColor: '#4a41a8', backgroundColor: 'transparent', ...CD},
@@ -554,22 +606,55 @@ function initCharts() {
     chartInstances[id] = new Chart(document.getElementById(id), {
       type: 'line',
       data: {labels: [], datasets: baseDatasets[id].map(d => ({...d, data: []}))},
-      options: mkOpt(def.yfmt)
+      options: mkOpt(def.yfmt, false, def.highlightLabels)
     });
   });
 }
 
 // Sync a chart's data without triggering individual updates
+function continuousChartRows(rowsForChart) {
+  if (!rowsForChart.length) return [];
+  const byDate = new Map(rowsForChart.map(row => [row.date, row]));
+  const start = new Date(rowsForChart[0].ts);
+  const end = new Date(rowsForChart[rowsForChart.length - 1].ts);
+  const result = [];
+  for (const cursor = new Date(start); cursor <= end; cursor.setDate(cursor.getDate() + 1)) {
+    const date = tsToDateStr(cursor.getTime());
+    result.push(byDate.get(date) || {date, _gap: true});
+  }
+  return result;
+}
+
 function syncChartData(ch, rowsForChart, keys, update = true) {
-  const len = rowsForChart.length || 1;
-  ch.data.labels = rowsForChart.map(r => fmtDateShort(r.date));
+  const chartRows = continuousChartRows(rowsForChart);
+  ch.data.labels = chartRows.map(r => fmtDateShort(r.date));
   keys.forEach((k, i) => {
-    const total = rowsForChart.reduce((s, r) => s + Number(r[k] || 0), 0);
-    ch.data.datasets[i * 2].data = rowsForChart.map(r => r[k]);
-    ch.data.datasets[(i * 2) + 1].data = Array(len).fill(total / len);
+    const values = chartRows.filter(r => !r._gap).map(r => Number(r[k] || 0));
+    const average = values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
+    ch.data.datasets[i * 2].data = chartRows.map(r => r._gap ? null : Number(r[k] || 0));
+    ch.data.datasets[(i * 2) + 1].data = chartRows.map(r => r._gap ? null : average);
   });
+  applyYAxisScale(ch);
   if (update) ch.update('none'); // 'none' skips animation for filter-driven updates
 }
+
+function applyYAxisScale(ch) {
+  const values = ch.data.datasets.flatMap(ds => ds.data)
+    .filter(value => value != null && Number.isFinite(Number(value)))
+    .map(Number);
+  const axis = ch.options.scales.y;
+  delete axis.min;
+  delete axis.max;
+  axis.beginAtZero = false;
+  if (!values.length) return;
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const span = max - min;
+  const pad = Math.max(span * .08, Math.abs(max || min) * .02, 1);
+  axis.min = Math.max(0, min - pad);
+  axis.max = max + pad;
+}
+
 
 function updateCharts() {
   if (!chartInstances['cRows']) return;
@@ -625,20 +710,26 @@ function updateKPIs() {
   const identityCards = [
     {l: 'Avg Device IDs / Day', v: fmt(Math.round(tDev / ndays)), clr: '#1f6f8b'},
     {l: 'Avg Distinct IP+UA / Day', v: fmt(Math.round(viewRows.reduce((s, r) => s + Number(r.dist_ipua || 0), 0) / ndays)), clr: '#6d28d9'},
-    {l: 'Avg Session IDs / Day', v: fmt(Math.round(tSess / ndays)), clr: '#9a6000'},
   ];
 
   const cardHtml = c => `<div class="card"><div class="clbl"><span class="cdot" style="background:${c.clr}"></span>${c.l}</div><div class="cval" style="color:${c.clr}">${c.v}</div>${c.s ? `<div class="csub">${c.s}</div>` : ''}</div>`;
-  const sectionHtml = (title, cards) => `
-    <section class="kpi-section">
+  const sectionHtml = (title, cards, className = '') => `
+    <section class="kpi-section ${className}">
       <div class="kpi-section-head"><h2>${title}</h2></div>
       <div class="kpi-grid">${cards.map(cardHtml).join('')}</div>
     </section>`;
+  const activeEndCards = [
+    deviceCards[3], deviceCards[4], deviceCards[5],
+    cliIpCards[1], cliIpCards[2], cliIpCards[3],
+  ];
+  const rangeCards = [
+    ...trafficCards, ...identityCards,
+    deviceCards[0], deviceCards[1], deviceCards[2],
+    cliIpCards[0], cliIpCards[4],
+  ];
   document.getElementById('cards').innerHTML = [
-    sectionHtml('Traffic Scale', trafficCards),
-    sectionHtml('Device Audience', deviceCards),
-    sectionHtml('cliIP Reach', cliIpCards),
-    sectionHtml('Identity & Sessions', identityCards),
+    sectionHtml('Active Audience at DAU/WAU/MAU End', activeEndCards, 'active-end'),
+    sectionHtml('Selected Range Values', rangeCards, 'range-values'),
   ].join('');
 }
 
@@ -1032,10 +1123,8 @@ function syncPresetFromDateInputs() {
 }
 
 function setActiveSource() {
-  [['srcAll','all'],['srcStream','stream'],['srcFast','fast']].forEach(([id, value]) => {
-    const el = document.getElementById(id);
-    if (el) el.classList.toggle('active', sourceFilter === value);
-  });
+  const select = document.getElementById('sourceSelect');
+  if (select) select.value = sourceFilter;
 }
 
 function syncDateInputBounds() {
@@ -1190,7 +1279,7 @@ function openChartModal(id) {
     modalChart = new Chart(document.getElementById('modalChart'), {
       type: 'line',
       data: {labels: [], datasets: def.datasets.map(d => ({...d, data: []}))},
-      options: mkOpt(def.yfmt, true),
+      options: mkOpt(def.yfmt, true, def.highlightLabels),
     });
     setModalPreset('dashboard');
   } catch (err) {

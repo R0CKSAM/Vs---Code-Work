@@ -111,10 +111,10 @@ canvas{width:100%!important;height:100%!important}
 .modal-chart-values{display:none;margin-top:10px;max-height:min(34vh,300px);overflow:auto;border:1px solid var(--line);border-radius:8px;background:#fbfdff}
 .modal-chart-values .pie-breakdown{border-top:0;background:transparent;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
 .modal-chart-values .pie-item{box-shadow:0 1px 2px rgba(15,23,42,.04)}
-.evidence-box{height:auto;min-height:440px;padding:10px}
+.evidence-box{height:440px;min-height:0;padding:10px;overflow:auto;overscroll-behavior:contain}
 .evidence-board{border:1px solid #e2e8f0;background:#fbfcfe;border-radius:8px;padding:10px;display:grid;gap:7px}
 .evidence-head,.evidence-row{display:grid;grid-template-columns:34px minmax(0,1.25fr) minmax(90px,.55fr) minmax(120px,1fr) minmax(150px,1.1fr);gap:10px;align-items:center}
-.evidence-head{padding:4px 6px 8px;color:#64748b;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.03em;border-bottom:1px solid #e2e8f0}
+.evidence-head{position:sticky;top:0;z-index:2;padding:4px 6px 8px;color:#64748b;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.03em;border-bottom:1px solid #e2e8f0;background:#fbfcfe}
 .evidence-row{border:1px solid #e7eef6;border-radius:7px;background:#fff;padding:8px 9px;min-width:0}
 .evidence-row:hover{border-color:#c9d7e8;background:#fbfdff}
 .evidence-rank{width:26px;height:26px;border-radius:999px;display:grid;place-items:center;background:#eef2f7;color:#334155;font-size:11px;font-weight:950}
@@ -123,7 +123,7 @@ canvas{width:100%!important;height:100%!important}
 .evidence-value{text-align:right;font-size:13px;font-weight:950;color:var(--brand);font-variant-numeric:tabular-nums}
 .evidence-value small{display:block;font-size:10px;color:#64748b;font-weight:800;margin-top:2px}
 .evidence-track{height:10px;border-radius:999px;background:#e8eef6;overflow:hidden}
-.evidence-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--brand),var(--brand2))}
+.evidence-fill{height:100%;border-radius:999px;background:var(--brand2)}
 .evidence-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
 .evidence-kpi{border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;padding:6px;min-width:0}
 .evidence-kpi b{display:block;font-size:9px;color:#64748b;text-transform:uppercase;line-height:1.1;margin-bottom:3px}
@@ -162,30 +162,48 @@ html,body{max-width:100%;overflow-x:hidden}
 table{min-width:0!important;max-width:100%;table-layout:fixed}
 th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
 .pill,.status{white-space:normal}
+/* Dense desktop baseline: preserve the controls and evidence, remove presentation spacing. */
+@media(min-width:1051px){
+  :root{--shadow:none}
+  body{font-size:11px}
+  .topbar{border-bottom-width:2px;padding:6px 8px;gap:8px}
+  .topbar h1{font-size:14px}.topbar .sub{font-size:9px;line-height:1.25}
+  .wrap{max-width:none;padding:5px 7px 8px}
+  .sticky{position:sticky;top:0;z-index:40;backdrop-filter:none;padding:3px 0;margin:0 0 4px}
+  .filters{display:flex;align-items:end;flex-wrap:nowrap;overflow-x:auto!important;grid-template-columns:none;border-radius:3px;padding:4px 5px;gap:4px;box-shadow:none}
+  .filters .field{display:flex;flex:0 0 auto;grid-column:auto!important}
+  .filters .field.date{width:106px}.filters .field.source{width:88px}.filters .field.platform{width:170px}.filters .field.channel{width:170px}.filters .field.actions{width:115px}
+  .field{gap:2px}.field label{font-size:8px}
+  input[type="date"],select{border-radius:3px;padding:3px 5px;font-size:10px}
+  .multi-picker-toggle,.date-multi-toggle{min-height:26px;border-radius:3px;padding:4px 5px;font-size:10px}
+  .preset-row,.action-row{gap:4px}.btn{border-radius:3px;padding:3px 6px;font-size:10px}
+  .context{gap:4px;margin-top:4px;font-size:9px}.pill{gap:4px;border-radius:3px;padding:3px 5px}
+  .note{border-radius:3px;padding:5px 7px;margin-bottom:6px;font-size:10px;line-height:1.3}
+  .kpis,.stakeholder-kpis,.viewership-kpis{gap:5px;margin-bottom:6px}
+  .kpi{border-radius:3px;border-top-width:2px;padding:6px 7px;box-shadow:none}
+  .kpi b{font-size:8px;margin-bottom:3px}.kpi span{font-size:16px}.kpi small{font-size:9px;margin-top:3px}
+  .stakeholder-kpis .kpi{min-height:0}.stakeholder-kpis .kpi b{font-size:8px}.stakeholder-kpis .kpi small{font-size:8.5px}
+  .identity-guide{margin-bottom:6px}.identity-guide .panel-head{margin-bottom:5px}
+  .identity-guide-grid{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:5px}
+  .identity-guide-card{border-radius:3px;padding:6px}.identity-guide-card b{font-size:9px;margin-bottom:3px}.identity-guide-card .value{font-size:14px}.identity-guide-card .formula,.identity-guide-card small{font-size:9px;margin-top:3px}.identity-guide-note{font-size:10px;margin-top:5px}
+  .section{border-radius:3px;padding:7px;margin-bottom:6px;box-shadow:none}
+  .section-head{gap:6px;margin-bottom:5px}.section h2{font-size:12px}.section .desc{font-size:9px;margin-top:2px}
+  .grid-2,.grid-stack,.grid-3{gap:6px}.panel{border-radius:3px}.panel-head{padding:5px 7px;gap:6px}.panel-title{font-size:10px}.panel-title small{font-size:8.5px;margin-top:1px}
+  .chart-box{height:230px;padding:5px}.chart-box.tall{height:300px}.chart-box.compact{height:195px}
+  .chart-note{font-size:9px;margin:0 6px 6px}.table-wrap{max-height:55vh}.pie-breakdown{gap:4px;padding:5px 6px}.pie-item{gap:5px;border-radius:3px;padding:4px 5px}.pie-name,.pie-value{font-size:9px}.pie-value small{font-size:8px}
+  .evidence-box{height:300px;min-height:0;padding:5px;overflow:auto}.evidence-board{border-radius:3px;padding:5px;gap:4px}.evidence-head,.evidence-row{grid-template-columns:26px minmax(0,1.2fr) minmax(64px,.48fr) minmax(80px,.9fr) minmax(120px,1fr);gap:6px}.evidence-head{padding:3px 4px 5px;font-size:8px}.evidence-row{border-radius:3px;padding:5px 6px}.evidence-name{font-size:10px}.evidence-meta,.evidence-value small{font-size:8.5px}.evidence-value{font-size:11px}.evidence-track{height:7px}
+  table{font-size:9px}th{padding:5px}td{padding:4px 5px}.wip-grid,.range-table{gap:5px}.wip-card,.range-card{border-radius:3px;padding:6px}.wip-card h3{font-size:10px;margin-bottom:3px}.wip-card p{font-size:9px;line-height:1.25;margin-top:3px}
+  .footer{font-size:8px;padding:5px 0 2px;line-height:1.25}.footer-title{font-size:10px;font-weight:850;color:var(--ink);margin-bottom:2px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
-<header class="topbar">
-  <h1 id="pageTitle">Veto Audience Operations</h1>
-  <div class="sub">
-    <div id="rangeText"></div>
-    <div id="sourceText"></div>
-    <div id="updatedText"></div>
-  </div>
-</header>
-
 <main class="wrap">
   <div class="sticky">
     <div class="filters">
-      <div class="field mode">
-        <label>Date Mode</label>
-        <div class="preset-row">
-          <button class="btn" id="dateModeSingle" onclick="setDateMode('single')">Single Date</button>
-          <button class="btn" id="dateModeRange" onclick="setDateMode('range')">Date Range</button>
-        </div>
-      </div>
       <div class="field date">
-        <label id="startDateLabel">Date From</label>
+        <label>Date From</label>
         <input id="startDate" type="date" onchange="setDateInputs()"/>
       </div>
       <div class="field date" id="endDateField">
@@ -208,13 +226,10 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
       </div>
       <div class="field actions">
         <label>Quick Range</label>
-        <div class="preset-row">
-          <button class="btn" id="presetYesterday" onclick="setPreset('yesterday')">Yesterday</button>
-          <button class="btn" id="preset7" onclick="setPreset(7)">7D</button>
-          <button class="btn" id="preset15" onclick="setPreset(15)">15D</button>
-          <button class="btn" id="preset30" onclick="setPreset(30)">30D</button>
-          <button class="btn" id="presetAll" onclick="setPreset('all')">All</button>
-        </div>
+        <select id="presetSelect" onchange="setPreset(this.value)">
+          <option value="yesterday">Yesterday</option><option value="7">Last 7 days</option>
+          <option value="15">Last 15 days</option><option value="30">Last 30 days</option><option value="all">All available dates</option>
+        </select>
       </div>
     </div>
     <div class="context" id="selectionContext"></div>
@@ -494,7 +509,12 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
     <div class="kpis" id="opsKpis"></div>
   </section>
 
-  <div class="footer">Generated for Veto Audience Operations.</div>
+  <footer class="footer">
+    <div class="footer-title" id="pageTitle">Veto Audience Operations</div>
+    <div id="rangeText"></div>
+    <div id="sourceText"></div>
+    <div id="updatedText"></div>
+  </footer>
 </main>
 
 <div class="modal" id="chartModal">
@@ -507,6 +527,7 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
 <script>
 const D = $DATA_BLOB;
 const DATA = D.data || {};
+if(typeof Chart!=="undefined")Chart.defaults.animation=false;
 function inflateRows(rows,schema,dictionaries){
   if(!Array.isArray(rows)||!rows.length)return [];
   if(!Array.isArray(schema)||!schema.length||!Array.isArray(rows[0]))return rows;
@@ -545,7 +566,7 @@ DATA.identity_minute=inflateRows(DATA.identity_minute||[],DATA.identity_minute_s
   DATA[key]=inflateRows(DATA[key]||[],DATA[key+"_schema"]||[]);
 });
 const COLORS = ["#1f7897","#b88416","#12805c","#6057b1","#d65f18","#b42318","#0f6b4d","#2d5b9a","#9f5a00","#7c3aed","#0891b2","#dc2626"];
-const state = {start:D.meta.max_date,end:D.meta.max_date,source:"fast",platform:"all",channel:"all",preset:"yesterday",dateMode:"single",concurrencyInterval:5,concurrencyStatus:"all"};
+const state = {start:D.meta.max_date,end:D.meta.max_date,source:"fast",platform:"all",channel:"all",preset:"yesterday",dateMode:"range",concurrencyInterval:5,concurrencyStatus:"all"};
 const uniqueIpDateView = {selected:new Set(),available:[],scopeKey:"",initialized:false};
 const charts = {};
 const configs = {};
@@ -802,18 +823,12 @@ function uniqueIpModalControlsHtml(){
 }
 function modalBaseControlsHtml(){
   return "<div class='mini-controls'>"
-    +"<button class='btn' id='modalDateModeSingle' onclick=\"setDateMode('single')\">Single Date</button>"
-    +"<button class='btn' id='modalDateModeRange' onclick=\"setDateMode('range')\">Date Range</button>"
-    +"<div class='mini-field date'><label id='modalStartDateLabel'>Date From</label><input id='modalStartDate' type='date' onchange='setModalDateInputs()'/></div>"
+    +"<div class='mini-field date'><label>Date From</label><input id='modalStartDate' type='date' onchange='setModalDateInputs()'/></div>"
     +"<div class='mini-field date' id='modalEndDateField'><label>Date To</label><input id='modalEndDate' type='date' onchange='setModalDateInputs()'/></div>"
     +"<div class='mini-field'><label>Source</label><select id='modalSourceSelect' onchange='setSource(this.value)'></select></div>"
     +"<div class='mini-field wide' id='modalPlatformField'><label>Platform(s)</label><select id='modalPlatformSelect' class='filter-select-hidden' multiple size='4' onchange='setPlatformFromElement(this)'></select><div class='multi-picker'><button type='button' class='multi-picker-toggle' id='modalPlatformToggle' onclick=\"toggleModalMultiPicker('platform')\"><span>All Platforms</span><span class='picker-caret'>v</span></button><div class='multi-picker-menu' id='modalPlatformMenu'></div></div></div>"
     +"<div class='mini-field wide'><label>Channel(s)</label><select id='modalChannelSelect' class='filter-select-hidden' multiple size='4' onchange='setChannelFromElement(this)'></select><div class='multi-picker'><button type='button' class='multi-picker-toggle' id='modalChannelToggle' onclick=\"toggleModalMultiPicker('channel')\"><span>All Channels</span><span class='picker-caret'>v</span></button><div class='multi-picker-menu' id='modalChannelMenu'></div></div></div>"
-    +"<button class='btn' id='modalPresetYesterday' onclick=\"setPreset('yesterday')\">Yesterday</button>"
-    +"<button class='btn' id='modalPreset7' onclick='setPreset(7)'>7D</button>"
-    +"<button class='btn' id='modalPreset15' onclick='setPreset(15)'>15D</button>"
-    +"<button class='btn' id='modalPreset30' onclick='setPreset(30)'>30D</button>"
-    +"<button class='btn' id='modalPresetAll' onclick=\"setPreset('all')\">All</button>"
+    +"<div class='mini-field'><label>Quick Range</label><select id='modalPresetSelect' onchange='setPreset(this.value)'><option value='yesterday'>Yesterday</option><option value='7'>Last 7 days</option><option value='15'>Last 15 days</option><option value='30'>Last 30 days</option><option value='all'>All available dates</option></select></div>"
     +"</div>";
 }
 function syncConcurrencyControls(){
@@ -846,16 +861,14 @@ function applyPresetRange(p){
   const r=sourceRange();
   const completedAmagiDates=state.source==="amagi"?amagiCoverage().complete:[];
   const presetEnd=completedAmagiDates.length?completedAmagiDates[completedAmagiDates.length-1]:r.max;
-  state.dateMode=p==="yesterday"?"single":"range";
+  state.dateMode="range";
   if(p==="all"){state.start=r.min;state.end=r.max;return}
   if(p==="yesterday"){state.start=presetEnd;state.end=presetEnd;return}
   state.start=addIsoDays(presetEnd,-(Number(p)-1));
   if(state.start<r.min)state.start=r.min;
   state.end=presetEnd;
 }
-function enforceDateMode(){
-  if(state.dateMode==="single")state.end=state.start;
-}
+function enforceDateMode(){state.dateMode="range";}
 function syncDateBounds(){
   const r=sourceRange();
   el("startDate").min=r.min;el("startDate").max=r.max;el("endDate").min=r.min;el("endDate").max=r.max;
@@ -1179,10 +1192,10 @@ function setupFilters(){
   rebuildConcurrencyStatusOptions();
   setPreset("yesterday");
 }
-function setPreset(p){state.preset=p;applyPresetRange(p);syncFilters();renderAll();refreshModalChart()}
-function setDateMode(mode){state.dateMode=mode==="range"?"range":"single";if(state.dateMode==="single")state.end=state.start;state.preset="custom";syncFilters();renderAll();refreshModalChart()}
-function setDateInputs(){const r=sourceRange();state.start=el("startDate").value||r.min;state.end=state.dateMode==="single"?state.start:(el("endDate").value||r.max);if(state.start>state.end){const t=state.start;state.start=state.end;state.end=t}enforceDateMode();state.preset="custom";syncFilters();renderAll();refreshModalChart()}
-function setModalDateInputs(){const r=sourceRange();state.start=el("modalStartDate").value||r.min;state.end=state.dateMode==="single"?state.start:(el("modalEndDate").value||r.max);if(state.start>state.end){const t=state.start;state.start=state.end;state.end=t}enforceDateMode();state.preset="custom";syncFilters();renderAll();refreshModalChart()}
+function setPreset(p){p=(p==="all"||p==="yesterday")?p:Number(p);state.preset=p;applyPresetRange(p);syncFilters();renderAll();refreshModalChart()}
+function setDateMode(){state.dateMode="range";syncFilters();}
+function setDateInputs(){const r=sourceRange();state.start=el("startDate").value||r.min;state.end=el("endDate").value||r.max;if(state.start>state.end){const t=state.start;state.start=state.end;state.end=t}enforceDateMode();state.preset="custom";syncFilters();renderAll();refreshModalChart()}
+function setModalDateInputs(){const r=sourceRange();state.start=el("modalStartDate").value||r.min;state.end=el("modalEndDate").value||r.max;if(state.start>state.end){const t=state.start;state.start=state.end;state.end=t}enforceDateMode();state.preset="custom";syncFilters();renderAll();refreshModalChart()}
 function setSource(v){state.source=v;state.platform="all";state.channel="all";rebuildPlatformOptions();rebuildChannelOptions();if(state.preset==="custom"){clampDateRange()}else{applyPresetRange(state.preset)}syncFilters();renderAll();refreshModalChart()}
 function setPlatformValues(values){state.platform=encodeFilterValues(values);rebuildChannelOptions();syncFilters();renderAll();refreshModalChart()}
 function setChannelValues(values){state.channel=encodeFilterValues(values);syncFilters();renderAll();refreshModalChart()}
@@ -1224,12 +1237,8 @@ function syncFilters(){
   el("startDate").value=state.start;el("endDate").value=state.end;el("sourceSelect").value=state.source;syncMultiSelect(el("platformSelect"),state.platform);syncMultiSelect(el("channelSelect"),state.channel);renderMultiPicker("platform");renderMultiPicker("channel");
   const platformField=el("platformField");
   if(platformField)platformField.style.display=hasPlatformFilter()?"":"none";
-  el("startDateLabel").textContent=state.dateMode==="single"?"Date":"Date From";
-  el("endDateField").style.display=state.dateMode==="single"?"none":"";
-  el("dateModeSingle").classList.toggle("active",state.dateMode==="single");
-  el("dateModeRange").classList.toggle("active",state.dateMode==="range");
-  ["presetYesterday","preset7","preset15","preset30","presetAll"].forEach(function(id){el(id).classList.remove("active")});
-  if(state.preset==="yesterday")el("presetYesterday").classList.add("active");if(state.preset===7)el("preset7").classList.add("active");if(state.preset===15)el("preset15").classList.add("active");if(state.preset===30)el("preset30").classList.add("active");if(state.preset==="all")el("presetAll").classList.add("active");
+  const preset=el("presetSelect");
+  if(preset)preset.value=String(state.preset);
   syncModalFilterControls();
 }
 function syncModalFilterControls(){
@@ -1239,14 +1248,6 @@ function syncModalFilterControls(){
   const r=sourceRange();
   start.min=r.min;start.max=r.max;start.value=state.start;
   end.min=r.min;end.max=r.max;end.value=state.end;
-  const startLabel=el("modalStartDateLabel");
-  if(startLabel)startLabel.textContent=state.dateMode==="single"?"Date":"Date From";
-  const endField=el("modalEndDateField");
-  if(endField)endField.style.display=state.dateMode==="single"?"none":"";
-  const single=el("modalDateModeSingle");
-  const range=el("modalDateModeRange");
-  if(single)single.classList.toggle("active",state.dateMode==="single");
-  if(range)range.classList.toggle("active",state.dateMode==="range");
   const source=el("modalSourceSelect");
   const platform=el("modalPlatformSelect");
   const channel=el("modalChannelSelect");
@@ -1257,12 +1258,8 @@ function syncModalFilterControls(){
   if(channel){channel.innerHTML=el("channelSelect").innerHTML;syncMultiSelect(channel,state.channel)}
   renderModalMultiPicker("platform");
   renderModalMultiPicker("channel");
-  ["modalPresetYesterday","modalPreset7","modalPreset15","modalPreset30","modalPresetAll"].forEach(function(id){const b=el(id);if(b)b.classList.remove("active")});
-  if(state.preset==="yesterday"&&el("modalPresetYesterday"))el("modalPresetYesterday").classList.add("active");
-  if(state.preset===7&&el("modalPreset7"))el("modalPreset7").classList.add("active");
-  if(state.preset===15&&el("modalPreset15"))el("modalPreset15").classList.add("active");
-  if(state.preset===30&&el("modalPreset30"))el("modalPreset30").classList.add("active");
-  if(state.preset==="all"&&el("modalPresetAll"))el("modalPresetAll").classList.add("active");
+  const modalPreset=el("modalPresetSelect");
+  if(modalPreset)modalPreset.value=String(state.preset);
 }
 
 function kpi(label,value,sub,cls){return "<div class='kpi "+(cls||"")+"'><b>"+esc(label)+"</b><span>"+value+"</span><small>"+esc(sub||"")+"</small></div>"}

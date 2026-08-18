@@ -1842,8 +1842,8 @@
       "source": "stream",
       "date": "2026-08-09",
       "file_count": 3,
-      "bytes": 690192826,
-      "max_mtime_ns": 1786971488961808400,
+      "bytes": 690277280,
+      "max_mtime_ns": 1787043013640385000,
       "files": [
         {
           "name": "part_stream_2026_08_08_0.parquet",
@@ -1852,8 +1852,8 @@
         },
         {
           "name": "part_stream_2026_08_09_0.parquet",
-          "bytes": 631696612,
-          "mtime_ns": 1786971470080196500
+          "bytes": 631781066,
+          "mtime_ns": 1787043013640385000
         },
         {
           "name": "part_stream_2026_08_11_0.parquet",
@@ -2050,22 +2050,46 @@
     "stream/2026-08-17": {
       "source": "stream",
       "date": "2026-08-17",
-      "file_count": 1,
-      "bytes": 54465431,
-      "max_mtime_ns": 1786971501695948200,
+      "file_count": 2,
+      "bytes": 793716096,
+      "max_mtime_ns": 1787043047679560100,
       "files": [
         {
           "name": "part_stream_2026_08_16_0.parquet",
           "bytes": 54465431,
           "mtime_ns": 1786971501695948200
+        },
+        {
+          "name": "part_stream_2026_08_17_0.parquet",
+          "bytes": 739250665,
+          "mtime_ns": 1787043047679560100
         }
       ],
       "output_counts": {
-        "identity_device_daily": 503,
-        "identity_session_daily": 515,
-        "identity_ipua_daily": 522
+        "identity_device_daily": 14294,
+        "identity_session_daily": 17658,
+        "identity_ipua_daily": 16197
+      }
+    },
+    "stream/2026-08-18": {
+      "source": "stream",
+      "date": "2026-08-18",
+      "file_count": 1,
+      "bytes": 59782076,
+      "max_mtime_ns": 1787043047796925700,
+      "files": [
+        {
+          "name": "part_stream_2026_08_17_0.parquet",
+          "bytes": 59782076,
+          "mtime_ns": 1787043047796925700
+        }
+      ],
+      "output_counts": {
+        "identity_device_daily": 489,
+        "identity_session_daily": 505,
+        "identity_ipua_daily": 515
       }
     }
   },
-  "updated_at_utc": "2026-08-17T13:38:00.881647+00:00"
+  "updated_at_utc": "2026-08-18T09:23:59.492970+00:00"
 }

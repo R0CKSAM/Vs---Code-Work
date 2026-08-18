@@ -2235,6 +2235,12 @@ def write_javascript_assignment(path: Path, target: str, value: Any) -> None:
     atomic_write_text(path, f"{target}={encoded};")
 
 
+def dashboard_cache_token(payload: dict[str, Any]) -> str:
+    """Return a URL-safe build token so file dashboards never reuse stale data."""
+    token = re.sub(r"[^0-9A-Za-z]+", "", str(payload.get("generated_at_ist", "")))
+    return token or "unversioned"
+
+
 def split_dashboard_payload(
     payload: dict[str, Any],
 ) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -2257,9 +2263,12 @@ def split_dashboard_payload(
     core["youtube"] = payload["youtube"].copy()
     for key in YOUTUBE_PAYLOAD_ARRAYS:
         core["youtube"][key] = []
-    core["sidecars"] = {
-        name: dict(config) for name, config in DASHBOARD_SIDECARS.items()
-    }
+    cache_token = dashboard_cache_token(payload)
+    core["sidecars"] = {}
+    for name, config in DASHBOARD_SIDECARS.items():
+        versioned = dict(config)
+        versioned["file"] = f"{config['file']}?v={cache_token}"
+        core["sidecars"][name] = versioned
     return core, chunks
 
 
@@ -2420,6 +2429,7 @@ def render_dashboard(payload: dict[str, Any]) -> str:
         raise FileNotFoundError(f"Chart.js cache is required for the ASRUN dashboard: {CHARTJS_CACHE}")
     chartjs = CHARTJS_CACHE.read_text(encoding="utf-8")
     title = html.escape(" / ".join(payload["channels"]))
+    cache_token = dashboard_cache_token(payload)
     # Token replacement keeps the HTML/JS free of Python f-string brace escaping.
     template = """<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -2843,7 +2853,7 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
     template = template.replace("<body>", "<body>" + loading_markup, 1)
     template = template.replace(
         data_marker,
-        '<script src="asrun_delivery_data.js"></script><script>'
+        f'<script src="asrun_delivery_data.js?v={cache_token}"></script><script>'
         "const DATA=window.__ASRUN_DATA__;"
         "if(!DATA){const toast=document.getElementById('loadingToast');"
         "toast.classList.add('error');"
@@ -8030,6 +8040,18 @@ function runWithDashboardSources(loaders,action){
       showFatalDashboardError('export data load',error);
     })
     .finally(hideLoading);
+}
+function audienceValue(event,state){
+  const window=fiveMinuteWindow(event),map=state&&state.map instanceof Map?state.map:new Map();
+  let total=0;
+  for(const key of window.keys)total+=Number(map.get(key)||0);
+  return {value:fmt(total),window:window.label,total,available:true};
+}
+function audienceScopeValue(event,state){
+  const window=fiveMinuteWindow(event),map=state instanceof Map?state:state.map;
+  let total=0;
+  for(const key of window.keys)total+=Number(map.get(key)||0);
+  return {window:window.label,total,available:true};
 }
 const asrunBaseRender=render;
 render=function(){

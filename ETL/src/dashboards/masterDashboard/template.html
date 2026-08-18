@@ -161,6 +161,28 @@
       .channel-geo-filter-bar,.geo-filter-bar,.geo-analysis-grid,.geo-analysis-grid[data-visible-panels="2"],.geo-analysis-grid[data-visible-panels="1"]{grid-template-columns:1fr}.geo-analysis-controls{padding:10px}.channel-geo-filter-bar select,.channel-geo-filter-bar input,.geo-filter-bar select,.geo-filter-bar input,.geo-multi-picker summary{height:34px;font-size:12px}
     }
     @media(max-width:430px){.meta{grid-template-columns:1fr}.kpi-grid.viewing{grid-template-columns:1fr}.rank-row{grid-template-columns:24px minmax(0,1fr)}.rank-value{grid-column:2;text-align:left}.channel-panel{right:auto;left:0}}
+    /* Dense desktop baseline for repeated operational scanning. */
+    @media(min-width:1051px){
+      :root{--shadow:none}
+      html{scroll-behavior:auto}.top-shell{box-shadow:none;backdrop-filter:none}
+      .top-inner{padding:2px 6px 0}.title-row{max-height:38px;transition:none}.top-shell.scrolled .title-row{transition:none}
+      h1{font-size:13px}.title-sub,.meta{font-size:7.5px}.meta strong{font-size:8px}
+      .filter-row{gap:3px;margin-top:2px}.filter-group{min-height:24px;gap:3px;padding:2px 3px;border-radius:3px}.filter-label{font-size:7.5px}
+      .segmented button,.quick-buttons button{height:20px;min-height:20px;padding:2px 4px;font-size:8px}.date-inputs input,.channel-picker summary{height:20px;font-size:8px;padding:2px 4px}
+      .scope-line{font-size:7.5px}.channel-panel{box-shadow:none}
+      main{padding:6px 6px 9px}.section{margin-bottom:7px;scroll-margin-top:90px}.section-head{gap:6px;margin-bottom:4px;padding-bottom:3px}.section-head h2{font-size:12px}.section-head p{font-size:8.5px}
+      .kpi-grid,.source-summary,.insight-grid,.analysis-grid,.distribution-grid,.geo-analysis-grid,.coverage-strip{gap:4px}
+      .kpi-card{min-height:72px;border-radius:3px;padding:6px 7px;box-shadow:none}.kpi-card::before{width:2px}.kpi-label{font-size:8px}.kpi-value{margin:3px 0 2px;font-size:clamp(16px,1.35vw,22px)}.kpi-note,.kpi-trend{font-size:8px}.kpi-trend{gap:3px;padding:1px 3px;border-radius:2px}
+      .source-card{gap:4px;border-radius:3px;padding:4px 6px}.source-name{font-size:9px}.source-metric span{font-size:7px}.source-metric strong{font-size:9px}
+      .insight-card,.panel{border-radius:3px;padding:6px;box-shadow:none}.insight-card{border-top-width:2px}.insight-card h3,.panel h3{font-size:10px}.insight-card-period,.panel-sub{font-size:8px;margin:1px 0 3px;min-height:0}.insight-metric{padding:3px 0}.insight-metric strong,.insight-reference-values strong{font-size:10px}.insight-metric small,.insight-reference-values span,.insight-metric span{font-size:7px}
+      .insight-findings{gap:4px;margin-top:4px}.insight-finding{border-radius:3px;padding:4px 5px}.insight-finding span{font-size:7px}.insight-finding strong{font-size:9px}.insight-finding small{font-size:8px}
+      .chart-wrap{height:185px}.empty{height:140px;font-size:9px}.rank-row{gap:4px}.rank,.rank-name,.rank-value{font-size:9px}.rank-value span{font-size:8px}
+      .distribution-note{min-height:0;margin:1px 0 3px;font-size:8px}.channel-geo-filter-bar{gap:3px;margin:3px 0 4px}.channel-geo-filter-bar label{font-size:7px}.channel-geo-filter-bar select,.channel-geo-filter-bar input{height:21px;padding:2px 3px;font-size:8px}
+      .asn-controls{gap:4px;margin:3px 0 4px}.asn-controls input{height:22px;font-size:9px}.asn-summary{gap:4px;margin-bottom:4px}.asn-summary-item{border-radius:3px;padding:4px 5px}.asn-summary-item span{font-size:7px}.asn-summary-item strong{font-size:10px}
+      .coverage-item,.guide-item{border-radius:3px;padding:4px 5px;font-size:8px}.coverage-item strong{font-size:9px}.guide summary{padding:5px 6px;font-size:9px}
+      .geo-analysis-controls{padding:5px}.geo-filter-bar{gap:3px;margin-bottom:4px}.geo-filter-bar label,.geo-multi-picker{font-size:7px}.geo-filter-bar select,.geo-filter-bar input,.geo-multi-picker summary{height:22px;padding:2px 4px;font-size:8px}.geo-analysis-grid .panel{padding:5px}.geo-panel-head h3{font-size:10px}.geo-panel-count,.geo-panel-expand{font-size:8px}.geo-analysis-grid .panel-sub{font-size:8px;margin:1px 0 3px}
+    }
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
   </style>
   $CHARTJS_TAG
 </head>
@@ -358,6 +380,7 @@
 
   <script>
     const DATA=$DATA_BLOB;
+    if(typeof Chart!=="undefined")Chart.defaults.animation=false;
     const SECTIONS=DATA.sections||{};
     const OVERVIEW_SECTION=SECTIONS.overview||{};
     const CHANNEL_SECTION=SECTIONS.by_channel||{};

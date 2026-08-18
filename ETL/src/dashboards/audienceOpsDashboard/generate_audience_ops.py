@@ -1401,6 +1401,34 @@ def completed_date_window(primary: pd.DataFrame, fallback_frames: list[pd.DataFr
     return min(all_dates), max(all_dates)
 
 
+def latest_complete_minute_date(minute: pd.DataFrame, source_scope: str) -> Any | None:
+    """Return the latest day with all 1,440 minutes for the requested CDN sources."""
+    if minute.empty or not {"log_date", "source", "minute_ist"}.issubset(minute.columns):
+        return None
+    required_sources = {
+        "all": {"fast", "stream"},
+        "fast": {"fast"},
+        "stream": {"stream"},
+    }.get(source_scope.lower())
+    if not required_sources:
+        return None
+    work = minute.loc[:, ["log_date", "source", "minute_ist"]].copy()
+    work["source"] = work["source"].astype("string").str.lower()
+    work = work[work["source"].isin(required_sources)]
+    work["log_date"] = pd.to_datetime(work["log_date"], errors="coerce").dt.date
+    work["minute_ist"] = pd.to_datetime(work["minute_ist"], errors="coerce").dt.floor("min")
+    work = work.dropna(subset=["log_date", "minute_ist"])
+    if work.empty:
+        return None
+    counts = work.groupby(["log_date", "source"])["minute_ist"].nunique().unstack(fill_value=0)
+    for required in required_sources:
+        if required not in counts.columns:
+            counts[required] = 0
+    complete = counts.loc[:, sorted(required_sources)].ge(1440).all(axis=1)
+    complete_dates = counts.index[complete]
+    return max(complete_dates) if len(complete_dates) else None
+
+
 def weighted_group(
     df: pd.DataFrame,
     keys: list[str],
@@ -1526,6 +1554,12 @@ def build_data(args: argparse.Namespace) -> dict[str, Any]:
             content,
         ],
     )
+    complete_minute_date = latest_complete_minute_date(
+        concurrency["minute_detail"],
+        source,
+    )
+    if complete_minute_date is not None and complete_minute_date < max_date:
+        max_date = complete_minute_date
 
     daily = filter_date_window(daily, min_date, max_date)
     overview_daily = filter_date_window(overview_daily, min_date, max_date, "date")
