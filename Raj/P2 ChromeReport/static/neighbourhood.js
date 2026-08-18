@@ -2,7 +2,7 @@
   const root = document.getElementById("nbhdTable");
   if (!root) return;
   const NO_DATA_LABEL = "NA";
-  const DEFAULT_VISIBLE_WEEK_COUNT = 2;
+  const DEFAULT_VISIBLE_WEEK_COUNT = 4;
 
   const state = {
     payload: null,
@@ -109,9 +109,8 @@
   const resetButton = document.getElementById("nbhdResetButton");
   const fullscreenButton = document.getElementById("nbhdFullscreenButton");
   const exitFullscreenButton = document.getElementById("nbhdExitFullscreenButton");
-  const prevPageButton = document.getElementById("nbhdPrevPage");
-  const nextPageButton = document.getElementById("nbhdNextPage");
   const pageInfo = document.getElementById("nbhdPageInfo");
+  const scrollHint = document.getElementById("nbhdScrollHint");
   const tableWrap = root.closest(".nbhd-table-wrap");
   const panel = root.closest(".nbhd-panel");
   const fullscreenState = {
@@ -123,6 +122,7 @@
   };
   let renderFrame = null;
   let reportRenderTimeout = null;
+  let lazyRenderPending = false;
 
   function scheduleRender(payload = state.payload) {
     if (renderFrame !== null) return;
@@ -130,6 +130,34 @@
       renderFrame = null;
       render(payload);
     });
+  }
+
+  function getVisibleRowCount(totalCount) {
+    return Math.min(totalCount, Math.max(1, state.page) * state.pageSize);
+  }
+
+  function updateLazyScrollHint(visibleCount, totalCount) {
+    if (!scrollHint) return;
+    if (totalCount > visibleCount) {
+      scrollHint.textContent = `Scroll to load more (${new Intl.NumberFormat().format(visibleCount)} of ${new Intl.NumberFormat().format(totalCount)} visible)`;
+      return;
+    }
+    scrollHint.textContent = totalCount ? `All ${new Intl.NumberFormat().format(totalCount)} rows loaded` : "No rows";
+  }
+
+  function maybeLoadMoreRows(force = false) {
+    if (!tableWrap || lazyRenderPending || !state.payload) return;
+    const pages = paginateGroupedRecords(state.payload.table.records || []);
+    const totalCount = pages.reduce((sum, page) => sum + page.length, 0);
+    const visibleCount = getVisibleRowCount(totalCount);
+    if (visibleCount >= totalCount) return;
+    const nearBottom = tableWrap.scrollTop + tableWrap.clientHeight >= tableWrap.scrollHeight - 160;
+    const underfilled = tableWrap.scrollHeight <= tableWrap.clientHeight + 40;
+    if (!force && !nearBottom && !underfilled) return;
+    lazyRenderPending = true;
+    state.page += 1;
+    scheduleRender(state.payload);
+    lazyRenderPending = false;
   }
 
   function isReportCacheValid() {
@@ -455,8 +483,8 @@
   }
 
   function getFrequencyChangeDirection(previousRaw, currentRaw) {
-    const previousMissing = previousRaw === null || previousRaw === undefined || previousRaw === "";
-    const currentMissing = currentRaw === null || currentRaw === undefined || currentRaw === "";
+    const previousMissing = previousRaw === null || previousRaw === undefined || previousRaw === "" || previousRaw === NO_DATA_LABEL;
+    const currentMissing = currentRaw === null || currentRaw === undefined || currentRaw === "" || currentRaw === NO_DATA_LABEL;
     if (previousMissing && currentMissing) return "";
     if (previousMissing && !currentMissing) return "Increase";
     if (!previousMissing && currentMissing) return "Decrease";
@@ -527,7 +555,6 @@
       { label: "MARKET", className: "sticky-col sticky-market" },
       { label: "CITY", className: "sticky-col sticky-city" },
       { label: "HEADEND", className: "sticky-col sticky-headend" },
-      { label: "CHANNEL NAME", className: "sticky-col sticky-channel sticky-body" },
     ].forEach((column) => {
       const th = document.createElement("th");
       th.textContent = column.label;
@@ -537,6 +564,7 @@
     });
 
     [
+      { label: "Channel", key: "channels", className: "nbhd-group-channel" },
       { label: "Frequency", key: "frequency", className: "nbhd-group-frequency" },
       { label: "Genre", key: "genre", className: "nbhd-group-genre" },
     ].forEach((group) => {
@@ -572,7 +600,6 @@
       { value: record.market, className: "sticky-col sticky-market sticky-body" },
       { value: record.city, className: "sticky-col sticky-city sticky-body" },
       { value: record.head_end, className: "sticky-col sticky-headend sticky-body" },
-      { value: record.channel_name || "", className: "sticky-col sticky-channel sticky-body" },
     ].forEach((column) => {
       const td = document.createElement("td");
       td.textContent = column.value || "";
@@ -581,6 +608,7 @@
     });
 
     const groups = [
+      { key: "channels", className: "nbhd-group-channel" },
       { key: "frequencies", className: "nbhd-group-frequency" },
       { key: "genres", className: "nbhd-group-genre" },
     ];
@@ -606,19 +634,19 @@
           const current = String(value || "").trim();
           const previousWeek = weekIndex > 0 ? weeks[weekIndex - 1] : "";
           const previous = previousWeek ? String(record[groupConfig.key][previousWeek] || "").trim() : "";
-          if (current.toUpperCase() === "INDIA TV") {
+          if (normalizeChannelKey(current) === "INDIATV") {
             td.classList.add("nbhd-cell-india");
-          } else if (weekIndex > 0 && current && !previous) {
+          } else if (weekIndex > 0 && current && current !== NO_DATA_LABEL && !previous) {
             td.classList.add("nbhd-cell-new");
           } else if (weekIndex > 0 && current && previous && current !== previous) {
             td.classList.add("nbhd-cell-changed");
           }
         }
         if (groupConfig.key === "frequencies") {
-          const currentValue = value === null || value === undefined || value === "" ? null : Number(value);
+          const currentValue = value === null || value === undefined || value === "" || value === NO_DATA_LABEL ? null : Number(value);
           const previousWeek = weekIndex > 0 ? weeks[weekIndex - 1] : "";
           const previousRaw = previousWeek ? record[groupConfig.key][previousWeek] : null;
-          const previousValue = previousRaw === null || previousRaw === undefined || previousRaw === "" ? null : Number(previousRaw);
+          const previousValue = previousRaw === null || previousRaw === undefined || previousRaw === "" || previousRaw === NO_DATA_LABEL ? null : Number(previousRaw);
           if (currentValue === null || Number.isNaN(currentValue)) {
             td.classList.add("nbhd-cell-empty");
           } else if (weekIndex > 0 && previousValue !== null && !Number.isNaN(previousValue)) {
@@ -649,7 +677,7 @@
     let currentCount = 0;
 
     function groupKey(record) {
-      return `${record.market}||${record.city}||${record.head_end}`;
+      return `${record.market}||${record.city}||${record.head_end}||${record.group_index || 1}`;
     }
 
     let currentGroupKey = "";
@@ -695,12 +723,11 @@
     buildHeader(weeks);
 
     if (!payload.table.records.length) {
-      pageInfo.textContent = "Page 1 of 1";
-      if (prevPageButton) prevPageButton.disabled = true;
-      if (nextPageButton) nextPageButton.disabled = true;
+      pageInfo.textContent = "Showing 0 of 0";
+      updateLazyScrollHint(0, 0);
       const tr = document.createElement("tr");
       const td = document.createElement("td");
-      td.colSpan = 4 + Math.max(weeks.length, 1) * 2;
+      td.colSpan = 3 + Math.max(weeks.length, 1) * 3;
       td.className = "empty-state";
       td.textContent = "No neighbourhood rows match the current filters.";
       tr.appendChild(td);
@@ -709,15 +736,11 @@
     }
 
     const pages = paginateGroupedRecords(payload.table.records);
-    const totalPages = Math.max(1, pages.length);
-    if (state.page > totalPages) {
-      state.page = totalPages;
-    }
-    const pageRecords = pages[state.page - 1] || [];
-
-    pageInfo.textContent = `Page ${state.page} of ${totalPages}`;
-    if (prevPageButton) prevPageButton.disabled = state.page <= 1;
-    if (nextPageButton) nextPageButton.disabled = state.page >= totalPages;
+    const flatRecords = pages.flat();
+    const visibleCount = getVisibleRowCount(flatRecords.length);
+    const pageRecords = flatRecords.slice(0, visibleCount);
+    pageInfo.textContent = `Showing ${new Intl.NumberFormat().format(pageRecords.length)} of ${new Intl.NumberFormat().format(flatRecords.length)}`;
+    updateLazyScrollHint(pageRecords.length, flatRecords.length);
 
     const fragment = document.createDocumentFragment();
     pageRecords.forEach((record) => fragment.appendChild(buildRow(record, weeks)));
@@ -736,6 +759,7 @@
     renderStatus(state.payload);
     resultCount.textContent = `${new Intl.NumberFormat().format(state.payload.table.total_count)} rows`;
     renderTable(state.payload);
+    window.requestAnimationFrame(() => maybeLoadMoreRows());
     renderReportPanel();
     renderComparisonReportPanel();
   }
@@ -1073,6 +1097,7 @@
     const genresByPosition = new Map();
     const channelPositions = new Map();
     const frequenciesByPosition = new Map();
+    const positions = [];
     records.forEach((record) => {
       const channel = normalizeText(record.channels?.[week]);
       const position = Number(record.position);
@@ -1081,12 +1106,31 @@
       genresByPosition.set(position, normalizeText(record.genres?.[week]));
       frequenciesByPosition.set(position, record.frequencies?.[week]);
       channelPositions.set(normalizeChannelKey(channel), position);
+      positions.push(position);
     });
-    return { byPosition, genresByPosition, channelPositions, frequenciesByPosition };
+    positions.sort((left, right) => left - right);
+    return { byPosition, genresByPosition, channelPositions, frequenciesByPosition, positions };
+  }
+
+  function getAdjacentPosition(mapState, position, offset) {
+    const positions = Array.isArray(mapState?.positions) ? mapState.positions : [];
+    if (!positions.length || Number.isNaN(Number(position))) return null;
+    if (offset < 0) {
+      for (let index = positions.length - 1; index >= 0; index -= 1) {
+        if (positions[index] < position) return positions[index];
+      }
+      return null;
+    }
+    for (let index = 0; index < positions.length; index += 1) {
+      if (positions[index] > position) return positions[index];
+    }
+    return null;
   }
 
   function neighborAt(mapState, position, offset) {
-    return normalizeText(mapState.byPosition.get(position + offset)) || "NA";
+    const adjacentPosition = getAdjacentPosition(mapState, position, offset);
+    if (adjacentPosition === null || adjacentPosition === undefined) return "NA";
+    return normalizeText(mapState.byPosition.get(adjacentPosition)) || "NA";
   }
   function renderReportStatus(message) {
     if (!reportStatus) return;
@@ -1158,13 +1202,14 @@
     const exportedAt = new Date().toLocaleString("en-IN", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false });
 
     // ── Sheet 1: Detailed Report ──────────────────────────────────────────
-    const colCount = 4 + weeks.length * 2;
+    const colCount = 3 + weeks.length * 3;
     const detailRows = [
       [excelCell("Neighbourhood Comparison – Detailed Report", "title", { mergeAcross: colCount - 1 })],
       [excelCell(`Exported: ${exportedAt}  |  Headends: ${totalHeadends}  |  Rows: ${records.length}`, "meta", { mergeAcross: colCount - 1 })],
       blankRow(colCount),
       [
-        excelCell("", "group", { mergeAcross: 3 }),
+        excelCell("", "group", { mergeAcross: 2 }),
+        excelCell("Channel", "group", { mergeAcross: Math.max(0, weeks.length - 1) }),
         excelCell("Frequency", "group", { mergeAcross: Math.max(0, weeks.length - 1) }),
         excelCell("Genre", "group", { mergeAcross: Math.max(0, weeks.length - 1) }),
       ],
@@ -1172,7 +1217,7 @@
         excelCell("MARKET", "header"),
         excelCell("CITY", "header"),
         excelCell("HEADEND", "header"),
-        excelCell("CHANNEL NAME", "header"),
+        ...weeks.map((week) => excelCell(week, "header")),
         ...weeks.map((week) => excelCell(week, "header")),
         ...weeks.map((week) => excelCell(week, "header")),
       ],
@@ -1211,7 +1256,11 @@
         excelCell(record.market || "", rowStyle),
         excelCell(record.city || "", rowStyle),
         excelCell(record.head_end || "", rowStyle),
-        excelCell(record.channel_name || "", normalizeChannelKey(record.channel_name) === "INDIATV" ? "highlight" : rowStyle),
+        ...weeks.map((week, weekIndex) => {
+          const value = record.channels?.[week];
+          const textVal = value === null || value === undefined || value === "" ? "NA" : String(value);
+          return excelCell(textVal, getTextChangeStyle(weekIndex, record.channels || {}, isAlt));
+        }),
         ...weeks.map((week, weekIndex) => {
           const value = record.frequencies?.[week];
           return excelCell(value ?? "NA", getFrequencyStyle(weekIndex, record.frequencies || {}, isAlt));
@@ -1279,7 +1328,7 @@
     window.__downloadExcelWorkbook?.("neighbourhood_report", [
       {
         name: "Detailed Report",
-        columns: [150, 140, 240, ...weeks.map(() => 150), ...weeks.map(() => 95), ...weeks.map(() => 140)],
+        columns: [190, 150, 220, ...weeks.map(() => 160), ...weeks.map(() => 85), ...weeks.map(() => 145)],
         rows: detailRows,
       },
       {
@@ -1761,10 +1810,12 @@
       }
 
       const indiaGenre = normalizeText(currentMap.genresByPosition.get(indiaTvPosition));
-      const channelAbove = normalizeText(currentMap.byPosition.get(indiaTvPosition - 1));
-      const genreAbove = normalizeText(currentMap.genresByPosition.get(indiaTvPosition - 1));
-      const channelBelow = normalizeText(currentMap.byPosition.get(indiaTvPosition + 1));
-      const genreBelow = normalizeText(currentMap.genresByPosition.get(indiaTvPosition + 1));
+      const abovePosition = getAdjacentPosition(currentMap, indiaTvPosition, -1);
+      const belowPosition = getAdjacentPosition(currentMap, indiaTvPosition, 1);
+      const channelAbove = abovePosition === null ? "" : normalizeText(currentMap.byPosition.get(abovePosition));
+      const genreAbove = abovePosition === null ? "" : normalizeText(currentMap.genresByPosition.get(abovePosition));
+      const channelBelow = belowPosition === null ? "" : normalizeText(currentMap.byPosition.get(belowPosition));
+      const genreBelow = belowPosition === null ? "" : normalizeText(currentMap.genresByPosition.get(belowPosition));
 
       detailedRows.push({
         market: group.market,
@@ -2325,11 +2376,14 @@
   }
 
   function groupKey(record) {
-    return `${record.market}||${record.city}||${record.head_end}`;
+    return `${record.market}||${record.city}||${record.head_end}||${record.group_index || 1}`;
   }
 
   function sortGroupRecords(records) {
-    return records.slice().sort((left, right) => normalizeText(left.channel_name).localeCompare(normalizeText(right.channel_name), undefined, { numeric: true }));
+    return records.slice().sort((left, right) => (
+      Number(left.position || 0) - Number(right.position || 0)
+      || Number(left.slot_index || 0) - Number(right.slot_index || 0)
+    ));
   }
 
   function recordMatchesBaseFilters(record, filters) {
@@ -2781,24 +2835,6 @@
       setFullscreen(false);
     });
   }
-  if (prevPageButton) {
-    prevPageButton.addEventListener("click", () => {
-      if (state.page > 1) {
-        state.page -= 1;
-        scheduleRender(state.payload);
-      }
-    });
-  }
-  if (nextPageButton) {
-    nextPageButton.addEventListener("click", () => {
-      if (!state.payload) return;
-      const totalPages = Math.max(1, paginateGroupedRecords(state.payload.table.records || []).length);
-      if (state.page < totalPages) {
-        state.page += 1;
-        scheduleRender(state.payload);
-      }
-    });
-  }
   window.addEventListener("resize", () => {
     if (!state.payload) return;
     const nextPageSize = getPageSize();
@@ -2819,6 +2855,9 @@
       setFullscreen(false);
     }
   });
+  if (tableWrap) {
+    tableWrap.addEventListener("scroll", () => maybeLoadMoreRows());
+  }
   if (state.initial) {
     render(normalizePayloadShape(state.initial));
   }

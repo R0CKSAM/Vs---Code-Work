@@ -71,10 +71,9 @@
   const downloadButton = document.getElementById("comparisonDownloadButton");
   const fullscreenButton = document.getElementById("comparisonFullscreenButton");
   const exitFullscreenButton = document.getElementById("comparisonExitFullscreenButton");
-  const prevPageButton = document.getElementById("comparisonPrevPage");
-  const nextPageButton = document.getElementById("comparisonNextPage");
   const resultCount = document.getElementById("comparisonResultCount");
   const pageInfo = document.getElementById("comparisonPageInfo");
+  const scrollHint = document.getElementById("comparisonScrollHint");
   const statusMessage = document.getElementById("comparisonStatusMessage");
   const tableHead = document.getElementById("comparisonTableHead");
   const tableBody = document.getElementById("comparisonTableBody");
@@ -89,6 +88,7 @@
     tableScrollLeft: 0,
   };
   let renderFrame = null;
+  let lazyRenderPending = false;
 
   function scheduleRender() {
     if (renderFrame !== null) return;
@@ -96,6 +96,33 @@
       renderFrame = null;
       render();
     });
+  }
+
+  function getVisibleRowCount(totalCount) {
+    return Math.min(totalCount, Math.max(1, state.page) * state.pageSize);
+  }
+
+  function updateLazyScrollHint(visibleCount, totalCount) {
+    if (!scrollHint) return;
+    if (totalCount > visibleCount) {
+      scrollHint.textContent = `Scroll to load more (${new Intl.NumberFormat().format(visibleCount)} of ${new Intl.NumberFormat().format(totalCount)} visible)`;
+      return;
+    }
+    scrollHint.textContent = totalCount ? `All ${new Intl.NumberFormat().format(totalCount)} rows loaded` : "No rows";
+  }
+
+  function maybeLoadMoreRows(force = false) {
+    if (!tableWrap || lazyRenderPending) return;
+    const rows = sortedRows();
+    const visibleCount = getVisibleRowCount(rows.length);
+    if (visibleCount >= rows.length) return;
+    const nearBottom = tableWrap.scrollTop + tableWrap.clientHeight >= tableWrap.scrollHeight - 160;
+    const underfilled = tableWrap.scrollHeight <= tableWrap.clientHeight + 40;
+    if (!force && !nearBottom && !underfilled) return;
+    lazyRenderPending = true;
+    state.page += 1;
+    scheduleRender();
+    lazyRenderPending = false;
   }
 
   function normalizeText(value) {
@@ -479,12 +506,10 @@
   function renderTable() {
     const rows = sortedRows();
     resultCount.textContent = `${new Intl.NumberFormat().format(rows.length)} rows`;
-    const totalPages = Math.max(1, Math.ceil(rows.length / state.pageSize));
-    if (state.page > totalPages) state.page = totalPages;
-    const pageRows = rows.slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
-    pageInfo.textContent = `Page ${state.page} of ${totalPages}`;
-    if (prevPageButton) prevPageButton.disabled = state.page <= 1;
-    if (nextPageButton) nextPageButton.disabled = state.page >= totalPages;
+    const visibleCount = getVisibleRowCount(rows.length);
+    const pageRows = rows.slice(0, visibleCount);
+    pageInfo.textContent = `Showing ${new Intl.NumberFormat().format(pageRows.length)} of ${new Intl.NumberFormat().format(rows.length)}`;
+    updateLazyScrollHint(pageRows.length, rows.length);
 
     buildHeader();
     if (!pageRows.length) {
@@ -506,6 +531,7 @@
     renderStatus();
     syncControls();
     renderTable();
+    window.requestAnimationFrame(() => maybeLoadMoreRows());
   }
 
   function exportComparisonExcel() {
@@ -647,24 +673,10 @@
       setFullscreen(false);
     });
   }
-  if (prevPageButton) {
-    prevPageButton.addEventListener("click", () => {
-      if (state.page > 1) {
-        state.page -= 1;
-        scheduleRender();
-      }
-    });
-  }
-  if (nextPageButton) {
-    nextPageButton.addEventListener("click", () => {
-      const totalPages = Math.max(1, Math.ceil(sortedRows().length / state.pageSize));
-      if (state.page < totalPages) {
-        state.page += 1;
-        scheduleRender();
-      }
-    });
-  }
   window.addEventListener("resize", () => scheduleRender());
+  if (tableWrap) {
+    tableWrap.addEventListener("scroll", () => maybeLoadMoreRows());
+  }
 
   columns.forEach((column) => {
     state.columnWidths[column.key] = DEFAULT_COLUMN_WIDTHS[column.key] || 120;

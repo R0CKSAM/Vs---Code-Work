@@ -1199,7 +1199,9 @@
     .dashboard-actions {
       display: flex;
       justify-content: flex-end;
-      margin-top: 18px;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
     .report-helper {
@@ -1641,7 +1643,10 @@
     <section class="kpi-section">
       <div class="kpi-header">
         <p class="toolbar-title">Dashboard Summary</p>
-        <button class="btn-secondary share-btn" id="downloadDashboardBtn" type="button">Download Dashboard</button>
+        <div class="dashboard-actions">
+          <button class="btn-primary" id="downloadWeeklyReportBtn" type="button">Download Report</button>
+          <button class="btn-secondary share-btn" id="downloadDashboardBtn" type="button">Download Dashboard</button>
+        </div>
       </div>
       <div class="kpi-grid">
         <div class="metric kpi-card">
@@ -1669,16 +1674,13 @@
           <div class="metric-value" id="visibleHeadendsKpi">0</div>
         </div>
       </div>
-      <div class="dashboard-actions">
-        <button class="btn-primary" id="downloadWeeklyReportBtn" type="button">Download Report</button>
-      </div>
     </section>
   </div>
 
   <script id="shared-dashboard-state">
     window.__DASHBOARD_SHARED_STATE__ = null;
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <script src="./vendor/exceljs.min.js"></script>
   <script>
     const DISTRIBUTION_MASTER = __DISTRIBUTION_MASTER_JSON__;
     const CHANNEL_WEEKLY = __CHANNEL_WEEKLY_JSON__;
@@ -2006,6 +2008,38 @@
       URL.revokeObjectURL(url);
     }
 
+    async function downloadBlobFile(blob, filename) {
+      if (typeof navigator !== "undefined" && typeof navigator.msSaveOrOpenBlob === "function") {
+        navigator.msSaveOrOpenBlob(blob, filename);
+        return;
+      }
+
+      if (window.location.protocol === "file:") {
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(reader.error || new Error("Unable to prepare the download file."));
+          reader.readAsDataURL(blob);
+        });
+        const link = document.createElement("a");
+        link.href = dataUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        return;
+      }
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 5000);
+    }
+
     function allReportLocations() {
       return uniqueValues(state.headendRows, "headend_location").filter(value => value !== "NA");
     }
@@ -2312,11 +2346,89 @@
       return [...grouped.values()];
     }
 
+    const TASK1_SECTION_CONFIGS = [
+      { key: "landing_channel_1", title: "Landing Channel 1" },
+      { key: "landing_channel_2", title: "Landing Channel 2" },
+      { key: "barker_1", title: "Barker 1" },
+      { key: "barker_2", title: "Barker 2" },
+    ];
+
+    function reportWeeksInRange(fromWeek, toWeek) {
+      return table3AllWeeks().filter(week => {
+        if (fromWeek && compareWeekLabels(week, fromWeek) < 0) return false;
+        if (toWeek && compareWeekLabels(week, toWeek) > 0) return false;
+        return true;
+      });
+    }
+
+    function task1SectionRowsForExport(fromWeek, toWeek, selectedLocations, selectedChannels) {
+      const selectedLocationSet = new Set(selectedLocations.map(value => displayValue(value)));
+      const selectedChannelSet = new Set(selectedChannels.map(value => canonicalChannelDisplay(value)));
+      const weeks = reportWeeksInRange(fromWeek, toWeek);
+
+      return TASK1_SECTION_CONFIGS.map(section => {
+        const channelType = TABLE3_CHANNEL_TYPES[section.key];
+        const matchingHeadendIds = new Set(
+          state.headendWeeklyRows
+            .filter(row => {
+              if (!weeks.includes(row.week_label)) return false;
+              if (!selectedLocationSet.has(displayValue(row.headend_location))) return false;
+              const channelName = canonicalChannelDisplay(row[channelType.channelField] || "");
+              return selectedChannelSet.has(channelName);
+            })
+            .map(row => row.headend_id)
+        );
+        const filteredRows = state.headendWeeklyRows.filter(row => {
+          if (!weeks.includes(row.week_label)) return false;
+          if (!selectedLocationSet.has(displayValue(row.headend_location))) return false;
+          return matchingHeadendIds.has(row.headend_id);
+        });
+
+        const groupedRows = table3GroupedRows(filteredRows, channelType, weeks)
+          .filter(row => row.change_status === "Change")
+          .map(row => ({
+            State: displayValue(row.state),
+            "BARC Market": displayValue(row.barc_market),
+            "Headend Location": displayValue(row.headend_location),
+            "Network Name": displayValue(row.network_name),
+            weeks: weeks.reduce((accumulator, week) => {
+              const channelName = table3WeekValue(row, week, "channel_name");
+              const lcnNo = table3WeekValue(row, week, "lcn_no");
+              const channelDisplay = displayValue(channelName);
+              const lcnDisplay = displayValue(lcnNo);
+              const isBothNA = channelDisplay === "NA" && lcnDisplay === "NA";
+              accumulator[week] = isBothNA ? "NA" : `${channelDisplay}${lcnDisplay !== "NA" ? ` - ${lcnDisplay}` : ""}`;
+              return accumulator;
+            }, {}),
+          }));
+
+        return {
+          ...section,
+          weeks,
+          rows: groupedRows,
+        };
+      });
+    }
+
     function applyWorksheetHeaderStyles(row) {
       row.eachCell(cell => {
         cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
         cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF2E6B5E" } };
         cell.alignment = { vertical: "middle", horizontal: "center" };
+        cell.border = {
+          top: { style: "thin", color: { argb: "FFD5E4DE" } },
+          left: { style: "thin", color: { argb: "FFD5E4DE" } },
+          bottom: { style: "thin", color: { argb: "FFD5E4DE" } },
+          right: { style: "thin", color: { argb: "FFD5E4DE" } },
+        };
+      });
+    }
+
+    function applyWorksheetSectionTitleStyles(row) {
+      row.eachCell(cell => {
+        cell.font = { bold: true, size: 12, color: { argb: "FF17312C" } };
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE5EFEC" } };
+        cell.alignment = { vertical: "middle", horizontal: "left" };
         cell.border = {
           top: { style: "thin", color: { argb: "FFD5E4DE" } },
           left: { style: "thin", color: { argb: "FFD5E4DE" } },
@@ -2371,6 +2483,64 @@
       });
     }
 
+    function buildTask1Worksheet(sheet, sectionData) {
+      const allWeeks = [...new Set(sectionData.flatMap(section => section.weeks))].sort(compareWeekLabels);
+      const taskColumns = ["State", "BARC Market", "Headend Location", "Network Name", ...allWeeks];
+      const columnWidths = [18, 18, 22, 24, ...allWeeks.map(() => 24)];
+
+      sheet.columns = taskColumns.map((column, index) => ({
+        header: column,
+        key: column,
+        width: columnWidths[index],
+      }));
+
+      const lastColumnLetter = sheet.getColumn(taskColumns.length).letter;
+      sheet.mergeCells(`A1:${lastColumnLetter}1`);
+      sheet.getCell("A1").value = "Task 1 - Filtered Channel Placement Sections";
+      sheet.getCell("A1").font = { bold: true, size: 15 };
+      sheet.getCell("A1").alignment = { horizontal: "center" };
+
+      let currentRowIndex = 3;
+
+      sectionData.forEach(section => {
+        const sectionTitleRow = sheet.getRow(currentRowIndex);
+        sheet.mergeCells(`A${currentRowIndex}:${lastColumnLetter}${currentRowIndex}`);
+        sectionTitleRow.getCell(1).value = section.title;
+        applyWorksheetSectionTitleStyles(sectionTitleRow);
+        currentRowIndex += 1;
+
+        const headerRow = sheet.getRow(currentRowIndex);
+        taskColumns.forEach((column, index) => {
+          headerRow.getCell(index + 1).value = allWeeks.includes(column) ? formatWeekCompact(column) : column;
+        });
+        applyWorksheetHeaderStyles(headerRow);
+        currentRowIndex += 1;
+
+        if (!section.rows.length) {
+          const emptyRow = sheet.getRow(currentRowIndex);
+          sheet.mergeCells(`A${currentRowIndex}:${lastColumnLetter}${currentRowIndex}`);
+          emptyRow.getCell(1).value = "No matching rows for the selected filters.";
+          emptyRow.getCell(1).font = { italic: true, color: { argb: "FF6D7F79" } };
+          currentRowIndex += 2;
+          return;
+        }
+
+        section.rows.forEach(row => {
+          const excelRow = sheet.getRow(currentRowIndex);
+          excelRow.getCell(1).value = row.State;
+          excelRow.getCell(2).value = row["BARC Market"];
+          excelRow.getCell(3).value = row["Headend Location"];
+          excelRow.getCell(4).value = row["Network Name"];
+          allWeeks.forEach((week, weekIndex) => {
+            excelRow.getCell(5 + weekIndex).value = row.weeks[week] || "NA";
+          });
+          currentRowIndex += 1;
+        });
+
+        currentRowIndex += 1;
+      });
+    }
+
     async function downloadWeeklyChannelReport() {
       if (typeof ExcelJS === "undefined") {
         setReportStatus("Excel export library could not be loaded.", "error");
@@ -2389,7 +2559,8 @@
         return;
       }
 
-      const reportRows = reportChannelRowsForExport(fromWeek, toWeek, locations, channels, changeFilter);
+      const reportRows = reportChannelRowsForExport(fromWeek, toWeek, locations, channels, changeFilter)
+        .filter(row => row["Change Status"] !== "No Change");
       if (!reportRows.length) {
         setReportStatus("No data available for the selected filters.", "error");
         return;
@@ -2406,6 +2577,7 @@
       const rangeToDate = formatReportDate(reportDateForWeek(toWeek, "max"));
       const selectedLocationsLabel = locations.join(", ");
       const selectedChannelsLabel = channels.join(", ");
+      const task1SectionData = task1SectionRowsForExport(fromWeek, toWeek, locations, channels);
 
       try {
         const reportSheet = workbook.addWorksheet("Report", {
@@ -2445,6 +2617,9 @@
           width: [18, 18, 22, 24, 24, 16, 18, 14, 16, 12][index],
         }));
         applyReportRowStyles(reportSheet, 7, reportRows);
+
+        const task1Sheet = workbook.addWorksheet("Task 1");
+        buildTask1Worksheet(task1Sheet, task1SectionData);
 
         const summarySheet = workbook.addWorksheet("Summary");
         summarySheet.addRow(["Weekly Channel Analysis Summary"]);
@@ -2493,12 +2668,7 @@
         });
         const fileSuffix = locations.length === allReportLocations().length && channels.length === allReportChannels().length ? "" : "_Selected-Filters";
         const filename = `weekly_channel_analysis_${rangeFromDate}_to_${rangeToDate}${fileSuffix}.xlsx`.replace(/\s+/g, "_");
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = filename;
-        link.click();
-        URL.revokeObjectURL(url);
+        await downloadBlobFile(blob, filename);
 
         setReportStatus("Report downloaded successfully.", "success");
       } catch (error) {

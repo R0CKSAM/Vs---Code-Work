@@ -75,9 +75,8 @@
   const fullscreenButton = document.getElementById("otsFullscreenButton");
   const graphButton = document.getElementById("otsGraphButton");
   const exitFullscreenButton = document.getElementById("otsExitFullscreenButton");
-  const prevPageButton = document.getElementById("otsPrevPage");
-  const nextPageButton = document.getElementById("otsNextPage");
   const pageInfo = document.getElementById("otsPageInfo");
+  const scrollHint = document.getElementById("otsScrollHint");
   const tableWrap = root.closest(".ots-table-wrap");
   const panel = root.closest(".ots-panel");
   const graphWrap = document.getElementById("otsGraphWrap");
@@ -132,6 +131,7 @@
     colorMap: {},
   };
   let renderFrame = null;
+  let lazyRenderPending = false;
 
   function scheduleRender(payload = state.payload) {
     if (renderFrame !== null) return;
@@ -139,6 +139,34 @@
       renderFrame = null;
       render(payload);
     });
+  }
+
+  function getVisibleRowCount(totalCount) {
+    return Math.min(totalCount, Math.max(1, state.page) * state.pageSize);
+  }
+
+  function updateLazyScrollHint(visibleCount, totalCount) {
+    if (!scrollHint) return;
+    if (totalCount > visibleCount) {
+      scrollHint.textContent = `Scroll to load more (${new Intl.NumberFormat().format(visibleCount)} of ${new Intl.NumberFormat().format(totalCount)} visible)`;
+      return;
+    }
+    scrollHint.textContent = totalCount ? `All ${new Intl.NumberFormat().format(totalCount)} records loaded` : "No records";
+  }
+
+  function maybeLoadMoreRows(force = false) {
+    if (!tableWrap || lazyRenderPending || graphState.open || !state.payload) return;
+    const weeks = state.payload.visible_weeks || state.payload.weeks || [];
+    const sortedRecords = sortRecords(state.payload.table.records || [], weeks);
+    const visibleCount = getVisibleRowCount(sortedRecords.length);
+    if (visibleCount >= sortedRecords.length) return;
+    const nearBottom = tableWrap.scrollTop + tableWrap.clientHeight >= tableWrap.scrollHeight - 160;
+    const underfilled = tableWrap.scrollHeight <= tableWrap.clientHeight + 40;
+    if (!force && !nearBottom && !underfilled) return;
+    lazyRenderPending = true;
+    state.page += 1;
+    scheduleRender(state.payload);
+    lazyRenderPending = false;
   }
 
   function getPageSize() {
@@ -642,13 +670,10 @@
     state.pageSize = getPageSize();
     buildHeader(weeks);
     const sortedRecords = sortRecords(payload.table.records || [], weeks);
-    const totalPages = Math.max(1, Math.ceil(sortedRecords.length / state.pageSize));
-    if (state.page > totalPages) state.page = totalPages;
-    const pageRecords = sortedRecords.slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
-
-    pageInfo.textContent = `Page ${state.page} of ${totalPages}`;
-    prevPageButton.disabled = state.page <= 1;
-    nextPageButton.disabled = state.page >= totalPages;
+    const visibleCount = getVisibleRowCount(sortedRecords.length);
+    const pageRecords = sortedRecords.slice(0, visibleCount);
+    pageInfo.textContent = `Showing ${new Intl.NumberFormat().format(pageRecords.length)} of ${new Intl.NumberFormat().format(sortedRecords.length)}`;
+    updateLazyScrollHint(pageRecords.length, sortedRecords.length);
 
     if (!pageRecords.length) {
       const tr = document.createElement("tr");
@@ -672,6 +697,7 @@
     renderStatus(payload);
     resultCount.textContent = `${new Intl.NumberFormat().format(payload.table.total_count || 0)} records`;
     renderTable(payload);
+    window.requestAnimationFrame(() => maybeLoadMoreRows());
     renderReportPanel();
     renderGraphPanel();
   }
@@ -1664,23 +1690,6 @@
       setFullscreen(false);
     });
   }
-  if (prevPageButton) {
-    prevPageButton.addEventListener("click", () => {
-      if (state.page > 1) {
-        state.page -= 1;
-        scheduleRender(state.payload);
-      }
-    });
-  }
-  if (nextPageButton) {
-    nextPageButton.addEventListener("click", () => {
-      const totalPages = Math.max(1, Math.ceil((state.payload?.table.records || []).length / state.pageSize));
-      if (state.page < totalPages) {
-        state.page += 1;
-        scheduleRender(state.payload);
-      }
-    });
-  }
   window.addEventListener("resize", () => {
     if (!state.payload) return;
     scheduleRender(state.payload);
@@ -1703,6 +1712,9 @@
   document.addEventListener("mousemove", handleColumnResize);
   document.addEventListener("mouseup", stopColumnResize);
   document.addEventListener("mouseleave", stopColumnResize);
+  if (tableWrap) {
+    tableWrap.addEventListener("scroll", () => maybeLoadMoreRows());
+  }
   if (state.initial) {
     render(state.initial);
   }

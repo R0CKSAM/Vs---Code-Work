@@ -28,15 +28,43 @@
   const tableBody = document.getElementById("landingTrackerTableBody");
   const resultCount = document.getElementById("trackerResultCount");
   const pageInfo = document.getElementById("trackerPageInfo");
-  const prevPageBtn = document.getElementById("trackerPrevPage");
-  const nextPageBtn = document.getElementById("trackerNextPage");
+  const scrollHint = document.getElementById("trackerScrollHint");
   const resetButton = document.getElementById("trackerResetButton");
   const downloadButton = document.getElementById("trackerDownloadButton");
   const fullscreenBtn = document.getElementById("trackerFullscreenButton");
   const panel = root.closest(".landing-tracker-panel");
+  const tableWrap = root.closest(".landing-tracker-table-wrap");
+  let lazyRenderPending = false;
 
   function normalizeText(val) {
     return String(val || "").trim();
+  }
+
+  function getVisibleRowCount(totalCount) {
+    return Math.min(totalCount, Math.max(1, state.page) * state.pageSize);
+  }
+
+  function updateLazyScrollHint(visibleCount, totalCount) {
+    if (!scrollHint) return;
+    if (totalCount > visibleCount) {
+      scrollHint.textContent = `Scroll to load more (${visibleCount.toLocaleString("en-IN")} of ${totalCount.toLocaleString("en-IN")} visible)`;
+      return;
+    }
+    scrollHint.textContent = totalCount ? `All ${totalCount.toLocaleString("en-IN")} records loaded` : "No records";
+  }
+
+  function maybeLoadMoreRows(force = false) {
+    if (!tableWrap || lazyRenderPending) return;
+    const filteredRecords = filterRecords();
+    const visibleCount = getVisibleRowCount(filteredRecords.length);
+    if (visibleCount >= filteredRecords.length) return;
+    const nearBottom = tableWrap.scrollTop + tableWrap.clientHeight >= tableWrap.scrollHeight - 160;
+    const underfilled = tableWrap.scrollHeight <= tableWrap.clientHeight + 40;
+    if (!force && !nearBottom && !underfilled) return;
+    lazyRenderPending = true;
+    state.page += 1;
+    render();
+    lazyRenderPending = false;
   }
 
   function getMultiSelect(id) {
@@ -403,19 +431,18 @@
 
     if (totalCount === 0) {
       if (resultCount) resultCount.textContent = "0 records";
-      if (pageInfo) pageInfo.textContent = "Page 1 of 1";
+      if (pageInfo) pageInfo.textContent = "Showing 0 of 0";
+      updateLazyScrollHint(0, 0);
       tableBody.innerHTML = `<tr><td colspan="100%" class="landing-empty-state">No records found.<br/><span style="font-size:0.75rem; font-weight:400; color:var(--muted);">Try adjusting your filters.</span></td></tr>`;
       return;
     }
 
-    const totalPages = Math.max(1, Math.ceil(totalCount / state.pageSize));
-    if (state.page > totalPages) state.page = totalPages;
-
-    const startIdx = (state.page - 1) * state.pageSize;
-    const pageRecords = records.slice(startIdx, startIdx + state.pageSize);
+    const visibleCount = getVisibleRowCount(totalCount);
+    const pageRecords = records.slice(0, visibleCount);
 
     if (resultCount) resultCount.textContent = `${totalCount.toLocaleString("en-IN")} records`;
-    if (pageInfo) pageInfo.textContent = `Page ${state.page} of ${totalPages}`;
+    if (pageInfo) pageInfo.textContent = `Showing ${pageRecords.length.toLocaleString("en-IN")} of ${totalCount.toLocaleString("en-IN")}`;
+    updateLazyScrollHint(pageRecords.length, totalCount);
 
     const channelTypeKey = state.filters.channel_type || "landing_1";
     const frag = document.createDocumentFragment();
@@ -481,6 +508,7 @@
     renderTableHead(visibleWeeks);
     renderTableBody(filteredRecords, visibleWeeks);
     syncFilterLabels();
+    window.requestAnimationFrame(() => maybeLoadMoreRows());
   }
 
   function exportTrackerExcel() {
@@ -632,26 +660,6 @@
       downloadButton.addEventListener("click", exportTrackerExcel);
     }
 
-    if (prevPageBtn) {
-      prevPageBtn.addEventListener("click", () => {
-        if (state.page > 1) {
-          state.page -= 1;
-          render();
-        }
-      });
-    }
-
-    if (nextPageBtn) {
-      nextPageBtn.addEventListener("click", () => {
-        const filteredRecords = filterRecords();
-        const totalPages = Math.max(1, Math.ceil(filteredRecords.length / state.pageSize));
-        if (state.page < totalPages) {
-          state.page += 1;
-          render();
-        }
-      });
-    }
-
     if (fullscreenBtn) {
       fullscreenBtn.addEventListener("click", () => {
         if (!panel) return;
@@ -664,6 +672,10 @@
           fullscreenBtn.textContent = "Exit Full Screen";
         }
       });
+    }
+
+    if (tableWrap) {
+      tableWrap.addEventListener("scroll", () => maybeLoadMoreRows());
     }
   }
 

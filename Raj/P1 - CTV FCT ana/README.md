@@ -5,6 +5,7 @@ This project builds and updates a CTV FCT dashboard from Excel data.
 ## What this project does
 - Reads Excel files from the Data/Incoming folder
 - Combines new data into a master workbook
+- Caches the master dataset for faster future updates
 - Archives processed files
 - Generates or updates the dashboard output
 
@@ -12,6 +13,7 @@ This project builds and updates a CTV FCT dashboard from Excel data.
 - Data/Incoming: place new Excel files here
 - Data/Archive: processed files are moved here after update
 - Data/Master_Data.xlsx: the combined master file used by the dashboard
+- Data/Master_Data.pkl: local cache created after a successful read of the master workbook
 - update_master.py: Python script to merge new Excel files into the master workbook
 - build_dashboard_html.py: script that generates the dashboard HTML from data sources
 - build_excel_dashboard.ps1: PowerShell script for Excel-based dashboard generation
@@ -24,7 +26,7 @@ This project builds and updates a CTV FCT dashboard from Excel data.
 
 ```powershell
 Set-Location "D:\Vs - Code Work\Raj\P1 - CTV FCT ana"
-.\.venv\Scripts\python.exe .\update_master.py
+python .\update_master.py
 ```
 
 4. The script will:
@@ -32,13 +34,19 @@ Set-Location "D:\Vs - Code Work\Raj\P1 - CTV FCT ana"
    - check the columns
    - append new rows to the master workbook
    - save the updated Master_Data.xlsx
+   - refresh the local Master_Data.pkl cache
    - move the processed file to Data/Archive
+
+## First run behavior
+- The first run after changing or rebuilding `Data/Master_Data.xlsx` can take longer because the script reads the full workbook and creates `Data/Master_Data.pkl`.
+- Later runs are faster because the script loads the cached `.pkl` file when it is newer than the Excel source.
+- If the first run seems slow, let it finish instead of stopping it early.
 
 ## Requirements
 Install the required Python packages:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install pandas openpyxl
+python -m pip install pandas openpyxl
 ```
 
 ## How to open the dashboard
@@ -48,6 +56,7 @@ Open the generated HTML file:
 ## Notes for new users
 - Do not manually edit the master workbook unless you know what you are doing.
 - Always place new source Excel files in Data/Incoming.
+- Ignore temporary Excel lock files such as `~$...xlsx`.
 - If the dashboard does not refresh after updating data, regenerate the HTML output using the dashboard scripts.
 
 ## Common folder names

@@ -10,10 +10,12 @@ from typing import Iterable
 
 import pandas as pd
 from pandas.api import types as pdt
+from openpyxl import load_workbook
 
 
 DEFAULT_DATA_DIR = Path(__file__).resolve().parent / "Data"
 DEFAULT_MASTER_PATH = DEFAULT_DATA_DIR / "Master_Data.xlsx"
+DEFAULT_MASTER_CACHE_SUFFIX = ".pkl"
 DEFAULT_INCOMING_DIR = DEFAULT_DATA_DIR / "Incoming"
 DEFAULT_ARCHIVE_DIR = DEFAULT_DATA_DIR / "Archive"
 AUTO_ID_CANDIDATES = (
@@ -33,6 +35,29 @@ class WorkbookData:
     path: Path
     sheet_name: str
     frame: pd.DataFrame
+
+
+def get_cache_path(workbook_path: Path) -> Path:
+    return workbook_path.with_suffix(DEFAULT_MASTER_CACHE_SUFFIX)
+
+
+def load_cached_frame(path: Path) -> pd.DataFrame | None:
+    cache_path = get_cache_path(path)
+    if not cache_path.exists():
+        return None
+    if cache_path.stat().st_mtime < path.stat().st_mtime:
+        return None
+
+    try:
+        log_ok(f"Loading cached data from {cache_path.name}")
+        return pd.read_pickle(cache_path)
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def save_cached_frame(path: Path, frame: pd.DataFrame) -> None:
+    cache_path = get_cache_path(path)
+    frame.to_pickle(cache_path)
 
 
 def parse_args() -> argparse.Namespace:
@@ -82,23 +107,35 @@ def read_excel_file(path: Path) -> WorkbookData:
 
     log_ok(f"Reading {path.name}")
 
+    cached_frame = load_cached_frame(path)
+    if cached_frame is not None:
+        return WorkbookData(path=path, sheet_name="Sheet1", frame=cached_frame.dropna(how="all"))
+
     try:
-        excel_file = pd.ExcelFile(path, engine="openpyxl")
+        workbook = load_workbook(path, read_only=True, data_only=True)
     except Exception as exc:  # noqa: BLE001
         raise ValueError(f"{path.name} cannot be opened or is not a valid Excel workbook.") from exc
 
-    if not excel_file.sheet_names:
+    if not workbook.sheetnames:
         raise ValueError(f"{path.name} has no sheets.")
 
-    sheet_name = excel_file.sheet_names[0]
+    sheet_name = workbook.sheetnames[0]
     log_ok(f"Using sheet: {sheet_name}")
 
     try:
-        frame = pd.read_excel(path, sheet_name=sheet_name, engine="openpyxl")
+        worksheet = workbook[sheet_name]
+        rows = worksheet.iter_rows(values_only=True)
+        headers = next(rows, None)
+        if headers is None:
+            frame = pd.DataFrame()
+        else:
+            frame = pd.DataFrame(rows, columns=headers)
     except Exception as exc:  # noqa: BLE001
         raise ValueError(f"Could not read sheet '{sheet_name}' from {path.name}.") from exc
 
-    return WorkbookData(path=path, sheet_name=sheet_name, frame=frame.dropna(how="all"))
+    frame = frame.dropna(how="all")
+    save_cached_frame(path, frame)
+    return WorkbookData(path=path, sheet_name=sheet_name, frame=frame)
 
 
 def create_master_dataset(initial_file: Path, master_path: Path) -> WorkbookData:
@@ -161,7 +198,7 @@ def align_to_master_schema(master_frame: pd.DataFrame, incoming_frame: pd.DataFr
             aligned[column] = source_series.astype(target_dtype)
         else:
             try:
-                aligned[column] = source_series.astype(target_dtype, copy=False)
+                aligned[column] = source_series.astype(target_dtype)
             except (TypeError, ValueError):
                 aligned[column] = source_series
 
@@ -229,6 +266,7 @@ def remove_duplicates(frame: pd.DataFrame, unique_key: list[str] | None) -> tupl
 def save_master_dataset(master_frame: pd.DataFrame, master_path: Path, sheet_name: str) -> None:
     with pd.ExcelWriter(master_path, engine="openpyxl") as writer:
         master_frame.to_excel(writer, sheet_name=sheet_name, index=False)
+    save_cached_frame(master_path, master_frame)
 
 
 def archive_processed_file(file_path: Path, archive_dir: Path) -> Path:

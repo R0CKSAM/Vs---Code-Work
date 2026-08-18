@@ -71,10 +71,9 @@
   const resetButton = document.getElementById("nbhdBenchmarkResetButton");
   const fullscreenButton = document.getElementById("nbhdBenchmarkFullscreenButton");
   const exitFullscreenButton = document.getElementById("nbhdBenchmarkExitFullscreenButton");
-  const prevPageButton = document.getElementById("nbhdBenchmarkPrevPage");
-  const nextPageButton = document.getElementById("nbhdBenchmarkNextPage");
   const resultCount = document.getElementById("nbhdBenchmarkResultCount");
   const pageInfo = document.getElementById("nbhdBenchmarkPageInfo");
+  const scrollHint = document.getElementById("nbhdBenchmarkScrollHint");
   const statusMessage = document.getElementById("nbhdBenchmarkStatusMessage");
   const tableHead = document.getElementById("nbhdBenchmarkTableHead");
   const tableBody = document.getElementById("nbhdBenchmarkTableBody");
@@ -88,6 +87,7 @@
     tableScrollTop: 0,
     tableScrollLeft: 0,
   };
+  let lazyRenderPending = false;
 
   function normalizeText(value) {
     return String(value || "").trim();
@@ -117,6 +117,33 @@
     if (state.filters.week) return;
     const weeks = availableWeeks();
     if (weeks.length) state.filters.week = weeks[weeks.length - 1];
+  }
+
+  function getVisibleRowCount(totalCount) {
+    return Math.min(totalCount, Math.max(1, state.page) * state.pageSize);
+  }
+
+  function updateLazyScrollHint(visibleCount, totalCount) {
+    if (!scrollHint) return;
+    if (totalCount > visibleCount) {
+      scrollHint.textContent = `Scroll to load more (${new Intl.NumberFormat().format(visibleCount)} of ${new Intl.NumberFormat().format(totalCount)} visible)`;
+      return;
+    }
+    scrollHint.textContent = totalCount ? `All ${new Intl.NumberFormat().format(totalCount)} rows loaded` : "No rows";
+  }
+
+  function maybeLoadMoreRows(force = false) {
+    if (!tableWrap || lazyRenderPending) return;
+    const rows = sortedRows();
+    const visibleCount = getVisibleRowCount(rows.length);
+    if (visibleCount >= rows.length) return;
+    const nearBottom = tableWrap.scrollTop + tableWrap.clientHeight >= tableWrap.scrollHeight - 160;
+    const underfilled = tableWrap.scrollHeight <= tableWrap.clientHeight + 40;
+    if (!force && !nearBottom && !underfilled) return;
+    lazyRenderPending = true;
+    state.page += 1;
+    renderTableBody();
+    lazyRenderPending = false;
   }
 
   function getPreviousWeek(currentWeek) {
@@ -503,14 +530,10 @@
   function renderTableBody() {
     const rows = sortedRows();
     resultCount.textContent = `${new Intl.NumberFormat().format(rows.length)} rows`;
-
-    const totalPages = Math.max(1, Math.ceil(rows.length / state.pageSize));
-    if (state.page > totalPages) state.page = totalPages;
-    const pageRows = rows.slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
-
-    pageInfo.textContent = `Page ${state.page} of ${totalPages}`;
-    if (prevPageButton) prevPageButton.disabled = state.page <= 1;
-    if (nextPageButton) nextPageButton.disabled = state.page >= totalPages;
+    const visibleCount = getVisibleRowCount(rows.length);
+    const pageRows = rows.slice(0, visibleCount);
+    pageInfo.textContent = `Showing ${new Intl.NumberFormat().format(pageRows.length)} of ${new Intl.NumberFormat().format(rows.length)}`;
+    updateLazyScrollHint(pageRows.length, rows.length);
 
     if (!pageRows.length) {
       const tr = document.createElement("tr");
@@ -601,6 +624,7 @@
     renderStatus();
     buildHeader();
     renderTableBody();
+    window.requestAnimationFrame(() => maybeLoadMoreRows());
   }
 
   bindSingleSelect(marketFilter, "market", "All Markets");
@@ -621,20 +645,6 @@
 
   fullscreenButton?.addEventListener("click", toggleFullscreen);
   exitFullscreenButton?.addEventListener("click", toggleFullscreen);
-  prevPageButton?.addEventListener("click", () => {
-    if (state.page > 1) {
-      state.page -= 1;
-      renderTableBody();
-    }
-  });
-  nextPageButton?.addEventListener("click", () => {
-    const totalPages = Math.max(1, Math.ceil(sortedRows().length / state.pageSize));
-    if (state.page < totalPages) {
-      state.page += 1;
-      renderTableBody();
-    }
-  });
-
   document.addEventListener("click", () => closeMenus());
   document.addEventListener("mousemove", handleColumnResize);
   document.addEventListener("mouseup", stopColumnResize);
@@ -650,6 +660,9 @@
   });
 
   window.addEventListener("resize", () => render());
+  if (tableWrap) {
+    tableWrap.addEventListener("scroll", () => maybeLoadMoreRows());
+  }
 
   render();
 })();

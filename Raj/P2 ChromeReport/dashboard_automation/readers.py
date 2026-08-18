@@ -4,6 +4,12 @@ from pathlib import Path
 
 import pandas as pd
 
+from market_mapping import (
+    normalize_channel_name,
+    normalize_city_name,
+    normalize_headend_name,
+    normalize_market_name,
+)
 from .utils import find_header_row, normalize_header, normalize_text
 
 
@@ -33,6 +39,18 @@ def _coerce_numeric_columns(dataframe: pd.DataFrame, columns: list[str]) -> pd.D
     return dataframe
 
 
+def _normalize_market_column(dataframe: pd.DataFrame, column_name: str = "Market") -> pd.DataFrame:
+    if column_name in dataframe.columns:
+        dataframe[column_name] = dataframe[column_name].map(lambda value: normalize_market_name(normalize_text(value)))
+    return dataframe
+
+
+def _normalize_text_column(dataframe: pd.DataFrame, column_name: str, normalizer) -> pd.DataFrame:
+    if column_name in dataframe.columns:
+        dataframe[column_name] = dataframe[column_name].map(lambda value: normalizer(normalize_text(value)))
+    return dataframe
+
+
 def read_distribution_details(file_path: Path, week_label: str) -> pd.DataFrame:
     aliases = {
         "Transmission": ("TRANSMISSION",),
@@ -59,6 +77,10 @@ def read_distribution_details(file_path: Path, week_label: str) -> pd.DataFrame:
         engine="openpyxl",
     )
     dataframe = _cleanup_dataframe(_rename_columns(dataframe, aliases))
+    dataframe = _normalize_market_column(dataframe, "Market")
+    dataframe = _normalize_text_column(dataframe, "City", normalize_city_name)
+    dataframe = _normalize_text_column(dataframe, "Head-End", normalize_headend_name)
+    dataframe = _normalize_text_column(dataframe, "Channel Name", normalize_channel_name)
     drop_columns = [column for column in dataframe.columns if normalize_header(column).startswith("WEEK") and column != "Week"]
     if drop_columns:
         dataframe = dataframe.drop(columns=drop_columns)
@@ -89,7 +111,13 @@ def read_nbhd_details(file_path: Path, week_label: str) -> pd.DataFrame:
         engine="openpyxl",
     )
     dataframe = _cleanup_dataframe(_rename_columns(dataframe, aliases))
+    dataframe = _normalize_market_column(dataframe, "Market")
+    dataframe = _normalize_text_column(dataframe, "City", normalize_city_name)
+    dataframe = _normalize_text_column(dataframe, "Head-End", normalize_headend_name)
+    dataframe = _normalize_text_column(dataframe, "Channel", normalize_channel_name)
     dataframe = _coerce_numeric_columns(dataframe, ["Frequency", "TV CH. No."])
+    if "TV CH. No." in dataframe.columns:
+        dataframe["Frequency"] = dataframe["TV CH. No."]
     if "Week" in dataframe.columns:
         dataframe["Week"] = week_label
     else:
@@ -112,11 +140,12 @@ def read_ots_summary(file_path: Path, week_label: str) -> pd.DataFrame:
 
     market_column = next((column for column in dataframe.columns if normalize_header(column) == "MARKET"), dataframe.columns[0])
     dataframe = dataframe.rename(columns={market_column: "Market"})
+    dataframe = _normalize_market_column(dataframe, "Market")
     dataframe = dataframe.dropna(how="all", subset=["Market"])
 
     melted = dataframe.melt(id_vars=["Market"], var_name="Channel", value_name="OTS")
-    melted["Market"] = melted["Market"].map(normalize_text)
-    melted["Channel"] = melted["Channel"].map(normalize_text)
+    melted["Market"] = melted["Market"].map(lambda value: normalize_market_name(normalize_text(value)))
+    melted["Channel"] = melted["Channel"].map(lambda value: normalize_channel_name(normalize_text(value)))
     melted["OTS"] = pd.to_numeric(melted["OTS"], errors="coerce")
     melted = melted.dropna(subset=["OTS"])
     melted = melted[(melted["Market"] != "") & (melted["Channel"] != "")]

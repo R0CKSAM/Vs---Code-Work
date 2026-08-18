@@ -9,6 +9,12 @@ from typing import Any
 
 import pandas as pd
 from openpyxl import Workbook, load_workbook
+from market_mapping import (
+    normalize_channel_name,
+    normalize_city_name,
+    normalize_headend_name,
+    normalize_market_name,
+)
 from weekly_workbook_builder import ensure_combined_weekly_workbooks
 
 
@@ -125,6 +131,22 @@ def normalize_text(value: Any) -> str:
     if value is None:
         return ""
     return str(value).strip()
+
+
+def normalize_market_text(value: Any) -> str:
+    return normalize_market_name(normalize_text(value))
+
+
+def normalize_city_text(value: Any) -> str:
+    return normalize_city_name(normalize_text(value))
+
+
+def normalize_headend_text(value: Any) -> str:
+    return normalize_headend_name(normalize_text(value))
+
+
+def normalize_channel_text(value: Any) -> str:
+    return normalize_channel_name(normalize_text(value))
 
 
 def sort_summary_channels(channels: list[str]) -> list[str]:
@@ -357,10 +379,10 @@ def prepare_nbhd_week_rows(path: Path) -> tuple[str, list[dict[str, Any]]]:
             field: values[index] if index < len(values) else None
             for field, index in field_indexes.items()
         }
-        market = normalize_text(row["market"])
-        city = normalize_text(row["city"])
-        head_end = normalize_text(row["head_end"])
-        channel = normalize_text(row["channel"])
+        market = normalize_market_text(row["market"])
+        city = normalize_city_text(row["city"])
+        head_end = normalize_headend_text(row["head_end"])
+        channel = normalize_channel_text(row["channel"])
         if not market or not city or not head_end or not channel:
             continue
         rows.append(
@@ -371,7 +393,7 @@ def prepare_nbhd_week_rows(path: Path) -> tuple[str, list[dict[str, Any]]]:
                 "head_end": head_end,
                 "channel": channel,
                 "genre": normalize_text(row["genre"]),
-                "frequency": normalize_number(row["frequency"]),
+                "frequency": normalize_number(row["tv_ch_no"]),
                 "tv_ch_no": normalize_number(row["tv_ch_no"]),
                 "order_token": normalize_number(row["tv_ch_no"]) if normalize_number(row["tv_ch_no"]) is not None else normalize_number(row["frequency"]),
             }
@@ -431,8 +453,8 @@ def prepare_ots_week_rows(path: Path) -> tuple[str, list[dict[str, Any]]]:
     week_label = normalize_text(path.stem)
     rows: list[dict[str, Any]] = []
     for values in sheet.iter_rows(min_row=2, values_only=True):
-        market = normalize_text(values[field_indexes["market"]] if field_indexes["market"] < len(values) else None)
-        channel = normalize_text(values[field_indexes["channel"]] if field_indexes["channel"] < len(values) else None)
+        market = normalize_market_text(values[field_indexes["market"]] if field_indexes["market"] < len(values) else None)
+        channel = normalize_channel_text(values[field_indexes["channel"]] if field_indexes["channel"] < len(values) else None)
         ots_value = normalize_ots_percentage(values[field_indexes["ots"]] if field_indexes["ots"] < len(values) else None)
         if not market or not channel:
             continue
@@ -495,7 +517,30 @@ def enumerate_nbhd_positions(rows: list[dict[str, Any]]) -> list[tuple[int, dict
 
 
 def build_nbhd_channel_rows(group_rows: list[dict[str, Any]]) -> list[tuple[int, dict[str, Any]]]:
-    return enumerate_nbhd_positions(group_rows)
+    sorted_rows = get_nbhd_sorted_rows(group_rows)
+    grouped_rows: list[tuple[int, dict[str, Any]]] = []
+    chunk_size = 9
+
+    for chunk_start in range(0, len(sorted_rows), chunk_size):
+        chunk = sorted_rows[chunk_start:chunk_start + chunk_size]
+        for slot_index in range(chunk_size):
+            absolute_position = chunk_start + slot_index + 1
+            if slot_index < len(chunk):
+                row = dict(chunk[slot_index])
+                row["is_padding"] = False
+            else:
+                row = {
+                    "channel": "NA",
+                    "genre": "NA",
+                    "frequency": "NA",
+                    "order_token": None,
+                    "is_padding": True,
+                }
+            row["group_index"] = (chunk_start // chunk_size) + 1
+            row["slot_index"] = slot_index + 1
+            grouped_rows.append((absolute_position, row))
+
+    return grouped_rows
 
 
 NBHD_WEEKWISE_COLUMNS = [
@@ -558,7 +603,7 @@ def build_nbhd_weekwise_row(
 ) -> dict[str, Any]:
     sorted_rows = get_nbhd_sorted_rows(rows)
     india_index = next(
-        (index for index, row in enumerate(sorted_rows) if normalize_text(row.get("channel")).upper() == "INDIA TV"),
+        (index for index, row in enumerate(sorted_rows) if normalize_channel_text(row.get("channel")).upper() == "INDIA TV"),
         None,
     )
 
@@ -590,7 +635,7 @@ def build_nbhd_weekwise_row(
             if source_index < 0 or source_index >= len(sorted_rows):
                 continue
             row = sorted_rows[source_index]
-            output[f"c{slot}"] = normalize_text(row.get("channel"))
+            output[f"c{slot}"] = normalize_channel_text(row.get("channel"))
             output[f"genre{slot}"] = normalize_text(row.get("genre"))
         return output
 
@@ -599,7 +644,7 @@ def build_nbhd_weekwise_row(
         if source_index >= len(sorted_rows):
             break
         row = sorted_rows[source_index]
-        output[f"c{slot}"] = normalize_text(row.get("channel"))
+        output[f"c{slot}"] = normalize_channel_text(row.get("channel"))
         output[f"genre{slot}"] = normalize_text(row.get("genre"))
     return output
 
@@ -622,14 +667,14 @@ def build_nbhd_weekwise_report() -> dict[str, Any]:
         grouped_rows: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
         for row in dataframe.to_dict(orient="records"):
             week_label = normalize_text(row.get("Week"))
-            market = normalize_text(row.get("Market"))
-            city = normalize_text(row.get("City"))
-            head_end = normalize_text(row.get("Head-End"))
-            channel = normalize_text(row.get("Channel"))
+            market = normalize_market_text(row.get("Market"))
+            city = normalize_city_text(row.get("City"))
+            head_end = normalize_headend_text(row.get("Head-End"))
+            channel = normalize_channel_text(row.get("Channel"))
             if not week_label or not market or not city or not head_end or not channel:
                 continue
             tv_ch_no = normalize_number(row.get("TV CH. No."))
-            frequency = normalize_number(row.get("Frequency"))
+            frequency = normalize_number(row.get("TV CH. No."))
             grouped_rows.setdefault((week_label, market, city, head_end), []).append(
                 {
                     "market": market,
@@ -733,14 +778,14 @@ def build_nbhd_report() -> dict[str, Any]:
             week_frame = dataframe[dataframe["Week"].astype(str) == week_label].copy()
             rows = []
             for row in week_frame.to_dict(orient="records"):
-                market = normalize_text(row.get("Market"))
-                city = normalize_text(row.get("City"))
-                head_end = normalize_text(row.get("Head-End"))
-                channel = normalize_text(row.get("Channel"))
+                market = normalize_market_text(row.get("Market"))
+                city = normalize_city_text(row.get("City"))
+                head_end = normalize_headend_text(row.get("Head-End"))
+                channel = normalize_channel_text(row.get("Channel"))
                 if not market or not city or not head_end or not channel:
                     continue
                 tv_ch_no = normalize_number(row.get("TV CH. No."))
-                frequency = normalize_number(row.get("Frequency"))
+                frequency = normalize_number(row.get("TV CH. No."))
                 rows.append(
                     {
                         "type": normalize_text(row.get("Type")),
@@ -761,8 +806,10 @@ def build_nbhd_report() -> dict[str, Any]:
 
             for (market, city, head_end), group_rows in grouped.items():
                 for offset, nbhd_row in build_nbhd_channel_rows(group_rows):
-                    channel = normalize_text(nbhd_row["channel"])
-                    row_key = comparison_record_key(market, city, head_end, channel)
+                    channel = normalize_channel_text(nbhd_row["channel"]) or "NA"
+                    group_index = int(nbhd_row.get("group_index") or 1)
+                    slot_index = int(nbhd_row.get("slot_index") or 1)
+                    row_key = "||".join((market, city, head_end, str(group_index), str(slot_index)))
                     record = merged.setdefault(
                         row_key,
                         {
@@ -770,8 +817,10 @@ def build_nbhd_report() -> dict[str, Any]:
                             "market": market,
                             "city": city,
                             "head_end": head_end,
-                            "channel_name": channel,
+                            "channel_name": f"Position {slot_index}",
                             "position": offset,
+                            "group_index": group_index,
+                            "slot_index": slot_index,
                             "positions": {},
                             "is_reference": False,
                             "channels": {},
@@ -779,22 +828,24 @@ def build_nbhd_report() -> dict[str, Any]:
                             "frequencies": {},
                         },
                     )
-                    if not normalize_text(record.get("channel_name")):
-                        record["channel_name"] = channel
+                    record["channel_name"] = f"Position {slot_index}"
                     record["position"] = offset
+                    record["group_index"] = group_index
+                    record["slot_index"] = slot_index
                     record["positions"][week_label] = offset
                     record["channels"][week_label] = channel
-                    record["genres"][week_label] = normalize_text(nbhd_row["genre"])
-                    record["frequencies"][week_label] = nbhd_row["frequency"]
+                    record["genres"][week_label] = normalize_text(nbhd_row["genre"]) or "NA"
+                    frequency = nbhd_row["frequency"]
+                    record["frequencies"][week_label] = frequency if frequency not in (None, "") else ("NA" if channel == "NA" else frequency)
                     if channel.upper() in FOCUS_CHANNELS:
                         record["is_reference"] = True
 
         records = list(merged.values())
         for record in records:
             for week in weeks:
-                record["channels"].setdefault(week, "")
-                record["genres"].setdefault(week, "")
-                record["frequencies"].setdefault(week, None)
+                record["channels"].setdefault(week, "NA")
+                record["genres"].setdefault(week, "NA")
+                record["frequencies"].setdefault(week, "NA")
 
         return {
             "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -805,7 +856,8 @@ def build_nbhd_report() -> dict[str, Any]:
                     item["market"].lower(),
                     item["city"].lower(),
                     item["head_end"].lower(),
-                    normalize_text(item.get("channel_name")).lower(),
+                    int(item.get("group_index") or 0),
+                    int(item.get("slot_index") or 0),
                 ),
             ),
             "message": "",
@@ -827,8 +879,10 @@ def build_nbhd_report() -> dict[str, Any]:
 
         for (market, city, head_end), group_rows in grouped.items():
             for offset, nbhd_row in build_nbhd_channel_rows(group_rows):
-                channel = normalize_text(nbhd_row["channel"])
-                row_key = comparison_record_key(market, city, head_end, channel)
+                channel = normalize_channel_text(nbhd_row["channel"]) or "NA"
+                group_index = int(nbhd_row.get("group_index") or 1)
+                slot_index = int(nbhd_row.get("slot_index") or 1)
+                row_key = "||".join((market, city, head_end, str(group_index), str(slot_index)))
                 record = merged.setdefault(
                     row_key,
                     {
@@ -836,8 +890,10 @@ def build_nbhd_report() -> dict[str, Any]:
                         "market": market,
                         "city": city,
                         "head_end": head_end,
-                        "channel_name": channel,
+                        "channel_name": f"Position {slot_index}",
                         "position": offset,
+                        "group_index": group_index,
+                        "slot_index": slot_index,
                         "positions": {},
                         "is_reference": False,
                         "channels": {},
@@ -845,22 +901,24 @@ def build_nbhd_report() -> dict[str, Any]:
                         "frequencies": {},
                     },
                 )
-                if not normalize_text(record.get("channel_name")):
-                    record["channel_name"] = channel
+                record["channel_name"] = f"Position {slot_index}"
                 record["position"] = offset
+                record["group_index"] = group_index
+                record["slot_index"] = slot_index
                 record["positions"][week_label] = offset
                 record["channels"][week_label] = channel
-                record["genres"][week_label] = normalize_text(nbhd_row["genre"])
-                record["frequencies"][week_label] = nbhd_row["frequency"]
+                record["genres"][week_label] = normalize_text(nbhd_row["genre"]) or "NA"
+                frequency = nbhd_row["frequency"]
+                record["frequencies"][week_label] = frequency if frequency not in (None, "") else ("NA" if channel == "NA" else frequency)
                 if channel.upper() in FOCUS_CHANNELS:
                     record["is_reference"] = True
 
     records = list(merged.values())
     for record in records:
         for week in weeks:
-            record["channels"].setdefault(week, "")
-            record["genres"].setdefault(week, "")
-            record["frequencies"].setdefault(week, None)
+            record["channels"].setdefault(week, "NA")
+            record["genres"].setdefault(week, "NA")
+            record["frequencies"].setdefault(week, "NA")
 
     return {
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -871,7 +929,8 @@ def build_nbhd_report() -> dict[str, Any]:
                 item["market"].lower(),
                 item["city"].lower(),
                 item["head_end"].lower(),
-                normalize_text(item.get("channel_name")).lower(),
+                int(item.get("group_index") or 0),
+                int(item.get("slot_index") or 0),
             ),
         ),
         "message": "",
@@ -907,10 +966,10 @@ def build_nbhd_benchmark_report() -> dict[str, Any]:
         merged: dict[str, dict[str, Any]] = {}
         for row in dataframe.to_dict(orient="records"):
             week_label = normalize_text(row.get("Week"))
-            market = normalize_text(row.get("Market"))
-            city = normalize_text(row.get("City"))
-            head_end = normalize_text(row.get("Head-End"))
-            channel = normalize_text(row.get("Channel"))
+            market = normalize_market_text(row.get("Market"))
+            city = normalize_city_text(row.get("City"))
+            head_end = normalize_headend_text(row.get("Head-End"))
+            channel = normalize_channel_text(row.get("Channel"))
             if not market or not city or not head_end or not channel or not week_label:
                 continue
             row_key = comparison_record_key(market, city, head_end, channel)
@@ -924,7 +983,7 @@ def build_nbhd_benchmark_report() -> dict[str, Any]:
                     "frequencies": {},
                 },
             )
-            record["frequencies"][week_label] = normalize_number(row.get("Frequency"))
+            record["frequencies"][week_label] = normalize_number(row.get("TV CH. No."))
 
         records = list(merged.values())
         for record in records:
@@ -963,10 +1022,10 @@ def build_nbhd_benchmark_report() -> dict[str, Any]:
 
     for week_label, rows in weekly_data:
         for row in rows:
-            market = normalize_text(row.get("market"))
-            city = normalize_text(row.get("city"))
-            head_end = normalize_text(row.get("head_end"))
-            channel = normalize_text(row.get("channel"))
+            market = normalize_market_text(row.get("market"))
+            city = normalize_city_text(row.get("city"))
+            head_end = normalize_headend_text(row.get("head_end"))
+            channel = normalize_channel_text(row.get("channel"))
             if not market or not city or not head_end or not channel:
                 continue
             row_key = comparison_record_key(market, city, head_end, channel)
@@ -1028,8 +1087,8 @@ def build_ots_report() -> dict[str, Any]:
         for week_label in weeks:
             week_frame = dataframe[dataframe["Week"].astype(str) == week_label]
             for row in week_frame.to_dict(orient="records"):
-                market = normalize_text(row.get("Market"))
-                channel = normalize_text(row.get("Channel"))
+                market = normalize_market_text(row.get("Market"))
+                channel = normalize_channel_text(row.get("Channel"))
                 if not market or not channel:
                     continue
                 row_key = f"{market}||{channel}"
@@ -1138,7 +1197,10 @@ def prepare_week_rows(path: Path, fallback_label: str) -> tuple[str, list[dict[s
                 week_label = candidate_week_label
 
         normalized = {column: normalize_text(row.get(column)) for column in DISPLAY_COLUMNS if column != "NAME"}
-        normalized["NAME"] = normalize_text(row.get("CHANNEL NAME"))
+        normalized["CITY"] = normalize_city_text(normalized.get("CITY"))
+        normalized["HEAD-END"] = normalize_headend_text(normalized.get("HEAD-END"))
+        normalized["CHANNEL NAME"] = normalize_channel_text(normalized.get("CHANNEL NAME"))
+        normalized["NAME"] = normalize_channel_text(row.get("CHANNEL NAME"))
         normalized[FREQUENCY_COLUMN] = normalize_number(row.get(FREQUENCY_COLUMN))
         normalized[RANK_COLUMN] = normalize_rank(row.get(RANK_COLUMN))
         normalized["BAND"] = normalize_text(row.get("BAND"))
@@ -1218,11 +1280,11 @@ def build_report() -> dict[str, Any]:
         merged: dict[str, dict[str, Any]] = {}
         for row in dataframe.to_dict(orient="records"):
             transmission = normalize_text(row.get("Transmission"))
-            market = normalize_text(row.get("Market"))
+            market = normalize_market_text(row.get("Market"))
             mso_type = normalize_text(row.get("MSO Type"))
-            city = normalize_text(row.get("City"))
-            head_end = normalize_text(row.get("Head-End"))
-            channel_name = normalize_text(row.get("Channel Name"))
+            city = normalize_city_text(row.get("City"))
+            head_end = normalize_headend_text(row.get("Head-End"))
+            channel_name = normalize_channel_text(row.get("Channel Name"))
             crn_no = normalize_text(row.get("CRN No."))
             row_key = "||".join((transmission, market, mso_type, city, head_end, channel_name, crn_no))
             if not row_key.replace("|", ""):
@@ -1321,9 +1383,9 @@ def build_report() -> dict[str, Any]:
                     "market": row["MARKET"],
                     "mso_type": row["MSO TYPE"],
                     "mso": row["TRANSMISSION"],
-                    "city": row["CITY"],
-                    "head_end": row["HEAD-END"],
-                    "channel_name": row["CHANNEL NAME"],
+                    "city": normalize_city_text(row["CITY"]),
+                    "head_end": normalize_headend_text(row["HEAD-END"]),
+                    "channel_name": normalize_channel_text(row["CHANNEL NAME"]),
                     "band": row["BAND"],
                     "tv_ch_no": row["TV CH. No."],
                     "crn_no": row["CRN No."],
@@ -1458,10 +1520,10 @@ def parse_weekly_highlight_sheet(path: Path) -> tuple[str, str, list[dict[str, A
 
         rows: list[dict[str, Any]] = []
         for values in sheet.iter_rows(min_row=header_row_index + 1, values_only=True):
-            market = normalize_text(values[header_map["MARKET"]] if header_map["MARKET"] < len(values) else None)
-            city = normalize_text(values[header_map["CITY"]] if header_map["CITY"] < len(values) else None)
-            head_end = normalize_text(values[header_map["HEADEND"]] if header_map["HEADEND"] < len(values) else None)
-            channel = normalize_text(values[header_map["CHANNEL"]] if header_map["CHANNEL"] < len(values) else None)
+            market = normalize_market_text(values[header_map["MARKET"]] if header_map["MARKET"] < len(values) else None)
+            city = normalize_city_text(values[header_map["CITY"]] if header_map["CITY"] < len(values) else None)
+            head_end = normalize_headend_text(values[header_map["HEADEND"]] if header_map["HEADEND"] < len(values) else None)
+            channel = normalize_channel_text(values[header_map["CHANNEL"]] if header_map["CHANNEL"] < len(values) else None)
             if not market or not city or not head_end or not channel:
                 continue
             rows.append(
@@ -2104,9 +2166,9 @@ __STYLE__
               <button id="rankViewButton" class="switch-button" type="button">Rank</button>
               <button id="bandViewButton" class="switch-button" type="button">Band</button>
             </div>
-            <div class="table-meta">
+        <div class="table-meta">
               <span id="resultCount">0 records</span>
-              <span id="pageInfo">Page 1</span>
+              <span id="pageInfo">Showing 0 of 0</span>
             </div>
           </div>
         </div>
@@ -2117,10 +2179,9 @@ __STYLE__
           </table>
         </div>
         <div class="pagination-bar">
-          <button id="prevPage" class="ghost-button" type="button">Previous</button>
           <button id="exitFullscreenButton" class="ghost-button table-exit-fullscreen" type="button" hidden>Exit Full Screen</button>
           <button id="channelReportToggleButton" class="primary-button" type="button">Show Report</button>
-          <button id="nextPage" class="ghost-button" type="button">Next</button>
+          <span id="scrollHint" class="table-scroll-hint">Scroll to load more</span>
         </div>
       </section>
 
@@ -2175,11 +2236,10 @@ __STYLE__
         </table>
       </div>
       <div class="pagination-bar nbhd-pagination-bar">
-        <button id="nbhdPrevPage" class="ghost-button" type="button">Previous</button>
-        <span id="nbhdPageInfo">Page 1 of 1</span>
-          <button id="nbhdNextPage" class="ghost-button" type="button">Next</button>
-          <button id="nbhdExitFullscreenButton" class="ghost-button nbhd-exit-fullscreen" type="button" hidden>Exit Full Screen</button>
-        </div>
+        <span id="nbhdPageInfo">Showing 0 of 0</span>
+        <span id="nbhdScrollHint" class="table-scroll-hint">Scroll to load more</span>
+        <button id="nbhdExitFullscreenButton" class="ghost-button nbhd-exit-fullscreen" type="button" hidden>Exit Full Screen</button>
+      </div>
         <div id="nbhdReportLauncher" class="nbhd-report-launcher">
           <button id="nbhdReportToggleButton" class="primary-button" type="button">Neighbour Change Report</button>
           <button id="nbhdComparisonReportToggleButton" class="ghost-button" type="button">India TV Genre Analysis</button>
@@ -2346,9 +2406,8 @@ __STYLE__
         <div id="otsGraphContainer"></div>
       </div>
       <div class="pagination-bar ots-pagination-bar">
-        <button id="otsPrevPage" class="ghost-button" type="button">Previous</button>
-        <span id="otsPageInfo">Page 1 of 1</span>
-        <button id="otsNextPage" class="ghost-button" type="button">Next</button>
+        <span id="otsPageInfo">Showing 0 of 0</span>
+        <span id="otsScrollHint" class="table-scroll-hint">Scroll to load more</span>
         <button id="otsExitFullscreenButton" class="ghost-button ots-exit-fullscreen" type="button" hidden>Exit Full Screen</button>
       </div>
       <div id="otsReportLauncher" class="ots-report-launcher">
@@ -2421,9 +2480,8 @@ __STYLE__
         </table>
       </div>
       <div class="pagination-bar comparison-pagination-bar">
-        <button id="comparisonPrevPage" class="ghost-button" type="button">Previous</button>
-        <span id="comparisonPageInfo">Page 1 of 1</span>
-        <button id="comparisonNextPage" class="ghost-button" type="button">Next</button>
+        <span id="comparisonPageInfo">Showing 0 of 0</span>
+        <span id="comparisonScrollHint" class="table-scroll-hint">Scroll to load more</span>
         <button id="comparisonExitFullscreenButton" class="ghost-button comparison-exit-fullscreen" type="button" hidden>Exit Full Screen</button>
       </div>
     </section>
@@ -2461,10 +2519,9 @@ __STYLE__
       </div>
 
       <div class="pagination-bar">
-        <button id="trackerPrevPage" class="ghost-button" type="button">Previous</button>
-        <span id="trackerPageInfo">Page 1</span>
+        <span id="trackerPageInfo">Showing 0 of 0</span>
         <span id="trackerResultCount" style="font-size:0.75rem; color:var(--muted); margin:0 8px;">0 records</span>
-        <button id="trackerNextPage" class="ghost-button" type="button">Next</button>
+        <span id="trackerScrollHint" class="table-scroll-hint">Scroll to load more</span>
       </div>
     </section>
 
@@ -2964,6 +3021,7 @@ const fullscreenState = {
   tableScrollTop: 0,
   tableScrollLeft: 0,
 };
+let lazyRenderPending = false;
 const DEFAULT_CHANNEL_REPORTS = __DEFAULT_CHANNEL_REPORTS__;
 function sortSummaryChannels(channels) {
   const uniqueChannels = Array.from(new Set((channels || []).map((channel) => String(channel || "").trim()).filter(Boolean)));
@@ -4086,10 +4144,8 @@ function renderTable(records) {
   const tableBody = document.getElementById("tableBody");
   if (state.view === "report") {
     const reportData = getReportRows(records);
-    const totalPages = Math.max(1, Math.ceil(reportData.rows.length / state.pageSize));
-    if (state.page > totalPages) state.page = totalPages;
-    const start = (state.page - 1) * state.pageSize;
-    const pageItems = reportData.rows.slice(start, start + state.pageSize);
+    const visibleCount = getVisibleRowCount(reportData.rows.length);
+    const pageItems = reportData.rows.slice(0, visibleCount);
     if (!pageItems.length) {
       tableBody.replaceChildren(document.getElementById("emptyStateTemplate").content.cloneNode(true));
       return;
@@ -4134,8 +4190,8 @@ function renderTable(records) {
     return;
   }
   const visibleWeeks = getVisibleWeeks();
-  const start = (state.page - 1) * state.pageSize;
-  const pageItems = records.slice(start, start + state.pageSize);
+  const visibleCount = getVisibleRowCount(records.length);
+  const pageItems = records.slice(0, visibleCount);
   if (!pageItems.length) {
     tableBody.replaceChildren(document.getElementById("emptyStateTemplate").content.cloneNode(true));
     return;
@@ -4188,6 +4244,35 @@ function getPageSize() {
   if (!fullscreenState.active) return 30;
   const viewportHeight = window.innerHeight || 900;
   return Math.max(45, Math.floor((viewportHeight - 230) / 26));
+}
+function getVisibleRowCount(totalCount) {
+  return Math.min(totalCount, Math.max(1, state.page) * state.pageSize);
+}
+function updateLazyScrollHint(visibleCount, totalCount) {
+  const scrollHint = document.getElementById("scrollHint");
+  if (!scrollHint) return;
+  if (totalCount > visibleCount) {
+    scrollHint.textContent = `Scroll to load more (${formatNumber(visibleCount)} of ${formatNumber(totalCount)} visible)`;
+    scrollHint.hidden = false;
+    return;
+  }
+  scrollHint.textContent = totalCount ? `All ${formatNumber(totalCount)} records loaded` : "No records";
+  scrollHint.hidden = false;
+}
+function maybeLoadMoreRows(force = false) {
+  if (!tableWrap || lazyRenderPending) return;
+  const records = getFilteredRecords();
+  const reportData = state.view === "report" ? getReportRows(records) : null;
+  const totalCount = reportData ? reportData.rows.length : records.length;
+  const visibleCount = getVisibleRowCount(totalCount);
+  if (visibleCount >= totalCount) return;
+  const nearBottom = tableWrap.scrollTop + tableWrap.clientHeight >= tableWrap.scrollHeight - 160;
+  const underfilled = tableWrap.scrollHeight <= tableWrap.clientHeight + 40;
+  if (!force && !nearBottom && !underfilled) return;
+  lazyRenderPending = true;
+  state.page += 1;
+  render();
+  lazyRenderPending = false;
 }
 function downloadStandaloneDashboard() {
   const embeddedBundle = JSON.stringify(window.__CHROME_REPORT_DATA__ || reportBundle || {}).split("</").join("<\\/");
@@ -4297,18 +4382,19 @@ function render() {
   const records = getFilteredRecords();
   const reportData = state.view === "report" ? getReportRows(records) : null;
   const displayCount = reportData ? reportData.rows.length : records.length;
+  const visibleCount = getVisibleRowCount(displayCount);
   const totalPages = Math.max(1, Math.ceil(displayCount / state.pageSize));
   if (state.page > totalPages) state.page = totalPages;
   document.getElementById("resultCount").textContent = `${formatNumber(displayCount)} records`;
-  document.getElementById("pageInfo").textContent = `Page ${state.page} of ${totalPages}`;
-  document.getElementById("prevPage").disabled = state.page <= 1;
-  document.getElementById("nextPage").disabled = state.page >= totalPages;
+  document.getElementById("pageInfo").textContent = `Showing ${formatNumber(Math.min(visibleCount, displayCount))} of ${formatNumber(displayCount)}`;
   document.getElementById("tableTitle").textContent = state.view === "report" ? "Channel Report" : getViewConfig().title;
   Object.entries(viewButtons).forEach(([view, button]) => button.classList.toggle("active", view === state.view));
   buildTableHead();
   renderTable(records);
   renderFocusSummary(records);
   updateKpis(records);
+  updateLazyScrollHint(Math.min(visibleCount, displayCount), displayCount);
+  requestAnimationFrame(() => maybeLoadMoreRows());
 }
 Object.entries(filters).forEach(([key, control]) => {
   bindSingleSelect(control, key, (value) => applyFilterValue(key, value));
@@ -4346,13 +4432,6 @@ document.getElementById("resetButton").addEventListener("click", () => {
   state.sortDirection = "asc";
   state.page = 1;
   render();
-});
-document.getElementById("prevPage").addEventListener("click", () => { if (state.page > 1) { state.page -= 1; render(); } });
-document.getElementById("nextPage").addEventListener("click", () => {
-  const filteredRecords = getFilteredRecords();
-  const totalRows = state.view === "report" ? getReportRows(filteredRecords).rows.length : filteredRecords.length;
-  const totalPages = Math.max(1, Math.ceil(totalRows / state.pageSize));
-  if (state.page < totalPages) { state.page += 1; render(); }
 });
 Object.entries(viewButtons).forEach(([view, button]) => {
   button.addEventListener("click", () => {
@@ -4398,6 +4477,9 @@ window.addEventListener("resize", () => {
     render();
   }
 });
+if (tableWrap) {
+  tableWrap.addEventListener("scroll", () => maybeLoadMoreRows());
+}
 document.getElementById("downloadDashboardButton").addEventListener("click", downloadStandaloneDashboard);
 syncFullscreenButtons();
 render();
@@ -4506,7 +4588,7 @@ def filter_nbhd_records(records: list[dict[str, Any]], filters: dict[str, str], 
         if filters["head_end"] and record["head_end"] != filters["head_end"] and ignore_key != "head_end":
             continue
         if filters.get("channel") and ignore_key != "channel":
-            selected_channel = normalize_text(filters["channel"])
+            selected_channel = normalize_channel_text(filters["channel"])
             channel_values = {normalize_text(value) for value in record.get("channels", {}).values()}
             if selected_channel not in channel_values:
                 continue
@@ -4561,6 +4643,8 @@ def serialize_nbhd_records(records: list[dict[str, Any]], weeks: list[str]) -> l
             "head_end": record["head_end"],
             "channel_name": record.get("channel_name", ""),
             "position": record.get("position", 0),
+            "group_index": record.get("group_index", 1),
+            "slot_index": record.get("slot_index", 1),
             "is_reference": bool(record.get("is_reference")),
             "channels": {week: record["channels"].get(week, "") for week in weeks},
             "genres": {week: record["genres"].get(week, "") for week in weeks},
@@ -4570,11 +4654,11 @@ def serialize_nbhd_records(records: list[dict[str, Any]], weeks: list[str]) -> l
     ]
 
 
-def nbhd_default_visible_weeks(weeks: list[str], count: int = 2) -> list[str]:
+def nbhd_default_visible_weeks(weeks: list[str], count: int = 4) -> list[str]:
     clean_weeks = [normalize_text(week) for week in weeks if normalize_text(week)]
     if not clean_weeks:
         return []
-    return clean_weeks
+    return clean_weeks[max(0, len(clean_weeks) - count) :]
 
 
 def build_nbhd_api_payload(filters: dict[str, str], search: str, force_refresh: bool = False) -> dict[str, Any]:
