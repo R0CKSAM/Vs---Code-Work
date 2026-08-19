@@ -172,9 +172,8 @@
     return "";
   }
 
-  function hasChannelChange(record, visibleWeeks) {
+  function hasChannelChange(record, visibleWeeks, channelTypeKey = state.filters.channel_type || "landing_1") {
     if (!record || !Array.isArray(visibleWeeks) || visibleWeeks.length < 2) return false;
-    const channelTypeKey = state.filters.channel_type || "landing_1";
     let previousName = "";
 
     for (let index = 0; index < visibleWeeks.length; index += 1) {
@@ -517,17 +516,16 @@
     if (!downloader) return;
 
     const visibleWeeks = getVisibleWeeks();
-    const filteredRecords = filterRecords();
-    const channelTypeKey = state.filters.channel_type || "landing_1";
-    const channelTypeLabel = {
-      landing_1: "Landing Channel 1",
-      landing_2: "Landing Channel 2",
-      landing_3: "Landing Channel 3",
-      barker_1: "Barker 1",
-      barker_2: "Barker 2",
-    }[channelTypeKey] || channelTypeKey;
+    const baseRecords = getFilteredSourceRecords();
+    const channelSections = [
+      { key: "landing_1", label: "Landing Channel 1 Change" },
+      { key: "landing_2", label: "Landing Channel 2 Change" },
+      { key: "barker_1", label: "Barker 1" },
+      { key: "barker_2", label: "Barker 2" },
+    ];
+    const totalColumns = 8 + visibleWeeks.length;
 
-    const headerRow = [
+    const buildHeaderRow = (sectionLabel) => ([
       excelCell("Band", "header"),
       excelCell("Market", "header"),
       excelCell("City", "header"),
@@ -536,46 +534,68 @@
       excelCell("District", "header"),
       excelCell("MSO", "header"),
       excelCell("Change Status", "header"),
-      ...visibleWeeks.map((week) => excelCell(`${week} (${channelTypeLabel})`, "header")),
+      ...visibleWeeks.map((week) => excelCell(`${week} (${sectionLabel})`, "header")),
+    ]);
+
+    const reportRows = [
+      [excelCell("Landing Channel Change Tracker", "title", { mergeAcross: Math.max(0, totalColumns - 1) })],
+      [excelCell(`Weeks: ${visibleWeeks.join(" to ") || "N/A"} | Exported Sections: 4`, "meta", { mergeAcross: Math.max(0, totalColumns - 1) })],
     ];
 
-    const rows = filteredRecords.map((rec, rowIndex) => {
-      const rowChanged = hasChannelChange(rec, visibleWeeks);
-      const rowStyle = rowIndex % 2 === 0 ? "cell" : "altRow";
-      const baseCells = [
-        excelCell(rec.band || "", rowStyle),
-        excelCell(rec.market || "", rowStyle),
-        excelCell(rec.city || "", rowStyle),
-        excelCell(rec.headend || "", rowStyle),
-        excelCell(rec.state_name || "", rowStyle),
-        excelCell(rec.district || "", rowStyle),
-        excelCell(rec.mso || "", rowStyle),
-        excelCell(rowChanged ? "Changed" : "No Change", rowChanged ? "positive" : "neutral"),
-      ];
-
-      const weekCells = visibleWeeks.map((week) => {
-        const weekObj = rec.weeks?.[week] || {};
-        const { channelName, lcnVal, genreVal } = getWeekCellParts(weekObj, channelTypeKey);
-        const parts = [];
-        if (channelName) parts.push(channelName);
-        if (lcnVal) parts.push(lcnVal);
-        if (genreVal) parts.push(genreVal);
-        return excelCell(parts.length ? parts.join(" - ") : "--", rowStyle);
+    channelSections.forEach((section, sectionIndex) => {
+      const sectionRecords = baseRecords.filter((rec) => {
+        const rowChanged = hasChannelChange(rec, visibleWeeks, section.key);
+        if (state.filters.change === "Changed" && !rowChanged) return false;
+        if (state.filters.change === "No Change" && rowChanged) return false;
+        return true;
       });
 
-      return [...baseCells, ...weekCells];
+      if (sectionIndex > 0) {
+        reportRows.push([excelCell("", "cell", { mergeAcross: Math.max(0, totalColumns - 1) })]);
+      }
+
+      reportRows.push([excelCell(section.label, "group", { mergeAcross: Math.max(0, totalColumns - 1) })]);
+      reportRows.push([excelCell(`Rows: ${sectionRecords.length}`, "meta", { mergeAcross: Math.max(0, totalColumns - 1) })]);
+      reportRows.push(buildHeaderRow(section.label));
+
+      if (sectionRecords.length === 0) {
+        reportRows.push([excelCell("No records found for the applied filters.", "textWrap", { mergeAcross: Math.max(0, totalColumns - 1) })]);
+        return;
+      }
+
+      sectionRecords.forEach((rec, rowIndex) => {
+        const rowChanged = hasChannelChange(rec, visibleWeeks, section.key);
+        const rowStyle = rowIndex % 2 === 0 ? "cell" : "altRow";
+        const baseCells = [
+          excelCell(rec.band || "", rowStyle),
+          excelCell(rec.market || "", rowStyle),
+          excelCell(rec.city || "", rowStyle),
+          excelCell(rec.headend || "", rowStyle),
+          excelCell(rec.state_name || "", rowStyle),
+          excelCell(rec.district || "", rowStyle),
+          excelCell(rec.mso || "", rowStyle),
+          excelCell(rowChanged ? "Changed" : "No Change", rowChanged ? "positive" : "neutral"),
+        ];
+
+        const weekCells = visibleWeeks.map((week) => {
+          const weekObj = rec.weeks?.[week] || {};
+          const { channelName, lcnVal, genreVal } = getWeekCellParts(weekObj, section.key);
+          const parts = [];
+          if (channelName) parts.push(channelName);
+          if (lcnVal) parts.push(lcnVal);
+          if (genreVal) parts.push(genreVal);
+          return excelCell(parts.length ? parts.join(" - ") : "--", rowStyle);
+        });
+
+        reportRows.push([...baseCells, ...weekCells]);
+      });
     });
 
     downloader("landing_channel_change_tracker", [
       {
         name: "Landing Tracker",
         columns: [95, 120, 120, 150, 110, 120, 140, 95, ...visibleWeeks.map(() => 220)],
-        rows: [
-          [excelCell("Landing Channel Change Tracker", "title", { mergeAcross: Math.max(0, headerRow.length - 1) })],
-          [excelCell(`Channel Type: ${channelTypeLabel} | Weeks: ${visibleWeeks.join(" to ") || "N/A"} | Rows: ${filteredRecords.length}`, "meta", { mergeAcross: Math.max(0, headerRow.length - 1) })],
-          headerRow,
-          ...rows,
-        ],
+        rows: reportRows,
       },
     ]);
   }

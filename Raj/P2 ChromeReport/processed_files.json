@@ -132,6 +132,28 @@
         "nbhd": 35204,
         "ots": 1066
       }
+    },
+    "c5cb3d0a69a5eddadb0fcf011b40e98d41973847": {
+      "file_name": "Chrome Track 2.0 Wk-31, 2026 (India TV).xlsm",
+      "file_path": "D:\\Vs - Code Work\\Raj\\P2 ChromeReport\\data\\Chrome Track 2.0 Wk-31, 2026 (India TV).xlsm",
+      "week": "Wk-31'26",
+      "processed_at": "2026-08-19T05:58:11.158880+00:00",
+      "row_counts": {
+        "distribution": 84864,
+        "nbhd": 35204,
+        "ots": 1066
+      }
+    },
+    "cb8e5d486fd1045d171a9b180d30c51ad2df9394": {
+      "file_name": "Chrome Track 2.0 Wk-32, 2026 (India TV).xlsm",
+      "file_path": "D:\\Vs - Code Work\\Raj\\P2 ChromeReport\\data\\Chrome Track 2.0 Wk-32, 2026 (India TV).xlsm",
+      "week": "Wk-32'26",
+      "processed_at": "2026-08-19T05:58:26.586230+00:00",
+      "row_counts": {
+        "distribution": 84864,
+        "nbhd": 29513,
+        "ots": 1066
+      }
     }
   }
 }

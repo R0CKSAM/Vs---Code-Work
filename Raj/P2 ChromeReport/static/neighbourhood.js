@@ -1222,36 +1222,35 @@
         ...weeks.map((week) => excelCell(week, "header")),
       ],
     ];
-    function getFrequencyStyle(index, values, isAlt) {
+    function getFrequencyStyle(index, values) {
       const week = weeks[index];
       const currentValue = values?.[week];
       const currentMissing = currentValue === null || currentValue === undefined || currentValue === "";
-      if (index <= 0) return currentMissing ? (isAlt ? "altRow" : "neutral") : "number";
+      if (index <= 0) return currentMissing ? "cell" : "number";
       const previousValue = values?.[weeks[index - 1]];
       const previousMissing = previousValue === null || previousValue === undefined || previousValue === "";
-      if (previousMissing && currentMissing) return isAlt ? "altRow" : "neutral";
+      if (previousMissing && currentMissing) return "cell";
       if (previousMissing && !currentMissing) return "positive";
       if (!previousMissing && currentMissing) return "negative";
       if (Number(currentValue) > Number(previousValue)) return "positive";
       if (Number(currentValue) < Number(previousValue)) return "negative";
       return "number";
     }
-    function getTextChangeStyle(index, values, isAlt) {
+    function getTextChangeStyle(index, values) {
       const week = weeks[index];
       const currentValue = values?.[week];
       const currentMissing = currentValue === null || currentValue === undefined || currentValue === "";
-      if (index <= 0) return currentMissing ? (isAlt ? "altRow" : "neutral") : (isAlt ? "altRow" : "cell");
+      if (index <= 0) return "cell";
       const previousValue = values?.[weeks[index - 1]];
       const previousMissing = previousValue === null || previousValue === undefined || previousValue === "";
-      if (previousMissing && currentMissing) return isAlt ? "altRow" : "neutral";
+      if (previousMissing && currentMissing) return "cell";
       if (previousMissing && !currentMissing) return "positive";
       if (!previousMissing && currentMissing) return "negative";
       if (String(previousValue) !== String(currentValue)) return "highlight";
-      return isAlt ? "altRow" : "cell";
+      return "cell";
     }
     records.forEach((record, recordIndex) => {
-      const isAlt = recordIndex % 2 === 1;
-      const rowStyle = isAlt ? "altRow" : "cell";
+      const rowStyle = "cell";
       detailRows.push([
         excelCell(record.market || "", rowStyle),
         excelCell(record.city || "", rowStyle),
@@ -1259,13 +1258,13 @@
         ...weeks.map((week, weekIndex) => {
           const value = record.channels?.[week];
           const textVal = value === null || value === undefined || value === "" ? "NA" : String(value);
-          return excelCell(textVal, getTextChangeStyle(weekIndex, record.channels || {}, isAlt));
+          return excelCell(textVal, getTextChangeStyle(weekIndex, record.channels || {}));
         }),
         ...weeks.map((week, weekIndex) => {
           const value = record.frequencies?.[week];
-          return excelCell(value ?? "NA", getFrequencyStyle(weekIndex, record.frequencies || {}, isAlt));
+          return excelCell(value ?? "NA", getFrequencyStyle(weekIndex, record.frequencies || {}));
         }),
-        ...weeks.map((week, weekIndex) => excelCell(record.genres?.[week] ?? "NA", getTextChangeStyle(weekIndex, record.genres || {}, isAlt))),
+        ...weeks.map((week, weekIndex) => excelCell(record.genres?.[week] ?? "NA", getTextChangeStyle(weekIndex, record.genres || {}))),
       ]);
     });
 
@@ -1405,6 +1404,7 @@
       },
     ]);
   }
+
   function buildReportNarratives() {
     const payload = normalizePayloadShape(state.payload || window.__NBHD_STANDALONE_DATA__ || { weeks: [] });
     const allWeeks = payload.weeks || [];
@@ -1420,11 +1420,10 @@
     const selectedChannel = normalizeText(state.report.channel);
     const currentWeeks = [weekFrom, weekTo].filter(Boolean);
     
-    // Check cache first
     if (isReportCacheValid() && state.reportCache.narratives !== null) {
       return state.reportCache.narratives;
     }
-    
+
     if (weeks.length < 2) {
       const result = {
         weeks,
@@ -1469,9 +1468,7 @@
     }
 
     const rows = [];
-    const targetChannels = getReportTargetChannels(); // This returns only 4 default channels when no channel selected
-
-    // Optimize: Pre-compute available channels for all groups
+    const targetChannels = getReportTargetChannels();
     const allAvailableChannels = new Map();
     for (const [headend, groupRecords] of groupedRecords.entries()) {
       getReportChannelOptions(groupRecords).forEach((value) => {
@@ -1481,11 +1478,11 @@
         }
       });
     }
-    
+
     for (const [headend, groupRecords] of groupedRecords.entries()) {
       const previousMap = buildHeadendMaps(groupRecords, previousWeek);
       const currentMap = buildHeadendMaps(groupRecords, currentWeek);
-      
+
       targetChannels.forEach(({ label, key }) => {
         const channelLabel = allAvailableChannels.get(key) || label;
         const previousPosition = previousMap.channelPositions.get(key);
@@ -1518,12 +1515,10 @@
       message: rows.length ? "" : `No neighbour changes detected for ${selectedChannel ? selectedChannel : "the selected channels"} in ${selectedHeadend || "all headends"}.`,
     };
 
-    // Cache the result
     state.reportCache.narratives = result;
     state.reportCache.lastHeadend = selectedHeadend;
     state.reportCache.lastWeeks = currentWeeks;
     state.reportCache.lastChannel = selectedChannel;
-    
     return result;
   }
 
@@ -1542,7 +1537,6 @@
     const selectedHeadend = normalizeText(state.report.headend);
     const currentWeeks = [weekFrom, weekTo].filter(Boolean);
     
-    // Check cache first - for download, cache is separate from display cache
     if (state.reportCache.narrativesForDownload !== null && 
         state.reportCache.lastWeeksForDownload && 
         JSON.stringify(state.reportCache.lastWeeksForDownload) === JSON.stringify(currentWeeks) &&
@@ -1597,7 +1591,6 @@
     const rows = [];
     const targetChannels = getReportTargetChannels();
     
-    // Optimize: Pre-compute available channels for all groups
     const allAvailableChannels = new Map();
     for (const [headend, groupRecords] of groupedRecords.entries()) {
       getReportChannelOptions(groupRecords).forEach((value) => {
@@ -1644,7 +1637,6 @@
       message: rows.length ? "" : `No neighbour changes detected for ${selectedChannel ? selectedChannel : "the selected channels"} in ${selectedHeadend || "all headends"}.`,
     };
     
-    // Cache the result
     state.reportCache.narrativesForDownload = result;
     state.reportCache.lastWeeksForDownload = currentWeeks;
     state.reportCache.lastHeadendForDownload = selectedHeadend;
