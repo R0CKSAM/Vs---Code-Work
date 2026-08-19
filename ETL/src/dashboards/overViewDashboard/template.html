@@ -508,74 +508,86 @@ function getScaleStats() {
 }
 
 // ── Chart setup ───────────────────────────────────────────────────────────────
-function trendPointColor(context) {
-  const value = Number(context.dataset.data[context.dataIndex]);
-  const average = Number(context.chart.data.datasets[context.datasetIndex + 1]?.data?.[context.dataIndex]);
-  if (!Number.isFinite(value) || !Number.isFinite(average)) return '#6b7280';
-  return value >= average ? '#0f9488' : '#f15a2a';
+function adaptiveAreaFill(color) {
+  return function(context) {
+    const chart = context.chart;
+    const area = chart.chartArea;
+    if (!area || chart.data.labels.length >= 15) return 'transparent';
+    const gradient = chart.ctx.createLinearGradient(0, area.top, 0, area.bottom);
+    const rgb = color === '#087f78' ? '8,127,120' : '37,99,162';
+    gradient.addColorStop(0, `rgba(${rgb},.12)`);
+    gradient.addColorStop(1, `rgba(${rgb},0)`);
+    return gradient;
+  };
 }
-function chartLabelValue(value, yfmt) {
+function tooltipMetricValue(value, yfmt) {
   if (yfmt === 'gib') return fmtData(value);
-  if (value >= 1e6) return (value / 1e6).toFixed(1) + 'M';
-  if (value >= 1e3) return (value / 1e3).toFixed(1) + 'K';
-  return fmt(Math.round(value));
+  return fmt(value);
 }
-const lineValueLabels = {
-  id: 'lineValueLabels',
-  afterDatasetsDraw(chart, args, options) {
-    if (!options || !options.enabled) return;
-    const dataset = chart.data.datasets[0];
-    const values = dataset.data.map((value, index) => ({value: Number(value), index}))
-      .filter(item => Number.isFinite(item.value));
-    if (!values.length) return;
-    const highest = values.reduce((best, item) => item.value > best.value ? item : best);
-    const lowest = values.reduce((best, item) => item.value < best.value ? item : best);
-    const latest = values[values.length - 1];
-    const indices = [...new Set([highest.index, lowest.index, latest.index])];
-    const points = chart.getDatasetMeta(0).data;
-    const averageValues = chart.data.datasets[1]?.data || [];
-    const ctx = chart.ctx;
+function tooltipDate(isoDate) {
+  if (!isoDate) return '';
+  const [year, month, day] = String(isoDate).split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  return date.toLocaleDateString('en-IN', {day: '2-digit', month: 'short', year: 'numeric'});
+}
+const hoverDateGuide = {
+  id: 'hoverDateGuide',
+  afterDatasetsDraw(chart) {
+    const tooltip = chart.tooltip;
+    if (!tooltip || !tooltip.opacity || !Number.isFinite(tooltip.caretX)) return;
+    const {ctx, chartArea} = chart;
     ctx.save();
-    ctx.font = '700 9px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
-    ctx.textAlign = 'center';
-    indices.forEach(index => {
-      const point = points[index];
-      const value = Number(dataset.data[index]);
-      if (!point || !Number.isFinite(value)) return;
-      const average = Number(averageValues[index]);
-      const above = !Number.isFinite(average) || value >= average;
-      const props = point.getProps(['x', 'y'], true);
-      const y = Math.max(chart.chartArea.top + 10, Math.min(chart.chartArea.bottom - 3, props.y + (above ? -9 : 13)));
-      ctx.fillStyle = above ? '#087f78' : '#d94f25';
-      ctx.fillText(chartLabelValue(value, options.yfmt), props.x, y);
-    });
+    ctx.strokeStyle = 'rgba(71,85,105,.38)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(tooltip.caretX, chartArea.top);
+    ctx.lineTo(tooltip.caretX, chartArea.bottom);
+    ctx.stroke();
     ctx.restore();
   }
 };
-if (typeof Chart !== 'undefined') Chart.register(lineValueLabels);
-const CD = {tension: 0, fill: false, pointRadius: 3.5, pointHoverRadius: 5, borderWidth: 1.5, pointBackgroundColor: trendPointColor, pointBorderColor: trendPointColor, pointBorderWidth: 1, spanGaps: false, animation: false};
+if (typeof Chart !== 'undefined') Chart.register(hoverDateGuide);
+const CD = {tension: .16, fill: false, pointRadius: 0, pointHoverRadius: 4, borderWidth: 1.75, spanGaps: false, animation: false};
 
-const mkOpt = (yfmt, expanded = false, highlightLabels = false) => ({
+const mkOpt = (yfmt, expanded = false) => ({
   responsive: true,
   maintainAspectRatio: false,
+  interaction: {mode: 'index', intersect: false},
+  hover: {mode: 'index', intersect: false},
   plugins: {
     legend: {position: 'bottom', labels: {font: {size: expanded ? 11 : 9.5}, boxWidth: 8, padding: 6}},
-    lineValueLabels: {enabled: highlightLabels && !expanded, yfmt: yfmt}
+    tooltip: {
+      animation: false,
+      backgroundColor: '#ffffff', titleColor: '#172033', bodyColor: '#334155',
+      borderColor: '#cbd5e1', borderWidth: 1, cornerRadius: 3, caretSize: 0,
+      padding: 8, displayColors: true, boxWidth: 7, boxHeight: 7, boxPadding: 4,
+      titleFont: {size: 10, weight: '700'}, bodyFont: {size: 10},
+      itemSort: (a, b) => {
+        const aAvg = /average/i.test(a.dataset.label), bAvg = /average/i.test(b.dataset.label);
+        if (aAvg !== bAvg) return aAvg ? 1 : -1;
+        return Number(b.parsed.y) - Number(a.parsed.y);
+      },
+      callbacks: {
+        title: items => tooltipDate(items[0]?.chart.$isoDates?.[items[0]?.dataIndex]),
+        label: item => `${item.dataset.label}: ${tooltipMetricValue(item.parsed.y, yfmt)}`
+      }
+    }
   },
   scales: {
-    x: {ticks: {font: {size: 8.5}, maxTicksLimit: 12, autoSkip: true}, grid: {color: '#d5dce1', borderDash: [2,4]}},
-    y: {ticks: {font: {size: 8.5}, maxTicksLimit: 5, callback: v => yfmt === 'gib' ? fmtData(v) : v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'K' : v}, grid: {color: '#d5dce1', borderDash: [2,4]}}
+    x: {ticks: {font: {size: 8.5}, maxTicksLimit: 12, autoSkip: true}, grid: {color: '#edf1f3'}},
+    y: {ticks: {font: {size: 8.5}, maxTicksLimit: 5, callback: v => yfmt === 'gib' ? fmtData(v) : v >= 1e6 ? (v / 1e6).toFixed(1) + 'M' : v >= 1e3 ? (v / 1e3).toFixed(0) + 'K' : v}, grid: {color: '#edf1f3'}}
   }
 });
 
 const chartDefs = {
-  cRows:    {title: 'Daily Row Volume',           keys: ['rows'],                yfmt: null, highlightLabels: true, datasets: [
-    {label: 'Total rows',     borderColor: '#69737a', backgroundColor: 'transparent', ...CD},
-    {label: 'Average',        borderColor: '#7da4c3',  borderWidth: 1.5, borderDash: [5,5], pointRadius: 0, fill: false}
+  cRows:    {title: 'Daily Row Volume',           keys: ['rows'],                yfmt: null, datasets: [
+    {label: 'Daily total',    borderColor: '#2563a2', backgroundColor: adaptiveAreaFill('#2563a2'), ...CD},
+    {label: 'Range average',  borderColor: '#94a3b8', borderWidth: 1.25, borderDash: [5,5], pointRadius: 0, fill: false}
   ]},
-  cBytes:   {title: 'Data Density Profile',        keys: ['bytes'],               yfmt: 'gib', highlightLabels: true, datasets: [
-    {label: 'Data Volume',    borderColor: '#69737a', backgroundColor: 'transparent', ...CD},
-    {label: 'Average',        borderColor: '#7da4c3', borderWidth: 1.5, borderDash: [5,5], pointRadius: 0, fill: false}
+  cBytes:   {title: 'Data Density Profile',        keys: ['bytes'],               yfmt: 'gib', datasets: [
+    {label: 'Daily volume',   borderColor: '#087f78', backgroundColor: adaptiveAreaFill('#087f78'), ...CD},
+    {label: 'Range average',  borderColor: '#94a3b8', borderWidth: 1.25, borderDash: [5,5], pointRadius: 0, fill: false}
   ]},
   cSessions:{title: 'Session Availability',        keys: ['sess_avail','sess_na','sess_none'],yfmt: null,  datasets: [
     {label: 'Sess Avail',     borderColor: '#2e6b10', backgroundColor: 'transparent', ...CD},
@@ -606,7 +618,7 @@ function initCharts() {
     chartInstances[id] = new Chart(document.getElementById(id), {
       type: 'line',
       data: {labels: [], datasets: baseDatasets[id].map(d => ({...d, data: []}))},
-      options: mkOpt(def.yfmt, false, def.highlightLabels)
+      options: mkOpt(def.yfmt)
     });
   });
 }
@@ -627,11 +639,17 @@ function continuousChartRows(rowsForChart) {
 
 function syncChartData(ch, rowsForChart, keys, update = true) {
   const chartRows = continuousChartRows(rowsForChart);
+  const shortRange = chartRows.length < 15;
   ch.data.labels = chartRows.map(r => fmtDateShort(r.date));
+  ch.$isoDates = chartRows.map(r => r.date);
   keys.forEach((k, i) => {
     const values = chartRows.filter(r => !r._gap).map(r => Number(r[k] || 0));
     const average = values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
-    ch.data.datasets[i * 2].data = chartRows.map(r => r._gap ? null : Number(r[k] || 0));
+    const series = ch.data.datasets[i * 2];
+    series.data = chartRows.map(r => r._gap ? null : Number(r[k] || 0));
+    series.pointRadius = shortRange ? 2.25 : 0;
+    series.pointHoverRadius = shortRange ? 4 : 5;
+    series.fill = shortRange && keys.length === 1;
     ch.data.datasets[(i * 2) + 1].data = chartRows.map(r => r._gap ? null : average);
   });
   applyYAxisScale(ch);
@@ -1279,7 +1297,7 @@ function openChartModal(id) {
     modalChart = new Chart(document.getElementById('modalChart'), {
       type: 'line',
       data: {labels: [], datasets: def.datasets.map(d => ({...d, data: []}))},
-      options: mkOpt(def.yfmt, true, def.highlightLabels),
+      options: mkOpt(def.yfmt, true),
     });
     setModalPreset('dashboard');
   } catch (err) {

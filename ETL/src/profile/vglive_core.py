@@ -30,6 +30,9 @@ IST = timezone(timedelta(hours=5, minutes=30))
 
 
 HOST_MAP = {
+    "veto-vod.akamaized.net": "Veto VOD",
+    "ndtvprofit-veto.akamaized.net": "NDTV Profit",
+    "ndtvprofit-veto.akamaized-staging.net": "NDTV Profit",
     "manorama-veto.akamaized.net": "Manorama",
     "b4u-veto-m.akamaized.net": "B4U Movies",
     "b4u-veto-music.akamaized.net": "B4U Music",
@@ -43,6 +46,8 @@ HOST_MAP = {
 HOST_CANDIDATE_MAP = {
     # Host-specific approval: do not map staging vetostreams indiatv.
     ("vetostreams.akamaized.net", "indiatv"): "India TV",
+    ("vetostreams.akamaized.net:443", "indiatv"): "India TV",
+    ("vetostreams.akamaized.net", "upgovlive"): "UP Government Live",
 }
 
 
