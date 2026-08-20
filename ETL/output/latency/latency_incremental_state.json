@@ -3299,8 +3299,8 @@
     },
     "fast|2026-08-09": {
       "date": "2026-08-09",
-      "duration_seconds": 225.285,
-      "processed_at": "2026-08-19T13:46:52",
+      "duration_seconds": 406.881,
+      "processed_at": "2026-08-20T12:55:26",
       "result": {
         "base_rows": 48957423,
         "rows": {
@@ -3323,8 +3323,8 @@
             "name": "part_fast_2026_08_08_0.parquet"
           },
           {
-            "bytes": 5694856634,
-            "mtime_ns": 1787125394837726600,
+            "bytes": 5694887128,
+            "mtime_ns": 1787208122828814100,
             "name": "part_fast_2026_08_09_0.parquet"
           },
           {
@@ -3333,8 +3333,8 @@
             "name": "part_fast_2026_08_11_0.parquet"
           }
         ],
-        "max_mtime_ns": 1787125394837726600,
-        "total_bytes": 5802890912
+        "max_mtime_ns": 1787208122828814100,
+        "total_bytes": 5802921406
       },
       "source": "fast",
       "status": "done"
@@ -3676,18 +3676,55 @@
     },
     "fast|2026-08-19": {
       "date": "2026-08-19",
-      "duration_seconds": 9.129,
-      "processed_at": "2026-08-19T14:01:43",
+      "duration_seconds": 399.669,
+      "processed_at": "2026-08-20T13:02:06",
       "result": {
-        "base_rows": 1527610,
+        "base_rows": 49364124,
         "rows": {
-          "cache_daily": 5,
-          "channel_daily": 9,
-          "daily": 3,
-          "geo_daily": 157,
-          "host_daily": 11,
-          "hourly": 13,
-          "status_daily": 6,
+          "cache_daily": 25,
+          "channel_daily": 21,
+          "daily": 15,
+          "geo_daily": 288,
+          "host_daily": 27,
+          "hourly": 69,
+          "status_daily": 32,
+          "summary": 1
+        }
+      },
+      "signature": {
+        "file_count": 2,
+        "files": [
+          {
+            "bytes": 91154934,
+            "mtime_ns": 1787125549441572600,
+            "name": "part_fast_2026_08_18_0.parquet"
+          },
+          {
+            "bytes": 5821660247,
+            "mtime_ns": 1787208344287906500,
+            "name": "part_fast_2026_08_19_0.parquet"
+          }
+        ],
+        "max_mtime_ns": 1787208344287906500,
+        "total_bytes": 5912815181
+      },
+      "source": "fast",
+      "status": "done"
+    },
+    "fast|2026-08-20": {
+      "date": "2026-08-20",
+      "duration_seconds": 10.768,
+      "processed_at": "2026-08-20T13:02:17",
+      "result": {
+        "base_rows": 1628833,
+        "rows": {
+          "cache_daily": 7,
+          "channel_daily": 10,
+          "daily": 4,
+          "geo_daily": 166,
+          "host_daily": 15,
+          "hourly": 16,
+          "status_daily": 9,
           "summary": 1
         }
       },
@@ -3695,13 +3732,13 @@
         "file_count": 1,
         "files": [
           {
-            "bytes": 91154934,
-            "mtime_ns": 1787125549441572600,
-            "name": "part_fast_2026_08_18_0.parquet"
+            "bytes": 100888577,
+            "mtime_ns": 1787208344023144700,
+            "name": "part_fast_2026_08_19_0.parquet"
           }
         ],
-        "max_mtime_ns": 1787125549441572600,
-        "total_bytes": 91154934
+        "max_mtime_ns": 1787208344023144700,
+        "total_bytes": 100888577
       },
       "source": "fast",
       "status": "done"
@@ -8906,13 +8943,13 @@
     },
     "stream|2026-08-11": {
       "date": "2026-08-11",
-      "duration_seconds": 94.529,
-      "processed_at": "2026-08-17T19:05:59",
+      "duration_seconds": 135.567,
+      "processed_at": "2026-08-20T13:05:26",
       "result": {
         "base_rows": 23545160,
         "rows": {
           "cache_daily": 8,
-          "channel_daily": 103,
+          "channel_daily": 107,
           "daily": 5,
           "geo_daily": 327,
           "host_daily": 89,
@@ -8930,13 +8967,13 @@
             "name": "part_stream_2026_08_10_0.parquet"
           },
           {
-            "bytes": 820496340,
-            "mtime_ns": 1786971488878305700,
+            "bytes": 820639842,
+            "mtime_ns": 1787208394829529800,
             "name": "part_stream_2026_08_11_0.parquet"
           }
         ],
-        "max_mtime_ns": 1786971488878305700,
-        "total_bytes": 886051145
+        "max_mtime_ns": 1787208394829529800,
+        "total_bytes": 886194647
       },
       "source": "stream",
       "status": "done"
@@ -9206,18 +9243,55 @@
     },
     "stream|2026-08-19": {
       "date": "2026-08-19",
-      "duration_seconds": 5.644,
-      "processed_at": "2026-08-19T14:03:56",
+      "duration_seconds": 124.767,
+      "processed_at": "2026-08-20T13:07:30",
       "result": {
-        "base_rows": 1675919,
+        "base_rows": 21098194,
         "rows": {
           "cache_daily": 5,
-          "channel_daily": 86,
+          "channel_daily": 92,
           "daily": 3,
-          "geo_daily": 173,
-          "host_daily": 54,
-          "hourly": 14,
-          "status_daily": 13,
+          "geo_daily": 359,
+          "host_daily": 60,
+          "hourly": 55,
+          "status_daily": 17,
+          "summary": 1
+        }
+      },
+      "signature": {
+        "file_count": 2,
+        "files": [
+          {
+            "bytes": 58505019,
+            "mtime_ns": 1787125602244083800,
+            "name": "part_stream_2026_08_18_0.parquet"
+          },
+          {
+            "bytes": 749145961,
+            "mtime_ns": 1787208419917832500,
+            "name": "part_stream_2026_08_19_0.parquet"
+          }
+        ],
+        "max_mtime_ns": 1787208419917832500,
+        "total_bytes": 807650980
+      },
+      "source": "stream",
+      "status": "done"
+    },
+    "stream|2026-08-20": {
+      "date": "2026-08-20",
+      "duration_seconds": 7.4,
+      "processed_at": "2026-08-20T13:07:38",
+      "result": {
+        "base_rows": 1578066,
+        "rows": {
+          "cache_daily": 5,
+          "channel_daily": 90,
+          "daily": 3,
+          "geo_daily": 177,
+          "host_daily": 68,
+          "hourly": 16,
+          "status_daily": 18,
           "summary": 1
         }
       },
@@ -9225,13 +9299,13 @@
         "file_count": 1,
         "files": [
           {
-            "bytes": 58505019,
-            "mtime_ns": 1787125602244083800,
-            "name": "part_stream_2026_08_18_0.parquet"
+            "bytes": 54956770,
+            "mtime_ns": 1787208419704966900,
+            "name": "part_stream_2026_08_19_0.parquet"
           }
         ],
-        "max_mtime_ns": 1787125602244083800,
-        "total_bytes": 58505019
+        "max_mtime_ns": 1787208419704966900,
+        "total_bytes": 54956770
       },
       "source": "stream",
       "status": "done"

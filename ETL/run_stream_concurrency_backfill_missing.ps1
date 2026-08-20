@@ -39,7 +39,7 @@ try {
 
     Write-Host ""
     Write-Host "✅ All missing STREAM concurrency dates backfilled successfully!"
-    Write-Host "You can now re-run export_stream_concurrency.py to generate the updated CSVs."
+    Write-Host "You can now re-run extras\one_off_helpers\stream_concurrency_and_watch_hours\export_stream_concurrency.py to generate the updated CSVs."
 }
 catch {
     Write-Host "❌ Error: $_" -ForegroundColor Red

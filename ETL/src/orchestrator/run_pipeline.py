@@ -799,6 +799,30 @@ def _latest_lake_day(lake_root: Path) -> Optional[date]:
     return max(days) if days else None
 
 
+def _earliest_lake_day(lake_roots: Iterable[Path]) -> Optional[date]:
+    earliest: Optional[date] = None
+    for lake_root in lake_roots:
+        try:
+            root_exists = lake_root.exists()
+        except OSError:
+            root_exists = False
+        if not root_exists:
+            continue
+        for day_dir in lake_root.glob("**/day=*"):
+            try:
+                values = {
+                    part.split("=", 1)[0]: part.split("=", 1)[1]
+                    for part in day_dir.parts
+                    if "=" in part
+                }
+                day_value = date(int(values["year"]), int(values["month"]), int(values["day"]))
+            except (KeyError, TypeError, ValueError):
+                continue
+            if earliest is None or day_value < earliest:
+                earliest = day_value
+    return earliest
+
+
 def _build_profile_range(lake_root: Path, lookback_days: Optional[int]) -> tuple[Optional[str], Optional[str]]:
     if not lookback_days or lookback_days <= 0:
         return None, None
@@ -848,6 +872,20 @@ def _profile_ready(profile_dir: Path) -> bool:
         daily_dir / "mapping_quality_daily.parquet",
     ]
     return all(path.exists() and path.stat().st_size > 0 for path in required_profile + required_daily)
+
+
+def _profile_covers_lake_history(profile_dir: Path, lake_roots: Iterable[Path]) -> bool:
+    """Reject an incremental base that starts after readable lake history."""
+    lake_start = _earliest_lake_day(lake_roots)
+    if lake_start is None:
+        return True
+    daily_volume = profile_dir / "daily_volume.parquet"
+    try:
+        values = pq.read_table(daily_volume, columns=["log_date"])["log_date"].to_pylist()
+        profile_dates = [date.fromisoformat(str(value)[:10]) for value in values if value]
+    except (OSError, ValueError, KeyError):
+        return False
+    return bool(profile_dates) and min(profile_dates) <= lake_start
 
 
 def _daily_profile_dates(
@@ -1779,6 +1817,17 @@ def main() -> None:
         if use_incremental_profile and not _profile_ready(profile_dir):
             if args.deep_profile_mode == "incremental":
                 raise SystemExit(f"Base profile is not ready for incremental merge: {profile_dir}")
+            use_incremental_profile = False
+        if use_incremental_profile and not _profile_covers_lake_history(
+            profile_dir,
+            [lake_root, *archive_lake_roots],
+        ):
+            if args.deep_profile_mode == "incremental":
+                raise SystemExit(
+                    f"Base profile does not cover available lake history: {profile_dir}. "
+                    "Run once with --deep-profile-mode full."
+                )
+            print("[watch] Existing profile is missing archived history; forcing a full rebuild.")
             use_incremental_profile = False
 
         base_profile_cmd = [

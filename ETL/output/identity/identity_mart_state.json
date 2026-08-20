@@ -1899,8 +1899,8 @@
       "source": "stream",
       "date": "2026-08-11",
       "file_count": 2,
-      "bytes": 886051145,
-      "max_mtime_ns": 1786971488878305700,
+      "bytes": 886194647,
+      "max_mtime_ns": 1787208394829529800,
       "files": [
         {
           "name": "part_stream_2026_08_10_0.parquet",
@@ -1909,14 +1909,14 @@
         },
         {
           "name": "part_stream_2026_08_11_0.parquet",
-          "bytes": 820496340,
-          "mtime_ns": 1786971488878305700
+          "bytes": 820639842,
+          "mtime_ns": 1787208394829529800
         }
       ],
       "output_counts": {
-        "identity_device_daily": 15009,
-        "identity_session_daily": 18753,
-        "identity_ipua_daily": 17249
+        "identity_device_daily": 15032,
+        "identity_session_daily": 18772,
+        "identity_ipua_daily": 17263
       }
     },
     "stream/2026-08-12": {
@@ -2098,22 +2098,46 @@
     "stream/2026-08-19": {
       "source": "stream",
       "date": "2026-08-19",
-      "file_count": 1,
-      "bytes": 58505019,
-      "max_mtime_ns": 1787125602244083800,
+      "file_count": 2,
+      "bytes": 807650980,
+      "max_mtime_ns": 1787208419917832500,
       "files": [
         {
           "name": "part_stream_2026_08_18_0.parquet",
           "bytes": 58505019,
           "mtime_ns": 1787125602244083800
+        },
+        {
+          "name": "part_stream_2026_08_19_0.parquet",
+          "bytes": 749145961,
+          "mtime_ns": 1787208419917832500
         }
       ],
       "output_counts": {
-        "identity_device_daily": 557,
-        "identity_session_daily": 570,
-        "identity_ipua_daily": 582
+        "identity_device_daily": 14670,
+        "identity_session_daily": 18175,
+        "identity_ipua_daily": 16678
+      }
+    },
+    "stream/2026-08-20": {
+      "source": "stream",
+      "date": "2026-08-20",
+      "file_count": 1,
+      "bytes": 54956770,
+      "max_mtime_ns": 1787208419704966900,
+      "files": [
+        {
+          "name": "part_stream_2026_08_19_0.parquet",
+          "bytes": 54956770,
+          "mtime_ns": 1787208419704966900
+        }
+      ],
+      "output_counts": {
+        "identity_device_daily": 531,
+        "identity_session_daily": 547,
+        "identity_ipua_daily": 559
       }
     }
   },
-  "updated_at_utc": "2026-08-19T08:34:35.761750+00:00"
+  "updated_at_utc": "2026-08-20T07:38:27.688127+00:00"
 }
