@@ -25,8 +25,8 @@ select[multiple]{min-height:70px;padding:4px 6px}
 .multi-picker-toggle{width:100%;min-height:34px;display:flex;align-items:center;justify-content:space-between;gap:8px;border:1px solid #c8d4e3;border-radius:6px;background:#fff;color:var(--ink);padding:7px 8px;font:inherit;font-size:12px;font-weight:750;text-align:left;cursor:pointer}
 .multi-picker-toggle:hover{border-color:#94a3b8;background:#f8fafc}.multi-picker-toggle:focus-visible{outline:0;border-color:var(--brand2);box-shadow:0 0 0 2px rgba(31,120,151,.14)}.multi-picker-toggle:disabled{cursor:not-allowed;color:#8a97a8;background:#f4f6f8}
 .multi-picker-toggle .picker-caret{color:var(--muted);font-size:10px;flex:0 0 auto}
-.multi-picker-menu{display:none;position:absolute;left:0;right:0;top:calc(100% + 5px);z-index:80;max-height:280px;overflow:auto;border:1px solid #b8c7d9;border-radius:7px;background:#fff;box-shadow:0 12px 26px rgba(15,23,42,.18);padding:5px}
-.multi-picker-menu.open{display:block}.multi-picker-option{display:flex;align-items:center;gap:7px;padding:7px 6px;border-radius:5px;color:#243044;font-size:11px;font-weight:700;cursor:pointer;overflow-wrap:anywhere}.multi-picker-option:hover{background:#f1f6fa}.multi-picker-option.all{border-bottom:1px solid var(--line);font-weight:900}.multi-picker-option input{accent-color:var(--brand2);flex:0 0 auto}
+.multi-picker-menu{display:none;position:absolute;left:0;right:0;top:calc(100% + 5px);z-index:80;max-height:min(320px,calc(100vh - 72px));overflow:hidden;border:1px solid #b8c7d9;border-radius:7px;background:#fff;box-shadow:0 12px 26px rgba(15,23,42,.18);padding:5px}
+.multi-picker-menu.open{display:flex;flex-direction:column}.multi-picker-search-shell{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px;flex:0 0 auto;padding:1px 1px 5px;border-bottom:1px solid var(--line);background:#fff}.multi-picker-search{width:100%;min-width:0;height:30px;border:1px solid #b8c7d9;border-radius:5px;background:#fff;color:var(--ink);padding:5px 7px;font:inherit;font-size:11px;font-weight:700;outline:none}.multi-picker-search:focus{border-color:var(--brand2);box-shadow:0 0 0 2px rgba(31,120,151,.14)}.multi-picker-clear{height:30px;border:1px solid #c8d4e3;border-radius:5px;background:#f8fafc;color:#475569;padding:4px 7px;font:inherit;font-size:10px;font-weight:850;cursor:pointer}.multi-picker-clear:hover{border-color:#94a3b8;background:#eef3f7}.multi-picker-search-meta{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:6px;color:#64748b;font-size:9px;font-weight:800;padding:0 2px}.multi-picker-options{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding-top:3px}.multi-picker-option{display:flex;align-items:flex-start;gap:7px;padding:7px 6px;border-radius:5px;color:#243044;font-size:11px;font-weight:700;cursor:pointer;overflow-wrap:anywhere}.multi-picker-option[hidden]{display:none!important}.multi-picker-option:hover{background:#f1f6fa}.multi-picker-option.all{position:sticky;top:0;z-index:1;border-bottom:1px solid var(--line);background:#fff;font-weight:900}.multi-picker-option.all:hover{background:#f1f6fa}.multi-picker-option input{accent-color:var(--brand2);flex:0 0 auto;margin-top:1px}.multi-picker-option span{min-width:0;overflow-wrap:anywhere}.multi-picker-empty{padding:12px 7px;color:#64748b;font-size:10px;font-weight:750;text-align:center}
 .unique-ip-date-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 10px;border-bottom:1px solid var(--line);background:#fbfdff}
 .unique-ip-date-controls>label{font-size:10px;text-transform:uppercase;letter-spacing:.04em;font-weight:850;color:var(--muted)}
 .date-multi-picker{position:relative;width:min(100%,250px)}
@@ -170,12 +170,13 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
   .topbar h1{font-size:14px}.topbar .sub{font-size:9px;line-height:1.25}
   .wrap{max-width:none;padding:5px 7px 8px}
   .sticky{position:sticky;top:0;z-index:40;backdrop-filter:none;padding:3px 0;margin:0 0 4px}
-  .filters{display:flex;align-items:end;flex-wrap:nowrap;overflow-x:auto!important;grid-template-columns:none;border-radius:3px;padding:4px 5px;gap:4px;box-shadow:none}
+  .filters{display:flex;align-items:end;flex-wrap:nowrap;overflow:visible!important;grid-template-columns:none;border-radius:3px;padding:4px 5px;gap:4px;box-shadow:none}
   .filters .field{display:flex;flex:0 0 auto;grid-column:auto!important}
   .filters .field.date{width:106px}.filters .field.source{width:88px}.filters .field.platform{width:170px}.filters .field.channel{width:170px}.filters .field.actions{width:115px}
   .field{gap:2px}.field label{font-size:8px}
   input[type="date"],select{border-radius:3px;padding:3px 5px;font-size:10px}
   .multi-picker-toggle,.date-multi-toggle{min-height:26px;border-radius:3px;padding:4px 5px;font-size:10px}
+  .multi-picker-menu{max-height:min(290px,calc(100vh - 55px));border-radius:3px;padding:4px}.multi-picker-search-shell{gap:4px;padding:0 0 4px}.multi-picker-search,.multi-picker-clear{height:25px;border-radius:3px;font-size:9px}.multi-picker-option{padding:5px 4px;border-radius:3px;font-size:9px}.multi-picker-search-meta{font-size:8px}
   .preset-row,.action-row{gap:4px}.btn{border-radius:3px;padding:3px 6px;font-size:10px}
   .context{gap:4px;margin-top:4px;font-size:9px}.pill{gap:4px;border-radius:3px;padding:3px 5px}
   .note{border-radius:3px;padding:5px 7px;margin-bottom:6px;font-size:10px;line-height:1.3}
@@ -194,6 +195,37 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
   .evidence-box{height:300px;min-height:0;padding:5px;overflow:auto}.evidence-board{border-radius:3px;padding:5px;gap:4px}.evidence-head,.evidence-row{grid-template-columns:26px minmax(0,1.2fr) minmax(64px,.48fr) minmax(80px,.9fr) minmax(120px,1fr);gap:6px}.evidence-head{padding:3px 4px 5px;font-size:8px}.evidence-row{border-radius:3px;padding:5px 6px}.evidence-name{font-size:10px}.evidence-meta,.evidence-value small{font-size:8.5px}.evidence-value{font-size:11px}.evidence-track{height:7px}
   table{font-size:9px}th{padding:5px}td{padding:4px 5px}.wip-grid,.range-table{gap:5px}.wip-card,.range-card{border-radius:3px;padding:6px}.wip-card h3{font-size:10px;margin-bottom:3px}.wip-card p{font-size:9px;line-height:1.25;margin-top:3px}
   .footer{font-size:8px;padding:5px 0 2px;line-height:1.25}.footer-title{font-size:10px;font-weight:850;color:var(--ink);margin-bottom:2px}
+}
+/* Minimal presentation pass: preserve every control and data surface while making
+   the dense desktop layout easier to scan in operational use. */
+@media(min-width:1051px){
+  :root{--shadow:0 1px 2px rgba(15,23,42,.04)}
+  body{font-size:12px;background:#f5f7fa}
+  .wrap{padding:8px 10px 12px}
+  .sticky{padding:5px 0 6px;margin:0 0 6px;background:rgba(245,247,250,.98);border-bottom:1px solid #e1e8f0}
+  .filters{min-height:54px;padding:7px 8px;gap:7px;border-color:#cfdbe8;border-radius:5px;background:#fff;box-shadow:var(--shadow)}
+  .filters .field.date{width:118px}.filters .field.source{width:98px}.filters .field.platform{width:184px}.filters .field.channel{width:184px}.filters .field.actions{width:124px}
+  .field{gap:3px}.field label{font-size:9px;color:#5c6c80}
+  input[type="date"],select{padding:5px 7px;font-size:11px;border-radius:4px}
+  .multi-picker-toggle,.date-multi-toggle{min-height:30px;padding:5px 7px;font-size:11px;border-radius:4px}
+  .multi-picker-menu{border-radius:5px;padding:5px;box-shadow:0 10px 24px rgba(15,23,42,.16)}
+  .multi-picker-search,.multi-picker-clear{height:28px;font-size:10px}.multi-picker-option{padding:6px 5px;font-size:10px}
+  .btn{padding:5px 8px;font-size:10px;border-radius:4px}.preset-row,.action-row{gap:5px}
+  .context{gap:5px;margin-top:5px;font-size:10px}.pill{padding:4px 6px;border-radius:4px;background:#fbfcfe}
+  .note{padding:7px 9px;margin-bottom:8px;font-size:11px;border-radius:5px}
+  .kpis,.stakeholder-kpis,.viewership-kpis{gap:7px;margin-bottom:8px}
+  .kpi{border-radius:5px;border-top-width:2px;padding:8px 9px;box-shadow:var(--shadow)}
+  .kpi b{font-size:9px;margin-bottom:4px;line-height:1.2}.kpi span{font-size:18px;line-height:1.05}.kpi small{font-size:9.5px;margin-top:4px;line-height:1.25}
+  .stakeholder-kpis .kpi b{font-size:8.5px}.stakeholder-kpis .kpi small{font-size:9px}
+  .section{border-radius:5px;padding:9px;margin-bottom:8px;box-shadow:var(--shadow)}
+  .section-head{gap:8px;margin-bottom:7px}.section h2{font-size:13px}.section .desc{font-size:10px}
+  .grid-2,.grid-stack,.grid-3{gap:8px}.panel{border-radius:5px}.panel-head{padding:7px 9px}.panel-title{font-size:11px}.panel-title small{font-size:9px}
+  .chart-box{height:250px;padding:7px}.chart-box.tall{height:330px}.chart-box.compact{height:210px}
+  .chart-note{font-size:10px;margin:0 8px 7px}.table-wrap{max-height:56vh}table{font-size:10px}th{padding:6px}td{padding:5px 6px}
+  .pie-breakdown{gap:5px;padding:7px 8px}.pie-item{border-radius:4px;padding:5px 6px}.pie-name,.pie-value{font-size:10px}.pie-value small{font-size:9px}
+  .identity-guide{margin-bottom:8px}.identity-guide-grid{gap:7px}.identity-guide-card{border-radius:5px;padding:8px}.identity-guide-card b{font-size:9px}.identity-guide-card .value{font-size:16px}.identity-guide-card .formula,.identity-guide-card small{font-size:10px}.identity-guide-note{font-size:11px}
+  .evidence-box{height:330px;padding:7px}.evidence-board{border-radius:5px;padding:7px;gap:5px}.evidence-head,.evidence-row{gap:7px}.evidence-head{font-size:9px}.evidence-row{border-radius:4px;padding:6px 7px}.evidence-name{font-size:11px}.evidence-meta,.evidence-value small{font-size:9px}.evidence-value{font-size:12px}
+  .wip-grid,.range-table{gap:7px}.wip-card,.range-card{border-radius:5px;padding:8px}.wip-card h3{font-size:11px}.wip-card p{font-size:10px;line-height:1.35}.footer{font-size:9px;padding:7px 0 3px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
@@ -579,6 +611,7 @@ let renderVersion = 0;
 let sectionVersions = {};
 let lazyRenderQueued = false;
 let lazySectionObserver = null;
+const multiPickerDraft={platform:null,channel:null,modalPlatform:null,modalChannel:null};
 
 function el(id){return document.getElementById(id)}
 function n(v){const x=Number(v);return Number.isFinite(x)?x:0}
@@ -606,25 +639,85 @@ function encodeFilterValues(values){const clean=[...new Set((values||[]).map(Str
 function filterLabel(value,allLabel){const values=selectedFilterValues(value);return values.length?values.join(", "):allLabel}
 function syncMultiSelect(select,value){if(!select)return;const selected=new Set(selectedFilterValues(value));for(const option of select.options)option.selected=value==="all"?option.value==="all":selected.has(option.value)}
 function multiPickerMeta(kind){return kind==="platform"?{select:"platformSelect",toggle:"platformToggle",menu:"platformMenu",allLabel:"All Platforms"}:{select:"channelSelect",toggle:"channelToggle",menu:"channelMenu",allLabel:"All Channels"}}
-function closeMultiPickers(exceptKind){const keep=exceptKind?multiPickerMeta(exceptKind).menu:"";document.querySelectorAll(".multi-picker-menu.open").forEach(function(menu){if(menu.id!==keep)menu.classList.remove("open")})}
-function toggleMultiPicker(kind){const meta=multiPickerMeta(kind),menu=el(meta.menu),toggle=el(meta.toggle);if(!menu||!toggle||toggle.disabled)return;const willOpen=!menu.classList.contains("open");closeMultiPickers(kind);menu.classList.toggle("open",willOpen)}
+function multiPickerMenuMarkup(kind,meta,selected,values,changeHandler){
+  return "<div class='multi-picker-search-shell'><input class='multi-picker-search' type='search' data-picker-search placeholder='Search "+(kind==="channel"?"channels":"platforms")+"...' autocomplete='off' oninput='filterMultiPickerMenu(this.closest(\".multi-picker-menu\"))'/><button type='button' class='multi-picker-clear' onclick='clearMultiPickerSearch(this.closest(\".multi-picker-menu\"))'>Clear</button><div class='multi-picker-search-meta'><span data-picker-count></span><span>Multi-select</span></div></div><div class='multi-picker-options'><div class='multi-picker-option all' onclick=\"toggleMultiPickerOption('"+kind+"',this,event)\"><input type='checkbox' data-all='1' "+(!selected.size?"checked":"")+" onchange=\""+changeHandler+"('"+kind+"',this)\" onclick='event.stopPropagation()'/><span>"+esc(meta.allLabel)+"</span></div>"+values.map(function(value){return "<div class='multi-picker-option' data-picker-option data-search='"+esc(value.toLowerCase())+"' onclick=\"toggleMultiPickerOption('"+kind+"',this,event)\"><input type='checkbox' data-value='"+esc(value)+"' "+(selected.has(value)?"checked":"")+" onchange=\""+changeHandler+"('"+kind+"',this)\" onclick='event.stopPropagation()'/><span>"+esc(value)+"</span></div>"}).join("")+"<div class='multi-picker-empty' data-picker-empty hidden>No matching options</div></div>";
+}
+function toggleMultiPickerOption(kind,row,event){
+  if(event&&event.target&&event.target.tagName==="INPUT")return;
+  const input=row&&row.querySelector("input");
+  if(input)input.click();
+}
+function filterMultiPickerMenu(menu){
+  if(!menu)return;
+  const search=menu.querySelector("[data-picker-search]");
+  const term=String(search?search.value:"").trim().toLowerCase();
+  const options=Array.from(menu.querySelectorAll("[data-picker-option]"));
+  let visible=0;
+  options.forEach(function(option){const show=!term||String(option.dataset.search||"").indexOf(term)>=0;option.hidden=!show;if(show)visible++});
+  const count=menu.querySelector("[data-picker-count]");
+  if(count)count.textContent=term?visible+" of "+options.length+" shown":options.length+" options";
+  const empty=menu.querySelector("[data-picker-empty]");
+  if(empty)empty.hidden=visible>0;
+}
+function clearMultiPickerSearch(menu){
+  if(!menu)return;
+  const search=menu.querySelector("[data-picker-search]");
+  if(search)search.value="";
+  filterMultiPickerMenu(menu);
+  const options=menu.querySelector(".multi-picker-options");
+  if(options)options.scrollTop=0;
+}
+function clearMultiPickerDraftForMenu(menuId){
+  if(menuId==="platformMenu")multiPickerDraft.platform=null;
+  if(menuId==="channelMenu")multiPickerDraft.channel=null;
+  if(menuId==="modalPlatformMenu")multiPickerDraft.modalPlatform=null;
+  if(menuId==="modalChannelMenu")multiPickerDraft.modalChannel=null;
+}
+function closeMultiPickers(exceptKind){
+  const keep=exceptKind?multiPickerMeta(exceptKind).menu:"";
+  document.querySelectorAll(".multi-picker-menu.open").forEach(function(menu){if(menu.id!==keep){menu.classList.remove("open");clearMultiPickerSearch(menu);clearMultiPickerDraftForMenu(menu.id)}});
+}
+function toggleMultiPicker(kind){
+  const meta=multiPickerMeta(kind),menu=el(meta.menu),toggle=el(meta.toggle);
+  if(!menu||!toggle||toggle.disabled)return;
+  const willOpen=!menu.classList.contains("open");
+  closeMultiPickers(kind);
+  multiPickerDraft[kind]=willOpen?selectedFilterValues(kind==="platform"?state.platform:state.channel):null;
+  menu.classList.toggle("open",willOpen);
+  if(willOpen){filterMultiPickerMenu(menu);requestAnimationFrame(function(){const search=menu.querySelector("[data-picker-search]");if(search)search.focus()})}else clearMultiPickerSearch(menu);
+}
 function renderMultiPicker(kind){
   const meta=multiPickerMeta(kind),select=el(meta.select),menu=el(meta.menu),toggle=el(meta.toggle);
   if(!select||!menu||!toggle)return;
+  const existingSearch=menu.classList.contains("open")?menu.querySelector("[data-picker-search]"):null;
+  const searchValue=existingSearch?existingSearch.value:"";
   const stateValue=kind==="platform"?state.platform:state.channel;
-  const selected=new Set(selectedFilterValues(stateValue));
+  const draft=menu.classList.contains("open")?multiPickerDraft[kind]:null;
+  const selected=new Set(draft===null?selectedFilterValues(stateValue):draft);
   const values=Array.from(select.options).map(function(option){return option.value}).filter(function(value){return value!=="all"});
   const allSelected=!selected.size;
-  menu.innerHTML="<label class='multi-picker-option all'><input type='checkbox' data-all='1' "+(allSelected?"checked":"")+" onchange=\"changeMultiPicker('"+kind+"',this)\"/>"+esc(meta.allLabel)+"</label>"+values.map(function(value){return "<label class='multi-picker-option'><input type='checkbox' data-value='"+esc(value)+"' "+(selected.has(value)?"checked":"")+" onchange=\"changeMultiPicker('"+kind+"',this)\"/>"+esc(value)+"</label>"}).join("");
+  menu.innerHTML=multiPickerMenuMarkup(kind,meta,selected,values,"changeMultiPicker");
+  const search=menu.querySelector("[data-picker-search]");
+  if(search)search.value=searchValue;
+  filterMultiPickerMenu(menu);
   const label=allSelected?meta.allLabel:selected.size===1?Array.from(selected)[0]:selected.size+" selected";
   toggle.querySelector("span").textContent=label;
   toggle.disabled=select.disabled||!values.length;
 }
 function changeMultiPicker(kind,input){
   const meta=multiPickerMeta(kind),menu=el(meta.menu);
-  if(!menu)return;
+  if(!menu||!input.isConnected)return;
   let values=[];
-  if(input.dataset.all){values=[];}else{values=Array.from(menu.querySelectorAll("input[data-value]:checked")).map(function(box){return box.dataset.value});}
+  if(input.dataset.all){values=[];}else{
+    const available=Array.from(menu.querySelectorAll("input[data-value]"));
+    const draft=multiPickerDraft[kind];
+    const selected=new Set(draft===null?selectedFilterValues(kind==="platform"?state.platform:state.channel):draft);
+    if(input.checked)selected.add(input.dataset.value);else selected.delete(input.dataset.value);
+    const availableValues=available.map(function(box){return box.dataset.value});
+    values=availableValues.filter(function(value){return selected.has(value)});
+    if(availableValues.length&&values.length===availableValues.length){values=[];multiPickerDraft[kind]=null}else multiPickerDraft[kind]=values;
+  }
+  if(input.dataset.all)multiPickerDraft[kind]=null;
   if(kind==="platform")setPlatformValues(values);else setChannelValues(values);
 }
 document.addEventListener("click",function(event){
@@ -1341,23 +1434,41 @@ function bandwidthUnavailableNote(){
   return "Not available for this selection: bandwidth bytes are not present in the processed mart for this filter/source.";
 }
 function modalMultiPickerMeta(kind){return kind==="platform"?{select:"modalPlatformSelect",toggle:"modalPlatformToggle",menu:"modalPlatformMenu",allLabel:"All Platforms"}:{select:"modalChannelSelect",toggle:"modalChannelToggle",menu:"modalChannelMenu",allLabel:"All Channels"}}
-function toggleModalMultiPicker(kind){const meta=modalMultiPickerMeta(kind),menu=el(meta.menu),toggle=el(meta.toggle);if(!menu||!toggle||toggle.disabled)return;const willOpen=!menu.classList.contains("open");closeMultiPickers("");menu.classList.toggle("open",willOpen)}
+function toggleModalMultiPicker(kind){const meta=modalMultiPickerMeta(kind),menu=el(meta.menu),toggle=el(meta.toggle);if(!menu||!toggle||toggle.disabled)return;const willOpen=!menu.classList.contains("open");closeMultiPickers("");multiPickerDraft["modal"+kind.charAt(0).toUpperCase()+kind.slice(1)]=willOpen?selectedFilterValues(kind==="platform"?state.platform:state.channel):null;menu.classList.toggle("open",willOpen);if(willOpen){filterMultiPickerMenu(menu);requestAnimationFrame(function(){const search=menu.querySelector("[data-picker-search]");if(search)search.focus()})}else clearMultiPickerSearch(menu)}
 function renderModalMultiPicker(kind){
   const meta=modalMultiPickerMeta(kind),select=el(meta.select),menu=el(meta.menu),toggle=el(meta.toggle);
   if(!select||!menu||!toggle)return;
+  const existingSearch=menu.classList.contains("open")?menu.querySelector("[data-picker-search]"):null;
+  const searchValue=existingSearch?existingSearch.value:"";
   const stateValue=kind==="platform"?state.platform:state.channel;
-  const selected=new Set(selectedFilterValues(stateValue));
+  const draftKey="modal"+kind.charAt(0).toUpperCase()+kind.slice(1);
+  const draft=menu.classList.contains("open")?multiPickerDraft[draftKey]:null;
+  const selected=new Set(draft===null?selectedFilterValues(stateValue):draft);
   const values=Array.from(select.options).map(function(option){return option.value}).filter(function(value){return value!=="all"});
   const allSelected=!selected.size;
-  menu.innerHTML="<label class='multi-picker-option all'><input type='checkbox' data-all='1' "+(allSelected?"checked":"")+" onchange=\"changeModalMultiPicker('"+kind+"',this)\"/>"+esc(meta.allLabel)+"</label>"+values.map(function(value){return "<label class='multi-picker-option'><input type='checkbox' data-value='"+esc(value)+"' "+(selected.has(value)?"checked":"")+" onchange=\"changeModalMultiPicker('"+kind+"',this)\"/>"+esc(value)+"</label>"}).join("");
+  menu.innerHTML=multiPickerMenuMarkup(kind,meta,selected,values,"changeModalMultiPicker");
+  const search=menu.querySelector("[data-picker-search]");
+  if(search)search.value=searchValue;
+  filterMultiPickerMenu(menu);
   const label=allSelected?meta.allLabel:selected.size===1?Array.from(selected)[0]:selected.size+" selected";
   toggle.querySelector("span").textContent=label;
   toggle.disabled=select.disabled||!values.length;
 }
 function changeModalMultiPicker(kind,input){
   const meta=modalMultiPickerMeta(kind),menu=el(meta.menu);
-  if(!menu)return;
-  const values=input.dataset.all?[]:Array.from(menu.querySelectorAll("input[data-value]:checked")).map(function(box){return box.dataset.value});
+  if(!menu||!input.isConnected)return;
+  let values=[];
+  if(!input.dataset.all){
+    const available=Array.from(menu.querySelectorAll("input[data-value]"));
+    const draftKey="modal"+kind.charAt(0).toUpperCase()+kind.slice(1);
+    const draft=multiPickerDraft[draftKey];
+    const selected=new Set(draft===null?selectedFilterValues(kind==="platform"?state.platform:state.channel):draft);
+    if(input.checked)selected.add(input.dataset.value);else selected.delete(input.dataset.value);
+    const availableValues=available.map(function(box){return box.dataset.value});
+    values=availableValues.filter(function(value){return selected.has(value)});
+    if(availableValues.length&&values.length===availableValues.length){values=[];multiPickerDraft[draftKey]=null}else multiPickerDraft[draftKey]=values;
+  }
+  if(input.dataset.all)multiPickerDraft["modal"+kind.charAt(0).toUpperCase()+kind.slice(1)]=null;
   if(kind==="platform")setPlatformValues(values);else setChannelValues(values);
 }
 function amagiMinuteRows(){
