@@ -381,6 +381,57 @@ def load_viewer_minute_snapshot(
     )
 
 
+def validate_asrun_viewer_coverage(
+    events: pd.DataFrame,
+    viewer_minute: pd.DataFrame,
+) -> None:
+    """Refuse to publish ASRUN audience zeros from a stale partial-day mart."""
+    ads = events.loc[events["is_ad"]].copy()
+    if ads.empty:
+        return
+    ads["log_date"] = ads["on_air_start_ist"].dt.strftime("%Y-%m-%d")
+    newest_date = ads["log_date"].max()
+    ads = ads.loc[ads["log_date"].eq(newest_date)]
+    required = (
+        ads.groupby("log_date", as_index=False)
+        .agg(first_ad=("on_air_start_ist", "min"), last_ad=("on_air_start_ist", "max"))
+    )
+    viewer = viewer_minute.copy()
+    viewer["minute_ist"] = pd.to_datetime(viewer["minute_ist"], errors="coerce")
+    viewer = viewer[viewer["minute_ist"].notna()].copy()
+    viewer["log_date"] = viewer["minute_ist"].dt.strftime("%Y-%m-%d")
+    coverage = (
+        viewer.groupby(["source", "log_date"], as_index=False, observed=True)
+        .agg(first_minute=("minute_ist", "min"), last_minute=("minute_ist", "max"))
+    )
+    problems: list[str] = []
+    for source in ("fast", "stream"):
+        source_coverage = coverage.loc[coverage["source"].astype(str).eq(source)]
+        by_date = source_coverage.set_index("log_date")
+        for row in required.itertuples(index=False):
+            if row.log_date not in by_date.index:
+                problems.append(f"{source.upper()} {row.log_date}: no identity-minute data")
+                continue
+            covered = by_date.loc[row.log_date]
+            first_required = row.first_ad.floor("5min")
+            last_required = row.last_ad.floor("5min") + pd.Timedelta(minutes=4)
+            if (
+                covered["first_minute"] > first_required
+                or covered["last_minute"] < last_required
+            ):
+                problems.append(
+                    f"{source.upper()} {row.log_date}: mart covers "
+                    f"{covered['first_minute']:%H:%M}-{covered['last_minute']:%H:%M}, "
+                    f"ASRUN requires {first_required:%H:%M}-{last_required:%H:%M}"
+                )
+    if problems:
+        raise RuntimeError(
+            "FAST/STREAM identity-minute coverage is incomplete; preserving the existing "
+            "ASRUN dashboard instead of publishing false zeros. Run the identity-minute "
+            "ETL through the ASRUN date(s). " + "; ".join(problems)
+        )
+
+
 def build_amagi_minute_mart(events: pd.DataFrame) -> dict[str, Any]:
     """Read Amagi's actual minute-level concurrency exports for ASRUN dates."""
     columns = ["minute_ist", "log_date", "platform_name", "channel_raw", "channel_name", "concurrent_viewers"]
@@ -4260,7 +4311,7 @@ document.addEventListener('click',event=>{
   ))showLoading('Updating dashboard...');
 },true);
 function refreshAmagiFilters(){const rows=(AMAGI.minute||[]).filter(r=>String(r.log_date)>=String($('from').value)&&String(r.log_date)<=String($('to').value)),platforms=[...new Set(rows.map(r=>String(r.platform_name)))].sort();buildMulti('amagiPlatform',platforms,'platforms',platforms,()=>{refreshAmagiFilters();render()});const selectedPlatforms=selectedMulti('amagiPlatform'),channels=[...new Set(rows.filter(r=>!selectedPlatforms.size||selectedPlatforms.has(String(r.platform_name))).map(r=>String(r.channel_name)))].sort();buildMulti('amagiChannel',channels,'channels',channels,render);}
-function amagiMinuteMap(){const platforms=selectedMulti('amagiPlatform'),channels=selectedMulti('amagiChannel'),map=new Map();for(const row of (AMAGI.minute||[])){if(!platforms.has(String(row.platform_name))||!channels.has(String(row.channel_name)))continue;const key=minuteKey(row.minute_ist);map.set(key,(map.get(key)||0)+Number(row.concurrent_viewers||0));}return {map};}
+function amagiMinuteMap(){const platforms=selectedMulti('amagiPlatform'),channels=selectedMulti('amagiChannel'),map=new Map(),coverage=new Set();for(const row of (AMAGI.minute||[])){if(!platforms.has(String(row.platform_name))||!channels.has(String(row.channel_name)))continue;const key=minuteKey(row.minute_ist);coverage.add(key);map.set(key,(map.get(key)||0)+Number(row.concurrent_viewers||0));}return {map,coverage};}
 function ensureAmagiPanel(){if($('amagiRows'))return;const grid=document.querySelector('.audience-grid');grid.insertAdjacentHTML('beforeend','<div class="panel audience-panel amagi-panel"><div class="panel-head"><div><h2>AMAGI Delivered Ad Events</h2><small>Actual platform-reported concurrent viewers</small></div><span class="source-tag amagi-tag">AMAGI</span></div><div class="audience-controls"><label class="filter-label">Platform<span class="multi-select"><button id="amagiPlatformToggle" class="multi-toggle" type="button">All platforms</button><span id="amagiPlatformMenu" class="multi-menu"></span></span></label><label class="filter-label">Channel<span class="multi-select"><button id="amagiChannelToggle" class="multi-toggle" type="button">All channels</button><span id="amagiChannelMenu" class="multi-menu"></span></span></label></div><div class="event-columns"><span>On-air IST</span><span>Ad ID / Type</span><span>Creative title</span><span class="duration">Duration</span><span class="metric">Concurrency</span></div><div class="audience-list" id="amagiRows"></div><div class="audience-note" id="amagiNote"></div></div>');const header=document.querySelector('.combined-columns');header.querySelector('.youtube-col').insertAdjacentHTML('beforebegin','<span class="amagi-col">AMAGI</span>');document.querySelector('.combined-panel .panel-head small').textContent='FAST + STREAM selected 5-minute concurrency | Amagi actual 5-minute concurrency | YouTube minute concurrency';document.querySelector('.combined-panel .combined-tag').textContent='FAST + STREAM + AMAGI';}
 function ensureFctPanel(){
   if($('fctRows'))return;
@@ -8041,8 +8092,18 @@ function runWithDashboardSources(loaders,action){
     })
     .finally(hideLoading);
 }
+const asrunBaseAudienceMinuteMap=audienceMinuteMap;
+audienceMinuteMap=function(source){
+  const state=asrunBaseAudienceMinuteMap(source);
+  state.coverage=new Set(viewerScope(source).map(row=>minuteKey(row.minute_ist)));
+  return state;
+};
 function audienceValue(event,state){
   const window=fiveMinuteWindow(event),map=state&&state.map instanceof Map?state.map:new Map();
+  const coverage=state&&state.coverage instanceof Set?state.coverage:new Set();
+  if(!coverage.has(window.keys[0])){
+    return {value:'—',window:window.label,total:null,available:false};
+  }
   let total=0;
   for(const key of window.keys)total+=Number(map.get(key)||0);
   return {value:fmt(total),window:window.label,total,available:true};
@@ -8202,6 +8263,7 @@ def main() -> None:
         args.identity_minute,
         [*fct_ranges, *nct_ranges],
     )
+    validate_asrun_viewer_coverage(events, viewer_minute)
     youtube = timed_step("YouTube concurrency marts", build_youtube_marts)
     amagi = timed_step("Amagi concurrency mart", build_amagi_minute_mart, events)
     viewer_snapshot_path = PARSED_DIR / "audience_ops_identity_minute_asrun_dates.parquet"

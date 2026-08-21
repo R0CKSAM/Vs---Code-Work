@@ -36,3 +36,11 @@ def test_skipping_watch_html_does_not_skip_concurrency_data() -> None:
 def test_daily_run_caps_dashboard_publication_at_validated_target() -> None:
     source = (ETL_ROOT / "run_daily_pipeline.ps1").read_text(encoding="utf-8")
     assert '"--publish-through", $TargetDate.ToString("yyyy-MM-dd")' in source
+
+
+def test_daily_archives_completed_target_and_keeps_only_spillover_hot() -> None:
+    source = (ETL_ROOT / "run_daily_pipeline.ps1").read_text(encoding="utf-8")
+    assert "[ValidateRange(1, 31)]" in source
+    assert "[int]$HotLakeRetentionDays = 1" in source
+    assert "$ArchiveThrough = $TargetDate.Date.AddDays(1 - $HotLakeRetentionDays)" in source
+    assert "archiving completed partitions through" in source

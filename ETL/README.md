@@ -236,7 +236,10 @@ The scheduled daily launcher defaults to the tested fast workstation profile:
 The lake archive runs a dry plan before execution, preserves the more complete
 copy of any repeated logical Parquet file, and moves displaced archive versions
 under `delete temp\lake_conflicts` for rollback review. Override the defaults with
-`-ArchiveLakeRoot` and `-HotLakeRetentionDays` (minimum 2).
+`-ArchiveLakeRoot` and `-HotLakeRetentionDays` (default and minimum 1). The
+default archives the completed target-date partitions after the successful
+pipeline and keeps only the next IST date on D as the hot spillover partition
+for the following daily merge.
 
 All limits remain explicit PowerShell parameters. For example, a lower-resource run can use:
 

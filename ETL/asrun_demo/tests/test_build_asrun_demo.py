@@ -259,6 +259,28 @@ def test_viewer_snapshot_includes_additional_fct_date_range(tmp_path: Path) -> N
     assert snapshot["distinct_cliips"].tolist() == [125, 250]
 
 
+def test_asrun_viewer_coverage_rejects_stale_partial_day() -> None:
+    events = pd.DataFrame(
+        {
+            "is_ad": [True, True],
+            "on_air_start_ist": pd.to_datetime(
+                ["2026-08-20 07:11:00", "2026-08-20 23:52:00"]
+            ),
+        }
+    )
+    viewer = pd.DataFrame(
+        {
+            "source": ["fast", "stream"],
+            "minute_ist": pd.to_datetime(
+                ["2026-08-20 05:29:00", "2026-08-20 05:29:00"]
+            ),
+        }
+    )
+
+    with pytest.raises(RuntimeError, match="preserving the existing ASRUN dashboard"):
+        asrun.validate_asrun_viewer_coverage(events, viewer)
+
+
 def test_fixed_five_minute_sum_preserves_filter_dimensions_and_totals() -> None:
     """Compaction must equal the exact sum of source minutes in each fixed bucket."""
     minute = pd.DataFrame(
@@ -579,19 +601,20 @@ def test_render_dashboard_wires_complete_reset_and_fatal_error(
     assert "Filters changed from the default view; click to restore defaults" in html
 
 
-def test_render_dashboard_exports_missing_asrun_audience_as_zero(
+def test_render_dashboard_distinguishes_missing_coverage_from_real_zero(
     tmp_path: Path, monkeypatch
 ) -> None:
-    """ASRUN source cells and exports must remain numeric when no minute matches."""
+    """Unbuilt source minutes must not be presented as measured zero audience."""
     chartjs = tmp_path / "chart.umd.min.js"
     chartjs.write_text("window.Chart=function(){};", encoding="utf-8")
     monkeypatch.setattr(asrun, "CHARTJS_CACHE", chartjs)
 
     html = asrun.render_dashboard({"channels": ["Test Channel"]})
 
-    assert "coverage=new Set(allRows.map(row=>minuteKey(row.minute_ist)))" not in html
-    assert "window.keys.some(key=>!coverage.has(key))" not in html
+    assert "state.coverage=new Set(viewerScope(source).map(row=>minuteKey(row.minute_ist)))" in html
+    assert "!coverage.has(window.keys[0])" in html
     assert "map=state&&state.map instanceof Map?state.map:new Map()" in html
+    assert "return {value:'—',window:window.label,total:null,available:false}" in html
     assert "return {value:fmt(total),window:window.label,total,available:true}" in html
     assert "total+=Number(map.get(key)||0)" in html
     assert 'src="asrun_delivery_data.js?v=unversioned"' in html
@@ -964,6 +987,8 @@ def test_render_dashboard_adds_interval_weighted_nct_story_performance(
     assert "const channelId=source==='fast'?'fastChannel':'streamChannel';" in html
     assert "selectedMulti('fastPlatform')" in html
     assert "selectedMulti('amagiPlatform')" in html
+    assert "function amagiMinuteMap(){const platforms=selectedMulti('amagiPlatform'),channels=selectedMulti('amagiChannel'),map=new Map(),coverage=new Set();" in html
+    assert "coverage.add(key);map.set(key" in html
     assert "selectedMulti('youtubeChannel')" in html
     assert "function isIndiaTvYoutubeChannel(value){" in html
     assert "youtubeDefaultChannels(channels)" in html

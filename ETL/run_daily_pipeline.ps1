@@ -57,8 +57,9 @@
     [string]$ContentMemory = "22GB",
     [switch]$KeepProcessedInputs,
     [string]$ArchiveLakeRoot = "Z:\Veto Logs Backup\DO NOT DELETE",
-    [ValidateRange(2, 31)]
-    [int]$HotLakeRetentionDays = 2,
+    # Keep the D+1 IST spillover partition hot so the next daily run can merge into it.
+    [ValidateRange(1, 31)]
+    [int]$HotLakeRetentionDays = 1,
     [switch]$SkipLakeArchive,
     [ValidateSet("zstd", "snappy", "lz4", "gzip", "brotli", "none")]
     [string]$Etl1Compression = "snappy",
@@ -600,7 +601,7 @@ try {
                 "--audit-dir", $ArchiveAuditDir,
                 "--pipeline-lock", $PipelineLock
             )
-            Write-Host "[$(Get-Date -Format o)] Lake retention: keeping $HotLakeRetentionDays IST partition dates hot; archiving through $($ArchiveThrough.ToString('yyyy-MM-dd'))."
+            Write-Host "[$(Get-Date -Format o)] Lake retention: keeping $HotLakeRetentionDays IST spillover partition date(s) hot; archiving completed partitions through $($ArchiveThrough.ToString('yyyy-MM-dd'))."
             & $DefaultVenvPython @ArchiveArgs
             if ($LASTEXITCODE -ne 0) {
                 throw "Lake archive dry run failed with exit code $LASTEXITCODE"

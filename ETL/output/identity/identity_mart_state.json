@@ -2122,22 +2122,46 @@
     "stream/2026-08-20": {
       "source": "stream",
       "date": "2026-08-20",
-      "file_count": 1,
-      "bytes": 54956770,
-      "max_mtime_ns": 1787208419704966900,
+      "file_count": 2,
+      "bytes": 798904645,
+      "max_mtime_ns": 1787313092801572600,
       "files": [
         {
           "name": "part_stream_2026_08_19_0.parquet",
           "bytes": 54956770,
           "mtime_ns": 1787208419704966900
+        },
+        {
+          "name": "part_stream_2026_08_20_0.parquet",
+          "bytes": 743947875,
+          "mtime_ns": 1787313092801572600
         }
       ],
       "output_counts": {
-        "identity_device_daily": 531,
-        "identity_session_daily": 547,
-        "identity_ipua_daily": 559
+        "identity_device_daily": 13996,
+        "identity_session_daily": 17162,
+        "identity_ipua_daily": 16050
+      }
+    },
+    "stream/2026-08-21": {
+      "source": "stream",
+      "date": "2026-08-21",
+      "file_count": 1,
+      "bytes": 64823986,
+      "max_mtime_ns": 1787313092816616900,
+      "files": [
+        {
+          "name": "part_stream_2026_08_20_0.parquet",
+          "bytes": 64823986,
+          "mtime_ns": 1787313092816616900
+        }
+      ],
+      "output_counts": {
+        "identity_device_daily": 538,
+        "identity_session_daily": 545,
+        "identity_ipua_daily": 565
       }
     }
   },
-  "updated_at_utc": "2026-08-20T07:38:27.688127+00:00"
+  "updated_at_utc": "2026-08-21T12:25:54.844221+00:00"
 }
