@@ -1,0 +1,144 @@
+=== Slide 1 ===
+Audience, Reach & LoyaltyAnalysis
+Weekly channel ranking, cross-metric analysis and regional insights
+AMA
+Reach
+TSV
+20 Aug 2026
+
+=== Slide 2 ===
+1. Data Scope & Key Inputs
+Define the analysis universe before comparing channels and regions.
+8 weeks
+Period: W-1 to W-8
+13
+Regions / markets
+12
+Channels in analysis
+06:00–24:00
+Primary time band
+01:00–05:00
+Night band excluded / low audience
+Core metrics
+• AMA (000s)• TSV / time-spent metric (10-min basis)• Viewing Minutes• Cumulative Reach
+Audience scope
+• Target audience: as defined in source data• Hindi news channels combined• South-side markets excluded per working note
+Data grain
+Region × Channel × Week × Time bandUse the same filters across all metrics so rankings remain comparable.
+Note: Replace the scope values above if the final dataset uses a different target audience definition.
+
+=== Slide 3 ===
+2. Analysis Plan
+Five views turn the raw channel metrics into actionable audience insights.
+Audience & Reach Analysis  |  Draft framework
+01
+Weekly AMA ranking
+Track channel rank and movement across W-1 to W-8.
+02
+Reach vs AMA
+Identify channels combining broad reach with strong average audience.
+03
+Reach vs TSV
+Assess reach alongside time spent / loyalty.
+04
+AMA vs TSV
+Find channels that are strong on both audience and engagement.
+05
+Regional analysis
+Identify regions with high AMA, TSV, viewing minutes and cumulative reach.
+
+=== Slide 4 ===
+3. Weekly AMA Analysis & Channel Ranking
+Compare weekly AMA (000s) and translate the movement into channel rank.
+Audience & Reach Analysis  |  Draft framework
+[Table]:
+Rank | Channel | AMA (000s)
+1 | Aaj Tak | 87
+2 | India TV | 85
+3 | News18 India | 74
+4 | News24 | —
+5 | Other | —
+Key output: weekly rank, rank movement, leading channel and the channels consistently near the top.
+
+=== Slide 5 ===
+4. Reach vs AMA — Audience Scale
+Use a scatter plot to separate broad-reach channels from high-average-audience channels.
+Audience & Reach Analysis  |  Draft framework
+Reach →
+AMA →
+India TV
+Aaj Tak
+News18
+News24
+Channel X
+Channel Y
+How to read the chart
+• Top-right: high AMA + high reach — strongest audience scale.
+• High reach / lower AMA: broad awareness but weaker average audience.
+• High AMA / lower reach: concentrated but strong audience.
+• Bottom-left: lower priority for audience-scale opportunity.
+Primary outcome
+Identify channels that combine strong audience size with broad reach.
+
+=== Slide 6 ===
+5. Reach vs TSV — Reach & Loyalty
+Evaluate whether broad reach is translating into stronger time-spent / loyalty.
+Audience & Reach Analysis  |  Draft framework
+Illustrative positioning
+Reach →
+TSV →
+Aaj Tak
+India TV
+News18
+News24
+Channel X
+Interpretation
+• High reach + high TSV: strongest combination of brand reach and loyalty.
+• High reach + low TSV: awareness is high, but engagement needs attention.
+• Low reach + high TSV: smaller base with strong loyalty.
+• Low reach + low TSV: lower immediate opportunity.
+Primary outcome
+Rank channels on reach and loyalty together — not reach alone.
+
+=== Slide 7 ===
+7. Regional Analysis
+Compare the same audience metrics across regions to identify high-potential markets.
+Audience & Reach Analysis  |  Draft framework
+[Table]:
+Region | Leading Channel | AMA | TSV | Cum. Reach
+HSM | Aaj Tak | High | — | —
+WB | News24 | — | High | —
+HSM | Aaj Tak | High | — | High
+HSM | News18 India | — | — | High
+Region 5 | Leading channel | — | — | —
+Region 6 | Leading channel | — | — | —
+The handwritten notes include a few regional examples; final values should be populated from the source dataset.
+Regional questions
+• Which regions have the highest AMA?
+• Where is TSV strongest?
+• Which regions deliver the highest cumulative reach?
+• Are the leading channels consistent across regions?
+• Where is there a gap between audience and loyalty?
+Output
+Region-wise opportunity map.
+
+=== Slide 8 ===
+8. Summary & Expected Outcomes
+The final report should convert the analysis into a simple decision view.
+Audience & Reach Analysis  |  Draft framework
+Graph1
+Channel ranking
+Which channels lead on AMA and how rankings change week to week.
+G2
+Reach + audience
+Which channels combine higher reach with higher audience.
+G3
+Audience + loyalty
+Which channels are strong on both viewership and loyalty / TSV.
+G4
+Best overall
+Identify channels with big audience + high loyalty.
+G5
+Regional distribution
+Show region-wise AMA, TSV, viewing minutes and cumulative reach.
+Recommended final dashboard flow: Overview → Weekly Ranking → Reach/AMA → Reach/TSV → AMA/TSV → Regional Analysis → Key Takeaways.

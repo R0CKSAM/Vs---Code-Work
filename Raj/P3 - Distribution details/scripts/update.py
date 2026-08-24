@@ -50,6 +50,9 @@ def load_json(path: Path, default: Any) -> Any:
     if not path.exists():
         return default
     start = perf_counter()
+    file_size_mb = path.stat().st_size / (1024 * 1024)
+    if file_size_mb >= 5:
+        LOGGER.info("Loading %s (%.1f MB)...", path.name, file_size_mb)
     with path.open("r", encoding="utf-8") as file:
         payload = json.load(file)
     elapsed = perf_counter() - start
@@ -60,6 +63,11 @@ def load_json(path: Path, default: Any) -> Any:
 
 def write_json(path: Path, payload: Any) -> None:
     start = perf_counter()
+    payload_count = len(payload) if isinstance(payload, (list, dict, set, tuple)) else None
+    if payload_count is not None:
+        LOGGER.info("Writing %s (%s items)...", path.name, payload_count)
+    else:
+        LOGGER.info("Writing %s...", path.name)
     with path.open("w", encoding="utf-8") as file:
         json.dump(payload, file, ensure_ascii=False, indent=2)
     elapsed = perf_counter() - start

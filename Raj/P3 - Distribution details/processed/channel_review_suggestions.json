@@ -774,10 +774,10 @@
   },
   {
     "group": [
-      "Customer Support",
+      "Customer Sports",
       "Customer Supports"
     ],
-    "suggested_canonical": "Customer Support"
+    "suggested_canonical": "Customer Sports"
   },
   {
     "group": [
@@ -6047,6 +6047,13 @@
       "Unite8 Sports 2 Hd"
     ],
     "suggested_canonical": "Unite8 Sports 1 Hd"
+  },
+  {
+    "group": [
+      "United Sports 1 Hd",
+      "United Sports 2 Hd"
+    ],
+    "suggested_canonical": "United Sports 1 Hd"
   },
   {
     "group": [

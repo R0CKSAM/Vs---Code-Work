@@ -2201,7 +2201,9 @@
         return null;
       }
       const [year, month, day] = value.split("-").map(Number);
-      return new Date(year, month - 1, day);
+      // Use a UTC midday timestamp so Excel treats this as a stable date-only value
+      // instead of shifting it backward in some timezone/locale combinations.
+      return new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
     }
 
     function reportChannelRowsForExport(fromWeek, toWeek, selectedLocations, selectedChannels, changeFilter) {
@@ -2217,9 +2219,7 @@
           .map(row => [row.headend_id, row])
       );
 
-      const targetWeeks = allWeekColumns().filter(week =>
-        compareWeekLabels(week, fromWeek) >= 0 && compareWeekLabels(week, toWeek) <= 0
-      );
+      const targetWeeks = fromWeek === toWeek ? [toWeek] : [toWeek];
 
       const rows = [];
 
@@ -2254,7 +2254,7 @@
           });
 
         targetWeeks.forEach(currentWeek => {
-          const previousWeek = previousWeekForReport(currentWeek);
+          const previousWeek = fromWeek === toWeek ? previousWeekForReport(currentWeek) : fromWeek;
           const previousMap = previousWeek ? weekMaps.get(previousWeek) || new Map() : new Map();
           const currentMap = weekMaps.get(currentWeek) || new Map();
           const channelNames = new Set([...previousMap.keys(), ...currentMap.keys()]);
@@ -2295,7 +2295,6 @@
               "Network Name": displayValue(meta.network_name),
               "Channel Name": channelName,
               Week: currentWeek,
-              "Updated Date": currentEntry?.updated_date || reportDateForWeek(currentWeek, "max") || "",
               "Previous Position": previousPosition || "",
               Current: currentPosition || "",
               "Position Change": positionChange,
@@ -2309,43 +2308,6 @@
       return rows;
     }
 
-    function reportSummaryRows(reportRows) {
-      const headendIds = new Set(reportRows.map(row => row.__headendId));
-      const changedRows = reportRows.filter(row => row["Change Status"] !== "No Change");
-      const changedHeadends = new Set(changedRows.map(row => row.__headendId));
-      return [
-        ["Total Headends", headendIds.size],
-        ["Total STBs", [...headendIds].reduce((sum, id) => sum + Number((reportRows.find(row => row.__headendId === id) || {}).STBs || 0), 0)],
-        ["Total Channels", reportRows.length],
-        ["Channels Changed", changedRows.length],
-        ["Channels With No Change", reportRows.filter(row => row["Change Status"] === "No Change").length],
-        ["STBs Affected", [...changedHeadends].reduce((sum, id) => sum + Number((reportRows.find(row => row.__headendId === id) || {}).STBs || 0), 0)],
-        ["Number of Headends Affected", changedHeadends.size],
-      ];
-    }
-
-    function reportHeadendSummaryRows(reportRows) {
-      const grouped = new Map();
-      reportRows.forEach(row => {
-        const key = [row.State, row["BARC Market"], row["Headend Location"], row["Network Name"], row.__headendId].join("||");
-        const current = grouped.get(key) || {
-          State: row.State,
-          "BARC Market": row["BARC Market"],
-          "Headend Location": row["Headend Location"],
-          Network: row["Network Name"],
-          "Total STBs": row.STBs,
-          "Channels Changed": 0,
-          "STBs Affected": 0,
-        };
-        if (row["Change Status"] !== "No Change") {
-          current["Channels Changed"] += 1;
-          current["STBs Affected"] = row.STBs;
-        }
-        grouped.set(key, current);
-      });
-      return [...grouped.values()];
-    }
-
     const TASK1_SECTION_CONFIGS = [
       { key: "landing_channel_1", title: "Landing Channel 1" },
       { key: "landing_channel_2", title: "Landing Channel 2" },
@@ -2354,11 +2316,13 @@
     ];
 
     function reportWeeksInRange(fromWeek, toWeek) {
-      return table3AllWeeks().filter(week => {
-        if (fromWeek && compareWeekLabels(week, fromWeek) < 0) return false;
-        if (toWeek && compareWeekLabels(week, toWeek) > 0) return false;
-        return true;
-      });
+      if (!fromWeek && !toWeek) {
+        return [];
+      }
+      if (!fromWeek || fromWeek === toWeek) {
+        return toWeek ? [toWeek] : [];
+      }
+      return [fromWeek, toWeek];
     }
 
     function task1SectionRowsForExport(fromWeek, toWeek, selectedLocations, selectedChannels) {
@@ -2410,6 +2374,22 @@
       });
     }
 
+    function reportStbRowsForExport(fromWeek, toWeek, selectedLocations, changeFilter) {
+      const selectedLocationSet = new Set(selectedLocations.map(value => displayValue(value)));
+      const weeks = reportWeeksInRange(fromWeek, toWeek);
+      const filteredRows = state.headendWeeklyRows.filter(row => {
+        if (!weeks.includes(row.week_label)) return false;
+        return selectedLocationSet.has(displayValue(row.headend_location));
+      });
+
+      let groupedRows = table4GroupedRows(filteredRows, weeks);
+      if (changeFilter === "Change" || changeFilter === "No Change") {
+        groupedRows = groupedRows.filter(row => row.change_status === changeFilter);
+      }
+
+      return { weeks, rows: groupedRows };
+    }
+
     function applyWorksheetHeaderStyles(row) {
       row.eachCell(cell => {
         cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
@@ -2442,8 +2422,8 @@
       dataRows.forEach((row, index) => {
         const excelRow = sheet.getRow(dataStartRow + index);
         const status = row["Change Status"];
-        const currentCell = excelRow.getCell(8);
-        const statusCell = excelRow.getCell(9);
+        const currentCell = excelRow.getCell(7);
+        const statusCell = excelRow.getCell(8);
         const positionDelta = Number(row["Position Change"]);
         if (status === "Change" && Number.isFinite(positionDelta) && positionDelta < 0) {
           currentCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFCDEFD2" } };
@@ -2472,13 +2452,8 @@
           statusCell.font = { color: { argb: "FF666666" }, bold: true };
         }
 
-        const updatedDate = parseReportDateValue(row["Updated Date"]);
-        if (updatedDate) {
-          excelRow.getCell(6).value = updatedDate;
-          excelRow.getCell(6).numFmt = "dd-mmm-yyyy";
-        }
         if (typeof row.STBs === "number") {
-          excelRow.getCell(10).numFmt = "#,##0";
+          excelRow.getCell(9).numFmt = "#,##0";
         }
       });
     }
@@ -2541,6 +2516,73 @@
       });
     }
 
+    function buildStbWorksheet(sheet, weeks, rows) {
+      const stbColumns = ["State", "BARC Market", "Headend Location", "Network Name", "Headend ID", ...weeks, "Change Status"];
+      const columnWidths = [18, 18, 22, 24, 18, ...weeks.map(() => 14), 16];
+      sheet.columns = stbColumns.map((column, index) => ({
+        header: column,
+        key: column,
+        width: columnWidths[index],
+      }));
+
+      sheet.views = [{ state: "frozen", ySplit: 2 }];
+      const lastColumnLetter = sheet.getColumn(stbColumns.length).letter;
+      sheet.mergeCells(`A1:${lastColumnLetter}1`);
+      sheet.getCell("A1").value = "Weekly STB Analysis";
+      sheet.getCell("A1").font = { bold: true, size: 15 };
+      sheet.getCell("A1").alignment = { horizontal: "center" };
+
+      const headerRow = sheet.getRow(2);
+      stbColumns.forEach((column, index) => {
+        headerRow.getCell(index + 1).value = weeks.includes(column) ? formatWeekCompact(column) : column;
+      });
+      applyWorksheetHeaderStyles(headerRow);
+
+      if (!rows.length) {
+        const emptyRow = sheet.getRow(3);
+        sheet.mergeCells(`A3:${lastColumnLetter}3`);
+        emptyRow.getCell(1).value = "No weekly STB rows match the selected filters.";
+        emptyRow.getCell(1).font = { italic: true, color: { argb: "FF6D7F79" } };
+        return;
+      }
+
+      rows.forEach((row, index) => {
+        const excelRow = sheet.getRow(3 + index);
+        excelRow.getCell(1).value = displayValue(row.state);
+        excelRow.getCell(2).value = displayValue(row.barc_market);
+        excelRow.getCell(3).value = displayValue(row.headend_location);
+        excelRow.getCell(4).value = displayValue(row.network_name);
+        excelRow.getCell(5).value = displayValue(row.headend_id);
+
+        weeks.forEach((week, weekIndex) => {
+          const value = table4WeekValue(row, week);
+          const cell = excelRow.getCell(6 + weekIndex);
+          if (typeof value === "number") {
+            cell.value = value;
+            cell.numFmt = "#,##0";
+          } else {
+            cell.value = value == null || value === "" ? "NA" : value;
+          }
+        });
+
+        const statusCell = excelRow.getCell(6 + weeks.length);
+        statusCell.value = row.change_status;
+        const renderedStatus = renderChangeStatusCell(row.change_status);
+        if (renderedStatus.cellClass.includes("changed-cell")) {
+          statusCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFCDEFD2" } };
+          statusCell.font = { color: { argb: "FF1F7A39" }, bold: true };
+        } else {
+          statusCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE8E8E8" } };
+          statusCell.font = { color: { argb: "FF666666" }, bold: true };
+        }
+      });
+
+      sheet.autoFilter = {
+        from: { row: 2, column: 1 },
+        to: { row: 2, column: stbColumns.length },
+      };
+    }
+
     async function downloadWeeklyChannelReport() {
       if (typeof ExcelJS === "undefined") {
         setReportStatus("Excel export library could not be loaded.", "error");
@@ -2578,28 +2620,29 @@
       const selectedLocationsLabel = locations.join(", ");
       const selectedChannelsLabel = channels.join(", ");
       const task1SectionData = task1SectionRowsForExport(fromWeek, toWeek, locations, channels);
+      const stbSheetData = reportStbRowsForExport(fromWeek, toWeek, locations, changeFilter);
 
       try {
         const reportSheet = workbook.addWorksheet("Report", {
           views: [{ state: "frozen", ySplit: 6 }],
         });
 
-        reportSheet.mergeCells("A1:J1");
+        reportSheet.mergeCells("A1:I1");
         reportSheet.getCell("A1").value = "Weekly Channel Analysis";
         reportSheet.getCell("A1").font = { bold: true, size: 16 };
         reportSheet.getCell("A1").alignment = { horizontal: "center" };
-        reportSheet.mergeCells("A2:J2");
+        reportSheet.mergeCells("A2:I2");
         reportSheet.getCell("A2").value = `From: ${rangeFromDate}    To: ${rangeToDate}`;
-        reportSheet.mergeCells("A3:J3");
+        reportSheet.mergeCells("A3:I3");
         reportSheet.getCell("A3").value = `Locations: ${selectedLocationsLabel}`;
-        reportSheet.mergeCells("A4:J4");
+        reportSheet.mergeCells("A4:I4");
         reportSheet.getCell("A4").value = `Channels: ${selectedChannelsLabel}`;
-        reportSheet.mergeCells("A5:J5");
+        reportSheet.mergeCells("A5:I5");
         reportSheet.getCell("A5").value = `Change Filter: ${changeFilter}`;
 
         const reportColumns = [
           "State", "BARC Market", "Headend Location", "Network Name",
-          "Channel Name", "Updated Date", "Previous Position", "Current",
+          "Channel Name", "Previous Position", "Current",
           "Change Status", "STBs",
         ];
         reportSheet.addRow(reportColumns);
@@ -2614,53 +2657,15 @@
         reportSheet.columns = reportColumns.map((column, index) => ({
           header: column,
           key: column,
-          width: [18, 18, 22, 24, 24, 16, 18, 14, 16, 12][index],
+          width: [18, 18, 22, 24, 24, 18, 14, 16, 12][index],
         }));
         applyReportRowStyles(reportSheet, 7, reportRows);
 
         const task1Sheet = workbook.addWorksheet("Task 1");
         buildTask1Worksheet(task1Sheet, task1SectionData);
 
-        const summarySheet = workbook.addWorksheet("Summary");
-        summarySheet.addRow(["Weekly Channel Analysis Summary"]);
-        summarySheet.getRow(1).font = { bold: true, size: 15 };
-        summarySheet.addRow(["From Week", rangeFromDate]);
-        summarySheet.addRow(["To Week", rangeToDate]);
-        summarySheet.addRow(["Locations", selectedLocationsLabel]);
-        summarySheet.addRow(["Channels", selectedChannelsLabel]);
-        summarySheet.addRow(["Change Filter", changeFilter]);
-        summarySheet.addRow([]);
-        summarySheet.addRow(["Metric", "Value"]);
-        applyWorksheetHeaderStyles(summarySheet.getRow(8));
-        reportSummaryRows(reportRows).forEach(([metric, value]) => {
-          const row = summarySheet.addRow([metric, value]);
-          if (typeof value === "number") {
-            row.getCell(2).numFmt = "#,##0";
-          }
-        });
-        summarySheet.columns = [{ width: 28 }, { width: 18 }];
-
-        const headendSummarySheet = workbook.addWorksheet("Headend Summary");
-        const headendSummaryColumns = ["State", "BARC Market", "Headend Location", "Network", "Total STBs", "Channels Changed", "STBs Affected"];
-        headendSummarySheet.addRow(headendSummaryColumns);
-        applyWorksheetHeaderStyles(headendSummarySheet.getRow(1));
-        reportHeadendSummaryRows(reportRows).forEach(row => {
-          headendSummarySheet.addRow(headendSummaryColumns.map(column => row[column]));
-        });
-        headendSummarySheet.views = [{ state: "frozen", ySplit: 1 }];
-        headendSummarySheet.autoFilter = {
-          from: { row: 1, column: 1 },
-          to: { row: 1, column: headendSummaryColumns.length },
-        };
-        headendSummarySheet.columns = [
-          { width: 18 }, { width: 20 }, { width: 22 }, { width: 26 },
-          { width: 14 }, { width: 18 }, { width: 16 },
-        ];
-        [5, 6, 7].forEach(columnIndex => {
-          for (let rowIndex = 2; rowIndex <= headendSummarySheet.rowCount; rowIndex += 1) {
-            headendSummarySheet.getRow(rowIndex).getCell(columnIndex).numFmt = "#,##0";
-          }
-        });
+        const stbSheet = workbook.addWorksheet("Weekly STB Analysis");
+        buildStbWorksheet(stbSheet, stbSheetData.weeks, stbSheetData.rows);
 
         const buffer = await workbook.xlsx.writeBuffer();
         const blob = new Blob([buffer], {

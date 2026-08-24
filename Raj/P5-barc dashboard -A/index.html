@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BARC Audience Reach & Loyalty Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Chart.js UMD version from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- Main Content Panel -->
+  <main class="main-content">
+    <header class="dashboard-header">
+      <div class="brand">
+        <div class="brand-logo">B</div>
+        <div class="brand-text">
+          <h1>BARC Audience Insights</h1>
+          <p>Reach, Loyalty & Regional Analysis Portal</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="status-badge">
+          <span class="status-dot"></span>
+          <span>Live Data Feed Active</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Overall KPI Cards Row -->
+    <div class="kpi-grid">
+      <div class="kpi-card ama">
+        <div class="kpi-header">
+          <span class="kpi-title">Overall Leading Channel (AMA)</span>
+          <span class="kpi-icon">📺</span>
+        </div>
+        <div class="kpi-value" id="kpiLeadAMA">-</div>
+        <div class="kpi-subtext">Avg AMA: <span class="highlight" id="kpiLeadAMAVal">-</span></div>
+      </div>
+
+      <div class="kpi-card reach">
+        <div class="kpi-header">
+          <span class="kpi-title">Highest Overall Reach</span>
+          <span class="kpi-icon">📈</span>
+        </div>
+        <div class="kpi-value" id="kpiLeadReach">-</div>
+        <div class="kpi-subtext">Avg Reach: <span class="highlight" id="kpiLeadReachVal">-</span></div>
+      </div>
+
+      <div class="kpi-card loyalty">
+        <div class="kpi-header">
+          <span class="kpi-title">Highest Overall Loyalty</span>
+          <span class="kpi-icon">⏱️</span>
+        </div>
+        <div class="kpi-value" id="kpiLeadLoyalty">-</div>
+        <div class="kpi-subtext">Avg TSV: <span class="highlight" id="kpiLeadLoyaltyVal">-</span></div>
+      </div>
+
+      <div class="kpi-card minutes">
+        <div class="kpi-header">
+          <span class="kpi-title">Total Viewing Minutes</span>
+          <span class="kpi-icon">🕒</span>
+        </div>
+        <div class="kpi-value" id="kpiTotalMinutes">-</div>
+        <div class="kpi-subtext">Across full universe dataset</div>
+      </div>
+    </div>
+
+    <!-- Charts Grid Layout -->
+    <div class="dashboard-grid">
+      
+      <!-- Graph 1: Weekly Channel Ranking / AMA Trend -->
+      <div class="chart-card grid-full-width" id="cardG1">
+        <div class="chart-card-header">
+          <div class="chart-title-block">
+            <h3>Graph 1: Weekly Channel Performance & Ranks</h3>
+            <p>Track weekly ranking movement or raw AMA volume over the 8-week period</p>
+          </div>
+          <div class="chart-actions">
+            <button id="toggleRankView" class="chart-toggle-btn active">Rankings View (Bump)</button>
+            <button id="toggleAMAView" class="chart-toggle-btn">AMA Trend View</button>
+          </div>
+        </div>
+        
+        <!-- Horizontal Filters for G1 -->
+        <div class="horizontal-filters" id="filtersG1">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div class="chart-container">
+          <canvas id="chartWeeklyRank"></canvas>
+        </div>
+      </div>
+
+      <!-- Graph 2: Reach vs AMA (Audience Scale) -->
+      <div class="chart-card" id="cardG2">
+        <div class="chart-card-header">
+          <div class="chart-title-block">
+            <h3>Graph 2: Audience Scale (Reach vs AMA)</h3>
+            <p>X: Cumulative Reach (000s) | Y: AMA (000s)</p>
+          </div>
+        </div>
+        
+        <!-- Horizontal Filters for G2 -->
+        <div class="horizontal-filters" id="filtersG2">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div class="chart-container">
+          <canvas id="chartReachAMA"></canvas>
+        </div>
+      </div>
+
+      <!-- Graph 3: Reach vs TSV (Reach & Loyalty) -->
+      <div class="chart-card" id="cardG3">
+        <div class="chart-card-header">
+          <div class="chart-title-block">
+            <h3>Graph 3: Reach & Loyalty Matrix (Reach vs TSV)</h3>
+            <p>X: Cumulative Reach (000s) | Y: TSV (Minutes)</p>
+          </div>
+        </div>
+        
+        <!-- Horizontal Filters for G3 -->
+        <div class="horizontal-filters" id="filtersG3">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div class="chart-container">
+          <canvas id="chartReachTSV"></canvas>
+        </div>
+      </div>
+
+      <!-- Graph 4: AMA vs TSV (Audience & Engagement) -->
+      <div class="chart-card" id="cardG4">
+        <div class="chart-card-header">
+          <div class="chart-title-block">
+            <h3>Graph 4: Engagement Matrix (AMA vs TSV)</h3>
+            <p>X: AMA (000s) | Y: TSV (Minutes)</p>
+          </div>
+        </div>
+        
+        <!-- Horizontal Filters for G4 -->
+        <div class="horizontal-filters" id="filtersG4">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div class="chart-container">
+          <canvas id="chartAMATSV"></canvas>
+        </div>
+      </div>
+
+      <!-- Graph 5 & Table: Regional Analysis -->
+      <div class="chart-card grid-full-width" id="cardG5">
+        <div class="chart-card-header">
+          <div class="chart-title-block">
+            <h3>Graph 5: Regional Analysis & Market Opportunity Map</h3>
+            <p>Detailed performance breakdown across the 13 regional markets</p>
+          </div>
+        </div>
+        
+        <!-- Horizontal Filters for G5 -->
+        <div class="horizontal-filters" id="filtersG5">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div class="regional-analysis-container">
+          <!-- Leaderboard Table -->
+          <div class="regional-table-wrapper">
+            <table class="regional-table">
+              <thead>
+                <tr>
+                  <th>Region / Market</th>
+                  <th>Leading Channel (AMA)</th>
+                  <th>Leader Avg AMA (000s)</th>
+                  <th>Market Avg TSV (Min)</th>
+                  <th>Market Total Reach (000s)</th>
+                  <th>Market Total Viewing Mins (000s)</th>
+                </tr>
+              </thead>
+              <tbody id="regionalTableBody">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Grouped Bar Chart -->
+          <div class="chart-container">
+            <canvas id="chartRegionalBar"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Load Extracted Data -->
+  <script src="data.js"></script>
+  <!-- Load Main Javascript Logic -->
+  <script src="dashboard.js"></script>
+</body>
+</html>

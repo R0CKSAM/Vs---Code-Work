@@ -1,0 +1,266 @@
+{
+    "data": {
+        "columns": [
+            "Year&Week",
+            "Targets",
+            "Regions",
+            "Channel",
+            "TimeBand",
+            "AMA 000's",
+            "TSV 18hrs",
+            "Viewing Minutes'000",
+            "Cume Rch'000"
+        ],
+        "row_count": 2704,
+        "dtypes": {
+            "Year&Week": "str",
+            "Targets": "str",
+            "Regions": "str",
+            "Channel": "str",
+            "TimeBand": "str",
+            "AMA 000's": "float64",
+            "TSV 18hrs": "float64",
+            "Viewing Minutes'000": "float64",
+            "Cume Rch'000": "float64"
+        },
+        "stats": {
+            "Year&Week": {
+                "unique_count": 8,
+                "null_count": 0,
+                "sample_values": [
+                    "2026W 1",
+                    "2026W 2",
+                    "2026W 3",
+                    "2026W 4",
+                    "2026W 5",
+                    "2026W 6",
+                    "2026W 7",
+                    "2026W 8"
+                ]
+            },
+            "Targets": {
+                "unique_count": 2,
+                "null_count": 0,
+                "sample_values": [
+                    "NCCS 15+",
+                    "22+ Male AB"
+                ]
+            },
+            "Regions": {
+                "unique_count": 13,
+                "null_count": 0,
+                "sample_values": [
+                    "HSM",
+                    "UP/Uttarakhand",
+                    "Rajasthan",
+                    "Delhi",
+                    "Assam / North East / Sikkim",
+                    "Odisha",
+                    "West Bengal",
+                    "Guj / D&D / DNH",
+                    "Mah / Goa",
+                    "Bihar/Jharkhand"
+                ]
+            },
+            "Channel": {
+                "unique_count": 13,
+                "null_count": 0,
+                "sample_values": [
+                    "Hindi News",
+                    "Aaj Tak",
+                    "ABP News",
+                    "News18 India",
+                    "India TV",
+                    "NDTV India",
+                    "News 24",
+                    "News Nation",
+                    "Republic Bharat",
+                    "Good News Today"
+                ]
+            },
+            "TimeBand": {
+                "unique_count": 1,
+                "null_count": 0,
+                "sample_values": [
+                    "06:00:00 - 24:00:00"
+                ]
+            },
+            "AMA 000's": {
+                "unique_count": 2704,
+                "null_count": 0,
+                "sample_values": [
+                    2062.869645,
+                    224.034996,
+                    142.725867,
+                    274.154623,
+                    215.17564,
+                    101.639297,
+                    99.246986,
+                    77.613209,
+                    187.116248,
+                    116.933733
+                ]
+            },
+            "TSV 18hrs": {
+                "unique_count": 2704,
+                "null_count": 0,
+                "sample_values": [
+                    126.055304,
+                    42.431397,
+                    33.886652,
+                    45.011256,
+                    54.518589,
+                    24.70384,
+                    35.439834,
+                    27.076649,
+                    54.88171,
+                    35.007943
+                ]
+            },
+            "Viewing Minutes'000": {
+                "unique_count": 2704,
+                "null_count": 0,
+                "sample_values": [
+                    15595294.515168,
+                    1693704.570949,
+                    1079007.557309,
+                    2072608.947551,
+                    1626727.84102,
+                    768393.084754,
+                    750307.214011,
+                    586755.860347,
+                    1414598.833595,
+                    884019.023198
+                ]
+            },
+            "Cume Rch'000": {
+                "unique_count": 2704,
+                "null_count": 0,
+                "sample_values": [
+                    123717.876513,
+                    39916.30493,
+                    31841.668648,
+                    46046.458719,
+                    29838.040033,
+                    31104.196291,
+                    21171.295823,
+                    21670.180372,
+                    25775.414874,
+                    25251.955456
+                ]
+            }
+        },
+        "sample": [
+            {
+                "Year&Week": "2026W 1",
+                "Targets": "NCCS 15+",
+                "Regions": "HSM",
+                "Channel": "Hindi News",
+                "TimeBand": "06:00:00 - 24:00:00",
+                "AMA 000's": 2062.869645,
+                "TSV 18hrs": 126.055304,
+                "Viewing Minutes'000": 15595294.515168,
+                "Cume Rch'000": 123717.876513
+            },
+            {
+                "Year&Week": "2026W 1",
+                "Targets": "NCCS 15+",
+                "Regions": "HSM",
+                "Channel": "Aaj Tak",
+                "TimeBand": "06:00:00 - 24:00:00",
+                "AMA 000's": 224.034996,
+                "TSV 18hrs": 42.431397,
+                "Viewing Minutes'000": 1693704.570949,
+                "Cume Rch'000": 39916.30493
+            },
+            {
+                "Year&Week": "2026W 1",
+                "Targets": "NCCS 15+",
+                "Regions": "HSM",
+                "Channel": "ABP News",
+                "TimeBand": "06:00:00 - 24:00:00",
+                "AMA 000's": 142.725867,
+                "TSV 18hrs": 33.886652,
+                "Viewing Minutes'000": 1079007.557309,
+                "Cume Rch'000": 31841.668648
+            },
+            {
+                "Year&Week": "2026W 1",
+                "Targets": "NCCS 15+",
+                "Regions": "HSM",
+                "Channel": "News18 India",
+                "TimeBand": "06:00:00 - 24:00:00",
+                "AMA 000's": 274.154623,
+                "TSV 18hrs": 45.011256,
+                "Viewing Minutes'000": 2072608.947551,
+                "Cume Rch'000": 46046.458719
+            },
+            {
+                "Year&Week": "2026W 1",
+                "Targets": "NCCS 15+",
+                "Regions": "HSM",
+                "Channel": "India TV",
+                "TimeBand": "06:00:00 - 24:00:00",
+                "AMA 000's": 215.17564,
+                "TSV 18hrs": 54.518589,
+                "Viewing Minutes'000": 1626727.84102,
+                "Cume Rch'000": 29838.040033
+            },
+            {
+                "Year&Week": "2026W 1",
+                "Targets": "NCCS 15+",
+                "Regions": "HSM",
+                "Channel": "NDTV India",
+                "TimeBand": "06:00:00 - 24:00:00",
+                "AMA 000's": 101.639297,
+                "TSV 18hrs": 24.70384,
+                "Viewing Minutes'000": 768393.084754,
+                "Cume Rch'000": 31104.196291
+            },
+            {
+                "Year&Week": "2026W 1",
+                "Targets": "NCCS 15+",
+                "Regions": "HSM",
+                "Channel": "News 24",
+                "TimeBand": "06:00:00 - 24:00:00",
+                "AMA 000's": 99.246986,
+                "TSV 18hrs": 35.439834,
+                "Viewing Minutes'000": 750307.214011,
+                "Cume Rch'000": 21171.295823
+            },
+            {
+                "Year&Week": "2026W 1",
+                "Targets": "NCCS 15+",
+                "Regions": "HSM",
+                "Channel": "News Nation",
+                "TimeBand": "06:00:00 - 24:00:00",
+                "AMA 000's": 77.613209,
+                "TSV 18hrs": 27.076649,
+                "Viewing Minutes'000": 586755.860347,
+                "Cume Rch'000": 21670.180372
+            },
+            {
+                "Year&Week": "2026W 1",
+                "Targets": "NCCS 15+",
+                "Regions": "HSM",
+                "Channel": "Republic Bharat",
+                "TimeBand": "06:00:00 - 24:00:00",
+                "AMA 000's": 187.116248,
+                "TSV 18hrs": 54.88171,
+                "Viewing Minutes'000": 1414598.833595,
+                "Cume Rch'000": 25775.414874
+            },
+            {
+                "Year&Week": "2026W 1",
+                "Targets": "NCCS 15+",
+                "Regions": "HSM",
+                "Channel": "Good News Today",
+                "TimeBand": "06:00:00 - 24:00:00",
+                "AMA 000's": 116.933733,
+                "TSV 18hrs": 35.007943,
+                "Viewing Minutes'000": 884019.023198,
+                "Cume Rch'000": 25251.955456
+            }
+        ]
+    }
+}
