@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BARC Audience Reach Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <main class="main-content">
+      <section class="workspace-shell">
+        <div class="toolbar-card sticky-toolbar compact-toolbar">
+          <div class="filters-row">
+            <label class="filter-chip">
+              <span>Target</span>
+              <select id="targetFilter"></select>
+            </label>
+
+            <label class="filter-chip">
+              <span>Region</span>
+              <select id="regionFilter"></select>
+            </label>
+
+            <label class="filter-chip">
+              <span>Channel</span>
+              <select id="channelFilter"></select>
+            </label>
+
+            <label class="filter-chip">
+              <span>Time Band</span>
+              <select id="timeBandFilter"></select>
+            </label>
+
+            <div class="filter-chip filter-chip-weeks" id="weekFilterControl">
+              <span>Weeks</span>
+              <button
+                id="weekFilterToggle"
+                class="week-dropdown-button"
+                type="button"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <span id="weekFilterSummary" class="week-dropdown-summary">All weeks</span>
+                <span class="week-dropdown-caret" aria-hidden="true">&#9662;</span>
+              </button>
+              <div id="weekFilterPanel" class="week-dropdown-panel" hidden>
+                <button id="weekSelectAll" class="week-dropdown-link" type="button">Select all</button>
+                <div id="weekFilter" class="week-pill-list"></div>
+              </div>
+            </div>
+
+            <div class="toolbar-actions compact-actions">
+              <button id="resetFilters" class="toolbar-button" type="button">Reset</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="kpi-grid" id="kpiGrid"></section>
+
+      <section class="chart-grid">
+        <article class="card card-wide" id="weeklySection" data-chart-card="weeklyAmaChart">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">Graph 1</p>
+              <h3>Weekly AMA Ranking</h3>
+            </div>
+            <div class="card-tools">
+              <p class="card-note">Channel rank movement across selected weeks.</p>
+              <button class="expand-button" type="button" data-expand-chart="weeklyAmaChart">Expand</button>
+            </div>
+          </div>
+          <div class="chart-wrap chart-tall">
+            <canvas id="weeklyAmaChart"></canvas>
+          </div>
+        </article>
+
+        <article class="card" id="reachAmaSection" data-chart-card="reachAmaChart">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">Graph 2</p>
+              <h3>Reach vs AMA</h3>
+            </div>
+            <div class="card-tools">
+              <p class="card-note">Broad reach vs audience strength.</p>
+              <button class="expand-button" type="button" data-expand-chart="reachAmaChart">Expand</button>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="reachAmaChart"></canvas>
+          </div>
+        </article>
+
+        <article class="card" id="reachTsvSection" data-chart-card="reachTsvChart">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">Graph 3</p>
+              <h3>Reach vs TSV</h3>
+            </div>
+            <div class="card-tools">
+              <p class="card-note">Reach compared with loyalty.</p>
+              <button class="expand-button" type="button" data-expand-chart="reachTsvChart">Expand</button>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="reachTsvChart"></canvas>
+          </div>
+        </article>
+
+        <article class="card" id="amaTsvSection" data-chart-card="amaTsvChart">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">Graph 4</p>
+              <h3>AMA vs TSV</h3>
+            </div>
+            <div class="card-tools">
+              <p class="card-note">Audience size balanced with engagement.</p>
+              <button class="expand-button" type="button" data-expand-chart="amaTsvChart">Expand</button>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="amaTsvChart"></canvas>
+          </div>
+        </article>
+
+        <article class="card card-wide" id="regionalSection" data-chart-card="regionalChart">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">Graph 5</p>
+              <h3>Regional Analysis</h3>
+            </div>
+            <div class="card-tools card-tools-stack">
+              <div class="segmented-control" id="regionMetricTabs"></div>
+              <button class="expand-button" type="button" data-expand-chart="regionalChart">Expand</button>
+            </div>
+          </div>
+          <div class="regional-layout">
+            <div class="chart-wrap chart-wrap-regional" id="regionalChartWrap">
+              <canvas id="regionalChart"></canvas>
+            </div>
+            <div class="heatmap-panel">
+              <div class="heatmap-legend">
+                <span>Low</span>
+                <div class="legend-bar"></div>
+                <span>High</span>
+              </div>
+              <div id="regionalHeatmap"></div>
+            </div>
+          </div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <div id="chartModal" class="chart-modal" hidden>
+    <div class="chart-modal-backdrop" data-close-modal="true"></div>
+    <div class="chart-modal-panel">
+      <div class="chart-modal-head">
+        <div>
+          <p class="eyebrow">Focused view</p>
+          <h3 id="chartModalTitle">Chart</h3>
+        </div>
+        <button id="closeChartModal" class="toolbar-button" type="button">Close</button>
+      </div>
+      <div class="chart-modal-body">
+        <canvas id="chartModalCanvas"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script src="./assets/vendor/chart.umd.js"></script>
+  <!-- DASHBOARD_PAYLOAD -->
+  <script src="./app.js"></script>
+</body>
+</html>
