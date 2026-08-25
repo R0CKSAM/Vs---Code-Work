@@ -27,6 +27,7 @@ $PrefetchScript = Join-Path $WorkspaceRoot "prefetch_daily_sources.ps1"
 $StateDir = Join-Path $WorkspaceRoot "output\state"
 $DailyStateDir = Join-Path $StateDir "daily_runs"
 $RecoveryStatePath = Join-Path $StateDir "recovery_backlog.json"
+$AsrunPriorityPath = Join-Path $StateDir "asrun_priority.json"
 $ValidationRoot = Join-Path $WorkspaceRoot "output\validation"
 $LogDir = Join-Path $WorkspaceRoot "output\logs"
 $TargetThroughDate = if ($ThroughDate) { $ThroughDate.Date } else { (Get-Date).Date.AddDays(-1) }
@@ -69,6 +70,16 @@ function Get-ValidationEvidence {
 
     if (-not (Test-Path -LiteralPath $ValidationRoot)) { return $null }
     $iso = $Date.ToString("yyyy-MM-dd")
+    $asrunPriorityDate = $false
+    if (Test-Path -LiteralPath $AsrunPriorityPath) {
+        try {
+            $priority = Get-Content -Raw -LiteralPath $AsrunPriorityPath | ConvertFrom-Json
+            $priorityStart = [datetime]::ParseExact([string]$priority.start_date, "yyyy-MM-dd", [Globalization.CultureInfo]::InvariantCulture).Date
+            $asrunPriorityDate = $Date.Date -ge $priorityStart -and $Date.Date -le $TargetThroughDate
+        } catch {
+            throw "ASRUN priority request is unreadable: $AsrunPriorityPath. $($_.Exception.Message)"
+        }
+    }
     $underscored = $Date.ToString("yyyy_MM_dd")
     # PowerShell unwraps Nullable[datetime] parameters to DateTime values.
     # Calling .Value therefore returns null on a supplied timestamp.
@@ -88,7 +99,8 @@ function Get-ValidationEvidence {
         } catch {
             continue
         }
-        if ($report.date -ne $iso -or $report.mode -ne "full") { continue }
+        $acceptedMode = $report.mode -eq "full" -or ($asrunPriorityDate -and $report.mode -eq "structural")
+        if ($report.date -ne $iso -or -not $acceptedMode) { continue }
         if ([int]($report.hard_failure_count) -ne 0) { continue }
         if ($report.overall_status -notin @("PASS", "REVIEW")) { continue }
 
@@ -98,14 +110,13 @@ function Get-ValidationEvidence {
         foreach ($source in @("fast", "stream")) {
             $sourceResult = $sourceResults | Where-Object { $_.source -eq $source } | Select-Object -First 1
             $reconciliation = $reconciliations | Where-Object { $_.source -eq $source } | Select-Object -First 1
-            if (
-                -not $sourceResult -or
-                $sourceResult.status -ne "PASS" -or
-                $sourceResult.selected.full_day -ne $true -or
+            $sourceInvalid = -not $sourceResult -or $sourceResult.status -ne "PASS" -or $sourceResult.selected.full_day -ne $true
+            $reconciliationInvalid = $report.mode -eq "full" -and (
                 -not $reconciliation -or
                 $reconciliation.status -ne "PASS" -or
                 [int64]($reconciliation.delta_rows) -ne 0
-            ) {
+            )
+            if ($sourceInvalid -or $reconciliationInvalid) {
                 $valid = $false
                 break
             }
@@ -314,6 +325,7 @@ try {
             MaxParallelDownloads = $MaxParallelDownloads
             Transfers = $DownloadTransfers
             Checkers = $DownloadCheckers
+            ForceRevalidate = $Force.IsPresent
         }
         $global:LASTEXITCODE = 0
         & $PrefetchScript @prefetchArguments
@@ -385,6 +397,10 @@ try {
     $state["backlog_days_remaining"] = $remaining
     $state["last_error"] = $null
     Save-RecoveryState -State $state -Status $(if ($remaining -gt 0) { "backlog_remaining" } else { "idle" })
+    if ($remaining -eq 0 -and (Test-Path -LiteralPath $AsrunPriorityPath)) {
+        Remove-Item -LiteralPath $AsrunPriorityPath -Force
+        Write-Host "[$(Get-Date -Format o)] ASRUN priority request cleared; normal ETL behavior restored."
+    }
     Write-Host "[$(Get-Date -Format o)] Recovery runner completed. Remaining backlog days: $remaining"
 } catch {
     $failure = $_.Exception.Message

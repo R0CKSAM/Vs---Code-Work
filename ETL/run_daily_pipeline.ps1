@@ -488,6 +488,16 @@ try {
     $env:VG_OVERVIEW_LAKE_ROOT = $DefaultOverviewLakeRoot
     $env:VG_OVERVIEW_SOURCES = $OverviewSources
     $pipeline = Join-Path $PSScriptRoot "src\orchestrator\run_pipeline.py"
+    $asrunPriorityPath = Join-Path $PSScriptRoot "output\state\asrun_priority.json"
+    $asrunPriority = $null
+    if (Test-Path -LiteralPath $asrunPriorityPath) {
+        try {
+            $asrunPriority = Get-Content -Raw -LiteralPath $asrunPriorityPath | ConvertFrom-Json
+            Write-Host "[$(Get-Date -Format o)] ASRUN priority mode enabled: lake + validation first; heavy marts and dashboards deferred."
+        } catch {
+            throw "ASRUN priority request is unreadable: $asrunPriorityPath. $($_.Exception.Message)"
+        }
+    }
     $watchArgs = @()
     $isIntermediateRecovery = $SkipDownload -and $SkipWatch -and $SkipOverview -and $SkipLakeArchive
     if ($SkipWatch) { $watchArgs += "--skip-watch" }
@@ -496,7 +506,23 @@ try {
         $watchArgs += @("--skip-audience", "--skip-master")
         Write-Host "[$(Get-Date -Format o)] Intermediate recovery date: daily marts remain enabled; top-level dashboard rendering is deferred."
     }
-    if (-not $RunDeviceDecode) { $watchArgs += "--skip-device-decode-profile" }
+    if ($asrunPriority) {
+        $watchArgs += @(
+            "--skip-watch",
+            "--skip-overview",
+            "--skip-deep-profile",
+            "--skip-device-snapshot",
+            "--skip-device-decode-profile",
+            "--skip-concurrency",
+            "--skip-latency",
+            "--skip-identity-mart",
+            "--skip-content-mart",
+            "--skip-audience",
+            "--skip-master"
+        )
+    } elseif (-not $RunDeviceDecode) {
+        $watchArgs += "--skip-device-decode-profile"
+    }
     if (-not $StrictPipeline) { $watchArgs += "--continue-on-error" }
     if ($StrictPipeline) {
         Write-Host "[$(Get-Date -Format o)] Strict pipeline mode enabled: recoverable step failures will fail the scheduled task."
@@ -533,7 +559,9 @@ try {
         $pipelineArgs += @("--stage-compression", $StageCompression)
     }
     if (-not $SingleSourceMode) {
-        if ($KeepProcessedInputs) {
+        if ($asrunPriority) {
+            Write-Host "[$(Get-Date -Format o)] ASRUN priority retention: keeping raw/stage until the normal post-priority cleanup run."
+        } elseif ($KeepProcessedInputs) {
             Write-Host "[$(Get-Date -Format o)] Retention: keeping raw and stage intermediates by request."
         } else {
             $pipelineArgs += "--cleanup-daily-intermediates"
@@ -560,7 +588,7 @@ try {
         "--content-memory", $ContentMemory
     )
     Write-Host "[$(Get-Date -Format o)] Performance: ETL1=$Etl1Workers workers; stages=$StageThreads threads/$StageMemory; profile=$DeepProfileThreads threads/$DeepProfileMemory; marts=$ConcurrencyThreads threads/$ConcurrencyMemory; spill=$DefaultDeepProfileTempDir (max $DeepProfileMaxTempSize)."
-    if (-not $SkipUaProfile) {
+    if (-not $SkipUaProfile -and -not $asrunPriority) {
         $pipelineArgs += @(
             "--run-ua-profile",
             "--ua-api-limit", $UaApiLimit.ToString()
@@ -577,6 +605,45 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "run_pipeline.py failed with exit code $LASTEXITCODE" }
 
     Write-Host "[$(Get-Date -Format o)] Pipeline completed."
+
+    $isFinalAsrunPriorityDate = $asrunPriority -and -not $SkipWatch -and -not $SkipOverview
+    if ($isFinalAsrunPriorityDate) {
+        $priorityStart = [string]$asrunPriority.start_date
+        $priorityEnd = $TargetDate.ToString("yyyy-MM-dd")
+        $priorityChannel = if ($asrunPriority.channel) {
+            [string]$asrunPriority.channel
+        } else {
+            "Unassigned - stakeholder mapping required"
+        }
+        $identityBuilder = Join-Path $PSScriptRoot "src\tools\build_identity_minute.py"
+        $identityOut = Join-Path $PSScriptRoot "output\watch_hours\concurrency"
+        foreach ($identitySource in @("fast", "stream")) {
+            $identityArgs = @(
+                $identityBuilder,
+                "--lake", (Join-Path $DefaultLocalRoot "lake"),
+                "--out-dir", $identityOut,
+                "--source", $identitySource,
+                "--start", $priorityStart,
+                "--end", $priorityEnd,
+                "--threads", $ConcurrencyThreads.ToString(),
+                "--memory-limit", $ConcurrencyMemory,
+                "--temp-dir", $DefaultDeepProfileTempDir
+            )
+            Write-Host "[$(Get-Date -Format o)] ASRUN priority: building $identitySource identity-minute for $priorityStart through $priorityEnd."
+            & $DefaultVenvPython @identityArgs
+            if ($LASTEXITCODE -ne 0) {
+                throw "ASRUN priority identity-minute build failed for $identitySource with exit code $LASTEXITCODE."
+            }
+        }
+
+        $asrunRunner = Join-Path $PSScriptRoot "asrun_demo\run_demo.ps1"
+        Write-Host "[$(Get-Date -Format o)] ASRUN priority: publishing dashboard."
+        & $asrunRunner -Channel $priorityChannel
+        if ($LASTEXITCODE -ne 0) {
+            throw "ASRUN priority dashboard generation failed with exit code $LASTEXITCODE."
+        }
+        Write-Host "[$(Get-Date -Format o)] ASRUN priority completed; recovery will restore normal ETL behavior after committing the final checkpoint."
+    }
 
     if (-not $SingleSourceMode -and -not $SkipLakeArchive) {
         $HotLakeRoot = Join-Path $DefaultLocalRoot "lake"

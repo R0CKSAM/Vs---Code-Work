@@ -963,7 +963,7 @@ def run_streaming(cfg: dict):
     print(f"  Output folder   : {output_dir}")
     print(f"{'='*60}\n")
 
-    status = "error" if (batch_errs or total_errs) else "ok"
+    status = "error" if batch_errs else ("warning" if total_errs else "ok")
     return {"status": status, "output_dir": str(output_dir), "rows": total_rows, "errors": total_errs + batch_errs}
 
 
@@ -1120,7 +1120,7 @@ def run(cfg: dict):
             save_prefs(cfg["cols_to_keep"], cfg["cols_to_drop"])
 
     print()
-    status = "error" if (batch_errs or total_errs) else "ok"
+    status = "error" if batch_errs else ("warning" if total_errs else "ok")
     return {"status": status, "output_dir": str(output_dir), "rows": total_rows, "errors": total_errs + batch_errs}
 
 
@@ -1259,7 +1259,7 @@ def run_master(cfg: dict):
         print(f"  {name:<20} â†’ {res.get('status', 'unknown'):<8} rows={res.get('rows', 0):,} errors={res.get('errors', 0):,}")
     print(f"{'='*60}\n")
 
-    failed = [(name, res) for name, res in results if res.get("status") not in {"ok", "skipped"}]
+    failed = [(name, res) for name, res in results if res.get("status") not in {"ok", "skipped", "warning"}]
     if failed:
         names = ", ".join(name for name, _ in failed)
         raise SystemExit(f"001.py failed for {len(failed)} folder(s): {names}")
@@ -1398,7 +1398,7 @@ if __name__ == "__main__":
         else:
             print("Running 001.py in non-interactive mode: SINGLE")
             result = run(cfg)
-            if result.get("status") not in {"ok", "skipped"}:
+            if result.get("status") not in {"ok", "skipped", "warning"}:
                 raise SystemExit("001.py failed in single-folder mode.")
     else:
         mode = choose_mode()

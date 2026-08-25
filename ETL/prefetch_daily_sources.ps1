@@ -20,7 +20,8 @@ param(
     [switch]$WaitForRemoteStable,
     [ValidateRange(1, 20)][int]$StableChecks = 2,
     [ValidateRange(1, 120)][int]$StableWaitMinutes = 10,
-    [switch]$SkipVerifyAfterSync
+    [switch]$SkipVerifyAfterSync,
+    [switch]$ForceRevalidate
 )
 
 $ErrorActionPreference = "Stop"
@@ -43,7 +44,54 @@ if (-not (Test-Path -LiteralPath $resolvedRclone)) {
 if (-not $Dates.Count) { throw "At least one download date is required." }
 New-Item -ItemType Directory -Path $resolvedRawRoot, $logRoot, $resultRoot -Force | Out-Null
 
+function Test-ReusableDownloadCheckpoint {
+    param(
+        [Parameter(Mandatory = $true)][string]$ResultPath,
+        [Parameter(Mandatory = $true)][string]$Source,
+        [Parameter(Mandatory = $true)][string]$DateIso,
+        [Parameter(Mandatory = $true)][string]$LocalPath
+    )
+
+    if ($ForceRevalidate -or -not (Test-Path -LiteralPath $ResultPath) -or -not (Test-Path -LiteralPath $LocalPath)) {
+        return $false
+    }
+    try {
+        $checkpoint = Get-Content -Raw -LiteralPath $ResultPath | ConvertFrom-Json
+        if (
+            $checkpoint.status -ne "complete" -or
+            $checkpoint.verified -ne $true -or
+            $checkpoint.source -ne $Source -or
+            $checkpoint.date -ne $DateIso -or
+            [int64]$checkpoint.local_count -ne [int64]$checkpoint.remote_count -or
+            [int64]$checkpoint.local_bytes -ne [int64]$checkpoint.remote_bytes -or
+            [int64]$checkpoint.local_count -le 0
+        ) {
+            return $false
+        }
+
+        $savedDirectoryStamp = [string]$checkpoint.local_directory_last_write_utc
+        if (-not $savedDirectoryStamp) {
+            # Legacy checkpoints need one local-only scan. This avoids contacting
+            # the remote while still proving that raw data matches saved evidence.
+            $jsonLines = & $resolvedRclone size $LocalPath --json
+            if ($LASTEXITCODE -ne 0) { return $false }
+            $localStats = (($jsonLines | Out-String).Trim() | ConvertFrom-Json)
+            return (
+                [int64]$localStats.count -eq [int64]$checkpoint.local_count -and
+                [int64]$localStats.bytes -eq [int64]$checkpoint.local_bytes
+            )
+        }
+
+        $currentDirectoryStamp = (Get-Item -LiteralPath $LocalPath).LastWriteTimeUtc.ToString("o")
+        return $currentDirectoryStamp -eq $savedDirectoryStamp
+    } catch {
+        Write-Warning "Ignoring unusable download checkpoint ${Source}/${DateIso}: $($_.Exception.Message)"
+        return $false
+    }
+}
+
 $tasks = New-Object System.Collections.Generic.List[object]
+$reused = New-Object System.Collections.Generic.List[string]
 foreach ($dateValue in @($Dates | Sort-Object -Unique)) {
     if ($dateValue.Date -ge (Get-Date).Date) { throw "Download date must be before today: $($dateValue.ToString('yyyy-MM-dd'))" }
     $month = $dateValue.ToString("MM")
@@ -54,17 +102,24 @@ foreach ($dateValue in @($Dates | Sort-Object -Unique)) {
         [pscustomobject]@{ Source = "fast"; RemoteRoot = $FastRemoteRoot; LocalName = $FastLocalName }
     )) {
         $stamp = Get-Date -Format "yyyyMMdd_HHmmss_fff"
+        $localPath = Join-Path (Join-Path $resolvedRawRoot $sourceConfig.LocalName) (Join-Path $month $day)
+        $resultPath = Join-Path $resultRoot ("{0}_{1}.json" -f $iso, $sourceConfig.Source)
+        if (Test-ReusableDownloadCheckpoint -ResultPath $resultPath -Source $sourceConfig.Source -DateIso $iso -LocalPath $localPath) {
+            $reused.Add("$($sourceConfig.Source)/$iso")
+            Write-Host "[$(Get-Date -Format o)] Reusing verified download checkpoint for $($sourceConfig.Source)/$iso."
+            continue
+        }
         $tasks.Add([pscustomobject]@{
             Name = "$($sourceConfig.Source)_$($dateValue.ToString('yyyyMMdd'))"
             Arguments = @{
                 Source = $sourceConfig.Source
                 Date = $dateValue.Date
                 RemotePath = "$($sourceConfig.RemoteRoot.TrimEnd('/'))/$month/$day"
-                LocalPath = Join-Path (Join-Path $resolvedRawRoot $sourceConfig.LocalName) (Join-Path $month $day)
+                LocalPath = $localPath
                 RcloneExe = $resolvedRclone
                 RcloneConfig = $resolvedConfig
                 LogPath = Join-Path $logRoot ("download_{0}_{1}_{2}.log" -f $iso, $sourceConfig.Source, $stamp)
-                ResultPath = Join-Path $resultRoot ("{0}_{1}.json" -f $iso, $sourceConfig.Source)
+                ResultPath = $resultPath
                 Transfers = $Transfers
                 Checkers = $Checkers
                 MultiThreadStreams = $MultiThreadStreams
@@ -80,8 +135,12 @@ foreach ($dateValue in @($Dates | Sort-Object -Unique)) {
     }
 }
 
-Write-Host "[$(Get-Date -Format o)] Prefetch queue: $($tasks.Count) source/date downloads; max parallel=$MaxParallelDownloads; each transfers=$Transfers, checkers=$Checkers."
+Write-Host "[$(Get-Date -Format o)] Prefetch queue: $($tasks.Count) source/date downloads; reused=$($reused.Count); max parallel=$MaxParallelDownloads; each transfers=$Transfers, checkers=$Checkers."
 $failures = New-Object System.Collections.Generic.List[string]
+if (-not $tasks.Count) {
+    Write-Host "[$(Get-Date -Format o)] All source/date downloads reused verified checkpoints; remote validation skipped."
+    return
+}
 for ($offset = 0; $offset -lt $tasks.Count; $offset += $MaxParallelDownloads) {
     $last = [Math]::Min($tasks.Count - 1, $offset + $MaxParallelDownloads - 1)
     $batch = @($tasks[$offset..$last])

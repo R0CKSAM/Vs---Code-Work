@@ -51,6 +51,7 @@ ETL/extras/test_tmp/
 ETL/Twitter/seen_posts.json
 
 # Generated dashboard HTML can exceed GitHub's file-size limit.
+ETL/class/*.html
 ETL/output/**/*.html
 ETL/output/watch_hours/*.html
 ETL/output/watch_hours/**/*.html

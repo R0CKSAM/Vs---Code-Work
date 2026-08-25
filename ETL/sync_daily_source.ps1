@@ -178,7 +178,7 @@ try {
 
     $finishedAt = Get-Date
     Write-JsonAtomic -Path $ResultPath -Payload @{
-        schema_version = 1
+        schema_version = 2
         status = "complete"
         source = $Source
         date = $targetIso
@@ -188,6 +188,7 @@ try {
         remote_bytes = $verifiedRemote.Bytes
         local_count = if ($verifiedLocal) { $verifiedLocal.Count } else { $null }
         local_bytes = if ($verifiedLocal) { $verifiedLocal.Bytes } else { $null }
+        local_directory_last_write_utc = (Get-Item -LiteralPath $LocalPath).LastWriteTimeUtc.ToString("o")
         verified = $verified
         transfers = $Transfers
         checkers = $Checkers
