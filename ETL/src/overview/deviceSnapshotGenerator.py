@@ -68,8 +68,20 @@ log = logging.getLogger("device_snapshot")
 def get_conn() -> duckdb.DuckDBPyConnection:
     mem_avail = psutil.virtual_memory().available / (1024 ** 3)
     cpus = os.cpu_count() or 4
-    mem_gb = max(4, min(int(mem_avail * 0.70), 48))
-    threads = max(1, min(cpus // 4, 4))
+    configured_memory = os.getenv("VG_DEVICE_SNAPSHOT_MEMORY_GB", "").strip()
+    configured_threads = os.getenv("VG_DEVICE_SNAPSHOT_THREADS", "").strip()
+    default_memory = max(4, min(int(mem_avail * 0.70), 48))
+    default_threads = max(1, min(cpus // 4, 4))
+    try:
+        mem_gb = max(4, min(int(configured_memory), int(mem_avail * 0.85))) if configured_memory else default_memory
+    except ValueError:
+        log.warning("Ignoring invalid VG_DEVICE_SNAPSHOT_MEMORY_GB=%r", configured_memory)
+        mem_gb = default_memory
+    try:
+        threads = max(1, min(int(configured_threads), cpus)) if configured_threads else default_threads
+    except ValueError:
+        log.warning("Ignoring invalid VG_DEVICE_SNAPSHOT_THREADS=%r", configured_threads)
+        threads = default_threads
     con = duckdb.connect()
     con.execute(f"SET threads={threads}")
     con.execute(f"SET memory_limit='{mem_gb}GB'")

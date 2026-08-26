@@ -39,21 +39,21 @@
     [switch]$SingleSourceMode,
     # Aggressive workstation defaults: tuned for the 6-core / 12-thread, 32 GB ETL host.
     # Every value remains overridable for a constrained or concurrent run.
-    [int]$Etl1Workers = 11,
-    [int]$StageThreads = 11,
+    [int]$Etl1Workers = 12,
+    [int]$StageThreads = 12,
     [string]$StageMemory = "24GB",
     [string]$StageMaxTempSize = "200GB",
-    [int]$DeepProfileThreads = 10,
+    [int]$DeepProfileThreads = 12,
     [string]$DeepProfileMemory = "22GB",
     [string]$DeepProfileMaxTempSize = "200GB",
     [string]$DeepProfileTempDir = "",
-    [int]$ConcurrencyThreads = 10,
+    [int]$ConcurrencyThreads = 12,
     [string]$ConcurrencyMemory = "22GB",
-    [int]$LatencyThreads = 10,
+    [int]$LatencyThreads = 12,
     [string]$LatencyMemory = "22GB",
-    [int]$IdentityThreads = 10,
+    [int]$IdentityThreads = 12,
     [string]$IdentityMemory = "22GB",
-    [int]$ContentThreads = 10,
+    [int]$ContentThreads = 12,
     [string]$ContentMemory = "22GB",
     [switch]$KeepProcessedInputs,
     [string]$ArchiveLakeRoot = "Z:\Veto Logs Backup\DO NOT DELETE",
@@ -183,6 +183,8 @@ $DefaultDeepProfileTempDir = if ($DeepProfileTempDir) {
     Resolve-DefaultDuckDbTempDir -Candidates $DefaultTempCandidates
 }
 $env:VG_DUCKDB_TEMP_DIR = $DefaultDeepProfileTempDir
+$env:VG_DEVICE_SNAPSHOT_THREADS = $DeepProfileThreads.ToString()
+$env:VG_DEVICE_SNAPSHOT_MEMORY_GB = ($DeepProfileMemory -replace '[^0-9]', '')
 try {
     New-Item -ItemType Directory -Path $DefaultDeepProfileTempDir -Force | Out-Null
     $TempProbe = Join-Path $DefaultDeepProfileTempDir ".etl_temp_probe.tmp"
@@ -569,6 +571,13 @@ try {
         }
     }
     $pipelineArgs += @(
+        "--lake-repair-lookback-days", "0",
+        "--deep-profile-mode", "incremental",
+        "--deep-profile-window-days", "1",
+        "--ua-profile-window-days", "1",
+        "--device-decode-window-days", "1",
+        "--concurrency-window-days", "1",
+        "--latency-window-days", "1",
         "--stage-threads", $StageThreads.ToString(),
         "--stage-memory", $StageMemory,
         "--stage-max-temp-size", $StageMaxTempSize,

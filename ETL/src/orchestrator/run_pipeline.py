@@ -1072,8 +1072,8 @@ def main() -> None:
     parser.add_argument(
         "--lake-repair-lookback-days",
         type=int,
-        default=14,
-        help="When running a daily ETL, recheck this many recent days in lake and downstream incremental marts.",
+        default=0,
+        help="When running a daily ETL, additionally recheck this many prior lake days; default is target-day only.",
     )
     cleanup_group = parser.add_mutually_exclusive_group()
     cleanup_group.add_argument(
@@ -2068,7 +2068,7 @@ def main() -> None:
                     ua_start = args.etl1_daily_date
                     ua_end = args.etl1_daily_date
             else:
-                ua_start, ua_end = _build_profile_range(lake_root, args.ua_profile_window_days or 7)
+                ua_start, ua_end = _build_profile_range(lake_root, args.ua_profile_window_days or 1)
 
         ua_cmd = [
             python,
@@ -2082,7 +2082,7 @@ def main() -> None:
             "--source",
             ua_source,
             "--threads",
-            str(max(1, min(args.deep_profile_threads, 4))),
+            str(max(1, int(args.deep_profile_threads))),
             "--memory-limit",
             "12GB",
             "--temp-dir",
@@ -2210,7 +2210,7 @@ def main() -> None:
             else:
                 device_decode_start, device_decode_end = _build_profile_range(
                     lake_root,
-                    args.device_decode_window_days or 7,
+                    args.device_decode_window_days or 1,
                 )
 
         device_decode_cmd = [
@@ -2584,10 +2584,7 @@ def main() -> None:
                 "--out-dir",
                 str(output_root / "watch_hours" / "concurrency"),
                 "--threads",
-                # CMCD aggregation is the memory-heavy FAST concurrency step; keep
-                # it independent from the wider concurrency thread count so a
-                # large FAST day cannot skip the dashboard refresh.
-                str(max(1, min(int(args.concurrency_threads), 2))),
+                str(max(1, int(args.concurrency_threads))),
                 "--memory-limit",
                 args.concurrency_memory,
             ]
@@ -2635,8 +2632,10 @@ def main() -> None:
         latency_end = args.latency_end
         if not (latency_start and latency_end) and args.etl1_daily_date:
             target_day = date.fromisoformat(args.etl1_daily_date)
-            lookback_days = max(1, int(args.lake_repair_lookback_days))
-            latency_start = (target_day - timedelta(days=lookback_days - 1)).isoformat()
+            # Latency parts are incremental. Re-scanning the broad lake-repair
+            # window here forces every daily run to enumerate archive storage;
+            # the target IST day and its next-day spillover are sufficient.
+            latency_start = target_day.isoformat()
             latency_end = (target_day + timedelta(days=1)).isoformat()
 
         latency_sources = ["fast", "stream"] if args.latency_source == "both" else [args.latency_source]
@@ -2644,18 +2643,6 @@ def main() -> None:
             source_start = latency_start
             source_end = latency_end
             latency_step_threads = max(1, int(args.latency_threads))
-            if latency_source == "fast":
-                # FAST days are larger than STREAM. A well-provisioned daily run
-                # can safely use four workers, while recovery runs with a small
-                # memory ceiling retain the conservative two-worker clamp.
-                latency_memory_gb = _parse_memory_limit_gb(args.latency_memory)
-                if latency_memory_gb and latency_memory_gb >= 20:
-                    fast_thread_cap = 6
-                elif latency_memory_gb and latency_memory_gb >= 12:
-                    fast_thread_cap = 4
-                else:
-                    fast_thread_cap = 2
-                latency_step_threads = min(latency_step_threads, fast_thread_cap)
             latency_cmd = [
                 python,
                 str(latency_incremental_script),
