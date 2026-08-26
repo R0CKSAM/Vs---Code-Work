@@ -247,8 +247,11 @@ def main() -> None:
         return
 
     con = duckdb.connect()
-    con.execute("SET threads=2")
-    con.execute("SET memory_limit='8GB'")
+    threads = os.getenv("VG_DUCKDB_THREADS", "10")
+    memory_limit = os.getenv("VG_DUCKDB_MEMORY_LIMIT", "22GB")
+    safe_memory_limit = str(memory_limit).replace("'", "''")
+    con.execute(f"SET threads={int(threads)}")
+    con.execute(f"SET memory_limit='{safe_memory_limit}'")
     con.execute("SET preserve_insertion_order=false")
     # Targeted repairs can still spill on a high-volume completed day. Honour the
     # pipeline scratch settings so a constrained local ETL drive is not the limit.

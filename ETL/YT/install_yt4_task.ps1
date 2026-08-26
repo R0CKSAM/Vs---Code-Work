@@ -1,6 +1,9 @@
 [CmdletBinding()]
 param(
-    [string]$TaskName = "Veto YouTube YT4 Collector"
+    [string]$TaskName = "Veto YouTube YT4 Collector",
+    [string]$OutDir = "Z:\Veto Logs Backup\DO NOT DELETE\source=Youtube",
+    [int]$IntervalSeconds = 60,
+    [int]$RollMinutes = 15
 )
 
 $ErrorActionPreference = "Stop"
@@ -30,6 +33,15 @@ if (-not (Select-String -LiteralPath $envFile -Pattern '^\s*(YOUTUBE_API_KEY|YOU
 if (-not (Test-Path -LiteralPath $channels)) {
     throw "Missing $channels"
 }
+if ($IntervalSeconds -lt 1) {
+    throw "IntervalSeconds must be at least 1."
+}
+if ($RollMinutes -lt 1) {
+    throw "RollMinutes must be at least 1."
+}
+if (-not (Test-Path -LiteralPath $OutDir)) {
+    New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
+}
 
 if (-not (Test-Path -LiteralPath $python)) {
     $launcher = Get-Command py.exe -ErrorAction SilentlyContinue
@@ -46,7 +58,7 @@ if ($LASTEXITCODE -ne 0) {
     throw "Dependency installation failed with exit code $LASTEXITCODE."
 }
 
-$arguments = '"{0}" --url-file "{1}" --roll-minutes 15' -f $script, $channels
+$arguments = '"{0}" --interval-seconds {1} --out-dir "{2}" --url-file "{3}" --roll-minutes {4}' -f $script, $IntervalSeconds, $OutDir, $channels, $RollMinutes
 $action = New-ScheduledTaskAction `
     -Execute $pythonw `
     -Argument $arguments `
@@ -80,4 +92,5 @@ Start-ScheduledTask -TaskName $TaskName
 Start-Sleep -Seconds 3
 Get-ScheduledTask -TaskName $TaskName | Select-Object TaskName, State
 Write-Host "Data: $(Join-Path $root 'data\source=Youtube')"
+Write-Host "Configured data root: $OutDir"
 Write-Host "Log:  $(Join-Path $root 'logs\yt4.log')"

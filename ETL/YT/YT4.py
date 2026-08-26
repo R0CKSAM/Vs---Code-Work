@@ -1232,6 +1232,19 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("out_dir", nargs="?", default=DEFAULT_OUTPUT_DIR)
     parser.add_argument("scan_limit", nargs="?", type=scan_limit_value, default=10)
     parser.add_argument(
+        "--interval-seconds",
+        dest="interval_sec_override",
+        type=positive_int,
+        default=None,
+        help="poll interval in seconds; overrides the positional interval_sec argument",
+    )
+    parser.add_argument(
+        "--out-dir",
+        dest="out_dir_override",
+        default=None,
+        help="output root; overrides the positional out_dir argument",
+    )
+    parser.add_argument(
         "--api-key",
         default=None,
         help="YouTube Data API v3 key (or set YOUTUBE_API_KEY)",
@@ -1301,8 +1314,8 @@ def main() -> None:
         track_many(
             urls,
             api_key,
-            args.interval_sec,
-            args.out_dir,
+            args.interval_sec_override or args.interval_sec,
+            args.out_dir_override or args.out_dir,
             args.scan_limit,
             args.workers,
             args.discovery_every,

@@ -102,6 +102,7 @@ ETL/output/validation/
 
 # YT4 deployment bundles are reproducible from the tracked source files.
 ETL/YT/*_remote_bundle.zip
+ETL/YT/state/
 
 # DuckDB cache/database files
 *.duckdb

@@ -27,6 +27,7 @@ $PrefetchScript = Join-Path $WorkspaceRoot "prefetch_daily_sources.ps1"
 $StateDir = Join-Path $WorkspaceRoot "output\state"
 $DailyStateDir = Join-Path $StateDir "daily_runs"
 $RecoveryStatePath = Join-Path $StateDir "recovery_backlog.json"
+$PipelineLastRunPath = Join-Path $StateDir "pipeline_last_run.json"
 $AsrunPriorityPath = Join-Path $StateDir "asrun_priority.json"
 $ValidationRoot = Join-Path $WorkspaceRoot "output\validation"
 $LogDir = Join-Path $WorkspaceRoot "output\logs"
@@ -58,6 +59,20 @@ function Read-RecoveryState {
         }
     } catch {
         throw "Recovery state is unreadable: $RecoveryStatePath. $($_.Exception.Message)"
+    }
+    return $state
+}
+
+function Read-PipelineLastRun {
+    $state = @{}
+    if (-not (Test-Path -LiteralPath $PipelineLastRunPath)) { return $state }
+    try {
+        $payload = Get-Content -Raw -LiteralPath $PipelineLastRunPath | ConvertFrom-Json
+        foreach ($property in $payload.PSObject.Properties) {
+            $state[$property.Name] = $property.Value
+        }
+    } catch {
+        throw "Pipeline last-run state is unreadable: $PipelineLastRunPath. $($_.Exception.Message)"
     }
     return $state
 }
@@ -236,6 +251,7 @@ try {
     Write-Host "[$(Get-Date -Format o)] Recovery runner started. Through date: $($TargetThroughDate.ToString('yyyy-MM-dd'))"
 
     $state = Read-RecoveryState
+    $pipelineLastRun = Read-PipelineLastRun
     $lastSuccessful = $null
     if ($state["last_successful_date"]) {
         $parsed = [datetime]::MinValue
@@ -247,6 +263,22 @@ try {
             [ref]$parsed
         )) {
             $lastSuccessful = $parsed.Date
+        }
+    }
+
+    if ($pipelineLastRun["status"] -eq "complete" -and $pipelineLastRun["target_date"]) {
+        try {
+            $pipelineDate = [datetime]::ParseExact(
+                [string]$pipelineLastRun["target_date"],
+                "yyyy-MM-dd",
+                [Globalization.CultureInfo]::InvariantCulture
+            ).Date
+            if (-not $lastSuccessful -or $pipelineDate -gt $lastSuccessful) {
+                $lastSuccessful = $pipelineDate
+                Write-Host "[$(Get-Date -Format o)] Bootstrapped from pipeline_last_run.json: $($pipelineDate.ToString('yyyy-MM-dd'))"
+            }
+        } catch {
+            Write-Warning "Ignoring unreadable pipeline last-run target date: $PipelineLastRunPath"
         }
     }
 

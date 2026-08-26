@@ -1793,6 +1793,84 @@ def main() -> None:
     if needs_lake and not lake_root.exists():
         raise SystemExit(f"Lake folder not found after ETL stage: {lake_root}. Check ETL logs in {log_dir}.")
 
+    overview_refreshed_early = False
+
+    def overview_report_command() -> list[str]:
+        if args.etl1_daily_date and not (args.overview_year or args.overview_month):
+            target_date = date.fromisoformat(args.etl1_daily_date)
+            repair_candidates = _daily_profile_dates(
+                lake_root,
+                target_date,
+                archive_lake_roots,
+            ) or [target_date]
+            completed_cutoff = date.today() - timedelta(days=1)
+            repair_dates = [day for day in repair_candidates if day <= completed_cutoff]
+            if not repair_dates and target_date <= completed_cutoff:
+                repair_dates = [target_date]
+            repair_date_text = ",".join(day.isoformat() for day in sorted(repair_dates))
+            return [
+                python,
+                str(overview_repair_script),
+                "--lake-root",
+                str(overview_lake_root),
+                "--out-dir",
+                str(overview_data_dir),
+                "--sources",
+                args.overview_sources or "fast,stream",
+                "--dates",
+                repair_date_text,
+            ]
+        return [
+            python,
+            str(overview_generator_script),
+            str(overview_lake_root),
+            "--out-dir",
+            str(overview_data_dir),
+            "--year",
+            args.overview_year or "",
+            "--month",
+            args.overview_month or "",
+            "--yes",
+            "--auto",
+        ]
+
+    def overview_dashboard_command() -> list[str]:
+        cmd = [
+            python,
+            str(overview_dashboard_dir / "generate_dashboard.py"),
+            "--data-dir",
+            str(overview_data_dir),
+            str(overview_data_dir / "overview_report.xlsx"),
+            str(overview_html),
+        ]
+        if args.dry_run:
+            cmd.append("--dry-run")
+        return cmd
+
+    if not args.skip_overview:
+        overview_report_ok = run(
+            overview_report_command(),
+            cwd=etl_root,
+            env=env,
+            step_name="overview_report_xlsx_quick_first",
+            log_dir=log_dir,
+            allow_failure=args.continue_on_error,
+            retry_on_memory=True,
+        )
+        if overview_report_ok:
+            overview_refreshed_early = run(
+                overview_dashboard_command(),
+                cwd=overview_dashboard_dir,
+                env=env,
+                step_name="overview_dashboard_html_quick_first",
+                log_dir=log_dir,
+                allow_failure=args.continue_on_error,
+            )
+        else:
+            reason = "overview_report_xlsx_quick_first failed; skipped quick-first Overview HTML refresh"
+            print(f"\n[skip] overview_dashboard_html_quick_first: {reason}")
+            record_skip("overview_dashboard_html_quick_first", reason)
+
     if not args.skip_deep_profile:
         daily_profile_dates: list[date] = []
         if args.etl1_daily_date:
@@ -1818,9 +1896,10 @@ def main() -> None:
             if args.deep_profile_mode == "incremental":
                 raise SystemExit(f"Base profile is not ready for incremental merge: {profile_dir}")
             use_incremental_profile = False
-        if use_incremental_profile and not _profile_covers_lake_history(
-            profile_dir,
-            [lake_root, *archive_lake_roots],
+        if (
+            use_incremental_profile
+            and not args.etl1_daily_date
+            and not _profile_covers_lake_history(profile_dir, [lake_root, *archive_lake_roots])
         ):
             if args.deep_profile_mode == "incremental":
                 raise SystemExit(
@@ -2166,46 +2245,11 @@ def main() -> None:
     else:
         print("\n[skip] UA model-code device decode profile step skipped.")
 
-    def overview_report_command() -> list[str]:
-        if args.etl1_daily_date and not (args.overview_year or args.overview_month):
-            target_date = date.fromisoformat(args.etl1_daily_date)
-            repair_candidates = _daily_profile_dates(
-                lake_root,
-                target_date,
-                archive_lake_roots,
-            ) or [target_date]
-            completed_cutoff = date.today() - timedelta(days=1)
-            repair_dates = [day for day in repair_candidates if day <= completed_cutoff]
-            if not repair_dates and target_date <= completed_cutoff:
-                repair_dates = [target_date]
-            repair_date_text = ",".join(day.isoformat() for day in sorted(repair_dates))
-            return [
-                python,
-                str(overview_repair_script),
-                "--lake-root",
-                str(overview_lake_root),
-                "--out-dir",
-                str(overview_data_dir),
-                "--sources",
-                args.overview_sources or "fast,stream",
-                "--dates",
-                repair_date_text,
-            ]
-        return [
-            python,
-            str(overview_generator_script),
-            str(overview_lake_root),
-            "--out-dir",
-            str(overview_data_dir),
-            "--year",
-            args.overview_year or "",
-            "--month",
-            args.overview_month or "",
-            "--yes",
-            "--auto",
-        ]
     if not args.skip_overview:
-        print("\n[defer] overview refresh will run once after latency and identity marts.")
+        if overview_refreshed_early:
+            print("\n[skip] overview step skipped after quick-first refresh.")
+        else:
+            print("\n[defer] overview refresh will run once after latency and identity marts.")
     else:
         print("\n[skip] overview step skipped.")
 
@@ -2706,7 +2750,7 @@ def main() -> None:
     else:
         print("\n[skip] identity mart skipped.")
 
-    if not args.skip_overview:
+    if not args.skip_overview and not overview_refreshed_early:
         overview_report_after_ok = run(
             overview_report_command(),
             cwd=etl_root,
@@ -2716,19 +2760,9 @@ def main() -> None:
             allow_failure=args.continue_on_error,
             retry_on_memory=True,
         )
-        overview_after_identity_cmd = [
-            python,
-            str(overview_dashboard_dir / "generate_dashboard.py"),
-            "--data-dir",
-            str(overview_data_dir),
-            str(overview_data_dir / "overview_report.xlsx"),
-            str(overview_html),
-        ]
-        if args.dry_run:
-            overview_after_identity_cmd.append("--dry-run")
         if overview_report_after_ok:
             run(
-                overview_after_identity_cmd,
+                overview_dashboard_command(),
                 cwd=overview_dashboard_dir,
                 env=env,
                 step_name="overview_dashboard_html_after_identity",

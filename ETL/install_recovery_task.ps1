@@ -1,7 +1,7 @@
 [CmdletBinding(PositionalBinding = $false)]
 param(
-    [string]$TaskName = "Veto ETL Daily 7AM IST",
-    [datetime]$DailyAt = "07:00",
+    [string]$TaskName = "Veto ETL Daily 6AM IST",
+    [datetime]$DailyAt = "06:00",
     [string]$UserId = "$env:USERDOMAIN\$env:USERNAME",
     [ValidateRange(1, 100)]
     [int]$RestartCount = 20,

@@ -19,8 +19,11 @@ ETL_ROOT = Path(__file__).resolve().parents[2]
 PROFILE_ROOT = ETL_ROOT / "src" / "profile"
 if str(PROFILE_ROOT) not in sys.path:
     sys.path.insert(0, str(PROFILE_ROOT))
+if str(ETL_ROOT) not in sys.path:
+    sys.path.insert(0, str(ETL_ROOT))
 
 from vglive_core import DEFAULT_LAKE_FOLDER, HOST_MAP, PATH_MAP, channel_candidate_sql  # noqa: E402
+from src.common.lake_partitions import resolve_lake_roots, split_path_list  # noqa: E402
 
 
 DEFAULT_OUT_DIR = ETL_ROOT / "output" / "content"
@@ -107,34 +110,46 @@ def connect(args: argparse.Namespace) -> duckdb.DuckDBPyConnection:
     return con
 
 
-def discover_partitions(lake: Path, source: str | None, start: str | None, end: str | None) -> list[Partition]:
+def discover_partitions(
+    lake_roots: list[Path],
+    source: str | None,
+    start: str | None,
+    end: str | None,
+) -> list[Partition]:
     start_date = parse_date(start)
     end_date = parse_date(end)
     if start_date and end_date and start_date > end_date:
         raise SystemExit("--start cannot be after --end")
 
     partitions: list[Partition] = []
-    for source_dir in sorted(lake.glob("source=*")):
-        if not source_dir.is_dir():
-            continue
-        source_name = source_dir.name.split("=", 1)[-1].lower()
-        if source and source.lower() != "all" and source_name != source.lower():
-            continue
-        for day_dir in sorted(source_dir.rglob("day=*")):
-            try:
-                year = int(day_dir.parent.parent.name.split("=", 1)[-1])
-                month = int(day_dir.parent.name.split("=", 1)[-1])
-                day = int(day_dir.name.split("=", 1)[-1])
-            except (IndexError, ValueError):
+    seen: set[tuple[str, str]] = set()
+    for lake in lake_roots:
+        for source_dir in sorted(lake.glob("source=*")):
+            if not source_dir.is_dir():
                 continue
-            date_value = date(year, month, day)
-            if start_date and date_value < start_date:
+            source_name = source_dir.name.split("=", 1)[-1].lower()
+            if source and source.lower() != "all" and source_name != source.lower():
                 continue
-            if end_date and date_value > end_date:
-                continue
-            files = tuple(sorted(day_dir.glob("*.parquet")))
-            if files:
-                partitions.append(Partition(source_name, year, month, day, day_dir, files))
+            for day_dir in sorted(source_dir.rglob("day=*")):
+                try:
+                    year = int(day_dir.parent.parent.name.split("=", 1)[-1])
+                    month = int(day_dir.parent.name.split("=", 1)[-1])
+                    day = int(day_dir.name.split("=", 1)[-1])
+                except (IndexError, ValueError):
+                    continue
+                date_value = date(year, month, day)
+                date_text = f"{year:04d}-{month:02d}-{day:02d}"
+                key = (source_name, date_text)
+                if key in seen:
+                    continue
+                if start_date and date_value < start_date:
+                    continue
+                if end_date and date_value > end_date:
+                    continue
+                files = tuple(sorted(day_dir.glob("*.parquet")))
+                if files:
+                    seen.add(key)
+                    partitions.append(Partition(source_name, year, month, day, day_dir, files))
     return partitions
 
 
@@ -356,6 +371,12 @@ def write_manifest(args: argparse.Namespace, out_dir: Path, state: dict[str, Any
 def main() -> None:
     parser = argparse.ArgumentParser(description="Build incremental content-title mart from lake queryStr evidence.")
     parser.add_argument("--lake", type=Path, default=DEFAULT_LAKE_FOLDER)
+    parser.add_argument(
+        "--archive-lake",
+        action="append",
+        default=[],
+        help="Optional archive lake root(s); repeat or separate with semicolons/commas.",
+    )
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
     parser.add_argument("--state", type=Path, default=DEFAULT_OUT_DIR / "content_mart_state.json")
     parser.add_argument("--source", choices=["stream", "fast", "all"], default="stream")
@@ -367,7 +388,11 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
-    partitions = discover_partitions(args.lake, args.source, args.start, args.end)
+    archive_roots: list[Path] = []
+    for value in args.archive_lake:
+        archive_roots.extend(split_path_list(value))
+    lake_roots = resolve_lake_roots(args.lake, archive_roots or None)
+    partitions = discover_partitions(lake_roots, args.source, args.start, args.end)
     state = load_state(args.state)
     old_partitions = state.setdefault("partitions", {})
     version_mismatch = state.get("mart_version") != MART_VERSION
