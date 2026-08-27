@@ -24,6 +24,7 @@ from build_vod_query_dashboard import (  # noqa: E402
     write_davis_workbook,
     write_events,
 )
+from export_vod_query_events import parquet_inputs  # noqa: E402
 
 
 def epoch(ist_time: str) -> str:
@@ -272,6 +273,20 @@ def test_export_keeps_unmarked_segments_from_vod_hosts() -> None:
     assert rows[0]["identity_source"] == "unavailable"
     assert float(rows[0]["request_watch_hours"]) == 6 / 3600
     assert float(rows[0]["delivered_watch_hours"]) == 0
+
+
+def test_parquet_inputs_reads_every_file_in_partition() -> None:
+    with TemporaryDirectory(dir=ROOT / "ETL" / "output") as folder:
+        partition = Path(folder)
+        first = partition / "part-1.parquet"
+        second = partition / "part-2.parquet"
+        first.touch()
+        second.touch()
+        (partition / "ignore.csv").touch()
+
+        resolved = parquet_inputs(partition)
+
+    assert resolved == [str(first), str(second)]
 
 
 def test_dashboard_has_searchable_multiselect_and_safe_payload() -> None:

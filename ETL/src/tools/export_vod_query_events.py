@@ -14,6 +14,18 @@ ETL_ROOT = HERE.parents[1]
 DEFAULT_UA_LOOKUP = ETL_ROOT / "output" / "device_decode" / "ua_decode_lookup_both_all.parquet"
 
 
+def parquet_inputs(path: Path) -> list[str]:
+    """Resolve one parquet file or every parquet file in a day partition."""
+    if path.is_file():
+        return [str(path)]
+    if path.is_dir():
+        files = sorted(path.glob("*.parquet"))
+        if files:
+            return [str(file) for file in files]
+        raise FileNotFoundError(f"No Parquet files were found in partition: {path}")
+    raise FileNotFoundError(f"Raw Parquet input was not found: {path}")
+
+
 def ua_norm_sql(column_expr: str) -> str:
     """Match the normalization used to build the shared UA decode lookup."""
     decoded_expr = f"CAST({column_expr} AS VARCHAR)"
@@ -27,7 +39,12 @@ def ua_norm_sql(column_expr: str) -> str:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Export one day of VOD STREAM query-string events.")
-    parser.add_argument("--input", type=Path, required=True, help="Raw STREAM Parquet file for the target date.")
+    parser.add_argument(
+        "--input",
+        type=Path,
+        required=True,
+        help="Raw STREAM Parquet file or IST day-partition directory.",
+    )
     parser.add_argument("--date", required=True, help="Target IST date (YYYY-MM-DD).")
     parser.add_argument("--out", type=Path, required=True, help="Daily VOD event CSV output.")
     parser.add_argument(
@@ -42,8 +59,7 @@ def main() -> None:
         help="Aggregate segment requests to minute/viewer/content rows for dashboards.",
     )
     args = parser.parse_args()
-    if not args.input.exists():
-        raise FileNotFoundError(f"Raw Parquet was not found: {args.input}")
+    source_files = parquet_inputs(args.input)
     if not args.ua_lookup.exists():
         raise FileNotFoundError(f"UA decode lookup was not found: {args.ua_lookup}")
     args.out.parent.mkdir(parents=True, exist_ok=True)
@@ -57,7 +73,7 @@ def main() -> None:
         source_columns = {
             row[0]
             for row in connection.execute(
-                "DESCRIBE SELECT * FROM read_parquet(?)", [str(args.input)]
+                "DESCRIBE SELECT * FROM read_parquet(?)", [source_files]
             ).fetchall()
         }
         ua_source = "UA" if "UA" in source_columns else "''"
@@ -342,7 +358,7 @@ def main() -> None:
                 {output_projection}
             ) TO '{output_sql}' (FORMAT CSV, HEADER TRUE, DELIMITER ',')
             """,
-            [str(args.input), args.date, str(args.ua_lookup)],
+            [source_files, args.date, str(args.ua_lookup)],
         )
         count = connection.execute("SELECT count(*) FROM read_csv_auto(?)", [str(args.out)]).fetchone()[0]
     finally:
