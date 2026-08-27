@@ -121,4 +121,7 @@ ETL/tools/rclone/rclone.exe
 **/__pycache__/
 # Additional virtualenv directories
 venv310/
+ETL/YT/logs
 ETL/YT/logs/yt4.log.1
+ETL/YT/logs/yt4.log.2
+ETL/YT/logs/yt4.log.3

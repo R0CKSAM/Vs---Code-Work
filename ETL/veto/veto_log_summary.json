@@ -1,0 +1,2324 @@
+{
+  "overview": {
+    "total_requests": 1021728,
+    "distinct_viewers": 9152,
+    "countries": 38,
+    "episode_ids": 842,
+    "window_start": "2026-08-24 18:30:00.269999981",
+    "window_end": "2026-08-25 18:29:59.592000008"
+  },
+  "platform": {
+    "Android TV / FireTV": 739121,
+    "Android": 254549,
+    "Apple TV": 13886,
+    "iOS": 6267,
+    "Other": 3624,
+    "Samsung TV": 2232,
+    "android_tv": 528,
+    "android_mobile_ott": 469,
+    "fire_tv": 448,
+    "AppleTV": 226
+  },
+  "platform_resolution_pct": {
+    "Android": {
+      "1280x720": 17.6,
+      "1920x1080": 55.7,
+      "3840x2160": 18.0,
+      "426x240": 0.5,
+      "640x360": 8.1
+    },
+    "Android TV / FireTV": {
+      "1280x720": 7.3,
+      "1920x1080": 68.0,
+      "3840x2160": 23.3,
+      "426x240": 0.3,
+      "640x360": 1.1
+    },
+    "Apple TV": {
+      "1280x720": 16.0,
+      "1920x1080": 41.5,
+      "3840x2160": 18.2,
+      "426x240": 21.3,
+      "640x360": 2.9
+    },
+    "Other": {
+      "1280x720": 2.8,
+      "1920x1080": 48.0,
+      "3840x2160": 44.1,
+      "426x240": 3.0,
+      "640x360": 2.1
+    },
+    "Samsung TV": {
+      "1280x720": 24.1,
+      "1920x1080": 47.2,
+      "3840x2160": 20.5,
+      "426x240": 6.7,
+      "640x360": 1.5
+    },
+    "Windows": {
+      "1280x720": 11.1,
+      "1920x1080": 22.2,
+      "3840x2160": 40.7,
+      "426x240": 18.5,
+      "640x360": 7.4
+    },
+    "iOS": {
+      "1280x720": 49.1,
+      "1920x1080": 39.8,
+      "3840x2160": 0.0,
+      "426x240": 3.7,
+      "640x360": 7.5
+    }
+  },
+  "hourly_segment_requests": {
+    "0": 5567,
+    "1": 40450,
+    "2": 17609,
+    "3": 51823,
+    "4": 53222,
+    "5": 21455,
+    "6": 25444,
+    "7": 32850,
+    "8": 45641,
+    "9": 27983,
+    "10": 24096,
+    "11": 26351,
+    "12": 45745,
+    "13": 46973,
+    "14": 36464,
+    "15": 30093,
+    "16": 92023,
+    "17": 31462,
+    "18": 9408,
+    "19": 2039,
+    "20": 1002,
+    "21": 386,
+    "22": 1574,
+    "23": 717
+  },
+  "top_countries": {
+    "IN": 996761,
+    "US": 6486,
+    "GB": 4272,
+    "CA": 2785,
+    "SG": 2052,
+    "AU": 1354,
+    "IL": 1172,
+    "OM": 907,
+    "NP": 813,
+    "BD": 796
+  },
+  "top_states_india": [
+    {
+      "state_clean": "Delhi",
+      "requests": 306460,
+      "viewers": 2636,
+      "requests_per_viewer": 116.3
+    },
+    {
+      "state_clean": "Uttar Pradesh",
+      "requests": 171181,
+      "viewers": 1363,
+      "requests_per_viewer": 125.6
+    },
+    {
+      "state_clean": "Maharashtra",
+      "requests": 133645,
+      "viewers": 1322,
+      "requests_per_viewer": 101.1
+    },
+    {
+      "state_clean": "Gujarat",
+      "requests": 60823,
+      "viewers": 556,
+      "requests_per_viewer": 109.4
+    },
+    {
+      "state_clean": "Karnataka",
+      "requests": 48009,
+      "viewers": 405,
+      "requests_per_viewer": 118.5
+    },
+    {
+      "state_clean": "Rajasthan",
+      "requests": 43964,
+      "viewers": 388,
+      "requests_per_viewer": 113.3
+    },
+    {
+      "state_clean": "Madhya Pradesh",
+      "requests": 42120,
+      "viewers": 430,
+      "requests_per_viewer": 98.0
+    },
+    {
+      "state_clean": "Haryana",
+      "requests": 40913,
+      "viewers": 353,
+      "requests_per_viewer": 115.9
+    },
+    {
+      "state_clean": "Punjab",
+      "requests": 30261,
+      "viewers": 263,
+      "requests_per_viewer": 115.1
+    },
+    {
+      "state_clean": "West Bengal",
+      "requests": 20586,
+      "viewers": 226,
+      "requests_per_viewer": 91.1
+    }
+  ],
+  "top_asn": [
+    {
+      "asn": 24560,
+      "requests": 351476,
+      "viewers": 2865
+    },
+    {
+      "asn": 55836,
+      "requests": 232067,
+      "viewers": 2193
+    },
+    {
+      "asn": 133982,
+      "requests": 60410,
+      "viewers": 436
+    },
+    {
+      "asn": 9829,
+      "requests": 30271,
+      "viewers": 245
+    },
+    {
+      "asn": 134674,
+      "requests": 23806,
+      "viewers": 219
+    },
+    {
+      "asn": 45916,
+      "requests": 20983,
+      "viewers": 190
+    },
+    {
+      "asn": 18209,
+      "requests": 15929,
+      "viewers": 148
+    },
+    {
+      "asn": 24309,
+      "requests": 15293,
+      "viewers": 138
+    },
+    {
+      "asn": 45609,
+      "requests": 14315,
+      "viewers": 238
+    },
+    {
+      "asn": 17488,
+      "requests": 13550,
+      "viewers": 120
+    }
+  ],
+  "top_episode_ids": [
+    {
+      "episode_id": "n9nnccx5",
+      "requests": 161473,
+      "viewers": 5846
+    },
+    {
+      "episode_id": "2kd202bg",
+      "requests": 117085,
+      "viewers": 6371
+    },
+    {
+      "episode_id": "uee4pc0t",
+      "requests": 31251,
+      "viewers": 2043
+    },
+    {
+      "episode_id": "4jvvpa25",
+      "requests": 29671,
+      "viewers": 2288
+    },
+    {
+      "episode_id": "d49363ez",
+      "requests": 29136,
+      "viewers": 3459
+    },
+    {
+      "episode_id": "j1lk2uuu",
+      "requests": 24560,
+      "viewers": 1757
+    },
+    {
+      "episode_id": "r17wixr5",
+      "requests": 23875,
+      "viewers": 1937
+    },
+    {
+      "episode_id": "st0ir9ql",
+      "requests": 21208,
+      "viewers": 1585
+    },
+    {
+      "episode_id": "ufmyudsc",
+      "requests": 18058,
+      "viewers": 1347
+    },
+    {
+      "episode_id": "1z7n6wko",
+      "requests": 15202,
+      "viewers": 2141
+    }
+  ],
+  "channels": {
+    "INDIATV VOD": 1101,
+    "INDIATV VODFireTv": 353,
+    "devotional": 197,
+    "INDIATV VODSamsung": 75,
+    "INDIATV VODMac": 60,
+    "INDIATV VODJioStore": 58,
+    "null": 48,
+    "IndiaTV-VOD-ENT": 28,
+    "INDIATV VODLG": 16,
+    " Veto_Live": 4
+  },
+  "content_type": {
+    "Vod": 1999,
+    "Live": 3
+  },
+  "category": {
+    "music": 290,
+    "kids": 286,
+    "sports": 186,
+    "documentaries": 119,
+    "entertainment": 61,
+    "top_banner_|_bravehearts_banner_|_home_page-1": 55,
+    "davis_cup_qualifiers_highlights": 54,
+    "lifestyle": 52,
+    "podcast": 46,
+    "trending_now": 43
+  },
+  "content_titles": {
+    "IND vs NED Match 5 Highlights | Reverse Singles Match 2": 100,
+    "Wasim Jaffer_Padikkal's Century Gives India Control!": 80,
+    "Panchatantra Story_Laal Pankh": 79,
+    "Davis Cup_IND vs NED Match 1 Highlights | Singles Match 1": 79,
+    "BraveHearts Banner | Home Page | Top Banner": 72,
+    "Bhole Mere Ghar Aa Jana": 44,
+    "YRF Music": 40,
+    "Ash Ki Baat_Ind vs SL 1st Test Preview : Can India Get Back in the WTC Race? Can Sri Lanka Pull Off a Shock?": 40,
+    "Budhiya Ki Dhaamal": 36,
+    "IND vs NED Match 3 Highlights | Doubles Match": 34
+  },
+  "episode_title_crosswalk": [
+    {
+      "episode_id": "7337q1d1",
+      "content_title": "YRF Music",
+      "channel": "INDIATV VODSamsung"
+    },
+    {
+      "episode_id": "gkoy1l2o",
+      "content_title": "YRF Music",
+      "channel": "INDIATV VODSamsung"
+    },
+    {
+      "episode_id": "8swgnb09",
+      "content_title": "Khabargaon_Ethanol ke naam par arbon kama rahi hai Sugar Lobby of India? | Nitin Gadkari | Kissa",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "girmr8xz",
+      "content_title": "IND vs NED Match 5 Highlights | Reverse Singles Match 2",
+      "channel": "INDIATV VODMac"
+    },
+    {
+      "episode_id": "cp6bp98h",
+      "content_title": "BraveHearts Banner | Home Page | Top Banner",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "1z7n6wko",
+      "content_title": "Wasim Jaffer_Padikkal's Century Gives India Control!",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "721pznuk",
+      "content_title": "Ash Ki Baat_Ind vs SL 1st Test Preview : Can India Get Back in the WTC Race? Can Sri Lanka Pull Off a Shock?",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "qbkdxh1y",
+      "content_title": "YRF Music",
+      "channel": "INDIATV VODSamsung"
+    },
+    {
+      "episode_id": "89h0wc72",
+      "content_title": "Gen-Z Ke Naam Par Sena Ka Apmaan",
+      "channel": NaN
+    },
+    {
+      "episode_id": "vq6wrmxe",
+      "content_title": "Panchatantra Story_Laal Pankh",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "84xtwii4",
+      "content_title": "Khabargaon_Sunny Deol, Sanjay Dutt ko acting sikhane wala gunda | Gulshan Grover ki kahani | Gunda",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "6zifl0li",
+      "content_title": "YRF Music",
+      "channel": "INDIATV VODSamsung"
+    },
+    {
+      "episode_id": "wykcz00v",
+      "content_title": "M. Karunanidhi: MGR \u0915\u0947 \u0926\u094b\u0938\u094d\u0924-\u0935\u093f\u0930\u094b\u0927\u0940 \u0915\u0940 \u092a\u0942\u0930\u0940 \u0915\u0939\u093e\u0928\u0940 | Tamil Nadu \u0915\u093e \u0930\u093e\u091c\u093e!| Kalaignar | Sattadhish",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "r78srgxh",
+      "content_title": "IND vs NED Match 3 Highlights | Doubles Match",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "9lerg6en",
+      "content_title": "Episode 15: The Earth Saviours Foundation",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "1fkvlu37",
+      "content_title": "YRF Music",
+      "channel": "INDIATV VODSamsung"
+    },
+    {
+      "episode_id": "a7lhpqip",
+      "content_title": "Khabargaon_Hitler ka Schoolmate, jisne kaha Philosophy ki saari Problems ki jad Language hai | Ludwig Wittgenstein",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "608cqjux",
+      "content_title": "Category | Podcast | Top banner | Panchayat",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "k3zxe6ii",
+      "content_title": "Category | Podcast | Top banner | Gullak",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "gr51noal",
+      "content_title": "YRF Music",
+      "channel": "INDIATV VODSamsung"
+    },
+    {
+      "episode_id": "miij582i",
+      "content_title": "Khabargaon_42 \u0930\u0940\u091f\u0947\u0915 \u0914\u0930 \u0930\u093f\u091c\u0947\u0915\u094d\u0936\u0928 , \u091c\u093f\u0938\u0928\u0947 Amjad Khan \u0915\u094b \u092c\u0928\u093e \u0926\u093f\u092f\u093e Biggest Villain | Gabbar Singh | Gunda",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "xhz3axh2",
+      "content_title": "YRF Music",
+      "channel": "INDIATV VODSamsung"
+    },
+    {
+      "episode_id": "qkv1599j",
+      "content_title": "YRF Music",
+      "channel": "INDIATV VODSamsung"
+    },
+    {
+      "episode_id": "krqcvkxw",
+      "content_title": "YRF Music",
+      "channel": "INDIATV VODSamsung"
+    },
+    {
+      "episode_id": "s9806sue",
+      "content_title": "Pramod Mahajan : Atal - Advani \u0915\u0947 \u0916\u093c\u093e\u0938 | BJP \u0915\u0947 \u0938\u092c\u0938\u0947 \u092a\u0939\u0932\u0947 \u0938\u0902\u0915\u091f\u092e\u094b\u091a\u0915 \u0914\u0930 \u091a\u093e\u0923\u0915\u094d\u092f | Sattadhish",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "eahn0vmj",
+      "content_title": "\"The Shocking UFO Secrets Exposed\u201d",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "u59pcy22",
+      "content_title": "YRF Music",
+      "channel": "INDIATV VODSamsung"
+    },
+    {
+      "episode_id": "lkn1ieij",
+      "content_title": "Khabargaon_Che Guevara: Ek doctor kaise ban gaya duniya ka sabse popular krantikari",
+      "channel": NaN
+    },
+    {
+      "episode_id": "9liyeg1j",
+      "content_title": "\u0906\u0908\u092a\u0940\u090f\u0932 \u0915\u0940 \u0924\u0930\u094d\u091c \u092a\u0930 \u092c\u0949\u0915\u094d\u0938\u093f\u0902\u0917 \u0932\u0940\u0917!",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "0bix6732",
+      "content_title": "YRF Music",
+      "channel": "INDIATV VODSamsung"
+    },
+    {
+      "episode_id": "m1pw3p2m",
+      "content_title": "35 And Single  | Episode 1",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "rtzjdo5f",
+      "content_title": "Khabargaon_GOT Explained in Hindi: HOTD se A Knight of the Seven Kingdoms tak | Kissa",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "1n2pjo07",
+      "content_title": "Ssoftoons_Lalchi Seth_EP-77",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "0h5fd5j9",
+      "content_title": "Sanskar_Jai Shiv Omkara || Shiva Aarti ",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "9h6vs2d9",
+      "content_title": "YRF Music",
+      "channel": "INDIATV VODSamsung"
+    },
+    {
+      "episode_id": "9tj2b2sr",
+      "content_title": "Saurabh Shukla Reveals the Story Behind \u201cJab Khuli Kitaab\u201d",
+      "channel": "IndiaTV-VOD-ENT"
+    },
+    {
+      "episode_id": "n77bz5xo",
+      "content_title": "Khabargaon_113 \u0930\u0941\u092a\u090f \u0932\u0947\u0915\u0930 Mumbai \u092d\u093e\u0917\u093e \u0932\u0921\u093c\u0915\u093e \u0915\u0948\u0938\u0947 \u092c\u0928\u093e Bollywood \u0915\u093e Lion? The Untold Story of Ajit | Gunda",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "djnkl1f3",
+      "content_title": "Khabargaon_Black September se Bangladesh tak Pakistan ne kitne Musalmanon ko maara? | Zia-ul-Haq | Kissa",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "krpglxrb",
+      "content_title": "IPL 2026 Final Review",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "1681hwht",
+      "content_title": "Godzilla vs Kong: Monsterverse | CSK vs MI | IPL Preview\n",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "eeih2f45",
+      "content_title": "Kishangarh Marble Dumping Zone \u0915\u093e \u0938\u091a \u091c\u093e\u0928\u0915\u0930 \u091a\u094c\u0902\u0915 \u091c\u093e\u090f\u0902\u0917\u0947! | Documentary |",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "ihk1jpyp",
+      "content_title": "Home Page | Top Banner | Bro Founder | Trailer ",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "67qcg01g",
+      "content_title": "Khabargaon_China mein 9 crore ghar khaali, Real Estate Crisis dubayega China ki Economy? | Rajdoot",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "e9cqn5se",
+      "content_title": "Ssoftoons_ Tooni Huya Ganja | Episode 17",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "iaitpdue",
+      "content_title": "Match Review Raiders vs Florida Hurricanes Final|Day-8",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "3z6l48iw",
+      "content_title": "Khabargaon_Bal Thackeray: The Man Who Ruled Without Power | Shiv Sena | Sattadhish",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "lp9viks0",
+      "content_title": "Bhole Tere Rang Mein Rang Gaya",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "xngrmy92",
+      "content_title": "Take It Or Leave It | Episode 3",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "mpicndh4",
+      "content_title": "Why Jeetendra Left Hema Malini for Shobha? ",
+      "channel": "IndiaTV-VOD-ENT"
+    },
+    {
+      "episode_id": "nxczk299",
+      "content_title": "Shooter Jawan |  Episode 3",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "7eq951xk",
+      "content_title": "Panchatantra Stories",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "45l97dm5",
+      "content_title": "Ready or Not | Episode 3",
+      "channel": "INDIATV VODLG"
+    },
+    {
+      "episode_id": "j9yyo2mf",
+      "content_title": "Sanskar_Hanuman Aarti | Aarti Kije Hanuman | ",
+      "channel": "INDIATV VODMac"
+    },
+    {
+      "episode_id": "jg5t7yci",
+      "content_title": "Ssoftoons_Chudail Safaiwali | Bhoot Story  | Episode 2",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "3y3pasji",
+      "content_title": "INDIAN RACING LEAGUE 2025 | DAY 2 | RACE 3 | HIGHLIGHTS ",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "fuf4a4u4",
+      "content_title": "Digital Commentary Podcast_Saumya Tandon On Her Acting Journey, SRK and Why She left Bhabiji | Podcast | Unfolding Talents ",
+      "channel": "INDIATV VODJioStore"
+    },
+    {
+      "episode_id": "gc6yyi01",
+      "content_title": "Budhiya Ki Dhaamal",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "hp76qqgj",
+      "content_title": "Work VS Family | Episode 2",
+      "channel": "Bada Shehar Choti Family"
+    },
+    {
+      "episode_id": "smvdeogk",
+      "content_title": "Category | Kids | Top Banner | C. parshuram",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "kqei90ov",
+      "content_title": "IND vs NED Match 2 Highlights | Singles Match 2",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "1jj3mc49",
+      "content_title": "EPIC KIDS",
+      "channel": "null"
+    },
+    {
+      "episode_id": "biik94gh",
+      "content_title": "Khabargaon_Mithun Chakraborty: Naxalwadi se Bollywood Superstar banne tak ki kya hai kahani? | Kissa",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "zy8q037l",
+      "content_title": "Ssoftoons_Viral Petu Kailash_EP-33",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "2tlho1d6",
+      "content_title": "\"The Shocking UFO Secrets Exposed\u201d",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "i8it6na9",
+      "content_title": "Bhole Mere Ghar Aa Jana",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "to7ujep5",
+      "content_title": "Khabargaon_Air India Plane crash | Category Top Banner ",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "o8zapvmm",
+      "content_title": "YOG MANTRA | Transform Your Body, Transform Your Life",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "0smz5ksi",
+      "content_title": "Aasmani Aaafat",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "xqwcqci5",
+      "content_title": "Ssoftoons_ Tooni Aur Bikhari Raja | Episode 19",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "6anlic2j",
+      "content_title": "Sarhad Ke Baad Bhi | Episode 4",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "20atoa8e",
+      "content_title": "Ssoftoons_ Kali Raat: Dafan Ki Sachai | Episode-48",
+      "channel": "INDIATV VODJioStore"
+    },
+    {
+      "episode_id": "6bsfdi7b",
+      "content_title": "Ssoftoons_Baat Karne Vali Jaduai Thali | Episode 47",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "cubc5spx",
+      "content_title": "Sanskar_Aarti Kunj Bihari Ki || Krishna Aarti",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "7j121hji",
+      "content_title": "Asia Cup Bihar 2025 | Hockey Day 2 | DG Sports Raveendaran Interview with Samip Rajguru",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "ly3djfwi",
+      "content_title": " AVROH | Episode 3",
+      "channel": "Yeh Saali Naukri"
+    },
+    {
+      "episode_id": "chxjz4vh",
+      "content_title": "Sanskar_Bhajan ",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "azqjypv1",
+      "content_title": "Oman Deal Ke Baad Bhi Hormuz Route Band?",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "0z7ufcc8",
+      "content_title": "Digital Commentary Podcast: Abhimanyu Singh: Bollywood\u2019s Most Underrated Actor? ",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "uitpv7zn",
+      "content_title": "Softoons_ Tooni Ki Chalaki | Episode 18",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "t2k89nwc",
+      "content_title": "The Woven Whispers Fashion Event 2025",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "vv8gpg67",
+      "content_title": "The Truth About Illuminati: Secret World Power or Just a Dangerous Illusion",
+      "channel": NaN
+    },
+    {
+      "episode_id": "sniv9zmj",
+      "content_title": " YOG MANTRA | Arm Toning Yoga",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "fsnylh0e",
+      "content_title": "Ssoftoons_ Kaun Banega Arabpati | EP-50",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "jz12pgt6",
+      "content_title": "Ssoftoons_Lalchi Loriwaala  | Bhoot Story | Episode 6",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "58xb44pm",
+      "content_title": "Haji Mastan Story: Mumbai\u2019s First Underworld Don?",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "0sfomhkf",
+      "content_title": "Sanskar_Aarti Kije Shri Ram Lala Ki",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "8td95x7y",
+      "content_title": "Khullam Khulla With Saurabh Sharma| Episode 3 | Journalist Deepika Narayan Bhardwaj ",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "bheg4g04",
+      "content_title": "Surya Dev Aarti | Powerful Morning Bhajan",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "udoq5hy7",
+      "content_title": "Why Is Gill Still in the Team?",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "7kv291fe",
+      "content_title": "Jatin-Apoorva Ki Masti aur Confessions",
+      "channel": "IndiaTV-VOD-ENT"
+    },
+    {
+      "episode_id": "q1lufzeo",
+      "content_title": "Operation Sindoor Real Life Documentary",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "2t1vg1h9",
+      "content_title": "Ash Ki Baat_Hitman Answers Critics, but Bethell & Duckett Seal England's 2-1 Series Win | ODI Series Wrap-Up",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "p790ogsp",
+      "content_title": "Conflict Of Interest | Episode 1",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "mlx0aae5",
+      "content_title": "Ssoftoons_ Tooni Ka Resham Ka Rumal | Episode 15",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "340dkbxx",
+      "content_title": "Sperm ZERO... Can You Still Become a Father? Doctor's  Exclusive Discussion",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "s45c7hjs",
+      "content_title": "Davis Cup | KOR vs ARG - Match 3 Highlights",
+      "channel": "INDIATV VODMac"
+    },
+    {
+      "episode_id": "8sry63uv",
+      "content_title": "Jai Ganesh Deva | Bhajan",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "9mt71gjy",
+      "content_title": "Category | Kids | Top Banner | C. Aswathama",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "yjn6zyez",
+      "content_title": "Badri_What makes Rajat Patidar special!",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "2wordlgo",
+      "content_title": "Go- Getter | Episode 2",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "plt6kfc9",
+      "content_title": "Top banner | Home page | Petu Maharaj",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "26z8xapd",
+      "content_title": "Shiv Aradhana: Shankhnaad Se Goonja Kailash",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "k2pljsu6",
+      "content_title": "Breaking Down Conjunctivitis",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "lgj5w2k7",
+      "content_title": "Anil Fixed Kajol's Producer Fight!",
+      "channel": "INDIATV VODJioStore"
+    },
+    {
+      "episode_id": "5p64g3t1",
+      "content_title": "Naxalism \u0915\u0940 \u0928\u0940\u0902\u0935 \u0930\u0916\u0928\u0947 \u0935\u093e\u0932\u0947 \u091c\u093c\u092e\u0940\u0902\u0926\u093e\u0930 \u0915\u0940 \u0915\u0939\u093e\u0928\u0940 | Charu Mazumdar| Naxalbari Movement | Sonar Bangla EP5",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "891tmxxl",
+      "content_title": "Ssoftoons_Dhoom Machya Sumo Kailash_EP-32",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "kwwm78d1",
+      "content_title": "Davis Cup_KOR vs ARG - Match 1 Highlights | Singles Match 1",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "njwd5dpb",
+      "content_title": "UPGOV_YUVAON KO ROZGAR",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "oltpn7i1",
+      "content_title": "Beat Diabetes Naturally",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "fzu0ann8",
+      "content_title": "Khabargaon_Swasth sharir aur shaant mann ke liye kaun se Yoga Asana zaroori hain? | The Kalm Show",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "7scm0esv",
+      "content_title": "Raiders Lift the Trophy! Rajat & Ritu Sharma Present the Title|Day-8",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "6kg5p3pj",
+      "content_title": "Episode 7 : Ghatshala ",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "5yk9grky",
+      "content_title": "AI vs Jobs: Is Human Employment in Danger",
+      "channel": "INDIATV VODMac"
+    },
+    {
+      "episode_id": "wtwo150u",
+      "content_title": "Nakash Aziz on Pushpa Hits & Music Journey",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "navx9ka1",
+      "content_title": "Pulwama Attack 2019 Full Analysis",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "vh4xzuv9",
+      "content_title": "Ashwin_Ee Saala nu Namde Guru ! RCB defend their title | RCB vs GT | IPL 2026 Finals",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "o8vvuzq2",
+      "content_title": "Vinash Ki Shuruvaat",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "69thlgno",
+      "content_title": "Superheros | Episode 4",
+      "channel": "null"
+    },
+    {
+      "episode_id": "ywmdd19b",
+      "content_title": "Dronacharya Ka Jhagda | Episode 2 | Cheeranjivi Ashwathama Warrior's Untold Journey",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "9bfnaus5",
+      "content_title": " Ssoftoons_ Tooni Ki Adla Badli | Episode 11",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "eyn5xgrv",
+      "content_title": "Ssoftoons_Bhutiya Haveli | Bhoot Stories  | Episode 1",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "7ccb82ea",
+      "content_title": "India Couture week 2025 | Day 5",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "fdgps4wc",
+      "content_title": "Vidya Dayini |Bhajan",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "jrn1375b",
+      "content_title": "Ssoftoons_ Pinjare Mein Kaid Raja | Episode 13",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "icvis6sa",
+      "content_title": "Ssoftoons_lullu bhoot aur jalpari | EPISODE 62",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "l552swqj",
+      "content_title": "Entertainment exclusive banner",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "1at5riyr",
+      "content_title": "Rani Nayki Devi: The Queen Who Defeated Muhammad Ghori",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "v64waz0z",
+      "content_title": "Ash Ki Baat_Vaibhav Packs a Punch! India End T20 Defeat Drought | IND vs ZIM 1st T20 Review",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "dai5a2x7",
+      "content_title": " Yoga for a Healthy Heart",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "i7ahgn9h",
+      "content_title": "How Dhurandhar 1\u2019s Brutal Scenes Were Actually Filmed",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "ixourhjg",
+      "content_title": " \u0938\u092e\u0902\u0926\u0930: \u092e\u093f\u0936\u0928 26/11 - Short",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "uusmbcd0",
+      "content_title": "Asia Cup Bihar 2025 | Samip Rajguru with Hockey Star Mandeep | Day 1",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "tzl8w9ip",
+      "content_title": "Digital Commentary Podcast_Will Akshay Kumar & Sunny Deol Rule Bollywood Again? | Vishek Chauhan Explains",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "u79u99gv",
+      "content_title": " Episode 2 :  Parshuram ka Paran ",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "p93ic5w1",
+      "content_title": "Wasim Jaffer_Kuldeep Deserves Better! India\u2019s Injury & Selection Crisis!!",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "eawnmcz3",
+      "content_title": "Hastinapur ki Yatra | Episode 3 | Cheeranjivi Ashwathama Warrior's Untold Journey",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "w64q7k3v",
+      "content_title": "Jaldi Lautna Captain | Episode 2",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "9v5rp7g5",
+      "content_title": "Why India Must Pray for South Africa Before the Big ZIM Clash @ Chepauk |INDvZIM",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "g6rbjj96",
+      "content_title": "Is Flying Safe in 2026? Decoding The Truth Behind Turbulence, Technology, and Aviation Safety",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "6r9c469r",
+      "content_title": "ARRANGED FAMILY | Episode 1",
+      "channel": NaN
+    },
+    {
+      "episode_id": "hu55xe9f",
+      "content_title": "Yoga for Thyroid Balance",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "z6nh9y0u",
+      "content_title": "Infection |  Episode 1 ",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "yrcdhzr0",
+      "content_title": "Episode 1 : Vastu Shastra Tips for Happy & Peaceful Life",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "321p4tgm",
+      "content_title": "Sanskar_Bhajan clubbing  ",
+      "channel": "INDIATV VODJioStore"
+    },
+    {
+      "episode_id": "mnlyphp6",
+      "content_title": "Davis Cup_IND vs NED Match 4 Highlights | Reverse Singles Match 1",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "pa8jexzl",
+      "content_title": "World Kidney Day : Act Early, Stay Healthy",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "4zgv11ld",
+      "content_title": "India Couture week 2025 | Day 4",
+      "channel": "IndiaTV-VOD-ENT"
+    },
+    {
+      "episode_id": "9nsbu544",
+      "content_title": " Episode 6 : The Nest Man of India",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "3iap1t0n",
+      "content_title": "LAC Par Deal Final? China Ki Chaalein Aur Bharat Ki Nazar",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "c6b7pk5u",
+      "content_title": "World Cancer Day: Demystifying the Disease",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "97vzet53",
+      "content_title": "Digital Commentary Podcast_Saanand Verma on Early Struggles, Bhabhi Ji Ghar Par Hai, Saxena Ji Spinoff | Unfolding Talents",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "r7nx9g9v",
+      "content_title": "Ali Fazal & Raakh Team on | Nothing Serious EP-6",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "48z8cgoa",
+      "content_title": "Annu Kapoor Ne Sunaye Ladki Patane Ke Mazedaar Tarike | Nothing Serious EP-7",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "aqx8gsop",
+      "content_title": "\u201cJai Ambe Bhavani \u2013 Powerful Durga Maa Bhakti Song\u201d",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "tpmwhhof",
+      "content_title": "Hafiz Saeed Zinda Hai? RAW Missions Ka Sach",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "a0uhamvg",
+      "content_title": "Yoga for Asthma Relief",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "a6vp5ept",
+      "content_title": "Panchatantra Story_Buddhimaan Siyar Ki Jeet",
+      "channel": "INDIATV VODJioStore"
+    },
+    {
+      "episode_id": "waekb52j",
+      "content_title": "Highlights: Indian F4 Race 1 | INDIAN RACING LEAGUE 2025",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "k85gpwi8",
+      "content_title": "Ash Ki Baat_76 ALL OUT! India's Batting Disaster | IND vs ENG 3rd T20 Review | Sanju's Exclusion Under Fire",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "szn0x9l8",
+      "content_title": "Suryagatha",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "59kgyyf7",
+      "content_title": "Episode 4 : YAMUNA BABA ki Kahani",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "3g7iw44m",
+      "content_title": "Sanskar_JAI AMBEY GAURI || AMBEY MAA AARTI ",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "gkgr49ub",
+      "content_title": "Shreyas Aur Kajal Ne Decode Kiye Golmaal Ke Mazedaar Scenes | Nothing Serious EP-8",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "ywixfw0m",
+      "content_title": "Khullam Khulla With Saurav Sharma | Episode 7 | Rasraj Ji Maharaj",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "7dgpchle",
+      "content_title": "Mahashivratri Bhajan Clubbing Special 2026 ",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "x4otconf",
+      "content_title": "Khabargaon_Absolute Zero: -273.15\u00b0C par kaise pahunche vaigyanik",
+      "channel": NaN
+    },
+    {
+      "episode_id": "rs7tmp0p",
+      "content_title": "Badri_India\u2019s Galle Glory | Padikkal\u2019s Brilliant Knock & Bangladesh\u2019s Historic Win | CRIC IT WITH BADRI |",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "8av90dru",
+      "content_title": "Indian Navy: Glorious History of the Guardians of the Seas",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "r4wtq9eg",
+      "content_title": "Ash Ki Baat_Suthar Spins a Web, DDP\u2019s Masterclass | Bangladesh Shock Aussies | Ind vs SL Test Review",
+      "channel": "INDIATV VODJioStore"
+    },
+    {
+      "episode_id": "1qqajy9q",
+      "content_title": "Round 1 \u2013 South India Rally | 4W INRC 2025\n",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "l3vu3zga",
+      "content_title": "Badri_ALL EYES ON HARDIK | IND VS SL TEST PREVIEW | CRIC IT WITH BADRI |",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "8vuovu0g",
+      "content_title": "Episode 14: Peepal Baba",
+      "channel": "INDIATV VODJioStore"
+    },
+    {
+      "episode_id": "yab7bc5q",
+      "content_title": "Ash Ki Baat_Vaibhav Announces Himself! | India Sweep Zimbabwe 3-0 | India Test Squad Analysis",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "y9bu882k",
+      "content_title": "New Year 2026 Special | Sufi Songs with Farhan Sabir",
+      "channel": "IndiaTV-VOD-ENT"
+    },
+    {
+      "episode_id": "afzn29ly",
+      "content_title": "Tum Mere Shiv, Main Teri Gaura",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "9zejs3vt",
+      "content_title": "Ssoftoons_ Manda Ki Jotish Par Charcha | Episode 49",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "mkalj4py",
+      "content_title": "Highlights| Rally of Indore 2025 | INRC Round 1 Action Begins",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "gkotvolv",
+      "content_title": "Swearing-in DONE, 10 Big Challenges Ahead for CM Suvendu | Will Bengal Change",
+      "channel": NaN
+    },
+    {
+      "episode_id": "sn190m6g",
+      "content_title": "Ssoftoons_Heera Ugalne Wala Khet_EP-79",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "iqgeabzf",
+      "content_title": "Digital Commentary Podcast_The Real Story Behind Every Young Indian Leaving India | Shaheer Sheikh & Avinash Mishra | UT",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "g5s1nb98",
+      "content_title": "The Reality Behind \"The Kerala Story\".",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "g28ngbx4",
+      "content_title": "Khabargaon_The Ultimate Poha Battle: Indore vs Maharashtra ft. Psycho Shayar",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "0767e3nm",
+      "content_title": "Pheli Baar Hai Kya",
+      "channel": NaN
+    },
+    {
+      "episode_id": "5ie4izub",
+      "content_title": " YOG MANTRA | Beat Acidity with Yoga",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "ckemw31l",
+      "content_title": "World Diabetes Day | Managing Diabetes: Tips & Facts ",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "gyn1c1sf",
+      "content_title": "Dead Bodies Ka Raaz Kaise Khulta Hai?",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "gmv6aymk",
+      "content_title": "Ssoftoons_Kailash Ka Jyotish Charcha_EP-21",
+      "channel": "INDIATV VODJioStore"
+    },
+    {
+      "episode_id": "ck553fw4",
+      "content_title": "Live TV - Top banner | 9xm  Live",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "df91v8pw",
+      "content_title": "Ssoftoons_Kolhu Ka Bail_EP-76",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "u5xvbgag",
+      "content_title": "Tu Hi Mera Kailash | Mahadev Ki Divya Mahima",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "ttudc10y",
+      "content_title": "Weight Loss Thandai Recipe by Dr. Shikha",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "gvam9i7m",
+      "content_title": "Round 4 \u2013 K1000 Rally | Championship Showdown\n",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "nzmg7pq0",
+      "content_title": "India Couture week 2025 | Day 3",
+      "channel": "IndiaTV-VOD-ENT"
+    },
+    {
+      "episode_id": "jmenttn2",
+      "content_title": "Veera | Episode 5",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "3b46eimt",
+      "content_title": "Round 5 - Rally of Highlands  | INRS 2025",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "0uidysl4",
+      "content_title": "Episode 8 : Vrikshit Foundation",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "2wor58th",
+      "content_title": "Hockey Star K Interview | Day 5| Asia Cup Bihar 2025 Exclusive",
+      "channel": "IndiaTV-VOD-SPORTS"
+    },
+    {
+      "episode_id": "1tab9fix",
+      "content_title": "Ssoftoons_Kailash Aur Jaadui Machhli_EP-31",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "jp99zgci",
+      "content_title": "Khabargaon_China ne Arunachal mein kitni zameen kabza li? | India-China Border | Rajdoot",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "40f4o0w4",
+      "content_title": "Digital Commentary Podcast_He Wrote India's Biggest TV Show But Nobody Knows His Name | FIR Writer Amit Aarryan | UT",
+      "channel": "INDIATV VODMac"
+    },
+    {
+      "episode_id": "vq5cg733",
+      "content_title": "HIGHLIGTS | IRL Driver A | INDIAN RACING LEAGUE 2025",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "cfhzb5fq",
+      "content_title": "States - Uttar Pradesh Vikas Yatra ",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "pc3gnl5s",
+      "content_title": "Can KKR brush aside their injury woes & do well",
+      "channel": NaN
+    },
+    {
+      "episode_id": "1sju3abx",
+      "content_title": "Mushtaq Khan & Rakesh Sawant reveals big on Govardhan Asrani Rakhi Sawant Story | Nothing Serious Episode 4",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "krb5x430",
+      "content_title": "Ssoftoons_Petu Aur Bhukkhar Bhut_EP-3\n",
+      "channel": "INDIATV VODJioStore"
+    },
+    {
+      "episode_id": "b5u3i3pb",
+      "content_title": "Indian Army: A Saga of Courage, Sacrifice & Glory",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "y44lt1ir",
+      "content_title": "Ssoftoons_Chota Uphaar Aur Badi Khushi | Epidose 45",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "6mdyvx1h",
+      "content_title": "Wasim_Shubman Gill Leads GT to 89-Run Win Over CSK ",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "z021qgh1",
+      "content_title": "Ssoftoons_Petu Fasha Jal Me_EP-15",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "47vunxmw",
+      "content_title": "Jai Ganesh Deva | Bhajan",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "lhirk5ri",
+      "content_title": "\u092c\u094d\u0932\u0948\u0915 \u0935\u093e\u0930\u0902\u091f \u0930\u093f\u092f\u0932 \u0938\u094d\u091f\u094b\u0930\u0940: \u092c\u093f\u0915\u093f\u0928\u0940 \u0915\u093f\u0932\u0930 \u091a\u093e\u0930\u094d\u0932\u094d\u0938 \u0936\u094b\u092d\u0930\u093e\u091c \u0915\u094c\u0928 \u0925\u093e?",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "ek9kw9h1",
+      "content_title": " Protect Your Kidneys Naturally",
+      "channel": "INDIATV VODMac"
+    },
+    {
+      "episode_id": "zv633bcm",
+      "content_title": "Wasim Jaffer_India beat Zimbabwe by 7 wickets| Finally Vaibhav is Back in touch!",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "j3r6mwdz",
+      "content_title": "Na Jaane Kaun Aa Gaya Cast Reveals Fun Stories and BTS Moments",
+      "channel": "IndiaTV-VOD-ENT"
+    },
+    {
+      "episode_id": "t5jfsg5q",
+      "content_title": "Will Suvendu Government Remove Infiltrators",
+      "channel": NaN
+    },
+    {
+      "episode_id": "5ozkb57a",
+      "content_title": "MPGOV_MP Higher Education: Pragati Ki Nayi Udaan",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "j8wra52z",
+      "content_title": "Bal Gopal Chhavi |Bhajan ",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "22ptnms3",
+      "content_title": "Tooni Ne Liya Raja Se Badla | Episode 12",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "9i54j2rb",
+      "content_title": "J. Jayalalithaa: Tamil Film Actress \u0938\u0947 Amma Chief Minister \u0924\u0915| Tamil Nadu| AIADMK| MGR| Sattadhish",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "kxl1brlh",
+      "content_title": "Khabargaon_Saturn ki Rings ka sabse bada rahasya | NASA inhein chhoone kyun ja raha hai? | Alif Laila",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "ahh4m60g",
+      "content_title": "Inside North Korea's Nuclear Journey",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "ti2opjsq",
+      "content_title": "Davis Cup | KOR vs ARG - Match 5 Highlights | Reverse Singles Match 2",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "41d36wa4",
+      "content_title": "MPGOV_MP Transport Management: Safar Hoga Smart Aur Smooth",
+      "channel": "INDIATV VODJioStore"
+    },
+    {
+      "episode_id": "bv85ztte",
+      "content_title": "Round 2 \u2013 Rally of Coimbatore | 4W INRC 2025\n",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "1jg952cf",
+      "content_title": "HIGHLIGHT | INDIA F4 RACE 4 | CHENNAI | INDIAN RACING LEAGUE 2025",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "4o6m4y34",
+      "content_title": "Badri_Why only Rohit Sharma ",
+      "channel": NaN
+    },
+    {
+      "episode_id": "5phchwhi",
+      "content_title": " RANGBAAJI | Episode 1",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "kqbxswnm",
+      "content_title": "Panchatantra Story_Ghamandi Titli Aur Mehnati Choti Chiti",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "4dydizdu",
+      "content_title": "Khullam Khulla With Saurav Sharma | Episode 2 | Shehla Rashid ",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "aav5dz5h",
+      "content_title": "Ye Tiranga Bolta Hai, Bharat Ki Shaan Dikhata Hai",
+      "channel": "INDIATV VODJioStore"
+    },
+    {
+      "episode_id": "d8dxcymt",
+      "content_title": "Diagnosis | Episode 2",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "v2elts88",
+      "content_title": "Broke AF | Episode 1",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "1xyn5xln",
+      "content_title": "High Protein Egg Recipe for Fat Loss by Dr. Shikha",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "yu0nf4h7",
+      "content_title": "Yoga for Liver Health",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "oyu6w66b",
+      "content_title": "Damru Ki Dhun Mein Mahadev",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "2zyc2mpb",
+      "content_title": "Why the World Wants Greenland",
+      "channel": NaN
+    },
+    {
+      "episode_id": "bbcgb7uz",
+      "content_title": "Ssoftoons_Chalaki Ka Khel, Dono Fail | Episode 46",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "r8mnjmao",
+      "content_title": " YOG MANTRA | Yoga for Immunity & Energy",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "0l6ew71z",
+      "content_title": "Ash Ki Baat_Joe Root's Masterclass Levels the Series | Rohit's Last ODI at Lord's? | IND vs ENG 2nd ODI Review",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "5obdleqm",
+      "content_title": "Will India's Dominance Over Pakistan Continue? #AakashVani ",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "vp4opfov",
+      "content_title": "Ssoftoons_ Sahi Pagri | Episode 49",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "dej5zjfc",
+      "content_title": "Jai Ambe Gauri Mata | Bhajan",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "f7il98fy",
+      "content_title": "Original Top banner ",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "qwe6l87a",
+      "content_title": "Khabargaon_Afghanistan: Hindu-Sikhon ki 1000 purani kahani kaise khatam hui? | Alif Laila",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "5gdugr49",
+      "content_title": " Ramadan Diet Plan by Dr. Shikha",
+      "channel": "INDIATV VODMac"
+    },
+    {
+      "episode_id": "gbozvzin",
+      "content_title": "Ashwin_Gill-GG Test Quest Returns | Vaibhav, Shreyas C, SKY Dropped",
+      "channel": NaN
+    },
+    {
+      "episode_id": "s4qodmc4",
+      "content_title": "Dancing Queen | Episode 4",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "d93huhkq",
+      "content_title": " Will RO-KO play 2027 World Cup?",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "hqb8ayo2",
+      "content_title": "AAROHAN: Antim Takkar",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "esid8yoc",
+      "content_title": "Ashwin_Ind vs SL 1st Test Preview: Can India Revive Its Test Campaign? Can Sri Lanka Spring a Surprise?",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "rylhfc6j",
+      "content_title": " Lung Cancer Explained: From Diagnosis to Treatment",
+      "channel": "INDIATV VODMac"
+    },
+    {
+      "episode_id": "emjtp3kz",
+      "content_title": "Davis Cup | KOR vs ARG - Match 2 Highlights | Singles Match 2",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "hgmnqnc9",
+      "content_title": "Softoons_ raja ke ser par mendak | Episode 16",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "yla33xz6",
+      "content_title": "Adulting",
+      "channel": "null"
+    },
+    {
+      "episode_id": "sx5m4x7i",
+      "content_title": "Parliament Attack 2001: A Dark Day",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "x9oe5k4y",
+      "content_title": " YOG MANTRA | Yoga to Reduce Obesity and Improve Fitness",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "dzv52gl1",
+      "content_title": "Ajay Ne Dikhayi Dosti",
+      "channel": "IndiaTV-VOD-ENT"
+    },
+    {
+      "episode_id": "kgcveq2j",
+      "content_title": "\u0915\u0943\u0937\u094d\u0923 \u091c\u0928\u094d\u092e \u0915\u0925\u093e \u2013 \u092d\u0917\u0935\u093e\u0928 \u0936\u094d\u0930\u0940\u0915\u0943\u0937\u094d\u0923 \u0915\u093e \u0926\u093f\u0935\u094d\u092f \u091c\u0928\u094d\u092e | \u090f\u092a\u093f\u0938\u094b\u0921 1\n",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "stvs6ppo",
+      "content_title": "India Thrash Sri Lanka by 165 Runs | IND vs SL Review",
+      "channel": "IndiaTV-VOD-SPORTS"
+    },
+    {
+      "episode_id": "exm64zgy",
+      "content_title": "Tihar Jail Ke Dark Secrets: Andar Kya Hota Hai?",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "ts7uw5hi",
+      "content_title": "India Couture Week 2025 | Day 1",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "ke10a7zc",
+      "content_title": "Khabargaon_Iran ne Yahudiyon ko jasoos kaise banaya? Pradhanmantri ko marne ki saazish pakdi gayi? Haredi | Rajdoot",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "ce98gttg",
+      "content_title": "Ssoftoons_Jaise Ko Taisa_EP-81",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "k6skgfnl",
+      "content_title": "Chakravyuh Ka Rahasya | Episode 6 | Cheeranjivi Ashwathama Warrior's Untold Journey",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "wypyb5m0",
+      "content_title": "Khabargaon_Titan Success Story: Kaise Tata ne toda HMT ka ghamand? | Tanishq | Rakesh Jhunjhunwala | Xerxes Desa",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "wt9dxyhx",
+      "content_title": "Om Namah Shivay | Bhajan",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "unak9sxy",
+      "content_title": "Ssoftoons_Lalchi Rajmistri_EP-80",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "fm6ni2tn",
+      "content_title": "PARISHRAM | Episode 2",
+      "channel": "Yeh Saali Naukri"
+    },
+    {
+      "episode_id": "ss3d80kp",
+      "content_title": "Khabargaon_Stop calling her 'Paraya Dhan' | The Truth about Dahej | The Kalm Show",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "izc49q5k",
+      "content_title": "Khabargaon_Manmohan Singh: The Silent Prime Minister Who Transformed India | Sattadhish",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "m8jplvh3",
+      "content_title": "Digital Commentary Podcast_Who is India's Greatest Captain Ever? | Dhoni vs Kohli vs Ganguly vs Rohit | Boys Played Well",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "1i83bayq",
+      "content_title": "Neha Devi and Akanksha Interview",
+      "channel": "INDIATV VODMac"
+    },
+    {
+      "episode_id": "vphh0anm",
+      "content_title": "Bageshwar Baba |  Satya Sanatan",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "r7b82sc1",
+      "content_title": "MPGOV_MP Krishak Kalyan Varsh 2026: Kisanon Ki Nayi Udaan",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "i6uoxil5",
+      "content_title": " YOG MANTRA | Strengthen Your Heart with Yoga",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "rtavig41",
+      "content_title": "Poaching The Talent | Episode 3",
+      "channel": "null"
+    },
+    {
+      "episode_id": "b18x2sp7",
+      "content_title": "Khabargaon_Iran ke haath se fisal raha Strait of Hormuz",
+      "channel": "INDIATV VODMac"
+    },
+    {
+      "episode_id": "teilo4s9",
+      "content_title": "Episode 2 : PONDMAN",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "e5mlghxl",
+      "content_title": "Asia Cup Bihar 2025 | Hockey Day 2 | Special Dog Feature & Interview with Samip Rajguru",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "5haivu33",
+      "content_title": "Ssoftoons_Sher Aur Kailash Ki Dushmani_ep-35",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "ukg3xt3w",
+      "content_title": " The Cliffhanger | Episode 5",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "qgvfn7ua",
+      "content_title": "Ash Ki Baat_Gill Leads from the Front | Axar's All-Round Masterclass | IND vs ENG 1st ODI Review",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "0h30d6q0",
+      "content_title": "Acharya Devkinandan Thakur | Satya sanatan",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "7yxprxva",
+      "content_title": "The launch | Episode 2",
+      "channel": "null"
+    },
+    {
+      "episode_id": "3qxmg826",
+      "content_title": "Breach Of Contract | Episode 5",
+      "channel": "null"
+    },
+    {
+      "episode_id": "64vbf2kj",
+      "content_title": "Sudhanshu Trivedi | Satya Sanatan",
+      "channel": "INDIATV VODMac"
+    },
+    {
+      "episode_id": "zdwfdnxe",
+      "content_title": "Digital Commentary Podcast: Rohitashv Gour: TV\u2019s Most Honest Tiwari Ji ",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "w9zp9oc7",
+      "content_title": "Phone Mein Ads Ka Attack? Aise Karein Block",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "zme7v4om",
+      "content_title": "YOG MANTRA | Shoulder Power Yoga",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "fe63b45f",
+      "content_title": "Ssoftoons_Khana Ya Khazana_EP-19",
+      "channel": "INDIATV VODJioStore"
+    },
+    {
+      "episode_id": "a09hfc5c",
+      "content_title": "Breach Of Contract | Episode 5",
+      "channel": "null"
+    },
+    {
+      "episode_id": "s8qpv8fd",
+      "content_title": "Astro Moon Effect in Aquarius Lagna",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "150bkb0t",
+      "content_title": "Ssoftoons_Do Chudail Bahane| Bhoot story | Episode 23Chaand Mein Bhoot| Bhoot story | Episode 22",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "kmqktv7m",
+      "content_title": "Episode 2: Vastu Shastra Tips for a Harmony",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "hq2kk735",
+      "content_title": "Soja Lala Nand Kishor | Bhajan",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "4lhmga5u",
+      "content_title": "PoK Se Balochistan Tak Pakistan Mein Baghawat?",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "9xetbu8m",
+      "content_title": "Asia Cup Bihar 2025 | Hockey Day 2 Match Briefing with Samip Rajguru",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "2b6a9bmk",
+      "content_title": "Ssoftoons_Petu Ka Body Building_EP-20",
+      "channel": "INDIATV VODJioStore"
+    },
+    {
+      "episode_id": "rpr0rzjs",
+      "content_title": "Ssoftoons_ Tonni Aur Jootha Raja | Episode 14",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "k0ywe9xb",
+      "content_title": "Why Nusrat Refused Devgn's Movie Song!",
+      "channel": "IndiaTV-VOD-ENT"
+    },
+    {
+      "episode_id": "t3t9pq1b",
+      "content_title": "Ram Naam Ki Sumane Ki Jai  | Bhajan",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "wynvicr9",
+      "content_title": "Modi Ka Naya Masterplan Ready, Opposition Ki Tension Badhi?",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "asty2k3u",
+      "content_title": "Swami Ramdev | Satya Sanatan",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "wutqoeon",
+      "content_title": "Ssoftoons_Chudail Ki Mamta  | Bhoot Story | Episode 5 ",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "5n1aohpn",
+      "content_title": "Panchatantra Story_Ghamandi Saap Aur Chatur Chintiyan",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "2q72po8u",
+      "content_title": "Is This the End of India\u2019s Test Glory?",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "n5xin08n",
+      "content_title": "Eklavya ka kaushal | Episode 4 | Cheeranjivi Ashwathama Warrior's Untold Journey",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "a3cagqom",
+      "content_title": "Ssoftoons_Jaadui Daawa_EP-4\n",
+      "channel": "INDIATV VODJioStore"
+    },
+    {
+      "episode_id": "zepzhfh7",
+      "content_title": "Yoddhaon ka Uday",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "9ij4q2xt",
+      "content_title": "MPGOV_MP Sarkar Ki Badi Pahal: Shikayaton Ka Hoga Tez Samadhan",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "ft4itu13",
+      "content_title": "Exclusive Interview With Amit Mishra",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "9qpa9ulh",
+      "content_title": "Digital Commentary Podcast_ I Didn't Get Work After Delivering a HIT: Sanjay Kapoor on Sirf Tum, Raja & Chhupa Rustam | UT",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "eojcuqk1",
+      "content_title": "Smriti Irani : Driving Change Through Leadership and Determination",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "dvolyo7b",
+      "content_title": "Khabargaon_kya Black Mirror hi banegi Humankind ki Future Reality? | Decoding Hollywood with The Kalm Show",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "s97xiaet",
+      "content_title": "Category Page | Top banner Sports | Ashwin Tamil",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "iamxh7w7",
+      "content_title": "Shandar 75 | A Journey of Progress & Pride ",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "zx0ifz5q",
+      "content_title": "JP Yadav On Mirzapur 3, Pankaj Tripathi, Pay Disparity & Body Shaming | Unfolding Talents",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "hn496a3o",
+      "content_title": "Digital Commentary Podcast_ The Reality of Punjab No One Wants to Talk About | Sanjay Kapoor & Mouni Roy | UT",
+      "channel": "INDIATV VODJioStore"
+    },
+    {
+      "episode_id": "al7c6rku",
+      "content_title": "Yoga for Spinal Cord Strength",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "r0bstyb0",
+      "content_title": "Bholenath Tripurari | Bhajan",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "23jolcww",
+      "content_title": "Khabargaon_Ajatashatru ne jise Mahamurkh kaha, wahi 2500 saal baad sahi nikla? | Sanjaya Belatthiputta | Mimansa",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "roicedv7",
+      "content_title": "DESIGNER JAYANTI REDDY & ROHIT BAL",
+      "channel": "IndiaTV-VOD-ENT"
+    },
+    {
+      "episode_id": "wvgs3oz5",
+      "content_title": "Shani Dev Ki Aarti| Saturday Special Bhakti",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "cja6wlxq",
+      "content_title": " H.P. Gupta & Onkar Bagaria : Perspectives from Industry Leaders",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "ruzz167j",
+      "content_title": " Lady Brigade : A Collective Force for Women's Progress",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "fbr3gy2e",
+      "content_title": "Wasim Jaffer_Manav Suthar's spin masterclass helps India beat Sri Lanka!",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "oskva6nl",
+      "content_title": "Ready or Not | Episode 3",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "d0ppvwxe",
+      "content_title": "Kennar Lewis \u2013 Player of the Final |Day-8",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "6byq0vzb",
+      "content_title": "Digital Commentary Podcast: 'Anubhav Sinha's Brutally Honest Truth' ",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "iarguxot",
+      "content_title": "Have  A Nice Day | Episode 2",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "ezx09hui",
+      "content_title": "Major Shaitan Singh: The Story of 120 Soldiers | The 1962 India\u2013China War ",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "pyt5o7i8",
+      "content_title": "ASADUDDIN OWAISI IN AAP KI ADALAT",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "6ovtv9kp",
+      "content_title": "Khabargaon_Bruce Lee ka 'Be Water' concept kahan se aaya? Lao Tzu aur Tao Te Ching ki kahani | Mimansa",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "v9423wac",
+      "content_title": "Digital Commentary Podcast: Swanand Kirkire Wrote India's Most Iconic Songs",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "4xmfzjws",
+      "content_title": "Jal Rakshas ka Khatma",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "99isgjz6",
+      "content_title": "Ssoftoons_lullu bhoot ka benam safar | Episode 66",
+      "channel": "INDIATV VODJioStore"
+    },
+    {
+      "episode_id": "k61p8eag",
+      "content_title": "Ssoftoons_Kailash Ki Buddhi_EP-22",
+      "channel": "INDIATV VODJioStore"
+    },
+    {
+      "episode_id": "n5s0z0kv",
+      "content_title": "MPGOV_MP Ki Sanskriti Aur Virasat: Parampara Se Pehchan Tak",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "ixzqjobx",
+      "content_title": "Weight Loss Peanut Butter at Home by Dr. Shikha",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "2bj03nn7",
+      "content_title": "Acharya Pramod Krishnam | Satya Sanatan",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "1fgrp6st",
+      "content_title": "Round 6 -Rally of Maharashtra  | INRS 2025",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "7usj1ta8",
+      "content_title": "Ploggers of India | Episode 5 | The Unstoppabbles ",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "oeehzb1a",
+      "content_title": "Rishi Ji Maharaj | Satya Sanatan",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "5ln1cpm7",
+      "content_title": "Kohli is back! Can RCB defend their title",
+      "channel": NaN
+    },
+    {
+      "episode_id": "ywn1pxne",
+      "content_title": "Wasim Jaffer_Aquib Nabi\u2019s Dream Comes True | Bumrah Injury Gives India a Huge Headache!",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "ewqwv1w5",
+      "content_title": "Ssoftoons_Kailash Ban Gaya MR INDIA_EP-30",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "4j2c7ovk",
+      "content_title": "Round 3 \u2013 Robusta Rally Kodagu | Forest Rally Action | 4W INCR 2025\n",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "pf3seuwk",
+      "content_title": "Ssoftoons_Bhutiyaa Chaata | Bhoot Story | Episode 4",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "t7ur09tj",
+      "content_title": "Swati Maliwal : Fighting for Women's Safety and Justice ",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "kjwdz5bl",
+      "content_title": "Working Mother | Episode 3",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "15bnj2dk",
+      "content_title": "Weight Loss Soup Recipe by Dr. Shikha",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "ehnfg6i7",
+      "content_title": "Ssoftoons_Baans-Bageeche Ka Bhoot| Bhoot story | Episode 21",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "20axd8tr",
+      "content_title": "Understanding Fertility Preservation",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "8ompa06c",
+      "content_title": "Khabargaon_Nelson Mandela: 27 saal ki kaid se President banne tak ki poori kahani | Sattadhish",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "ws8omfls",
+      "content_title": " Khelo India Beach Games 2026 | Day 3",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "fxx6s479",
+      "content_title": "Ssoftoons_Cheenti Aur Kailash Ki Jasoosi _EP-34",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "g2nvzu33",
+      "content_title": "Ssoftoons_Chudail Banee Heroine| Bhoot story | Episode 25",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "9zd7xreb",
+      "content_title": "Ssoftoons_Tooni Aur Chor Raani_EP-9\n",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "6b5ueol3",
+      "content_title": "Suryagatha | Indian Air Force: Glorious History of the Guardians of the Sky",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "lhwwrqas",
+      "content_title": "Superheros | Episode 4",
+      "channel": "null"
+    },
+    {
+      "episode_id": "lpp1e92y",
+      "content_title": "Rishi Dhawan \u2013 Player of the Series |Day-8",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "bgmrnq05",
+      "content_title": " Aries Lagna in Chandra",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "oteq9qxw",
+      "content_title": "Khabargaon_China ke Kung Fu Masters ki pol kholne wala MMA Fighter | Shu Xiaodong | Alif Laila",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "ghrlno0z",
+      "content_title": "Panchatantra Story_Chalaak Billi Ka Faisla",
+      "channel": "INDIATV VODJioStore"
+    },
+    {
+      "episode_id": "714hbpih",
+      "content_title": "Shri Ganesh Mahagatha | \u0917\u0923\u0947\u0936 \u091c\u0928\u094d\u092e : \u0938\u093f\u0930 \u0915\u091f\u0928\u0947 \u0915\u0940 \u0915\u0925\u093e |",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "g85u06r9",
+      "content_title": "Rahul Ko Hirasat Mein Kyun Liya? 200 Minute Ki Poori Kahani",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "ej28ny0w",
+      "content_title": "Bengal Election Result: \u092c\u0902\u0917\u093e\u0932 \u092e\u0947\u0902 \u092e\u0941\u0938\u094d\u0932\u093f\u092e \u092c\u0939\u0941\u0932 \u0907\u0932\u093e\u0915\u094b\u0902 \u092e\u0947\u0902 \u092e\u0941\u0938\u0932\u092e\u093e\u0928 \u092c\u0902\u091f\u0947 | Mamata vs Suvendu",
+      "channel": "devotional"
+    },
+    {
+      "episode_id": "fh1ymn3b",
+      "content_title": "Ssoftoons_Antim Uttaradhikari | Bhoot Story | Episode 3",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "hangc5mc",
+      "content_title": "Khabargaon_Kaaba: Islam ki pehli ibadatgah aur Mecca - Medina ki poori kahani | Kaise bana Kaaba? | Kissa",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "1aa8sxog",
+      "content_title": "Tarique Rahman Ki India Se Doori, Kya Hai Majboori?",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "tprmrex7",
+      "content_title": "Taurus Lagna in Chandra",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "r3bgwr58",
+      "content_title": "Relief from Ulcers with Yoga",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "u9u1dybz",
+      "content_title": "Khabargaon_Operation Safed Sagar: Kargil War mein Air Force ko pahunchne mein 2 hafte kyun lage? | Alif Laila",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "3ka1bvtj",
+      "content_title": "Astro Moon Effect in Libra Lagna",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "078p8mah",
+      "content_title": "Pradarshan Par Congress Vs AAP Mein Sangram! Andolan Par Banta Vipaksh",
+      "channel": NaN
+    },
+    {
+      "episode_id": "0j7ckdy8",
+      "content_title": "Ssoftoons_Chor Se Chori_EP-31",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "wnpgxkp0",
+      "content_title": "Khabargaon_Ghalib se lekar Jaun tak, suniye shayaron ki Attitude Problem se nikle sher | The Kalm Show Podcast",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "oiyv0y2g",
+      "content_title": "AAP Rift Deepens: Why Distance from Kejriwal After Allegations",
+      "channel": NaN
+    },
+    {
+      "episode_id": "j8183l8o",
+      "content_title": "Surya Dev Aarti | Powerful Morning Bhajan",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "4e686zm1",
+      "content_title": "Prototype Ka Pressure | Episode 2",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "d3hm0sp4",
+      "content_title": "Khullam Khulla With Saurav Sharma | Episode 6 | Former MLA Vinod Kumar Binny",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "fnrp6k1p",
+      "content_title": " Buddhu Ki Buaa",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "y4sn74zb",
+      "content_title": " MUKHIYA KA DHOTI",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "8xiuhkrk",
+      "content_title": " PRATEEKSHA | Episode 4",
+      "channel": "Yeh Saali Naukri"
+    },
+    {
+      "episode_id": "bnuqli31",
+      "content_title": "Jatin & Apoorva Ka Hungama",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "3ukgdc19",
+      "content_title": "Operation Sindoor Ke Baad Pakistan Se India Aayi 150 Dulhane?",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "of8qrt15",
+      "content_title": "Ssoftoons_Abhagan Aur Lakadhara_EP-44",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "kgpd9u05",
+      "content_title": "Thyroid Diet for Fat Loss by Dr. Shikha",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "x2c059th",
+      "content_title": "Ashwin_IPL Trading Buzz: Is Hardik Pandya Heading to CSK? What's Really Happening Behind the Scenes?",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "tva6cc5d",
+      "content_title": "Ashwin_Kuldeep\u2019s Crucial Test! | Pakistan Paridhabangal | What\u2019s With Sri Lankan Names? | IND vs SL Preview",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "pm3qfswh",
+      "content_title": "Ssoftoons_Tooni Ke Jaal Mein Phas Gaya Raja_EP-10\n",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "uiss6ydv",
+      "content_title": "Unlock The Colour Code Of Delhi Buses ",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "iwzb2jsh",
+      "content_title": "Neelam Se Pyaar, Sunita Se Shaadi?",
+      "channel": "IndiaTV-VOD-ENT"
+    },
+    {
+      "episode_id": "xitz7ylg",
+      "content_title": "Chunav Se Pehle Desh Ka Mood Kiske Saath?",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "43jr5hqt",
+      "content_title": " YOG MANTRA | Yoga for Power & Balance : Veerbhadrasana",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "bimbxg6k",
+      "content_title": "Medha Roopam & Meenakshi Verma Interview ",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "00bovf5j",
+      "content_title": "Episode 15 : Vastu Shastra Tips for House Land",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "xheu21fj",
+      "content_title": "Eklavya ki Gurudakshina | Episode 5 |  Cheeranjivi Ashwathama Warrior's Untold Journey",
+      "channel": "INDIATV VOD"
+    },
+    {
+      "episode_id": "qy554hpd",
+      "content_title": "Episode 13: Cancer Hotspot- Gangnauli Village",
+      "channel": "INDIATV VODJioStore"
+    },
+    {
+      "episode_id": "ghhgppns",
+      "content_title": "Khabargaon_Kargil War mein GPS nahi milne par Indian Air Force ka jugaad | Safed Sagar | Alif Laila",
+      "channel": "INDIATV VODFireTv"
+    },
+    {
+      "episode_id": "dblkk74m",
+      "content_title": "Nipah Virus 101: Symptoms, Transmission, and Prevention",
+      "channel": "INDIATV VODFireTv"
+    }
+  ]
+}

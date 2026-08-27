@@ -1,0 +1,195 @@
+<style>
+  :root{
+    --bg:#0b0f0e;
+    --panel:#121815;
+    --panel2:#161f1b;
+    --line:#233029;
+    --text:#e9efe9;
+    --muted:#8fa39a;
+    --signal:#5ff0a0;
+    --signal2:#ffb454;
+    --warn:#ff6b6b;
+    --mono: 'IBM Plex Mono','SFMono-Regular',Consolas,monospace;
+    --sans: 'Inter','Helvetica Neue',Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);}
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px;}
+  .top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid var(--line);padding-bottom:16px;margin-bottom:22px;flex-wrap:wrap;gap:10px;}
+  .brand{font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--signal);text-transform:uppercase;}
+  h1{font-size:26px;margin:4px 0 2px;font-weight:600;letter-spacing:-0.01em;}
+  .sub{color:var(--muted);font-size:13px;font-family:var(--mono);}
+  .window{font-family:var(--mono);font-size:12px;color:var(--muted);text-align:right;}
+  .window b{color:var(--text);}
+
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:26px;border-radius:10px;overflow:hidden;}
+  .kpi{background:var(--panel);padding:16px 14px;}
+  .kpi .n{font-family:var(--mono);font-size:24px;color:var(--signal);font-weight:600;}
+  .kpi .l{font-size:11px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.06em;}
+
+  .grid{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:16px;}
+  .grid3{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px;}
+  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0 0 4px;font-weight:600;}
+  .card .insight{font-size:12.5px;color:var(--text);margin:0 0 14px;line-height:1.5;padding-left:10px;border-left:2px solid var(--signal);}
+  .card .insight b{color:var(--signal2);}
+  canvas{max-height:260px;}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th{text-align:left;color:var(--muted);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:6px 8px;border-bottom:1px solid var(--line);}
+  td{padding:7px 8px;border-bottom:1px solid #1b241f;font-family:var(--mono);}
+  tr:last-child td{border-bottom:none;}
+  .bar{height:6px;background:#1b241f;border-radius:3px;overflow:hidden;margin-top:3px;}
+  .bar i{display:block;height:100%;background:var(--signal);}
+  .idcell{color:var(--signal2);}
+
+  .heat td{text-align:center;font-family:var(--mono);}
+  .heat th{text-align:center;}
+  .heat td:first-child{text-align:left;font-family:var(--sans);color:var(--text);}
+
+  footer{margin-top:20px;color:var(--muted);font-size:11px;font-family:var(--mono);text-align:center;}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <div class="brand">VETO · CDN Delivery Log</div>
+      <h1>One Title, One Day: 1.02M Edge Requests</h1>
+      <div class="sub">export__7_.csv · akamaized.net access log</div>
+    </div>
+    <div class="window">Window<br><b id="win"></b></div>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Traffic by hour (segment requests)</h2>
+      <p class="insight">Viewing is <b>overwhelmingly non-primetime</b>: the single biggest hour (16:00) carries almost as much traffic as the entire 19:00–24:00 block combined — consistent with an NRI/diaspora audience watching across scattered time zones rather than one evening peak.</p>
+      <canvas id="hourly"></canvas>
+    </div>
+    <div class="card">
+      <h2>Platform share</h2>
+      <p class="insight"><b>73%</b> of all requests come from Android TV / FireTV — this is a living-room, big-screen product, not a phone-first one.</p>
+      <canvas id="platform"></canvas>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="card">
+      <h2>Resolution mix by platform</h2>
+      <p class="insight">TV platforms pull noticeably higher bitrates than mobile: <b>91%</b> of Android TV/FireTV segments are 1080p or 4K, vs iOS where <b>55%</b> never rises above 720p — iOS sessions look constrained by network/ABR, not just screen size.</p>
+      <table class="heat" id="resTable"></table>
+    </div>
+    <div class="card">
+      <h2>Top 10 states (India, 99.7% of traffic)</h2>
+      <p class="insight">Delhi alone drives <b>31%</b> of national requests from just <b>2,636</b> distinct viewers — the highest requests-per-viewer ratio of any major state, meaning Delhi viewers are watching noticeably longer sessions, not just more numerous.</p>
+      <table id="statesTable"></table>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div class="card">
+      <h2>Top 10 episodes by delivery volume</h2>
+      <p class="insight">The top 2 of 842 episodes account for <b>27%</b> of all segment requests. #1 (n9nnccx5) has fewer viewers than #2 (2kd202bg) yet <b>38% more requests</b> — its audience is re-watching or binging harder, not just larger.</p>
+      <table id="epTable"></table>
+    </div>
+    <div class="card">
+      <h2>Top ISPs (by ASN)</h2>
+      <p class="insight">Reliance Jio and Bharti Airtel together account for <b>57%</b> of all requests. Jio has fewer unique viewers than Airtel (2,193 vs 2,865) but a similar request share — Jio subscribers watch more per person, likely reflecting Jio's cheaper unlimited-data plans.</p>
+      <table id="asnTable"></table>
+    </div>
+  </div>
+
+  <footer>Parsed from reqPath (content/date/episode/profile/segment), UA string, and reqTimeSec · asn 24560 = Bharti Airtel, 55836 = Reliance Jio (public ASN registries)</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+const D = {"total_rows": 1021728, "total_viewers": 9152, "total_episodes": 842, "countries": 38, "platform": {"Android TV / FireTV": 750967, "Android": 244257, "Apple TV": 14112, "Other": 5961, "iOS": 5138, "Mac": 1246, "Windows": 47}, "platform_res": {"Android": {"1280x720": 17.7, "1920x1080": 54.7, "3840x2160": 18.7, "426x240": 0.5, "640x360": 8.3}, "Android TV / FireTV": {"1280x720": 7.4, "1920x1080": 68.1, "3840x2160": 23.0, "426x240": 0.3, "640x360": 1.1}, "Apple TV": {"1280x720": 16.0, "1920x1080": 41.5, "3840x2160": 18.2, "426x240": 21.3, "640x360": 2.9}, "Mac": {"1280x720": 25.8, "1920x1080": 62.7, "3840x2160": 0.0, "426x240": 3.8, "640x360": 7.7}, "Other": {"1280x720": 10.8, "1920x1080": 47.7, "3840x2160": 35.2, "426x240": 4.4, "640x360": 1.9}, "Windows": {"1280x720": 11.1, "1920x1080": 22.2, "3840x2160": 40.7, "426x240": 18.5, "640x360": 7.4}, "iOS": {"1280x720": 55.1, "1920x1080": 33.9, "3840x2160": 0.0, "426x240": 3.6, "640x360": 7.4}}, "hourly": {"0": 5567, "1": 40450, "2": 17609, "3": 51823, "4": 53222, "5": 21455, "6": 25444, "7": 32850, "8": 45641, "9": 27983, "10": 24096, "11": 26351, "12": 45745, "13": 46973, "14": 36464, "15": 30093, "16": 92023, "17": 31462, "18": 9408, "19": 2039, "20": 1002, "21": 386, "22": 1574, "23": 717}, "top_episodes": [{"id": "n9nnccx5", "reqs": 161473, "viewers": 5846}, {"id": "2kd202bg", "reqs": 117085, "viewers": 6371}, {"id": "uee4pc0t", "reqs": 31251, "viewers": 2043}, {"id": "4jvvpa25", "reqs": 29671, "viewers": 2288}, {"id": "d49363ez", "reqs": 29136, "viewers": 3459}, {"id": "j1lk2uuu", "reqs": 24560, "viewers": 1757}, {"id": "r17wixr5", "reqs": 23875, "viewers": 1937}, {"id": "st0ir9ql", "reqs": 21208, "viewers": 1585}, {"id": "ufmyudsc", "reqs": 18058, "viewers": 1347}, {"id": "1z7n6wko", "reqs": 15202, "viewers": 2141}], "top_states": [{"state": "Delhi", "reqs": 306460, "viewers": 2636}, {"state": "Uttar Pradesh", "reqs": 171181, "viewers": 1363}, {"state": "Maharashtra", "reqs": 133645, "viewers": 1322}, {"state": "Gujarat", "reqs": 60823, "viewers": 556}, {"state": "Karnataka", "reqs": 48009, "viewers": 405}, {"state": "Rajasthan", "reqs": 43964, "viewers": 388}, {"state": "Madhya Pradesh", "reqs": 42120, "viewers": 430}, {"state": "Haryana", "reqs": 40913, "viewers": 353}, {"state": "Punjab", "reqs": 30261, "viewers": 263}, {"state": "West Bengal", "reqs": 20586, "viewers": 226}], "top_countries": {"IN": 996761, "US": 6486, "GB": 4272, "CA": 2785, "SG": 2052, "AU": 1354, "IL": 1172, "OM": 907, "NP": 813, "BD": 796}, "top_asn": [{"asn": "24560", "reqs": 351476, "viewers": 2865}, {"asn": "55836", "reqs": 232067, "viewers": 2193}, {"asn": "133982", "reqs": 60410, "viewers": 436}, {"asn": "9829", "reqs": 30271, "viewers": 245}, {"asn": "134674", "reqs": 23806, "viewers": 219}, {"asn": "45916", "reqs": 20983, "viewers": 190}, {"asn": "18209", "reqs": 15929, "viewers": 148}, {"asn": "24309", "reqs": 15293, "viewers": 138}, {"asn": "45609", "reqs": 14315, "viewers": 238}, {"asn": "17488", "reqs": 13550, "viewers": 120}]};
+
+const ASN_NAMES = {"24560":"Bharti Airtel","55836":"Reliance Jio","133982":"ISP (IN)","9829":"BSNL","134674":"ISP (IN)","45916":"ACT Fibernet","18209":"ISP (IN)","24309":"ISP (IN)","45609":"ISP (IN)","17488":"Hathway"};
+
+document.getElementById('win').textContent = "24 Aug 18:30 – 25 Aug 18:30 UTC";
+
+const fmt = n => n.toLocaleString('en-IN');
+
+// KPIs
+const kpis = [
+  [fmt(D.total_rows), 'Edge requests'],
+  [fmt(D.total_viewers), 'Distinct client IPs'],
+  [fmt(D.total_episodes), 'Episodes touched'],
+  [D.countries, 'Countries'],
+  [(D.top_countries.IN/D.total_rows*100).toFixed(1)+'%', 'Traffic from India'],
+];
+document.getElementById('kpis').innerHTML = kpis.map(([n,l])=>`<div class="kpi"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+
+Chart.defaults.color = '#8fa39a';
+Chart.defaults.font.family = "'Inter','Helvetica Neue',Arial,sans-serif";
+Chart.defaults.font.size = 11;
+
+// Hourly chart
+new Chart(document.getElementById('hourly'), {
+  type: 'bar',
+  data: {
+    labels: Object.keys(D.hourly).map(h=>h.padStart(2,'0')+':00'),
+    datasets: [{ data: Object.values(D.hourly), backgroundColor: '#5ff0a0', borderRadius: 3, maxBarThickness: 22 }]
+  },
+  options: { plugins:{legend:{display:false}}, scales:{ x:{grid:{display:false}}, y:{grid:{color:'#1b241f'}} } }
+});
+
+// Platform donut
+new Chart(document.getElementById('platform'), {
+  type: 'doughnut',
+  data: {
+    labels: Object.keys(D.platform),
+    datasets: [{ data: Object.values(D.platform), backgroundColor: ['#5ff0a0','#ffb454','#6ea8fe','#ff6b6b','#c792ea','#8fa39a','#5a6b62'], borderColor:'#121815', borderWidth:2 }]
+  },
+  options: { plugins:{legend:{position:'right', labels:{boxWidth:10, padding:10, font:{size:10.5}}}} }
+});
+
+// Resolution heat table
+(function(){
+  const resOrder = ['3840x2160','1920x1080','1280x720','640x360','426x240'];
+  let html = '<tr><th>Platform</th>' + resOrder.map(r=>`<th>${r.replace('x','×')}</th>`).join('') + '</tr>';
+  for (const [plat, vals] of Object.entries(D.platform_res)) {
+    html += `<tr><td>${plat}</td>` + resOrder.map(r=>{
+      const v = vals[r]||0;
+      const alpha = Math.min(v/70,1);
+      return `<td style="background:rgba(95,240,160,${alpha*0.55})">${v}%</td>`;
+    }).join('') + '</tr>';
+  }
+  document.getElementById('resTable').innerHTML = html;
+})();
+
+// States table
+(function(){
+  const max = Math.max(...D.top_states.map(s=>s.reqs));
+  let html = '<tr><th>State</th><th>Requests</th><th>Viewers</th><th>Req/Viewer</th></tr>';
+  D.top_states.forEach(s=>{
+    html += `<tr><td style="font-family:inherit">${s.state}</td><td>${fmt(s.reqs)}<div class="bar"><i style="width:${s.reqs/max*100}%"></i></div></td><td>${fmt(s.viewers)}</td><td>${(s.reqs/s.viewers).toFixed(0)}</td></tr>`;
+  });
+  document.getElementById('statesTable').innerHTML = html;
+})();
+
+// Episodes table
+(function(){
+  const max = Math.max(...D.top_episodes.map(e=>e.reqs));
+  let html = '<tr><th>Episode</th><th>Requests</th><th>Viewers</th></tr>';
+  D.top_episodes.forEach(e=>{
+    html += `<tr><td class="idcell">${e.id}</td><td>${fmt(e.reqs)}<div class="bar"><i style="width:${e.reqs/max*100}%"></i></div></td><td>${fmt(e.viewers)}</td></tr>`;
+  });
+  document.getElementById('epTable').innerHTML = html;
+})();
+
+// ASN table
+(function(){
+  const max = Math.max(...D.top_asn.map(a=>a.reqs));
+  let html = '<tr><th>ISP (ASN)</th><th>Requests</th><th>Viewers</th></tr>';
+  D.top_asn.forEach(a=>{
+    const name = ASN_NAMES[a.asn] || ('AS'+a.asn);
+    html += `<tr><td style="font-family:inherit">${name} <span style="color:#5a6b62">AS${a.asn}</span></td><td>${fmt(a.reqs)}<div class="bar"><i style="width:${a.reqs/max*100}%"></i></div></td><td>${fmt(a.viewers)}</td></tr>`;
+  });
+  document.getElementById('asnTable').innerHTML = html;
+})();
+</script>
