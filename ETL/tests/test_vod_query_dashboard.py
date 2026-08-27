@@ -22,6 +22,7 @@ from build_vod_query_dashboard import (  # noqa: E402
     render_html,
     watch_minutes,
     write_davis_workbook,
+    write_events,
 )
 
 
@@ -95,6 +96,32 @@ def write_source_parquet(path: Path) -> None:
     connection.executemany(
         "INSERT INTO source VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [tuple(row.values()) for row in rows],
+    )
+    connection.execute("COPY source TO ? (FORMAT PARQUET)", [str(path)])
+    connection.close()
+
+
+def write_unmarked_vod_source_parquet(path: Path) -> None:
+    row = source_row(
+        "2026-08-26 20:30:00",
+        "10.0.0.9",
+        "library/2026/08/eb56ay9d/asset/eb56ay9d_1920x1080_0.ts",
+        status="404",
+    )
+    connection = duckdb.connect()
+    connection.execute(
+        """
+        CREATE TABLE source (
+            reqTimeSec VARCHAR, reqHost VARCHAR, reqPath VARCHAR,
+            queryStr VARCHAR, cliIP VARCHAR, country VARCHAR,
+            state VARCHAR, city VARCHAR, asn VARCHAR,
+            statusCode VARCHAR, cacheStatus VARCHAR, UA VARCHAR
+        )
+        """
+    )
+    connection.executemany(
+        "INSERT INTO source VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [tuple(row.values())],
     )
     connection.execute("COPY source TO ? (FORMAT PARQUET)", [str(path)])
     connection.close()
@@ -207,6 +234,44 @@ def test_compact_export_preserves_weighted_segments_and_identity() -> None:
     assert viewer_a["status_code"] == "200, 404"
     assert float(viewer_a["request_watch_hours"]) == 12 / 3600
     assert float(viewer_a["delivered_watch_hours"]) == 6 / 3600
+
+
+def test_export_keeps_unmarked_segments_from_vod_hosts() -> None:
+    with TemporaryDirectory(dir=ROOT / "ETL" / "output") as folder:
+        folder_path = Path(folder)
+        source = folder_path / "source.parquet"
+        lookup = folder_path / "ua_lookup.parquet"
+        output = folder_path / "events.csv"
+        write_unmarked_vod_source_parquet(source)
+        write_ua_lookup(lookup)
+        subprocess.run(
+            [
+                sys.executable,
+                str(TOOLS / "export_vod_query_events.py"),
+                "--input",
+                str(source),
+                "--date",
+                "2026-08-26",
+                "--out",
+                str(output),
+                "--ua-lookup",
+                str(lookup),
+            ],
+            check=True,
+        )
+        with output.open(encoding="utf-8", newline="") as handle:
+            rows = list(csv.DictReader(handle))
+
+    assert len(rows) == 1
+    assert rows[0]["content_code"] == "eb56ay9d"
+    assert rows[0]["content_title"] == "Unknown / Unmarked"
+    assert rows[0]["category_name"] == "Unknown / Unmarked"
+    assert rows[0]["channel"] == "Unknown / Unmarked"
+    assert rows[0]["content_type"] == "Vod"
+    assert rows[0]["status_code"] == "404"
+    assert rows[0]["identity_source"] == "unavailable"
+    assert float(rows[0]["request_watch_hours"]) == 6 / 3600
+    assert float(rows[0]["delivered_watch_hours"]) == 0
 
 
 def test_dashboard_has_searchable_multiselect_and_safe_payload() -> None:
@@ -355,3 +420,24 @@ def test_reimported_date_replaces_old_rows() -> None:
     old = [{"log_date": "2026-08-25", "request_ist": "old"}]
     new = [{"log_date": "2026-08-25", "request_ist": "new"}]
     assert merge_events(old, new) == new
+
+
+def test_write_events_supports_new_columns_during_append() -> None:
+    rows = [
+        {"log_date": "2026-08-26", "content_code": "old-code"},
+        {
+            "log_date": "2026-08-27",
+            "content_code": "new-code",
+            "segment_count": "4",
+            "decoded_model": "Example TV",
+        },
+    ]
+    with TemporaryDirectory(dir=ROOT / "ETL" / "output") as folder:
+        output = Path(folder) / "events.csv"
+        write_events(output, rows)
+        with output.open(encoding="utf-8", newline="") as handle:
+            written = list(csv.DictReader(handle))
+
+    assert written[0]["segment_count"] == ""
+    assert written[1]["segment_count"] == "4"
+    assert written[1]["decoded_model"] == "Example TV"

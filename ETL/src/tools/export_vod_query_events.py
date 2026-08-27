@@ -257,10 +257,10 @@ def main() -> None:
                     strftime(segment.request_timestamp, '%Y-%m-%d') AS log_date,
                     strftime(date_trunc('minute', segment.request_timestamp), '%Y-%m-%d %H:%M:%S') AS minute_ist,
                     strftime(segment.request_timestamp, '%Y-%m-%d %H:%M:%S.%f') AS request_ist,
-                    COALESCE(NULLIF(segment.query_content_title, ''), NULLIF(segment.viewer_content_title, ''), NULLIF(content.content_title, ''), 'Unknown / NA') AS content_title,
-                    COALESCE(NULLIF(segment.query_category_name, ''), NULLIF(segment.viewer_category_name, ''), NULLIF(content.category_name, ''), 'Unknown / NA') AS category_name,
+                    COALESCE(NULLIF(segment.query_content_title, ''), NULLIF(segment.viewer_content_title, ''), NULLIF(content.content_title, ''), 'Unknown / Unmarked') AS content_title,
+                    COALESCE(NULLIF(segment.query_category_name, ''), NULLIF(segment.viewer_category_name, ''), NULLIF(content.category_name, ''), 'Unknown / Unmarked') AS category_name,
                     COALESCE(NULLIF(segment.query_content_type, ''), NULLIF(segment.viewer_content_type, ''), NULLIF(content.content_type, ''), 'Vod') AS content_type,
-                    COALESCE(NULLIF(segment.query_channel, ''), NULLIF(segment.viewer_channel, ''), 'Unknown / NA') AS channel,
+                    COALESCE(NULLIF(segment.query_channel, ''), NULLIF(segment.viewer_channel, ''), 'Unknown / Unmarked') AS channel,
                     COALESCE(NULLIF(segment.query_platform, ''), NULLIF(segment.viewer_platform, ''), 'Unknown / NA') AS platform,
                     COALESCE(NULLIF(segment.query_device, ''), NULLIF(segment.viewer_device, ''), 'Unknown / NA') AS device,
                     segment.user_agent,
@@ -324,11 +324,20 @@ def main() -> None:
                 LEFT JOIN ua_lookup AS ua
                     ON segment.ua_norm = ua.ua_norm
                 WHERE lower(COALESCE(
-                    NULLIF(segment.query_content_type, ''),
-                    NULLIF(segment.viewer_content_type, ''),
-                    NULLIF(content.content_type, ''),
-                    ''
-                )) = 'vod'
+                        NULLIF(segment.query_content_type, ''),
+                        NULLIF(segment.viewer_content_type, ''),
+                        NULLIF(content.content_type, ''),
+                        ''
+                    )) = 'vod'
+                   OR (
+                        COALESCE(
+                            NULLIF(segment.query_content_type, ''),
+                            NULLIF(segment.viewer_content_type, ''),
+                            NULLIF(content.content_type, ''),
+                            ''
+                        ) = ''
+                        AND regexp_matches(segment.req_host_key, '(^|[.-])vod([.-]|$)')
+                   )
                 )
                 {output_projection}
             ) TO '{output_sql}' (FORMAT CSV, HEADER TRUE, DELIMITER ',')

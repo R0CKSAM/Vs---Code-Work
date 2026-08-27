@@ -70,7 +70,13 @@ def merge_events(
 
 
 def write_events(path: Path, rows: list[dict[str, str]]) -> None:
-    fields = list(rows[0]) if rows else []
+    fields: list[str] = []
+    seen_fields: set[str] = set()
+    for row in rows:
+        for field in row:
+            if field not in seen_fields:
+                fields.append(field)
+                seen_fields.add(field)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
