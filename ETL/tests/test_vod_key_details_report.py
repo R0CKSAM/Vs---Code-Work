@@ -13,7 +13,24 @@ ROOT = Path(__file__).resolve().parents[2]
 TOOLS = ROOT / "ETL" / "src" / "tools"
 sys.path.insert(0, str(TOOLS))
 
-from build_vod_key_details_report import build_report  # noqa: E402
+from build_vod_key_details_report import build_report, read_video_list  # noqa: E402
+
+
+def test_tab_separated_xls_export_uses_report_title_and_vod_key() -> None:
+    with TemporaryDirectory(dir=ROOT / "ETL" / "output") as folder:
+        source = Path(folder) / "video-report.xls"
+        source.write_bytes(
+            "category_name\tvideo_title\tvideo_report_title\tvod_key\tpublish_date\n"
+            "Sports\tFallback title\tPreferred report’s title\tABC123\t30-08-2026 13:06\n"
+            "Kids\tOnly video title\t\tDEF456\t29-08-2026 12:00\n".encode("cp1252")
+        )
+
+        videos = read_video_list(source, "Video List")
+
+    assert videos == [
+        ("Preferred report’s title", "abc123"),
+        ("Only video title", "def456"),
+    ]
 
 
 def test_report_has_three_daily_metric_sheets_and_true_distinct_totals() -> None:

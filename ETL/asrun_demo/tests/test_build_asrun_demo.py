@@ -599,6 +599,9 @@ def test_render_dashboard_wires_complete_reset_and_fatal_error(
     assert "function nctMissingPartitions(range){" in html
     assert "function loadNctPartition(dateValue,file){" in html
     assert "Filters changed from the default view; click to restore defaults" in html
+    assert 'class="scope-gap-details"' in html
+    assert "<strong>Remaining gap dates:</strong>" in html
+    assert "remaining=missing.slice(4)" in html
 
 
 def test_render_dashboard_distinguishes_missing_coverage_from_real_zero(

@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import csv
+import io
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
@@ -22,6 +24,8 @@ SHEETS = (
     ("Distinct CLI IPs", "cli_ips"),
     ("Distinct Device IDs", "device_ids"),
 )
+VIDEO_TITLE_HEADERS = ("video report title", "video title")
+VOD_KEY_HEADER = "vod key"
 
 
 def parse_date(value: str) -> date:
@@ -35,9 +39,82 @@ def output_path_for(source: Path) -> Path:
     return source.with_name(f"{source.stem}_details.xlsx")
 
 
+def normalize_header(value: object) -> str:
+    return " ".join(str(value or "").strip().lower().replace("_", " ").split())
+
+
+def parse_video_rows(
+    headers: tuple[object, ...] | list[object],
+    rows,
+    source_label: str,
+) -> list[tuple[str, str]]:
+    header_map = {
+        normalize_header(value): index
+        for index, value in enumerate(headers)
+    }
+    title_indexes = [
+        header_map[name] for name in VIDEO_TITLE_HEADERS if name in header_map
+    ]
+    if not title_indexes or VOD_KEY_HEADER not in header_map:
+        missing = []
+        if not title_indexes:
+            missing.append("Video Title or Video Report Title")
+        if VOD_KEY_HEADER not in header_map:
+            missing.append("VOD Key")
+        raise ValueError(f"Missing columns in {source_label}: {', '.join(missing)}")
+
+    code_index = header_map[VOD_KEY_HEADER]
+    videos: list[tuple[str, str]] = []
+    seen_codes: set[str] = set()
+    for excel_row, row in enumerate(rows, start=2):
+        values = list(row)
+        title = next(
+            (
+                str(values[index] or "").strip()
+                for index in title_indexes
+                if index < len(values) and str(values[index] or "").strip()
+            ),
+            "",
+        )
+        code = (
+            str(values[code_index] or "").strip().lower()
+            if code_index < len(values)
+            else ""
+        )
+        if not title and not code:
+            continue
+        if not title or not code:
+            raise ValueError(f"Row {excel_row} must contain both Video Title and VOD Key.")
+        if code in seen_codes:
+            raise ValueError(f"Duplicate VOD Key {code!r} at row {excel_row}.")
+        seen_codes.add(code)
+        videos.append((title, code))
+    if not videos:
+        raise ValueError(f"No videos were found in {source_label}.")
+    return videos
+
+
 def read_video_list(path: Path, sheet_name: str) -> list[tuple[str, str]]:
     if not path.exists():
         raise FileNotFoundError(f"Video-list workbook was not found: {path}")
+
+    if path.suffix.lower() == ".xls":
+        raw = path.read_bytes()
+        if raw.startswith(b"\xd0\xcf\x11\xe0"):
+            raise ValueError(
+                f"{path.name!r} is a binary legacy XLS file. Convert it to XLSX first."
+            )
+        try:
+            text = raw.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            text = raw.decode("cp1252")
+        rows = csv.reader(io.StringIO(text, newline=""), delimiter="\t")
+        try:
+            headers = next(rows)
+        except StopIteration as error:
+            raise ValueError(f"Tab-separated XLS export {path.name!r} is empty.") from error
+        return parse_video_rows(headers, rows, repr(path.name))
+
     workbook = load_workbook(path, read_only=True, data_only=True)
     if sheet_name not in workbook.sheetnames:
         raise ValueError(
@@ -49,31 +126,7 @@ def read_video_list(path: Path, sheet_name: str) -> list[tuple[str, str]]:
         headers = next(rows)
     except StopIteration as error:
         raise ValueError(f"Sheet {sheet_name!r} is empty.") from error
-    header_map = {
-        str(value or "").strip().lower(): index
-        for index, value in enumerate(headers)
-    }
-    required = {"video title", "vod key"}
-    missing = sorted(required - set(header_map))
-    if missing:
-        raise ValueError(f"Missing columns in {sheet_name!r}: {', '.join(missing)}")
-
-    videos: list[tuple[str, str]] = []
-    seen_codes: set[str] = set()
-    for excel_row, row in enumerate(rows, start=2):
-        title = str(row[header_map["video title"]] or "").strip()
-        code = str(row[header_map["vod key"]] or "").strip().lower()
-        if not title and not code:
-            continue
-        if not title or not code:
-            raise ValueError(f"Row {excel_row} must contain both Video Title and VOD Key.")
-        if code in seen_codes:
-            raise ValueError(f"Duplicate VOD Key {code!r} at row {excel_row}.")
-        seen_codes.add(code)
-        videos.append((title, code))
-    if not videos:
-        raise ValueError(f"No videos were found in sheet {sheet_name!r}.")
-    return videos
+    return parse_video_rows(headers, rows, repr(sheet_name))
 
 
 def date_range(start: date, end: date) -> list[date]:

@@ -194,7 +194,7 @@ class DailyDeliveryValidationTests(unittest.TestCase):
                 "channel_name": "India TV",
                 "raw_ts_chunks": 10000,
             })
-            for day in range(1, 6):
+            for day in range(1, 10):
                 rows.append({
                     "log_date": f"2026-08-{day:02d}",
                     "source": "stream",
@@ -203,6 +203,7 @@ class DailyDeliveryValidationTests(unittest.TestCase):
                 })
             pd.DataFrame(rows).to_parquet(daily / "channel_audience_daily.parquet", index=False)
 
+            expected_inactive = []
             anomalies, warnings = validator.channel_anomalies(
                 profile,
                 date(2026, 8, 10),
@@ -211,10 +212,14 @@ class DailyDeliveryValidationTests(unittest.TestCase):
                 threshold_pct=5,
                 min_baseline_days=3,
                 min_median_rows=1000,
+                expected_inactive=expected_inactive,
             )
 
             self.assertFalse(warnings)
             self.assertEqual(anomalies, [])
+            self.assertEqual(len(expected_inactive), 1)
+            self.assertEqual(expected_inactive[0]["channel"], "Veto Cricket Live")
+            self.assertEqual(expected_inactive[0]["status"], "EXPECTED_INACTIVE")
 
 
 if __name__ == "__main__":

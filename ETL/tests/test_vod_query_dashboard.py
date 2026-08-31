@@ -19,8 +19,10 @@ sys.path.insert(0, str(TOOLS))
 from build_vod_query_dashboard import (  # noqa: E402
     canonicalize_content_titles,
     merge_events,
+    prepare_dashboard_data,
     render_html,
     watch_minutes,
+    write_dashboard_data,
     write_davis_workbook,
     write_events,
 )
@@ -320,9 +322,13 @@ def test_dashboard_has_searchable_multiselect_and_safe_payload() -> None:
     assert 'id="davisTitles"' in html
     assert 'id="davisTitlesHead"' in html
     assert 'id="davisHeaderStatus"' in html
-    assert 'id="davisExportExcel"' in html
-    assert 'href="Davis_Cup_Performance.xlsx"' in html
-    assert "Export Davis Cup Excel" in html
+    assert 'id="universalExportExcel"' in html
+    assert "Export selected Excel" in html
+    assert 'id="davisExportExcel"' not in html
+    assert "function exportUniversalExcel()" in html
+    assert "function xlsxBlob(sheets)" in html
+    assert "'Video Title','Video Key','First Seen'" in html
+    assert "'Watch Minutes':watchRows,'CLI IPs':cliRows" in html
     assert "isDavisCupRow" in html
     assert "watchTimeParts" in html
     assert "const DAVIS_TO" not in html
@@ -340,8 +346,33 @@ def test_dashboard_has_searchable_multiselect_and_safe_payload() -> None:
     assert "nearestAvailableDate" in html
     assert "container.replaceChildren()" in html
     assert "option.hidden" not in html
+    assert "function visiblePickerValues(type)" in html
+    assert "for(const value of visiblePickerValues(type))filterState[type].add(value)" in html
     assert "DecompressionStream" in html
+    assert "loadDayScript" in html
+    assert "dayCache.delete(date)" in html
+    assert "default_window_days\":7" in html
+    assert "availableDates.length-defaultWindow" in html
+    assert "Loading ${countFmt.format(dates.length)} selected ${dateWord}" in html
     assert "Title </script>" not in html
+
+
+def test_dashboard_writes_one_lazy_payload_per_date() -> None:
+    rows = [
+        {"log_date": "2026-08-24", "content_code": "code-a", "content_title": "A"},
+        {"log_date": "2026-08-25", "content_code": "code-b", "content_title": "B"},
+    ]
+    index, days = prepare_dashboard_data(rows)
+    with TemporaryDirectory(dir=ROOT / "ETL" / "output") as folder:
+        data_dir = Path(folder) / "dashboard_data"
+        write_dashboard_data(data_dir, days)
+        files = sorted(path.name for path in data_dir.iterdir())
+        registration = (data_dir / "2026-08-24.js").read_text(encoding="ascii")
+
+    assert index["dates"] == ["2026-08-24", "2026-08-25"]
+    assert index["default_window_days"] == 7
+    assert files == ["2026-08-24.js", "2026-08-25.js"]
+    assert 'window.__vodDayPayloads["2026-08-24"]' in registration
 
 
 def test_dashboard_uses_dominant_title_for_each_video_key() -> None:
@@ -409,20 +440,21 @@ def test_davis_workbook_has_watch_hours_and_cli_ip_sheets() -> None:
     watch = workbook["Watch Minutes"]
     cli_ips = workbook["CLI IPs"]
     assert [cell.value for cell in watch[1]] == [
-        "Match Title", "Date Posted", "Watch Minutes - Aug 24",
+        "Video Title", "Video Key", "First Seen", "Watch Minutes - Aug 24",
         "Watch Minutes - Aug 25", "Total Watch Minutes",
     ]
     assert [cell.value for cell in watch[2]] == [
-        "Davis Cup | IND vs NED Match 5 Highlights", "2026-08-24",
+        "Davis Cup | IND vs NED Match 5 Highlights", "match-five", "2026-08-24",
         30, 90, 120,
     ]
     assert [cell.value for cell in cli_ips[2]] == [
-        "Davis Cup | IND vs NED Match 5 Highlights", "2026-08-24", 1, 2, 2,
+        "Davis Cup | IND vs NED Match 5 Highlights", "match-five", "2026-08-24",
+        1, 2, 2,
     ]
     assert watch.freeze_panes == "A2"
     assert cli_ips.freeze_panes == "A2"
     assert watch.auto_filter.ref == watch.dimensions
-    assert all(cell.number_format == "0" for cell in watch[2][2:])
+    assert all(cell.number_format == "0" for cell in watch[2][3:])
 
 
 def test_watch_minutes_matches_dashboard_half_up_rounding() -> None:

@@ -29,6 +29,7 @@ import pyarrow.parquet as pq
 IST = ZoneInfo("Asia/Kolkata")
 SCHEMA_VERSION = 1
 DEFAULT_ARCHIVE = Path(r"Z:\Veto Logs Backup\DO NOT DELETE")
+DEFAULT_EVENT_DRIVEN_CHANNELS = ("Veto Cricket Live",)
 ARCHIVE_ENV_NAMES = (
     "VG_ETL_ARCHIVE_LAKE_ROOTS",
     "VG_ETL_ARCHIVE_LAKE_ROOT",
@@ -424,6 +425,8 @@ def channel_anomalies(
     min_baseline_days: int,
     min_median_rows: int,
     min_active_ratio: float = 0.7,
+    event_driven_channels: Iterable[str] = DEFAULT_EVENT_DRIVEN_CHANNELS,
+    expected_inactive: list[dict[str, Any]] | None = None,
 ) -> tuple[list[dict[str, Any]], list[str]]:
     frame = load_channel_daily(profile_dir)
     warnings: list[str] = []
@@ -448,6 +451,11 @@ def channel_anomalies(
         .nunique()
         .to_dict()
     )
+    event_channel_keys = {
+        str(channel).strip().casefold()
+        for channel in event_driven_channels
+        if str(channel).strip()
+    }
     anomalies: list[dict[str, Any]] = []
     for (source, channel), group in data.groupby(["source", "channel_name"], observed=True):
         target_rows = float(group.loc[group["log_date"] == end, "raw_ts_chunks"].sum())
@@ -465,6 +473,20 @@ def channel_anomalies(
             continue
         pct = (target_rows / normal * 100) if normal else 0.0
         if pct <= threshold_pct:
+            if target_rows == 0 and channel.strip().casefold() in event_channel_keys:
+                if expected_inactive is not None:
+                    expected_inactive.append({
+                        "source": source,
+                        "channel": channel,
+                        "date": target.isoformat(),
+                        "target_raw_ts_chunks": 0,
+                        "median_raw_ts_chunks": int(normal),
+                        "baseline_nonzero_days": int(len(nonzero)),
+                        "baseline_available_days": available_days,
+                        "baseline_active_ratio": round(active_ratio, 4),
+                        "status": "EXPECTED_INACTIVE",
+                    })
+                continue
             anomalies.append({
                 "source": source,
                 "channel": channel,
@@ -540,6 +562,15 @@ def main() -> None:
         default=0.7,
         help="Minimum share of available baseline days on which a channel must be active.",
     )
+    parser.add_argument(
+        "--event-driven-channel",
+        action="append",
+        default=list(DEFAULT_EVENT_DRIVEN_CHANNELS),
+        help=(
+            "Repeatable channel name allowed to have a zero-volume day without being treated "
+            "as an outage. Defaults to Veto Cricket Live."
+        ),
+    )
     parser.add_argument("--reconcile-tolerance-pct", type=float, default=0.1)
     parser.add_argument("--reconcile-tolerance-rows", type=int, default=100)
     parser.add_argument("--fail-on-channel-anomaly", action="store_true")
@@ -568,6 +599,7 @@ def main() -> None:
 
     reconciliation: list[dict[str, Any]] = []
     anomalies: list[dict[str, Any]] = []
+    expected_inactive_channels: list[dict[str, Any]] = []
     warnings: list[str] = []
     if args.mode == "full":
         if args.profile_dir is None:
@@ -588,6 +620,8 @@ def main() -> None:
             args.channel_min_baseline_days,
             args.channel_min_median_rows,
             args.channel_min_active_ratio,
+            args.event_driven_channel,
+            expected_inactive_channels,
         )
         warnings.extend(channel_warnings)
 
@@ -611,6 +645,9 @@ def main() -> None:
         "overall_status": overall_status,
         "hard_failure_count": len(hard_failures),
         "channel_anomaly_count": len(anomalies),
+        "event_driven_channels": sorted(set(args.event_driven_channel)),
+        "expected_inactive_channel_count": len(expected_inactive_channels),
+        "expected_inactive_channels": expected_inactive_channels,
         "warnings": warnings,
         "source_results": source_results,
         "profile_reconciliation": reconciliation,
@@ -644,6 +681,7 @@ def main() -> None:
                     f"delta={item.get('delta_rows', 0):,}"
                 )
     print(f"Channel anomalies: {len(anomalies)}")
+    print(f"Expected inactive event channels: {len(expected_inactive_channels)}")
     print(f"Report: {latest_json}")
 
     if hard_failures or (args.fail_on_channel_anomaly and anomalies):

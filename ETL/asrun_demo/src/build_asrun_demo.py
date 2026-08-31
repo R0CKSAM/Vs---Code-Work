@@ -3113,6 +3113,28 @@ function render(){const ev=filtered(),seconds=ev.reduce((n,e)=>n+(+e.actual_dura
 .scope-continuity-line strong { color: var(--ink); }
 .scope-continuity-line.complete strong { color: #047857; }
 .scope-continuity-line.gap strong { color: #b45309; }
+.scope-gap-details { display: inline; }
+.scope-gap-details summary {
+  display: inline;
+  color: #075985;
+  cursor: pointer;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+}
+.scope-gap-details summary::-webkit-details-marker { display: none; }
+.scope-gap-details[open] { display: block; margin-top: 4px; }
+.scope-gap-details[open] summary { display: inline-block; }
+.scope-gap-details span {
+  display: block;
+  margin-top: 3px;
+  padding: 5px 7px;
+  border-left: 2px solid #f59e0b;
+  background: #fffbeb;
+  color: var(--ink);
+  line-height: 1.45;
+}
 .multi-search-shell {
   display: block;
   position: sticky;
@@ -4977,7 +4999,7 @@ function inclusiveIsoDates(start,end){const first=isoDatePart(start),last=isoDat
 function coverageBounds(dateValues){const values=[...new Set((dateValues||[]).map(isoDatePart).filter(Boolean))].sort();return values.length?{start:values[0]+'T00:00:00',end:values[values.length-1]+'T23:59:59'}:null;}
 function dateContinuity(dateValues,start,end){const expected=inclusiveIsoDates(start,end);if(!expected.length)return {valid:false,total:0,present:0,missing:[]};const represented=new Set((dateValues||[]).map(isoDatePart).filter(Boolean)),missing=expected.filter(date=>!represented.has(date));return {valid:true,total:expected.length,present:expected.length-missing.length,missing};}
 function usedDateContinuity(dateValues,start,end,trueBounds){const selected=inclusiveIsoDates(start,end),sourceFirst=isoDatePart(trueBounds?.start),sourceLast=isoDatePart(trueBounds?.end);if(!selected.length)return {valid:false,total:0,present:0,missing:[],outside:0};if(!sourceFirst||!sourceLast)return {...dateContinuity(dateValues,start,end),outside:0};const overlapStart=selected[0]>sourceFirst?selected[0]:sourceFirst,overlapEnd=selected[selected.length-1]<sourceLast?selected[selected.length-1]:sourceLast;if(overlapStart>overlapEnd)return {valid:true,total:0,present:0,missing:[],outside:selected.length,noOverlap:true};const value=dateContinuity(dateValues,overlapStart,overlapEnd);value.outside=selected.length-value.total;return value;}
-function continuityLine(label,coverage){if(!coverage.valid)return '<span class="scope-continuity-line"><strong>'+esc(label)+':</strong> No range</span>';if(coverage.noOverlap)return '<span class="scope-continuity-line"><strong>'+esc(label)+': Outside source range</strong> · '+fmt(coverage.outside)+' selected dates</span>';const outside=coverage.outside?' · '+fmt(coverage.outside)+' outside source range':'';if(!coverage.missing.length)return '<span class="scope-continuity-line complete"><strong>'+esc(label)+': Complete</strong> · '+fmt(coverage.present)+'/'+fmt(coverage.total)+' dates'+outside+'</span>';const preview=coverage.missing.slice(0,4).map(shortDate).join(', '),more=coverage.missing.length>4?' +'+fmt(coverage.missing.length-4)+' more':'';return '<span class="scope-continuity-line gap"><strong>'+esc(label)+': '+fmt(coverage.missing.length)+' gap'+(coverage.missing.length===1?'':'s')+'</strong> · '+fmt(coverage.present)+'/'+fmt(coverage.total)+' dates<span title="'+esc(coverage.missing.map(shortDate).join(', '))+'"> · '+esc(preview+more)+'</span>'+outside+'</span>';}
+function continuityLine(label,coverage){if(!coverage.valid)return '<div class="scope-continuity-line"><strong>'+esc(label)+':</strong> No range</div>';if(coverage.noOverlap)return '<div class="scope-continuity-line"><strong>'+esc(label)+': Outside source range</strong> · '+fmt(coverage.outside)+' selected dates</div>';const outside=coverage.outside?' · '+fmt(coverage.outside)+' outside source range':'';if(!coverage.missing.length)return '<div class="scope-continuity-line complete"><strong>'+esc(label)+': Complete</strong> · '+fmt(coverage.present)+'/'+fmt(coverage.total)+' dates'+outside+'</div>';const missing=coverage.missing.map(shortDate),preview=missing.slice(0,4).join(', '),remaining=missing.slice(4),more=remaining.length?' <details class="scope-gap-details"><summary title="Show the remaining gap dates">+'+fmt(remaining.length)+' more</summary><span><strong>Remaining gap dates:</strong> '+esc(remaining.join(', '))+'</span></details>':'';return '<div class="scope-continuity-line gap"><strong>'+esc(label)+': '+fmt(coverage.missing.length)+' gap'+(coverage.missing.length===1?'':'s')+'</strong> · '+fmt(coverage.present)+'/'+fmt(coverage.total)+' dates · '+esc(preview)+more+outside+'</div>';}
 function scopeContinuityHtml(dateValues,trueBounds,usedStart,usedEnd){const effectiveTrue=trueBounds||coverageBounds(dateValues);return '<span class="scope-continuity">'+continuityLine('True',dateContinuity(dateValues,effectiveTrue?.start,effectiveTrue?.end))+continuityLine('Used',usedDateContinuity(dateValues,usedStart,usedEnd,effectiveTrue))+'</span>';}
 function minuteCompletenessHtml(counts,usedStart,usedEnd){
   if(!counts||!usedStart||!usedEnd)return '';
