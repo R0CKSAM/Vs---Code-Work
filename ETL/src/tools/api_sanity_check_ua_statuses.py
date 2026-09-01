@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
 import random
 import time
 from datetime import datetime, timezone
@@ -73,16 +74,30 @@ def save_cache(cache: pd.DataFrame, path: Path) -> None:
 
 
 def select_candidates(lookup: pd.DataFrame, cache: pd.DataFrame, args: argparse.Namespace) -> pd.DataFrame:
-    statuses = {item.strip() for item in args.statuses.split(",") if item.strip()}
+    status_order = [item.strip() for item in args.statuses.split(",") if item.strip()]
+    statuses = set(status_order)
     candidates = lookup[lookup["decode_status"].fillna("").isin(statuses)].copy()
     candidates = candidates[candidates["ua_norm"].fillna("").astype(str).str.strip().ne("")]
     if not args.include_malformed and "is_malformed" in candidates.columns:
         candidates = candidates[~candidates["is_malformed"].astype(str).str.lower().isin(["true", "1"])]
-    cached = set(cache["ua_hash"].astype(str)) if not cache.empty and "ua_hash" in cache.columns else set()
+    # Failed and rate-limited responses remain retryable. Only a successful API
+    # decode should remove a UA from a resumed run.
+    cached = (
+        set(
+            cache.loc[
+                cache["api_status"].fillna("").eq("decoded_api"), "ua_hash"
+            ].astype(str)
+        )
+        if not cache.empty and {"ua_hash", "api_status"}.issubset(cache.columns)
+        else set()
+    )
     if not args.force:
         candidates = candidates[~candidates["ua_hash"].astype(str).isin(cached)]
-    sort_cols = [col for col in ["decode_status", "confidence", "ua_norm"] if col in candidates.columns]
-    candidates = candidates.sort_values(sort_cols)
+    candidates["_status_order"] = candidates["decode_status"].map(
+        {status: rank for rank, status in enumerate(status_order)}
+    ).fillna(len(status_order))
+    sort_cols = [col for col in ["_status_order", "confidence", "ua_norm"] if col in candidates.columns]
+    candidates = candidates.sort_values(sort_cols).drop(columns=["_status_order"])
     if args.api_limit > 0:
         candidates = candidates.head(args.api_limit)
     return candidates
@@ -102,7 +117,10 @@ def run_api(candidates: pd.DataFrame, cache: pd.DataFrame, args: argparse.Namesp
         except Exception as exc:
             rows.append(decoder.api_error_row(ua_hash, str(exc)))
             log(f"API error: {exc}")
-            if args.stop_on_rate_limit and "rate limit" in str(exc).lower():
+            if decoder.is_auth_error(exc):
+                log("Stopping because the API key was rejected. Cache/report are resumable.")
+                break
+            if args.stop_on_rate_limit and decoder.is_rate_limit_error(exc):
                 log("Stopping because API appears rate-limited. Cache/report are resumable.")
                 break
 
@@ -195,7 +213,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
     parser.add_argument("--output-prefix", default="ua_status_api_sanity")
     parser.add_argument("--api-limit", type=int, default=25, help="0 report only; positive checks N rows; -1 checks all uncached rows.")
-    parser.add_argument("--api-key", default="NOTREQUIED")
+    parser.add_argument("--api-key", default=os.getenv("WHATMYUA_KEY", "NOTREQUIED"))
     parser.add_argument("--api-url", default=decoder.DEFAULT_API_URL)
     parser.add_argument("--api-timeout", type=float, default=20.0)
     parser.add_argument("--api-sleep-min-seconds", type=float, default=2.0)
@@ -208,6 +226,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    decoder.load_env_file()
     args = parse_args()
     args.lookup = args.lookup.expanduser().resolve()
     args.api_cache = args.api_cache.expanduser().resolve()

@@ -46,6 +46,7 @@ DEFAULT_ALL_DISTINCT_API_CACHE = (
     ETL_ROOT / "data" / "cache" / "device_decode" / "whatmyuseragent_all_distinct_ua_cache.parquet"
 )
 DEFAULT_API_URL = "https://whatmyuseragent.com/api"
+DEFAULT_ENV_FILE = ETL_ROOT / ".env"
 
 OUTPUT_COLUMNS = [
     "UA",
@@ -101,6 +102,26 @@ API_COLUMNS = [
 ]
 
 
+def load_env_file(path: Path = DEFAULT_ENV_FILE, *, override: bool = True) -> bool:
+    """Load simple KEY=VALUE settings without requiring python-dotenv."""
+    if not path.exists():
+        return False
+    for raw_line in path.read_text(encoding="utf-8-sig").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", key):
+            continue
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {"'", '"'}:
+            value = value[1:-1]
+        if override or key not in os.environ:
+            os.environ[key] = value
+    return True
+
+
 def log(message: str) -> None:
     print(f"[{datetime.now().isoformat(timespec='seconds')}] {message}", flush=True)
 
@@ -129,6 +150,24 @@ def normalize_ua(value: Any) -> str:
 
 def ua_hash(value: str) -> str:
     return hashlib.sha256(value.encode("utf-8", errors="replace")).hexdigest()
+
+
+def is_rate_limit_error(value: Any) -> bool:
+    error = safe_text(value).lower()
+    return (
+        "rate limit" in error
+        or "too many requests" in error
+        or bool(re.search(r"(?:http(?: error)?\s*)?429\b", error))
+    )
+
+
+def is_auth_error(value: Any) -> bool:
+    error = safe_text(value).lower()
+    return (
+        "unauthorized" in error
+        or "forbidden" in error
+        or bool(re.search(r"(?:http(?: error)?\s*)?(?:401|403)\b", error))
+    )
 
 
 def read_parquet(path: Path) -> pd.DataFrame:
@@ -554,7 +593,7 @@ def save_api_cache(cache: pd.DataFrame, path: Path) -> None:
 
 
 def api_decode(ua: str, args: argparse.Namespace) -> dict[str, Any]:
-    params = urllib.parse.urlencode({"ua": ua, "key": args.api_key})
+    params = urllib.parse.urlencode({"ua": ua, "key": args.api_key or "NOTREQUIED"})
     url = f"{args.api_url}?{params}"
     request = urllib.request.Request(url, headers={"User-Agent": "Veto-ETL-UA-Decoder/1.1"})
     with urllib.request.urlopen(request, timeout=args.api_timeout) as response:
@@ -695,7 +734,10 @@ def enrich_with_api(local: pd.DataFrame, cache: pd.DataFrame, args: argparse.Nam
             error = str(exc)
             api_rows.append(api_error_row(hash_value, error))
             log(f"API error: {error}")
-            if "rate limit" in error.lower() and args.stop_on_rate_limit:
+            if is_auth_error(error):
+                log("Stopping API loop because the API key was rejected. Cache will be saved.")
+                break
+            if is_rate_limit_error(error) and args.stop_on_rate_limit:
                 log("Stopping API loop because rate limit was reached. Cache will be saved.")
                 break
         if args.api_flush_every > 0 and len(api_rows) >= args.api_flush_every:
@@ -814,6 +856,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    load_env_file()
     args = parse_args()
     args.input = args.input.expanduser().resolve()
     args.map = args.map.expanduser().resolve()

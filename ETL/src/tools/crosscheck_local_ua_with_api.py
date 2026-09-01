@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import random
 import re
 import sys
@@ -245,7 +246,10 @@ def run_api_crosscheck(candidates: pd.DataFrame, cache: pd.DataFrame, args: argp
         except Exception as exc:
             api_rows.append(decoder.api_error_row(ua_hash, str(exc)))
             log(f"API error: {exc}")
-            if args.stop_on_rate_limit and "rate limit" in str(exc).lower():
+            if decoder.is_auth_error(exc):
+                log("Stopping because the API key was rejected.")
+                break
+            if args.stop_on_rate_limit and decoder.is_rate_limit_error(exc):
                 log("Stopping because API appears rate-limited.")
                 break
         if args.api_flush_every > 0 and len(api_rows) >= args.api_flush_every:
@@ -317,7 +321,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
     parser.add_argument("--output-prefix", default="ua_local_api_crosscheck")
     parser.add_argument("--api-limit", type=int, default=25, help="0 writes report from cache only; positive checks N new local rows; -1 checks all uncached local rows.")
-    parser.add_argument("--api-key", default="NOTREQUIED")
+    parser.add_argument("--api-key", default=os.getenv("WHATMYUA_KEY", "NOTREQUIED"))
     parser.add_argument("--api-url", default=decoder.DEFAULT_API_URL)
     parser.add_argument("--api-timeout", type=float, default=20.0)
     parser.add_argument("--api-sleep-min-seconds", type=float, default=2.0)
@@ -330,6 +334,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    decoder.load_env_file()
     args = parse_args()
     args.lookup = args.lookup.expanduser().resolve()
     args.ua_daily = args.ua_daily.expanduser().resolve()

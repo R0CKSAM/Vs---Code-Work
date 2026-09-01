@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
 import random
 import time
 from datetime import datetime, timezone
@@ -119,7 +120,10 @@ def run_api(candidates: pd.DataFrame, own_cache: pd.DataFrame, args: argparse.Na
         except Exception as exc:
             rows.append(decoder.api_error_row(ua_hash, str(exc)))
             log(f"API error: {exc}")
-            if args.stop_on_rate_limit and "rate limit" in str(exc).lower():
+            if decoder.is_auth_error(exc):
+                log("Stopping because the API key was rejected. Cache is resumable.")
+                break
+            if args.stop_on_rate_limit and decoder.is_rate_limit_error(exc):
                 log("Stopping because API appears rate-limited. Cache is resumable.")
                 break
 
@@ -173,7 +177,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--api-cache", type=Path, default=DEFAULT_CACHE)
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
     parser.add_argument("--api-limit", type=int, default=100, help="0 status/manifest only; positive checks N new UAs; -1 checks all remaining valid UAs.")
-    parser.add_argument("--api-key", default="NOTREQUIED")
+    parser.add_argument("--api-key", default=os.getenv("WHATMYUA_KEY", "NOTREQUIED"))
     parser.add_argument("--api-url", default=decoder.DEFAULT_API_URL)
     parser.add_argument("--api-timeout", type=float, default=20.0)
     parser.add_argument("--api-sleep-min-seconds", type=float, default=2.0)
@@ -185,6 +189,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    decoder.load_env_file()
     args = parse_args()
     args.input = args.input.expanduser().resolve()
     args.ua_daily = args.ua_daily.expanduser().resolve()
