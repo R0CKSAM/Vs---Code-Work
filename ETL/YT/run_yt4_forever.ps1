@@ -36,6 +36,8 @@ $argsList = @(
     $OutDir,
     "--url-file",
     $channels,
+    "--measurement-mode",
+    "auto",
     "--roll-minutes",
     "$RollMinutes"
 )

@@ -20,9 +20,12 @@ from build_vod_query_dashboard import (  # noqa: E402
     canonicalize_content_titles,
     merge_events,
     prepare_dashboard_data,
+    read_dashboard_day,
     render_html,
+    summarize_dashboard_data,
     watch_minutes,
     write_dashboard_data,
+    write_dashboard_day,
     write_davis_workbook,
     write_events,
 )
@@ -366,13 +369,102 @@ def test_dashboard_writes_one_lazy_payload_per_date() -> None:
     with TemporaryDirectory(dir=ROOT / "ETL" / "output") as folder:
         data_dir = Path(folder) / "dashboard_data"
         write_dashboard_data(data_dir, days)
-        files = sorted(path.name for path in data_dir.iterdir())
+        files = sorted(path.name for path in data_dir.glob("*.js"))
         registration = (data_dir / "2026-08-24.js").read_text(encoding="ascii")
+        metadata_files = sorted(path.name for path in data_dir.glob("*.meta.json.gz"))
 
     assert index["dates"] == ["2026-08-24", "2026-08-25"]
     assert index["default_window_days"] == 7
     assert files == ["2026-08-24.js", "2026-08-25.js"]
+    assert metadata_files == [
+        "2026-08-24.meta.json.gz",
+        "2026-08-25.meta.json.gz",
+    ]
     assert 'window.__vodDayPayloads["2026-08-24"]' in registration
+
+
+def test_incremental_dashboard_replaces_only_requested_date() -> None:
+    initial_rows = [
+        {"log_date": "2026-08-24", "content_code": "code-a", "content_title": "A"},
+        {"log_date": "2026-08-25", "content_code": "code-b", "content_title": "B"},
+    ]
+    _, initial_days = prepare_dashboard_data(initial_rows)
+    replacement_rows = [
+        {"log_date": "2026-08-25", "content_code": "code-c", "content_title": "C"},
+    ]
+    _, replacement_days = prepare_dashboard_data(replacement_rows)
+
+    with TemporaryDirectory(dir=ROOT / "ETL" / "output") as folder:
+        data_dir = Path(folder) / "dashboard_data"
+        write_dashboard_data(data_dir, initial_days)
+        untouched_before = (data_dir / "2026-08-24.js").read_bytes()
+
+        write_dashboard_day(data_dir, "2026-08-25", replacement_days["2026-08-25"])
+        index, _ = summarize_dashboard_data(data_dir)
+        untouched_after = (data_dir / "2026-08-24.js").read_bytes()
+        replaced = read_dashboard_day(data_dir / "2026-08-25.js")
+
+    assert untouched_after == untouched_before
+    assert index["dates"] == ["2026-08-24", "2026-08-25"]
+    assert index["picker_values"]["code"] == ["code-a", "code-c"]
+    assert [row["content_code"] for row in replaced] == ["code-c"]
+
+
+def test_incremental_cli_does_not_require_historical_events_csv() -> None:
+    initial_rows = [
+        {
+            "log_date": "2026-08-24",
+            "content_code": "old-code",
+            "content_title": "Old title",
+        },
+    ]
+    incoming_rows = [
+        {
+            "log_date": "2026-08-25",
+            "minute_ist": "2026-08-25 10:00:00",
+            "request_ist": "2026-08-25 10:00:01.000",
+            "content_code": "new-code",
+            "content_title": "New title",
+            "category_name": "Sports",
+            "segment_count": "3",
+            "request_watch_hours": "0.005",
+            "cli_ip": "10.0.0.1",
+        },
+    ]
+    _, initial_days = prepare_dashboard_data(initial_rows)
+
+    with TemporaryDirectory(dir=ROOT / "ETL" / "output") as folder:
+        root = Path(folder)
+        data_dir = root / "dashboard_data"
+        append_csv = root / "incoming.csv"
+        dashboard = root / "dashboard.html"
+        workbook = root / "Davis.xlsx"
+        write_dashboard_data(data_dir, initial_days)
+        untouched_before = (data_dir / "2026-08-24.js").read_bytes()
+        write_events(append_csv, incoming_rows)
+
+        result = subprocess.run(
+            [
+                sys.executable,
+                str(TOOLS / "build_vod_query_dashboard.py"),
+                "--append", str(append_csv),
+                "--out", str(dashboard),
+                "--davis-xlsx", str(workbook),
+                "--data-dir", str(data_dir),
+                "--data-url", "dashboard_data",
+                "--incremental",
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+
+        assert (data_dir / "2026-08-24.js").read_bytes() == untouched_before
+        assert (data_dir / "2026-08-25.js").exists()
+        assert dashboard.exists()
+        assert workbook.exists()
+        assert not (root / "vod_stream_query_events.csv").exists()
+        assert "Existing date payloads were reused" in result.stdout
 
 
 def test_dashboard_uses_dominant_title_for_each_video_key() -> None:

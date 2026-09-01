@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
-    [string]$TaskName = "Veto YouTube YT4 Collector"
+    [string]$TaskName = "Veto YouTube YT4 Collector",
+    [string]$OutDir = "Z:\Veto Logs Backup\DO NOT DELETE\source=Youtube"
 )
 
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -18,7 +19,7 @@ $info = Get-ScheduledTaskInfo -TaskName $TaskName
     NextRun = $info.NextRunTime
 } | Format-List
 
-$latest = Get-ChildItem (Join-Path $root "data\source=Youtube") `
+$latest = Get-ChildItem $OutDir `
     -Recurse -File -ErrorAction SilentlyContinue |
     Where-Object { $_.Extension -in ".parquet", ".journal" } |
     Sort-Object LastWriteTime -Descending |

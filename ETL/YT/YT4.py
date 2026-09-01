@@ -1,17 +1,17 @@
 r"""
 YT4 crash-safe YouTube live audience collector
 -----------------------------------------------
-Discovers channel livestreams with yt-dlp and retrieves live status and
-concurrent viewers with the official YouTube Data API v3. This is a standalone
-combination of YT2 and YT3; no sibling Python module is required.
+Discovers channel livestreams and retrieves public live status/concurrent
+viewers with yt-dlp. The official YouTube Data API v3 can be used as a fallback
+or explicitly selected, but normal collection does not depend on API quota.
 
 Requirements:
     pip install yt-dlp pyarrow
 
-API key:
+API key (optional):
     Put YOUTUBE_API_KEY in a .env file beside this script, set it as an
     environment variable, or pass --api-key. The key needs access to YouTube
-    Data API v3 in its Google Cloud project.
+    Data API v3 in its Google Cloud project. It is only required for API mode.
 
 Usage:
     python YT4.py [URL] [interval_sec] [out_dir] [scan_limit] [options]
@@ -24,6 +24,7 @@ Examples:
 
 Useful options:
     --api-key KEY          API key (prefer the YOUTUBE_API_KEY environment variable).
+    --measurement-mode M   auto (public-first), public, or api.
     --extra-url URL        Add another channel/video (repeatable).
     --url-file PATH        Add URLs from a text file, one per line (repeatable).
     --discovery-every N    Run live search every N polls (default: 15).
@@ -34,8 +35,9 @@ Useful options:
     --request-timeout N    HTTP timeout in seconds (default: 20).
     --once                 Run one poll, print its timing, and exit.
 
-Channel discovery uses yt-dlp and consumes no search.list quota. Up to 50 live
-video IDs are measured in one videos.list request.
+Channel discovery always uses yt-dlp and consumes no search.list quota. Public
+measurement also uses yt-dlp. Auto mode only spends API quota when a public
+lookup fails or returns a live stream without a viewer count.
 
 Storage:
     Files use the existing six-column schema and Hive-style output layout:
@@ -94,8 +96,9 @@ YOUTUBE_SOURCE_PARTITION = "source=Youtube"
 API_BASE_URL = "https://www.googleapis.com/youtube/v3"
 CHANNEL_SUFFIXES = ("live", "streams", "videos", "shorts", "featured")
 FLAT_ENDED_STATUSES = {"was_live", "post_live", "not_live"}
-ENDED_STATUSES = {"was_live", "not_live", "not_found"}
-DIRECT_STOP_STATUSES = {"was_live"}
+ENDED_STATUSES = {"was_live", "post_live", "not_live", "not_found"}
+DIRECT_STOP_STATUSES = {"was_live", "post_live"}
+MEASUREMENT_MODES = ("auto", "public", "api")
 PRINT_LOCK = threading.Lock()
 LOGGER = logging.getLogger("yt4")
 CONSOLE_ENABLED = False
@@ -222,6 +225,7 @@ def _as_int(value) -> Optional[int]:
 
 
 class YouTubeApiV3:
+    official_measurement = True
     discovery_api_calls = 1
     discovery_search_queries = 1
     discovery_notice = (
@@ -511,6 +515,145 @@ class HybridYouTubeApi(YouTubeApiV3):
         return candidates
 
 
+class PublicYouTubeApi(HybridYouTubeApi):
+    """Discover and measure streams from public YouTube player metadata."""
+
+    measurement_notice = (
+        "Viewer measurement: public YouTube player metadata via yt-dlp; "
+        "official API quota usage is zero."
+    )
+    official_measurement = False
+
+    def __init__(
+        self,
+        api_key: str = "",
+        timeout: float = 20.0,
+        request_gate: Optional[threading.BoundedSemaphore] = None,
+    ):
+        self.api_key = (api_key or "").strip()
+        self.timeout = timeout
+        self.request_gate = request_gate
+
+    def _public_video_lookup(
+        self,
+        ydl: yt_dlp.YoutubeDL,
+        video_id: str,
+    ) -> VideoLookup:
+        try:
+            if self.request_gate is not None:
+                self.request_gate.acquire()
+            try:
+                info = ydl.extract_info(
+                    f"https://www.youtube.com/watch?v={video_id}",
+                    download=False,
+                )
+            finally:
+                if self.request_gate is not None:
+                    self.request_gate.release()
+        except Exception as exc:
+            return VideoLookup(video_id, None, None, "lookup_error", str(exc))
+
+        info = info or {}
+        status = info.get("live_status")
+        if not status:
+            status = "is_live" if info.get("is_live") else "not_live"
+        return VideoLookup(
+            str(info.get("id") or video_id),
+            info.get("title"),
+            _as_int(info.get("concurrent_view_count")),
+            str(status),
+        )
+
+    def get_videos(self, video_ids: Iterable[str]) -> Dict[str, VideoLookup]:
+        unique_ids = list(dict.fromkeys(str(value) for value in video_ids if value))
+        if not unique_ids:
+            return {}
+
+        opts = {
+            "quiet": True,
+            "no_warnings": True,
+            "skip_download": True,
+            "noplaylist": True,
+            "socket_timeout": self.timeout,
+            "retries": 1,
+            "extractor_retries": 1,
+        }
+        results: Dict[str, VideoLookup] = {}
+        try:
+            with yt_dlp.YoutubeDL(opts) as ydl:
+                for video_id in unique_ids:
+                    results[video_id] = self._public_video_lookup(ydl, video_id)
+        except Exception as exc:
+            for video_id in unique_ids:
+                results.setdefault(
+                    video_id,
+                    VideoLookup(video_id, None, None, "lookup_error", str(exc)),
+                )
+        return results
+
+    def consume_official_measurement_calls(self) -> int:
+        return 0
+
+
+class PublicFirstYouTubeApi(PublicYouTubeApi):
+    """Use public metadata first and the official API only to repair gaps."""
+
+    official_measurement = False
+
+    def __init__(
+        self,
+        api_key: str = "",
+        timeout: float = 20.0,
+        request_gate: Optional[threading.BoundedSemaphore] = None,
+    ):
+        super().__init__(api_key, timeout, request_gate)
+        self.api_fallback = (
+            YouTubeApiV3(api_key, timeout, request_gate)
+            if (api_key or "").strip()
+            else None
+        )
+        self._measurement_stats = threading.local()
+        self.measurement_notice = (
+            "Viewer measurement: public-first via yt-dlp"
+            + (" with official API fallback." if self.api_fallback else ".")
+        )
+
+    def get_videos(self, video_ids: Iterable[str]) -> Dict[str, VideoLookup]:
+        self._measurement_stats.api_calls = 0
+        results = super().get_videos(video_ids)
+        if self.api_fallback is None:
+            return results
+
+        fallback_ids = [
+            video_id
+            for video_id, result in results.items()
+            if result.status == "lookup_error"
+            or (result.status == "is_live" and result.viewers is None)
+        ]
+        if not fallback_ids:
+            return results
+
+        self._measurement_stats.api_calls = (len(fallback_ids) + 49) // 50
+        fallback = self.api_fallback.get_videos(fallback_ids)
+        for video_id in fallback_ids:
+            repaired = fallback.get(video_id)
+            original = results[video_id]
+            if repaired and repaired.status != "lookup_error":
+                results[video_id] = VideoLookup(
+                    video_id,
+                    repaired.title or original.title,
+                    repaired.viewers if repaired.viewers is not None else original.viewers,
+                    repaired.status,
+                    repaired.error,
+                )
+        return results
+
+    def consume_official_measurement_calls(self) -> int:
+        calls = getattr(self._measurement_stats, "api_calls", 0)
+        self._measurement_stats.api_calls = 0
+        return calls
+
+
 def video_id_from_source(source: str) -> Optional[str]:
     raw = source.strip()
     if re.fullmatch(r"[A-Za-z0-9_-]{11}", raw) and not raw.startswith("UC"):
@@ -794,10 +937,16 @@ def poll_channel(
         *sorted(state.active_ids),
         *(candidate.video_id for candidate in candidates),
     ]))
-    if lookup_ids:
+    if lookup_ids and getattr(api, "official_measurement", True):
         api_calls += (len(lookup_ids) + 49) // 50
         quota_units += (len(lookup_ids) + 49) // 50
     results = api.get_videos(lookup_ids)
+    if not getattr(api, "official_measurement", True):
+        fallback_calls = getattr(
+            api, "consume_official_measurement_calls", lambda: 0
+        )()
+        api_calls += fallback_calls
+        quota_units += fallback_calls
 
     previous_active = set(state.active_ids)
     next_active: Set[str] = set()
@@ -940,9 +1089,11 @@ def poll_source(
         )
         title = result.title or runtime.source.title
         rows = [make_row(now_ist, video_id, title, result.viewers, result.status)]
-        api_calls = 1
+        api_calls = 1 if getattr(api, "official_measurement", True) else getattr(
+            api, "consume_official_measurement_calls", lambda: 0
+        )()
         search_queries = 0
-        quota_units = 1
+        quota_units = api_calls
         should_stop = result.status in DIRECT_STOP_STATUSES
         if result.status == "lookup_error":
             emit(
@@ -974,7 +1125,7 @@ def _require_positive(name: str, value: int) -> None:
 
 def track_many(
     input_urls: Sequence[str],
-    api_key: str,
+    api_key: str = "",
     interval_sec: int = 60,
     out_dir: str = DEFAULT_OUTPUT_DIR,
     scan_limit: int = 10,
@@ -985,7 +1136,8 @@ def track_many(
     roll_minutes: int = 15,
     once: bool = False,
     request_timeout: float = 20.0,
-    api_class=HybridYouTubeApi,
+    api_class=None,
+    measurement_mode: str = "auto",
 ) -> None:
     if pa is None or pq is None:
         raise ValueError("pyarrow is required; install it with: pip install pyarrow")
@@ -1003,13 +1155,29 @@ def track_many(
         raise ValueError("scan_limit cannot exceed the API maximum of 50")
     if request_timeout <= 0:
         raise ValueError("request_timeout must be greater than zero")
+    if measurement_mode not in MEASUREMENT_MODES:
+        raise ValueError(
+            f"measurement_mode must be one of {', '.join(MEASUREMENT_MODES)}"
+        )
+    if measurement_mode == "api" and not (api_key or "").strip():
+        raise ValueError("an API key is required for --measurement-mode api")
 
     urls = list(dict.fromkeys(url.strip() for url in input_urls if url.strip()))
+    # India TV is the business-critical source and is submitted first every
+    # cycle. Python's stable sort preserves the configured order of all others.
+    urls.sort(key=lambda value: 0 if "indiatv" in value.lower() else 1)
     if not urls:
         raise ValueError("at least one YouTube URL is required")
 
     request_gate = threading.BoundedSemaphore(max_workers)
-    api = api_class(api_key, request_timeout, request_gate)
+    if api_class is not None:
+        api = api_class(api_key, request_timeout, request_gate)
+    elif measurement_mode == "api":
+        api = HybridYouTubeApi(api_key, request_timeout, request_gate)
+    elif measurement_mode == "public":
+        api = PublicYouTubeApi(api_key, request_timeout, request_gate)
+    else:
+        api = PublicFirstYouTubeApi(api_key, request_timeout, request_gate)
     partition_root = youtube_output_root(out_dir)
     recovered = recover_journals(partition_root, row_group_rows)
     if recovered:
@@ -1047,8 +1215,9 @@ def track_many(
 
     emit(
         f"Tracking {len(runtimes)} source(s) every {interval_sec}s with "
-        f"up to {max_workers} concurrent API request(s). Press Ctrl+C to stop."
+        f"up to {max_workers} concurrent request(s). Press Ctrl+C to stop."
     )
+    emit(getattr(api, "measurement_notice", "Viewer measurement: official API."))
     if any(runtime.source.kind == "channel" for runtime in runtimes):
         emit(api.discovery_notice.format(discovery_every=discovery_every))
     for runtime in runtimes:
@@ -1247,7 +1416,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--api-key",
         default=None,
-        help="YouTube Data API v3 key (or set YOUTUBE_API_KEY)",
+        help="optional YouTube Data API v3 fallback key (or set YOUTUBE_API_KEY)",
+    )
+    parser.add_argument(
+        "--measurement-mode",
+        choices=MEASUREMENT_MODES,
+        default="auto",
+        help="auto=public-first with optional API fallback; public=no API; api=official API",
     )
     parser.add_argument(
         "--extra-url",
@@ -1293,10 +1468,11 @@ def main() -> None:
         or os.environ.get("YOUTUBE_DATA_API_KEY")
         or load_dotenv_value(dotenv_path, "YOUTUBE_API_KEY", "YOUTUBE_DATA_API_KEY")
     )
-    if not api_key or not api_key.strip():
-        emit("YouTube API key is missing from .env or the environment.", error=True)
+    api_key = (api_key or "").strip()
+    if args.measurement_mode == "api" and not api_key:
+        emit("YouTube API key is required in api measurement mode.", error=True)
         parser.error(
-            "YouTube Data API v3 key required; set YOUTUBE_API_KEY or use --api-key"
+            "set YOUTUBE_API_KEY/use --api-key, or choose public/auto mode"
         )
 
     urls = [value for value in [args.url, *args.extra_url] if value]
@@ -1324,6 +1500,7 @@ def main() -> None:
             args.roll_minutes,
             args.once,
             args.request_timeout,
+            measurement_mode=args.measurement_mode,
         )
     except (ValueError, YouTubeApiError, OSError) as exc:
         emit(f"Collector stopped: {exc}", error=True)

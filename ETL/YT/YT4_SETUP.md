@@ -1,36 +1,34 @@
-# YT4 remote collector
+# YT4 collector
 
-Keep this bundle together in one root folder, for example `C:\Veto-IndiaTv`:
+The collector uses the repository virtual environment and writes to the mapped
+YouTube backup root on `Z:` by default:
 
 ```text
-C:\Veto-IndiaTv
+ETL\YT
 |-- YT4.py
 |-- channels.txt
-|-- requirements-yt4.txt
 |-- install_yt4_task.ps1
 |-- status_yt4.ps1
-|-- .env
-|-- .venv\
-|-- data\source=Youtube\year=YYYY\month=MM\day=DD\
 |-- logs\yt4.log
 `-- state\yt4.lock
 ```
 
 ## Install
 
-1. Copy `.env.example` to `.env` and set `YOUTUBE_API_KEY`.
+1. Ensure the repository `venv` contains `yt-dlp` and `pyarrow`.
 2. Edit `channels.txt` if the tracked channel list needs to change.
-3. Open PowerShell as Administrator in this folder.
-4. Run:
+3. Run from `ETL\YT` while logged in as the user that can access `Z:`:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process Bypass
 .\install_yt4_task.ps1
 ```
 
-The installer creates the local `.venv`, installs dependencies, registers an
-at-startup task under `SYSTEM`, starts it through hidden `pythonw.exe`, and
-restarts it one minute after a failure.
+The installer registers an at-logon task under the current interactive user,
+starts it through hidden `pythonw.exe`, and restarts it one minute after a
+failure. This account choice is intentional: a `SYSTEM` task cannot normally
+see the user's mapped `Z:` drive. Viewer measurement is public-first through
+yt-dlp; an API key in `.env` is optional and is used only as a fallback.
 
 Check it without opening the collector console:
 

@@ -3,7 +3,7 @@ param(
     [datetime]$EndDate = (Get-Date).Date.AddDays(-1),
     [string]$LakeRoot = 'Z:\Veto Logs Backup\DO NOT DELETE\source=stream',
     [string]$FallbackLakeRoot = (Join-Path $PSScriptRoot 'data\lake\source=stream'),
-    [string]$Python = '.\venv\Scripts\python.exe'
+    [string]$Python = (Join-Path $PSScriptRoot '..\venv\Scripts\python.exe')
 )
 
 $ErrorActionPreference = 'Stop'

@@ -160,8 +160,11 @@ def watch_minutes(hours: float) -> int:
     return int(max(0.0, hours) * 60 + 0.5)
 
 
-def davis_cup_performance(rows: list[dict[str, str]]) -> tuple[list[str], list[dict[str, object]]]:
-    available_dates = sorted(
+def davis_cup_performance(
+    rows: list[dict[str, str]],
+    available_dates: list[str] | None = None,
+) -> tuple[list[str], list[dict[str, object]]]:
+    available_dates = available_dates or sorted(
         {row.get("log_date", "") for row in rows if row.get("log_date")}
     )
     davis_codes = {
@@ -253,8 +256,12 @@ def style_performance_sheet(sheet, date_columns: int) -> None:
     sheet.column_dimensions[get_column_letter(4 + date_columns)].width = 20
 
 
-def write_davis_workbook(path: Path, rows: list[dict[str, str]]) -> None:
-    dates, performance = davis_cup_performance(rows)
+def write_davis_workbook(
+    path: Path,
+    rows: list[dict[str, str]],
+    available_dates: list[str] | None = None,
+) -> None:
+    dates, performance = davis_cup_performance(rows, available_dates)
     workbook = Workbook()
     watch_sheet = workbook.active
     watch_sheet.title = "Watch Minutes"
@@ -300,6 +307,10 @@ def encode_browser_rows(rows: list[dict[str, str]]) -> str:
     return base64.b64encode(
         gzip.compress(payload_json.encode("utf-8"), compresslevel=9)
     ).decode("ascii")
+
+
+def decode_browser_rows(payload: str) -> list[dict[str, str]]:
+    return json.loads(gzip.decompress(base64.b64decode(payload)).decode("utf-8"))
 
 
 def script_json(value: object) -> str:
@@ -375,13 +386,206 @@ def write_dashboard_data(
                 "window.__vodDayPayloads=window.__vodDayPayloads||{};"
                 f"window.__vodDayPayloads[{json.dumps(date)}]={json.dumps(payload)};"
             )
-            (staged / f"{date}.js").write_text(registration, encoding="ascii")
+            payload_path = staged / f"{date}.js"
+            payload_path.write_text(registration, encoding="ascii")
+            write_dashboard_day_metadata(staged, date, rows, payload_path)
         if data_dir.exists():
             shutil.rmtree(data_dir)
         staged.replace(data_dir)
     finally:
         if staged.exists():
             shutil.rmtree(staged)
+
+
+def dashboard_day_registration(date: str, rows: list[dict[str, str]]) -> str:
+    payload = encode_browser_rows(rows)
+    return (
+        "window.__vodDayPayloads=window.__vodDayPayloads||{};"
+        f"window.__vodDayPayloads[{json.dumps(date)}]={json.dumps(payload)};"
+    )
+
+
+def dashboard_day_metadata(
+    date: str,
+    rows: list[dict[str, str]],
+    payload_path: Path,
+) -> dict[str, object]:
+    payload_stat = payload_path.stat()
+    picker_values = {
+        "title": sorted(
+            {row.get("content_title", "") for row in rows if row.get("content_title")},
+            key=str.casefold,
+        ),
+        "category": sorted(
+            {row.get("category_name", "") for row in rows if row.get("category_name")},
+            key=str.casefold,
+        ),
+        "code": sorted(
+            {row.get("content_code", "") for row in rows if row.get("content_code")},
+            key=str.casefold,
+        ),
+    }
+    return {
+        "date": date,
+        "payload_size": payload_stat.st_size,
+        "payload_mtime_ns": payload_stat.st_mtime_ns,
+        "picker_values": picker_values,
+        "davis_codes": sorted(
+            {
+                row.get("content_code", "")
+                for row in rows
+                if row.get("content_code") and is_davis_cup_row(row)
+            }
+        ),
+        "davis_rows": [row for row in rows if is_davis_cup_row(row)],
+    }
+
+
+def dashboard_day_metadata_path(data_dir: Path, date: str) -> Path:
+    return data_dir / f"{date}.meta.json.gz"
+
+
+def write_dashboard_day_metadata(
+    data_dir: Path,
+    date: str,
+    rows: list[dict[str, str]],
+    payload_path: Path,
+) -> Path:
+    destination = dashboard_day_metadata_path(data_dir, date)
+    temporary = data_dir / f".{date}.meta.tmp-{uuid4().hex}.json.gz"
+    metadata = dashboard_day_metadata(date, rows, payload_path)
+    encoded = json.dumps(metadata, ensure_ascii=True, separators=(",", ":")).encode("utf-8")
+    try:
+        temporary.write_bytes(gzip.compress(encoded, compresslevel=9))
+        temporary.replace(destination)
+    finally:
+        temporary.unlink(missing_ok=True)
+    return destination
+
+
+def read_dashboard_day_metadata(
+    data_dir: Path,
+    date: str,
+    payload_path: Path,
+) -> dict[str, object] | None:
+    metadata_path = dashboard_day_metadata_path(data_dir, date)
+    if not metadata_path.exists():
+        return None
+    try:
+        metadata = json.loads(gzip.decompress(metadata_path.read_bytes()).decode("utf-8"))
+        payload_stat = payload_path.stat()
+        if (
+            metadata.get("date") != date
+            or metadata.get("payload_size") != payload_stat.st_size
+            or metadata.get("payload_mtime_ns") != payload_stat.st_mtime_ns
+        ):
+            return None
+        return metadata
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return None
+
+
+def write_dashboard_day(
+    data_dir: Path,
+    date: str,
+    rows: list[dict[str, str]],
+) -> Path:
+    """Atomically add or replace one lazy dashboard date payload."""
+    data_dir.mkdir(parents=True, exist_ok=True)
+    destination = data_dir / f"{date}.js"
+    temporary = data_dir / f".{date}.tmp-{uuid4().hex}.js"
+    try:
+        temporary.write_text(dashboard_day_registration(date, rows), encoding="ascii")
+        temporary.replace(destination)
+        write_dashboard_day_metadata(data_dir, date, rows, destination)
+    finally:
+        temporary.unlink(missing_ok=True)
+    return destination
+
+
+def read_dashboard_day(path: Path) -> list[dict[str, str]]:
+    """Decode one generated lazy date payload without evaluating JavaScript."""
+    date = path.stem
+    marker = f"window.__vodDayPayloads[{json.dumps(date)}]="
+    registration = path.read_text(encoding="ascii")
+    start = registration.find(marker)
+    if start < 0:
+        raise ValueError(f"Dashboard date payload is malformed: {path}")
+    encoded_json = registration[start + len(marker):].strip()
+    if encoded_json.endswith(";"):
+        encoded_json = encoded_json[:-1]
+    encoded = json.loads(encoded_json)
+    return decode_browser_rows(encoded)
+
+
+def summarize_dashboard_data(
+    data_dir: Path,
+) -> tuple[dict[str, object], list[dict[str, str]]]:
+    """Build the lightweight index and Davis rows from existing lazy payloads."""
+    picker_values: dict[str, set[str]] = {
+        "title": set(),
+        "category": set(),
+        "code": set(),
+    }
+    first_seen_by_code: dict[str, str] = {}
+    davis_codes: set[str] = set()
+    davis_rows: list[dict[str, str]] = []
+    dates: list[str] = []
+
+    for path in sorted(data_dir.glob("????-??-??.js")):
+        date = path.stem
+        metadata = read_dashboard_day_metadata(data_dir, date, path)
+        if metadata is None:
+            rows = read_dashboard_day(path)
+            write_dashboard_day_metadata(data_dir, date, rows, path)
+            metadata = dashboard_day_metadata(date, rows, path)
+        dates.append(date)
+        metadata_picker_values = metadata.get("picker_values", {})
+        for key in picker_values:
+            picker_values[key].update(metadata_picker_values.get(key, []))
+        for code in metadata_picker_values.get("code", []):
+            previous = first_seen_by_code.get(code)
+            if previous is None or date < previous:
+                first_seen_by_code[code] = date
+        davis_codes.update(metadata.get("davis_codes", []))
+        davis_rows.extend(metadata.get("davis_rows", []))
+
+    if not dates:
+        raise ValueError(f"No lazy dashboard date payloads were found: {data_dir}")
+    index: dict[str, object] = {
+        "dates": sorted(set(dates)),
+        "default_window_days": 7,
+        "picker_values": {
+            key: sorted(values, key=str.casefold)
+            for key, values in picker_values.items()
+        },
+        "first_seen_by_code": first_seen_by_code,
+        "davis_codes": sorted(davis_codes),
+    }
+    return index, davis_rows
+
+
+def write_text_atomic(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.tmp-{uuid4().hex}")
+    try:
+        temporary.write_text(text, encoding="utf-8")
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def write_davis_workbook_atomic(
+    path: Path,
+    rows: list[dict[str, str]],
+    available_dates: list[str],
+) -> None:
+    temporary = path.with_name(f".{path.stem}.tmp-{uuid4().hex}{path.suffix}")
+    try:
+        write_davis_workbook(temporary, rows, available_dates)
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def dashboard_script() -> str:
@@ -1192,21 +1396,54 @@ def main() -> None:
     parser.add_argument("--davis-xlsx", type=Path)
     parser.add_argument("--data-dir", type=Path)
     parser.add_argument(
+        "--incremental",
+        action="store_true",
+        help="Replace only appended dates in an existing lazy dashboard.",
+    )
+    parser.add_argument(
         "--data-url",
         help="Relative browser path to --data-dir; defaults to the data directory name.",
     )
     args = parser.parse_args()
-    existing = read_events(args.events) if args.events.exists() else []
     incoming = [row for path in args.append for row in read_events(path)]
+    data_dir = args.data_dir or args.out.with_name(f"{args.out.stem}_data")
+    data_url = args.data_url or data_dir.name
+    davis_xlsx = args.davis_xlsx or args.out.with_name("Davis_Cup_Performance.xlsx")
+
+    if args.incremental:
+        if not incoming:
+            raise ValueError("Incremental refresh requires at least one --append CSV.")
+        if not data_dir.is_dir():
+            raise FileNotFoundError(
+                f"Lazy dashboard data was not found: {data_dir}. Run one full range build first."
+            )
+        _, incoming_days = prepare_dashboard_data(incoming)
+        if not incoming_days:
+            raise ValueError("Incremental refresh did not contain any dated dashboard rows.")
+        for date, day_rows in incoming_days.items():
+            write_dashboard_day(data_dir, date, day_rows)
+        index, davis_rows = summarize_dashboard_data(data_dir)
+        available_dates = list(index["dates"])
+        write_davis_workbook_atomic(davis_xlsx, davis_rows, available_dates)
+        write_text_atomic(
+            args.out,
+            render_dashboard_html(index, {}, data_url, davis_xlsx.name),
+        )
+        segments = int(sum(number(row.get("segment_count", "1")) for row in incoming))
+        refreshed_dates = ", ".join(sorted(incoming_days))
+        print(
+            f"Incrementally refreshed {args.out} for {refreshed_dates}: "
+            f"{segments:,} media segments. Existing date payloads were reused."
+        )
+        return
+
+    existing = read_events(args.events) if args.events.exists() else []
     rows = merge_events(existing, incoming) if incoming else existing
     if incoming:
         write_events(args.events, rows)
     if not rows:
         raise ValueError("No VOD event rows were supplied. Provide --append for the first extract.")
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    davis_xlsx = args.davis_xlsx or args.out.with_name("Davis_Cup_Performance.xlsx")
-    data_dir = args.data_dir or args.out.with_name(f"{args.out.stem}_data")
-    data_url = args.data_url or data_dir.name
     write_davis_workbook(davis_xlsx, rows)
     index, days = prepare_dashboard_data(rows)
     write_dashboard_data(data_dir, days)
