@@ -136,20 +136,26 @@ AMAGI_TIMESTAMP_COLUMNS = ("timestamp (UTC)", "timestamp (PST)")
 CORE_PAYLOAD_FILENAME = "asrun_delivery_data.js"
 DASHBOARD_SIDECARS = {
     "viewer": {
-        "file": "asrun_viewer_minute_data.js",
-        "global": "__ASRUN_VIEWER_MINUTE__",
+        "partitioned": True,
+        "directory": "data/viewer",
+        "prefix": "viewer",
+        "global": "__ASRUN_VIEWER_PARTITIONS__",
     },
     "amagi": {
-        "file": "asrun_amagi_minute_data.js",
-        "global": "__ASRUN_AMAGI_MINUTE__",
+        "partitioned": True,
+        "directory": "data/amagi",
+        "prefix": "amagi",
+        "global": "__ASRUN_AMAGI_PARTITIONS__",
     },
     "fct": {
         "file": "asrun_fct_event_data.js",
         "global": "__ASRUN_FCT_EVENTS__",
     },
     "youtube": {
-        "file": "asrun_youtube_data.js",
-        "global": "__ASRUN_YOUTUBE_DATA__",
+        "partitioned": True,
+        "directory": "data/youtube",
+        "prefix": "youtube",
+        "global": "__ASRUN_YOUTUBE_PARTITIONS__",
     },
 }
 YOUTUBE_PAYLOAD_ARRAYS = (
@@ -2292,6 +2298,26 @@ def dashboard_cache_token(payload: dict[str, Any]) -> str:
     return token or "unversioned"
 
 
+def dashboard_row_date(row: dict[str, Any]) -> str:
+    """Return the canonical ISO date attached to one dashboard source row."""
+    for column in ("log_date", "timestamp_ist", "bucket_ist", "minute_ist"):
+        value = str(row.get(column, ""))[:10]
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):
+            return value
+    return ""
+
+
+def dashboard_partition_dates(name: str, chunk: Any) -> list[str]:
+    """List every date represented by a partitioned source chunk."""
+    if name in {"viewer", "amagi"}:
+        rows = chunk
+    elif name == "youtube":
+        rows = [row for key in YOUTUBE_PAYLOAD_ARRAYS for row in chunk[key]]
+    else:
+        return []
+    return sorted({date for row in rows if (date := dashboard_row_date(row))})
+
+
 def split_dashboard_payload(
     payload: dict[str, Any],
 ) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -2318,15 +2344,72 @@ def split_dashboard_payload(
     core["sidecars"] = {}
     for name, config in DASHBOARD_SIDECARS.items():
         versioned = dict(config)
-        versioned["file"] = f"{config['file']}?v={cache_token}"
+        if config.get("partitioned"):
+            versioned["dates"] = {
+                date: (
+                    f"{config['directory']}/{config['prefix']}_{date}.js"
+                    f"?v={cache_token}"
+                )
+                for date in dashboard_partition_dates(name, chunks[name])
+            }
+        else:
+            versioned["file"] = f"{config['file']}?v={cache_token}"
         core["sidecars"][name] = versioned
     return core, chunks
+
+
+def write_dashboard_partition(
+    path: Path,
+    global_name: str,
+    date: str,
+    value: Any,
+) -> None:
+    """Publish one date partition into a shared browser-side partition store."""
+    encoded = json.dumps(
+        value,
+        ensure_ascii=True,
+        separators=(",", ":"),
+    ).replace("</", "<\\/")
+    date_key = json.dumps(date)
+    atomic_write_text(
+        path,
+        f"window.{global_name}=window.{global_name}||{{}};"
+        f"window.{global_name}[{date_key}]={encoded};",
+    )
 
 
 def write_dashboard_sidecars(chunks: dict[str, Any]) -> dict[str, Path]:
     """Publish source-specific payloads so the browser can load them independently."""
     paths: dict[str, Path] = {}
     for name, config in DASHBOARD_SIDECARS.items():
+        if config.get("partitioned"):
+            partition_dir = OUTPUT_DIR / config["directory"]
+            partition_dir.mkdir(parents=True, exist_ok=True)
+            partitions: dict[str, Any] = {}
+            if name in {"viewer", "amagi"}:
+                for row in chunks[name]:
+                    date = dashboard_row_date(row)
+                    if date:
+                        partitions.setdefault(date, []).append(row)
+            else:
+                for key in YOUTUBE_PAYLOAD_ARRAYS:
+                    for row in chunks[name][key]:
+                        date = dashboard_row_date(row)
+                        if not date:
+                            continue
+                        partitions.setdefault(
+                            date,
+                            {array: [] for array in YOUTUBE_PAYLOAD_ARRAYS},
+                        )[key].append(row)
+            for date, value in sorted(partitions.items()):
+                write_dashboard_partition(
+                    partition_dir / f"{config['prefix']}_{date}.js",
+                    config["global"],
+                    date,
+                    value,
+                )
+            paths[name] = partition_dir
+            continue
         path = OUTPUT_DIR / config["file"]
         write_javascript_assignment(
             path,
@@ -3869,14 +3952,39 @@ body.nct-chart-expanded::before {
 </style><script>
 const AMAGI=DATA.amagi||{};
 const FCT=DATA.fct||{};
+const defaultEndDate=maxDate;
+const defaultStartCandidate=new Date(defaultEndDate+'T00:00:00Z');
+defaultStartCandidate.setUTCDate(defaultStartCandidate.getUTCDate()-6);
+const defaultStartDate=[minDate,defaultStartCandidate.toISOString().slice(0,10)]
+  .sort().at(-1);
+$('from').value=defaultStartDate;
+$('to').value=defaultEndDate;
 const DASHBOARD_SOURCE_SIDECARS=DATA.sidecars||{};
 const dashboardSourceState=new Map(
   Object.keys(DASHBOARD_SOURCE_SIDECARS).map(name=>[name,'pending'])
 );
 const dashboardSourcePromises=new Map();
+const dashboardSourcePartitions=new Map(
+  Object.entries(DASHBOARD_SOURCE_SIDECARS)
+    .filter(([_name,config])=>config.partitioned)
+    .map(([name])=>[name,new Set()])
+);
+function dashboardSourceDates(name,from='',to=''){
+  const config=DASHBOARD_SOURCE_SIDECARS[name]||{},dates=Object.keys(config.dates||{}).sort();
+  return dates.filter(date=>(!from||date>=from)&&(!to||date<=to));
+}
 function dashboardSourceLoaded(name){
-  return !DASHBOARD_SOURCE_SIDECARS[name]
-    ||dashboardSourceState.get(name)==='loaded';
+  const config=DASHBOARD_SOURCE_SIDECARS[name];
+  if(!config)return true;
+  if(!config.partitioned)return dashboardSourceState.get(name)==='loaded';
+  const loaded=dashboardSourcePartitions.get(name)||new Set();
+  return dashboardSourceDates(name).every(date=>loaded.has(date));
+}
+function dashboardSourceRangeLoaded(name,from='',to=''){
+  const config=DASHBOARD_SOURCE_SIDECARS[name];
+  if(!config||!config.partitioned)return dashboardSourceLoaded(name);
+  const loaded=dashboardSourcePartitions.get(name)||new Set();
+  return dashboardSourceDates(name,from,to).every(date=>loaded.has(date));
 }
 function dashboardSourceError(name){
   return dashboardSourceState.get(name)==='failed'
@@ -3897,14 +4005,84 @@ function installDashboardSource(name,value){
     throw new Error('Unsupported dashboard sidecar: '+name);
   }
 }
+function installDashboardPartition(name,date,value){
+  const loaded=dashboardSourcePartitions.get(name)||new Set();
+  if(loaded.has(date))return;
+  if(name==='viewer'){
+    DATA.viewer_minute.push(...(Array.isArray(value)?value:[]));
+  }else if(name==='amagi'){
+    AMAGI.minute.push(...(Array.isArray(value)?value:[]));
+  }else if(name==='youtube'){
+    const youtube=DATA.youtube||{};
+    for(const key of ['minute','video_daily','video_5min','video_minute']){
+      if(!Array.isArray(youtube[key]))youtube[key]=[];
+      youtube[key].push(...(Array.isArray(value?.[key])?value[key]:[]));
+    }
+    youtubeDeliveryMinuteIndex=null;
+  }else{
+    throw new Error('Unsupported partitioned dashboard sidecar: '+name);
+  }
+  loaded.add(date);
+  dashboardSourcePartitions.set(name,loaded);
+  dashboardSourceState.set(
+    name,
+    dashboardSourceDates(name).every(item=>loaded.has(item))?'loaded':'partial',
+  );
+}
+function loadDashboardPartition(name,date){
+  const config=DASHBOARD_SOURCE_SIDECARS[name],file=config?.dates?.[date];
+  if(!file)return Promise.resolve();
+  const loaded=dashboardSourcePartitions.get(name)||new Set();
+  if(loaded.has(date))return Promise.resolve();
+  const promiseKey=name+':'+date;
+  if(dashboardSourcePromises.has(promiseKey))return dashboardSourcePromises.get(promiseKey);
+  const promise=new Promise((resolve,reject)=>{
+    const finish=()=>{
+      const store=window[config.global],value=store?.[date];
+      if(value===undefined){
+        const error=new Error(file+' did not publish '+config.global+'['+date+']');
+        dashboardSourceState.set(name,'failed');
+        reject(error);
+        return;
+      }
+      installDashboardPartition(name,date,value);
+      try{delete store[date]}catch(_error){store[date]=undefined}
+      resolve();
+    };
+    if(window[config.global]?.[date]!==undefined){
+      finish();
+      return;
+    }
+    const script=document.createElement('script');
+    script.src=file;
+    script.async=true;
+    script.onload=finish;
+    script.onerror=()=>{
+      const error=new Error('Unable to load '+file);
+      dashboardSourceState.set(name,'failed');
+      reject(error);
+    };
+    document.head.appendChild(script);
+  });
+  dashboardSourcePromises.set(promiseKey,promise);
+  return promise;
+}
+function loadDashboardSourceRange(name,from='',to=''){
+  const config=DASHBOARD_SOURCE_SIDECARS[name];
+  if(!config?.partitioned)return loadDashboardSource(name);
+  return Promise.all(dashboardSourceDates(name,from,to).map(date=>
+    loadDashboardPartition(name,date)
+  ));
+}
 function loadDashboardSource(name){
   if(dashboardSourceLoaded(name))return Promise.resolve();
-  if(dashboardSourcePromises.has(name))return dashboardSourcePromises.get(name);
   const config=DASHBOARD_SOURCE_SIDECARS[name];
   if(!config){
     dashboardSourceState.set(name,'loaded');
     return Promise.resolve();
   }
+  if(config.partitioned)return loadDashboardSourceRange(name);
+  if(dashboardSourcePromises.has(name))return dashboardSourcePromises.get(name);
   const promise=new Promise((resolve,reject)=>{
     const finish=()=>{
       const value=window[config.global];
@@ -3941,7 +4119,7 @@ function loadDashboardSources(names){
   return Promise.all(names.map(loadDashboardSource));
 }
 let fctClassMode='Commercial';
-let fctRangeMode='all';
+let fctRangeMode='7';
 const FCT_SCALAR_FILTER_IDS=[
   'fctTimeFrom','fctTimeTo','fctProgramTimeFrom','fctProgramTimeTo',
   'fctDurationMin','fctDurationMax',
@@ -4300,11 +4478,11 @@ function updateResetState(){
 }
 function resetDashboardFilters(){
   showLoading('Resetting dashboard...');
-  $('from').value=minDate;
-  $('to').value=maxDate;
+  $('from').value=defaultStartDate;
+  $('to').value=defaultEndDate;
   setDateMode('range',false);
   fctClassMode='Commercial';
-  fctRangeMode='all';
+  fctRangeMode='7';
   for(const id of RESET_SCOPE_IDS){
     const menu=$(id+'Menu');
     if(menu)menu.innerHTML='';
@@ -4313,7 +4491,7 @@ function resetDashboardFilters(){
     if($(id))$(id).value='';
   }
   multiInitialized.clear();
-  if(dashboardSourceLoaded('fct'))setFctRange('all',false);
+  if(dashboardSourceLoaded('fct'))setFctRange('7',false);
   clearFilterCache();
   refreshDependentOptions();
   refreshAudienceFilters();
@@ -4350,9 +4528,9 @@ function ensureFctPanel(){
     +'<label class="filter-label">FCT date to<input id="fctTo" type="date" disabled></label>'
     +'<div class="fct-range-actions" role="group" aria-label="FCT quick ranges">'
     +'<button type="button" data-fct-range="latest">Latest day</button>'
-    +'<button type="button" data-fct-range="7">7D</button>'
+    +'<button type="button" data-fct-range="7" class="active">7D</button>'
     +'<button type="button" data-fct-range="30">30D</button>'
-    +'<button type="button" data-fct-range="all" class="active">All</button></div>'
+    +'<button type="button" data-fct-range="all">All</button></div>'
     +'<div class="fct-date-meta" id="fctDateMeta">Loading FCT date coverage...</div></div>'
     +'<div class="fct-class-filter" role="group" aria-label="FCT occurrence classification">'
     +'<button type="button" data-fct-class="Commercial" class="active">Commercial</button>'
@@ -4553,7 +4731,7 @@ function setFctRange(kind,renderNow=true){
   if(renderNow)renderFctAndScope(true);
 }
 function initializeFctDates(){
-  setFctRange('all',false);
+  setFctRange('7',false);
 }
 function fctDateRows(){
   const bounds=fctBounds(),from=$('fctFrom')?.value||bounds.start,to=$('fctTo')?.value||bounds.end;
@@ -4982,7 +5160,7 @@ function audienceLines(events,state){const preview=events.slice().sort((a,b)=>St
 function amagiLines(events,state){if(!AMAGI.available)return '<div class="audience-empty">'+esc(AMAGI.reason||'Amagi concurrency data is unavailable.')+'</div>';return audienceLines(events,state);}
 function combinedRows(events,fast,stream){const amagi=amagiMinuteMap();return events.sort((a,b)=>a.on_air_start_ist.localeCompare(b.on_air_start_ist)).map(e=>{const fastMetric=audienceValue(e,fast),streamMetric=audienceValue(e,stream),amagiMetric=audienceValue(e,amagi),youtubeMetric=youtubeFiveMinuteValue(e),all=[fastMetric.total,streamMetric.total,amagiMetric.total,youtubeMetric.total];return {event:e,fast:fastMetric,stream:streamMetric,amagi:amagiMetric,youtube:youtubeMetric,total:all.some(v=>v===null)?null:all.reduce((sum,v)=>sum+v,0)};});}
 function combinedLines(events,fast,stream){const rows=combinedRows(events,fast,stream),preview=rows.slice(-50).reverse();if(!preview.length)return '<div class="audience-empty">No delivered ad events in this selection.</div>';return preview.map(row=>{const e=row.event,total=row.total===null?'No combined data':fmt(row.total);return '<div class="combined-line"><span>'+formatIst(e.on_air_start_ist)+'</span><span><strong>'+esc(e.event_id)+'</strong><small>'+esc(e.ad_type)+'</small></span><span>'+esc(e.creative_title)+'</span><span class="duration">'+fmt(e.actual_duration_seconds)+' sec</span><span class="combined-value fast-col">'+esc(row.fast.value)+'</span><span class="combined-value stream-col">'+esc(row.stream.value)+'</span><span class="combined-value amagi-col">'+esc(row.amagi.value)+'</span><span class="combined-value youtube-col">'+esc(row.youtube.value)+'</span><span class="combined-value total-col">'+esc(total)+'</span></div>';}).join('');}
-function renderAudience(events){if(!dashboardSourceLoaded('viewer')||!dashboardSourceLoaded('amagi')){const failed=dashboardSourceError('viewer')||dashboardSourceError('amagi'),message=failed||'Loading FAST, STREAM, and AMAGI audience data...';$('allRows').innerHTML='<div class="audience-empty">'+esc(message)+'</div>';$('allNote').textContent='';return}refreshAmagiFilters();const fast=audienceMinuteMap('fast'),stream=audienceMinuteMap('stream'),visible=Math.min(events.length,50),note='Showing latest '+fmt(visible)+' of '+fmt(events.length)+' delivered events. CSV exports the complete filtered result.';$('allRows').innerHTML=combinedLines(events,fast,stream);$('allNote').textContent=note;}
+function renderAudience(events){const range=masterDashboardRange();if(!dashboardSourceRangeLoaded('viewer',range.start,range.end)||!dashboardSourceRangeLoaded('amagi',range.start,range.end)){const failed=dashboardSourceError('viewer')||dashboardSourceError('amagi'),message=failed||'Loading FAST, STREAM, and AMAGI audience data...';$('allRows').innerHTML='<div class="audience-empty">'+esc(message)+'</div>';$('allNote').textContent='';return}refreshAmagiFilters();const fast=audienceMinuteMap('fast'),stream=audienceMinuteMap('stream'),visible=Math.min(events.length,50),note='Showing latest '+fmt(visible)+' of '+fmt(events.length)+' delivered events. CSV exports the complete filtered result.';$('allRows').innerHTML=combinedLines(events,fast,stream);$('allNote').textContent=note;}
 function exportSelection(id,allLabel,keepExactValues=false){const menu=$(id+'Menu');if(!menu)return 'Not available';const inputs=[...menu.querySelectorAll('input[data-value]')],selected=inputs.filter(input=>input.checked).map(input=>input.dataset.value);if(!selected.length)return 'None';return selected.length===inputs.length&&!keepExactValues?allLabel:selected.join(' | ');}
 function exportDeliverySelection(kind){const types=selectedDeliveryAdTypes();if(!types.size)return 'None';return DELIVERY_AD_TYPES.filter(type=>types.has(type)).map(type=>{const prefix=type==='Spot'?'spot':'lband',suffix=kind==='adIds'?'AdId':'Creative',label=kind==='adIds'?'ad IDs':'creative titles';return type+': '+exportSelection(prefix+suffix,'All '+type+' '+label)}).join(' || ');}
 function exportFilterContext(){return {dateFrom:$('from').value,dateTo:$('to').value,adTypes:deliveryAdTypeLabel(),adIds:exportDeliverySelection('adIds'),creatives:exportDeliverySelection('creatives')};}
@@ -5613,7 +5791,8 @@ function renderYoutubeChannelAware(){
     renderYoutubeChannelTable(renderYoutubeChannelTrend([],new Set()));
     return;
   }
-  if(!dashboardSourceLoaded('youtube')){
+  const loadedRange=youtubeDashboardRange();
+  if(!dashboardSourceRangeLoaded('youtube',loadedRange.start,loadedRange.end)){
     const message=dashboardSourceError('youtube')
       ||'Loading YouTube live-audience data...';
     $('youtubeMeta').textContent=message;
@@ -5885,14 +6064,21 @@ function ensureGlobalAudienceFilters(){
 }
 youtubeDeliveryDetails=function(event){
   const youtube=DATA.youtube||{},key=youtubeMinuteKey(event.on_air_start_ist);
-  if(!dashboardSourceLoaded('youtube'))return {
-    value:dashboardSourceError('youtube')||'Loading',
+  const eventDate=isoDatePart(event.on_air_start_ist);
+  if(!dashboardSourceRangeLoaded('youtube',eventDate,eventDate)){
+    const selectedRange=youtubeDashboardRange();
+    const outsideSelection=eventDate<selectedRange.start||eventDate>selectedRange.end;
+    return {
+    value:outsideSelection?'—':dashboardSourceError('youtube')||'Loading',
     total:null,
     live_videos:0,
     video_ids:'',
     video_titles:'',
-    scope:'India TV YouTube is loading',
+    scope:outsideSelection
+      ?'Outside selected YouTube range'
+      :'India TV YouTube is loading',
   };
+  }
   const channels=new Set(indiaTvYoutubeChannels());
   if(!channels.size)return {
     value:'0',total:0,live_videos:0,video_ids:'',video_titles:'',
@@ -5924,7 +6110,7 @@ youtubeDeliveryDetails=function(event){
   if(!hasMinute)return {
     value:'0',total:0,live_videos:0,video_ids:'',video_titles:'',
     scope:(()=>{
-      const eventDate=isoDatePart(event.on_air_start_ist),bounds=youtubeTrueBounds();
+      const bounds=youtubeTrueBounds();
       if(eventDate&&bounds.start&&bounds.end
         &&(eventDate<bounds.start||eventDate>bounds.end)){
         return 'Outside India TV YouTube source range';
@@ -7900,18 +8086,42 @@ function reportDashboardSourceFailure(name,error){
   else render();
   hideLoading();
 }
+function masterDashboardRange(){
+  return {start:$('from').value||minDate,end:$('to').value||maxDate};
+}
+function youtubeDashboardRange(){
+  return {
+    start:$('youtubeFrom').value||youtubeTrueBounds().start,
+    end:$('youtubeTo').value||youtubeTrueBounds().end,
+  };
+}
+const dashboardRangeLoadPromises=new Map();
 async function loadAudienceDashboardData(){
-  const alreadyLoaded=dashboardSourceLoaded('viewer')&&dashboardSourceLoaded('amagi');
-  await loadDashboardSources(['viewer','amagi']);
-  if(alreadyLoaded)return;
-  resetNctAudienceCaches();
-  resetSourceMenus([
-    'fastPlatform','fastChannel','streamChannel','amagiPlatform','amagiChannel',
-  ]);
-  refreshAudienceFilters();
-  refreshAmagiFilters();
-  refreshNctStorySourceFilters();
-  render();
+  const range=masterDashboardRange();
+  const loadKey='audience:'+range.start+':'+range.end;
+  if(dashboardRangeLoadPromises.has(loadKey)){
+    return dashboardRangeLoadPromises.get(loadKey);
+  }
+  const promise=(async()=>{
+    const alreadyLoaded=dashboardSourceRangeLoaded('viewer',range.start,range.end)
+      &&dashboardSourceRangeLoaded('amagi',range.start,range.end);
+    await Promise.all([
+      loadDashboardSourceRange('viewer',range.start,range.end),
+      loadDashboardSourceRange('amagi',range.start,range.end),
+    ]);
+    if(alreadyLoaded)return;
+    resetNctAudienceCaches();
+    resetSourceMenus([
+      'fastPlatform','fastChannel','streamChannel','amagiPlatform','amagiChannel',
+    ]);
+    refreshAudienceFilters();
+    refreshAmagiFilters();
+    refreshNctStorySourceFilters();
+    render();
+  })();
+  dashboardRangeLoadPromises.set(loadKey,promise);
+  try{return await promise}
+  finally{dashboardRangeLoadPromises.delete(loadKey)}
 }
 async function loadFctDashboardData(){
   const alreadyLoaded=dashboardSourceLoaded('fct');
@@ -7924,22 +8134,31 @@ async function loadFctDashboardData(){
   renderFctAndScope(true);
 }
 async function loadYoutubeDashboardData(){
-  const alreadyLoaded=dashboardSourceLoaded('youtube');
-  await loadDashboardSource('youtube');
-  if(alreadyLoaded)return;
-  resetNctAudienceCaches();
-  resetSourceMenus([
-    'youtubeChannel','nctYoutubeVideo',
-  ]);
-  $('youtubeVideoMenu').innerHTML='';
-  youtubeVideoMultiInitialized=false;
-  youtubeVideoSelectAll=true;
-  youtubeDeliveryMinuteIndex=null;
-  refreshNctStorySourceFilters();
-  refreshYoutubeDateLimits();
-  initializeYoutubeDates();
-  render();
-  renderYoutube();
+  const range=youtubeDashboardRange();
+  const loadKey='youtube:'+range.start+':'+range.end;
+  if(dashboardRangeLoadPromises.has(loadKey)){
+    return dashboardRangeLoadPromises.get(loadKey);
+  }
+  const promise=(async()=>{
+    const alreadyLoaded=dashboardSourceRangeLoaded('youtube',range.start,range.end);
+    await loadDashboardSourceRange('youtube',range.start,range.end);
+    if(alreadyLoaded)return;
+    resetNctAudienceCaches();
+    resetSourceMenus([
+      'youtubeChannel','nctYoutubeVideo',
+    ]);
+    $('youtubeVideoMenu').innerHTML='';
+    youtubeVideoMultiInitialized=false;
+    youtubeVideoSelectAll=true;
+    youtubeDeliveryMinuteIndex=null;
+    refreshNctStorySourceFilters();
+    refreshYoutubeDateLimits();
+    render();
+    renderYoutube();
+  })();
+  dashboardRangeLoadPromises.set(loadKey,promise);
+  try{return await promise}
+  finally{dashboardRangeLoadPromises.delete(loadKey)}
 }
 let activeDashboardPage='audience';
 const DASHBOARD_PAGE_IDS={
@@ -8013,15 +8232,15 @@ function ensureDashboardPages(){
 }
 function dashboardPageNeedsLoading(page){
   if(page==='audience'){
-    return !dashboardSourceLoaded('viewer')||!dashboardSourceLoaded('amagi')
-      ||!dashboardSourceLoaded('youtube');
+    const master=masterDashboardRange(),youtube=youtubeDashboardRange();
+    return !dashboardSourceRangeLoaded('viewer',master.start,master.end)
+      ||!dashboardSourceRangeLoaded('amagi',master.start,master.end)
+      ||!dashboardSourceRangeLoaded('youtube',youtube.start,youtube.end);
   }
   if(page==='delivery'){
-    return !dashboardSourceLoaded('viewer')||!dashboardSourceLoaded('amagi')
-      ||!dashboardSourceLoaded('fct')||!dashboardSourceLoaded('youtube');
+    return !dashboardSourceLoaded('fct');
   }
-  return !nctPayload||!dashboardSourceLoaded('viewer')
-    ||!dashboardSourceLoaded('amagi')||!dashboardSourceLoaded('youtube');
+  return !nctPayload;
 }
 async function activateDashboardPageData(page){
   if(page==='audience'){
@@ -8031,19 +8250,11 @@ async function activateDashboardPageData(page){
     return;
   }
   if(page==='delivery'){
-    await Promise.all([
-      loadAudienceDashboardData(),
-      loadFctDashboardData(),
-      loadYoutubeDashboardData(),
-    ]);
+    await loadFctDashboardData();
     renderFctAndScope(false);
     return;
   }
-  await Promise.all([
-    loadAudienceDashboardData(),
-    loadYoutubeDashboardData(),
-    loadNctData(),
-  ]);
+  await loadNctData();
   if(nctPayload)renderNct(false);
   if(nctChart)requestAnimationFrame(()=>nctChart.resize());
 }
@@ -8090,7 +8301,7 @@ function observeDashboardSource(name,target,loader){
         observer.disconnect();
         start();
       }
-    },{rootMargin:'600px 0px'});
+    },{rootMargin:name==='fct'?'0px':'600px 0px'});
     observer.observe(target);
   }else{
     start();
@@ -8137,8 +8348,26 @@ function audienceScopeValue(event,state){
   return {window:window.label,total,available:true};
 }
 const asrunBaseRender=render;
+function requestActiveDashboardPartitions(){
+  if(activeDashboardPage!=='audience')return;
+  const master=masterDashboardRange(),youtube=youtubeDashboardRange(),tasks=[];
+  if(!dashboardSourceRangeLoaded('viewer',master.start,master.end)
+    ||!dashboardSourceRangeLoaded('amagi',master.start,master.end)){
+    tasks.push(loadAudienceDashboardData());
+  }
+  if(!dashboardSourceRangeLoaded('youtube',youtube.start,youtube.end)){
+    tasks.push(loadYoutubeDashboardData());
+  }
+  if(tasks.length){
+    Promise.all(tasks).catch(error=>{
+      console.error('Selected dashboard date partitions failed:',error);
+      showFatalDashboardError('selected date partitions',error);
+    });
+  }
+}
 render=function(){
   if(youtubeDateMode==='follow')applyYoutubeMainDate(false);
+  requestActiveDashboardPartitions();
   asrunBaseRender();
   renderFct();
   if(nctPayload){
@@ -8164,7 +8393,7 @@ render=function(){
 };
 renderYoutube=renderYoutubeChannelAware;
 const asrunBaseRenderYoutube=renderYoutube;
-renderYoutube=function(){asrunBaseRenderYoutube();renderScopeValidation();updateResetState();hideLoading();};
+renderYoutube=function(){requestActiveDashboardPartitions();asrunBaseRenderYoutube();renderScopeValidation();updateResetState();hideLoading();};
 ensurePeriodControls();ensureCreativeFilters();ensureYoutubeDateModeControls();ensureYoutubeChannelFilter();ensureYoutubeChartIntervalControls();ensureYoutubeChartExpand();refreshYoutubeDateLimits();initializeYoutubeDates();setYoutubeDateMode('follow',false);refreshDependentOptions();ensureAmagiPanel();ensureFctPanel();ensureNctPanel();ensureScopePanel();ensureGlobalAudienceFilters();ensureDashboardPages();initializeNctLazyLoad();initializeDashboardSourceLoading();$('reset').onclick=resetDashboardFilters;
 replaceDownloadAction('exportAllEvents',()=>runWithDashboardSources(
   [loadAudienceDashboardData,loadYoutubeDashboardData],exportAllEventsCsv
@@ -8189,14 +8418,14 @@ async function bootstrapDashboard(){
   try{
     render();
     renderYoutube();
-    showLoading('Loading FAST, STREAM, and AMAGI audience data...');
-    await loadAudienceDashboardData();
     await activateDashboardPageData(activeDashboardPage);
     captureDefaultFilterSignature();
     renderYoutube();
   }catch(startupError){
     showFatalDashboardError('initial render',startupError);
     throw startupError;
+  }finally{
+    hideLoading();
   }
 }
 bootstrapDashboard();

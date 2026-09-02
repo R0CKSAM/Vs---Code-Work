@@ -50,3 +50,13 @@ def test_non_cdn_scope_does_not_apply_fast_stream_gate() -> None:
     minute = minute_rows("2026-08-10", "amagi", 1440)
 
     assert audience_ops.latest_complete_minute_date(minute, "amagi") is None
+
+
+def test_template_exposes_filter_aware_amagi_concurrency_csv() -> None:
+    template = (MODULE_PATH.parent / "template.html").read_text(encoding="utf-8")
+
+    assert 'id="amagiConcurrencyExport"' in template
+    assert "function exportAmagiConcurrencyCsv()" in template
+    assert '["Timestamp IST","Platform","Channel","Actual Concurrent Viewers"]' in template
+    assert 'amagiExport.style.display=amagi?"":"none"' in template
+    assert "const rows=amagiMinuteRows().slice().sort" in template

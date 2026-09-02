@@ -1,0 +1,68 @@
+{
+  "canvas_preset": "16:9  (1024×576)",
+  "export_scale": 1,
+  "export_format": "PNG",
+  "export_quality": 95,
+  "photo_path": "C:/Users/Intern/Downloads/images (1).jpg",
+  "photo_fit": "cover",
+  "photo_treatment": "none",
+  "overlay_path": "",
+  "overlay_x": 5.0,
+  "overlay_y": 5.0,
+  "overlay_scale": 80.0,
+  "panel_side": "left",
+  "panel_width_pct": 37,
+  "panel_opacity": 220,
+  "panel_gradient_dir": "horizontal_fade",
+  "glassmorphism": true,
+  "drop_shadow": true,
+  "margin_x": 11.052631578947368,
+  "margin_y": 8.89952153110048,
+  "spacing_title": 3.5167464114832536,
+  "spacing_rows": 0.0,
+  "spacing_items": 4.0669856459330145,
+  "title": "Match\nStatistics",
+  "subtitle": "",
+  "show_score_block": false,
+  "team_a": "Team A",
+  "team_b": "Team B",
+  "score": "3 – 1",
+  "match_info": "Full Time",
+  "watermark_text": "",
+  "watermark_logo_path": "",
+  "watermark_opacity": 0,
+  "theme_name": "Dark Pro",
+  "accent_override": "",
+  "font_family": "Verdana",
+  "font_bold_path": "",
+  "font_regular_path": "",
+  "title_size": 0,
+  "label_size": 0,
+  "value_size": 0,
+  "stat_rows": [
+    {
+      "label": "New Stat",
+      "value": "0 %",
+      "max": "100",
+      "sublabel": ""
+    },
+    {
+      "label": "New Stat",
+      "value": "0 %",
+      "max": "100",
+      "sublabel": ""
+    },
+    {
+      "label": "New Stat",
+      "value": "0 %",
+      "max": "100",
+      "sublabel": ""
+    },
+    {
+      "label": "New Stat",
+      "value": "0 %",
+      "max": "100",
+      "sublabel": ""
+    }
+  ]
+}

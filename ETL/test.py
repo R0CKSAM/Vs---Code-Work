@@ -13,7 +13,7 @@ import decode_distinct_ua_lookup as decoder  # noqa: E402
 
 decoder.load_env_file()
 key = os.environ["WHATMYUA_KEY"]
-ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
 
 response = requests.get(
     decoder.DEFAULT_API_URL,
@@ -32,3 +32,8 @@ data = response.json()
 print(data.get("Browser", {}).get("name", "Unknown"))
 print(data.get("OS", {}).get("name", "Unknown"))
 print(data.get("Device", {}).get("brand", "Unknown"))
+print(data.get("Device", {}).get("model", "Unknown"))
+print(data.get("Device", {}).get("type", "Unknown"))
+print(data.get("Engine", {}).get("name", "Unknown"))
+print(data.get("Engine", {}).get("version", "Unknown"))
+print(data.get("RenderingEngine", {}).get("name", "Unknown"))

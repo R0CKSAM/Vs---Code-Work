@@ -627,18 +627,79 @@ def test_split_dashboard_payload_versions_lazy_sidecars() -> None:
     """Every rebuild must force local-file browsers to load the new source arrays."""
     payload = {
         "generated_at_ist": "18/08/26 12:24:33 PM IST",
-        "viewer_minute": [],
+        "viewer_minute": [{"log_date": "2026-08-18"}],
         "amagi": {"minute": []},
         "fct": {"events": []},
-        "youtube": {key: [] for key in asrun.YOUTUBE_PAYLOAD_ARRAYS},
+        "youtube": {
+            key: [{"log_date": "2026-08-18", "source": key}]
+            for key in asrun.YOUTUBE_PAYLOAD_ARRAYS
+        },
     }
 
     core, _chunks = asrun.split_dashboard_payload(payload)
 
-    assert {
-        config["file"].split("?v=")[1]
-        for config in core["sidecars"].values()
-    } == {"180826122433PMIST"}
+    versioned_files = []
+    for config in core["sidecars"].values():
+        if config.get("partitioned"):
+            versioned_files.extend(config["dates"].values())
+        else:
+            versioned_files.append(config["file"])
+    assert {file.split("?v=")[1] for file in versioned_files} == {
+        "180826122433PMIST"
+    }
+    assert core["sidecars"]["viewer"]["dates"] == {
+        "2026-08-18": "data/viewer/viewer_2026-08-18.js?v=180826122433PMIST"
+    }
+    assert core["sidecars"]["youtube"]["dates"] == {
+        "2026-08-18": "data/youtube/youtube_2026-08-18.js?v=180826122433PMIST"
+    }
+
+
+def test_write_dashboard_sidecars_isolates_daily_viewer_and_youtube_rows(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Daily sidecars must never leak rows from another date partition."""
+    monkeypatch.setattr(asrun, "OUTPUT_DIR", tmp_path)
+    chunks = {
+        "viewer": [
+            {"log_date": "2026-08-25", "value": 25},
+            {"log_date": "2026-08-26", "value": 26},
+        ],
+        "amagi": [
+            {"log_date": "2026-08-25", "value": "amagi-25"},
+            {"log_date": "2026-08-26", "value": "amagi-26"},
+        ],
+        "fct": [{"value": "fct"}],
+        "youtube": {
+            key: [
+                {"log_date": "2026-08-25", "value": f"{key}-25"},
+                {"log_date": "2026-08-26", "value": f"{key}-26"},
+            ]
+            for key in asrun.YOUTUBE_PAYLOAD_ARRAYS
+        },
+    }
+
+    paths = asrun.write_dashboard_sidecars(chunks)
+
+    viewer_25 = (tmp_path / "data/viewer/viewer_2026-08-25.js").read_text(
+        encoding="utf-8"
+    )
+    youtube_26 = (tmp_path / "data/youtube/youtube_2026-08-26.js").read_text(
+        encoding="utf-8"
+    )
+    amagi_25 = (tmp_path / "data/amagi/amagi_2026-08-25.js").read_text(
+        encoding="utf-8"
+    )
+    assert paths["viewer"] == tmp_path / "data/viewer"
+    assert "__ASRUN_VIEWER_PARTITIONS__" in viewer_25
+    assert '"value":25' in viewer_25
+    assert '"value":26' not in viewer_25
+    assert "__ASRUN_YOUTUBE_PARTITIONS__" in youtube_26
+    assert '"minute-26"' in youtube_26
+    assert '"minute-25"' not in youtube_26
+    assert '"amagi-25"' in amagi_25
+    assert '"amagi-26"' not in amagi_25
+    assert (tmp_path / "asrun_fct_event_data.js").exists()
 
 
 def test_delivery_filters_are_bidirectional_and_empty_multiselects_stay_empty(
@@ -704,7 +765,53 @@ def test_render_dashboard_groups_sections_into_three_pages(
         "ensureDashboardPages();initializeNctLazyLoad()"
     ) in html
     assert "nodes.audience.remove();" in html
-    assert "await activateDashboardPageData(activeDashboardPage)" in html
+    assert "await activateDashboardPageData(activeDashboardPage);" in html
+    assert "let activeDashboardPage='audience';" in html
+    assert "setDashboardPage('audience',false,false);" in html
+    assert "await loadFctDashboardData();" in html
+    assert "initializeDashboardSourceLoading();" in html
+    assert "rootMargin:name==='fct'?'0px':'600px 0px'" in html
+    assert "showLoading('Loading FAST, STREAM, and AMAGI audience data...');" not in html
+
+
+def test_render_dashboard_defaults_master_and_fct_ranges_to_latest_seven_days(
+    tmp_path: Path, monkeypatch
+) -> None:
+    chartjs = tmp_path / "chart.umd.min.js"
+    chartjs.write_text("window.Chart=function(){};", encoding="utf-8")
+    monkeypatch.setattr(asrun, "CHARTJS_CACHE", chartjs)
+
+    html = asrun.render_dashboard({"channels": ["Test Channel"]})
+
+    assert "defaultStartCandidate.setUTCDate(defaultStartCandidate.getUTCDate()-6);" in html
+    assert "$('from').value=defaultStartDate;" in html
+    assert "$('to').value=defaultEndDate;" in html
+    assert "let fctRangeMode='7';" in html
+    assert "setFctRange('7',false)" in html
+
+
+def test_render_dashboard_loads_viewer_and_youtube_by_selected_date_range(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Audience activation must fetch only missing partitions in the active range."""
+    chartjs = tmp_path / "chart.umd.min.js"
+    chartjs.write_text("window.Chart=function(){};", encoding="utf-8")
+    monkeypatch.setattr(asrun, "CHARTJS_CACHE", chartjs)
+
+    html = asrun.render_dashboard({"channels": ["Test Channel"]})
+
+    assert "const dashboardSourcePartitions=new Map(" in html
+    assert "function dashboardSourceRangeLoaded(name,from='',to=''){" in html
+    assert "function loadDashboardPartition(name,date){" in html
+    assert "function loadDashboardSourceRange(name,from='',to=''){" in html
+    assert "loadDashboardSourceRange('viewer',range.start,range.end)" in html
+    assert "loadDashboardSourceRange('amagi',range.start,range.end)" in html
+    assert "loadDashboardSourceRange('youtube',range.start,range.end)" in html
+    assert "function requestActiveDashboardPartitions(){" in html
+    assert "if(activeDashboardPage!=='audience')return;" in html
+    assert "dashboardSourceRangeLoaded('amagi',range.start,range.end)" in html
+    assert "dashboardSourceRangeLoaded('youtube',loadedRange.start,loadedRange.end)" in html
+    assert "Outside selected YouTube range" in html
 
 
 def test_render_dashboard_uses_one_visible_date_scope_per_page(
@@ -1089,7 +1196,7 @@ def test_render_dashboard_adds_interval_weighted_nct_story_performance(
     assert "const zeroMissing=source==='youtube';" in html
     assert "const zeroSelected=basis==='youtube';" in html
     assert "loadAudienceDashboardData()," in html
-    assert "loadYoutubeDashboardData()," in html
+    assert "loadYoutubeDashboardData()" in html
     assert "Date continuity checks source coverage inside the date window" in html
     assert "<th>Date continuity</th>" in html
     assert "function dateContinuity(dateValues,start,end)" in html
@@ -1099,7 +1206,7 @@ def test_render_dashboard_adds_interval_weighted_nct_story_performance(
     assert "(DATA.date_coverage||{}).nct" in html
 
 
-def test_render_dashboard_gives_fct_an_independent_all_range(
+def test_render_dashboard_gives_fct_an_independent_latest_seven_day_range(
     tmp_path: Path, monkeypatch
 ) -> None:
     """FCT rows and exports must use FCT dates instead of the ASRUN header range."""
@@ -1111,9 +1218,10 @@ def test_render_dashboard_gives_fct_an_independent_all_range(
 
     assert 'id="fctFrom"' in html
     assert 'id="fctTo"' in html
-    assert 'data-fct-range="all" class="active"' in html
+    assert 'data-fct-range="7" class="active"' in html
+    assert 'data-fct-range="all" class="active"' not in html
     assert "function initializeFctDates()" in html
-    assert "setFctRange('all',false)" in html
+    assert "setFctRange('7',false)" in html
     assert "const from=$('fctFrom').value,to=$('fctTo').value" in html
     assert "filters=fctFilterContext()" in html
     assert "Independent FCT date + all selected FCT dimensions" in html

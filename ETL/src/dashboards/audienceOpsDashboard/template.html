@@ -387,7 +387,7 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
     </div>
     <div class="grid-2">
       <div class="panel">
-        <div class="panel-head"><div class="panel-title"><span id="concurrencyTitle">Active Viewer Minute Sum</span><small id="concurrencySubtitle">cliIP count summed inside selected interval</small></div><button class="btn" onclick="expandChart('concurrencyChart','Active Viewer Minute Sum')">Expand</button></div>
+        <div class="panel-head"><div class="panel-title"><span id="concurrencyTitle">Active Viewer Minute Sum</span><small id="concurrencySubtitle">cliIP count summed inside selected interval</small></div><div class="action-row"><button class="btn" id="amagiConcurrencyExport" style="display:none" onclick="exportAmagiConcurrencyCsv()">Export CSV</button><button class="btn" onclick="expandChart('concurrencyChart','Active Viewer Minute Sum')">Expand</button></div></div>
         <div class="mini-controls">
           <button class="btn" id="concInterval1" onclick="setConcurrencyInterval(1)">1 min</button>
           <button class="btn" id="concInterval5" onclick="setConcurrencyInterval(5)">5 min</button>
@@ -1505,6 +1505,8 @@ function updateSourceLayout(){
   if(generalKpis)generalKpis.style.display=amagi?"none":"";
   const statusField=el("concStatusField");
   if(statusField)statusField.style.display=amagi?"none":"";
+  const amagiExport=el("amagiConcurrencyExport");
+  if(amagiExport)amagiExport.style.display=amagi?"":"none";
 }
 function renderStakeholderKpis(){
   const rows=scopedWatchRows();
@@ -2455,6 +2457,32 @@ function downloadCsv(filename,headers,rows){
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
+}
+function exportAmagiConcurrencyCsv(){
+  const rows=amagiMinuteRows().slice().sort(function(a,b){
+    return String(a.minute_ist||"").localeCompare(String(b.minute_ist||""))
+      ||String(a.platform_name||"").localeCompare(String(b.platform_name||""))
+      ||String(a.channel_name||"").localeCompare(String(b.channel_name||""));
+  });
+  if(!rows.length){
+    alert("No Amagi concurrency minute data for the selected filters.");
+    return;
+  }
+  const headers=["Timestamp IST","Platform","Channel","Actual Concurrent Viewers"];
+  const values=rows.map(function(row){
+    return [String(row.minute_ist||""),String(row.platform_name||"Unknown / NA"),String(row.channel_name||"Unknown / NA"),Math.round(n(row.unique_viewers))];
+  });
+  const platform=filterLabel(state.platform,"All Platforms");
+  const channel=filterLabel(state.channel,"All Channels");
+  const filename=[
+    "amagi_concurrency",
+    safeFileToken(state.start||"start"),
+    "to",
+    safeFileToken(state.end||"end"),
+    safeFileToken(platform),
+    safeFileToken(channel)
+  ].join("_")+".csv";
+  downloadCsv(filename,headers,values);
 }
 function exportUniqueIpMinuteCsv(){
   const comparison=buildUniqueIpDateComparison(opsIdentityMinuteRows());
