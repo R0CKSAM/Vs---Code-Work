@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from build_concurrency import (
@@ -57,8 +57,15 @@ def resolved_platform_key_sql(source: str) -> str:
     return platform_key_sql("reqHost")
 
 
-def build_identity_minute_table(con, args: argparse.Namespace) -> None:
-    start, end = checked_dates(args)
+def build_identity_minute_table(
+    con,
+    args: argparse.Namespace,
+    start: date | None = None,
+    end: date | None = None,
+) -> None:
+    configured_start, configured_end = checked_dates(args)
+    start = configured_start if start is None else start
+    end = configured_end if end is None else end
     lake_source = parquet_source_sql(args.selected_lake_files)
     partition_filter = date_filter_sql(start, end)
     candidate_expr = channel_candidate_sql("reqPath")
@@ -135,6 +142,18 @@ def build_identity_minute_table(con, args: argparse.Namespace) -> None:
     )
 
 
+def daily_ranges(start: date | None, end: date | None) -> list[tuple[date | None, date | None]]:
+    """Split bounded rebuilds into daily scans to cap DISTINCT aggregation memory."""
+    if start is None or end is None:
+        return [(start, end)]
+    ranges: list[tuple[date | None, date | None]] = []
+    current = start
+    while current <= end:
+        ranges.append((current, current))
+        current += timedelta(days=1)
+    return ranges
+
+
 def write_manifest(args: argparse.Namespace, new_rows: int, output_path: Path) -> None:
     manifest = {
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -181,13 +200,35 @@ def main() -> None:
     args.out_dir.mkdir(parents=True, exist_ok=True)
     con = connect(args)
     try:
-        build_identity_minute_table(con, args)
-        new_rows = table_count(con, "identity_minute_new")
-        if new_rows <= 0:
+        new_rows = 0
+        has_accumulator = False
+        for chunk_start, chunk_end in daily_ranges(start, end):
+            build_identity_minute_table(con, args, chunk_start, chunk_end)
+            chunk_rows = table_count(con, "identity_minute_new")
+            chunk_label = (
+                chunk_start.isoformat()
+                if chunk_start is not None
+                else "all available dates"
+            )
+            print(f"Identity minute chunk {chunk_label}: {chunk_rows:,} rows")
+            if chunk_rows <= 0:
+                continue
+            if has_accumulator:
+                con.execute("INSERT INTO identity_minute_all SELECT * FROM identity_minute_new")
+            else:
+                con.execute(
+                    "CREATE OR REPLACE TEMP TABLE identity_minute_all AS "
+                    "SELECT * FROM identity_minute_new"
+                )
+                has_accumulator = True
+            new_rows += chunk_rows
+            con.execute("DROP TABLE identity_minute_new")
+
+        if not has_accumulator:
             raise SystemExit(f"No {args.source.upper()} .ts rows found for the selected identity-minute range.")
 
         output_path = args.out_dir / "identity_minute.parquet"
-        write_append_table(con, "identity_minute_new", output_path, args.source, start, end)
+        write_append_table(con, "identity_minute_all", output_path, args.source, start, end)
         write_manifest(args, new_rows, output_path)
     finally:
         con.close()

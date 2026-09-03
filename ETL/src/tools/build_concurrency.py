@@ -229,7 +229,10 @@ def build_new_tables(con: duckdb.DuckDBPyConnection, args: argparse.Namespace) -
 
     con.execute(
         f"""
-        CREATE OR REPLACE TEMP TABLE concurrency_resolved_new AS
+        -- Keep the tens-of-millions-row resolved source as a view. Materializing
+        -- it inside the in-memory DuckDB connection exhausted RAM before the
+        -- much smaller minute aggregates could be produced on high-volume days.
+        CREATE OR REPLACE TEMP VIEW concurrency_resolved_new AS
         WITH base AS (
             SELECT
                 COALESCE(CAST(source AS VARCHAR), 'stream') AS source,

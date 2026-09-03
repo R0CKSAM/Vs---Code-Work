@@ -2643,6 +2643,11 @@ def main() -> None:
             source_start = latency_start
             source_end = latency_end
             latency_step_threads = max(1, int(args.latency_threads))
+            # FAST days now exceed 50 million rows. Its geography quantile
+            # aggregation duplicates state per worker and has repeatedly OOMed
+            # at 12 and 6 threads; two threads is slower but proven to finish.
+            if latency_source == "fast":
+                latency_step_threads = min(latency_step_threads, 2)
             latency_cmd = [
                 python,
                 str(latency_incremental_script),

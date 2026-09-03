@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 
 
@@ -44,3 +45,20 @@ def test_daily_archives_completed_target_and_keeps_only_spillover_hot() -> None:
     assert "[int]$HotLakeRetentionDays = 1" in source
     assert "$ArchiveThrough = $TargetDate.Date.AddDays(1 - $HotLakeRetentionDays)" in source
     assert "archiving completed partitions through" in source
+
+
+def test_identity_minute_bounded_ranges_are_split_by_day(monkeypatch) -> None:
+    monkeypatch.syspath_prepend(str(ETL_ROOT / "src" / "tools"))
+    from build_identity_minute import daily_ranges
+
+    assert daily_ranges(date(2026, 9, 2), date(2026, 9, 3)) == [
+        (date(2026, 9, 2), date(2026, 9, 2)),
+        (date(2026, 9, 3), date(2026, 9, 3)),
+    ]
+    assert daily_ranges(None, None) == [(None, None)]
+
+
+def test_fast_latency_threads_are_capped_for_high_volume_geo_aggregation() -> None:
+    source = (ETL_ROOT / "src" / "orchestrator" / "run_pipeline.py").read_text(encoding="utf-8")
+    assert 'if latency_source == "fast":' in source
+    assert "latency_step_threads = min(latency_step_threads, 2)" in source

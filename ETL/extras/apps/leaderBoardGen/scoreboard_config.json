@@ -1,26 +1,30 @@
 {
+  "template_name": "VS Tug-of-War",
   "canvas_preset": "16:9  (1024×576)",
   "export_scale": 1,
   "export_format": "PNG",
   "export_quality": 95,
-  "photo_path": "C:/Users/Intern/Downloads/images (1).jpg",
+  "photo_path": "C:/Users/Intern/Downloads/images (2).jpg",
   "photo_fit": "cover",
   "photo_treatment": "none",
+  "photo_zoom": 100.0,
+  "photo_focus_x": 0.0,
+  "photo_focus_y": 50.0,
   "overlay_path": "",
   "overlay_x": 5.0,
   "overlay_y": 5.0,
   "overlay_scale": 80.0,
-  "panel_side": "left",
-  "panel_width_pct": 37,
+  "panel_side": "right",
+  "panel_width_pct": 42,
   "panel_opacity": 220,
-  "panel_gradient_dir": "horizontal_fade",
+  "panel_gradient_dir": "vertical",
   "glassmorphism": true,
   "drop_shadow": true,
-  "margin_x": 11.052631578947368,
-  "margin_y": 8.89952153110048,
-  "spacing_title": 3.5167464114832536,
-  "spacing_rows": 0.0,
-  "spacing_items": 4.0669856459330145,
+  "margin_x": 15.14354066985646,
+  "margin_y": 2.5119617224880386,
+  "spacing_title": 3.3014354066985647,
+  "spacing_rows": 5.119617224880383,
+  "spacing_items": 2.3205741626794256,
   "title": "Match\nStatistics",
   "subtitle": "",
   "show_score_block": false,
@@ -29,40 +33,271 @@
   "score": "3 – 1",
   "match_info": "Full Time",
   "watermark_text": "",
-  "watermark_logo_path": "",
-  "watermark_opacity": 0,
-  "theme_name": "Dark Pro",
+  "watermark_logo_path": "C:/Users/Intern/Downloads/image-removebg-pDAreview.png",
+  "watermark_opacity": 255,
+  "theme_name": "Ocean",
   "accent_override": "",
-  "font_family": "Verdana",
+  "font_family": "Helvetica",
   "font_bold_path": "",
   "font_regular_path": "",
   "title_size": 0,
   "label_size": 0,
   "value_size": 0,
+  "auto_fit_text": true,
   "stat_rows": [
     {
-      "label": "New Stat",
-      "value": "0 %",
+      "label": "1st Serve %",
+      "value": "72 %",
       "max": "100",
       "sublabel": ""
     },
     {
-      "label": "New Stat",
-      "value": "0 %",
+      "label": "2nd Serve Win %",
+      "value": "61 %",
       "max": "100",
       "sublabel": ""
     },
     {
-      "label": "New Stat",
-      "value": "0 %",
+      "label": "1st Serve Return Win %",
+      "value": "54 %",
       "max": "100",
       "sublabel": ""
     },
     {
-      "label": "New Stat",
-      "value": "0 %",
-      "max": "100",
-      "sublabel": ""
+      "label": "Break Points Won",
+      "value": "4",
+      "max": "7",
+      "sublabel": "out of 7 chances"
     }
-  ]
+  ],
+  "positions": {},
+  "layer_order": [
+    "template_artwork"
+  ],
+  "layer_states": {},
+  "snap_enabled": true,
+  "snap_threshold": 8.0,
+  "show_safe_area": true,
+  "show_center_guides": false,
+  "safe_area_pct": 5.0,
+  "template_configs": {
+    "Head-to-Head Insights": {
+      "template": "t2",
+      "canvas_size": "Wide  (1152x640)",
+      "header_text": "INSIGHTS | SHOT QUALITY",
+      "divider_text": "V",
+      "photo_a": "",
+      "photo_b": "",
+      "name_a_first": "Stefanos",
+      "name_a_last": "Tsitsipas",
+      "abbr_a": "GRE",
+      "name_b_first": "Diego",
+      "name_b_last": "Schwartzman",
+      "abbr_b": "ARG",
+      "accent_color": [
+        210,
+        235,
+        60
+      ],
+      "rows": [
+        {
+          "label": "SERVE",
+          "value_a": "8.2",
+          "value_b": "6.6",
+          "max": "10"
+        },
+        {
+          "label": "RETURN",
+          "value_a": "7.0",
+          "value_b": "7.5",
+          "max": "10"
+        },
+        {
+          "label": "FOREHAND",
+          "value_a": "8.0",
+          "value_b": "7.9",
+          "max": "10"
+        },
+        {
+          "label": "BACKHAND",
+          "value_a": "7.5",
+          "value_b": "8.1",
+          "max": "10"
+        }
+      ],
+      "show_playing_style": true,
+      "style_label": "PLAYING STYLE",
+      "tags_a": [
+        "Big Server",
+        "All Courter"
+      ],
+      "tags_b": [
+        "Counter Puncher",
+        "Solid Baseliner"
+      ]
+    },
+    "VS Tug-of-War": {
+      "template": "t3",
+      "canvas_size": "Square(1080x1080)",
+      "photo_a": "C:/Users/Intern/Downloads/image-removebg-preview.png",
+      "photo_b": "C:/Users/Intern/Pictures/621-profile-dr-naresh-trehan.jpg",
+      "logo_path": "",
+      "name_a_first": "Clarissa",
+      "name_a_last": "Blomqvist",
+      "team_a": "HLK",
+      "name_b_first": "Emelie",
+      "name_b_last": "Gabrán",
+      "team_b": "ÅLK",
+      "vs_text": "VS",
+      "score": "6-4  3-6  10-4",
+      "accent_color": [
+        210,
+        235,
+        60
+      ],
+      "sponsor_text": "zenniz",
+      "rows": [
+        {
+          "label": "Groundstroke Speed",
+          "value_a": "107",
+          "value_b": "111",
+          "max": "200",
+          "unit": "KMH"
+        },
+        {
+          "label": "1st Serve Speed",
+          "value_a": "154",
+          "value_b": "155",
+          "max": "250",
+          "unit": "KMH"
+        },
+        {
+          "label": "Short Rallies Won",
+          "value_a": "54",
+          "value_b": "45",
+          "max": "100",
+          "unit": ""
+        },
+        {
+          "label": "Long Rallies Won %",
+          "value_a": "4",
+          "value_b": "15",
+          "max": "100",
+          "unit": ""
+        }
+      ]
+    },
+    "Performance Spotlight": {
+      "template": "t4",
+      "canvas_size": "Square(1080x1080)",
+      "banner_text": "PERFORMANCE SPOTLIGHT",
+      "accent_color": [
+        210,
+        235,
+        60
+      ],
+      "sponsor_text": "TEHO TENNIS LIIGA   ·   zenniz",
+      "players": [
+        {
+          "team": "HVS",
+          "first": "Otto",
+          "last": "Virtanen",
+          "photo": "",
+          "result": "Def. J. Karlsson Wistrand 6-1, 6-2",
+          "stats": [
+            {
+              "label": "Fastest Serve",
+              "value": "218",
+              "unit": "KMH",
+              "max": "300"
+            },
+            {
+              "label": "1st Serve Won %",
+              "value": "89",
+              "unit": "%",
+              "max": "100"
+            },
+            {
+              "label": "1st Serve Return %",
+              "value": "82",
+              "unit": "%",
+              "max": "100"
+            },
+            {
+              "label": "Short Points Won %",
+              "value": "72",
+              "unit": "%",
+              "max": "100"
+            }
+          ]
+        },
+        {
+          "team": "HVS",
+          "first": "Viktor",
+          "last": "Durasovic",
+          "photo": "",
+          "result": "Def. V. Ahti 6-3, 6-1",
+          "stats": [
+            {
+              "label": "Fastest Serve",
+              "value": "200",
+              "unit": "KMH",
+              "max": "300"
+            },
+            {
+              "label": "1st Serve Won %",
+              "value": "68",
+              "unit": "%",
+              "max": "100"
+            },
+            {
+              "label": "1st Serve Return %",
+              "value": "75",
+              "unit": "%",
+              "max": "100"
+            },
+            {
+              "label": "Medium Points Won %",
+              "value": "71",
+              "unit": "%",
+              "max": "100"
+            }
+          ]
+        },
+        {
+          "team": "HVS",
+          "first": "Leevi",
+          "last": "Säätelä",
+          "photo": "",
+          "result": "Def. V. Ahti 6-4, 6-3",
+          "stats": [
+            {
+              "label": "Fastest Serve",
+              "value": "197",
+              "unit": "KMH",
+              "max": "300"
+            },
+            {
+              "label": "1st Serve Won %",
+              "value": "74",
+              "unit": "%",
+              "max": "100"
+            },
+            {
+              "label": "1st Serve Return %",
+              "value": "71",
+              "unit": "%",
+              "max": "100"
+            },
+            {
+              "label": "Long Points Won %",
+              "value": "74",
+              "unit": "%",
+              "max": "100"
+            }
+          ]
+        }
+      ]
+    }
+  }
 }
