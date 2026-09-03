@@ -15,41 +15,84 @@
       <section class="workspace-shell">
         <div class="toolbar-card sticky-toolbar compact-toolbar">
           <div class="filters-row">
-            <label class="filter-chip">
+            <div class="filter-chip filter-chip-dropdown" id="targetFilterControl">
               <span>Target</span>
-              <select id="targetFilter"></select>
-            </label>
+              <button id="targetFilterToggle" class="filter-dropdown-button" type="button" aria-haspopup="true" aria-expanded="false">
+                <span id="targetFilterSummary" class="filter-dropdown-summary">All targets</span>
+                <span class="filter-dropdown-caret" aria-hidden="true">&#9662;</span>
+              </button>
+              <div id="targetFilterPanel" class="filter-dropdown-panel" hidden>
+                <div class="filter-dropdown-actions">
+                  <button id="targetFilterSelectAll" class="filter-dropdown-link" type="button">Select all</button>
+                  <button id="targetFilterClear" class="filter-dropdown-link filter-dropdown-link-muted" type="button">Clear</button>
+                </div>
+                <div id="targetFilterOptions" class="filter-option-list"></div>
+              </div>
+            </div>
 
-            <label class="filter-chip">
+            <div class="filter-chip filter-chip-dropdown" id="regionFilterControl">
               <span>Region</span>
-              <select id="regionFilter"></select>
-            </label>
+              <button id="regionFilterToggle" class="filter-dropdown-button" type="button" aria-haspopup="true" aria-expanded="false">
+                <span id="regionFilterSummary" class="filter-dropdown-summary">All regions</span>
+                <span class="filter-dropdown-caret" aria-hidden="true">&#9662;</span>
+              </button>
+              <div id="regionFilterPanel" class="filter-dropdown-panel" hidden>
+                <div class="filter-dropdown-actions">
+                  <button id="regionFilterSelectAll" class="filter-dropdown-link" type="button">Select all</button>
+                  <button id="regionFilterClear" class="filter-dropdown-link filter-dropdown-link-muted" type="button">Clear</button>
+                </div>
+                <div id="regionFilterOptions" class="filter-option-list"></div>
+              </div>
+            </div>
 
-            <label class="filter-chip">
+            <div class="filter-chip filter-chip-dropdown" id="channelFilterControl">
               <span>Channel</span>
-              <select id="channelFilter"></select>
-            </label>
+              <button id="channelFilterToggle" class="filter-dropdown-button" type="button" aria-haspopup="true" aria-expanded="false">
+                <span id="channelFilterSummary" class="filter-dropdown-summary">All channels</span>
+                <span class="filter-dropdown-caret" aria-hidden="true">&#9662;</span>
+              </button>
+              <div id="channelFilterPanel" class="filter-dropdown-panel" hidden>
+                <div class="filter-dropdown-actions">
+                  <button id="channelFilterSelectAll" class="filter-dropdown-link" type="button">Select all</button>
+                  <button id="channelFilterClear" class="filter-dropdown-link filter-dropdown-link-muted" type="button">Clear</button>
+                </div>
+                <div id="channelFilterOptions" class="filter-option-list"></div>
+              </div>
+            </div>
 
-            <label class="filter-chip">
+            <div class="filter-chip filter-chip-dropdown" id="timeBandFilterControl">
               <span>Time Band</span>
-              <select id="timeBandFilter"></select>
-            </label>
+              <button id="timeBandFilterToggle" class="filter-dropdown-button" type="button" aria-haspopup="true" aria-expanded="false">
+                <span id="timeBandFilterSummary" class="filter-dropdown-summary">All time bands</span>
+                <span class="filter-dropdown-caret" aria-hidden="true">&#9662;</span>
+              </button>
+              <div id="timeBandFilterPanel" class="filter-dropdown-panel" hidden>
+                <div class="filter-dropdown-actions">
+                  <button id="timeBandFilterSelectAll" class="filter-dropdown-link" type="button">Select all</button>
+                  <button id="timeBandFilterClear" class="filter-dropdown-link filter-dropdown-link-muted" type="button">Clear</button>
+                </div>
+                <div id="timeBandFilterOptions" class="filter-option-list"></div>
+              </div>
+            </div>
 
-            <div class="filter-chip filter-chip-weeks" id="weekFilterControl">
+            <div class="filter-chip filter-chip-dropdown filter-chip-weeks" id="weekFilterControl">
               <span>Weeks</span>
               <button
                 id="weekFilterToggle"
-                class="week-dropdown-button"
+                class="filter-dropdown-button"
                 type="button"
                 aria-haspopup="true"
                 aria-expanded="false"
               >
-                <span id="weekFilterSummary" class="week-dropdown-summary">All weeks</span>
-                <span class="week-dropdown-caret" aria-hidden="true">&#9662;</span>
+                <span id="weekFilterSummary" class="filter-dropdown-summary">All weeks</span>
+                <span class="filter-dropdown-caret" aria-hidden="true">&#9662;</span>
               </button>
-              <div id="weekFilterPanel" class="week-dropdown-panel" hidden>
-                <button id="weekSelectAll" class="week-dropdown-link" type="button">Select all</button>
-                <div id="weekFilter" class="week-pill-list"></div>
+              <div id="weekFilterPanel" class="filter-dropdown-panel" hidden>
+                <div class="filter-dropdown-actions">
+                  <button id="weekSelectAll" class="filter-dropdown-link" type="button">Select all</button>
+                  <button id="weekFilterClear" class="filter-dropdown-link filter-dropdown-link-muted" type="button">Clear</button>
+                </div>
+                <div id="weekFilter" class="filter-option-list"></div>
               </div>
             </div>
 
@@ -135,23 +178,27 @@
             </div>
             <div class="card-tools card-tools-stack">
               <div class="segmented-control" id="regionMetricTabs"></div>
-              <button class="expand-button" type="button" data-expand-chart="regionalChart">Expand</button>
             </div>
           </div>
-          <div class="regional-layout">
-            <div class="chart-wrap chart-wrap-regional" id="regionalChartWrap">
-              <canvas id="regionalChart"></canvas>
+          <div class="heatmap-panel regional-table-panel">
+            <div class="heatmap-legend">
+              <span>Low</span>
+              <div class="legend-bar"></div>
+              <span>High</span>
             </div>
-            <div class="heatmap-panel">
-              <div class="heatmap-legend">
-                <span>Low</span>
-                <div class="legend-bar"></div>
-                <span>High</span>
-              </div>
-              <div id="regionalHeatmap"></div>
-            </div>
+            <div id="regionalHeatmap"></div>
           </div>
         </article>
+      </section>
+
+      <section class="dashboard-notes">
+        <h3>Units Guide</h3>
+        <ul class="dashboard-notes-list">
+          <li><strong>AMA</strong>: Average Minute Audience, shown in thousands of viewers (`000s`).</li>
+          <li><strong>TSV</strong>: Time Spent Viewing, shown as average viewing time per reached viewer.</li>
+          <li><strong>Viewing Minutes</strong>: Total viewing minutes, shown in thousands (`000`).</li>
+          <li><strong>Cume Reach</strong>: Cumulative reach, shown in thousands of viewers (`000`).</li>
+        </ul>
       </section>
     </main>
   </div>

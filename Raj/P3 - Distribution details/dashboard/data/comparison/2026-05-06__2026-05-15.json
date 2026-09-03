@@ -361,9 +361,90 @@
   },
   {
     "headend_id": "HED000507",
+    "lcn": "438",
+    "week_from": "2026-05-06",
+    "week_from_channel": "Zee News",
+    "week_to": "2026-05-15",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000507",
+    "lcn": "439",
+    "week_from": "2026-05-06",
+    "week_from_channel": "Zee Mpcg",
+    "week_to": "2026-05-15",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000507",
+    "lcn": "440",
+    "week_from": "2026-05-06",
+    "week_from_channel": "Zee Business",
+    "week_to": "2026-05-15",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000507",
+    "lcn": "441",
+    "week_from": "2026-05-06",
+    "week_from_channel": "Salaam Tv",
+    "week_to": "2026-05-15",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000507",
+    "lcn": "442",
+    "week_from": "2026-05-06",
+    "week_from_channel": "Wion",
+    "week_to": "2026-05-15",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000507",
+    "lcn": "443",
+    "week_from": "2026-05-06",
+    "week_from_channel": "Zee Bharat",
+    "week_to": "2026-05-15",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000507",
     "lcn": "449",
     "week_from": "2026-05-06",
     "week_from_channel": "Hd Nick",
+    "week_to": "2026-05-15",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000507",
+    "lcn": "450",
+    "week_from": "2026-05-06",
+    "week_from_channel": "Nick",
+    "week_to": "2026-05-15",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000507",
+    "lcn": "451",
+    "week_from": "2026-05-06",
+    "week_from_channel": "Disney Channel",
+    "week_to": "2026-05-15",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000507",
+    "lcn": "452",
+    "week_from": "2026-05-06",
+    "week_from_channel": "Sony Yay",
     "week_to": "2026-05-15",
     "week_to_channel": null,
     "status": "Removed"

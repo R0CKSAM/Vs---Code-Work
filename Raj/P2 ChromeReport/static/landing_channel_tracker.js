@@ -27,6 +27,7 @@
   const tableHead = document.getElementById("landingTrackerTableHead");
   const tableBody = document.getElementById("landingTrackerTableBody");
   const resultCount = document.getElementById("trackerResultCount");
+  const trackerMeta = document.getElementById("landingTrackerMeta");
   const pageInfo = document.getElementById("trackerPageInfo");
   const scrollHint = document.getElementById("trackerScrollHint");
   const resetButton = document.getElementById("trackerResetButton");
@@ -506,6 +507,11 @@
     const filteredRecords = filterRecords();
     renderTableHead(visibleWeeks);
     renderTableBody(filteredRecords, visibleWeeks);
+    if (trackerMeta) {
+      const allWeeks = state.payload?.weeks || [];
+      const latestWeek = allWeeks[allWeeks.length - 1] || "No data";
+      trackerMeta.textContent = `Latest landing data: ${latestWeek}`;
+    }
     syncFilterLabels();
     window.requestAnimationFrame(() => maybeLoadMoreRows());
   }

@@ -8242,5 +8242,53 @@
     "second_landing_channel": null,
     "barker_channel": null,
     "second_barker_channel": null
+  },
+  {
+    "headend_id": "HED000688",
+    "network_name": "Shivam Cable Network",
+    "headend_location": "Bhadra - Bhiwani",
+    "state": "Haryana",
+    "barc_market": "Rural",
+    "stbs": 18000,
+    "landing_channel": null,
+    "second_landing_channel": null,
+    "barker_channel": null,
+    "second_barker_channel": null
+  },
+  {
+    "headend_id": "HED000689",
+    "network_name": "Hathway cable & Datacom Ltd",
+    "headend_location": "Mumbai",
+    "state": "Maharashtra",
+    "barc_market": null,
+    "stbs": 200000,
+    "landing_channel": "Local",
+    "second_landing_channel": "Local",
+    "barker_channel": null,
+    "second_barker_channel": null
+  },
+  {
+    "headend_id": "HED000690",
+    "network_name": "Den Suprime Belapur ( Den Network)",
+    "headend_location": "Navi Mumbai",
+    "state": "Maharashtra",
+    "barc_market": null,
+    "stbs": 35000,
+    "landing_channel": "Local",
+    "second_landing_channel": "Local",
+    "barker_channel": null,
+    "second_barker_channel": null
+  },
+  {
+    "headend_id": "HED000691",
+    "network_name": "RAJA NETWORK",
+    "headend_location": "Raisen",
+    "state": "M.P.",
+    "barc_market": "MP LC1",
+    "stbs": 5500,
+    "landing_channel": null,
+    "second_landing_channel": null,
+    "barker_channel": null,
+    "second_barker_channel": null
   }
 ]

@@ -2488,7 +2488,10 @@ __STYLE__
 
     <section class="panel landing-tracker-panel">
       <div class="panel-heading landing-tracker-heading">
-        <div><h2>Landing Channel Change Tracker</h2></div>
+        <div>
+          <h2>Landing Channel Change Tracker</h2>
+          <p id="landingTrackerMeta" class="panel-subtitle">Loading landing data...</p>
+        </div>
       </div>
       <div class="landing-tracker-toolbar">
         <div class="tracker-field"><span class="tracker-field-label">Band</span><div class="filter-select"><button id="trackerBandFilter" class="tracker-select-btn" type="button">All Bands</button><div id="trackerBandFilterMenu" class="tracker-menu" hidden><input id="trackerBandFilterSearch" class="tracker-menu-search" type="text" placeholder="Search band..." autocomplete="off" /><div id="trackerBandFilterOptions" class="tracker-options-list"></div></div></div></div>
@@ -2650,6 +2653,11 @@ const XLSX_STYLE_INDEX = {
   changeNo: 14,
   altRow: 15,
   altRowWrap: 16,
+  repeatedChange1: 17,
+  repeatedChange2: 18,
+  repeatedChange3: 19,
+  repeatedChange4: 20,
+  repeatedChange5: 21,
 };
 function buildXlsxStylesXml() {
   return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -2660,21 +2668,26 @@ function buildXlsxStylesXml() {
     <font><b/><sz val="11"/><color rgb="FF1F2A44"/><name val="Calibri"/><family val="2"/></font>
     <font><b/><sz val="11"/><color rgb="FF1A2F6B"/><name val="Calibri"/><family val="2"/></font>
     <font><b/><sz val="11"/><color rgb="FF13284B"/><name val="Calibri"/><family val="2"/></font>
-    <font><b/><sz val="11"/><color rgb="FF15803D"/><name val="Calibri"/><family val="2"/></font>
-    <font><b/><sz val="11"/><color rgb="FFDC2626"/><name val="Calibri"/><family val="2"/></font>
+    <font><b/><sz val="11"/><color rgb="FF0B5E2B"/><name val="Calibri"/><family val="2"/></font>
+    <font><b/><sz val="11"/><color rgb="FFB91C1C"/><name val="Calibri"/><family val="2"/></font>
     <font><b/><sz val="11"/><color rgb="FF8A6D1F"/><name val="Calibri"/><family val="2"/></font>
   </fonts>
-  <fills count="10">
+  <fills count="15">
     <fill><patternFill patternType="none"/></fill>
     <fill><patternFill patternType="gray125"/></fill>
     <fill><patternFill patternType="solid"><fgColor rgb="FFEAF1FF"/><bgColor indexed="64"/></patternFill></fill>
     <fill><patternFill patternType="solid"><fgColor rgb="FFF4F8FF"/><bgColor indexed="64"/></patternFill></fill>
-    <fill><patternFill patternType="solid"><fgColor rgb="FFE8F8EF"/><bgColor indexed="64"/></patternFill></fill>
-    <fill><patternFill patternType="solid"><fgColor rgb="FFFDEAEA"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFC6E8D3"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFF5C6C2"/><bgColor indexed="64"/></patternFill></fill>
     <fill><patternFill patternType="solid"><fgColor rgb="FFEFF6FF"/><bgColor indexed="64"/></patternFill></fill>
     <fill><patternFill patternType="solid"><fgColor rgb="FFFFFDF0"/><bgColor indexed="64"/></patternFill></fill>
     <fill><patternFill patternType="solid"><fgColor rgb="FFF1F5FB"/><bgColor indexed="64"/></patternFill></fill>
     <fill><patternFill patternType="solid"><fgColor rgb="FFF8FAFD"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFCFE2F3"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFD9EAD3"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFFCE5CD"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFF4CCCC"/><bgColor indexed="64"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFF1E1B8"/><bgColor indexed="64"/></patternFill></fill>
   </fills>
   <borders count="2">
     <border><left/><right/><top/><bottom/><diagonal/></border>
@@ -2689,7 +2702,7 @@ function buildXlsxStylesXml() {
   <cellStyleXfs count="1">
     <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
   </cellStyleXfs>
-  <cellXfs count="17">
+  <cellXfs count="22">
     <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
     <xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>
     <xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>
@@ -2701,12 +2714,17 @@ function buildXlsxStylesXml() {
     <xf numFmtId="0" fontId="5" fillId="4" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
     <xf numFmtId="0" fontId="6" fillId="5" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
     <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
-    <xf numFmtId="0" fontId="3" fillId="0" borderId="1" xfId="0" applyFont="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>
+    <xf numFmtId="0" fontId="3" fillId="6" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
     <xf numFmtId="0" fontId="7" fillId="7" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
     <xf numFmtId="0" fontId="6" fillId="7" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
     <xf numFmtId="0" fontId="5" fillId="4" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
     <xf numFmtId="0" fontId="0" fillId="8" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>
     <xf numFmtId="0" fontId="0" fillId="9" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="top" wrapText="1"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="10" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="11" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="12" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="13" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>
+    <xf numFmtId="0" fontId="0" fillId="14" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment vertical="center"/></xf>
   </cellXfs>
   <cellStyles count="1">
     <cellStyle name="Normal" xfId="0" builtinId="0"/>
@@ -3338,14 +3356,16 @@ function checkHeadendBecameAvailable(market, headend, previousWeek, currentWeek)
   return result;
 }
 
-function buildChannelReportRows(channel, weeks) {
+function buildChannelReportRows(channel, weeks, options = {}) {
+  const includeClosedHeadends = Boolean(options.includeClosedHeadends);
   const [previousWeek, currentWeek] = weeks;
   const grouped = new Map();
   getChannelReportSourceRecords().forEach((record) => {
     if (String(record.channel_name || "").trim().toUpperCase() !== String(channel || "").trim().toUpperCase()) return;
     const market = String(record.market || "").trim();
+    const city = String(record.city || "").trim();
     const headend = String(record.head_end || "").trim();
-    const key = `${market}||${headend}`;
+    const key = `${market}||${city}||${headend}`;
     if (!grouped.has(key)) grouped.set(key, record);
   });
   return Array.from(grouped.values())
@@ -3357,12 +3377,19 @@ function buildChannelReportRows(channel, weeks) {
       const previousMissing = previousFrequency === null || previousFrequency === undefined || previousFrequency === "" || String(previousFrequency).toUpperCase() === "NA";
       const currentMissing = currentFrequency === null || currentFrequency === undefined || currentFrequency === "" || String(currentFrequency).toUpperCase() === "NA";
       const hasFrequencyChange = previousMissing !== currentMissing || (!previousMissing && !currentMissing && String(previousFrequency) !== String(currentFrequency));
+      const isClosedHeadend = !previousMissing && currentMissing;
 
       const prevRankNum = Number(previousRank);
       const currRankNum = Number(currentRank);
       const prevRankValid = !isNaN(prevRankNum) && previousRank !== null && previousRank !== "" && String(previousRank).toUpperCase() !== "NA";
       const currRankValid = !isNaN(currRankNum) && currentRank !== null && currentRank !== "" && String(currentRank).toUpperCase() !== "NA";
       const hasRankChange = prevRankValid && currRankValid && prevRankNum !== currRankNum;
+      const isFullyStable = !previousMissing
+        && !currentMissing
+        && String(previousFrequency) === String(currentFrequency)
+        && prevRankValid
+        && currRankValid
+        && prevRankNum === currRankNum;
 
       const prevNeighbour = getNeighbourForChannelInWeek(channel, record.market, record.head_end, previousWeek);
       const currNeighbour = getNeighbourForChannelInWeek(channel, record.market, record.head_end, currentWeek);
@@ -3382,12 +3409,15 @@ function buildChannelReportRows(channel, weeks) {
         previousRank,
         currentRank,
         hasFrequencyChange,
+        isClosedHeadend,
         hasRankChange,
+        isFullyStable,
         hasNeighbourChange,
         hasAnyChange,
       };
     })
-    .filter((record) => record.hasFrequencyChange)
+    // Keep only newly available and numeric-to-numeric LCN changes; exclude closures and stable rows.
+    .filter((record) => record.hasFrequencyChange && (includeClosedHeadends || !record.isClosedHeadend))
     .sort((left, right) => {
       const marketCompare = String(left.market || "").localeCompare(String(right.market || ""));
       if (marketCompare !== 0) return marketCompare;
@@ -3542,9 +3572,181 @@ function buildChannelReportRemark(row, weeks) {
 
   return remark;
 }
+
+function joinUniqueValues(values, separator = ", ") {
+  const seen = new Set();
+  const result = [];
+  values.forEach((value) => {
+    const text = String(value || "").trim();
+    if (!text) return;
+    const key = text.toUpperCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    result.push(text);
+  });
+  return result.join(separator);
+}
+
+function isReportValueMissing(value) {
+  return value === null || value === undefined || value === "" || String(value).toUpperCase() === "NA";
+}
+
+function buildChannelReportChange(row) {
+  const channelName = formatChannelLabel(row.channel_name || "");
+  const previousLcn = row.previousFrequency;
+  const currentLcn = row.currentFrequency;
+  const previousRank = row.previousRank;
+  const currentRank = row.currentRank;
+  const previousLcnMissing = isReportValueMissing(previousLcn);
+  const currentLcnMissing = isReportValueMissing(currentLcn);
+
+  let change = "";
+  if (previousLcnMissing && !currentLcnMissing) {
+    change = `${channelName}'s LCN became available (NA -> ${currentLcn})`;
+  } else if (!previousLcnMissing && currentLcnMissing) {
+    change = `${channelName} became unavailable (${previousLcn} -> NA)`;
+  } else {
+    change = `${channelName}'s LCN changed (${previousLcn} -> ${currentLcn})`;
+  }
+
+  const previousRankNumber = Number(previousRank);
+  const currentRankNumber = Number(currentRank);
+  const ranksAreComparable = !isReportValueMissing(previousRank)
+    && !isReportValueMissing(currentRank)
+    && !isNaN(previousRankNumber)
+    && !isNaN(currentRankNumber);
+  if (ranksAreComparable && previousRankNumber !== currentRankNumber) {
+    const direction = currentRankNumber < previousRankNumber ? "improved" : "dropped";
+    change += `; rank ${direction} (${previousRank} -> ${currentRank})`;
+  }
+
+  return change;
+}
+
+function buildMarketGroupText(rows) {
+  const markets = new Map();
+  (rows || []).forEach((row) => {
+    const market = String(row.market || "").trim();
+    if (!market) return;
+    const key = market.toUpperCase();
+    if (!markets.has(key)) markets.set(key, { market, headends: [] });
+    markets.get(key).headends.push(row.head_end);
+  });
+
+  return Array.from(markets.values())
+    .map(({ market, headends }) => {
+      const mappedHeadends = joinUniqueValues(headends);
+      return mappedHeadends.includes(", ") ? `${market} (${mappedHeadends})` : market;
+    })
+    .join(", ");
+}
+
+function joinReportValues(values, fallback) {
+  return joinUniqueValues((values || []).map((value) => isReportValueMissing(value) ? fallback : value));
+}
+
+function getConsolidatedReportStyle(previousValues, currentValues, isRank = false) {
+  const styles = new Set();
+  (previousValues || []).forEach((previousValue, index) => {
+    const currentValue = currentValues?.[index];
+    const previousMissing = isReportValueMissing(previousValue);
+    const currentMissing = isReportValueMissing(currentValue);
+    if (previousMissing && currentMissing) return;
+    if (previousMissing) styles.add("positive");
+    else if (currentMissing) styles.add("negative");
+    else if (Number(currentValue) !== Number(previousValue)) {
+      const isPositive = isRank ? Number(currentValue) < Number(previousValue) : Number(currentValue) > Number(previousValue);
+      styles.add(isPositive ? "positive" : "negative");
+    }
+  });
+  return styles.size === 1 ? Array.from(styles)[0] : styles.size > 1 ? "highlight" : "neutral";
+}
+
+function consolidateChannelReportRows(rows, weeks) {
+  const grouped = new Map();
+  (rows || []).forEach((row) => {
+    const headend = String(row.head_end || "").trim();
+    const summaryText = buildChannelReportRemark(row, weeks);
+    const valueKey = (value, fallback) => isReportValueMissing(value) ? fallback : String(value).trim().toUpperCase();
+    // Markets share a row only when the headend, LCNs, ranks, and summary all match.
+    const key = [
+      headend || `__EMPTY__${String(row.market || "").trim()}`,
+      valueKey(row.previousFrequency, "NA"),
+      valueKey(row.currentFrequency, "NA"),
+      valueKey(row.previousRank, "NO RANK"),
+      valueKey(row.currentRank, "NO RANK"),
+      summaryText,
+    ].join("||").toUpperCase();
+    if (!grouped.has(key)) {
+      grouped.set(key, {
+        channel_name: row.channel_name,
+        marketRows: [],
+        headends: [],
+        previousFrequencies: [],
+        currentFrequencies: [],
+        previousRanks: [],
+        currentRanks: [],
+        changes: [],
+        isFullyStable: row.isFullyStable,
+      });
+    }
+    const entry = grouped.get(key);
+    entry.marketRows.push(row);
+    entry.headends.push(row.head_end);
+    entry.previousFrequencies.push(row.previousFrequency);
+    entry.currentFrequencies.push(row.currentFrequency);
+    entry.previousRanks.push(row.previousRank);
+    entry.currentRanks.push(row.currentRank);
+    entry.changes.push(summaryText);
+  });
+
+  return Array.from(grouped.values()).map((entry) => ({
+    channel_name: entry.channel_name,
+    marketsText: buildMarketGroupText(entry.marketRows),
+    headendsText: joinUniqueValues(entry.headends),
+    previousFrequencyText: joinReportValues(entry.previousFrequencies, "NA"),
+    currentFrequencyText: joinReportValues(entry.currentFrequencies, "NA"),
+    previousRankText: joinReportValues(entry.previousRanks, "No Rank"),
+    currentRankText: joinReportValues(entry.currentRanks, "No Rank"),
+    changeText: joinUniqueValues(entry.changes, "\\n"),
+    isFullyStable: entry.isFullyStable,
+    currentFrequencyStyle: getConsolidatedReportStyle(entry.previousFrequencies, entry.currentFrequencies),
+    currentRankStyle: getConsolidatedReportStyle(entry.previousRanks, entry.currentRanks, true),
+  }));
+}
+
+function applyRepeatedChangeStyles(rows) {
+  const palette = ["repeatedChange1", "repeatedChange2", "repeatedChange3", "repeatedChange4", "repeatedChange5"];
+  const rowCountByChange = new Map();
+  const getChangeKey = (row) => [
+    row.previousFrequencyText,
+    row.currentFrequencyText,
+    row.previousRankText,
+    row.currentRankText,
+  ].map((value) => String(value || "").trim().toUpperCase()).join("||");
+
+  (rows || []).forEach((row) => {
+    const key = getChangeKey(row);
+    rowCountByChange.set(key, (rowCountByChange.get(key) || 0) + 1);
+  });
+
+  const styleByChange = new Map();
+  let paletteIndex = 0;
+  return (rows || []).map((row) => {
+    const key = getChangeKey(row);
+    if (rowCountByChange.get(key) < 2) return { ...row, channelStyle: "cell" };
+    if (!styleByChange.has(key)) {
+      styleByChange.set(key, palette[paletteIndex % palette.length]);
+      paletteIndex += 1;
+    }
+    return { ...row, channelStyle: styleByChange.get(key) };
+  });
+}
+
 function exportTable1Excel() {
   syncChannelReportWeeksWithTable();
-  const records = getFilteredRecords()
+  const activeWeeks = getChannelReportWeekPair();
+  const records = filterRecords("change")
     .filter((record) => !isAllCitiesValue(record.city))
     .slice()
     .sort((left, right) => {
@@ -3556,21 +3758,20 @@ function exportTable1Excel() {
       if (cityCompare !== 0) return cityCompare;
       return String(left.head_end || "").localeCompare(String(right.head_end || ""));
     });
-  const visibleWeeks = getVisibleWeeks();
-  const activeWeeks = getChannelReportWeekPair();
+  const detailWeeks = activeWeeks.filter(Boolean);
   const targetChannels = ["INDIA TV", "AAJ TAK", "NEWS 18 INDIA", "REPUBLIC BHARAT"];
   const frequencyExportView = { series: "frequencies", changes: "changes" };
   const rankExportView = { series: "ranks", changes: "rank_changes" };
   const detailRows = [
     excelRow(["CHANNEL NAME", "MARKET", "CITY", "HEAD-END"], "header").concat(
-      visibleWeeks.map((week) => excelCell(week, "header")),
-      visibleWeeks.map((week) => excelCell(week, "header"))
+      detailWeeks.map((week) => excelCell(week, "header")),
+      detailWeeks.map((week) => excelCell(week, "header"))
     ),
   ];
   detailRows.unshift([
     excelCell("", "group", { mergeAcross: 3 }),
-    excelCell("Freq", "group", { mergeAcross: Math.max(0, visibleWeeks.length - 1) }),
-    excelCell("Rank", "group", { mergeAcross: Math.max(0, visibleWeeks.length - 1) }),
+    excelCell("Freq", "group", { mergeAcross: Math.max(0, detailWeeks.length - 1) }),
+    excelCell("Rank", "group", { mergeAcross: Math.max(0, detailWeeks.length - 1) }),
   ]);
   records.forEach((record) => {
     detailRows.push([
@@ -3578,15 +3779,15 @@ function exportTable1Excel() {
       excelCell(record.market || "", "cell"),
       excelCell(record.city || "", "cell"),
       excelCell(record.head_end || "", "cell"),
-      ...visibleWeeks.map((week, weekIndex) => {
+      ...detailWeeks.map((week, weekIndex) => {
         const value = record.frequencies?.[week];
-        const status = getDisplayStatusForView(record, frequencyExportView, visibleWeeks, weekIndex, "frequency");
+        const status = getDisplayStatusForView(record, frequencyExportView, detailWeeks, weekIndex, "frequency");
         const style = mapTableStatusToExcelStyle(status, value === null || value === undefined || value === "" ? "neutral" : "number");
         return excelCell(formatExcelValue(value, "NA"), style);
       }),
-      ...visibleWeeks.map((week, weekIndex) => {
+      ...detailWeeks.map((week, weekIndex) => {
         const value = record.ranks?.[week];
-        const status = getDisplayStatusForView(record, rankExportView, visibleWeeks, weekIndex, "rank");
+        const status = getDisplayStatusForView(record, rankExportView, detailWeeks, weekIndex, "rank");
         const style = mapTableStatusToExcelStyle(status, value === null || value === undefined || value === "" ? "neutral" : "number");
         return excelCell(formatExcelValue(value, "No Rank"), style);
       }),
@@ -3598,57 +3799,84 @@ function exportTable1Excel() {
     [excelCell("Major Change", "meta", { mergeAcross: 7 })],
     blankExcelRow(8),
   ];
+  const removedRows = [
+    [excelCell("Source: Chrome Track", "title", { mergeAcross: 7 })],
+    [excelCell("Removed Channels - One of Four per Headend", "meta", { mergeAcross: 7 })],
+    blankExcelRow(8),
+    excelRow(["CHANNEL NAME", "MARKET", "CITY", "HEAD-END", activeWeeks[0] || "Week 1", activeWeeks[1] || "Week 2", `${activeWeeks[0] || "Week 1"} RANK`, `${activeWeeks[1] || "Week 2"} RANK`], "header"),
+  ];
+  const removedChannelRecords = [];
 
   targetChannels.forEach((channel) => {
     const rows = buildChannelReportRows(channel, activeWeeks).filter((row) => !isAllCitiesValue(row.city) && row.hasFrequencyChange);
-    if (!rows.length) return;
+    const consolidatedRows = applyRepeatedChangeStyles(consolidateChannelReportRows(rows, activeWeeks));
+    const removedChannelRows = buildChannelReportRows(channel, activeWeeks, { includeClosedHeadends: true })
+      .filter((row) => !isAllCitiesValue(row.city) && row.isClosedHeadend);
+    removedChannelRecords.push(...removedChannelRows);
+    if (!consolidatedRows.length) return;
 
     reportRows.push([
       excelCell("", "group", { mergeAcross: 2 }),
       excelCell("Freq", "group", { mergeAcross: 1 }),
       excelCell("Rank", "group", { mergeAcross: 1 }),
-      excelCell("Remark", "group"),
+      excelCell("Change", "group"),
     ]);
     reportRows.push([
       excelCell("CHANNEL NAME", "header"),
-      excelCell("MARKET", "header"),
-      excelCell("HEAD-END", "header"),
+      excelCell("MARKET GROUPS", "header"),
+      excelCell("HEADENDS", "header"),
       excelCell(activeWeeks[0] || "Week 1", "header"),
       excelCell(activeWeeks[1] || "Week 2", "header"),
       excelCell(activeWeeks[0] || "Week 1", "header"),
       excelCell(activeWeeks[1] || "Week 2", "header"),
-      excelCell("Remark", "header"),
+      excelCell("CHANGE", "header"),
     ]);
 
-    rows.forEach((row) => {
-      const currentFrequencyStyle = getFrequencyChangeStyle(row.previousFrequency, row.currentFrequency);
-      const currentRankStyle = getRankChangeStyle(row.previousRank, row.currentRank);
-      const currentFrequencyExportStyle = currentFrequencyStyle === "neutral"
-        ? (row.currentFrequency === null || row.currentFrequency === undefined || row.currentFrequency === "" ? "neutral" : "number")
-        : currentFrequencyStyle;
-      const currentRankExportStyle = currentRankStyle === "neutral"
-        ? (row.currentRank === null || row.currentRank === undefined || row.currentRank === "" ? "neutral" : "number")
-        : currentRankStyle;
-
-      const remarkText = buildChannelReportRemark(row, activeWeeks);
-
+    consolidatedRows.forEach((row) => {
       reportRows.push([
-        excelCell(formatChannelLabel(row.channel_name), "cell"),
-        excelCell(row.market || "", "cell"),
-        excelCell(row.head_end || "", "cell"),
-        excelCell(formatExcelValue(row.previousFrequency, "NA"), row.previousFrequency === null || row.previousFrequency === undefined || row.previousFrequency === "" ? "neutral" : "number"),
-        excelCell(formatExcelValue(row.currentFrequency, "NA"), currentFrequencyExportStyle),
-        excelCell(formatExcelValue(row.previousRank, "No Rank"), row.previousRank === null || row.previousRank === undefined || row.previousRank === "" ? "neutral" : "number"),
-        excelCell(formatExcelValue(row.currentRank, "No Rank"), currentRankExportStyle),
-        excelCell(remarkText, "textWrap"),
+        excelCell(formatChannelLabel(row.channel_name), row.channelStyle),
+        excelCell(row.marketsText || "", "cell"),
+        excelCell(row.headendsText || "", "cell"),
+        excelCell(row.previousFrequencyText, row.isFullyStable ? "highlight" : "textWrap"),
+        excelCell(row.currentFrequencyText, row.isFullyStable ? "highlight" : row.currentFrequencyStyle),
+        excelCell(row.previousRankText, row.isFullyStable ? "highlight" : "textWrap"),
+        excelCell(row.currentRankText, row.isFullyStable ? "highlight" : row.currentRankStyle),
+        excelCell(row.changeText, "textWrap"),
       ]);
     });
 
     reportRows.push(blankExcelRow(8));
+
   });
+
+  const removalCountByHeadend = new Map();
+  removedChannelRecords.forEach((row) => {
+    const key = [row.market, row.city, row.head_end].map((value) => String(value || "").trim().toUpperCase()).join("||");
+    removalCountByHeadend.set(key, (removalCountByHeadend.get(key) || 0) + 1);
+  });
+  removedChannelRecords
+    .filter((row) => {
+      const key = [row.market, row.city, row.head_end].map((value) => String(value || "").trim().toUpperCase()).join("||");
+      return removalCountByHeadend.get(key) === 1;
+    })
+    .forEach((row) => {
+      removedRows.push([
+        excelCell(formatChannelLabel(row.channel_name), "cell"),
+        excelCell(row.market || "", "cell"),
+        excelCell(row.city || "", "cell"),
+        excelCell(row.head_end || "", "cell"),
+        excelCell(formatExcelValue(row.previousFrequency, "NA"), "textWrap"),
+        excelCell("NA", "negative"),
+        excelCell(formatExcelValue(row.previousRank, "No Rank"), "textWrap"),
+        excelCell(formatExcelValue(row.currentRank, "No Rank"), "negative"),
+      ]);
+    });
 
   if (reportRows.length === 3) {
     reportRows.push([excelCell("No frequency changes found for the selected channels and weeks.", "textWrap", { mergeAcross: 7 })]);
+  }
+  if (removedRows.length === 4) {
+    removedRows.push([excelCell("No headends had exactly one removed channel for the selected weeks.", "textWrap", { mergeAcross: 7 })]);
   }
 
   downloadExcelWorkbook(`table1_${getActiveBaseView()}_export`, [
@@ -3659,8 +3887,13 @@ function exportTable1Excel() {
     },
     {
       name: "Detailed Sheet",
-      columns: [180, 170, 140, 240, ...visibleWeeks.map(() => 85), ...visibleWeeks.map(() => 85)],
+      columns: [180, 170, 140, 240, ...detailWeeks.map(() => 85), ...detailWeeks.map(() => 85)],
       rows: detailRows,
+    },
+    {
+      name: "Removed Channels",
+      columns: [180, 170, 140, 240, 90, 90, 90, 90],
+      rows: removedRows,
     },
   ]);
 }
@@ -4753,15 +4986,25 @@ def ots_change_delta(record: dict[str, Any], weeks: list[str]) -> float | None:
         return None
     previous = record["ots_values"].get(weeks[-2])
     current = record["ots_values"].get(weeks[-1])
-    if previous is None or current is None:
+    if previous is None and current is None:
         return None
+    if previous is None:
+        return round(float(current), 2)
+    if current is None:
+        return round(-float(previous), 2)
     return round(float(current) - float(previous), 2)
 
 
 def ots_change_type(record: dict[str, Any], weeks: list[str]) -> str:
+    if len(weeks) < 2:
+        return "missing"
+    previous = record["ots_values"].get(weeks[-2])
+    current = record["ots_values"].get(weeks[-1])
+    if previous is None and current is None:
+        return "missing"
     delta = ots_change_delta(record, weeks)
     if delta is None:
-        return "no_change"
+        return "missing"
     if delta > 0:
         return "increase"
     if delta < 0:
@@ -4815,7 +5058,7 @@ def build_ots_filters(records: list[dict[str, Any]], current_filters: dict[str, 
         "markets": values_for("market"),
         "channels": values_for("channel"),
         "weeks": current_filters["all_weeks"],
-        "change_options": ["", "changed", "no_change", "increase", "decrease"],
+        "change_options": ["", "changed", "no_change", "increase", "decrease", "missing"],
     }
 
 

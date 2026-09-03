@@ -27,7 +27,7 @@ def main() -> int:
     try:
         # 2. Run automation pipeline & regenerate dashboard HTML
         result = process_new_files(config, logger=logger)
-        print("\n✓ Dashboard update completed successfully!")
+        print("\nDashboard update completed successfully!")
         print(json.dumps(result, indent=2))
         return 0
     except Exception as error:  # noqa: BLE001

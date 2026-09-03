@@ -376,21 +376,36 @@ def log_normalization_warnings(aggregate: dict[str, Counter[str]]) -> None:
             LOGGER.warning("    %s (%s rows)", raw_value, count)
 
 
+def normalize_channel_name(value: Any) -> str | None:
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        value = value.get("channel_name")
+        if value is None:
+            return None
+
+    text = str(value).strip()
+    if not text or text.upper() == "NA":
+        return None
+    return text
+
+
 def extract_channel_names(channel_weekly_rows: list[dict[str, Any]]) -> set[str]:
     names: set[str] = set()
     for row in channel_weekly_rows:
         if "weeks" in row and isinstance(row["weeks"], dict):
             for week_payload in row["weeks"].values():
-                value = (week_payload or {}).get("channel_name")
-                if value and str(value).strip() and str(value).strip().upper() != "NA":
-                    names.add(str(value).strip())
+                channel_name = normalize_channel_name(week_payload)
+                if channel_name:
+                    names.add(channel_name)
             continue
 
         for key, value in row.items():
             if key in {"headend_id", "lcn_no"}:
                 continue
-            if value and str(value).strip() and str(value).strip().upper() != "NA":
-                names.add(str(value).strip())
+            channel_name = normalize_channel_name(value)
+            if channel_name:
+                names.add(channel_name)
     return names
 
 

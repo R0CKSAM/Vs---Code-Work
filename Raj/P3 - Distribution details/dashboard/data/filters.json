@@ -26,8 +26,8 @@
     "Jharkhand",
     "Karnataka",
     "M.P.",
-    "MAHARASHTRA",
     "Maharashtra",
+    "MAHARASHTRA",
     "MANIPUR",
     "Manipur",
     "MIZORAM",
@@ -36,14 +36,14 @@
     "Odisha",
     "Punjab",
     "Rajasthan",
-    "Telangana",
     "TELANGANA",
+    "Telangana",
     "U.P",
     "U.P.",
     "Uk",
-    "UP",
-    "up",
     "Up",
+    "up",
+    "UP",
     "West Bengal"
   ],
   "markets": [
@@ -53,8 +53,8 @@
     "10-75Lacs",
     "10-75LACS & RURAL",
     "All India",
-    "ALL MARKET",
     "All Market",
+    "ALL MARKET",
     "Ap / Telangana - Rural",
     "Ap/Telangana - Below 75L Urban",
     "Ap/Telangana - Urban",
@@ -66,8 +66,8 @@
     "Bangalore",
     "Below 10 L Urban/Rural",
     "BELOW 10 LAC",
-    "BELOW 10 LAC & RURAL",
     "Below 10 Lac & Rural",
+    "BELOW 10 LAC & RURAL",
     "BELOW 10L URBAN",
     "Bihar/Jharkhand - Rural",
     "Bihar/Jharkhand - Urban",
@@ -76,8 +76,8 @@
     "Delhi",
     "Entire State CG",
     "Haryana",
-    "Hyderabad",
     "HYDERABAD",
+    "Hyderabad",
     "Karnataka",
     "Karnataka Rural",
     "Karnataka- Urban",
@@ -93,12 +93,12 @@
     "Mega City",
     "Megacity",
     "Mp 1-10",
-    "MP 10+",
     "Mp 10+",
+    "MP 10+",
     "MP 10-75",
+    "MP Lc1",
     "MP LC1",
     "Mp Lc1",
-    "MP Lc1",
     "MpCg Rural",
     "NAGALAND/NORTHEAST/",
     "NORTHEAST /Urban-Rural",
@@ -188,8 +188,8 @@
     "Baran-Baran",
     "Barauni",
     "Bargi",
-    "BARODA",
     "Baroda",
+    "BARODA",
     "Barshi",
     "Bass - Hissar",
     "Bassi-Jaipur",
@@ -339,8 +339,8 @@
     "Hissar",
     "Honnali -Davanagere",
     "Hubli -Dharwad",
-    "Hyderabad",
     "HYDERABAD",
+    "Hyderabad",
     "IMPHAL- MANIPUR",
     "Indargrh",
     "Indore",
@@ -401,8 +401,8 @@
     "Kathuwas-Alwar",
     "Katihar",
     "Kavatemahakal",
-    "KAWARDHA",
     "Kawardha",
+    "KAWARDHA",
     "Kelwada",
     "Khadagpur-Paschim Medinipur",
     "Khajuwala-Bikaner",
@@ -485,8 +485,8 @@
     "Mubarakpur",
     "Muktainagar",
     "Multhan",
-    "Mumbai",
     "MUMBAI",
+    "Mumbai",
     "Mundri",
     "Murud Janjira",
     "MYDUKUR",
@@ -569,8 +569,8 @@
     "Rajakhera-Dholpur",
     "Rajim",
     "Rajkanika",
-    "RAJKOT",
     "Rajkot",
+    "RAJKOT",
     "Rajol",
     "RAMAPURAM",
     "Rambhapur & Pitol",
@@ -752,6 +752,20 @@
     "2026-08-09",
     "2026-08-10",
     "2026-08-11",
+    "2026-08-12",
+    "2026-08-13",
+    "2026-08-14",
+    "2026-08-15",
+    "2026-08-16",
+    "2026-08-17",
+    "2026-08-18",
+    "2026-08-19",
+    "2026-08-20",
+    "2026-08-21",
+    "2026-08-22",
+    "2026-08-23",
+    "2026-08-24",
+    "2026-08-25",
     "2026-08-31",
     "2027-07-18"
   ],
@@ -792,13 +806,13 @@
       "week_from": "2026-04-25",
       "week_to": "2026-05-06",
       "file": "./data/comparison/2026-04-25__2026-05-06.json",
-      "record_count": 149
+      "record_count": 158
     },
     {
       "week_from": "2026-05-06",
       "week_to": "2026-05-15",
       "file": "./data/comparison/2026-05-06__2026-05-15.json",
-      "record_count": 167
+      "record_count": 176
     },
     {
       "week_from": "2026-05-15",
@@ -852,13 +866,13 @@
       "week_from": "2026-07-01",
       "week_to": "2026-07-02",
       "file": "./data/comparison/2026-07-01__2026-07-02.json",
-      "record_count": 457
+      "record_count": 494
     },
     {
       "week_from": "2026-07-02",
       "week_to": "2026-07-03",
       "file": "./data/comparison/2026-07-02__2026-07-03.json",
-      "record_count": 636
+      "record_count": 673
     },
     {
       "week_from": "2026-07-03",
@@ -906,25 +920,25 @@
       "week_from": "2026-07-11",
       "week_to": "2026-07-13",
       "file": "./data/comparison/2026-07-11__2026-07-13.json",
-      "record_count": 314
+      "record_count": 353
     },
     {
       "week_from": "2026-07-13",
       "week_to": "2026-07-14",
       "file": "./data/comparison/2026-07-13__2026-07-14.json",
-      "record_count": 538
+      "record_count": 577
     },
     {
       "week_from": "2026-07-14",
       "week_to": "2026-07-15",
       "file": "./data/comparison/2026-07-14__2026-07-15.json",
-      "record_count": 1815
+      "record_count": 1880
     },
     {
       "week_from": "2026-07-15",
       "week_to": "2026-07-16",
       "file": "./data/comparison/2026-07-15__2026-07-16.json",
-      "record_count": 3526
+      "record_count": 3591
     },
     {
       "week_from": "2026-07-16",
@@ -1002,13 +1016,13 @@
       "week_from": "2026-08-02",
       "week_to": "2026-08-03",
       "file": "./data/comparison/2026-08-02__2026-08-03.json",
-      "record_count": 1270
+      "record_count": 1323
     },
     {
       "week_from": "2026-08-03",
       "week_to": "2026-08-04",
       "file": "./data/comparison/2026-08-03__2026-08-04.json",
-      "record_count": 3888
+      "record_count": 3941
     },
     {
       "week_from": "2026-08-04",
@@ -1026,37 +1040,121 @@
       "week_from": "2026-08-06",
       "week_to": "2026-08-07",
       "file": "./data/comparison/2026-08-06__2026-08-07.json",
-      "record_count": 4664
+      "record_count": 4682
     },
     {
       "week_from": "2026-08-07",
       "week_to": "2026-08-08",
       "file": "./data/comparison/2026-08-07__2026-08-08.json",
-      "record_count": 3161
+      "record_count": 3179
     },
     {
       "week_from": "2026-08-08",
       "week_to": "2026-08-09",
       "file": "./data/comparison/2026-08-08__2026-08-09.json",
-      "record_count": 2624
+      "record_count": 2681
     },
     {
       "week_from": "2026-08-09",
       "week_to": "2026-08-10",
       "file": "./data/comparison/2026-08-09__2026-08-10.json",
-      "record_count": 10458
+      "record_count": 10517
     },
     {
       "week_from": "2026-08-10",
       "week_to": "2026-08-11",
       "file": "./data/comparison/2026-08-10__2026-08-11.json",
-      "record_count": 16103
+      "record_count": 16105
     },
     {
       "week_from": "2026-08-11",
+      "week_to": "2026-08-12",
+      "file": "./data/comparison/2026-08-11__2026-08-12.json",
+      "record_count": 7164
+    },
+    {
+      "week_from": "2026-08-12",
+      "week_to": "2026-08-13",
+      "file": "./data/comparison/2026-08-12__2026-08-13.json",
+      "record_count": 526
+    },
+    {
+      "week_from": "2026-08-13",
+      "week_to": "2026-08-14",
+      "file": "./data/comparison/2026-08-13__2026-08-14.json",
+      "record_count": 652
+    },
+    {
+      "week_from": "2026-08-14",
+      "week_to": "2026-08-15",
+      "file": "./data/comparison/2026-08-14__2026-08-15.json",
+      "record_count": 499
+    },
+    {
+      "week_from": "2026-08-15",
+      "week_to": "2026-08-16",
+      "file": "./data/comparison/2026-08-15__2026-08-16.json",
+      "record_count": 315
+    },
+    {
+      "week_from": "2026-08-16",
+      "week_to": "2026-08-17",
+      "file": "./data/comparison/2026-08-16__2026-08-17.json",
+      "record_count": 688
+    },
+    {
+      "week_from": "2026-08-17",
+      "week_to": "2026-08-18",
+      "file": "./data/comparison/2026-08-17__2026-08-18.json",
+      "record_count": 3870
+    },
+    {
+      "week_from": "2026-08-18",
+      "week_to": "2026-08-19",
+      "file": "./data/comparison/2026-08-18__2026-08-19.json",
+      "record_count": 4253
+    },
+    {
+      "week_from": "2026-08-19",
+      "week_to": "2026-08-20",
+      "file": "./data/comparison/2026-08-19__2026-08-20.json",
+      "record_count": 3471
+    },
+    {
+      "week_from": "2026-08-20",
+      "week_to": "2026-08-21",
+      "file": "./data/comparison/2026-08-20__2026-08-21.json",
+      "record_count": 4372
+    },
+    {
+      "week_from": "2026-08-21",
+      "week_to": "2026-08-22",
+      "file": "./data/comparison/2026-08-21__2026-08-22.json",
+      "record_count": 2600
+    },
+    {
+      "week_from": "2026-08-22",
+      "week_to": "2026-08-23",
+      "file": "./data/comparison/2026-08-22__2026-08-23.json",
+      "record_count": 2601
+    },
+    {
+      "week_from": "2026-08-23",
+      "week_to": "2026-08-24",
+      "file": "./data/comparison/2026-08-23__2026-08-24.json",
+      "record_count": 9307
+    },
+    {
+      "week_from": "2026-08-24",
+      "week_to": "2026-08-25",
+      "file": "./data/comparison/2026-08-24__2026-08-25.json",
+      "record_count": 16239
+    },
+    {
+      "week_from": "2026-08-25",
       "week_to": "2026-08-31",
-      "file": "./data/comparison/2026-08-11__2026-08-31.json",
-      "record_count": 7064
+      "file": "./data/comparison/2026-08-25__2026-08-31.json",
+      "record_count": 8082
     },
     {
       "week_from": "2026-08-31",
@@ -1067,7 +1165,7 @@
   ],
   "summary": {
     "last_updated": "2027-07-18",
-    "total_headends": 687,
-    "total_channel_rows": 130383
+    "total_headends": 691,
+    "total_channel_rows": 160104
   }
 }

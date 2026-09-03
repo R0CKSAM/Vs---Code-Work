@@ -2,10 +2,10 @@ const state = {
   records: [],
   metadata: null,
   filters: {
-    target: "All",
-    region: "All",
-    channel: "All",
-    timeBand: "All",
+    target: [],
+    region: [],
+    channel: [],
+    timeBand: [],
     weeks: [],
   },
   regionMetric: "ama",
@@ -43,17 +43,15 @@ const channelPalette = [
   "#9333ea",
 ];
 
+const filterConfigs = {
+  target: { label: "targets", metadataKey: "targets" },
+  region: { label: "regions", metadataKey: "regions" },
+  channel: { label: "channels", metadataKey: "channels" },
+  timeBand: { label: "time bands", metadataKey: "time_bands" },
+  weeks: { label: "weeks", metadataKey: "weeks" },
+};
+
 const filters = {
-  target: document.getElementById("targetFilter"),
-  region: document.getElementById("regionFilter"),
-  channel: document.getElementById("channelFilter"),
-  timeBand: document.getElementById("timeBandFilter"),
-  weekControl: document.getElementById("weekFilterControl"),
-  weekToggle: document.getElementById("weekFilterToggle"),
-  weekSummary: document.getElementById("weekFilterSummary"),
-  weekPanel: document.getElementById("weekFilterPanel"),
-  weekWrap: document.getElementById("weekFilter"),
-  weekSelectAll: document.getElementById("weekSelectAll"),
   reset: document.getElementById("resetFilters"),
 };
 
@@ -61,7 +59,6 @@ const cards = {
   kpis: document.getElementById("kpiGrid"),
   regionMetricTabs: document.getElementById("regionMetricTabs"),
   regionalHeatmap: document.getElementById("regionalHeatmap"),
-  regionalChartWrap: document.getElementById("regionalChartWrap"),
   modal: document.getElementById("chartModal"),
   modalTitle: document.getElementById("chartModalTitle"),
   closeModal: document.getElementById("closeChartModal"),
@@ -84,7 +81,7 @@ async function init() {
   const payload = await loadPayload();
   state.records = payload.records;
   state.metadata = payload.metadata;
-  state.filters.weeks = [...payload.metadata.weeks];
+  hydrateFilterState();
 
   buildFilterControls();
   buildRegionMetricTabs();
@@ -104,70 +101,67 @@ async function loadPayload() {
   return response.json();
 }
 
-function buildFilterControls() {
-  populateSelect(filters.target, state.metadata.targets, "All");
-  populateSelect(filters.region, state.metadata.regions, "All");
-  populateSelect(filters.channel, state.metadata.channels, "All");
-  populateSelect(filters.timeBand, state.metadata.time_bands, "All");
+function hydrateFilterState() {
+  state.filters.target = [...state.metadata.targets];
+  state.filters.region = [...state.metadata.regions];
+  state.filters.channel = [...state.metadata.channels];
+  state.filters.timeBand = [...state.metadata.time_bands];
+  state.filters.weeks = [...state.metadata.weeks];
+}
 
-  filters.weekWrap.innerHTML = "";
-  state.metadata.weeks.forEach((week) => {
-    const label = document.createElement("label");
-    label.className = "week-pill";
-    const input = document.createElement("input");
-    input.type = "checkbox";
-    input.value = week;
-    input.checked = true;
-    input.addEventListener("change", () => {
-      const checked = getSelectedWeekValues();
-      state.filters.weeks = checked.length ? checked : [];
-      updateWeekFilterSummary();
+function buildFilterControls() {
+  Object.entries(filterConfigs).forEach(([key, config]) => {
+    const control = getFilterElements(key);
+    const items = getFilterItems(key);
+
+    control.options.innerHTML = "";
+    items.forEach((item) => {
+      const label = document.createElement("label");
+      label.className = "filter-option";
+      const input = document.createElement("input");
+      input.type = "checkbox";
+      input.value = item;
+      input.checked = true;
+      input.addEventListener("change", () => {
+        const selected = getSelectedFilterValues(key);
+        state.filters[key] = selected.length ? selected : [];
+        updateFilterSummary(key);
+        render();
+      });
+      const text = document.createElement("span");
+      text.textContent = item;
+      label.append(input, text);
+      control.options.append(label);
+    });
+
+    control.toggle.addEventListener("click", () => {
+      const shouldOpen = !control.control.classList.contains("open");
+      Object.keys(filterConfigs).forEach((filterKey) => {
+        if (filterKey !== key) {
+          setFilterOpen(filterKey, false);
+        }
+      });
+      setFilterOpen(key, shouldOpen);
+    });
+    control.selectAll.addEventListener("click", () => {
+      state.filters[key] = [...items];
+      syncFilterInputs(key);
+      updateFilterSummary(key);
       render();
     });
-    label.append(input, document.createTextNode(week));
-    filters.weekWrap.append(label);
+    control.clear.addEventListener("click", () => {
+      state.filters[key] = [];
+      syncFilterInputs(key);
+      updateFilterSummary(key);
+      render();
+    });
+
+    updateFilterSummary(key);
   });
 
-  filters.target.addEventListener("change", () => {
-    state.filters.target = filters.target.value;
-    render();
-  });
-  filters.region.addEventListener("change", () => {
-    state.filters.region = filters.region.value;
-    render();
-  });
-  filters.channel.addEventListener("change", () => {
-    state.filters.channel = filters.channel.value;
-    render();
-  });
-  filters.timeBand.addEventListener("change", () => {
-    state.filters.timeBand = filters.timeBand.value;
-    render();
-  });
-  filters.weekToggle.addEventListener("click", () => {
-    setWeekFilterOpen(!filters.weekControl.classList.contains("open"));
-  });
-  filters.weekSelectAll.addEventListener("click", () => {
-    state.filters.weeks = [...state.metadata.weeks];
-    syncWeekFilterInputs();
-    updateWeekFilterSummary();
-    render();
-  });
   filters.reset.addEventListener("click", resetFilters);
   document.addEventListener("click", handleGlobalClick);
   document.addEventListener("keydown", handleGlobalKeydown);
-  updateWeekFilterSummary();
-}
-
-function populateSelect(element, items, defaultValue) {
-  element.innerHTML = "";
-  [defaultValue, ...items].forEach((item) => {
-    const option = document.createElement("option");
-    option.value = item;
-    option.textContent = item;
-    element.append(option);
-  });
-  element.value = defaultValue;
 }
 
 function buildRegionMetricTabs() {
@@ -180,86 +174,120 @@ function buildRegionMetricTabs() {
     button.addEventListener("click", () => {
       state.regionMetric = metric;
       buildRegionMetricTabs();
-      renderRegionalAnalysis(getFilteredRecords());
+      renderRegionalAnalysis(getRegionalRecords());
     });
     cards.regionMetricTabs.append(button);
   });
 }
 
 function resetFilters() {
-  state.filters = {
-    target: "All",
-    region: "All",
-    channel: "All",
-    timeBand: "All",
-    weeks: [...state.metadata.weeks],
-  };
-
-  filters.target.value = "All";
-  filters.region.value = "All";
-  filters.channel.value = "All";
-  filters.timeBand.value = "All";
-  syncWeekFilterInputs();
-  updateWeekFilterSummary();
-  setWeekFilterOpen(false);
+  hydrateFilterState();
+  Object.keys(filterConfigs).forEach((key) => {
+    syncFilterInputs(key);
+    updateFilterSummary(key);
+    setFilterOpen(key, false);
+  });
 
   render();
 }
 
-function getSelectedWeekValues() {
-  return Array.from(filters.weekWrap.querySelectorAll("input:checked")).map((node) => node.value);
+function getFilterElements(key) {
+  const filterIdBase = key === "weeks" ? "week" : key;
+  if (!filters[key]) {
+    filters[key] = {
+      control: document.getElementById(`${filterIdBase}FilterControl`),
+      toggle: document.getElementById(`${filterIdBase}FilterToggle`),
+      summary: document.getElementById(`${filterIdBase}FilterSummary`),
+      panel: document.getElementById(`${filterIdBase}FilterPanel`),
+      options: document.getElementById(key === "weeks" ? "weekFilter" : `${filterIdBase}FilterOptions`),
+      selectAll: document.getElementById(key === "weeks" ? "weekSelectAll" : `${filterIdBase}FilterSelectAll`),
+      clear: document.getElementById(key === "weeks" ? "weekFilterClear" : `${filterIdBase}FilterClear`),
+    };
+  }
+  return filters[key];
 }
 
-function syncWeekFilterInputs() {
-  const selectedWeeks = new Set(state.filters.weeks);
-  Array.from(filters.weekWrap.querySelectorAll("input")).forEach((input) => {
-    input.checked = selectedWeeks.has(input.value);
+function getFilterItems(key) {
+  const config = filterConfigs[key];
+  return [...state.metadata[config.metadataKey]];
+}
+
+function getSelectedFilterValues(key) {
+  const control = getFilterElements(key);
+  return Array.from(control.options.querySelectorAll("input:checked")).map((node) => node.value);
+}
+
+function syncFilterInputs(key) {
+  const selected = new Set(state.filters[key]);
+  const control = getFilterElements(key);
+  Array.from(control.options.querySelectorAll("input")).forEach((input) => {
+    input.checked = selected.has(input.value);
   });
 }
 
-function updateWeekFilterSummary() {
-  const selectedWeeks = state.filters.weeks;
-  const totalWeeks = state.metadata?.weeks?.length || 0;
+function updateFilterSummary(key) {
+  const selected = state.filters[key];
+  const items = getFilterItems(key);
+  const { label } = filterConfigs[key];
+  const control = getFilterElements(key);
 
-  if (!selectedWeeks.length || selectedWeeks.length === totalWeeks) {
-    filters.weekSummary.textContent = "All weeks";
+  if (!selected.length || selected.length === items.length) {
+    if (!selected.length) {
+      control.summary.textContent = `No ${label}`;
+      return;
+    }
+    control.summary.textContent = `All ${label}`;
     return;
   }
 
-  if (selectedWeeks.length <= 2) {
-    filters.weekSummary.textContent = selectedWeeks.join(", ");
+  if (selected.length <= 2) {
+    control.summary.textContent = selected.join(", ");
     return;
   }
 
-  filters.weekSummary.textContent = `${selectedWeeks.length} weeks selected`;
+  control.summary.textContent = `${selected.length} ${label} selected`;
 }
 
-function setWeekFilterOpen(isOpen) {
-  filters.weekControl.classList.toggle("open", isOpen);
-  filters.weekToggle.setAttribute("aria-expanded", String(isOpen));
-  filters.weekPanel.hidden = !isOpen;
+function setFilterOpen(key, isOpen) {
+  const control = getFilterElements(key);
+  control.control.classList.toggle("open", isOpen);
+  control.toggle.setAttribute("aria-expanded", String(isOpen));
+  control.panel.hidden = !isOpen;
 }
 
 function handleGlobalClick(event) {
-  if (!filters.weekControl.contains(event.target)) {
-    setWeekFilterOpen(false);
-  }
+  Object.keys(filterConfigs).forEach((key) => {
+    const control = getFilterElements(key);
+    if (!control.control.contains(event.target)) {
+      setFilterOpen(key, false);
+    }
+  });
 }
 
 function handleGlobalKeydown(event) {
   if (event.key === "Escape") {
-    setWeekFilterOpen(false);
+    Object.keys(filterConfigs).forEach((key) => setFilterOpen(key, false));
   }
 }
 
 function getFilteredRecords() {
   return state.records.filter((record) => {
-    const targetMatch = state.filters.target === "All" || record.target === state.filters.target;
-    const regionMatch = state.filters.region === "All" || record.region === state.filters.region;
-    const channelMatch = state.filters.channel === "All" || record.channel === state.filters.channel;
-    const timeBandMatch = state.filters.timeBand === "All" || record.time_band === state.filters.timeBand;
-    const weekMatch = state.filters.weeks.length === 0 || state.filters.weeks.includes(record.year_week);
+    const targetMatch = state.filters.target.length > 0 && state.filters.target.includes(record.target);
+    const regionMatch = state.filters.region.length > 0 && state.filters.region.includes(record.region);
+    const channelMatch = state.filters.channel.length > 0 && state.filters.channel.includes(record.channel);
+    const timeBandMatch = state.filters.timeBand.length > 0 && state.filters.timeBand.includes(record.time_band);
+    const weekMatch = state.filters.weeks.length > 0 && state.filters.weeks.includes(record.year_week);
     return targetMatch && regionMatch && channelMatch && timeBandMatch && weekMatch;
+  });
+}
+
+function getRegionalRecords() {
+  return state.records.filter((record) => {
+    const targetMatch = state.filters.target.length > 0 && state.filters.target.includes(record.target);
+    const channelMatch = state.filters.channel.length > 0 && state.filters.channel.includes(record.channel);
+    const timeBandMatch = state.filters.timeBand.length > 0 && state.filters.timeBand.includes(record.time_band);
+    const weekMatch = state.filters.weeks.length > 0 && state.filters.weeks.includes(record.year_week);
+    return targetMatch && channelMatch && timeBandMatch && weekMatch;
   });
 }
 
@@ -268,7 +296,6 @@ function buildCharts() {
   state.charts.reachAma = createChart("reachAmaChart", "scatter");
   state.charts.reachTsv = createChart("reachTsvChart", "scatter");
   state.charts.amaTsv = createChart("amaTsvChart", "scatter");
-  state.charts.regional = createChart("regionalChart", "bar");
 }
 
 function bindModalEvents() {
@@ -302,7 +329,7 @@ function initSectionObserver() {
     return;
   }
 
-  const sectionIds = ["summarySection", "weeklySection", "reachAmaSection", "reachTsvSection", "amaTsvSection", "regionalSection"];
+  const sectionIds = ["weeklySection", "reachAmaSection", "reachTsvSection", "amaTsvSection", "regionalSection"];
   const observer = new IntersectionObserver(
     (entries) => {
       const visible = entries
@@ -358,11 +385,14 @@ function createChart(id, type) {
                 const point = context.raw;
                 const xLabel = context.chart.options.scales.x.title.text;
                 const yLabel = context.chart.options.scales.y.title.text;
-                return `${label}: ${xLabel} ${formatValue(point.x)} | ${yLabel} ${formatValue(point.y)}`;
+                return `${label}: ${xLabel} ${formatTooltipValue(point.x)} | ${yLabel} ${formatTooltipValue(point.y)}`;
               }
-              return `${context.dataset.label}: ${formatValue(context.raw)}`;
+              return `${context.dataset.label}: ${formatTooltipValue(context.raw)}`;
             },
           },
+        },
+        pointLabels: {
+          enabled: false,
         },
       },
       scales: {
@@ -386,7 +416,7 @@ function render() {
   renderKpis(filtered);
   renderWeeklyAma(filtered);
   renderScatterCharts(filtered);
-  renderRegionalAnalysis(filtered);
+  renderRegionalAnalysis(getRegionalRecords());
 }
 
 function renderKpis(records) {
@@ -510,6 +540,7 @@ function renderScatter(chart, rows, config) {
     pointHoverRadius: sizeFromMetric(row.ama) + 2,
   }));
   chart.options.plugins.legend.display = false;
+  chart.options.plugins.pointLabels.enabled = true;
   chart.options.scales.x.title = { display: true, text: config.xLabel };
   chart.options.scales.y.title = { display: true, text: config.yLabel };
   chart.update();
@@ -526,46 +557,7 @@ function renderRegionalAnalysis(records) {
     }))
     .sort((a, b) => b[state.regionMetric] - a[state.regionMetric]);
 
-  setRegionalChartHeight(regionRows.length);
-  state.charts.regional.data.labels = regionRows.map((row) => row.region);
-  state.charts.regional.data.datasets = [
-    {
-      label: metricLabels[state.regionMetric],
-      data: regionRows.map((row) => row[state.regionMetric]),
-      backgroundColor: regionRows.map((_, index) => {
-        const ratio = regionRows.length <= 1 ? 1 : 1 - index / (regionRows.length - 1);
-        return `rgba(21, 199, 190, ${0.25 + ratio * 0.7})`;
-      }),
-      borderRadius: 10,
-      borderSkipped: false,
-    },
-  ];
-  state.charts.regional.options.indexAxis = "y";
-  state.charts.regional.options.layout = { padding: { right: 12 } };
-  state.charts.regional.options.plugins.legend.display = false;
-  state.charts.regional.options.scales.x.title = { display: true, text: metricLabels[state.regionMetric] };
-  state.charts.regional.options.scales.y.title = { display: false, text: "Region" };
-  state.charts.regional.options.scales.x.ticks = {
-    color: "#657486",
-    font: { size: 11 },
-    callback(value) {
-      return formatAxisTick(value);
-    },
-  };
-  state.charts.regional.options.scales.y.ticks = {
-    color: "#657486",
-    font: { size: 11 },
-    autoSkip: false,
-  };
-  state.charts.regional.resize();
-  state.charts.regional.update();
-
   renderRegionalHeatmap(regionRows);
-}
-
-function setRegionalChartHeight(regionCount) {
-  const nextHeight = Math.max(360, regionCount * 34);
-  cards.regionalChartWrap.style.height = `${nextHeight}px`;
 }
 
 function renderRegionalHeatmap(rows) {
@@ -734,18 +726,11 @@ function formatAxisTick(value) {
   return value >= 1000 ? formatCompactMetric(value) : formatters.integer.format(value);
 }
 
-function buildActiveSelectionLabel() {
-  const parts = [];
-  if (state.filters.target !== "All") {
-    parts.push(state.filters.target);
+function formatTooltipValue(value) {
+  if (!Number.isFinite(value)) {
+    return "0.00";
   }
-  if (state.filters.region !== "All") {
-    parts.push(state.filters.region);
-  }
-  if (state.filters.channel !== "All") {
-    parts.push(state.filters.channel);
-  }
-  return parts.length ? parts.join(" / ") : "All Data";
+  return Number(value).toFixed(2);
 }
 
 function getChannelColor(channel) {
@@ -754,6 +739,128 @@ function getChannelColor(channel) {
     return "#475569";
   }
   return channelPalette[channelIndex % channelPalette.length];
+}
+
+Chart.register({
+  id: "pointLabels",
+  afterDatasetsDraw(chart, _args, pluginOptions) {
+    if (!pluginOptions?.enabled || chart.config.type !== "scatter") {
+      return;
+    }
+
+    const { ctx, chartArea } = chart;
+    const placedLabelBoxes = [];
+    const labelCandidates = [];
+
+    ctx.save();
+    ctx.font = '10px "Manrope", sans-serif';
+    ctx.fillStyle = "#475569";
+    ctx.textBaseline = "middle";
+
+    chart.data.datasets.forEach((dataset, datasetIndex) => {
+      const meta = chart.getDatasetMeta(datasetIndex);
+      const point = meta.data[0];
+      if (!point) {
+        return;
+      }
+
+      labelCandidates.push({
+        label: dataset.label,
+        x: point.x,
+        y: point.y,
+        radius: dataset.pointRadius || 6,
+      });
+    });
+
+    labelCandidates
+      .sort((left, right) => right.radius - left.radius)
+      .forEach((candidate) => {
+        const placement = findScatterLabelPlacement(ctx, chartArea, candidate, placedLabelBoxes);
+        if (!placement) {
+          return;
+        }
+
+        ctx.textAlign = placement.align;
+        ctx.fillText(candidate.label, placement.textX, placement.textY);
+        placedLabelBoxes.push(placement.box);
+      });
+
+    ctx.restore();
+  },
+});
+
+function findScatterLabelPlacement(ctx, chartArea, candidate, placedLabelBoxes) {
+  const labelWidth = ctx.measureText(candidate.label).width;
+  const halfHeight = 6;
+  const gap = Math.max(10, candidate.radius + 4);
+  const placements = [
+    { dx: gap, dy: -gap, align: "left" },
+    { dx: gap, dy: gap, align: "left" },
+    { dx: -gap, dy: -gap, align: "right" },
+    { dx: -gap, dy: gap, align: "right" },
+    { dx: 0, dy: -(gap + 2), align: "center" },
+    { dx: 0, dy: gap + 2, align: "center" },
+  ];
+
+  for (const placement of placements) {
+    const textX = candidate.x + placement.dx;
+    const textY = candidate.y + placement.dy;
+    const box = buildLabelBox(textX, textY, labelWidth, halfHeight, placement.align);
+    if (!isLabelBoxInsideChart(box, chartArea)) {
+      continue;
+    }
+    if (placedLabelBoxes.some((placedBox) => doLabelBoxesOverlap(box, placedBox))) {
+      continue;
+    }
+    return { textX, textY, align: placement.align, box };
+  }
+
+  return null;
+}
+
+function buildLabelBox(textX, textY, labelWidth, halfHeight, align) {
+  if (align === "right") {
+    return {
+      left: textX - labelWidth,
+      right: textX,
+      top: textY - halfHeight,
+      bottom: textY + halfHeight,
+    };
+  }
+
+  if (align === "center") {
+    return {
+      left: textX - labelWidth / 2,
+      right: textX + labelWidth / 2,
+      top: textY - halfHeight,
+      bottom: textY + halfHeight,
+    };
+  }
+
+  return {
+    left: textX,
+    right: textX + labelWidth,
+    top: textY - halfHeight,
+    bottom: textY + halfHeight,
+  };
+}
+
+function isLabelBoxInsideChart(box, chartArea) {
+  return (
+    box.left >= chartArea.left + 2 &&
+    box.right <= chartArea.right - 2 &&
+    box.top >= chartArea.top + 2 &&
+    box.bottom <= chartArea.bottom - 2
+  );
+}
+
+function doLabelBoxesOverlap(left, right) {
+  return !(
+    left.right < right.left ||
+    left.left > right.right ||
+    left.bottom < right.top ||
+    left.top > right.bottom
+  );
 }
 
 init().catch((error) => {

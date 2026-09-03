@@ -802,11 +802,92 @@
   },
   {
     "headend_id": "HED000507",
+    "lcn": "438",
+    "week_from": "2026-04-25",
+    "week_from_channel": null,
+    "week_to": "2026-05-06",
+    "week_to_channel": "Zee News",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000507",
+    "lcn": "439",
+    "week_from": "2026-04-25",
+    "week_from_channel": null,
+    "week_to": "2026-05-06",
+    "week_to_channel": "Zee Mpcg",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000507",
+    "lcn": "440",
+    "week_from": "2026-04-25",
+    "week_from_channel": null,
+    "week_to": "2026-05-06",
+    "week_to_channel": "Zee Business",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000507",
+    "lcn": "441",
+    "week_from": "2026-04-25",
+    "week_from_channel": null,
+    "week_to": "2026-05-06",
+    "week_to_channel": "Salaam Tv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000507",
+    "lcn": "442",
+    "week_from": "2026-04-25",
+    "week_from_channel": null,
+    "week_to": "2026-05-06",
+    "week_to_channel": "Wion",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000507",
+    "lcn": "443",
+    "week_from": "2026-04-25",
+    "week_from_channel": null,
+    "week_to": "2026-05-06",
+    "week_to_channel": "Zee Bharat",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000507",
     "lcn": "449",
     "week_from": "2026-04-25",
     "week_from_channel": null,
     "week_to": "2026-05-06",
     "week_to_channel": "Hd Nick",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000507",
+    "lcn": "450",
+    "week_from": "2026-04-25",
+    "week_from_channel": null,
+    "week_to": "2026-05-06",
+    "week_to_channel": "Nick",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000507",
+    "lcn": "451",
+    "week_from": "2026-04-25",
+    "week_from_channel": null,
+    "week_to": "2026-05-06",
+    "week_to_channel": "Disney Channel",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000507",
+    "lcn": "452",
+    "week_from": "2026-04-25",
+    "week_from_channel": null,
+    "week_to": "2026-05-06",
+    "week_to_channel": "Sony Yay",
     "status": "Added"
   },
   {

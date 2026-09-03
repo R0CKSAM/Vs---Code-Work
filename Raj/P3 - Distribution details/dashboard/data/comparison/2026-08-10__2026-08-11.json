@@ -119656,6 +119656,24 @@
   },
   {
     "headend_id": "HED000469",
+    "lcn": "88",
+    "week_from": "2026-08-10",
+    "week_from_channel": "R.Bharat",
+    "week_to": "2026-08-11",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000469",
+    "lcn": "89",
+    "week_from": "2026-08-10",
+    "week_from_channel": "Local",
+    "week_to": "2026-08-11",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000469",
     "lcn": "90",
     "week_from": "2026-08-10",
     "week_from_channel": "India Tv",

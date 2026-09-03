@@ -368,14 +368,14 @@
 
   function getChangeMeta(record, weeks) {
     if (weeks.length < 2) {
-      return { text: "NA", type: "no_change", delta: null };
+      return { text: "NA", type: "missing", delta: null };
     }
     const previous = record.ots_values?.[weeks[weeks.length - 2]];
     const current = record.ots_values?.[weeks[weeks.length - 1]];
     const previousMissing = previous === null || previous === undefined || previous === "";
     const currentMissing = current === null || current === undefined || current === "";
     if (previousMissing && currentMissing) {
-      return { text: "NA", type: "no_change", delta: null };
+      return { text: "NA", type: "missing", delta: null };
     }
     if (previousMissing && !currentMissing) {
       return { text: `▲ +${Number(current).toFixed(2)}%`, type: "increase", delta: Number(current) };
@@ -517,11 +517,11 @@
     state.filters.week_to = syncSingleSelect(weekToFilter, getConstrainedWeekOptions(payload.weeks || [], "week_to"), "To Week", state.filters.week_to, (value) => applySingleFilter("week_to", value));
     state.filters.change = syncSingleSelect(
       changeFilter,
-      ["changed", "no_change", "increase", "decrease"],
+      ["changed", "no_change", "increase", "decrease", "missing"],
       "All Changes",
       state.filters.change,
       (value) => applySingleFilter("change", value),
-      { changed: "Changed", increase: "Increase", decrease: "Decrease", no_change: "No Change" }
+      { changed: "Changed", increase: "Increase", decrease: "Decrease", no_change: "No Change", missing: "Missing" }
     );
   }
 
@@ -1518,7 +1518,7 @@
     if (control.search) {
       control.search.addEventListener("click", (event) => event.stopPropagation());
       control.search.addEventListener("input", () => {
-        const values = key === "change" ? ["changed", "no_change", "increase", "decrease"] : getConstrainedWeekOptions(state.payload?.weeks || [], key);
+        const values = key === "change" ? ["changed", "no_change", "increase", "decrease", "missing"] : getConstrainedWeekOptions(state.payload?.weeks || [], key);
         renderSingleSelectOptions(control, values, state.filters[key], placeholder, (value) => applySingleFilter(key, value), labels);
       });
     }
@@ -1640,7 +1640,7 @@
   bindMenu(graphChannelButton, graphChannelMenu);
   bindSingleSelect(weekFromFilter, "week_from", "From Week");
   bindSingleSelect(weekToFilter, "week_to", "To Week");
-  bindSingleSelect(changeFilter, "change", "All Changes", { changed: "Changed", increase: "Increase", decrease: "Decrease", no_change: "No Change" });
+  bindSingleSelect(changeFilter, "change", "All Changes", { changed: "Changed", increase: "Increase", decrease: "Decrease", no_change: "No Change", missing: "Missing" });
 
   document.addEventListener("click", (event) => {
     if (!event.target.closest(".ots-multiselect") && !event.target.closest(".filter-select")) closeMenus();
