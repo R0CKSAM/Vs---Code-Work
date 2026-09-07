@@ -41,6 +41,17 @@ CREATE TABLE IF NOT EXISTS minute_metrics (
     errors_4xx INTEGER NOT NULL,
     errors_5xx INTEGER NOT NULL,
     media_segments INTEGER NOT NULL,
+    ttfb_samples INTEGER NOT NULL DEFAULT 0,
+    ttfb_total_ms REAL NOT NULL DEFAULT 0,
+    turnaround_samples INTEGER NOT NULL DEFAULT 0,
+    turnaround_total_ms REAL NOT NULL DEFAULT 0,
+    transfer_samples INTEGER NOT NULL DEFAULT 0,
+    transfer_total_ms REAL NOT NULL DEFAULT 0,
+    throughput_samples INTEGER NOT NULL DEFAULT 0,
+    throughput_total REAL NOT NULL DEFAULT 0,
+    tls_overhead_samples INTEGER NOT NULL DEFAULT 0,
+    tls_overhead_total_ms REAL NOT NULL DEFAULT 0,
+    delivery_edge_issues INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY(minute_ist, req_host, target)
 );
 CREATE TABLE IF NOT EXISTS minute_viewers (
@@ -112,6 +123,80 @@ class LiveStore:
         path.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as connection:
             connection.executescript(SCHEMA)
+            self._ensure_metric_columns(connection)
+            self._migrate_dimension_labels(connection)
+
+    @staticmethod
+    def _ensure_metric_columns(connection: sqlite3.Connection) -> None:
+        """Upgrade existing live databases in place without dropping audience data."""
+        existing = {
+            row[1] for row in connection.execute("PRAGMA table_info(minute_metrics)")
+        }
+        columns = {
+            "ttfb_samples": "INTEGER NOT NULL DEFAULT 0",
+            "ttfb_total_ms": "REAL NOT NULL DEFAULT 0",
+            "turnaround_samples": "INTEGER NOT NULL DEFAULT 0",
+            "turnaround_total_ms": "REAL NOT NULL DEFAULT 0",
+            "transfer_samples": "INTEGER NOT NULL DEFAULT 0",
+            "transfer_total_ms": "REAL NOT NULL DEFAULT 0",
+            "throughput_samples": "INTEGER NOT NULL DEFAULT 0",
+            "throughput_total": "REAL NOT NULL DEFAULT 0",
+            "tls_overhead_samples": "INTEGER NOT NULL DEFAULT 0",
+            "tls_overhead_total_ms": "REAL NOT NULL DEFAULT 0",
+            "delivery_edge_issues": "INTEGER NOT NULL DEFAULT 0",
+        }
+        for name, declaration in columns.items():
+            if name not in existing:
+                connection.execute(
+                    f"ALTER TABLE minute_metrics ADD COLUMN {name} {declaration}"
+                )
+
+    @staticmethod
+    def _migrate_dimension_labels(connection: sqlite3.Connection) -> None:
+        """Merge legacy numeric/CDN labels into their documented display labels."""
+        migration_key = "dimension_labels_v2"
+        migrated = connection.execute(
+            "SELECT value FROM metadata WHERE key=?", (migration_key,)
+        ).fetchone()
+        if migrated:
+            return
+        mappings = (
+            ("cache", "Miss", "Non-cacheable"),
+            ("cache", "Hit", "Cache hit - child edge"),
+            ("delivery_type", "0", "Default"),
+            ("delivery_type", "1", "Adaptive media - live"),
+            ("delivery_type", "2", "Adaptive media - VOD"),
+            ("delivery_type", "3", "Download delivery"),
+            ("delivery_format", "0", "Default"),
+            ("delivery_format", "1", "Apple / HLS"),
+            ("delivery_format", "2", "ZERI"),
+            ("delivery_format", "3", "Silverlight"),
+            ("delivery_format", "4", "DASH"),
+            ("media_encryption", "0", "Disabled"),
+            ("media_encryption", "1", "Enabled"),
+        )
+        for dimension, old_value, new_value in mappings:
+            connection.execute(
+                """
+                INSERT INTO minute_dimensions(
+                    minute_ist,req_host,target,dimension,value,requests,bytes
+                )
+                SELECT minute_ist,req_host,target,dimension,?,requests,bytes
+                  FROM minute_dimensions
+                 WHERE dimension=? AND value=?
+                ON CONFLICT(minute_ist,req_host,target,dimension,value) DO UPDATE SET
+                    requests=requests+excluded.requests,
+                    bytes=bytes+excluded.bytes
+                """,
+                (new_value, dimension, old_value),
+            )
+            connection.execute(
+                "DELETE FROM minute_dimensions WHERE dimension=? AND value=?",
+                (dimension, old_value),
+            )
+        connection.execute(
+            "INSERT INTO metadata(key,value) VALUES(?,?)", (migration_key, "complete")
+        )
 
     @contextlib.contextmanager
     def connect(self) -> Iterator[sqlite3.Connection]:
@@ -191,6 +276,7 @@ class LiveStore:
         now = time.time()
         path_text = str(path.resolve())
         with self.connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
             row = connection.execute(
                 "SELECT size,mtime_ns,stable_count,status FROM files WHERE path=?",
                 (path_text,),
@@ -270,14 +356,28 @@ class LiveStore:
                 """
                 INSERT INTO minute_metrics(
                     minute_ist,req_host,target,requests,bytes,errors_4xx,errors_5xx,
-                    media_segments
-                ) VALUES(?,?,?,?,?,?,?,?)
+                    media_segments,ttfb_samples,ttfb_total_ms,turnaround_samples,
+                    turnaround_total_ms,transfer_samples,transfer_total_ms,
+                    throughput_samples,throughput_total,tls_overhead_samples,
+                    tls_overhead_total_ms,delivery_edge_issues
+                ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 ON CONFLICT(minute_ist,req_host,target) DO UPDATE SET
                     requests=requests+excluded.requests,
                     bytes=bytes+excluded.bytes,
                     errors_4xx=errors_4xx+excluded.errors_4xx,
                     errors_5xx=errors_5xx+excluded.errors_5xx,
-                    media_segments=media_segments+excluded.media_segments
+                    media_segments=media_segments+excluded.media_segments,
+                    ttfb_samples=ttfb_samples+excluded.ttfb_samples,
+                    ttfb_total_ms=ttfb_total_ms+excluded.ttfb_total_ms,
+                    turnaround_samples=turnaround_samples+excluded.turnaround_samples,
+                    turnaround_total_ms=turnaround_total_ms+excluded.turnaround_total_ms,
+                    transfer_samples=transfer_samples+excluded.transfer_samples,
+                    transfer_total_ms=transfer_total_ms+excluded.transfer_total_ms,
+                    throughput_samples=throughput_samples+excluded.throughput_samples,
+                    throughput_total=throughput_total+excluded.throughput_total,
+                    tls_overhead_samples=tls_overhead_samples+excluded.tls_overhead_samples,
+                    tls_overhead_total_ms=tls_overhead_total_ms+excluded.tls_overhead_total_ms,
+                    delivery_edge_issues=delivery_edge_issues+excluded.delivery_edge_issues
                 """,
                 [(*key, *values) for key, values in batch.metrics.items()],
             )
@@ -404,7 +504,17 @@ class LiveStore:
                     """
                     SELECT minute_ist,SUM(requests) requests,SUM(bytes) bytes,
                            SUM(errors_4xx) errors_4xx,SUM(errors_5xx) errors_5xx,
-                           SUM(media_segments) media_segments
+                           SUM(media_segments) media_segments,
+                           SUM(ttfb_samples) ttfb_samples,SUM(ttfb_total_ms) ttfb_total_ms,
+                           SUM(turnaround_samples) turnaround_samples,
+                           SUM(turnaround_total_ms) turnaround_total_ms,
+                           SUM(transfer_samples) transfer_samples,
+                           SUM(transfer_total_ms) transfer_total_ms,
+                           SUM(throughput_samples) throughput_samples,
+                           SUM(throughput_total) throughput_total,
+                           SUM(tls_overhead_samples) tls_overhead_samples,
+                           SUM(tls_overhead_total_ms) tls_overhead_total_ms,
+                           SUM(delivery_edge_issues) delivery_edge_issues
                       FROM minute_metrics
                      WHERE target=? AND minute_ist>=?
                      GROUP BY minute_ist ORDER BY minute_ist
@@ -450,6 +560,11 @@ class LiveStore:
                 series[target] = [
                     {
                         **dict(row),
+                        "ttfb_avg_ms": row["ttfb_total_ms"] / row["ttfb_samples"] if row["ttfb_samples"] else None,
+                        "turnaround_avg_ms": row["turnaround_total_ms"] / row["turnaround_samples"] if row["turnaround_samples"] else None,
+                        "transfer_avg_ms": row["transfer_total_ms"] / row["transfer_samples"] if row["transfer_samples"] else None,
+                        "throughput_avg": row["throughput_total"] / row["throughput_samples"] if row["throughput_samples"] else None,
+                        "tls_overhead_avg_ms": row["tls_overhead_total_ms"] / row["tls_overhead_samples"] if row["tls_overhead_samples"] else None,
                         "active_cliips": viewer_counts.get(row["minute_ist"], 0),
                         "device_ids": device_counts.get(row["minute_ist"], 0),
                         "session_ids": session_counts.get(row["minute_ist"], 0),
@@ -477,6 +592,20 @@ class LiveStore:
                         watch_seconds / viewers if viewers else 0
                     ),
                 }
+                for metric in ("ttfb", "turnaround", "transfer", "tls_overhead"):
+                    samples = sum(int(row[f"{metric}_samples"]) for row in rows)
+                    total = sum(float(row[f"{metric}_total_ms"]) for row in rows)
+                    summaries[target][f"{metric}_samples"] = samples
+                    summaries[target][f"{metric}_avg_ms"] = total / samples if samples else None
+                throughput_samples = sum(int(row["throughput_samples"]) for row in rows)
+                throughput_total = sum(float(row["throughput_total"]) for row in rows)
+                summaries[target]["throughput_samples"] = throughput_samples
+                summaries[target]["throughput_avg"] = (
+                    throughput_total / throughput_samples if throughput_samples else None
+                )
+                summaries[target]["delivery_edge_issues"] = sum(
+                    int(row["delivery_edge_issues"]) for row in rows
+                )
             breakdowns: dict[str, dict[str, list[dict]]] = {}
             dimension_rows = connection.execute(
                 """

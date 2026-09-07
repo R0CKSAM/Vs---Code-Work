@@ -77,7 +77,16 @@ def atomic_write_json(path: Path, value: object) -> None:
         json.dump(value, stream, ensure_ascii=True, separators=(",", ":"))
         stream.flush()
         os.fsync(stream.fileno())
-    os.replace(temporary, path)
+    for attempt in range(6):
+        try:
+            os.replace(temporary, path)
+            return
+        except PermissionError:
+            if attempt == 5:
+                raise
+            # Windows scanners and readers can briefly retain a handle to the
+            # published snapshot. Keep atomic replacement, but tolerate that race.
+            time.sleep(0.05 * (2**attempt))
 
 
 class LiveEngine:
@@ -411,6 +420,7 @@ class LiveEngine:
         payload.update(
             {
                 "generated_at": dt.datetime.now(IST).isoformat(),
+                "window_minutes": self.config.dashboard_minutes,
                 "lag_seconds": lag_seconds,
                 "health": {
                     "ok": not health_issues,

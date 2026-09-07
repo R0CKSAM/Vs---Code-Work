@@ -12,6 +12,7 @@ from urllib.parse import parse_qs, unquote
 from zoneinfo import ZoneInfo
 
 from ..profile.vglive_core import SKIP_PATH_SEGMENTS, resolve_channel
+from .enrichment import decoded_asn_dimensions, decoded_ua_dimensions
 
 
 IST = ZoneInfo("Asia/Kolkata")
@@ -24,8 +25,8 @@ class FileBatch:
     rows: int = 0
     rejected_rows: int = 0
     latest_timestamp: float | None = None
-    metrics: dict[tuple[str, str, str], list[int]] = field(
-        default_factory=lambda: defaultdict(lambda: [0, 0, 0, 0, 0])
+    metrics: dict[tuple[str, str, str], list[float]] = field(
+        default_factory=lambda: defaultdict(lambda: [0] * 16)
     )
     minute_viewers: set[tuple[str, str, str, str]] = field(default_factory=set)
     minute_devices: set[tuple[str, str, str, str]] = field(default_factory=set)
@@ -55,6 +56,15 @@ def integer_value(value: object) -> int:
         return max(0, int(float(value)))
     except (TypeError, ValueError):
         return 0
+
+
+def nonnegative_number(value: object) -> float | None:
+    """Parse an optional non-negative CDN measurement without inventing zeroes."""
+    try:
+        result = float(value)
+    except (TypeError, ValueError):
+        return None
+    return result if 0 <= result < 1_000_000_000 else None
 
 
 def query_metadata(value: object) -> dict[str, str]:
@@ -123,13 +133,39 @@ def request_dimensions(row: dict, request_path: str, query: dict[str, str]) -> d
     status = integer_value(row.get("statusCode"))
     status_class = f"{status // 100}xx" if 100 <= status < 600 else "Unknown"
     cache_raw = dimension_value(row.get("cacheStatus"))
-    cache = {"1": "Hit", "0": "Miss"}.get(cache_raw, cache_raw)
+    cache = {
+        "0": "Non-cacheable",
+        "1": "Cache hit - child edge",
+        "2": "Cache hit - peer/parent edge",
+        "3": "Origin",
+        "4": "Cached error response",
+    }.get(cache_raw, cache_raw)
+    delivery_type_raw = dimension_value(row.get("deliveryType"))
+    delivery_type = {
+        "0": "Default",
+        "1": "Adaptive media - live",
+        "2": "Adaptive media - VOD",
+        "3": "Download delivery",
+    }.get(delivery_type_raw, delivery_type_raw)
+    delivery_format_raw = dimension_value(row.get("deliveryFormat"))
+    delivery_format = {
+        "0": "Default",
+        "1": "Apple / HLS",
+        "2": "ZERI",
+        "3": "Silverlight",
+        "4": "DASH",
+    }.get(delivery_format_raw, delivery_format_raw)
+    media_encryption_raw = dimension_value(row.get("mediaEncryption"))
+    media_encryption = {
+        "0": "Disabled",
+        "1": "Enabled",
+    }.get(media_encryption_raw, media_encryption_raw)
     inferred_platform, inferred_device = inferred_client(row.get("UA"))
     platform = dimension_value(query.get("platform"), inferred_platform)
     device = dimension_value(query.get("device"), inferred_device)
     resolution_match = re.search(r"(?<!\d)(2160|1440|1080|720|576|540|480|360|240)p?(?!\d)", request_path.casefold())
     resolution = f"{resolution_match.group(1)}p" if resolution_match else "Unknown"
-    return {
+    dimensions = {
         "status": status_class,
         "cache": cache,
         "country": dimension_value(row.get("country")),
@@ -139,9 +175,27 @@ def request_dimensions(row: dict, request_path: str, query: dict[str, str]) -> d
         "platform_inferred": platform,
         "device_inferred": device,
         "resolution_inferred": resolution,
-        "delivery_format": dimension_value(row.get("deliveryFormat")),
         "host": dimension_value(row.get("reqHost")),
+        "tls_version": dimension_value(row.get("tlsVersion")),
+        "protocol": dimension_value(row.get("proto")),
+        "request_method": dimension_value(row.get("reqMethod")),
+        "content_type": dimension_value(row.get("rspContentType")),
+        "cacheable": {"1": "Cacheable", "0": "Not cacheable"}.get(
+            str(row.get("cacheable") or "").strip(), "Unknown"
+        ),
+        "server_country": dimension_value(row.get("serverCountry")),
+        "billing_region": dimension_value(row.get("billingRegion")),
+        "delivery_type": delivery_type,
+        "delivery_policy_status": dimension_value(row.get("deliveryPolicyReqStatus")),
+        "delivery_format": delivery_format,
+        "cp_code": dimension_value(row.get("cp")),
+        "file_size_bucket": dimension_value(row.get("fileSizeBucket")),
+        "media_encryption": media_encryption,
+        "akamai_error": dimension_value(row.get("errorCode"), "No Akamai error"),
     }
+    dimensions.update(decoded_ua_dimensions(row.get("UA")))
+    dimensions.update(decoded_asn_dimensions(row.get("asn")))
+    return dimensions
 
 
 def channel_candidate(path: str) -> str:
@@ -204,6 +258,13 @@ def parse_gzip_file(path: Path, watched_paths: tuple[str, ...]) -> FileBatch:
             )
             lower_path = request_path.casefold().split("?", 1)[0]
             is_segment = int(lower_path.endswith((".ts", ".m4s", ".mp4")))
+            ttfb_ms = nonnegative_number(row.get("timeToFirstByte"))
+            turnaround_ms = nonnegative_number(row.get("turnAroundTimeMSec"))
+            transfer_ms = nonnegative_number(row.get("transferTimeMSec"))
+            throughput = nonnegative_number(row.get("throughput"))
+            tls_overhead_ms = nonnegative_number(row.get("tlsOverheadTimeMSec"))
+            delivery_policy_status = integer_value(row.get("deliveryPolicyReqStatus"))
+            edge_attempts = integer_value(row.get("edgeAttempts"))
             dimensions = request_dimensions(row, request_path, query)
             for target in matching_targets(host, request_path):
                 values = batch.metrics[(minute, host, target)]
@@ -212,6 +273,17 @@ def parse_gzip_file(path: Path, watched_paths: tuple[str, ...]) -> FileBatch:
                 values[2] += int(400 <= status < 500)
                 values[3] += int(500 <= status < 600)
                 values[4] += is_segment
+                for count_index, total_index, measurement in (
+                    (5, 6, ttfb_ms),
+                    (7, 8, turnaround_ms),
+                    (9, 10, transfer_ms),
+                    (11, 12, throughput),
+                    (13, 14, tls_overhead_ms),
+                ):
+                    if measurement is not None:
+                        values[count_index] += 1
+                        values[total_index] += measurement
+                values[15] += int(delivery_policy_status != 0 or edge_attempts > 1)
                 if viewer_key:
                     batch.minute_viewers.add((minute, host, target, viewer_key))
                     batch.daily_viewers.add((day, host, target, viewer_key))

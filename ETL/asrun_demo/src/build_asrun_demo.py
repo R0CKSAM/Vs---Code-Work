@@ -4196,9 +4196,9 @@ class DashboardMultiSelect{
         +'<span class="multi-search-actions">'
           +'<span class="multi-search-count" data-multi-search-count></span>'
           +'<button type="button" data-multi-match-action="select" '
-          +'title="Select matching options">Select</button>'
+          +'title="Select visible matching options">Select visible</button>'
           +'<button type="button" data-multi-match-action="clear" '
-          +'title="Clear matching options">Clear</button>'
+          +'title="Clear every option in this dropdown">Clear all</button>'
         +'</span>'
       +'</span>',
     );
@@ -4219,6 +4219,22 @@ class DashboardMultiSelect{
     for(const button of this.menu.querySelectorAll('[data-multi-match-action]')){
       button.addEventListener('click',event=>this.applyVisibleAction(event,button));
     }
+    // With an active search, the top All checkbox applies to the visible
+    // recommendations only. Unchecking it still means a complete clear.
+    this.menu.addEventListener('change',event=>{
+      if(!event.target.matches('input[data-all]')||!event.target.checked)return;
+      const search=this.menu.querySelector('[data-multi-search]');
+      if(!search||!normalizeMultiSearch(search.value))return;
+      event.stopImmediatePropagation();
+      const visible=this.optionInputs(true);
+      for(const input of visible)input.checked=true;
+      event.target.checked=this.optionInputs().every(input=>input.checked);
+      if(visible.length){
+        visible[0].dispatchEvent(new Event('change',{bubbles:true}));
+      }else{
+        this.applySearch();
+      }
+    },true);
     const originalToggle=this.toggle.onclick;
     this.toggle.onclick=event=>{
       const opening=!this.menu.classList.contains('open');
@@ -4267,10 +4283,10 @@ class DashboardMultiSelect{
   applyVisibleAction(event,button){
     event.preventDefault();
     event.stopPropagation();
-    const inputs=this.optionInputs(true);
+    const selecting=button.dataset.multiMatchAction==='select';
+    const inputs=this.optionInputs(selecting);
     if(!inputs.length)return;
-    const checked=button.dataset.multiMatchAction==='select';
-    for(const input of inputs)input.checked=checked;
+    for(const input of inputs)input.checked=selecting;
     // Reuse the established checkbox change path for labels, cache, and charts.
     inputs[0].dispatchEvent(new Event('change',{bubbles:true}));
   }
@@ -4409,7 +4425,12 @@ function multiSelectionState(id){
   const menu=$(id+'Menu');
   const inputs=menu?[...menu.querySelectorAll('input[data-value]')]:[];
   const selected=selectedMulti(id);
-  return {selected,restricted:inputs.length>0&&selected.size<inputs.length};
+  return {
+    selected,
+    // Empty is an explicit zero-result selection, but it must not erase the
+    // paired dropdown's option catalog and trap the user in an empty menu.
+    restricted:selected.size>0&&selected.size<inputs.length,
+  };
 }
 function refreshSectionOptions(type,prefix){
   const rows=sectionDateRows(type),idKey=prefix+'AdId',creativeKey=prefix+'Creative';

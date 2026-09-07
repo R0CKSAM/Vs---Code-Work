@@ -720,6 +720,7 @@ def test_delivery_filters_are_bidirectional_and_empty_multiselects_stay_empty(
     assert 'id="deliveryTypeFilter"' not in html
     assert 'data-delivery-ad-type="' not in html
     assert "function multiSelectionState(id){" in html
+    assert "restricted:selected.size>0&&selected.size<inputs.length" in html
     assert "const idRows=creativeState.restricted" in html
     assert "const creativeRows=idState.restricted" in html
     assert "creativeState.selected.has(event.creative_title)" in html
@@ -731,6 +732,10 @@ def test_delivery_filters_are_bidirectional_and_empty_multiselects_stay_empty(
     assert "creatives:exportDeliverySelection('creatives')" in html
     assert "deliveryAdTypeFileToken()+'_'+filters.dateFrom" in html
     assert "parts.push('deliveryTypes:'" in html
+    assert "Select visible" in html
+    assert "Clear all" in html
+    assert "const inputs=this.optionInputs(selecting);" in html
+    assert "event.target.matches('input[data-all]')" in html
 
 
 def test_render_dashboard_groups_sections_into_three_pages(

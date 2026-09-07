@@ -6,6 +6,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from .operations_page import PAGE as OPERATIONS_PAGE
+from .war_room_page import PAGE as WAR_ROOM_PAGE
 
 
 PAGE = """<!doctype html>
@@ -43,8 +44,14 @@ class SnapshotServer:
 
         class Handler(BaseHTTPRequestHandler):
             def do_GET(self):
+                if self.path == "/favicon.ico":
+                    return self._send(204, "image/x-icon", b"")
                 if self.path == "/":
                     return self._send(200, "text/html; charset=utf-8", PAGE.encode())
+                if self.path in {"/war-room", "/war-room/"}:
+                    return self._send(
+                        200, "text/html; charset=utf-8", WAR_ROOM_PAGE.encode()
+                    )
                 if self.path in {"/api/state", "/healthz"}:
                     try:
                         raw = owner.snapshot_path.read_bytes()

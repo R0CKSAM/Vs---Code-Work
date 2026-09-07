@@ -8,8 +8,9 @@ from urllib.request import urlopen
 from urllib.error import HTTPError
 
 from ETL.src.live_monitor.parser import IST, parse_gzip_file, query_identifiers
+from ETL.src.live_monitor.enrichment import decoded_asn_dimensions, normalize_ua
 from ETL.src.live_monitor.config import LiveConfig
-from ETL.src.live_monitor.engine import LiveEngine
+from ETL.src.live_monitor.engine import LiveEngine, atomic_write_json
 from ETL.src.live_monitor.store import LiveStore
 from ETL.src.live_monitor.server import SnapshotServer
 from ETL.src.live_monitor.s3_index import load_rclone_s3_remote
@@ -40,7 +41,17 @@ def test_parser_builds_exact_minute_metrics_without_storing_raw_ip(tmp_path: Pat
                 "city": "Delhi",
                 "asn": "AS123",
                 "UA": "Mozilla/5.0 (SMART-TV; Linux; Tizen 7.0)",
-                "deliveryFormat": "HLS",
+                "deliveryFormat": "1",
+                "deliveryType": "1",
+                "mediaEncryption": "1",
+                "timeToFirstByte": "80",
+                "turnAroundTimeMSec": "60",
+                "transferTimeMSec": "20",
+                "throughput": "1500.5",
+                "tlsOverheadTimeMSec": "4",
+                "tlsVersion": "TLSv1.3",
+                "cacheable": "1",
+                "edgeAttempts": "2",
             },
             {
                 "reqTimeSec": timestamp + 20,
@@ -57,15 +68,19 @@ def test_parser_builds_exact_minute_metrics_without_storing_raw_ip(tmp_path: Pat
     batch = parse_gzip_file(path, ("vglive-274906",))
 
     watched = next(value for key, value in batch.metrics.items() if key[2] == "India TV")
-    assert watched == [2, 300, 0, 1, 2]
+    assert watched == [2, 300, 0, 1, 2, 1, 80.0, 1, 60.0, 1, 20.0, 1, 1500.5, 1, 4.0, 1]
     assert len([row for row in batch.minute_viewers if row[2] == "India TV"]) == 1
     assert all("192.0.2.10" not in row for row in batch.minute_viewers)
     assert len([row for row in batch.minute_devices if row[2] == "India TV"]) == 1
     assert len([row for row in batch.minute_sessions if row[2] == "India TV"]) == 1
     assert all("device-123" not in row for row in batch.minute_devices)
     assert all("session-456" not in row for row in batch.minute_sessions)
-    assert batch.dimensions[("2026-09-04T10:15:00+0530", "veto.akamaized.net", "India TV", "cache", "Hit")][0] == 1
+    assert batch.dimensions[("2026-09-04T10:15:00+0530", "veto.akamaized.net", "India TV", "cache", "Cache hit - child edge")][0] == 1
     assert batch.dimensions[("2026-09-04T10:15:00+0530", "veto.akamaized.net", "India TV", "device_inferred", "Samsung/Tizen TV")][0] == 1
+    assert batch.dimensions[("2026-09-04T10:15:00+0530", "veto.akamaized.net", "India TV", "tls_version", "TLSv1.3")][0] == 1
+    assert batch.dimensions[("2026-09-04T10:15:00+0530", "veto.akamaized.net", "India TV", "delivery_format", "Apple / HLS")][0] == 1
+    assert batch.dimensions[("2026-09-04T10:15:00+0530", "veto.akamaized.net", "India TV", "delivery_type", "Adaptive media - live")][0] == 1
+    assert batch.dimensions[("2026-09-04T10:15:00+0530", "veto.akamaized.net", "India TV", "media_encryption", "Enabled")][0] == 1
 
 
 def test_query_identifiers_supports_fully_encoded_query_strings() -> None:
@@ -73,6 +88,13 @@ def test_query_identifiers_supports_fully_encoded_query_strings() -> None:
         "device_id%3Ddevice-123%26session_id%3Dsession-456"
     ) == ("device-123", "session-456")
     assert query_identifiers("-") == ("", "")
+
+
+def test_live_enrichment_normalizes_ua_and_resolves_asn_cache() -> None:
+    assert normalize_ua("Mozilla%252F5.0%2520Test") == "Mozilla/5.0 Test"
+    decoded = decoded_asn_dimensions("AS55836")
+    assert decoded["network_provider"] == "Reliance Jio Infocomm Limited"
+    assert decoded["network_type"] == "(MOB) Mobile ISP"
 
 
 def test_store_commits_file_and_aggregates_in_one_transaction(tmp_path: Path) -> None:
@@ -86,7 +108,9 @@ def test_store_commits_file_and_aggregates_in_one_transaction(tmp_path: Path) ->
     from ETL.src.live_monitor.parser import FileBatch
 
     batch = FileBatch(rows=1, latest_timestamp=1_788_500_000)
-    batch.metrics[("2026-09-04T10:15:00+0530", "host", "__all__")] = [1, 50, 0, 0, 1]
+    batch.metrics[("2026-09-04T10:15:00+0530", "host", "__all__")] = [
+        1, 50, 0, 0, 1, 1, 25, 1, 20, 1, 5, 1, 1800, 1, 2, 0
+    ]
     batch.minute_viewers.add(("2026-09-04T10:15:00+0530", "host", "__all__", "hash"))
     batch.minute_devices.add(("2026-09-04T10:15:00+0530", "host", "__all__", "device-hash"))
     batch.minute_sessions.add(("2026-09-04T10:15:00+0530", "host", "__all__", "session-hash"))
@@ -103,7 +127,42 @@ def test_store_commits_file_and_aggregates_in_one_transaction(tmp_path: Path) ->
     assert snapshot["series"]["__all__"][0]["session_ids"] == 1
     assert snapshot["summaries"]["__all__"]["unique_cliips"] == 1
     assert snapshot["summaries"]["__all__"]["estimated_watch_seconds"] == 6
+    assert snapshot["summaries"]["__all__"]["ttfb_avg_ms"] == 25
+    assert snapshot["series"]["__all__"][0]["throughput_avg"] == 1800
     assert snapshot["breakdowns"]["__all__"]["status"][0]["value"] == "2xx"
+
+
+def test_store_migrates_legacy_cdn_dimension_labels(tmp_path: Path) -> None:
+    database = tmp_path / "state.sqlite3"
+    store = LiveStore(database)
+    with store.connect() as connection:
+        connection.execute(
+            "DELETE FROM metadata WHERE key='dimension_labels_v2'"
+        )
+        connection.execute(
+            """
+            INSERT INTO minute_dimensions VALUES(?,?,?,?,?,?,?)
+            """,
+            ("2026-09-04T10:15:00+0530", "host", "__all__", "cache", "Hit", 3, 30),
+        )
+        connection.execute(
+            """
+            INSERT INTO minute_dimensions VALUES(?,?,?,?,?,?,?)
+            """,
+            ("2026-09-04T10:15:00+0530", "host", "__all__", "cache", "Cache hit - child edge", 2, 20),
+        )
+        connection.execute(
+            """
+            INSERT INTO minute_dimensions VALUES(?,?,?,?,?,?,?)
+            """,
+            ("2026-09-04T10:15:00+0530", "host", "__all__", "delivery_format", "1", 5, 50),
+        )
+
+    migrated = LiveStore(database).snapshot(10_000_000)
+    cache = migrated["breakdowns"]["__all__"]["cache"]
+    delivery_format = migrated["breakdowns"]["__all__"]["delivery_format"]
+    assert cache == [{"value": "Cache hit - child edge", "requests": 5, "bytes": 50}]
+    assert delivery_format == [{"value": "Apple / HLS", "requests": 5, "bytes": 50}]
 
 
 def test_restart_requeues_interrupted_file_immediately(tmp_path: Path) -> None:
@@ -117,6 +176,29 @@ def test_restart_requeues_interrupted_file_immediately(tmp_path: Path) -> None:
     assert store.recover(300) == 1
     assert store.claim_file() == source.resolve()
 
+
+def test_atomic_snapshot_retries_a_transient_windows_share_violation(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    output = tmp_path / "state.json"
+    from ETL.src.live_monitor import engine
+
+    real_replace = engine.os.replace
+    attempts = 0
+
+    def flaky_replace(source, destination):
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            raise PermissionError("temporary share violation")
+        return real_replace(source, destination)
+
+    monkeypatch.setattr(engine.os, "replace", flaky_replace)
+    monkeypatch.setattr(engine.time, "sleep", lambda _seconds: None)
+    atomic_write_json(output, {"ok": True})
+
+    assert attempts == 2
+    assert json.loads(output.read_text(encoding="utf-8")) == {"ok": True}
 
 def test_completed_file_change_is_not_double_counted(tmp_path: Path) -> None:
     source = tmp_path / "source.gz"
@@ -150,6 +232,26 @@ def test_snapshot_server_serves_only_valid_atomic_json(tmp_path: Path) -> None:
         with urlopen(f"http://127.0.0.1:{port}/", timeout=2) as response:
             page = response.read().decode("utf-8")
             assert 'id="minuteRows"' in page
+            assert 'id="visibleRange"' in page
+            assert "rolling limit" in page
+        with urlopen(f"http://127.0.0.1:{port}/war-room", timeout=2) as response:
+            war_room = response.read().decode("utf-8")
+            assert "VETO LIVE MONITORING DASHBOARD" in war_room
+            assert 'id="audienceChart"' in war_room
+            assert 'id="ttfbChart"' in war_room
+            assert 'id="timingCoverage"' in war_room
+            assert 'id="decodedDeviceBars"' in war_room
+            assert 'id="networkBars"' in war_room
+            assert 'id="rangeFrom"' in war_room
+            assert 'id="rangeTo"' in war_room
+            assert 'id="chartModal"' in war_room
+            assert 'id="dataClock"' in war_room
+            assert "function completeMinute()" in war_room
+            assert 'data-expand="audience"' in war_room
+            assert "CDN DELIVERY TIMING" in war_room
+            assert "Advertising source not connected" in war_room
+        with urlopen(f"http://127.0.0.1:{port}/favicon.ico", timeout=2) as response:
+            assert response.status == 204
             assert 'id="yAxis"' in page
             assert 'id="chartScroll"' in page
             assert 'id="tooltip"' in page
