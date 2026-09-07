@@ -127,7 +127,7 @@ FCT_INTERNAL_CATEGORIES = frozenset(
 )
 FCT_MART_VERSION = 3
 NCT_MART_VERSION = 5
-YOUTUBE_MART_VERSION = 3
+YOUTUBE_MART_VERSION = 4
 AMAGI_MART_VERSION = 2
 
 # Amagi has delivered both UTC-labelled and PST-labelled exports. Normalize
@@ -159,6 +159,7 @@ DASHBOARD_SIDECARS = {
     },
 }
 YOUTUBE_PAYLOAD_ARRAYS = (
+    "collector_minute",
     "minute",
     "video_daily",
     "video_5min",
@@ -1574,6 +1575,14 @@ def youtube_channel_from_path(parquet_path: Path) -> tuple[str, str]:
 
 def build_youtube_marts() -> dict[str, Any]:
     """Build compact, reusable YouTube concurrency marts for the ASRUN demo."""
+    empty_collector_minute = pd.DataFrame(
+        columns=[
+            "timestamp_ist",
+            "log_date",
+            "youtube_channel",
+            "collector_status",
+        ]
+    )
     empty_minute = pd.DataFrame(
         columns=[
             "timestamp_ist",
@@ -1622,6 +1631,7 @@ def build_youtube_marts() -> dict[str, Any]:
             "reason": f"YouTube source folder not found: {YOUTUBE_ROOT}",
             "completed_files": 0,
             "partial_files": 0,
+            "collector_minute": empty_collector_minute,
             "minute": empty_minute,
             "video_daily": empty_video_daily,
             "video_5min": empty_video_5min,
@@ -1639,6 +1649,7 @@ def build_youtube_marts() -> dict[str, Any]:
     manifest_path = PARSED_DIR / "youtube_manifest.json"
     source_cache_path = PARSED_DIR / "youtube_source_rows.parquet"
     mart_paths = {
+        "collector_minute": PARSED_DIR / "youtube_collector_minute.parquet",
         "minute": PARSED_DIR / "youtube_minute_total.parquet",
         "video_daily": PARSED_DIR / "youtube_video_daily.parquet",
         "video_5min": PARSED_DIR / "youtube_video_5min.parquet",
@@ -1748,6 +1759,7 @@ def build_youtube_marts() -> dict[str, Any]:
             "completed_files": len(completed_files),
             "partial_files": len(partial_files),
             "skipped_files": skipped,
+            "collector_minute": empty_collector_minute,
             "minute": empty_minute,
             "video_daily": empty_video_daily,
             "video_5min": empty_video_5min,
@@ -1787,6 +1799,19 @@ def build_youtube_marts() -> dict[str, Any]:
     youtube = youtube.sort_values("timestamp_ist").drop_duplicates(
         ["timestamp_ist", "youtube_collector_key", "video_id"], keep="last"
     )
+    collector_minute = (
+        youtube.groupby(["timestamp_ist", "youtube_channel"], as_index=False)
+        .agg(
+            collector_status=(
+                "status",
+                lambda values: " | ".join(sorted(set(values.dropna().astype(str)))),
+            )
+        )
+        .sort_values(["timestamp_ist", "youtube_channel"])
+    )
+    collector_minute["log_date"] = collector_minute["timestamp_ist"].dt.strftime(
+        "%Y-%m-%d"
+    )
     live = youtube.loc[youtube["status"].eq("is_live")].copy()
     if live.empty:
         # Readable collector files without live rows are a valid degraded state,
@@ -1797,6 +1822,7 @@ def build_youtube_marts() -> dict[str, Any]:
             "completed_files": len(completed_files),
             "partial_files": len(partial_files),
             "skipped_files": skipped,
+            "collector_minute": collector_minute,
             "minute": empty_minute,
             "video_daily": empty_video_daily,
             "video_5min": empty_video_5min,
@@ -1884,6 +1910,7 @@ def build_youtube_marts() -> dict[str, Any]:
         .sort_values(["bucket_ist", "youtube_channel", "video_id"])
     )
 
+    atomic_write_parquet(mart_paths["collector_minute"], collector_minute)
     atomic_write_parquet(mart_paths["minute"], minute)
     atomic_write_parquet(mart_paths["video_daily"], video_daily)
     atomic_write_parquet(mart_paths["video_5min"], video_5min)
@@ -1912,6 +1939,7 @@ def build_youtube_marts() -> dict[str, Any]:
         "completed_files": len(completed_files),
         "partial_files": len(partial_files),
         "skipped_files": skipped,
+        "collector_minute": collector_minute,
         "minute": minute,
         "video_daily": video_daily,
         "video_5min": video_5min,
@@ -2226,6 +2254,15 @@ def build_payload(
             "full_start": youtube["full_start"],
             "full_end": youtube["full_end"],
             "channels": youtube.get("channels", []),
+            "collector_minute": records(
+                youtube["collector_minute"],
+                [
+                    "timestamp_ist",
+                    "log_date",
+                    "youtube_channel",
+                    "collector_status",
+                ],
+            ),
             "minute": records(
                 youtube["minute"],
                 [
@@ -6081,7 +6118,7 @@ youtubeDeliveryDetails=function(event){
   }
   const channels=new Set(indiaTvYoutubeChannels());
   if(!channels.size)return {
-    value:'0',total:0,live_videos:0,video_ids:'',video_titles:'',
+    value:'â€”',total:null,live_videos:0,video_ids:'',video_titles:'',
     scope:'No India TV YouTube collector',
   };
   const selectionKey=[...channels].sort().join('\u0000');
@@ -6089,7 +6126,7 @@ youtubeDeliveryDetails=function(event){
     youtubeDeliveryMinuteIndex=new Map();
   }
   if(!youtubeDeliveryMinuteIndex.has(selectionKey)){
-    const totals=new Map(),videos=new Map();
+    const totals=new Map(),videos=new Map(),collectorStatuses=new Map();
     for(const row of youtube.video_minute||[]){
       if(!channels.has(String(row.youtube_channel||'Unknown / NA')))continue;
       const minuteKey=youtubeMinuteKey(row.timestamp_ist);
@@ -6101,15 +6138,35 @@ youtubeDeliveryDetails=function(event){
       list.push(row);
       videos.set(minuteKey,list);
     }
-    youtubeDeliveryMinuteIndex.set(selectionKey,{totals,videos});
+    for(const row of youtube.collector_minute||[]){
+      if(!channels.has(String(row.youtube_channel||'Unknown / NA')))continue;
+      const minuteKey=youtubeMinuteKey(row.timestamp_ist);
+      const statuses=collectorStatuses.get(minuteKey)||new Set();
+      for(const status of String(row.collector_status||'').split('|')){
+        const normalized=status.trim().toLowerCase();
+        if(normalized)statuses.add(normalized);
+      }
+      collectorStatuses.set(minuteKey,statuses);
+    }
+    youtubeDeliveryMinuteIndex.set(selectionKey,{totals,videos,collectorStatuses});
   }
   const index=youtubeDeliveryMinuteIndex.get(selectionKey);
   const hasMinute=index.totals.has(key);
   const videoRows=index.videos.get(key)||[];
   let scope=indiaTvYoutubeScopeLabel();
-  if(!hasMinute)return {
-    value:'0',total:0,live_videos:0,video_ids:'',video_titles:'',
-    scope:(()=>{
+  if(!hasMinute){
+    const statuses=index.collectorStatuses.get(key);
+    if(statuses&&statuses.has('lookup_error'))return {
+      value:'â€”',total:null,live_videos:0,video_ids:'',video_titles:'',
+      scope:'India TV YouTube collector lookup error',
+    };
+    if(statuses&&statuses.size)return {
+      value:'0',total:0,live_videos:0,video_ids:'',video_titles:'',
+      scope:'India TV YouTube observed; no live stream',
+    };
+    return {
+      value:'â€”',total:null,live_videos:0,video_ids:'',video_titles:'',
+      scope:(()=>{
       const bounds=youtubeTrueBounds();
       if(eventDate&&bounds.start&&bounds.end
         &&(eventDate<bounds.start||eventDate>bounds.end)){
@@ -6117,7 +6174,8 @@ youtubeDeliveryDetails=function(event){
       }
       return 'No India TV YouTube minute record';
     })(),
-  };
+    };
+  }
   const videoIds=[...new Set(videoRows.map(row=>String(row.video_id||'')).filter(Boolean))];
   const titles=[...new Set(videoRows.map(row=>
     youtubeVideoTitle(youtube,row.video_id,row.log_date)).filter(Boolean))];

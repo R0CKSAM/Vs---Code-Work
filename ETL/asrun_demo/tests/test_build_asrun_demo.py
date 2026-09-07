@@ -44,6 +44,7 @@ def test_build_payload_handles_no_classified_ads() -> None:
         "reason": "No YouTube data",
         "completed_files": 0,
         "partial_files": 0,
+        "collector_minute": pd.DataFrame(columns=["timestamp_ist", "log_date", "youtube_channel", "collector_status"]),
         "minute": pd.DataFrame(columns=["timestamp_ist", "log_date", "total_concurrent_viewers", "live_videos", "peak_video_concurrent"]),
         "video_daily": pd.DataFrame(columns=["log_date", "video_id", "title", "peak_concurrent_viewers", "avg_concurrent_viewers", "viewer_minutes", "live_minutes"]),
         "video_5min": pd.DataFrame(columns=["bucket_ist", "log_date", "video_id", "title", "avg_concurrent_viewers", "peak_concurrent_viewers"]),
@@ -122,6 +123,7 @@ def test_build_youtube_marts_handles_no_live_rows(tmp_path: Path, monkeypatch) -
     assert result["available"] is False
     assert result["reason"] == "No live YouTube viewer minutes were found in readable completed files."
     assert result["minute"].empty
+    assert result["collector_minute"]["collector_status"].tolist() == ["offline"]
 
 
 def test_build_fct_ad_mart_classifies_deduplicates_and_tracks_spillover(
@@ -326,6 +328,7 @@ def test_split_dashboard_payload_preserves_all_source_rows() -> None:
         "fct": {"available": True, "events": [{"event": 1}, {"event": 2}]},
         "youtube": {
             "available": True,
+            "collector_minute": [{"collector": 1}],
             "minute": [{"minute": 1}],
             "video_daily": [{"day": 1}],
             "video_5min": [{"bucket": 1}],
@@ -1185,7 +1188,9 @@ def test_render_dashboard_adds_interval_weighted_nct_story_performance(
     assert "Selected YouTube Video IDs" in html
     assert "youtubeMetric=youtubeFiveMinuteValue(e)" in html
     assert "youtubeMetric=youtubeFiveMinuteValue(anchor)" in html
-    assert "value:'0',total:0,live_videos:0" in html
+    assert "scope:'India TV YouTube collector lookup error'" in html
+    assert "scope:'India TV YouTube observed; no live stream'" in html
+    assert "value:'â€”',total:null,live_videos:0" in html
     assert "scope:'No India TV YouTube collector'" in html
     assert "return 'No India TV YouTube minute record';" in html
     assert "return 'Outside India TV YouTube source range';" in html

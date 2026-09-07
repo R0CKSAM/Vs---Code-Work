@@ -65,6 +65,16 @@ ETL/extras/repair_artifacts/
 ETL/output/benchmarks/
 ETL/output/micro_live/
 
+# Near-live monitor inputs and state are regenerated locally. The cloner folder
+# is retained only as prototype/reference material and includes bundled binaries.
+ETL/cloner/
+ETL/data/live_spool/
+ETL/output/live_monitor/
+
+# Local test/browser artifacts use both hyphenated and underscored names.
+ETL/output/pytest*/
+ETL/output/test-tmp/
+
 # ASRUN demo output is regenerated locally and can be too large for GitHub.
 ETL/asrun_demo/output/*.html
 ETL/asrun_demo/output/*.js
