@@ -126,6 +126,8 @@ def test_store_commits_file_and_aggregates_in_one_transaction(tmp_path: Path) ->
     assert snapshot["series"]["__all__"][0]["device_ids"] == 1
     assert snapshot["series"]["__all__"][0]["session_ids"] == 1
     assert snapshot["summaries"]["__all__"]["unique_cliips"] == 1
+    assert snapshot["summaries"]["__all__"]["new_cliips"] == 1
+    assert snapshot["summaries"]["__all__"]["returning_cliips"] == 0
     assert snapshot["summaries"]["__all__"]["estimated_watch_seconds"] == 6
     assert snapshot["summaries"]["__all__"]["ttfb_avg_ms"] == 25
     assert snapshot["series"]["__all__"][0]["throughput_avg"] == 1800
@@ -163,6 +165,39 @@ def test_store_migrates_legacy_cdn_dimension_labels(tmp_path: Path) -> None:
     delivery_format = migrated["breakdowns"]["__all__"]["delivery_format"]
     assert cache == [{"value": "Cache hit - child edge", "requests": 5, "bytes": 50}]
     assert delivery_format == [{"value": "Apple / HLS", "requests": 5, "bytes": 50}]
+
+
+def test_new_and_returning_ip_viewers_are_mutually_exclusive(tmp_path: Path) -> None:
+    store = LiveStore(tmp_path / "state.sqlite3")
+    now = dt.datetime.now(IST).replace(second=0, microsecond=0)
+    old_minute = (now - dt.timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:00%z")
+    recent_minute = (now - dt.timedelta(minutes=5)).strftime("%Y-%m-%dT%H:%M:00%z")
+
+    def finish(name: str, minute: str, viewers: tuple[str, ...]) -> None:
+        source = tmp_path / name
+        source.write_bytes(name.encode())
+        stat = source.stat()
+        store.observe_file(source, stat.st_size, stat.st_mtime_ns, 1)
+        assert store.claim_file() == source.resolve()
+        from ETL.src.live_monitor.parser import FileBatch
+
+        batch = FileBatch(rows=len(viewers), latest_timestamp=now.timestamp())
+        batch.metrics[(minute, "host", "__all__")] = [
+            len(viewers), 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+        ]
+        batch.minute_viewers.update(
+            (minute, "host", "__all__", viewer) for viewer in viewers
+        )
+        store.finish_file(source, batch)
+
+    finish("old.gz", old_minute, ("returning-hash",))
+    finish("recent.gz", recent_minute, ("returning-hash", "new-hash"))
+    summary = store.snapshot(60)["summaries"]["__all__"]
+
+    assert summary["unique_cliips"] == 2
+    assert summary["new_cliips"] == 1
+    assert summary["returning_cliips"] == 1
+    assert summary["new_cliips"] + summary["returning_cliips"] == summary["unique_cliips"]
 
 
 def test_restart_requeues_interrupted_file_immediately(tmp_path: Path) -> None:
@@ -337,8 +372,10 @@ def test_recent_sync_uses_exact_s3_keys_and_backfill_uses_yesterday(
     calls = []
 
     monkeypatch.setattr(
-        "ETL.src.live_monitor.engine.list_recent_relative_keys",
-        lambda _remote, _hours, local_root=None: ["ak-000001-sample.gz"],
+        "ETL.src.live_monitor.engine.list_recent_relative_key_sets",
+        lambda _remote, _hours, local_root=None: (
+            ["ak-000001-sample.gz"], ["ak-000001-sample.gz"]
+        ),
     )
 
     def fake_rclone(
@@ -359,6 +396,50 @@ def test_recent_sync_uses_exact_s3_keys_and_backfill_uses_yesterday(
     assert calls[0][3] is None and calls[0][4] is None and calls[0][5] is None
     yesterday = dt.datetime.now(IST) - dt.timedelta(days=1)
     assert calls[0][0].endswith(yesterday.strftime("/%m/%d"))
+
+
+def test_recent_sync_immediately_queues_downloaded_keys(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    config = LiveConfig(spool_root=tmp_path / "spool", state_dir=tmp_path / "state")
+    engine = LiveEngine(config)
+    key = "ak-000001-current.gz"
+    monkeypatch.setattr(
+        "ETL.src.live_monitor.engine.list_recent_relative_key_sets",
+        lambda _remote, _hours, local_root=None: ([key], [key]),
+    )
+
+    def fake_rclone(remote, local, timeout, max_age=None, min_age=None, files_from=None):
+        local.mkdir(parents=True, exist_ok=True)
+        write_log(local / key, [])
+        return True
+
+    engine._rclone = fake_rclone
+
+    assert engine.sync_once()
+    assert engine.store.snapshot(10)["files"] == {"pending": 1}
+
+
+def test_recent_sync_queues_existing_unprocessed_key_without_redownload(
+    tmp_path: Path, monkeypatch,
+) -> None:
+    config = LiveConfig(spool_root=tmp_path / "spool", state_dir=tmp_path / "state")
+    engine = LiveEngine(config)
+    day = dt.datetime.now(IST)
+    local = config.spool_root / engine._day_folder(day)
+    local.mkdir(parents=True)
+    key = "ak-000001-existing.gz"
+    write_log(local / key, [])
+    monkeypatch.setattr(
+        "ETL.src.live_monitor.engine.list_recent_relative_key_sets",
+        lambda _remote, _hours, local_root=None: ([], [key]),
+    )
+    rclone_calls = []
+    engine._rclone = lambda *args, **kwargs: rclone_calls.append((args, kwargs)) or True
+
+    assert engine.sync_once()
+    assert not rclone_calls
+    assert engine.store.snapshot(10)["files"] == {"pending": 1}
 
 
 def test_rclone_s3_config_is_loaded_without_exposing_credentials(

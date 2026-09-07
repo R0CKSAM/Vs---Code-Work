@@ -50,8 +50,8 @@ class LiveConfig:
     )
     scan_seconds: float = 2.0
     snapshot_seconds: float = 5.0
-    sync_seconds: float = 120.0
-    full_scan_seconds: float = 300.0
+    sync_seconds: float = 30.0
+    full_scan_seconds: float = 1800.0
     full_sync_seconds: float = 1800.0
     parse_workers: int = max(2, min(6, os.cpu_count() or 4))
     # rclone publishes each .gz only after its temporary download is complete.

@@ -15,7 +15,7 @@ from zoneinfo import ZoneInfo
 
 from .config import LiveConfig
 from .parser import CHANNEL_MAPPING_VERSION, parse_gzip_file
-from .s3_index import list_recent_relative_keys
+from .s3_index import list_recent_relative_key_sets
 from .server import SnapshotServer
 from .store import LiveStore
 
@@ -145,6 +145,37 @@ class LiveEngine:
             for offset in (0, 1)
         ]
 
+    def _historical_directories(self) -> list[Path]:
+        """Return finalized partitions that can be reconciled off the live path."""
+        yesterday = dt.datetime.now(IST) - dt.timedelta(days=1)
+        return [self.config.spool_root / self._day_folder(yesterday)]
+
+    def observe_paths(self, paths) -> int:
+        """Queue explicit local files without walking the large flat spool."""
+        observed = 0
+        for path in paths:
+            path = Path(path)
+            try:
+                path_text = str(path.resolve())
+                stat = path.stat()
+                if stat.st_size <= 0:
+                    continue
+                signature = (stat.st_size, stat.st_mtime_ns)
+                if self._file_signatures.get(path_text) == signature:
+                    continue
+                status = self.store.observe_file(
+                    path,
+                    stat.st_size,
+                    stat.st_mtime_ns,
+                    self.config.stable_observations,
+                )
+                if status != "observed":
+                    self._file_signatures[path_text] = signature
+                observed += 1
+            except OSError as exc:
+                self.store.event("WARNING", "scanner", f"{path}: {exc}")
+        return observed
+
     def scan_directories(self, directories: list[Path], force: bool = False) -> int:
         observed = 0
         seen: set[Path] = set()
@@ -167,41 +198,37 @@ class LiveEngine:
                     if path in seen:
                         continue
                     seen.add(path)
-                    try:
-                        path_text = str(path) if path.is_absolute() else str(path.resolve())
-                        if not force and path_text in self._file_signatures:
-                            continue
-                        stat = path.stat()
-                        if stat.st_size <= 0:
-                            continue
-                        signature = (stat.st_size, stat.st_mtime_ns)
-                        if self._file_signatures.get(path_text) == signature:
-                            continue
-                        status = self.store.observe_file(
-                            path,
-                            stat.st_size,
-                            stat.st_mtime_ns,
-                            self.config.stable_observations,
-                        )
-                        if status != "observed":
-                            self._file_signatures[path_text] = signature
-                        observed += 1
-                    except OSError as exc:
-                        self.store.event("WARNING", "scanner", f"{path}: {exc}")
+                    path_text = str(path) if path.is_absolute() else str(path.resolve())
+                    if not force and path_text in self._file_signatures:
+                        continue
+                    observed += self.observe_paths((path,))
             self._directory_signatures[resolved_directory] = signature
         self._set_runtime(last_scan_at=time.time())
         return observed
 
     def scanner_loop(self) -> None:
+        initial_reconciliation = True
         while not self.stop_event.is_set():
             try:
                 now = time.monotonic()
-                directories = self._recent_directories()
-                force = False
-                if now >= self._full_scan_due:
+                if initial_reconciliation:
                     directories = self._full_directories()
+                    force = True
+                    initial_reconciliation = False
+                elif self.sync_enabled:
+                    if now < self._full_scan_due:
+                        self.stop_event.wait(self.config.scan_seconds)
+                        continue
+                    directories = self._historical_directories()
                     self._full_scan_due = now + self.config.full_scan_seconds
                     force = True
+                else:
+                    directories = self._recent_directories()
+                    force = False
+                    if now >= self._full_scan_due:
+                        directories = self._full_directories()
+                        self._full_scan_due = now + self.config.full_scan_seconds
+                        force = True
                 self.scan_directories(directories, force=force)
             except Exception as exc:
                 LOGGER.exception("Scanner cycle failed")
@@ -311,20 +338,30 @@ class LiveEngine:
                 local = self.config.spool_root / self._day_folder(moment)
                 key_file = None
                 try:
-                    keys = list_recent_relative_keys(
+                    keys, recent_keys = list_recent_relative_key_sets(
                         remote, self.config.recent_hours, local_root=local
                     )
-                    if not keys:
+                    if not recent_keys:
                         continue
-                    self.config.state_dir.mkdir(parents=True, exist_ok=True)
-                    with tempfile.NamedTemporaryFile(
-                        mode="w", encoding="utf-8", newline="\n", delete=False,
-                        dir=self.config.state_dir, prefix="recent_keys_", suffix=".txt",
-                    ) as stream:
-                        stream.write("\n".join(keys))
-                        stream.write("\n")
-                        key_file = Path(stream.name)
-                    synced = self._rclone(remote, local, timeout=900, files_from=key_file)
+                    if keys:
+                        self.config.state_dir.mkdir(parents=True, exist_ok=True)
+                        with tempfile.NamedTemporaryFile(
+                            mode="w", encoding="utf-8", newline="\n", delete=False,
+                            dir=self.config.state_dir, prefix="recent_keys_", suffix=".txt",
+                        ) as stream:
+                            stream.write("\n".join(keys))
+                            stream.write("\n")
+                            key_file = Path(stream.name)
+                        synced = self._rclone(
+                            remote, local, timeout=900, files_from=key_file
+                        )
+                    else:
+                        synced = True
+                    if synced:
+                        # The spool is intentionally flat and can hold hundreds of
+                        # thousands of files. Queue the exact recent keys now so live
+                        # ingestion never waits for a historical directory walk.
+                        self.observe_paths(local / Path(key) for key in recent_keys)
                 except Exception as exc:
                     self.store.event(
                         "WARNING", "sync-index",

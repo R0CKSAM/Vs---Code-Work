@@ -102,6 +102,15 @@ CREATE TABLE IF NOT EXISTS daily_viewers (
 );
 CREATE INDEX IF NOT EXISTS daily_viewers_target_idx
     ON daily_viewers(target, date_ist);
+CREATE TABLE IF NOT EXISTS viewer_history (
+    target TEXT NOT NULL,
+    viewer_key TEXT NOT NULL,
+    first_seen_ist TEXT NOT NULL,
+    last_seen_ist TEXT NOT NULL,
+    PRIMARY KEY(target, viewer_key)
+);
+CREATE INDEX IF NOT EXISTS viewer_history_last_seen_idx
+    ON viewer_history(target, last_seen_ist);
 CREATE TABLE IF NOT EXISTS runtime_events (
     occurred_at REAL NOT NULL,
     level TEXT NOT NULL,
@@ -125,6 +134,7 @@ class LiveStore:
             connection.executescript(SCHEMA)
             self._ensure_metric_columns(connection)
             self._migrate_dimension_labels(connection)
+            self._bootstrap_viewer_history(connection)
 
     @staticmethod
     def _ensure_metric_columns(connection: sqlite3.Connection) -> None:
@@ -198,6 +208,30 @@ class LiveStore:
             "INSERT INTO metadata(key,value) VALUES(?,?)", (migration_key, "complete")
         )
 
+    @staticmethod
+    def _bootstrap_viewer_history(connection: sqlite3.Connection) -> None:
+        """Seed durable first/last-seen state from identities already processed."""
+        migration_key = "viewer_history_v1"
+        migrated = connection.execute(
+            "SELECT value FROM metadata WHERE key=?", (migration_key,)
+        ).fetchone()
+        if migrated:
+            return
+        connection.execute(
+            """
+            INSERT INTO viewer_history(target,viewer_key,first_seen_ist,last_seen_ist)
+            SELECT target,viewer_key,MIN(minute_ist),MAX(minute_ist)
+              FROM minute_viewers
+             GROUP BY target,viewer_key
+            ON CONFLICT(target,viewer_key) DO UPDATE SET
+                first_seen_ist=MIN(first_seen_ist,excluded.first_seen_ist),
+                last_seen_ist=MAX(last_seen_ist,excluded.last_seen_ist)
+            """
+        )
+        connection.execute(
+            "INSERT INTO metadata(key,value) VALUES(?,?)", (migration_key, "complete")
+        )
+
     @contextlib.contextmanager
     def connect(self) -> Iterator[sqlite3.Connection]:
         connection = sqlite3.connect(self.path, timeout=10)
@@ -242,6 +276,7 @@ class LiveStore:
             connection.execute("DELETE FROM minute_sessions")
             connection.execute("DELETE FROM minute_dimensions")
             connection.execute("DELETE FROM daily_viewers")
+            connection.execute("DELETE FROM viewer_history")
             connection.execute(
                 """
                 UPDATE files SET status='pending',attempts=0,next_attempt_at=0,
@@ -385,6 +420,24 @@ class LiveStore:
                 "INSERT OR IGNORE INTO minute_viewers VALUES(?,?,?,?)",
                 batch.minute_viewers,
             )
+            viewer_history: dict[tuple[str, str], list[str]] = {}
+            for minute_ist, _req_host, target, viewer_key in batch.minute_viewers:
+                bounds = viewer_history.setdefault(
+                    (target, viewer_key), [minute_ist, minute_ist]
+                )
+                bounds[0] = min(bounds[0], minute_ist)
+                bounds[1] = max(bounds[1], minute_ist)
+            connection.executemany(
+                """
+                INSERT INTO viewer_history(
+                    target,viewer_key,first_seen_ist,last_seen_ist
+                ) VALUES(?,?,?,?)
+                ON CONFLICT(target,viewer_key) DO UPDATE SET
+                    first_seen_ist=MIN(first_seen_ist,excluded.first_seen_ist),
+                    last_seen_ist=MAX(last_seen_ist,excluded.last_seen_ist)
+                """,
+                [(*key, *bounds) for key, bounds in viewer_history.items()],
+            )
             connection.executemany(
                 "INSERT OR IGNORE INTO minute_devices VALUES(?,?,?,?)",
                 batch.minute_devices,
@@ -459,6 +512,8 @@ class LiveStore:
             dt.datetime.now(IST) - dt.timedelta(minutes=dashboard_minutes)
         ).strftime("%Y-%m-%dT%H:%M:00%z")
         with self.connect() as connection:
+            # Pin every query below to one WAL snapshot while parser workers commit.
+            connection.execute("BEGIN")
             files = {
                 row["status"]: row["count"]
                 for row in connection.execute(
@@ -498,6 +553,31 @@ class LiveStore:
             unique_cliips = distinct_counts("minute_viewers", "viewer_key")
             unique_devices = distinct_counts("minute_devices", "device_key")
             unique_sessions = distinct_counts("minute_sessions", "session_key")
+            viewer_types = {
+                row["target"]: {
+                    "new": int(row["new_viewers"]),
+                    "returning": int(row["returning_viewers"]),
+                }
+                for row in connection.execute(
+                    """
+                    SELECT active.target,
+                           SUM(CASE WHEN history.first_seen_ist>=? THEN 1 ELSE 0 END)
+                               new_viewers,
+                           SUM(CASE WHEN history.first_seen_ist<? THEN 1 ELSE 0 END)
+                               returning_viewers
+                      FROM (
+                            SELECT DISTINCT target,viewer_key
+                              FROM minute_viewers
+                             WHERE minute_ist>=?
+                           ) active
+                      JOIN viewer_history history
+                        ON history.target=active.target
+                       AND history.viewer_key=active.viewer_key
+                     GROUP BY active.target
+                    """,
+                    (cutoff, cutoff, cutoff),
+                )
+            }
             series: dict[str, list[dict]] = {}
             for target in targets:
                 metric_rows = connection.execute(
@@ -586,6 +666,10 @@ class LiveStore:
                     "media_segments": segments,
                     "estimated_watch_seconds": watch_seconds,
                     "unique_cliips": viewers,
+                    "new_cliips": viewer_types.get(target, {}).get("new", 0),
+                    "returning_cliips": viewer_types.get(target, {}).get(
+                        "returning", 0
+                    ),
                     "unique_device_ids": unique_devices.get(target, 0),
                     "unique_session_ids": unique_sessions.get(target, 0),
                     "average_watch_seconds_per_ip": (

@@ -60,14 +60,14 @@ def load_rclone_s3_remote(remote: str) -> RcloneS3Remote:
     )
 
 
-def list_recent_relative_keys(
+def list_recent_relative_key_sets(
     remote: str,
     hours: int,
     workers: int = 10,
     now: dt.datetime | None = None,
     local_root: Path | None = None,
-) -> list[str]:
-    """List missing recent objects using parallel server-side key prefixes."""
+) -> tuple[list[str], list[str]]:
+    """List missing and all recent objects with one parallel S3 traversal."""
     import boto3
     from botocore.config import Config
 
@@ -91,8 +91,9 @@ def list_recent_relative_keys(
     cutoff = current.astimezone(dt.timezone.utc) - dt.timedelta(hours=hours)
     base = f"{target.key_prefix}/" if target.key_prefix else ""
 
-    def list_shard(digit: str) -> list[str]:
-        keys: list[str] = []
+    def list_shard(digit: str) -> tuple[list[str], list[str]]:
+        missing: list[str] = []
+        recent: list[str] = []
         paginator = client.get_paginator("list_objects_v2")
         for page in paginator.paginate(
             Bucket=target.bucket,
@@ -106,15 +107,32 @@ def list_recent_relative_keys(
                 relative = key[len(base):] if key.startswith(base) else PurePosixPath(key).name
                 if not relative or "/" in relative:
                     continue
+                recent.append(relative)
                 if local_root is not None:
                     try:
                         if (local_root / relative).stat().st_size == int(item.get("Size", -1)):
                             continue
                     except OSError:
                         pass
-                keys.append(relative)
-        return keys
+                missing.append(relative)
+        return missing, recent
 
     with ThreadPoolExecutor(max_workers=max(1, min(10, workers))) as pool:
         groups = list(pool.map(list_shard, "0123456789"))
-    return sorted({key for group in groups for key in group})
+    missing = sorted({key for group, _recent in groups for key in group})
+    recent = sorted({key for _missing, group in groups for key in group})
+    return missing, recent
+
+
+def list_recent_relative_keys(
+    remote: str,
+    hours: int,
+    workers: int = 10,
+    now: dt.datetime | None = None,
+    local_root: Path | None = None,
+) -> list[str]:
+    """Compatibility wrapper returning only objects missing from local storage."""
+    missing, _recent = list_recent_relative_key_sets(
+        remote, hours, workers=workers, now=now, local_root=local_root
+    )
+    return missing
