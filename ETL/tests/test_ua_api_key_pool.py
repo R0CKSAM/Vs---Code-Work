@@ -15,14 +15,15 @@ module = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(module)
 
 
-def test_configured_keys_are_deduplicated_and_limited_to_three(monkeypatch):
+def test_configured_keys_are_deduplicated_and_limited_to_four(monkeypatch):
     monkeypatch.setenv("WHATMYUA_KEYS", "key-a,key-b")
     monkeypatch.setenv("WHATMYUA_KEY_1", "key-b")
     monkeypatch.setenv("WHATMYUA_KEY_2", "key-c")
     monkeypatch.setenv("WHATMYUA_KEY_3", "key-d")
+    monkeypatch.setenv("WHATMYUA_KEY_4", "key-e")
     args = Namespace(api_keys="", api_key="key-a")
 
-    assert module.configured_api_keys(args) == ["key-a", "key-b", "key-c"]
+    assert module.configured_api_keys(args) == ["key-a", "key-b", "key-c", "key-d"]
 
 
 def test_key_pool_rotates_and_persists_daily_quota(tmp_path):

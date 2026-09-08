@@ -50,11 +50,11 @@ def split_api_keys(value: str) -> list[str]:
 
 
 def configured_api_keys(args: argparse.Namespace) -> list[str]:
-    """Return at most three unique keys without ever logging their values."""
+    """Return at most four unique keys without ever logging their values."""
     candidates: list[str] = []
     candidates.extend(split_api_keys(getattr(args, "api_keys", "")))
     candidates.extend(split_api_keys(os.getenv("WHATMYUA_KEYS", "")))
-    for index in range(1, 4):
+    for index in range(1, 5):
         candidates.extend(split_api_keys(os.getenv(f"WHATMYUA_KEY_{index}", "")))
     candidates.extend(split_api_keys(getattr(args, "api_key", "")))
 
@@ -62,7 +62,7 @@ def configured_api_keys(args: argparse.Namespace) -> list[str]:
     for key in candidates:
         if key and key not in unique and key != "NOTREQUIED":
             unique.append(key)
-    return unique[:3] or ["NOTREQUIED"]
+    return unique[:4] or ["NOTREQUIED"]
 
 
 class APIKeyPool:
@@ -323,7 +323,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
     parser.add_argument("--api-limit", type=int, default=100, help="0 status/manifest only; positive checks N new UAs; -1 checks all remaining valid UAs.")
     parser.add_argument("--api-key", default=os.getenv("WHATMYUA_KEY", "NOTREQUIED"))
-    parser.add_argument("--api-keys", default="", help="Comma-separated keys; prefer WHATMYUA_KEYS or WHATMYUA_KEY_1..3 in .env.")
+    parser.add_argument("--api-keys", default="", help="Comma-separated keys; prefer WHATMYUA_KEYS or WHATMYUA_KEY_1..4 in .env.")
     parser.add_argument("--api-daily-limit-per-key", type=int, default=1000)
     parser.add_argument("--api-quota-state", type=Path, default=DEFAULT_QUOTA_STATE)
     parser.add_argument("--api-url", default=decoder.DEFAULT_API_URL)

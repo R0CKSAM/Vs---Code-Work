@@ -34,7 +34,7 @@ if (-not $env:WHATMYUA_KEY) {
 
 Write-Host "UA API decode: highest observed request volume first" -ForegroundColor Cyan
 Write-Host "This run is resumable. Successful API rows are never requested twice."
-Write-Host "Up to three authorized keys are rotated with one global request every $SleepMinSeconds-$SleepMaxSeconds seconds."
+Write-Host "Up to four authorized keys are rotated with one global request every $SleepMinSeconds-$SleepMaxSeconds seconds."
 
 if ($InitialDelayMinutes -gt 0) {
     $ResumeAt = (Get-Date).AddMinutes($InitialDelayMinutes)
