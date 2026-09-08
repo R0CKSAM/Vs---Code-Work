@@ -13,6 +13,7 @@ __pycache__/
 *.pyc
 .pytest_cache/
 **/.pytest_cache/
+ETL/.test-tmp/
 
 # Data files
 *.parquet
@@ -24,6 +25,8 @@ ETL/data/raw/
 ETL/data/stage/
 ETL/data/lake/
 ETL/data/.etl_*_state.json
+ETL/data/asn/ip2location_asn_cache.json
+ETL/data/cache/
 ETL/output/cache/
 ETL/output/state/
 ETL/output/**/_duckdb_tmp/
@@ -70,6 +73,14 @@ ETL/output/micro_live/
 ETL/cloner/
 ETL/data/live_spool/
 ETL/output/live_monitor/
+# Local reverse-proxy binaries and runtime files are installed per workstation.
+ETL/tools/ngrok.exe
+ETL/tools/nginx/**
+!ETL/tools/nginx/conf/
+!ETL/tools/nginx/conf/live_dashboard.conf
+!ETL/tools/nginx/conf/mime.types
+# Local nginx credentials are generated per workstation and must never be committed.
+ETL/tools/nginx/conf/live_dashboard.htpasswd
 
 # Local test/browser artifacts use both hyphenated and underscored names.
 ETL/output/pytest*/

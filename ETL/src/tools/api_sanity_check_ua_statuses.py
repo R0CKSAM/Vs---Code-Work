@@ -216,7 +216,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--api-key", default=os.getenv("WHATMYUA_KEY", "NOTREQUIED"))
     parser.add_argument("--api-url", default=decoder.DEFAULT_API_URL)
     parser.add_argument("--api-timeout", type=float, default=20.0)
-    parser.add_argument("--api-sleep-min-seconds", type=float, default=2.0)
+    parser.add_argument("--api-sleep-min-seconds", type=float, default=4.0)
     parser.add_argument("--api-sleep-max-seconds", type=float, default=5.0)
     parser.add_argument("--api-flush-every", type=int, default=5)
     parser.add_argument("--stop-on-rate-limit", action="store_true", default=True)

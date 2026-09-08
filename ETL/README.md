@@ -104,10 +104,12 @@ Install or refresh the Windows task:
 powershell -ExecutionPolicy Bypass -File .\install_recovery_task.ps1
 ```
 
-The task runs at 7:00 AM and when `Intern` logs on after a restart. It uses an
+The task runs at 6:00 AM and when `Intern` logs on after a restart. It uses an
 interactive user trigger because mapped `Z:` is unavailable to SYSTEM before
 login. Missed starts run as soon as possible, and failures retry every 15
-minutes. Preview the detected backlog without processing data:
+minutes. When dates are pending, it gracefully pauses the near-live monitor
+before source prefetch and restarts it after ETL, including after a failed ETL
+attempt. Preview the detected backlog without processing data:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\run_recovery_pipeline.ps1 -DryRun

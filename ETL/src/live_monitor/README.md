@@ -14,6 +14,28 @@ From the `ETL` directory:
 Open `http://127.0.0.1:8790`. Stop with `Ctrl+C`. A non-zero unexpected exit is
 automatically restarted after five seconds. Use `-NoRestart` while debugging.
 
+Manage a background instance without killing an in-flight database transaction:
+
+```powershell
+.\manage_live_monitor.ps1 -Action Start
+.\manage_live_monitor.ps1 -Action Status
+.\manage_live_monitor.ps1 -Action Stop
+```
+
+The 6:00 AM recovery task pauses this monitor only when daily ETL dates are
+pending, then starts it again from a guaranteed cleanup block after ETL ends.
+
+The nginx LAN endpoint requires a browser username and password. Change its
+credentials at any time without storing the password in shell history:
+
+```powershell
+.\set_live_dashboard_credentials.ps1
+```
+
+The generated password file is local-only and ignored by Git. `/healthz`
+remains available without a login so automated monitoring can verify service
+availability.
+
 The channel dropdown defaults to **All channels** and uses the same canonical
 host/path channel mapping as the batch ETL. Each selection reports exact
 distinct `cliIP` values per minute for that mapped channel.

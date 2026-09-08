@@ -1,18 +1,15 @@
 param(
-    [double]$SleepMinSeconds = 10.0,
-    [double]$SleepMaxSeconds = 20.0,
-    [int]$InitialDelayMinutes = 15,
-    [int]$ApiLimit = 950
+    [double]$SleepMinSeconds = 4.0,
+    [double]$SleepMaxSeconds = 5.0,
+    [int]$InitialDelayMinutes = 0,
+    [int]$ApiLimit = -1
 )
 
 $ErrorActionPreference = "Stop"
 $EtlRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Split-Path -Parent $EtlRoot
 $Python = Join-Path $RepoRoot "venv\Scripts\python.exe"
-$Lookup = Join-Path $EtlRoot "output\device_decode\ua_decode_lookup_both_all.parquet"
-$CrosscheckCache = Join-Path $EtlRoot "data\cache\device_decode\whatmyuseragent_local_verified_crosscheck_cache.parquet"
-$SanityOut = Join-Path $EtlRoot "output\device_decode\api_sanity\production_remaining"
-$SanityScript = Join-Path $EtlRoot "src\tools\api_sanity_check_ua_statuses.py"
+$FullDecodeScript = Join-Path $EtlRoot "src\tools\decode_all_distinct_ua_api.py"
 $LookupScript = Join-Path $EtlRoot "src\tools\decode_distinct_ua_lookup.py"
 $EnvFile = Join-Path $EtlRoot ".env"
 
@@ -35,14 +32,9 @@ if (-not $env:WHATMYUA_KEY) {
     $env:WHATMYUA_KEY = [Environment]::GetEnvironmentVariable("WHATMYUA_KEY", "User")
 }
 
-Write-Host "UA API decode: unknown first, then locally decoded UAs" -ForegroundColor Cyan
+Write-Host "UA API decode: highest observed request volume first" -ForegroundColor Cyan
 Write-Host "This run is resumable. Successful API rows are never requested twice."
-Write-Host "Failed or rate-limited rows remain eligible on the next run."
-if ($env:WHATMYUA_KEY) {
-    Write-Host "WHATMYUA_KEY detected; authenticated API quota will be used." -ForegroundColor Green
-} else {
-    Write-Host "WHATMYUA_KEY is not set; the public API quota will be used." -ForegroundColor Yellow
-}
+Write-Host "Up to three authorized keys are rotated with one global request every $SleepMinSeconds-$SleepMaxSeconds seconds."
 
 if ($InitialDelayMinutes -gt 0) {
     $ResumeAt = (Get-Date).AddMinutes($InitialDelayMinutes)
@@ -50,12 +42,7 @@ if ($InitialDelayMinutes -gt 0) {
     Start-Sleep -Seconds ($InitialDelayMinutes * 60)
 }
 
-& $Python $SanityScript `
-    --lookup $Lookup `
-    --statuses "unknown,decoded_local" `
-    --api-cache $CrosscheckCache `
-    --out-dir $SanityOut `
-    --output-prefix "ua_unknown_then_local_api" `
+& $Python $FullDecodeScript `
     --api-limit $ApiLimit `
     --api-sleep-min-seconds $SleepMinSeconds `
     --api-sleep-max-seconds $SleepMaxSeconds `

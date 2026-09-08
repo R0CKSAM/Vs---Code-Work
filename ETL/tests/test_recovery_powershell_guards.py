@@ -11,6 +11,7 @@ ETL_ROOT = Path(__file__).resolve().parents[1]
 DAILY_SCRIPT = ETL_ROOT / "run_daily_pipeline.ps1"
 RECOVERY_SCRIPT = ETL_ROOT / "run_recovery_pipeline.ps1"
 INSTALL_SCRIPT = ETL_ROOT / "install_recovery_task.ps1"
+LIVE_MANAGER_SCRIPT = ETL_ROOT / "manage_live_monitor.ps1"
 PREFETCH_SCRIPT = ETL_ROOT / "prefetch_daily_sources.ps1"
 WORKER_SCRIPT = ETL_ROOT / "sync_daily_source.ps1"
 TEST_TEMP_ROOT = Path(tempfile.gettempdir()) / "veto_etl_tests"
@@ -31,6 +32,7 @@ class RecoveryPowerShellGuardsTest(unittest.TestCase):
                 INSTALL_SCRIPT,
                 PREFETCH_SCRIPT,
                 WORKER_SCRIPT,
+                LIVE_MANAGER_SCRIPT,
             )
         ]
         paths = ",".join(f"'{path}'" for path in escaped_paths)
@@ -47,6 +49,19 @@ class RecoveryPowerShellGuardsTest(unittest.TestCase):
             capture_output=True,
             text=True,
         )
+
+    def test_recovery_pauses_live_monitor_around_pending_etl(self) -> None:
+        source = RECOVERY_SCRIPT.read_text(encoding="utf-8")
+        pause = source.index('& $LiveManager -Action Stop')
+        prefetch = source.index('& $PrefetchScript @prefetchArguments')
+        restart = source.index('& $LiveManager -Action Start')
+        finally_block = source.rindex('} finally {')
+        pause_enabled = source.rindex('$livePausedForDailyEtl = $true', 0, pause)
+        self.assertLess(pause, prefetch)
+        self.assertLess(pause_enabled, pause)
+        self.assertGreater(restart, finally_block)
+        self.assertIn('$ensureLiveMonitorAtExit = -not $DryRun', source)
+        self.assertGreater(source.index('$mutex.Dispose()'), restart)
 
     def test_six_slot_prefetch_validates_all_source_date_jobs(self) -> None:
         TEST_TEMP_ROOT.mkdir(parents=True, exist_ok=True)

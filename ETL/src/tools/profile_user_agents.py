@@ -593,7 +593,7 @@ def main() -> None:
     parser.add_argument("--api-limit", type=int, default=0, help="Number of high-impact UAs to decode through whatmyuseragent.com. Use -1 for all candidates. Default: 0.")
     parser.add_argument("--min-rows-for-api", type=int, default=1, help="Minimum rows before a UA is eligible for API decode.")
     parser.add_argument("--api-sleep-seconds", type=float, default=None, help="Fixed sleep between API calls. Overrides random min/max when set.")
-    parser.add_argument("--api-sleep-min-seconds", type=float, default=2.0)
+    parser.add_argument("--api-sleep-min-seconds", type=float, default=4.0)
     parser.add_argument("--api-sleep-max-seconds", type=float, default=5.0)
     parser.add_argument("--api-flush-every", type=int, default=25, help="Write API cache progress every N decoded UA rows.")
     parser.add_argument("--api-timeout", type=float, default=20.0)

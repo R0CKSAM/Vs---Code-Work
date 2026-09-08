@@ -1,6 +1,6 @@
 param(
     [int]$ApiLimit = -1,
-    [double]$SleepMinSeconds = 2,
+    [double]$SleepMinSeconds = 4,
     [double]$SleepMaxSeconds = 5,
     [switch]$SkipAudienceOpsRefresh
 )
@@ -21,6 +21,7 @@ try {
     Write-Host "ETL root: $EtlRoot"
     Write-Host "Log     : $TranscriptPath"
     Write-Host "Step 1  : Fill all-distinct UA API cache"
+    Write-Host "           Uses up to 3 keys from ETL\.env with a global $SleepMinSeconds-$SleepMaxSeconds second delay."
     & ".\venv\Scripts\python.exe" "ETL\src\tools\decode_all_distinct_ua_api.py" `
         --api-limit $ApiLimit `
         --api-sleep-min-seconds $SleepMinSeconds `

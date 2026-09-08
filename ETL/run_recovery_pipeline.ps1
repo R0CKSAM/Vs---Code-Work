@@ -24,6 +24,7 @@ $ErrorActionPreference = "Stop"
 $WorkspaceRoot = $PSScriptRoot
 $DailyScript = Join-Path $WorkspaceRoot "run_daily_pipeline.ps1"
 $PrefetchScript = Join-Path $WorkspaceRoot "prefetch_daily_sources.ps1"
+$LiveManager = Join-Path $WorkspaceRoot "manage_live_monitor.ps1"
 $StateDir = Join-Path $WorkspaceRoot "output\state"
 $DailyStateDir = Join-Path $StateDir "daily_runs"
 $RecoveryStatePath = Join-Path $StateDir "recovery_backlog.json"
@@ -234,6 +235,8 @@ New-Item -ItemType Directory -Path $StateDir, $DailyStateDir, $LogDir -Force | O
 $mutex = [System.Threading.Mutex]::new($false, "Local\VetoETLRecoveryBacklog")
 $ownsMutex = $false
 $transcriptStarted = $false
+$livePausedForDailyEtl = $false
+$ensureLiveMonitorAtExit = $false
 try {
     try {
         $ownsMutex = $mutex.WaitOne(0)
@@ -244,6 +247,7 @@ try {
         Write-Host "Another Veto ETL recovery runner is already active. Exiting cleanly."
         exit 0
     }
+    $ensureLiveMonitorAtExit = -not $DryRun
 
     $logPath = Join-Path $LogDir ("recovery_{0}.log" -f (Get-Date -Format "yyyyMMdd_HHmmss"))
     Start-Transcript -Path $logPath -Append | Out-Null
@@ -339,6 +343,15 @@ try {
         Write-Host "Dry-run prefetch plan: $($pendingDates.Count * 2) source/date jobs, max $MaxParallelDownloads parallel, each transfers=$DownloadTransfers/checkers=$DownloadCheckers."
         Write-Host "Dry run complete; no ETL or checkpoint files were changed."
         exit 0
+    }
+
+    if ($pendingDates.Count) {
+        if (-not (Test-Path -LiteralPath $LiveManager)) {
+            throw "Live-monitor manager is missing: $LiveManager"
+        }
+        Write-Host "[$(Get-Date -Format o)] Pausing the live monitor while daily source downloads and ETL use workstation resources."
+        $livePausedForDailyEtl = $true
+        & $LiveManager -Action Stop
     }
 
     if ($pendingDates.Count) {
@@ -449,6 +462,21 @@ try {
     }
     exit 1
 } finally {
+    $liveRestartFailure = $null
+    if ($ensureLiveMonitorAtExit) {
+        try {
+            $liveAction = if ($livePausedForDailyEtl) {
+                "Daily ETL work ended; restarting"
+            } else {
+                "Ensuring"
+            }
+            Write-Host "[$(Get-Date -Format o)] $liveAction the live monitor."
+            & $LiveManager -Action Start
+        } catch {
+            [Console]::Error.WriteLine("Live monitor restart failed: $($_.Exception.Message)")
+            $liveRestartFailure = $_.Exception
+        }
+    }
     if ($transcriptStarted) {
         try { Stop-Transcript | Out-Null } catch {}
     }
@@ -456,4 +484,7 @@ try {
         try { $mutex.ReleaseMutex() } catch {}
     }
     $mutex.Dispose()
+    if ($liveRestartFailure) {
+        throw "Live monitor was not restored after daily ETL: $($liveRestartFailure.Message)"
+    }
 }

@@ -15,6 +15,11 @@ $arguments = @("-m", "src.live_monitor.cli", "run")
 if ($NoSync) { $arguments += "--no-sync" }
 if ($Workers -gt 0) { $arguments += @("--workers", [string]$Workers) }
 
+$StopRequest = Join-Path $EtlRoot "output\live_monitor\stop.request"
+if (Test-Path -LiteralPath $StopRequest) {
+    Remove-Item -LiteralPath $StopRequest -Force
+}
+
 Set-Location -LiteralPath $EtlRoot
 do {
     & $Python @arguments

@@ -487,6 +487,7 @@ class LiveEngine:
 
     def run(self) -> None:
         with InstanceLock(self.config.state_dir / "live_monitor.lock"):
+            stop_request_path = self.config.state_dir / "stop.request"
             reset_files = self.store.ensure_channel_mapping_version(CHANNEL_MAPPING_VERSION)
             self._file_signatures = self.store.file_signatures()
             if reset_files:
@@ -535,7 +536,14 @@ class LiveEngine:
                     thread.start()
                 try:
                     while not self.stop_event.wait(1):
-                        pass
+                        if stop_request_path.exists():
+                            LOGGER.info("Graceful stop requested by %s", stop_request_path)
+                            self.store.event(
+                                "INFO",
+                                "lifecycle",
+                                "Graceful pause requested for the daily ETL",
+                            )
+                            self.stop_event.set()
                 finally:
                     self.stop_event.set()
                     server.stop()
