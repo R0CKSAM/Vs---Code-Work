@@ -723,6 +723,9 @@ def test_delivery_filters_are_bidirectional_and_empty_multiselects_stay_empty(
     assert "restricted:selected.size>0&&selected.size<inputs.length" in html
     assert "const idRows=creativeState.restricted" in html
     assert "const creativeRows=idState.restricted" in html
+    assert "oldInputs=[...menu.querySelectorAll('input[data-value]')]" in html
+    assert "wasAll=oldInputs.length>0&&old.size===oldInputs.length" in html
+    assert "if(wasAll||(!old.size&&!multiInitialized.has(id)))" in html
     assert "creativeState.selected.has(event.creative_title)" in html
     assert "idState.selected.has(event.event_id)" in html
     assert "if(!ids.size||!creatives.size)return [];" in html
@@ -736,6 +739,8 @@ def test_delivery_filters_are_bidirectional_and_empty_multiselects_stay_empty(
     assert "Clear all" in html
     assert "const inputs=this.optionInputs(selecting);" in html
     assert "event.target.matches('input[data-all]')" in html
+    assert "const asrunBaseBuildMulti=buildMulti;" in html
+    assert "if(existing.length&&selected.size===existing.length)" in html
 
 
 def test_render_dashboard_groups_sections_into_three_pages(
@@ -1197,7 +1202,11 @@ def test_render_dashboard_adds_interval_weighted_nct_story_performance(
     assert "scope:'India TV YouTube observed; no live stream'" in html
     assert "value:'â€”',total:null,live_videos:0" in html
     assert "scope:'No India TV YouTube collector'" in html
-    assert "return 'No India TV YouTube minute record';" in html
+    assert "?'Missing India TV YouTube collector minute'" in html
+    assert ":'No India TV YouTube collection for date';" in html
+    assert "function deliveryCoverageStatus(row){" in html
+    assert "'Coverage Status','Metric Basis'" in html
+    assert "sum of five one-minute concurrency samples" in html
     assert "return 'Outside India TV YouTube source range';" in html
     assert "value:'No India TV YouTube data'" not in html
     assert "row.fast.total,row.stream.total,row.amagi.total,row.youtube.scope,row.youtube.total" in html

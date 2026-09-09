@@ -3,6 +3,7 @@ param(
     [string]$OutDir = "Z:\Veto Logs Backup\DO NOT DELETE\source=Youtube",
     [int]$IntervalSeconds = 60,
     [int]$RollMinutes = 15,
+    [int]$Workers = 8,
     [int]$RestartDelaySeconds = 60
 )
 
@@ -38,6 +39,8 @@ $argsList = @(
     $channels,
     "--measurement-mode",
     "auto",
+    "--workers",
+    "$Workers",
     "--roll-minutes",
     "$RollMinutes"
 )

@@ -3,7 +3,8 @@ param(
     [string]$TaskName = "Veto YouTube YT4 Collector",
     [string]$OutDir = "Z:\Veto Logs Backup\DO NOT DELETE\source=Youtube",
     [int]$IntervalSeconds = 60,
-    [int]$RollMinutes = 15
+    [int]$RollMinutes = 15,
+    [int]$Workers = 8
 )
 
 $ErrorActionPreference = "Stop"
@@ -29,11 +30,14 @@ if ($IntervalSeconds -lt 1) {
 if ($RollMinutes -lt 1) {
     throw "RollMinutes must be at least 1."
 }
+if ($Workers -lt 1) {
+    throw "Workers must be at least 1."
+}
 if (-not (Test-Path -LiteralPath $OutDir)) {
     New-Item -ItemType Directory -Path $OutDir -Force | Out-Null
 }
 
-$arguments = '"{0}" --interval-seconds {1} --out-dir "{2}" --url-file "{3}" --measurement-mode auto --roll-minutes {4}' -f $script, $IntervalSeconds, $OutDir, $channels, $RollMinutes
+$arguments = '"{0}" --interval-seconds {1} --out-dir "{2}" --url-file "{3}" --measurement-mode auto --workers {4} --roll-minutes {5}' -f $script, $IntervalSeconds, $OutDir, $channels, $Workers, $RollMinutes
 $action = New-ScheduledTaskAction `
     -Execute $pythonw `
     -Argument $arguments `

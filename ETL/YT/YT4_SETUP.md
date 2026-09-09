@@ -29,6 +29,10 @@ starts it through hidden `pythonw.exe`, and restarts it one minute after a
 failure. This account choice is intentional: a `SYSTEM` task cannot normally
 see the user's mapped `Z:` drive. Viewer measurement is public-first through
 yt-dlp; an API key in `.env` is optional and is used only as a fallback.
+The launchers use eight workers for the eight configured channels so a slow
+channel does not routinely consume the next minute's collection slot. If a
+cycle still exceeds 60 seconds, the log records an explicit `COLLECTION GAP`
+warning; the collector never fabricates a missing concurrency value.
 
 Check it without opening the collector console:
 

@@ -2,7 +2,8 @@
 param(
     [string]$OutDir = "Z:\Veto Logs Backup\DO NOT DELETE\source=Youtube",
     [int]$IntervalSeconds = 60,
-    [int]$RollMinutes = 15
+    [int]$RollMinutes = 15,
+    [int]$Workers = 8
 )
 
 $ErrorActionPreference = "Stop"
@@ -27,18 +28,24 @@ if (-not (Test-Path -LiteralPath $channels)) {
 }
 
 $argsList = @(
-    $script,
+    ('"{0}"' -f $script),
     "--interval-seconds",
     "$IntervalSeconds",
     "--out-dir",
-    $OutDir,
+    ('"{0}"' -f $OutDir),
     "--url-file",
-    $channels,
+    ('"{0}"' -f $channels),
     "--measurement-mode",
     "auto",
+    "--workers",
+    "$Workers",
     "--roll-minutes",
     "$RollMinutes"
 )
 
 "$(Get-Date -Format o) starting YT4 -> $OutDir" | Add-Content -LiteralPath $log
-Start-Process -FilePath $pythonw -ArgumentList $argsList -WorkingDirectory $root -WindowStyle Hidden
+Start-Process `
+    -FilePath $pythonw `
+    -ArgumentList ($argsList -join " ") `
+    -WorkingDirectory $root `
+    -WindowStyle Hidden

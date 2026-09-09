@@ -215,6 +215,15 @@ def emit(message: str, prefix: str = "", error: bool = False) -> None:
             print(rendered, file=sys.stderr if error else sys.stdout)
 
 
+def emit_warning(message: str, prefix: str = "") -> None:
+    rendered = f"[{prefix}] {message}" if prefix else message
+    with PRINT_LOCK:
+        if LOGGER.handlers:
+            LOGGER.warning(rendered)
+        if CONSOLE_ENABLED:
+            print(rendered, file=sys.stderr)
+
+
 def _as_int(value) -> Optional[int]:
     if value is None:
         return None
@@ -1129,7 +1138,7 @@ def track_many(
     interval_sec: int = 60,
     out_dir: str = DEFAULT_OUTPUT_DIR,
     scan_limit: int = 10,
-    max_workers: int = 4,
+    max_workers: int = 8,
     discovery_every: int = 15,
     end_confirmations: int = 2,
     row_group_rows: int = 250,
@@ -1283,10 +1292,19 @@ def track_many(
                         runtime.stopped = True
                         emit("Stream has ended. Stopping this source.", prefix)
 
+                cycle_elapsed = time.perf_counter() - cycle_started
                 if multiple_sources:
                     emit(
                         f"Global cycle benchmark: "
-                        f"{time.perf_counter() - cycle_started:.3f}s for {len(active)} source(s)"
+                        f"{cycle_elapsed:.3f}s for {len(active)} source(s)"
+                    )
+                if cycle_elapsed >= interval_sec:
+                    skipped_intervals = max(1, int(cycle_elapsed // interval_sec))
+                    emit_warning(
+                        "COLLECTION GAP: cycle exceeded the "
+                        f"{interval_sec}s polling budget by "
+                        f"{cycle_elapsed - interval_sec:.3f}s; approximately "
+                        f"{skipped_intervals} minute sample(s) cannot be collected."
                     )
                 if once:
                     break
@@ -1310,7 +1328,7 @@ def track(
     interval_sec: int = 60,
     out_dir: str = DEFAULT_OUTPUT_DIR,
     scan_limit: int = 10,
-    max_workers: int = 4,
+    max_workers: int = 8,
     discovery_every: int = 15,
     end_confirmations: int = 2,
     row_group_rows: int = 250,
@@ -1436,7 +1454,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=[],
         help="UTF-8 text file containing one additional URL per line",
     )
-    parser.add_argument("--workers", type=positive_int, default=4)
+    parser.add_argument("--workers", type=positive_int, default=8)
     parser.add_argument("--discovery-every", type=positive_int, default=1)
     parser.add_argument("--end-confirmations", type=positive_int, default=2)
     parser.add_argument("--row-group-rows", type=positive_int, default=250)
