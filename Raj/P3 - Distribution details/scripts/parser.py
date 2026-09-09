@@ -130,6 +130,7 @@ def extract_date_from_filename(value: str) -> date | None:
         for fmt in ("%d-%b-%y", "%d-%B-%y", "%d-%b-%Y", "%d-%B-%Y", "%Y-%m-%d", "%d-%m-%y", "%d-%m-%Y"):
             try:
                 normalized = candidate.replace("_", "-").replace(" ", "-")
+                normalized = re.sub(r"(?i)-sept-", "-sep-", normalized)
                 return datetime.strptime(normalized, fmt).date()
             except ValueError:
                 continue

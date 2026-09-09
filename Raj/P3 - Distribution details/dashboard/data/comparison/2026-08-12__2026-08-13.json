@@ -910,6 +910,15 @@
   },
   {
     "headend_id": "HED000476",
+    "lcn": "139",
+    "week_from": "2026-08-12",
+    "week_from_channel": "NDTV MPCG",
+    "week_to": "2026-08-13",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000476",
     "lcn": "140",
     "week_from": "2026-08-12",
     "week_from_channel": "Bansal News",
@@ -958,6 +967,24 @@
     "lcn": "149",
     "week_from": "2026-08-12",
     "week_from_channel": "JanTv",
+    "week_to": "2026-08-13",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000476",
+    "lcn": "152",
+    "week_from": "2026-08-12",
+    "week_from_channel": "Good News Today",
+    "week_to": "2026-08-13",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000476",
+    "lcn": "154",
+    "week_from": "2026-08-12",
+    "week_from_channel": "R.Bharat",
     "week_to": "2026-08-13",
     "week_to_channel": null,
     "status": "Removed"

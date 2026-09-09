@@ -2296,6 +2296,15 @@
   },
   {
     "headend_id": "HED000504",
+    "lcn": "207",
+    "week_from": "2026-08-15",
+    "week_from_channel": null,
+    "week_to": "2026-08-16",
+    "week_to_channel": "Times Now Navbharat",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000504",
     "lcn": "208",
     "week_from": "2026-08-15",
     "week_from_channel": null,

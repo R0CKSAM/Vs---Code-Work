@@ -4204,6 +4204,15 @@
   },
   {
     "headend_id": "HED000504",
+    "lcn": "207",
+    "week_from": "2026-08-16",
+    "week_from_channel": "Times Now Navbharat",
+    "week_to": "2026-08-17",
+    "week_to_channel": null,
+    "status": "Removed"
+  },
+  {
+    "headend_id": "HED000504",
     "lcn": "208",
     "week_from": "2026-08-16",
     "week_from_channel": "Zee News",

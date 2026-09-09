@@ -62875,6 +62875,15 @@
   },
   {
     "headend_id": "HED000476",
+    "lcn": "139",
+    "week_from": "2026-08-11",
+    "week_from_channel": null,
+    "week_to": "2026-08-12",
+    "week_to_channel": "NDTV MPCG",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000476",
     "lcn": "140",
     "week_from": "2026-08-11",
     "week_from_channel": null,
@@ -62925,6 +62934,24 @@
     "week_from_channel": null,
     "week_to": "2026-08-12",
     "week_to_channel": "JanTv",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000476",
+    "lcn": "152",
+    "week_from": "2026-08-11",
+    "week_from_channel": null,
+    "week_to": "2026-08-12",
+    "week_to_channel": "Good News Today",
+    "status": "Added"
+  },
+  {
+    "headend_id": "HED000476",
+    "lcn": "154",
+    "week_from": "2026-08-11",
+    "week_from_channel": null,
+    "week_to": "2026-08-12",
+    "week_to_channel": "R.Bharat",
     "status": "Added"
   },
   {

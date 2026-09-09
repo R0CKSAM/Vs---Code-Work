@@ -1457,11 +1457,12 @@
   },
   {
     "group": [
+      "Euro Sport Hd",
       "Euro Sports Hd",
       "Eurosport Hd",
       "Eurosports Hd"
     ],
-    "suggested_canonical": "Euro Sports Hd"
+    "suggested_canonical": "Euro Sport Hd"
   },
   {
     "group": [
@@ -1802,6 +1803,13 @@
       "Hd Channel2"
     ],
     "suggested_canonical": "Hd Channel"
+  },
+  {
+    "group": [
+      "Hd Cn",
+      "Hd Cn +"
+    ],
+    "suggested_canonical": "Hd Cn"
   },
   {
     "group": [
@@ -3904,6 +3912,13 @@
       "News18 Mp Chhattisgarh"
     ],
     "suggested_canonical": "News 18 Mp & Chattisgarh"
+  },
+  {
+    "group": [
+      "News 18 Mp/Ch",
+      "News18 Mp/Ch"
+    ],
+    "suggested_canonical": "News 18 Mp/Ch"
   },
   {
     "group": [

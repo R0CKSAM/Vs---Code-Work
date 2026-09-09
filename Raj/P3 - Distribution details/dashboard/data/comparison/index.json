@@ -297,13 +297,13 @@
     "week_from": "2026-08-11",
     "week_to": "2026-08-12",
     "file": "./data/comparison/2026-08-11__2026-08-12.json",
-    "record_count": 7164
+    "record_count": 7167
   },
   {
     "week_from": "2026-08-12",
     "week_to": "2026-08-13",
     "file": "./data/comparison/2026-08-12__2026-08-13.json",
-    "record_count": 526
+    "record_count": 529
   },
   {
     "week_from": "2026-08-13",
@@ -321,13 +321,13 @@
     "week_from": "2026-08-15",
     "week_to": "2026-08-16",
     "file": "./data/comparison/2026-08-15__2026-08-16.json",
-    "record_count": 315
+    "record_count": 316
   },
   {
     "week_from": "2026-08-16",
     "week_to": "2026-08-17",
     "file": "./data/comparison/2026-08-16__2026-08-17.json",
-    "record_count": 688
+    "record_count": 689
   },
   {
     "week_from": "2026-08-17",
@@ -375,18 +375,54 @@
     "week_from": "2026-08-24",
     "week_to": "2026-08-25",
     "file": "./data/comparison/2026-08-24__2026-08-25.json",
-    "record_count": 16239
+    "record_count": 16344
   },
   {
     "week_from": "2026-08-25",
+    "week_to": "2026-08-26",
+    "file": "./data/comparison/2026-08-25__2026-08-26.json",
+    "record_count": 9088
+  },
+  {
+    "week_from": "2026-08-26",
+    "week_to": "2026-08-27",
+    "file": "./data/comparison/2026-08-26__2026-08-27.json",
+    "record_count": 3173
+  },
+  {
+    "week_from": "2026-08-27",
+    "week_to": "2026-08-28",
+    "file": "./data/comparison/2026-08-27__2026-08-28.json",
+    "record_count": 3633
+  },
+  {
+    "week_from": "2026-08-28",
+    "week_to": "2026-08-29",
+    "file": "./data/comparison/2026-08-28__2026-08-29.json",
+    "record_count": 3544
+  },
+  {
+    "week_from": "2026-08-29",
+    "week_to": "2026-08-30",
+    "file": "./data/comparison/2026-08-29__2026-08-30.json",
+    "record_count": 1914
+  },
+  {
+    "week_from": "2026-08-30",
     "week_to": "2026-08-31",
-    "file": "./data/comparison/2026-08-25__2026-08-31.json",
-    "record_count": 8082
+    "file": "./data/comparison/2026-08-30__2026-08-31.json",
+    "record_count": 7938
   },
   {
     "week_from": "2026-08-31",
+    "week_to": "2026-09-01",
+    "file": "./data/comparison/2026-08-31__2026-09-01.json",
+    "record_count": 18750
+  },
+  {
+    "week_from": "2026-09-01",
     "week_to": "2027-07-18",
-    "file": "./data/comparison/2026-08-31__2027-07-18.json",
-    "record_count": 115
+    "file": "./data/comparison/2026-09-01__2027-07-18.json",
+    "record_count": 10988
   }
 ]

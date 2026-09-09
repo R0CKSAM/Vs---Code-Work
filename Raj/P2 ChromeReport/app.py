@@ -3258,57 +3258,62 @@ function getChannelReportTargets() {
 let neighbourCache = new Map();
 let neighbourCacheReportRef = null;
 
-function getNeighbourForChannelInWeek(channelName, market, headend, week) {
-  if (!channelName || !market || !headend || !week) return "";
+function getChannelNeighboursInWeek(channelName, market, headend, week, city, recordMsoType, targetFrequency) {
+  const empty = { above: "", below: "" };
+  if (!channelName || !market || !headend || !week) return empty;
   const sourceRecords = (typeof report !== "undefined" && report.records) ? report.records : [];
-  if (!sourceRecords.length) return "";
-
   if (neighbourCacheReportRef !== sourceRecords) {
     neighbourCache.clear();
     neighbourCacheReportRef = sourceRecords;
   }
-
-  const msoType = (channelReportState && channelReportState.mso_type)
-    ? String(channelReportState.mso_type).trim().toUpperCase()
-    : "";
-  const cacheKey = `${channelName.toUpperCase()}||${market.trim()}||${headend.trim()}||${msoType}||${week}`;
-  if (neighbourCache.has(cacheKey)) {
-    return neighbourCache.get(cacheKey);
+  const channelKey = String(channelName).trim().toUpperCase();
+  const msoType = String(recordMsoType || "").trim().toUpperCase();
+  const cityKey = String(city || "").trim();
+  const cacheKey = JSON.stringify([channelKey, market.trim(), headend.trim(), cityKey, msoType, week, targetFrequency]);
+  if (neighbourCache.has(cacheKey)) return neighbourCache.get(cacheKey);
+  const validFrequency = (value) => value !== null && value !== undefined
+    && String(value).trim() !== "" && Number.isFinite(Number(value));
+  const lineup = sourceRecords.filter((r) =>
+    String(r.market || "").trim() === market.trim()
+    && String(r.head_end || "").trim() === headend.trim()
+    && String(r.city || "").trim() === cityKey
+    && String(r.mso_type || "").trim().toUpperCase() === msoType
+    && String(r.channel_name || "").trim()
+    && String(r.channel_name).trim().toUpperCase() !== "NA"
+    && validFrequency(r.frequencies?.[week])
+  );
+  const target = lineup.find((r) => String(r.channel_name).trim().toUpperCase() === channelKey
+    && (targetFrequency === undefined || (validFrequency(targetFrequency)
+      && Number(r.frequencies[week]) === Number(targetFrequency))));
+  if (!target) {
+    neighbourCache.set(cacheKey, empty);
+    return empty;
   }
-
-  const headendRecords = sourceRecords.filter((r) => {
-    if (String(r.market || "").trim() !== market) return false;
-    if (String(r.head_end || "").trim() !== headend) return false;
-    if (msoType) {
-      if (String(r.mso_type || "").trim().toUpperCase() !== msoType) return false;
-    } else {
-      if (String(r.mso_type || "").trim().toUpperCase() === "DTH") return false;
+  const frequency = Number(target.frequencies[week]);
+  let aboveFrequency = -Infinity;
+  let belowFrequency = Infinity;
+  const neighbours = { above: "", below: "" };
+  // Choose the closest occupied LCN on each side, skipping gaps and the channel itself.
+  lineup.forEach((r) => {
+    const candidate = String(r.channel_name).trim();
+    if (candidate.toUpperCase() === channelKey) return;
+    const candidateFrequency = Number(r.frequencies[week]);
+    if (candidateFrequency < frequency && candidateFrequency > aboveFrequency) {
+      aboveFrequency = candidateFrequency;
+      neighbours.above = candidate;
     }
-    return true;
-  });
-
-  if (!headendRecords.length) {
-    neighbourCache.set(cacheKey, "");
-    return "";
-  }
-
-  const sorted = headendRecords
-    .filter((r) => r.frequencies?.[week] !== null && r.frequencies?.[week] !== undefined && r.frequencies?.[week] !== "" && String(r.frequencies?.[week]).toUpperCase() !== "NA")
-    .sort((a, b) => Number(a.frequencies[week]) - Number(b.frequencies[week]));
-
-  sorted.forEach((r, idx) => {
-    const ch = String(r.channel_name || "").trim();
-    let neighbour = "";
-    if (idx > 0) {
-      neighbour = String(sorted[idx - 1].channel_name || "").trim();
-    } else if (idx + 1 < sorted.length) {
-      neighbour = String(sorted[idx + 1].channel_name || "").trim();
+    if (candidateFrequency > frequency && candidateFrequency < belowFrequency) {
+      belowFrequency = candidateFrequency;
+      neighbours.below = candidate;
     }
-    const k = `${ch.toUpperCase()}||${market.trim()}||${headend.trim()}||${msoType}||${week}`;
-    neighbourCache.set(k, neighbour);
   });
+  neighbourCache.set(cacheKey, neighbours);
+  return neighbours;
+}
 
-  return neighbourCache.get(cacheKey) || "";
+function getNeighbourForChannelInWeek(channelName, market, headend, week, city, recordMsoType) {
+  const neighbours = getChannelNeighboursInWeek(channelName, market, headend, week, city, recordMsoType);
+  return neighbours.above || neighbours.below;
 }
 
 let headendAvailCache = new Map();
@@ -3365,7 +3370,7 @@ function buildChannelReportRows(channel, weeks, options = {}) {
     const market = String(record.market || "").trim();
     const city = String(record.city || "").trim();
     const headend = String(record.head_end || "").trim();
-    const key = `${market}||${city}||${headend}`;
+    const key = JSON.stringify([market, city, headend, String(record.mso_type || "").trim().toUpperCase()]);
     if (!grouped.has(key)) grouped.set(key, record);
   });
   return Array.from(grouped.values())
@@ -3391,8 +3396,8 @@ function buildChannelReportRows(channel, weeks, options = {}) {
         && currRankValid
         && prevRankNum === currRankNum;
 
-      const prevNeighbour = getNeighbourForChannelInWeek(channel, record.market, record.head_end, previousWeek);
-      const currNeighbour = getNeighbourForChannelInWeek(channel, record.market, record.head_end, currentWeek);
+      const prevNeighbour = getNeighbourForChannelInWeek(channel, record.market, record.head_end, previousWeek, record.city, record.mso_type);
+      const currNeighbour = getNeighbourForChannelInWeek(channel, record.market, record.head_end, currentWeek, record.city, record.mso_type);
       const prevNeighbourValid = prevNeighbour && prevNeighbour.toUpperCase() !== "NA";
       const currNeighbourValid = currNeighbour && currNeighbour.toUpperCase() !== "NA";
       const hasNeighbourChange = prevNeighbourValid && currNeighbourValid && prevNeighbour.toUpperCase() !== currNeighbour.toUpperCase();
@@ -3404,6 +3409,7 @@ function buildChannelReportRows(channel, weeks, options = {}) {
         market: record.market,
         city: record.city,
         head_end: record.head_end,
+        mso_type: record.mso_type,
         previousFrequency,
         currentFrequency,
         previousRank,
@@ -3478,47 +3484,11 @@ function getSequentialTrendStyle(weeks, values, index, styleResolver, emptyFallb
   const style = styleResolver(previousValue, currentValue);
   return style === "neutral" && !currentMissing ? filledFallback : style;
 }
-function getChannelPlacementInWeek(channelName, market, headend, week) {
-  if (!channelName || !market || !headend || !week) return "";
-  const sourceRecords = (typeof report !== "undefined" && report.records) ? report.records : [];
-  if (!sourceRecords.length) return "";
-
-  const msoType = (channelReportState && channelReportState.mso_type)
-    ? String(channelReportState.mso_type).trim().toUpperCase()
-    : "";
-
-  const headendRecords = sourceRecords.filter((r) => {
-    if (String(r.market || "").trim() !== market) return false;
-    if (String(r.head_end || "").trim() !== headend) return false;
-    if (msoType) {
-      if (String(r.mso_type || "").trim().toUpperCase() !== msoType) return false;
-    } else {
-      if (String(r.mso_type || "").trim().toUpperCase() === "DTH") return false;
-    }
-    return true;
-  });
-
-  if (!headendRecords.length) return "";
-
-  const sorted = headendRecords
-    .filter((r) => r.frequencies?.[week] !== null && r.frequencies?.[week] !== undefined && r.frequencies?.[week] !== "" && String(r.frequencies?.[week]).toUpperCase() !== "NA")
-    .sort((a, b) => Number(a.frequencies[week]) - Number(b.frequencies[week]));
-
-  const idx = sorted.findIndex((r) => String(r.channel_name || "").trim().toUpperCase() === String(channelName).trim().toUpperCase());
-  const isSelf = String(channelName).trim().toUpperCase() === "INDIA TV";
-  const selfRef = isSelf ? "us" : "it";
-  if (idx < 0) return `no channel from the genre was placed beside ${selfRef}`;
-
-  const prev = idx > 0 ? String(sorted[idx - 1].channel_name || "").trim() : "";
-  const next = idx + 1 < sorted.length ? String(sorted[idx + 1].channel_name || "").trim() : "";
-
-  if (prev && next) {
-    return `between ${formatChannelLabel(prev)} & ${formatChannelLabel(next)}`;
-  } else if (prev) {
-    return `beside ${formatChannelLabel(prev)}`;
-  } else if (next) {
-    return `beside ${formatChannelLabel(next)}`;
-  }
+function getChannelPlacementInWeek(channelName, market, headend, week, city, recordMsoType, targetFrequency) {
+  const { above, below } = getChannelNeighboursInWeek(channelName, market, headend, week, city, recordMsoType, targetFrequency);
+  if (above && below) return `between ${formatChannelLabel(above)} & ${formatChannelLabel(below)}`;
+  if (above || below) return `beside ${formatChannelLabel(above || below)}`;
+  const selfRef = String(channelName).trim().toUpperCase() === "INDIA TV" ? "us" : "it";
   return `no channel from the genre was placed beside ${selfRef}`;
 }
 
@@ -3559,8 +3529,8 @@ function buildChannelReportRemark(row, weeks) {
     remark += ` and ${rankVerb} from ${prevRank} to ${currRank}`;
   }
 
-  const prevPlacement = getChannelPlacementInWeek(channel, row.market, row.head_end, previousWeek);
-  const currPlacement = getChannelPlacementInWeek(channel, row.market, row.head_end, currentWeek);
+  const prevPlacement = getChannelPlacementInWeek(channel, row.market, row.head_end, previousWeek, row.city, row.mso_type, row.previousFrequency);
+  const currPlacement = getChannelPlacementInWeek(channel, row.market, row.head_end, currentWeek, row.city, row.mso_type, row.currentFrequency);
 
   if (prevPlacement.startsWith("no channel")) {
     remark += `, previously ${prevPlacement}, now ${selfRefCapital} ${currPlacement}`;
