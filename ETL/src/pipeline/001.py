@@ -27,6 +27,7 @@ DEFAULT_COMPRESSION = "zstd"
 DEFAULT_COMPRESSION_LEVEL = int(os.getenv("VG_ETL_001_COMPRESSION_LEVEL", "3"))
 DEFAULT_ROW_BUFFER  = 100_000
 DEFAULT_ROW_GROUP   = 200_000
+PROCESS_POOL_SHUTDOWN_TIMEOUT = int(os.getenv("VG_ETL_001_POOL_SHUTDOWN_TIMEOUT", "30"))
 PLACEHOLDERS        = {"-", "^"}
 CONVERSION_VERSION  = 4
 
@@ -49,6 +50,40 @@ def resolve_prefs_file() -> Path:
 
 
 PREFS_FILE = resolve_prefs_file()
+
+
+class BoundedProcessPoolExecutor(ProcessPoolExecutor):
+    """Process pool that cannot hold the daily pipeline open indefinitely."""
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        workers = list((getattr(self, "_processes", None) or {}).values())
+        self.shutdown(wait=False, cancel_futures=True)
+
+        deadline = time.monotonic() + max(1, PROCESS_POOL_SHUTDOWN_TIMEOUT)
+        for worker in workers:
+            remaining = max(0.0, deadline - time.monotonic())
+            worker.join(remaining)
+
+        stragglers = [worker for worker in workers if worker.is_alive()]
+        if stragglers:
+            pids = ", ".join(str(worker.pid) for worker in stragglers)
+            print(
+                f"  Warning: terminating {len(stragglers)} worker(s) that did not "
+                f"exit after {PROCESS_POOL_SHUTDOWN_TIMEOUT}s: {pids}",
+                flush=True,
+            )
+            for worker in stragglers:
+                worker.terminate()
+            for worker in stragglers:
+                worker.join(5)
+                if worker.is_alive():
+                    worker.kill()
+                    worker.join(5)
+
+        manager = getattr(self, "_executor_manager_thread", None)
+        if manager is not None and manager.is_alive():
+            manager.join(5)
+        return False
 
 
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -892,7 +927,7 @@ def run_streaming(cfg: dict):
         dynamic_ncols=True,
     )
 
-    with ProcessPoolExecutor(max_workers=cfg["workers"]) as pool:
+    with BoundedProcessPoolExecutor(max_workers=cfg["workers"]) as pool:
         chunk: list[str] = []
         for path in iter_gz_files_streaming(input_dir):
             chunk.append(path)
@@ -1064,7 +1099,7 @@ def run(cfg: dict):
         ),
     )
 
-    with ProcessPoolExecutor(max_workers=cfg["workers"]) as pool:
+    with BoundedProcessPoolExecutor(max_workers=cfg["workers"]) as pool:
         futs = {pool.submit(_convert_batch, t): t for t in tasks}
         for fut in as_completed(futs):
             task        = futs[fut]

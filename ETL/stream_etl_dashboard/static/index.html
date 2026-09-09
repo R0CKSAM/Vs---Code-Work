@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Live Concurrency</title>
+  <script src="/static/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<main>
+  <section class="hero">
+    <h1>Live Concurrency <span>—</span> <strong id="streamTitle">Loading...</strong></h1>
+    <p>Distinct client IPs per minute (concurrent viewers) · auto-refreshes every 5s</p>
+    <div class="stream-buttons" id="streamButtons"></div>
+  </section>
+
+  <section class="cards">
+    <article class="card"><div class="label">CURRENT VIEWERS</div><div class="value" id="currentViewers">—</div></article>
+    <article class="card"><div class="label">PEAK (SHOWN WINDOW)</div><div class="value" id="peakViewers">—</div></article>
+    <article class="card"><div class="label">DATA VERIFIED THROUGH</div><div class="value yellow" id="dataThrough">—</div></article>
+    <article class="card"><div class="label">SYNC STATUS</div><div class="value" id="syncStatus">Initializing...</div></article>
+  </section>
+
+  <section class="panel chart-panel">
+    <div class="range-buttons" id="rangeButtons">
+      <button data-hours="1" class="active">Last 1h</button><button data-hours="3">Last 3h</button>
+      <button data-hours="6">Last 6h</button><button data-hours="24">Full day</button>
+    </div>
+    <div class="chart-box"><canvas id="concurrencyChart"></canvas><div class="empty-state" id="chartEmpty">No data for this path yet</div></div>
+    <div class="refresh-status" id="health">Connecting to pipeline...</div>
+  </section>
+
+  <section class="panel table-panel">
+    <div class="panel-title-row"><h2>Minute-by-minute (newest first)</h2><a class="button" id="export">Export CSV</a></div>
+    <div class="table-wrap minute-wrap"><table>
+      <thead><tr><th>TIME (IST)</th><th>CONCURRENCY (DISTINCT CLIIP)</th><th>REQUESTS</th><th>4XX</th><th>5XX</th><th>STATUS</th></tr></thead>
+      <tbody id="minutes"><tr><td colspan="6">Loading...</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <div class="section-heading"><h2>Additional analytics</h2><p>Traffic, errors, geography, and ETL processing details</p></div>
+  <section class="analytics-grid">
+    <article class="panel compact-chart"><h2>Requests per minute</h2><canvas id="trafficChart"></canvas></article>
+    <article class="panel compact-chart"><h2>HTTP errors</h2><canvas id="errorChart"></canvas></article>
+  </section>
+  <section class="analytics-grid tables-grid">
+    <article class="panel"><h2>Viewer geography</h2><div class="table-wrap"><table><thead><tr><th>STATE / REGION</th><th>VIEWERS</th><th>REQUESTS</th><th>SHARE</th></tr></thead><tbody id="geography"></tbody></table></div></article>
+    <article class="panel"><h2>Pipeline objects</h2><div class="table-wrap"><table><thead><tr><th>OBJECT</th><th>STATUS</th><th>RECORDS</th><th>TIME</th></tr></thead><tbody id="pipeline"></tbody></table></div></article>
+  </section>
+</main>
+<script src="/static/app.js"></script>
+</body>
+</html>

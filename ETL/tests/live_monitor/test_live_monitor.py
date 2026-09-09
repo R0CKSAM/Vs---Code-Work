@@ -7,7 +7,12 @@ from pathlib import Path
 from urllib.request import urlopen
 from urllib.error import HTTPError
 
-from ETL.src.live_monitor.parser import IST, parse_gzip_file, query_identifiers
+from ETL.src.live_monitor.parser import (
+    IST,
+    inferred_resolution,
+    parse_gzip_file,
+    query_identifiers,
+)
 from ETL.src.live_monitor.enrichment import decoded_asn_dimensions, normalize_ua
 from ETL.src.live_monitor.config import LiveConfig
 from ETL.src.live_monitor.engine import LiveEngine, atomic_write_json
@@ -88,6 +93,14 @@ def test_query_identifiers_supports_fully_encoded_query_strings() -> None:
         "device_id%3Ddevice-123%26session_id%3Dsession-456"
     ) == ("device-123", "session-456")
     assert query_identifiers("-") == ("", "")
+
+
+def test_resolution_inference_requires_resolution_evidence_in_path() -> None:
+    assert inferred_resolution("channel/live_216p/chunks.m3u8") == "216p"
+    assert inferred_resolution("asset_1920x1080_42.ts") == "1080p"
+    assert inferred_resolution("channel/720p60/segment.m4s") == "720p"
+    assert inferred_resolution("channel/main_1_10714360.ts") == "Unknown"
+    assert inferred_resolution("channel/main_10.m3u8") == "Unknown"
 
 
 def test_live_enrichment_normalizes_ua_and_resolves_asn_cache() -> None:

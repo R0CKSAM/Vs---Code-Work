@@ -1490,6 +1490,7 @@ def main() -> None:
             "VG_ETL_DUCKDB_MAX_TEMP": str(args.stage_max_temp_size or "40GB"),
             "PYTHONIOENCODING": "utf-8",
             "PYTHONUTF8": "1",
+            "PYTHONUNBUFFERED": "1",
         }
     )
 

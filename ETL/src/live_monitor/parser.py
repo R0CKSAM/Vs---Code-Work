@@ -129,6 +129,22 @@ def inferred_client(user_agent: object) -> tuple[str, str]:
     return "Other / inferred", "Other / inferred"
 
 
+def inferred_resolution(request_path: str) -> str:
+    """Return a resolution only when the URL exposes a credible frame height."""
+    lowered = str(request_path or "").casefold()
+    explicit = re.search(r"(?<!\d)(\d{3,4})p(?:\d{2,3})?(?![a-z0-9])", lowered)
+    dimensions = re.search(r"(?<!\d)\d{2,4}x(\d{3,4})(?!\d)", lowered)
+    legacy = re.search(
+        r"(?<!\d)(2160|1440|1080|720|576|540|480|432|360|288|240|216)(?!\d)",
+        lowered,
+    )
+    match = explicit or dimensions or legacy
+    if not match:
+        return "Unknown"
+    height = int(match.group(1))
+    return f"{height}p" if 144 <= height <= 4320 else "Unknown"
+
+
 def request_dimensions(row: dict, request_path: str, query: dict[str, str]) -> dict[str, str]:
     status = integer_value(row.get("statusCode"))
     status_class = f"{status // 100}xx" if 100 <= status < 600 else "Unknown"
@@ -163,8 +179,7 @@ def request_dimensions(row: dict, request_path: str, query: dict[str, str]) -> d
     inferred_platform, inferred_device = inferred_client(row.get("UA"))
     platform = dimension_value(query.get("platform"), inferred_platform)
     device = dimension_value(query.get("device"), inferred_device)
-    resolution_match = re.search(r"(?<!\d)(2160|1440|1080|720|576|540|480|360|240)p?(?!\d)", request_path.casefold())
-    resolution = f"{resolution_match.group(1)}p" if resolution_match else "Unknown"
+    resolution = inferred_resolution(request_path)
     dimensions = {
         "status": status_class,
         "cache": cache,

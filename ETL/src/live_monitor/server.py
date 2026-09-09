@@ -47,7 +47,7 @@ class SnapshotServer:
                 if self.path == "/favicon.ico":
                     return self._send(204, "image/x-icon", b"")
                 if self.path == "/":
-                    return self._send(200, "text/html; charset=utf-8", PAGE.encode())
+                    return self._redirect("/war-room")
                 if self.path in {"/war-room", "/war-room/"}:
                     return self._send(
                         200, "text/html; charset=utf-8", WAR_ROOM_PAGE.encode()
@@ -79,6 +79,13 @@ class SnapshotServer:
                 self.send_header("X-Content-Type-Options", "nosniff")
                 self.end_headers()
                 self.wfile.write(body)
+
+            def _redirect(self, location: str):
+                self.send_response(302)
+                self.send_header("Location", location)
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("Content-Length", "0")
+                self.end_headers()
 
             def log_message(self, _format, *_args):
                 return

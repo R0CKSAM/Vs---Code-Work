@@ -62,3 +62,15 @@ def test_fast_latency_threads_are_capped_for_high_volume_geo_aggregation() -> No
     source = (ETL_ROOT / "src" / "orchestrator" / "run_pipeline.py").read_text(encoding="utf-8")
     assert 'if latency_source == "fast":' in source
     assert "latency_step_threads = min(latency_step_threads, 2)" in source
+
+
+def test_etl_converter_cannot_wait_forever_for_finished_workers() -> None:
+    converter = (ETL_ROOT / "src" / "pipeline" / "001.py").read_text(encoding="utf-8")
+    orchestrator = (
+        ETL_ROOT / "src" / "orchestrator" / "run_pipeline.py"
+    ).read_text(encoding="utf-8")
+
+    assert "class BoundedProcessPoolExecutor" in converter
+    assert converter.count("with BoundedProcessPoolExecutor(") == 2
+    assert "worker.terminate()" in converter
+    assert '"PYTHONUNBUFFERED": "1"' in orchestrator
