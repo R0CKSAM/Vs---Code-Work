@@ -1624,7 +1624,6 @@
           <div class="report-field">
             <label for="reportChangeStatus">Change Status</label>
             <select id="reportChangeStatus">
-              <option value="All">All</option>
               <option value="Change">Change</option>
               <option value="No Change">No Change</option>
             </select>
@@ -2150,7 +2149,7 @@
         state.reportModal.selectedChannels = [...allReportChannels()];
       }
       state.reportModal.isOpen = true;
-      elements.reportChangeStatus.value = elements.reportChangeStatus.value || "All";
+      elements.reportChangeStatus.value = "Change";
       setReportStatus();
       renderReportLocationList();
       renderReportChannelList();
@@ -2325,7 +2324,7 @@
       return [fromWeek, toWeek];
     }
 
-    function task1SectionRowsForExport(fromWeek, toWeek, selectedLocations, selectedChannels) {
+    function task1SectionRowsForExport(fromWeek, toWeek, selectedLocations, selectedChannels, changeFilter) {
       const selectedLocationSet = new Set(selectedLocations.map(value => displayValue(value)));
       const selectedChannelSet = new Set(selectedChannels.map(value => canonicalChannelDisplay(value)));
       const weeks = reportWeeksInRange(fromWeek, toWeek);
@@ -2349,7 +2348,7 @@
         });
 
         const groupedRows = table3GroupedRows(filteredRows, channelType, weeks)
-          .filter(row => row.change_status === "Change")
+          .filter(row => row.change_status === changeFilter)
           .map(row => ({
             State: displayValue(row.state),
             "BARC Market": displayValue(row.barc_market),
@@ -2593,7 +2592,7 @@
       const toWeek = elements.reportToWeek.value;
       const locations = [...state.reportModal.selectedLocations];
       const channels = [...state.reportModal.selectedChannels];
-      const changeFilter = elements.reportChangeStatus.value || "All";
+      const changeFilter = elements.reportChangeStatus.value || "Change";
 
       if (!fromWeek || !toWeek || compareWeekLabels(fromWeek, toWeek) > 0 || !locations.length || !channels.length) {
         setReportStatus("Please select a valid From Week, To Week, at least one location, and at least one channel.", "error");
@@ -2601,8 +2600,7 @@
         return;
       }
 
-      const reportRows = reportChannelRowsForExport(fromWeek, toWeek, locations, channels, changeFilter)
-        .filter(row => row["Change Status"] !== "No Change");
+      const reportRows = reportChannelRowsForExport(fromWeek, toWeek, locations, channels, changeFilter);
       if (!reportRows.length) {
         setReportStatus("No data available for the selected filters.", "error");
         return;
@@ -2619,7 +2617,7 @@
       const rangeToDate = formatReportDate(reportDateForWeek(toWeek, "max"));
       const selectedLocationsLabel = locations.join(", ");
       const selectedChannelsLabel = channels.join(", ");
-      const task1SectionData = task1SectionRowsForExport(fromWeek, toWeek, locations, channels);
+      const task1SectionData = task1SectionRowsForExport(fromWeek, toWeek, locations, channels, changeFilter);
       const stbSheetData = reportStbRowsForExport(fromWeek, toWeek, locations, changeFilter);
 
       try {

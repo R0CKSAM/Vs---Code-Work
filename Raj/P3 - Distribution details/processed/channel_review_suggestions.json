@@ -6216,6 +6216,13 @@
   },
   {
     "group": [
+      "Zee Bharat(Alacrte)",
+      "Zee Bharat(Alarte)"
+    ],
+    "suggested_canonical": "Zee Bharat(Alacrte)"
+  },
+  {
+    "group": [
       "Zee Bihar & Jarkhand",
       "Zee Bihar & Jharkhand",
       "Zee Bihar /Jharkhand",
@@ -6313,6 +6320,13 @@
       "Zee Delhi Ncr/ Hr"
     ],
     "suggested_canonical": "Zee Delhi Ncr Hr"
+  },
+  {
+    "group": [
+      "Zee Dl Ncr(Acarte)",
+      "Zee Dl Ncr(Alcarte)"
+    ],
+    "suggested_canonical": "Zee Dl Ncr(Acarte)"
   },
   {
     "group": [

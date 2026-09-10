@@ -48,6 +48,19 @@ LCN_HEADER_ALIASES = {"lcn", "lcnno", "lcnnumber"}
 CHANNEL_HEADER_ALIASES = {"channel", "channelname", "channelnames"}
 POSITION_HEADER_ALIASES = {"position", "channelposition", "channel_position"}
 NULL_LIKE_VALUES = {"", "na", "n/a", "none", "null", "-"}
+NETWORK_ALIASES = {
+    "nxt": "NXT Digital",
+    "nxt digital": "NXT Digital",
+    "nxt digitel": "NXT Digital",
+    "nxt digital ltd": "NXT Digital",
+}
+HEADEND_ALIASES = {
+    "guwahati": "Guwahati & Shilchar",
+    "guwahati shilchar": "Guwahati & Shilchar",
+}
+STATE_ALIASES = {
+    "bhopal": "Madhya Pradesh",
+}
 
 
 @dataclass(slots=True)
@@ -76,6 +89,30 @@ def clean_text(value: Any) -> str | None:
     if not text or text.lower() in NULL_LIKE_VALUES:
         return None
     return text
+
+
+def normalize_network_name(value: Any) -> str | None:
+    text = clean_text(value)
+    if text is None:
+        return None
+    key = re.sub(r"[^a-z0-9]+", " ", text.casefold()).strip()
+    return NETWORK_ALIASES.get(key, text)
+
+
+def normalize_headend_name(value: Any) -> str | None:
+    text = clean_text(value)
+    if text is None:
+        return None
+    key = re.sub(r"[^a-z0-9]+", " ", text.casefold()).strip()
+    return HEADEND_ALIASES.get(key, text)
+
+
+def normalize_state_name(value: Any, sheet_name: str | None = None) -> str | None:
+    text = clean_text(value) or clean_text(sheet_name)
+    if text is None:
+        return None
+    key = re.sub(r"[^a-z0-9]+", " ", text.casefold()).strip()
+    return STATE_ALIASES.get(key, text)
 
 
 def clean_stb(value: Any) -> int | None:
@@ -203,9 +240,15 @@ def parse_sheet(sheet_name: str, rows: list[list[Any]]) -> tuple[list[dict[str, 
         metadata = {
             "Sheet_Name": sheet_name,
             "Week": clean_week(get_cell(rows, label_rows.get("Dated"), block_start)),
-            "Network_Name": clean_text(get_cell(rows, label_rows.get("Network_Name"), block_start)),
-            "Headend": clean_text(get_cell(rows, label_rows.get("Headend"), block_start)),
-            "State": clean_text(get_cell(rows, label_rows.get("State"), block_start)) or sheet_name,
+            "Network_Name": normalize_network_name(
+                get_cell(rows, label_rows.get("Network_Name"), block_start)
+            ),
+            "Headend": normalize_headend_name(
+                get_cell(rows, label_rows.get("Headend"), block_start)
+            ),
+            "State": normalize_state_name(
+                get_cell(rows, label_rows.get("State"), block_start), sheet_name
+            ),
             "BARC_Market": clean_text(get_cell(rows, label_rows.get("BARC_Market"), block_start)),
             "STB": clean_stb(get_cell(rows, label_rows.get("STB"), block_start)),
             "Landing_Channel": clean_text(get_cell(rows, label_rows.get("Landing_Channel"), block_start)),

@@ -66,6 +66,13 @@ STATE_ALIASES = {
     "goa": ("Goa", "GA"),
 }
 
+NETWORK_ALIASES = {
+    "nxt": "NXT Digital",
+    "nxt digital": "NXT Digital",
+    "nxt digitel": "NXT Digital",
+    "nxt digital ltd": "NXT Digital",
+}
+
 
 def normalize_text(value: str | None) -> str:
     if value is None:
@@ -75,6 +82,13 @@ def normalize_text(value: str | None) -> str:
     text = text.replace("&", "and")
     text = re.sub(r"[^a-z0-9]+", " ", text)
     return re.sub(r"\s+", " ", text).strip()
+
+
+def normalize_network_name(value: str | None) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    return NETWORK_ALIASES.get(normalize_text(text), text)
 
 
 def state_lookup_key(value: str | None) -> str:
@@ -145,7 +159,7 @@ def generate_headend_id(network_name: str | None, headend_location: str | None, 
     normalized_state = normalize_state(state)
     raw_key = "||".join(
         [
-            normalize_text(network_name),
+            normalize_text(normalize_network_name(network_name)),
             normalize_text(headend_location),
             normalize_text(normalized_state),
         ]

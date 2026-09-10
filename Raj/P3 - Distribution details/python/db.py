@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
+
+from utils import normalize_headend_name, normalize_network_name, normalize_state_name
 
 LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +38,9 @@ CHANNEL_CSV_COLUMNS = [
 def normalize_key_part(value: Any) -> str:
     if value is None or pd.isna(value):
         return ""
-    return str(value).strip().casefold()
+    text = str(value).strip().casefold().replace("&", " and ")
+    text = re.sub(r"[^a-z0-9]+", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
 
 
 def build_business_key(
@@ -45,9 +50,9 @@ def build_business_key(
     barc_market: Any,
 ) -> tuple[str, str, str, str]:
     return (
-        normalize_key_part(network_name),
-        normalize_key_part(headend),
-        normalize_key_part(state),
+        normalize_key_part(normalize_network_name(network_name)),
+        normalize_key_part(normalize_headend_name(headend)),
+        normalize_key_part(normalize_state_name(state)),
         normalize_key_part(barc_market),
     )
 
@@ -77,28 +82,40 @@ def read_csv_if_exists(path: Path) -> pd.DataFrame:
     return pd.read_csv(path, keep_default_na=False, na_values=[""], low_memory=False)
 
 
-def fetch_existing_headends(headend_csv_path: Path) -> tuple[pd.DataFrame, dict[tuple[str, str, str, str], str]]:
+def fetch_existing_headends(
+    headend_csv_path: Path,
+) -> tuple[pd.DataFrame, dict[tuple[str, str, str, str], str], dict[str, str]]:
     existing_df = read_csv_if_exists(headend_csv_path)
     if existing_df.empty:
-        return pd.DataFrame(columns=HEADEND_CSV_COLUMNS), {}
+        return pd.DataFrame(columns=HEADEND_CSV_COLUMNS), {}, {}
 
     for column in HEADEND_CSV_COLUMNS:
         if column not in existing_df.columns:
             existing_df[column] = None
 
     existing_df = existing_df[HEADEND_CSV_COLUMNS].copy()
+    existing_df["Network_Name"] = existing_df["Network_Name"].apply(normalize_network_name)
+    existing_df["Headend"] = existing_df["Headend"].apply(normalize_headend_name)
+    existing_df["State"] = existing_df["State"].apply(normalize_state_name)
     existing_map: dict[tuple[str, str, str, str], str] = {}
+    headend_id_remap: dict[str, str] = {}
     for record in existing_df.to_dict(orient="records"):
-        existing_map[
-            build_business_key(
-                record["Network_Name"],
-                record["Headend"],
-                record["State"],
-                record["BARC_Market"],
-            )
-        ] = str(record["Headend_ID"])
+        key = build_business_key(
+            record["Network_Name"],
+            record["Headend"],
+            record["State"],
+            record["BARC_Market"],
+        )
+        headend_id = str(record["Headend_ID"])
+        canonical_id = existing_map.setdefault(key, headend_id)
+        if headend_id != canonical_id:
+            headend_id_remap[headend_id] = canonical_id
 
-    return existing_df, existing_map
+    if headend_id_remap:
+        existing_df["Headend_ID"] = existing_df["Headend_ID"].astype(str).replace(headend_id_remap)
+        existing_df = existing_df.drop_duplicates(subset=["Headend_ID"], keep="last").reset_index(drop=True)
+
+    return existing_df, existing_map, headend_id_remap
 
 
 def next_headend_sequence(existing_df: pd.DataFrame) -> int:
@@ -203,7 +220,7 @@ def merge_headends(existing_df: pd.DataFrame, assigned_df: pd.DataFrame) -> pd.D
 
     combined = (
         combined[HEADEND_CSV_COLUMNS]
-        .drop_duplicates(subset=["Headend_ID"], keep="first")
+        .drop_duplicates(subset=["Headend_ID"], keep="last")
         .sort_values("Headend_ID")
         .reset_index(drop=True)
     )
@@ -477,7 +494,7 @@ def build_file_outputs(
 ) -> dict[str, Any]:
     paths = ensure_output_directories(root)
 
-    existing_headends_df, existing_headend_map = fetch_existing_headends(paths["headend_csv"])
+    existing_headends_df, existing_headend_map, headend_id_remap = fetch_existing_headends(paths["headend_csv"])
     assigned_headends_df, headend_map, new_headend_id_count = assign_headend_ids(
         existing_df=existing_headends_df,
         existing_map=existing_headend_map,
@@ -486,6 +503,8 @@ def build_file_outputs(
 
     incoming_channels_df = attach_headend_ids_to_channels(channels_df=channels_df, headend_map=headend_map)
     existing_channels_df = read_csv_if_exists(paths["channel_csv"])
+    if headend_id_remap and not existing_channels_df.empty:
+        existing_channels_df["Headend_ID"] = existing_channels_df["Headend_ID"].astype(str).replace(headend_id_remap)
 
     merged_headends_df = merge_headends(existing_headends_df, assigned_headends_df)
     merged_channels_df = merge_channels(existing_channels_df, incoming_channels_df)

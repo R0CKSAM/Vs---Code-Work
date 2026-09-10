@@ -12,7 +12,7 @@ from typing import Any
 
 import openpyxl
 
-from headend_id import generate_headend_id
+from headend_id import generate_headend_id, normalize_network_name
 
 LOGGER = logging.getLogger(__name__)
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -225,6 +225,7 @@ STATE_NORMALIZATION = build_normalization_map(
         "Arunachal Pradesh": "Arunachal Pradesh",
         "Asaam": "Assam",
         "Assam": "Assam",
+        "Bhopal": "Madhya Pradesh",
         "Bihar": "Bihar",
         "Chhattisdarh": "Chhattisgarh",
         "Chhattisgarh": "Chhattisgarh",
@@ -328,6 +329,8 @@ CITY_NORMALIZATION = build_normalization_map(
         "WARANGAL": "Warangal",
         "Warangal": "Warangal",
         "AIZAWL- MIZORAM": "Aizawl",
+        "Guwahati": "Guwahati & Shilchar",
+        "Guwahati & Shilchar": "Guwahati & Shilchar",
     }
 )
 
@@ -668,7 +671,9 @@ def parse_sheet(
 
     for block_start in block_starts:
         record_date = clean_date(get_cell(rows, label_rows.get("date"), block_start))
-        network_name = clean_text(get_cell(rows, label_rows.get("network_name"), block_start))
+        network_name = normalize_network_name(
+            clean_text(get_cell(rows, label_rows.get("network_name"), block_start))
+        ) or None
         headend_location = normalize_headend_location(
             get_cell(rows, label_rows.get("headend_location"), block_start),
             counters=counters,
