@@ -620,7 +620,7 @@ def test_render_dashboard_distinguishes_missing_coverage_from_real_zero(
     assert "state.coverage=new Set(viewerScope(source).map(row=>minuteKey(row.minute_ist)))" in html
     assert "!coverage.has(window.keys[0])" in html
     assert "map=state&&state.map instanceof Map?state.map:new Map()" in html
-    assert "return {value:'—',window:window.label,total:null,available:false}" in html
+    assert "return {value:'N/A',window:window.label,total:null,available:false}" in html
     assert "return {value:fmt(total),window:window.label,total,available:true}" in html
     assert "total+=Number(map.get(key)||0)" in html
     assert 'src="asrun_delivery_data.js?v=unversioned"' in html
@@ -843,7 +843,7 @@ def test_render_dashboard_uses_one_visible_date_scope_per_page(
     assert "function syncDateControlVisibility(){" in html
     assert "activeDashboardPage==='content'&&nctDateMode==='independent'" in html
     assert "activeDashboardPage==='audience'&&youtubeDateMode==='independent'" in html
-    assert "setYoutubeDateMode('follow',false);" in html
+    assert "setYoutubeDateMode('independent',false);" in html
     assert "syncDateControlVisibility();\n  closeMultiMenus('');" in html
     assert 'id="nctDateFields" hidden' in html
     assert 'id="nctApplyDate"' in html
@@ -1029,6 +1029,8 @@ def test_render_dashboard_keeps_fct_multiselects_independent(
     assert "'Selected On-air Time From','Selected On-air Time To'" in html
     assert "const NCT_FILTER_SPECS=[" in html
     assert "for(const [id,key,kind] of NCT_FILTER_SPECS)" in html
+    assert "if(values.length&&!existing){" in html
+    assert "multiInitialized.delete(id);" in html
     assert 'id="nctStoryToggle"' in html
     assert 'id="nctStoryLookup"' in html
     assert 'id="nctStoryOptions"' in html
@@ -1200,12 +1202,26 @@ def test_render_dashboard_adds_interval_weighted_nct_story_performance(
     assert "youtubeMetric=youtubeFiveMinuteValue(anchor)" in html
     assert "scope:'India TV YouTube collector lookup error'" in html
     assert "scope:'India TV YouTube observed; no live stream'" in html
-    assert "value:'â€”',total:null,live_videos:0" in html
+    assert "value:'N/A',total:null,live_videos:0" in html
     assert "scope:'No India TV YouTube collector'" in html
     assert "?'Missing India TV YouTube collector minute'" in html
     assert ":'No India TV YouTube collection for date';" in html
     assert "function deliveryCoverageStatus(row){" in html
     assert "'Coverage Status','Metric Basis'" in html
+    assert "'ASRUN Status','ASRUN Source File','ASRUN Source Line'" in html
+    assert "formatIstSeconds(row.event.on_air_start_ist)" in html
+    assert "function isSkippedAsrunEvent(event){" in html
+    assert "label:'Total ASRUN ad events'" in html
+    assert "without non-delivery status" in html
+    assert "function isMissedAsrunEvent" in html
+    assert "status=asrunStatusSuffix(event)" in html
+    assert "status=asrunStatusSuffix(e)" in html
+    assert "FAST ASRUN Ad Events" in html
+    assert "All ASRUN Ad Events" in html
+    assert "const bounds=youtubeTrueBounds();" in html
+    assert "setYoutubeDateMode('independent',false)" in html
+    assert "â€”" not in html
+    assert "Â·" not in html
     assert "sum of five one-minute concurrency samples" in html
     assert "return 'Outside India TV YouTube source range';" in html
     assert "value:'No India TV YouTube data'" not in html

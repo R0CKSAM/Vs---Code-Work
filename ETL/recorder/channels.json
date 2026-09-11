@@ -1,0 +1,342 @@
+[
+  {
+    "id": "india-tv",
+    "name": "India TV",
+    "group": "India TV",
+    "hls_url": "https://veto.akamaized.net/v1/vglive-sk-274906/main_4.m3u8",
+    "enabled": true
+  },
+  {
+    "id": "india-tv-cricket",
+    "name": "IndiaTV Cricket",
+    "group": "India TV",
+    "hls_url": "",
+    "enabled": false
+  },
+  {
+    "id": "india-tv-speednews",
+    "name": "India TV SpeedNews",
+    "group": "India TV",
+    "hls_url": "https://veto-samsung.akamaized.net/v1/vglive-sk-479089/main_10.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "india-tv-adalat",
+    "name": "India TV Adalat",
+    "group": "India TV",
+    "hls_url": "https://indiatv-cloudtv.akamaized.net/v1/vglive-sk-912213/main_4.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "india-tv-yoga",
+    "name": "India TV Yoga",
+    "group": "India TV",
+    "hls_url": "https://indiatv-samsung.akamaized.net/vglive-sk-699286/playlist.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "ndtv-india",
+    "name": "NDTV India",
+    "group": "NDTV",
+    "hls_url": "https://ndtv-veto.akamaized.net/vglive-sk-834057/main.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "ndtv-24x7",
+    "name": "NDTV 24x7",
+    "group": "NDTV",
+    "hls_url": "https://ndtv-veto.akamaized.net/vglive-sk-722277/main.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "ndtv-marathi",
+    "name": "NDTV Marathi",
+    "group": "NDTV",
+    "hls_url": "https://ndtv-veto.akamaized.net/vglive-sk-238731/main.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "ndtv-rajasthan",
+    "name": "NDTV Rajasthan",
+    "group": "NDTV",
+    "hls_url": "https://ndtv-veto.akamaized.net/vglive-sk-494434/main.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "ndtv-madhya-pradesh",
+    "name": "NDTV Madhya Pradesh",
+    "group": "NDTV",
+    "hls_url": "https://ndtv-veto.akamaized.net/vglive-sk-618504/main.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "ndtv-profit",
+    "name": "NDTV Profit",
+    "group": "NDTV",
+    "hls_url": "https://ndtvprofit-veto.akamaized.net/ndtvprofit/master_1.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "newsnation",
+    "name": "NewsNation",
+    "group": "News Nation",
+    "hls_url": "https://nn-veto.akamaized.net/national/master_nnna_veto.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "newsnation-up-uk",
+    "name": "NewsNation UP/UK",
+    "group": "News Nation",
+    "hls_url": "https://nn-veto.akamaized.net/nnup/master_nnup_veto.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "newsnation-mp-ch",
+    "name": "NewsNation MP/CH",
+    "group": "News Nation",
+    "hls_url": "https://nn-veto.akamaized.net/nnmp/master_nnmp_veto.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "newsnation-br-jh",
+    "name": "NewsNation BR/JH",
+    "group": "News Nation",
+    "hls_url": "https://nn-veto.akamaized.net/nnbrjh/master_nnbrjh_veto.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "newsnation-punjab",
+    "name": "NewsNation Punjab",
+    "group": "News Nation",
+    "hls_url": "https://nn-veto.akamaized.net/nnpunj/master_nnpunj_veto.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "b4u-movies",
+    "name": "B4U Movies",
+    "group": "B4U",
+    "hls_url": "https://b4u-veto-m.akamaized.net/b4umo001/playlist.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "b4u-music",
+    "name": "B4U Music",
+    "group": "B4U",
+    "hls_url": "https://b4u-veto-music.akamaized.net/b4um001/playlist.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "b4u-kadak",
+    "name": "B4U Kadak",
+    "group": "B4U",
+    "hls_url": "https://b4u-veto-kadak.akamaized.net/b4ua001/playlist.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "b4u-bhojpuri",
+    "name": "B4U Bhojpuri",
+    "group": "B4U",
+    "hls_url": "https://b4u-veto.akamaized.net/B4U_Bhojpuri/master.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "9xm",
+    "name": "9XM",
+    "group": "9X Media",
+    "hls_url": "https://xind-live-indiatvnews.akamaized.net/9XM/master.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "9xm-jalwa",
+    "name": "9XM Jalwa",
+    "group": "9X Media",
+    "hls_url": "https://xind-live-indiatvnews.akamaized.net/9XJalwa/master.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "9xm-tashan",
+    "name": "9XM Tashan",
+    "group": "9X Media",
+    "hls_url": "https://xind-live-indiatvnews.akamaized.net/9XTashan/master.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "9xm-jhakaas",
+    "name": "9XM Jhakaas",
+    "group": "9X Media",
+    "hls_url": "https://xind-live-indiatvnews.akamaized.net/9XJhakaas/master.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "yrf-music",
+    "name": "YRF Music",
+    "group": "Music",
+    "hls_url": "https://yrf-veto.akamaized.net/YrfMusic/master.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "saga-music",
+    "name": "SAGA Music",
+    "group": "Music",
+    "hls_url": "https://yrf-veto.akamaized.net/SagaMusic/master.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "saga-haryanvi",
+    "name": "Saga Music Haryanvi",
+    "group": "Music",
+    "hls_url": "https://yrf-veto.akamaized.net/SagaHaryanvi/master.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "bollywood-masala",
+    "name": "Bollywood Masala",
+    "group": "Music",
+    "hls_url": "https://bmasala-live.akamaized.net/bollywoodmasala/index.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "sikh-ratnavali",
+    "name": "Sikh Ratnavali",
+    "group": "Spiritual",
+    "hls_url": "https://yrf-veto.akamaized.net/SikhRatnavali/master.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "sanskaar-tv",
+    "name": "Sanskaar TV",
+    "group": "Spiritual",
+    "hls_url": "https://sanskar-live-indiatvnews.akamaized.net/sanskar/sanskarmaster.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "satsangh-tv",
+    "name": "Satsangh TV",
+    "group": "Spiritual",
+    "hls_url": "https://sanskar-live-indiatvnews.akamaized.net/satsang/satsangmaster.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "shubh-tv",
+    "name": "Shubh TV",
+    "group": "Spiritual",
+    "hls_url": "https://sanskar-live-indiatvnews.akamaized.net/shubh/shubhmaster.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "epic-tv",
+    "name": "Epic TV",
+    "group": "Epic",
+    "hls_url": "https://epic-tv-veto.akamaized.net/epic_tv/master.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "epic-bharat",
+    "name": "Epic Bharat",
+    "group": "Epic",
+    "hls_url": "https://epic-bharat-veto.akamaized.net/epic_bharat/master.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "epic-bhojpuri",
+    "name": "Epic Bhojpuri",
+    "group": "Epic",
+    "hls_url": "https://epic-veto.akamaized.net/epic_bhojpuri/playlist.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "epic-kids",
+    "name": "Epic Kids",
+    "group": "Epic",
+    "hls_url": "https://epic-kid-veto.akamaized.net/epic_kids/playlist.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "epic-music",
+    "name": "Epic Music",
+    "group": "Epic",
+    "hls_url": "https://epic-music-veto.akamaized.net/epic_music/playlist.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "gtc-news",
+    "name": "GTC News",
+    "group": "GTC",
+    "hls_url": "https://gtc-veto.akamaized.net/gtcnews/index.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "gtc-punjabi",
+    "name": "GTC Punjabi",
+    "group": "GTC",
+    "hls_url": "https://gtc-veto.akamaized.net/gtcpunjabi/index.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "punjabi-shorts",
+    "name": "Punjabi Shorts",
+    "group": "GTC",
+    "hls_url": "https://gtc-veto.akamaized.net/punjabshort/index.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "manorama",
+    "name": "Manorama",
+    "group": "Regional",
+    "hls_url": "https://manorama-veto.akamaized.net/out/v1/b238f826190a4b5b9f8a68ee05afdb9a/index.m3u8",
+    "enabled": true,
+    "discovered_from_lake": true
+  },
+  {
+    "id": "up-government-live",
+    "name": "UP Government Live",
+    "group": "Government",
+    "hls_url": "",
+    "enabled": false
+  },
+  {
+    "id": "veto-cricket-live",
+    "name": "Veto Cricket Live",
+    "group": "Sports",
+    "hls_url": "",
+    "enabled": false
+  }
+]

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import io
 from argparse import Namespace
 from pathlib import Path
 
@@ -65,3 +66,41 @@ def test_candidates_prioritize_highest_observed_usage(monkeypatch):
     selected = module.select_candidates(distinct, pd.DataFrame(), args)
 
     assert selected["ua_hash"].tolist() == ["high", "middle", "low"]
+
+
+def test_candidates_honor_requested_decode_status_order(tmp_path, monkeypatch):
+    distinct = pd.DataFrame([
+        {"ua_norm": "Local/1.0", "ua_hash": "local"},
+        {"ua_norm": "Unknown/1.0", "ua_hash": "unknown"},
+        {"ua_norm": "-", "ua_hash": "malformed"},
+    ])
+    lookup = pd.DataFrame([
+        {"ua_hash": "local", "decode_status": "decoded_local"},
+        {"ua_hash": "unknown", "decode_status": "unknown"},
+        {"ua_hash": "malformed", "decode_status": "malformed"},
+    ])
+    lookup_path = tmp_path / "lookup.parquet"
+    lookup.to_parquet(lookup_path, index=False)
+    monkeypatch.setattr(module, "build_impact", lambda _path: pd.DataFrame())
+    args = Namespace(
+        include_malformed=True,
+        ua_daily=Path("unused"),
+        api_limit=-1,
+        priority_statuses="unknown,malformed,decoded_local",
+        status_lookup=lookup_path,
+    )
+
+    selected = module.select_candidates(distinct, pd.DataFrame(), args)
+
+    assert selected["ua_hash"].tolist() == ["unknown", "malformed", "local"]
+
+
+def test_log_handles_unicode_outside_windows_code_page(monkeypatch):
+    buffer = io.BytesIO()
+    stream = io.TextIOWrapper(buffer, encoding="cp1252", errors="strict")
+    monkeypatch.setattr(module.sys, "stdout", stream)
+
+    module.log("Unicode UA: \u4e2d\u6587")
+    stream.flush()
+
+    assert b"\\u4e2d\\u6587" in buffer.getvalue()

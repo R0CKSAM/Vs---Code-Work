@@ -14,6 +14,7 @@ import json
 import os
 import random
 import re
+import sys
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -29,6 +30,7 @@ DEFAULT_INPUT = ETL_ROOT / "distinct_UA_Both_All.csv"
 DEFAULT_UA_DAILY = ETL_ROOT / "output" / "watch_hours" / "daily_tables" / "user_agents_daily.parquet"
 DEFAULT_CACHE = ETL_ROOT / "data" / "cache" / "device_decode" / "whatmyuseragent_all_distinct_ua_cache.parquet"
 DEFAULT_OUT_DIR = ETL_ROOT / "output" / "device_decode"
+DEFAULT_STATUS_LOOKUP = DEFAULT_OUT_DIR / "ua_decode_lookup_both_all.parquet"
 DEFAULT_QUOTA_STATE = ETL_ROOT / "data" / "cache" / "device_decode" / "whatmyuseragent_quota_state.json"
 IST = timezone(timedelta(hours=5, minutes=30))
 
@@ -157,7 +159,13 @@ class APIKeyPool:
 
 
 def log(message: str) -> None:
-    print(f"[{datetime.now().isoformat(timespec='seconds')}] {message}", flush=True)
+    text = f"[{datetime.now().isoformat(timespec='seconds')}] {message}"
+    try:
+        print(text, flush=True)
+    except UnicodeEncodeError:
+        encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
+        safe_text = text.encode(encoding, errors="backslashreplace").decode(encoding)
+        print(safe_text, flush=True)
 
 
 def build_impact(ua_daily_path: Path) -> pd.DataFrame:
@@ -202,6 +210,21 @@ def select_candidates(distinct: pd.DataFrame, combined_cache: pd.DataFrame, args
     ) if not combined_cache.empty else set()
     candidates = candidates[~candidates["ua_hash"].astype(str).isin(successful)].copy()
 
+    priority_statuses = [
+        value.strip() for value in getattr(args, "priority_statuses", "").split(",")
+        if value.strip()
+    ]
+    if priority_statuses:
+        status_lookup_path = Path(getattr(args, "status_lookup", DEFAULT_STATUS_LOOKUP))
+        status_lookup = pd.read_parquet(status_lookup_path, columns=["ua_hash", "decode_status"])
+        status_lookup = status_lookup.drop_duplicates("ua_hash", keep="last")
+        candidates = candidates.merge(status_lookup, on="ua_hash", how="left")
+        candidates.loc[candidates["malformed_reason"].ne(""), "decode_status"] = "malformed"
+        candidates["decode_status"] = candidates["decode_status"].fillna("unknown")
+        priority = {status: index for index, status in enumerate(priority_statuses)}
+        candidates["_status_priority"] = candidates["decode_status"].map(priority)
+        candidates = candidates[candidates["_status_priority"].notna()].copy()
+
     impact = build_impact(args.ua_daily)
     if not impact.empty:
         candidates = candidates.merge(impact, on="ua_hash", how="left")
@@ -211,10 +234,12 @@ def select_candidates(distinct: pd.DataFrame, combined_cache: pd.DataFrame, args
         candidates[col] = pd.to_numeric(candidates[col], errors="coerce").fillna(0)
 
     # Spend scarce API quota on the UAs that affect the most real requests.
-    candidates = candidates.sort_values(
-        ["raw_ts_rows", "approx_unique_ips", "rows", "ua_norm"],
-        ascending=[False, False, False, True],
-    )
+    sort_columns = ["raw_ts_rows", "approx_unique_ips", "rows", "ua_norm"]
+    ascending = [False, False, False, True]
+    if priority_statuses:
+        sort_columns.insert(0, "_status_priority")
+        ascending.insert(0, True)
+    candidates = candidates.sort_values(sort_columns, ascending=ascending)
     if args.api_limit > 0:
         candidates = candidates.head(args.api_limit)
     return candidates
@@ -333,6 +358,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--api-flush-every", type=int, default=5)
     parser.add_argument("--stop-on-rate-limit", action="store_true", default=True)
     parser.add_argument("--include-malformed", action="store_true")
+    parser.add_argument(
+        "--priority-statuses",
+        default="",
+        help="Optional comma-separated production decode statuses to include and process in order.",
+    )
+    parser.add_argument(
+        "--status-lookup",
+        type=Path,
+        default=DEFAULT_STATUS_LOOKUP,
+        help="Production UA lookup used by --priority-statuses.",
+    )
     return parser.parse_args()
 
 

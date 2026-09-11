@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HLS Stream Recorder</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js"></script>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg:       #0e0e10;
+    --surface:  #18181b;
+    --surface2: #222228;
+    --border:   #2e2e36;
+    --border2:  #3e3e48;
+    --text:     #f1f1f3;
+    --muted:    #8888a0;
+    --dim:      #4a4a60;
+    --accent:   #4f7cff;
+    --accentH:  #3a66e8;
+    --green:    #22c55e;
+    --greenH:   #16a34a;
+    --red:      #ef4444;
+    --redH:     #dc2626;
+    --amber:    #f59e0b;
+    --radius:   8px;
+    --radius2:  12px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 48px;
+  }
+
+  #app {
+    width: 100%;
+    max-width: 860px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 4px;
+  }
+  .header-icon {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .header-icon svg { width: 18px; height: 18px; fill: #fff; }
+  .header h1 { font-size: 16px; font-weight: 600; }
+  .header-badge {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2px 10px;
+    letter-spacing: .02em;
+  }
+
+  /* URL bar */
+  .url-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .url-wrap {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .url-wrap input {
+    width: 100%;
+    padding: 10px 40px 10px 12px;
+    font-size: 13px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s;
+  }
+  .url-wrap input:focus { border-color: var(--accent); }
+  .url-wrap input::placeholder { color: var(--dim); }
+  #copyBtn {
+    position: absolute; right: 8px;
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); padding: 4px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    transition: color .15s;
+  }
+  #copyBtn:hover { color: var(--text); }
+  #copyBtn svg { width: 16px; height: 16px; }
+  .btn {
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background .15s, opacity .15s, transform .1s;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn:disabled { opacity: .35; cursor: not-allowed; pointer-events: none; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accentH); }
+  .btn-record  { background: var(--green); color: #fff; }
+  .btn-record:hover { background: var(--greenH); }
+  .btn-stop    { background: var(--red); color: #fff; }
+  .btn-stop:hover { background: var(--redH); }
+  .btn-ghost {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-ghost:hover { background: var(--border); }
+  .btn svg { width: 15px; height: 15px; }
+
+  /* Player panel */
+  .player-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    overflow: hidden;
+  }
+  video {
+    width: 100%;
+    display: block;
+    background: #000;
+    max-height: 440px;
+    object-fit: contain;
+  }
+
+  /* Controls bar */
+  .controls {
+    background: var(--surface2);
+    border-top: 1px solid var(--border);
+    padding: 12px 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  /* Status pill */
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px 4px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    min-width: 90px;
+    transition: color .2s;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--dim);
+    flex-shrink: 0;
+    transition: background .2s;
+  }
+  .dot.live    { background: var(--red);   animation: pulse 1.4s infinite; }
+  .dot.record  { background: var(--red);   animation: pulse .8s infinite; }
+  .dot.loaded  { background: var(--green); }
+  .dot.error   { background: var(--amber); }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,.5); }
+    50%      { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+  }
+
+  .timer {
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--red);
+    min-width: 64px;
+    display: none;
+  }
+  .timer.visible { display: block; }
+
+  .controls-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+  /* Quality selector */
+  .select-wrap { position: relative; }
+  select {
+    appearance: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 12px;
+    padding: 5px 28px 5px 10px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color .15s;
+  }
+  select:focus { border-color: var(--accent); }
+  .select-arrow {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    pointer-events: none; color: var(--muted);
+  }
+  .select-arrow svg { width: 12px; height: 12px; display: block; }
+
+  /* Stats row */
+  .stats-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 0 14px 10px;
+    background: var(--surface2);
+    border-top: 1px solid var(--border);
+  }
+  .stat-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+  }
+  .stat-chip strong { color: var(--text); font-weight: 600; }
+
+  /* Progress bar (recording) */
+  .rec-progress {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    display: none;
+  }
+  .rec-progress.visible { display: block; }
+  .rec-progress-bar {
+    height: 100%;
+    background: var(--red);
+    width: 0%;
+    transition: width .3s;
+    border-radius: 2px;
+  }
+
+  /* Download progress overlay */
+  .dl-progress {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .dl-progress.visible { display: flex; }
+  .dl-progress-bar-wrap {
+    flex: 1;
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .dl-progress-bar {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    border-radius: 3px;
+    transition: width .2s;
+  }
+
+  /* Log panel */
+  .log-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    overflow: hidden;
+  }
+  .log-header {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    gap: 8px;
+  }
+  .log-header span {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  .log-clear {
+    margin-left: auto;
+    background: none; border: none;
+    color: var(--dim); font-size: 11px; cursor: pointer;
+    padding: 2px 6px; border-radius: 4px;
+    transition: color .15s;
+  }
+  .log-clear:hover { color: var(--muted); }
+  #log {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 10px 12px;
+    max-height: 120px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    line-height: 1.7;
+  }
+  .log-line { display: flex; gap: 8px; }
+  .log-time { color: var(--dim); flex-shrink: 0; }
+  .log-msg.ok   { color: var(--green); }
+  .log-msg.warn { color: var(--amber); }
+  .log-msg.err  { color: var(--red); }
+  .log-msg.info { color: var(--muted); }
+
+  /* Keyboard hint */
+  .kbd-hint {
+    display: flex;
+    gap: 16px;
+    font-size: 11px;
+    color: var(--dim);
+    padding: 4px 0;
+  }
+  kbd {
+    display: inline-block;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 10px;
+    font-family: system-ui;
+    color: var(--muted);
+  }
+
+  @media (max-width: 540px) {
+    .controls { flex-direction: column; align-items: stretch; }
+    .controls-right { margin-left: 0; }
+    .kbd-hint { display: none; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-icon">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm3.5 10.5l-5 3A.5.5 0 0 1 10 15V9a.5.5 0 0 1 .5-.5.5.5 0 0 1 .25.066l5 3a.5.5 0 0 1 0 .868z"/>
+      </svg>
+    </div>
+    <h1>HLS Stream Recorder</h1>
+    <span class="header-badge">hls.js 1.5.13</span>
+  </div>
+
+  <!-- URL input -->
+  <div class="url-row">
+    <div class="url-wrap">
+      <input id="urlInput" type="url" spellcheck="false"
+        placeholder="https://example.com/stream/main.m3u8"
+        value="https://veto.akamaized.net/v1/vglive-sk-274906/main_4.m3u8">
+      <button id="copyBtn" title="Copy URL" aria-label="Copy URL">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="9" y="9" width="13" height="13" rx="2"/>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+        </svg>
+      </button>
+    </div>
+    <button class="btn btn-primary" id="loadBtn">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+      Load
+    </button>
+  </div>
+
+  <!-- Player -->
+  <div class="player-card">
+    <video id="video" muted autoplay playsinline controls></video>
+
+    <div class="rec-progress" id="recProgress">
+      <div class="rec-progress-bar" id="recBar"></div>
+    </div>
+
+    <!-- Controls bar -->
+    <div class="controls">
+      <div class="status-pill" id="statusPill">
+        <span class="dot" id="dot"></span>
+        <span id="statusText">idle</span>
+      </div>
+
+      <span class="timer" id="timer">00:00:00</span>
+
+      <button class="btn btn-record" id="startBtn" disabled aria-label="Start recording (Shift+R)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>
+        Record
+      </button>
+      <button class="btn btn-stop" id="stopBtn" disabled aria-label="Stop and save (Shift+S)">
+        <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+        Stop &amp; Save
+      </button>
+
+      <div class="controls-right">
+        <div class="select-wrap">
+          <select id="qualitySelect" title="Recording quality">
+            <option value="8000000">Ultra (8 Mbps)</option>
+            <option value="4000000" selected>High (4 Mbps)</option>
+            <option value="2000000">Medium (2 Mbps)</option>
+            <option value="1000000">Low (1 Mbps)</option>
+          </select>
+          <span class="select-arrow">
+            <svg viewBox="0 0 12 12" fill="currentColor"><path d="M6 8L1 3h10z"/></svg>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats chips -->
+    <div class="stats-row" id="statsRow">
+      <div class="stat-chip">Segments <strong id="statSegs">–</strong></div>
+      <div class="stat-chip">Buffer <strong id="statBuf">–</strong></div>
+      <div class="stat-chip">Level <strong id="statLevel">–</strong></div>
+      <div class="stat-chip">Codec <strong id="statCodec">–</strong></div>
+      <div class="stat-chip">Captured <strong id="statSize">0 MB</strong></div>
+    </div>
+  </div>
+
+  <!-- Download progress -->
+  <div class="dl-progress" id="dlProgress">
+    <span>Preparing file…</span>
+    <div class="dl-progress-bar-wrap">
+      <div class="dl-progress-bar" id="dlBar"></div>
+    </div>
+    <span id="dlPct">0%</span>
+  </div>
+
+  <!-- Log -->
+  <div class="log-wrap">
+    <div class="log-header">
+      <span>Activity log</span>
+      <button class="log-clear" id="clearLog">Clear</button>
+    </div>
+    <div id="log"></div>
+  </div>
+
+  <!-- Keyboard hints -->
+  <div class="kbd-hint">
+    <span><kbd>Shift</kbd>+<kbd>L</kbd> Load</span>
+    <span><kbd>Shift</kbd>+<kbd>R</kbd> Record</span>
+    <span><kbd>Shift</kbd>+<kbd>S</kbd> Stop</span>
+    <span><kbd>Shift</kbd>+<kbd>C</kbd> Copy URL</span>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ─── State machine ──────────────────────────────────────────────── */
+  const STATE = { IDLE: 'idle', LOADING: 'loading', LOADED: 'loaded', RECORDING: 'recording', ERROR: 'error' };
+  let state = STATE.IDLE;
+
+  /* ─── DOM refs ───────────────────────────────────────────────────── */
+  const video        = document.getElementById('video');
+  const urlInput     = document.getElementById('urlInput');
+  const loadBtn      = document.getElementById('loadBtn');
+  const startBtn     = document.getElementById('startBtn');
+  const stopBtn      = document.getElementById('stopBtn');
+  const dot          = document.getElementById('dot');
+  const statusText   = document.getElementById('statusText');
+  const timerEl      = document.getElementById('timer');
+  const logEl        = document.getElementById('log');
+  const recProgress  = document.getElementById('recProgress');
+  const recBar       = document.getElementById('recBar');
+  const dlProgress   = document.getElementById('dlProgress');
+  const dlBar        = document.getElementById('dlBar');
+  const dlPct        = document.getElementById('dlPct');
+  const copyBtn      = document.getElementById('copyBtn');
+  const clearLogBtn  = document.getElementById('clearLog');
+  const qualitySelect= document.getElementById('qualitySelect');
+  const statSegs     = document.getElementById('statSegs');
+  const statBuf      = document.getElementById('statBuf');
+  const statLevel    = document.getElementById('statLevel');
+  const statCodec    = document.getElementById('statCodec');
+  const statSize     = document.getElementById('statSize');
+
+  /* ─── Runtime vars ───────────────────────────────────────────────── */
+  let hls           = null;
+  let mediaRecorder = null;
+  let chunks        = [];
+  let chunkBytes    = 0;
+  let timerInterval = null;
+  let statsInterval = null;
+  let startTime     = 0;
+  let segCount      = 0;
+  let retryCount    = 0;
+  const MAX_RETRIES = 3;
+
+  /* ─── Logging ────────────────────────────────────────────────────── */
+  function log(msg, level = 'info') {
+    const t = new Date().toLocaleTimeString('en-GB');
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    line.innerHTML = `<span class="log-time">${t}</span><span class="log-msg ${level}">${escHtml(msg)}</span>`;
+    logEl.prepend(line);
+    if (logEl.children.length > 200) logEl.removeChild(logEl.lastChild);
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  clearLogBtn.addEventListener('click', () => { logEl.innerHTML = ''; });
+
+  /* ─── State management ───────────────────────────────────────────── */
+  function setState(s) {
+    state = s;
+    dot.className = 'dot';
+    timerEl.classList.remove('visible');
+    recProgress.classList.remove('visible');
+
+    const map = {
+      [STATE.IDLE]:      { text: 'idle',      dotCls: '',       startD: true,  stopD: true },
+      [STATE.LOADING]:   { text: 'loading…',  dotCls: '',       startD: true,  stopD: true },
+      [STATE.LOADED]:    { text: 'live',       dotCls: 'live',   startD: false, stopD: true },
+      [STATE.RECORDING]: { text: 'recording', dotCls: 'record', startD: true,  stopD: false },
+      [STATE.ERROR]:     { text: 'error',      dotCls: 'error',  startD: true,  stopD: true },
+    };
+    const cfg = map[s];
+    statusText.textContent = cfg.text;
+    if (cfg.dotCls) dot.classList.add(cfg.dotCls);
+    startBtn.disabled = cfg.startD;
+    stopBtn.disabled  = cfg.stopD;
+    loadBtn.disabled  = (s === STATE.LOADING || s === STATE.RECORDING);
+    urlInput.disabled = (s === STATE.RECORDING);
+
+    if (s === STATE.RECORDING) {
+      timerEl.classList.add('visible');
+      recProgress.classList.add('visible');
+    }
+  }
+
+  /* ─── URL validation ─────────────────────────────────────────────── */
+  function validateUrl(raw) {
+    const u = raw.trim();
+    if (!u) return { ok: false, msg: 'Enter a .m3u8 URL first.' };
+    try { new URL(u); } catch { return { ok: false, msg: 'Invalid URL format.' }; }
+    if (!u.toLowerCase().includes('.m3u8') && !u.toLowerCase().includes('m3u8')) {
+      log('Warning: URL does not contain ".m3u8" — proceeding anyway.', 'warn');
+    }
+    return { ok: true, url: u };
+  }
+
+  /* ─── HLS loader ─────────────────────────────────────────────────── */
+  function loadStream(url) {
+    if (state === STATE.RECORDING) { log('Stop recording before loading a new stream.', 'warn'); return; }
+    if (hls) { hls.destroy(); hls = null; }
+    segCount = 0; retryCount = 0;
+    updateStats();
+    setState(STATE.LOADING);
+    log(`Loading: ${url}`, 'info');
+
+    if (Hls.isSupported()) {
+      hls = new Hls({
+        lowLatencyMode: true,
+        backBufferLength: 30,
+        maxBufferLength: 60,
+        xhrSetup(xhr) { xhr.withCredentials = false; },
+      });
+
+      hls.loadSource(url);
+      hls.attachMedia(video);
+
+      hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
+        retryCount = 0;
+        setState(STATE.LOADED);
+        video.play().catch(() => {});
+        log(`Manifest parsed — ${data.levels.length} quality level(s) available.`, 'ok');
+      });
+
+      hls.on(Hls.Events.FRAG_LOADED, () => { segCount++; });
+
+      hls.on(Hls.Events.LEVEL_SWITCHED, (_, data) => {
+        const lvl = hls.levels[data.level];
+        if (lvl) statLevel.textContent = `${lvl.width}×${lvl.height}`;
+      });
+
+      hls.on(Hls.Events.FRAG_PARSING_INIT_SEGMENT, (_, data) => {
+        if (data.tracks && data.tracks.video) {
+          const c = data.tracks.video.codec || '';
+          statCodec.textContent = c || 'avc1';
+        }
+      });
+
+      hls.on(Hls.Events.ERROR, (_, data) => {
+        if (!data.fatal) return;
+        log(`Fatal HLS error: ${data.type} / ${data.details}`, 'err');
+        if (retryCount < MAX_RETRIES) {
+          retryCount++;
+          log(`Auto-retrying (${retryCount}/${MAX_RETRIES})…`, 'warn');
+          setTimeout(() => {
+            if (data.type === Hls.ErrorTypes.NETWORK_ERROR) hls.startLoad();
+            else if (data.type === Hls.ErrorTypes.MEDIA_ERROR) hls.recoverMediaError();
+            else { hls.destroy(); setState(STATE.ERROR); }
+          }, 1500 * retryCount);
+        } else {
+          setState(STATE.ERROR);
+          log('Max retries reached. Reload the stream manually.', 'err');
+        }
+      });
+
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = url;
+      video.addEventListener('loadedmetadata', () => {
+        setState(STATE.LOADED);
+        video.play().catch(() => {});
+        log('Native HLS playback started (Safari).', 'ok');
+      }, { once: true });
+      video.addEventListener('error', () => {
+        setState(STATE.ERROR);
+        log('Video error: ' + (video.error?.message || 'unknown'), 'err');
+      }, { once: true });
+    } else {
+      setState(STATE.ERROR);
+      log('HLS playback is not supported in this browser.', 'err');
+    }
+  }
+
+  /* ─── Stats poller ───────────────────────────────────────────────── */
+  function updateStats() {
+    statSegs.textContent = segCount;
+    if (video.buffered.length) {
+      const buf = video.buffered.end(video.buffered.length - 1) - video.currentTime;
+      statBuf.textContent = `${buf.toFixed(1)}s`;
+    } else {
+      statBuf.textContent = '–';
+    }
+    statSize.textContent = chunkBytes
+      ? `${(chunkBytes / 1024 / 1024).toFixed(2)} MB`
+      : '0 MB';
+  }
+
+  /* ─── Timer ──────────────────────────────────────────────────────── */
+  function fmtTime(ms) {
+    const s = Math.floor(ms / 1000);
+    return [Math.floor(s/3600), Math.floor((s%3600)/60), s%60]
+      .map(n => String(n).padStart(2, '0')).join(':');
+  }
+
+  /* ─── Codec picker ───────────────────────────────────────────────── */
+  function pickMime() {
+    const candidates = [
+      'video/webm;codecs=vp9,opus',
+      'video/webm;codecs=vp8,opus',
+      'video/webm',
+      'video/mp4',
+    ];
+    if (!window.MediaRecorder) return '';
+    return candidates.find(c => MediaRecorder.isTypeSupported(c)) || '';
+  }
+
+  /* ─── Recording ──────────────────────────────────────────────────── */
+  startBtn.addEventListener('click', startRecording);
+
+  function startRecording() {
+    if (state !== STATE.LOADED) return;
+
+    let stream;
+    try {
+      stream = video.captureStream();
+    } catch (e) {
+      log('captureStream() failed: ' + e.message + '. Try a different browser.', 'err');
+      return;
+    }
+
+    const mime    = pickMime();
+    const bitrate = parseInt(qualitySelect.value, 10);
+    chunks = []; chunkBytes = 0;
+
+    let recorder;
+    try {
+      recorder = new MediaRecorder(stream, {
+        ...(mime ? { mimeType: mime } : {}),
+        videoBitsPerSecond: bitrate,
+        audioBitsPerSecond: 128_000,
+      });
+    } catch (e) {
+      log('MediaRecorder init failed: ' + e.message, 'err');
+      return;
+    }
+
+    mediaRecorder = recorder;
+
+    recorder.ondataavailable = (e) => {
+      if (e.data && e.data.size > 0) {
+        chunks.push(e.data);
+        chunkBytes += e.data.size;
+      }
+    };
+    recorder.onstop = saveRecording;
+    recorder.onerror = (e) => {
+      log('MediaRecorder error: ' + e.error?.message, 'err');
+      stopRecording();
+    };
+
+    recorder.start(1000);
+    startTime = Date.now();
+
+    timerInterval = setInterval(() => {
+      timerEl.textContent = fmtTime(Date.now() - startTime);
+      const elapsed = (Date.now() - startTime) / 1000;
+      recBar.style.width = Math.min(100, (elapsed % 60) / 60 * 100) + '%';
+    }, 500);
+    statsInterval = setInterval(updateStats, 1000);
+
+    setState(STATE.RECORDING);
+    log(`Recording started — ${mime || 'default codec'}, ${bitrate / 1e6} Mbps`, 'ok');
+  }
+
+  stopBtn.addEventListener('click', stopRecording);
+
+  function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+    }
+    clearInterval(timerInterval);
+    clearInterval(statsInterval);
+    setState(STATE.LOADED);
+  }
+
+  /* ─── Save ───────────────────────────────────────────────────────── */
+  async function saveRecording() {
+    if (!chunks.length) { log('No data captured.', 'warn'); return; }
+
+    dlProgress.classList.add('visible');
+    dlBar.style.width = '30%';
+    dlPct.textContent = '30%';
+
+    const type = chunks[0].type || 'video/webm';
+    const ext  = type.includes('mp4') ? 'mp4' : 'webm';
+    const ts   = new Date().toISOString().replace(/[:.]/g, '-').replace('T','-').split('.')[0];
+    const name = `recording-${ts}.${ext}`;
+
+    await new Promise(r => setTimeout(r, 60)); // allow repaint
+
+    const blob = new Blob(chunks, { type });
+    dlBar.style.width = '70%';
+    dlPct.textContent = '70%';
+
+    await new Promise(r => setTimeout(r, 60));
+
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement('a');
+    a.href     = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+
+    dlBar.style.width = '100%';
+    dlPct.textContent = '100%';
+
+    log(`Saved: ${name} — ${(blob.size / 1024 / 1024).toFixed(2)} MB`, 'ok');
+    chunkBytes = 0; chunks = [];
+    updateStats();
+
+    setTimeout(() => {
+      dlProgress.classList.remove('visible');
+      dlBar.style.width = '0%';
+      dlPct.textContent = '0%';
+    }, 2000);
+  }
+
+  /* ─── Copy URL ───────────────────────────────────────────────────── */
+  copyBtn.addEventListener('click', async () => {
+    const url = urlInput.value.trim();
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(url);
+      log('URL copied to clipboard.', 'ok');
+    } catch {
+      log('Clipboard access denied.', 'warn');
+    }
+  });
+
+  /* ─── Load button ────────────────────────────────────────────────── */
+  loadBtn.addEventListener('click', () => {
+    const v = validateUrl(urlInput.value);
+    if (!v.ok) { log(v.msg, 'warn'); return; }
+    loadStream(v.url);
+  });
+
+  /* ─── Keyboard shortcuts ─────────────────────────────────────────── */
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (!e.shiftKey) return;
+    switch (e.key.toUpperCase()) {
+      case 'L': loadBtn.click(); break;
+      case 'R': startBtn.click(); break;
+      case 'S': stopBtn.click(); break;
+      case 'C': copyBtn.click(); break;
+    }
+  });
+
+  /* ─── Page unload: stop recorder cleanly ────────────────────────── */
+  window.addEventListener('beforeunload', () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+    }
+    if (hls) hls.destroy();
+  });
+
+  /* ─── Auto-load default URL ──────────────────────────────────────── */
+  window.addEventListener('load', () => {
+    const v = validateUrl(urlInput.value);
+    if (v.ok) loadStream(v.url);
+  });
+
+})();
+</script>
+</body>
+</html>

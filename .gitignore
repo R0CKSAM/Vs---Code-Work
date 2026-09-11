@@ -147,3 +147,7 @@ ETL/YT/logs
 ETL/YT/logs/yt4.log.1
 ETL/YT/logs/yt4.log.2
 ETL/YT/logs/yt4.log.3
+# Generated multi-channel recorder output and runtime state
+ETL/recorder/recordings/
+ETL/recorder/recorder_state.sqlite*
+ETL/recorder/channel_discovery_report.json

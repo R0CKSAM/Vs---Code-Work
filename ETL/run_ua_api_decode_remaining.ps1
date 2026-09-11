@@ -2,7 +2,9 @@ param(
     [double]$SleepMinSeconds = 4.0,
     [double]$SleepMaxSeconds = 5.0,
     [int]$InitialDelayMinutes = 0,
-    [int]$ApiLimit = -1
+    [int]$ApiLimit = -1,
+    [switch]$IncludeMalformed,
+    [string]$PriorityStatuses = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -42,11 +44,20 @@ if ($InitialDelayMinutes -gt 0) {
     Start-Sleep -Seconds ($InitialDelayMinutes * 60)
 }
 
-& $Python $FullDecodeScript `
-    --api-limit $ApiLimit `
-    --api-sleep-min-seconds $SleepMinSeconds `
-    --api-sleep-max-seconds $SleepMaxSeconds `
-    --api-flush-every 5
+$DecodeArgs = @(
+    $FullDecodeScript,
+    "--api-limit", $ApiLimit,
+    "--api-sleep-min-seconds", $SleepMinSeconds,
+    "--api-sleep-max-seconds", $SleepMaxSeconds,
+    "--api-flush-every", 5
+)
+if ($IncludeMalformed) {
+    $DecodeArgs += "--include-malformed"
+}
+if ($PriorityStatuses) {
+    $DecodeArgs += @("--priority-statuses", $PriorityStatuses)
+}
+& $Python @DecodeArgs
 
 if ($LASTEXITCODE -ne 0) {
     throw "UA API decode failed with exit code $LASTEXITCODE"
