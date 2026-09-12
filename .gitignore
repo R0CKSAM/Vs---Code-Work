@@ -151,3 +151,9 @@ ETL/YT/logs/yt4.log.3
 ETL/recorder/recordings/
 ETL/recorder/recorder_state.sqlite*
 ETL/recorder/channel_discovery_report.json
+ETL/recorder.zip
+
+# Scoreboard browser uploads/exports and local working copies are workstation state.
+ETL/output/scoreboard_web/
+ETL/extras/apps/leaderBoardGen/scoreboard_app - OG.py
+ETL/extras/apps/leaderBoardGen/scoreboard_app - SDI VERSION.py

@@ -17,10 +17,13 @@ Verify every template without opening the GUI:
 
 Requires:
     pip install pillow
+
+Optional direct Blackmagic DeckLink output:
+    pip install "gstreamer-bundle>=1.28,<1.29"
 """
 
 from __future__ import annotations
-import argparse, colorsys, copy, csv, json, os, re, sys
+import argparse, colorsys, copy, csv, json, os, re, shutil, subprocess, sys, tempfile, threading, time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 import tkinter as tk
@@ -38,7 +41,8 @@ except ImportError:
     sys.exit("Pillow is required:  pip install pillow")
 
 IMAGE_FILETYPES = [
-    ("Images", "*.png *.jpg *.jpeg *.webp *.bmp *.avif"),
+    ("Images", "*.png *.jpg *.jpeg *.gif *.webp *.bmp *.avif"),
+    ("GIF images", "*.gif"),
     ("All files", "*.*"),
 ]
 
@@ -51,6 +55,28 @@ STYLE_PRESET_FILETYPES = [
     ("Scoreboard style", "*.scoreboard-style.json"),
     ("JSON", "*.json"),
 ]
+
+VIDEO_EXPORT_PRESETS = {
+    "HD 1080i50": {
+        "width":1920, "height":1080, "fps":25, "level":"4.1", "interlaced":True,
+        "gst_mode":"1080i50",
+    },
+    "HD 1080p25": {
+        "width":1920, "height":1080, "fps":25, "level":"4.1", "gst_mode":"1080p25",
+    },
+    "HD 1080p50": {
+        "width":1920, "height":1080, "fps":50, "level":"4.2", "gst_mode":"1080p50",
+    },
+    "HD 720p50": {
+        "width":1280, "height":720, "fps":50, "level":"4.1", "gst_mode":"720p50",
+    },
+}
+
+DECKLINK_OUTPUTS = {
+    "DeckLink output 1 (device 0)": 0,
+    "DeckLink output 2 (device 1)": 1,
+}
+_GSTREAMER_DLL_HANDLES = []
 
 TEXT_CASE_CHOICES = ("As typed", "UPPERCASE", "lowercase", "Title Case")
 PANEL_STYLE_LABELS = {
@@ -195,8 +221,264 @@ def pct(val, maxv) -> float:
 
 def load_photo(path: str) -> Optional[Image.Image]:
     if not path or not os.path.exists(path): return None
-    try: return Image.open(path).convert("RGBA")
-    except: return None
+    try:
+        # Scoreboards are static compositions. Animated GIFs therefore use
+        # their first frame consistently in the editor, preview, and export.
+        with Image.open(path) as source:
+            source.seek(0)
+            return source.convert("RGBA")
+    except (OSError, ValueError, EOFError):
+        return None
+
+
+def locate_ffmpeg(explicit: str = "") -> Optional[str]:
+    """Find FFmpeg in an explicit path, the environment, or known local installs."""
+    app_root = Path(__file__).resolve().parents[3]
+    candidates = [
+        explicit,
+        os.getenv("FFMPEG_PATH", ""),
+        str(app_root / "tools" / "ffmpeg" / "bin" / "ffmpeg.exe"),
+        str(app_root / "tools" / "ffmpeg.exe"),
+        shutil.which("ffmpeg") or "",
+    ]
+    for candidate in candidates:
+        if candidate and Path(candidate).is_file():
+            return str(Path(candidate).resolve())
+    local_app_data = os.getenv("LOCALAPPDATA", "")
+    if local_app_data:
+        winget_root = Path(local_app_data) / "Microsoft" / "WinGet" / "Packages"
+        matches = sorted(
+            winget_root.glob("Gyan.FFmpeg_*/*/bin/ffmpeg.exe"), reverse=True,
+        )
+        if matches:
+            return str(matches[0].resolve())
+    return None
+
+
+def build_mp4_command(
+    ffmpeg: str, source_png: Path, output_mp4: Path, preset_name: str, duration: int,
+) -> List[str]:
+    """Build a deterministic, DeckLink-host-friendly H.264 MP4 command."""
+    preset = VIDEO_EXPORT_PRESETS.get(preset_name)
+    if preset is None:
+        raise ValueError(f"Unknown video preset: {preset_name}")
+    duration = max(1, min(3600, int(duration)))
+    width, height, fps = preset["width"], preset["height"], preset["fps"]
+    video_filter = (
+        f"scale={width}:{height}:force_original_aspect_ratio=decrease:flags=lanczos,"
+        f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2:color=black,"
+        "setsar=1,format=yuv420p"
+    )
+    command = [
+        ffmpeg, "-hide_banner", "-loglevel", "error", "-y",
+        "-loop", "1", "-framerate", str(fps), "-i", str(source_png),
+        "-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=48000",
+        "-t", str(duration), "-vf", video_filter,
+        "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+    ]
+    if preset.get("interlaced"):
+        command.extend(["-flags", "+ildct+ilme", "-x264-params", "tff=1"])
+    command.extend([
+        "-profile:v", "high", "-level:v", preset["level"],
+        "-r", str(fps), "-g", str(fps * 2), "-pix_fmt", "yuv420p",
+        "-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709",
+        "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-ac", "2",
+        "-shortest", "-movflags", "+faststart", str(output_mp4),
+    ])
+    return command
+
+
+def prepare_broadcast_frame(image: Image.Image, preset_name: str) -> Image.Image:
+    """Fit a scoreboard inside an exact broadcast raster without cropping it."""
+    preset = VIDEO_EXPORT_PRESETS.get(preset_name)
+    if preset is None:
+        raise ValueError(f"Unknown video preset: {preset_name}")
+    width, height = preset["width"], preset["height"]
+    source = image.convert("RGB")
+    scale = min(width / source.width, height / source.height)
+    fitted_size = (
+        max(1, int(round(source.width * scale))),
+        max(1, int(round(source.height * scale))),
+    )
+    fitted = source.resize(fitted_size, Image.LANCZOS)
+    frame = Image.new("RGB", (width, height), (0, 0, 0))
+    frame.paste(fitted, ((width - fitted.width) // 2, (height - fitted.height) // 2))
+    return frame
+
+
+def build_decklink_pipeline(preset_name: str, device_number: int) -> str:
+    """Build the direct SDI pipeline used by the embedded GStreamer runtime."""
+    preset = VIDEO_EXPORT_PRESETS.get(preset_name)
+    if preset is None:
+        raise ValueError(f"Unknown video preset: {preset_name}")
+    device_number = max(0, int(device_number))
+    width, height, fps = preset["width"], preset["height"], preset["fps"]
+    source_caps = (
+        f"video/x-raw,format=RGB,width={width},height={height},"
+        f"framerate={fps}/1,pixel-aspect-ratio=1/1"
+    )
+    output_caps = (
+        f"video/x-raw,format=UYVY,width={width},height={height},"
+        f"framerate={fps}/1,pixel-aspect-ratio=1/1,colorimetry=bt709"
+    )
+    stages = [
+        "appsrc name=scoreboard_source is-live=true block=false format=time "
+        f"do-timestamp=true caps=\"{source_caps}\"",
+        "queue max-size-buffers=2 leaky=downstream",
+        "videoconvert",
+    ]
+    if preset.get("interlaced"):
+        stages.extend([
+            f"{output_caps},interlace-mode=progressive",
+            "interlace field-pattern=2:2 top-field-first=true",
+            f"{output_caps},interlace-mode=interleaved,field-order=top-field-first",
+        ])
+    else:
+        stages.append(f"{output_caps},interlace-mode=progressive")
+    stages.append(
+        "decklinkvideosink "
+        f"device-number={device_number} mode={preset['gst_mode']} "
+        "video-format=8bit-yuv keyer-mode=off sync=true"
+    )
+    return " ! ".join(stages)
+
+
+def load_gstreamer():
+    """Load the optional bundled GStreamer runtime with a working plugin scanner."""
+    try:
+        import gstreamer_libs
+    except ImportError as exc:
+        raise RuntimeError(
+            'GStreamer is not installed. Run: pip install "gstreamer-bundle>=1.28,<1.29"'
+        ) from exc
+
+    environment, dll_paths = gstreamer_libs.gstreamer_env()
+    scanner = Path(environment.get("GST_PLUGIN_SCANNER_1_0", ""))
+    scanner_exe = scanner.with_suffix(".exe")
+    if os.name == "nt" and scanner.suffix.lower() != ".exe" and scanner_exe.is_file():
+        environment["GST_PLUGIN_SCANNER_1_0"] = str(scanner_exe)
+        environment["GST_PLUGIN_SCANNER"] = str(scanner_exe)
+    blackmagic = Path(r"C:\Program Files\Blackmagic Design\Blackmagic Desktop Video")
+    if blackmagic.is_dir():
+        environment["PATH"] = str(blackmagic) + os.pathsep + environment.get("PATH", "")
+    os.environ.update(environment)
+    if os.name == "nt" and hasattr(os, "add_dll_directory"):
+        for directory in str(dll_paths).split(os.pathsep):
+            if directory and Path(directory).is_dir():
+                try:
+                    _GSTREAMER_DLL_HANDLES.append(os.add_dll_directory(directory))
+                except OSError:
+                    pass
+        if blackmagic.is_dir():
+            try:
+                _GSTREAMER_DLL_HANDLES.append(os.add_dll_directory(str(blackmagic)))
+            except OSError:
+                pass
+
+    try:
+        import gi
+        gi.require_version("Gst", "1.0")
+        from gi.repository import Gst
+    except (ImportError, ValueError) as exc:
+        raise RuntimeError(f"Could not load GStreamer: {exc}") from exc
+    Gst.init(None)
+    missing = [
+        name for name in ("appsrc", "queue", "videoconvert", "interlace", "decklinkvideosink")
+        if Gst.ElementFactory.find(name) is None
+    ]
+    if missing:
+        raise RuntimeError("Missing GStreamer elements: " + ", ".join(missing))
+    return Gst
+
+
+class DeckLinkLiveOutput:
+    """Hold and update the latest scoreboard frame on one DeckLink output."""
+
+    def __init__(self, preset_name: str, device_number: int):
+        self.preset_name = preset_name
+        self.device_number = int(device_number)
+        self.Gst = load_gstreamer()
+        try:
+            self.pipeline = self.Gst.parse_launch(
+                build_decklink_pipeline(preset_name, self.device_number)
+            )
+        except Exception as exc:
+            raise RuntimeError(f"Could not create DeckLink pipeline: {exc}") from exc
+        self.source = self.pipeline.get_by_name("scoreboard_source")
+        self.bus = self.pipeline.get_bus()
+        self.running = False
+        self._frame_lock = threading.Lock()
+        self._frame_data = b""
+        self._stop_event = threading.Event()
+        self._thread = None
+        self._thread_error = None
+
+    def start(self, image: Image.Image) -> None:
+        self._set_frame(image)
+        result = self.pipeline.set_state(self.Gst.State.PLAYING)
+        if result == self.Gst.StateChangeReturn.FAILURE:
+            self.pipeline.set_state(self.Gst.State.NULL)
+            raise RuntimeError("DeckLink rejected the selected output mode or device.")
+        self.running = True
+        self._stop_event.clear()
+        self._thread = threading.Thread(
+            target=self._feed_frames, name="scoreboard-decklink-output", daemon=True,
+        )
+        self._thread.start()
+
+    def update(self, image: Image.Image) -> None:
+        if not self.running:
+            return
+        self._set_frame(image)
+
+    def _set_frame(self, image: Image.Image) -> None:
+        frame = prepare_broadcast_frame(image, self.preset_name)
+        with self._frame_lock:
+            self._frame_data = frame.tobytes("raw", "RGB")
+
+    def _feed_frames(self) -> None:
+        fps = VIDEO_EXPORT_PRESETS[self.preset_name]["fps"]
+        duration = self.Gst.SECOND // fps
+        frame_number = 0
+        deadline = time.perf_counter()
+        while not self._stop_event.is_set():
+            with self._frame_lock:
+                data = self._frame_data
+            buffer = self.Gst.Buffer.new_wrapped(data)
+            buffer.pts = frame_number * duration
+            buffer.dts = buffer.pts
+            buffer.duration = duration
+            flow = self.source.emit("push-buffer", buffer)
+            if flow != self.Gst.FlowReturn.OK:
+                if not self._stop_event.is_set():
+                    self._thread_error = f"DeckLink frame output failed: {flow.value_nick}"
+                return
+            frame_number += 1
+            deadline += 1.0 / fps
+            self._stop_event.wait(max(0.0, deadline - time.perf_counter()))
+
+    def poll_error(self) -> Optional[str]:
+        if self._thread_error:
+            return self._thread_error
+        message = self.bus.pop_filtered(
+            self.Gst.MessageType.ERROR | self.Gst.MessageType.EOS
+        )
+        if message is None:
+            return None
+        if message.type == self.Gst.MessageType.ERROR:
+            error, debug = message.parse_error()
+            detail = debug.strip() if debug else ""
+            return f"{error.message}\n{detail}".strip()
+        return "DeckLink output ended unexpectedly."
+
+    def stop(self) -> None:
+        self._stop_event.set()
+        if self._thread is not None and self._thread.is_alive():
+            self._thread.join(timeout=2.0)
+        if self.running:
+            self.source.emit("end-of-stream")
+        self.pipeline.set_state(self.Gst.State.NULL)
+        self.running = False
 
 def cover_crop(img: Image.Image, w: int, h: int, zoom: float = 100.0,
                focus_x: float = 50.0, focus_y: float = 50.0) -> Image.Image:
@@ -1909,6 +2191,111 @@ class LiveColorDialog(tk.Toplevel):
         self.destroy()
 
 
+class MP4ExportDialog(tk.Toplevel):
+    """Collect the broadcast video mode and hold duration before export."""
+
+    def __init__(self, parent, preset, duration, on_export):
+        super().__init__(parent)
+        self.title("Export MP4")
+        self.resizable(False, False)
+        self.transient(parent)
+        self.grab_set()
+        self._on_export = on_export
+        self.preset_var = tk.StringVar(
+            value=preset if preset in VIDEO_EXPORT_PRESETS else next(iter(VIDEO_EXPORT_PRESETS))
+        )
+        self.duration_var = tk.StringVar(value=str(duration))
+
+        body = ttk.Frame(self, padding=14)
+        body.pack(fill="both", expand=True)
+        ttk.Label(body, text="Video format:").grid(row=0, column=0, sticky="w", pady=4)
+        ttk.Combobox(
+            body, textvariable=self.preset_var, values=list(VIDEO_EXPORT_PRESETS),
+            state="readonly", width=22,
+        ).grid(row=0, column=1, sticky="ew", padx=(10, 0), pady=4)
+        ttk.Label(body, text="Duration (seconds):").grid(row=1, column=0, sticky="w", pady=4)
+        ttk.Spinbox(
+            body, textvariable=self.duration_var, from_=1, to=3600, width=10,
+        ).grid(row=1, column=1, sticky="w", padx=(10, 0), pady=4)
+
+        buttons = ttk.Frame(body)
+        buttons.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(12, 0))
+        ttk.Button(buttons, text="Cancel", command=self.destroy).pack(side="right")
+        ttk.Button(
+            buttons, text="Choose output", style="Primary.TButton", command=self._submit,
+        ).pack(side="right", padx=(0, 8))
+        self.bind("<Return>", lambda _event: self._submit())
+        self.bind("<Escape>", lambda _event: self.destroy())
+
+    def _submit(self):
+        try:
+            duration = int(self.duration_var.get())
+        except ValueError:
+            duration = 0
+        if not 1 <= duration <= 3600:
+            messagebox.showerror(
+                "Invalid duration", "Enter a duration from 1 to 3600 seconds.", parent=self,
+            )
+            return
+        preset = self.preset_var.get()
+        self.destroy()
+        self._on_export(preset, duration)
+
+
+class LiveOutputDialog(tk.Toplevel):
+    """Choose a DeckLink connector and television standard before going live."""
+
+    def __init__(self, parent, preset, output_name, on_start):
+        super().__init__(parent)
+        self.title("DeckLink live output")
+        self.resizable(False, False)
+        self.transient(parent)
+        self.grab_set()
+        self._on_start = on_start
+        self.preset_var = tk.StringVar(
+            value=preset if preset in VIDEO_EXPORT_PRESETS else "HD 1080i50"
+        )
+        self.output_var = tk.StringVar(
+            value=output_name if output_name in DECKLINK_OUTPUTS else next(iter(DECKLINK_OUTPUTS))
+        )
+
+        body = ttk.Frame(self, padding=14)
+        body.pack(fill="both", expand=True)
+        ttk.Label(body, text="Video format:").grid(row=0, column=0, sticky="w", pady=4)
+        ttk.Combobox(
+            body, textvariable=self.preset_var, values=list(VIDEO_EXPORT_PRESETS),
+            state="readonly", width=28,
+        ).grid(row=0, column=1, sticky="ew", padx=(10, 0), pady=4)
+        ttk.Label(body, text="SDI output:").grid(row=1, column=0, sticky="w", pady=4)
+        ttk.Combobox(
+            body, textvariable=self.output_var, values=list(DECKLINK_OUTPUTS),
+            state="readonly", width=28,
+        ).grid(row=1, column=1, sticky="ew", padx=(10, 0), pady=4)
+        ttk.Label(
+            body,
+            text=(
+                "Close Blackmagic Media Express before starting.\n"
+                "The current scoreboard will update on SDI as you edit it."
+            ),
+            foreground="#53616e",
+        ).grid(row=2, column=0, columnspan=2, sticky="w", pady=(10, 2))
+
+        buttons = ttk.Frame(body)
+        buttons.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(12, 0))
+        ttk.Button(buttons, text="Cancel", command=self.destroy).pack(side="right")
+        ttk.Button(
+            buttons, text="Start SDI output", style="Primary.TButton", command=self._submit,
+        ).pack(side="right", padx=(0, 8))
+        self.bind("<Return>", lambda _event: self._submit())
+        self.bind("<Escape>", lambda _event: self.destroy())
+
+    def _submit(self):
+        preset = self.preset_var.get()
+        output_name = self.output_var.get()
+        self.destroy()
+        self._on_start(preset, output_name)
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 # ROW WIDGETS
 # ═══════════════════════════════════════════════════════════════════════════
@@ -2582,6 +2969,12 @@ class App:
         self._t1_layer_controls_suspended = False
         self._t1_panel_controls_suspended = False
         self._t1_spacing_controls_suspended = False
+        self._video_export_preset = "HD 1080i50"
+        self._video_export_duration = 10
+        self._live_output_preset = "HD 1080i50"
+        self._live_output_name = next(iter(DECKLINK_OUTPUTS))
+        self._live_output: Optional[DeckLinkLiveOutput] = None
+        self._live_output_poll_id = None
 
         self._build_ui()
         self._suspend = True
@@ -2603,6 +2996,8 @@ class App:
         root.bind("<Control-s>",lambda e:self.save_project())
         root.bind("<Control-Shift-S>",lambda e:self.save_project(save_as=True))
         root.bind("<Control-e>",lambda e:self.export_png())
+        root.bind("<Control-Shift-E>",lambda e:self.export_mp4())
+        root.bind("<Control-l>",lambda e:self.toggle_live_output())
         root.protocol("WM_DELETE_WINDOW",self._on_close)
 
     def _setup_style(self):
@@ -2643,6 +3038,11 @@ class App:
         ttk.Button(top,text="Reset",command=self.reset_current_template).pack(side="left",padx=2)
 
         ttk.Button(top,text="Export PNG",style="Primary.TButton",command=self.export_png).pack(side="right",padx=(8,0))
+        ttk.Button(top,text="Export MP4",command=self.export_mp4).pack(side="right",padx=(8,0))
+        self._live_output_button=ttk.Button(
+            top,text="Live Output",command=self.toggle_live_output,
+        )
+        self._live_output_button.pack(side="right",padx=(8,0))
         self.export_scale_var=tk.StringVar(value="Standard")
         ttk.Combobox(
             top,textvariable=self.export_scale_var,
@@ -4586,6 +4986,7 @@ class App:
 
     def _on_close(self):
         if self._confirm_discard():
+            self._stop_live_output(silent=True)
             self.root.destroy()
 
     # ── Render ───────────────────────────────────────────────────────────
@@ -4607,6 +5008,12 @@ class App:
         self._last_render=img
         self.preview_info_var.set(f"{img.width:,} x {img.height:,} px")
         self._paint_preview()
+        if self._live_output is not None:
+            try:
+                self._live_output.update(img)
+            except RuntimeError as exc:
+                self._stop_live_output(silent=True)
+                messagebox.showerror("Live output stopped",str(exc),parent=self.root)
 
     def _paint_preview(self):
         self._preview_resize_id=None
@@ -4679,6 +5086,128 @@ class App:
             self._status("Export failed")
             messagebox.showerror("Export failed",str(exc),parent=self.root)
 
+    def toggle_live_output(self):
+        if self._live_output is not None:
+            self._stop_live_output()
+            return
+        LiveOutputDialog(
+            self.root, self._live_output_preset, self._live_output_name,
+            self._start_live_output,
+        )
+
+    def _start_live_output(self, preset, output_name):
+        if output_name not in DECKLINK_OUTPUTS:
+            messagebox.showerror("Invalid output","Choose a DeckLink output.",parent=self.root)
+            return
+        if self._last_render is None:
+            self.redraw()
+        if self._last_render is None:
+            messagebox.showerror(
+                "No scoreboard", "The current scoreboard could not be rendered.", parent=self.root,
+            )
+            return
+        self._live_output_preset = preset
+        self._live_output_name = output_name
+        self._status(f"Starting {preset} on {output_name}")
+        self.root.update_idletasks()
+        output = None
+        try:
+            output = DeckLinkLiveOutput(preset, DECKLINK_OUTPUTS[output_name])
+            output.start(self._last_render)
+            self._live_output = output
+            self._live_output_button.configure(text="Stop Live")
+            self._status(f"LIVE: {preset} on {output_name}")
+            self._poll_live_output()
+        except (OSError,ValueError,RuntimeError) as exc:
+            if output is not None:
+                output.stop()
+            self._status("DeckLink output did not start")
+            messagebox.showerror(
+                "DeckLink output failed",
+                f"{exc}\n\nClose Media Express, check the SDI device, and try again.",
+                parent=self.root,
+            )
+
+    def _poll_live_output(self):
+        self._live_output_poll_id = None
+        if self._live_output is None:
+            return
+        error = self._live_output.poll_error()
+        if error:
+            self._stop_live_output(silent=True)
+            messagebox.showerror("Live output stopped",error,parent=self.root)
+            return
+        self._live_output_poll_id = self.root.after(350,self._poll_live_output)
+
+    def _stop_live_output(self, silent=False):
+        if self._live_output_poll_id:
+            try:
+                self.root.after_cancel(self._live_output_poll_id)
+            except tk.TclError:
+                pass
+            self._live_output_poll_id = None
+        output, self._live_output = self._live_output, None
+        if output is not None:
+            output.stop()
+        if hasattr(self,"_live_output_button"):
+            self._live_output_button.configure(text="Live Output")
+        if not silent:
+            self._status("DeckLink live output stopped")
+
+    def export_mp4(self):
+        ffmpeg = locate_ffmpeg()
+        if not ffmpeg:
+            messagebox.showerror(
+                "FFmpeg not found",
+                "Install FFmpeg or set FFMPEG_PATH to the full ffmpeg.exe path.",
+                parent=self.root,
+            )
+            return
+        MP4ExportDialog(
+            self.root, self._video_export_preset, self._video_export_duration,
+            lambda preset,duration:self._export_mp4(ffmpeg,preset,duration),
+        )
+
+    def _export_mp4(self, ffmpeg, preset, duration):
+        base=self.current_project_path.stem.replace(".scoreboard","") if self.current_project_path else "scoreboard"
+        selected=filedialog.asksaveasfilename(
+            defaultextension=".mp4",filetypes=[("MP4 video","*.mp4")],
+            initialfile=f"{base}_{self.tpl}_{preset.lower().replace(' ','_')}.mp4",
+            parent=self.root,
+        )
+        if not selected:
+            return
+        self._video_export_preset=preset
+        self._video_export_duration=duration
+        try:
+            self._status(f"Exporting {preset} MP4")
+            self.root.update_idletasks()
+            config=copy.deepcopy(self.cfgs[self.tpl])
+            config["_render_scale"]=1
+            image=RENDERERS[self.tpl](config)
+            with tempfile.TemporaryDirectory(prefix="scoreboard_mp4_") as temporary:
+                source=Path(temporary) / "scoreboard_frame.png"
+                image.save(source,format="PNG")
+                command=build_mp4_command(
+                    ffmpeg,source,Path(selected),preset,duration,
+                )
+                completed=subprocess.run(
+                    command,capture_output=True,text=True,check=False,
+                    creationflags=getattr(subprocess,"CREATE_NO_WINDOW",0),
+                )
+            if completed.returncode:
+                detail=(completed.stderr or completed.stdout or "FFmpeg failed").strip()
+                raise RuntimeError(detail[-1800:])
+            self._status(f"Exported {Path(selected).name} ({preset}, {duration}s)")
+            messagebox.showinfo(
+                "Export complete",
+                f"Saved {Path(selected).name}\n{preset} | {duration} seconds | 48 kHz stereo",
+                parent=self.root,
+            )
+        except (OSError,ValueError,RuntimeError) as exc:
+            self._status("MP4 export failed")
+            messagebox.showerror("MP4 export failed",str(exc),parent=self.root)
+
 
 def render_default(template: str, output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -4692,7 +5221,10 @@ def main(argv=None):
     output_group = parser.add_mutually_exclusive_group()
     output_group.add_argument("--headless", type=Path, help="Render one default template to PNG.")
     output_group.add_argument("--render-all", type=Path, help="Render all default templates into a directory.")
+    output_group.add_argument("--web", action="store_true", help="Run the browser editor.")
     parser.add_argument("--template", choices=TEMPLATE_KEYS, default="t1")
+    parser.add_argument("--host", default="127.0.0.1", help="Web bind address (default: 127.0.0.1).")
+    parser.add_argument("--port", type=int, default=8080, help="Web port (default: 8080).")
     args = parser.parse_args(argv)
 
     if args.headless:
@@ -4701,6 +5233,12 @@ def main(argv=None):
     if args.render_all:
         for key in TEMPLATE_KEYS:
             render_default(key, args.render_all / f"scoreboard_{key}.png")
+        return
+    if args.web:
+        if not 1 <= args.port <= 65535:
+            parser.error("--port must be between 1 and 65535")
+        import scoreboard_web
+        scoreboard_web.run_server(sys.modules[__name__], args.host, args.port)
         return
 
     root=TkinterDnD.Tk() if TkinterDnD else tk.Tk()

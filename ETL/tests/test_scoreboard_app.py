@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import base64
 import copy
 import importlib.util
+import io
 from pathlib import Path
 
 import pytest
@@ -13,6 +15,131 @@ SPEC = importlib.util.spec_from_file_location("scoreboard_app", MODULE_PATH)
 assert SPEC and SPEC.loader
 scoreboard = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(scoreboard)
+
+WEB_MODULE_PATH = MODULE_PATH.with_name("scoreboard_web.py")
+WEB_SPEC = importlib.util.spec_from_file_location("scoreboard_web", WEB_MODULE_PATH)
+assert WEB_SPEC and WEB_SPEC.loader
+scoreboard_web = importlib.util.module_from_spec(WEB_SPEC)
+WEB_SPEC.loader.exec_module(scoreboard_web)
+
+
+def test_gif_files_are_selectable_and_load_the_first_animation_frame(tmp_path: Path) -> None:
+    gif_path = tmp_path / "animated-player.gif"
+    first = scoreboard.Image.new("RGB", (8, 6), (240, 20, 30))
+    second = scoreboard.Image.new("RGB", (8, 6), (20, 30, 240))
+    first.save(
+        gif_path,
+        format="GIF",
+        save_all=True,
+        append_images=[second],
+        duration=[80, 120],
+        loop=0,
+    )
+
+    image = scoreboard.load_photo(str(gif_path))
+
+    assert "*.gif" in scoreboard.IMAGE_FILETYPES[0][1]
+    assert image is not None
+    assert image.mode == "RGBA"
+    assert image.size == (8, 6)
+    red, green, blue, alpha = image.getpixel((0, 0))
+    assert red > 200 and green < 50 and blue < 50 and alpha == 255
+
+
+def test_mp4_command_uses_broadcast_safe_video_and_audio_settings(tmp_path: Path) -> None:
+    source = tmp_path / "frame.png"
+    output = tmp_path / "scoreboard.mp4"
+
+    command = scoreboard.build_mp4_command(
+        "ffmpeg.exe", source, output, "HD 1080p25", 12,
+    )
+
+    assert command[0] == "ffmpeg.exe"
+    video_filter = command[command.index("-vf") + 1]
+    assert "scale=1920:1080:force_original_aspect_ratio=decrease" in video_filter
+    assert command[command.index("-r") + 1] == "25"
+    assert command[command.index("-pix_fmt") + 1] == "yuv420p"
+    assert command[command.index("-color_primaries") + 1] == "bt709"
+    assert command[command.index("-ar") + 1] == "48000"
+    assert command[command.index("-ac") + 1] == "2"
+    assert command[command.index("-t") + 1] == "12"
+    assert command[-1] == str(output)
+
+    interlaced = scoreboard.build_mp4_command(
+        "ffmpeg.exe", source, output, "HD 1080i50", 12,
+    )
+    assert interlaced[interlaced.index("-r") + 1] == "25"
+    assert interlaced[interlaced.index("-flags") + 1] == "+ildct+ilme"
+    assert interlaced[interlaced.index("-x264-params") + 1] == "tff=1"
+
+
+def test_broadcast_frame_fits_without_cropping() -> None:
+    source = scoreboard.Image.new("RGB", (100, 100), (220, 30, 40))
+
+    frame = scoreboard.prepare_broadcast_frame(source, "HD 1080p25")
+
+    assert frame.size == (1920, 1080)
+    assert frame.getpixel((960, 540)) == (220, 30, 40)
+    assert frame.getpixel((10, 540)) == (0, 0, 0)
+
+
+def test_decklink_pipeline_uses_selected_device_and_video_standard() -> None:
+    progressive = scoreboard.build_decklink_pipeline("HD 1080p25", 2)
+    interlaced = scoreboard.build_decklink_pipeline("HD 1080i50", 0)
+
+    assert "device-number=2" in progressive
+    assert "mode=1080p25" in progressive
+    assert "interlace-mode=progressive" in progressive
+    assert "field-pattern=2:2" not in progressive
+    assert "device-number=0" in interlaced
+    assert "mode=1080i50" in interlaced
+    assert "interlace field-pattern=2:2 top-field-first=true" in interlaced
+    assert "interlace-mode=interleaved,field-order=top-field-first" in interlaced
+
+
+def test_decklink_pipeline_rejects_unknown_video_standard() -> None:
+    with pytest.raises(ValueError, match="Unknown video preset"):
+        scoreboard.build_decklink_pipeline("Cinema mystery mode", 0)
+
+
+def test_web_runtime_uses_the_same_four_template_renderers(tmp_path: Path) -> None:
+    runtime = scoreboard_web.ScoreboardWebRuntime(scoreboard, tmp_path)
+
+    image, config = runtime.render("t2", copy.deepcopy(scoreboard.DEF_T2))
+
+    assert image.size == scoreboard.T2_SIZES[scoreboard.DEF_T2["canvas_size"]]
+    assert config["template"] == "t2"
+    assert runtime.bootstrap()["defaults"]["t3"] == scoreboard.DEF_T3
+
+
+def test_web_runtime_blocks_arbitrary_local_image_paths(tmp_path: Path) -> None:
+    runtime = scoreboard_web.ScoreboardWebRuntime(scoreboard, tmp_path / "uploads")
+    config = copy.deepcopy(scoreboard.DEF_T1)
+    config["photo_path"] = str(tmp_path / "private-image.png")
+
+    normalized = runtime.normalized_config("t1", config)
+
+    assert normalized["photo_path"] == ""
+
+
+def test_web_upload_persists_and_can_be_rendered(tmp_path: Path) -> None:
+    runtime = scoreboard_web.ScoreboardWebRuntime(scoreboard, tmp_path / "uploads")
+    source = scoreboard.Image.new("RGB", (32, 24), (20, 140, 220))
+    buffer = io.BytesIO()
+    source.save(buffer, "PNG")
+
+    uploaded = runtime.upload({
+        "name": "player.png",
+        "data": "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode("ascii"),
+    })
+    config = copy.deepcopy(scoreboard.DEF_T1)
+    config["photo_path"] = uploaded["path"]
+    rendered, normalized = runtime.render("t1", config)
+
+    assert Path(uploaded["path"]).is_file()
+    assert normalized["photo_path"] == uploaded["path"]
+    assert rendered.size == scoreboard.T1_SIZES[scoreboard.DEF_T1["canvas_size"]]
+    assert runtime.storage_status()["writable"] is True
 
 
 def test_text_style_inheritance_and_role_override() -> None:

@@ -1,0 +1,2 @@
+Pillow>=10
+gstreamer-bundle>=1.28,<1.29; sys_platform == "win32"
