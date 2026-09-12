@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 import copy
 import io
+import ipaddress
 import json
 import os
 import re
@@ -12,14 +13,16 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Dict
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 
 MAX_REQUEST_BYTES = 35 * 1024 * 1024
+SESSION_TIMEOUT_SECONDS = 30
 IMAGE_MIME_EXTENSIONS = {
     "image/png": ".png",
     "image/jpeg": ".jpg",
@@ -40,6 +43,8 @@ class ScoreboardWebRuntime:
         self.live_output = None
         self.live_preset = None
         self.live_output_name = None
+        self.live_owner_id = None
+        self.sessions: Dict[str, Dict[str, Any]] = {}
 
     def _select_upload_dir(self, requested: Path | None) -> Path:
         candidates = []
@@ -75,6 +80,112 @@ class ScoreboardWebRuntime:
             "writable": self.upload_dir.is_dir() and os.access(self.upload_dir, os.W_OK),
         }
 
+    @staticmethod
+    def _clean_client_id(value: Any) -> str:
+        client_id = str(value or "").strip()
+        return client_id if re.fullmatch(r"[A-Za-z0-9-]{8,80}", client_id) else ""
+
+    @staticmethod
+    def _clean_display_name(value: Any, client_id: str) -> str:
+        name = re.sub(r"\s+", " ", str(value or "")).strip()[:40]
+        return name or f"Operator {client_id[:4].upper()}"
+
+    @staticmethod
+    def _is_local_request(remote_address: str) -> bool:
+        try:
+            return ipaddress.ip_address(remote_address).is_loopback
+        except ValueError:
+            return False
+
+    def _purge_sessions_locked(self) -> None:
+        cutoff = time.monotonic() - SESSION_TIMEOUT_SECONDS
+        stale = [
+            client_id for client_id, session in self.sessions.items()
+            if session["last_seen"] < cutoff and client_id != self.live_owner_id
+        ]
+        for client_id in stale:
+            self.sessions.pop(client_id, None)
+
+    def register_session(
+        self, client_id: Any, display_name: Any, remote_address: str,
+    ) -> Dict[str, Any]:
+        client_id = self._clean_client_id(client_id) or uuid.uuid4().hex
+        now = time.monotonic()
+        with self.lock:
+            existing = self.sessions.get(client_id, {})
+            session = {
+                "id": client_id,
+                "name": self._clean_display_name(display_name, client_id),
+                "address": remote_address,
+                "priority": int(existing.get("priority", 50)),
+                "last_seen": now,
+            }
+            self.sessions[client_id] = session
+            self._purge_sessions_locked()
+            return self._public_session(session)
+
+    def touch_session(self, client_id: Any, remote_address: str) -> Dict[str, Any] | None:
+        client_id = self._clean_client_id(client_id)
+        if not client_id:
+            return None
+        with self.lock:
+            session = self.sessions.get(client_id)
+            if session is None:
+                session = {
+                    "id": client_id,
+                    "name": self._clean_display_name("", client_id),
+                    "address": remote_address,
+                    "priority": 50,
+                    "last_seen": time.monotonic(),
+                }
+                self.sessions[client_id] = session
+            else:
+                session["address"] = remote_address
+                session["last_seen"] = time.monotonic()
+            self._purge_sessions_locked()
+            return self._public_session(session)
+
+    def _public_session(self, session: Dict[str, Any]) -> Dict[str, Any]:
+        return {
+            "id": session["id"],
+            "name": session["name"],
+            "address": session["address"],
+            "priority": session["priority"],
+            "live_owner": session["id"] == self.live_owner_id,
+            "age_seconds": max(0, int(time.monotonic() - session["last_seen"])),
+        }
+
+    def session_status(self, client_id: Any, remote_address: str) -> Dict[str, Any]:
+        requester = self.touch_session(client_id, remote_address)
+        with self.lock:
+            sessions = sorted(
+                (self._public_session(session) for session in self.sessions.values()),
+                key=lambda item: (-item["priority"], item["name"].casefold()),
+            )
+        return {
+            "requester": requester,
+            "can_manage": self._is_local_request(remote_address),
+            "session_timeout_seconds": SESSION_TIMEOUT_SECONDS,
+            "sessions": sessions,
+        }
+
+    def set_session_priority(
+        self, target_id: Any, priority: Any, remote_address: str,
+    ) -> Dict[str, Any]:
+        if not self._is_local_request(remote_address):
+            raise PermissionError("Priorities can only be changed from this computer.")
+        target_id = self._clean_client_id(target_id)
+        try:
+            priority = max(0, min(100, int(priority)))
+        except (TypeError, ValueError) as exc:
+            raise ValueError("Priority must be from 0 to 100.") from exc
+        with self.lock:
+            session = self.sessions.get(target_id)
+            if session is None:
+                raise ValueError("That user is no longer online.")
+            session["priority"] = priority
+            return self._public_session(session)
+
     def bootstrap(self) -> Dict[str, Any]:
         return {
             "template_names": dict(zip(self.core.TEMPLATE_KEYS, self.core.TEMPLATE_NAMES)),
@@ -105,9 +216,9 @@ class ScoreboardWebRuntime:
     def _validate_image_paths(self, template: str, config: Dict[str, Any]) -> None:
         keys = {
             "t1": ("photo_path", "player_path", "logo_path"),
-            "t2": ("photo_a", "photo_b"),
+            "t2": ("photo_a", "photo_b", "logo_path"),
             "t3": ("photo_a", "photo_b", "logo_path"),
-            "t4": (),
+            "t4": ("logo_path",),
         }[template]
         for key in keys:
             config[key] = self._safe_uploaded_path(config.get(key, ""))
@@ -125,11 +236,16 @@ class ScoreboardWebRuntime:
             return ""
         return str(path) if path.is_file() else ""
 
-    def render(self, template: str, value: Any, update_live: bool = True):
+    def render(
+        self, template: str, value: Any, update_live: bool = True, client_id: str = "",
+    ):
         config = self.normalized_config(template, value)
         image = self.core.RENDERERS[template](config)
         with self.lock:
-            if update_live and self.live_output is not None:
+            if (
+                update_live and self.live_output is not None
+                and self._clean_client_id(client_id) == self.live_owner_id
+            ):
                 self.live_output.update(image)
         return image, config
 
@@ -162,44 +278,93 @@ class ScoreboardWebRuntime:
             ) from exc
         return {"path": str(target.resolve()), "name": name}
 
-    def start_live(self, template: str, config: Any, preset: str, output_name: str):
+    def start_live(
+        self, template: str, config: Any, preset: str, output_name: str,
+        client_id: Any, remote_address: str,
+    ):
         if preset not in self.core.VIDEO_EXPORT_PRESETS:
             raise ValueError("Unknown video format.")
         if output_name not in self.core.DECKLINK_OUTPUTS:
             raise ValueError("Unknown DeckLink output.")
-        image, _ = self.render(template, config, update_live=False)
-        output = self.core.DeckLinkLiveOutput(
-            preset, self.core.DECKLINK_OUTPUTS[output_name]
-        )
-        output.start(image)
+        requester = self.touch_session(client_id, remote_address)
+        if requester is None:
+            raise PermissionError("Register an operator name before starting live output.")
+        if requester["priority"] <= 0:
+            raise PermissionError("This user has view-only live priority.")
         with self.lock:
+            owner = self.sessions.get(self.live_owner_id) if self.live_owner_id else None
+            if owner and owner["id"] != requester["id"]:
+                if requester["priority"] <= owner["priority"]:
+                    raise PermissionError(
+                        f"Live output is controlled by {owner['name']} "
+                        f"(priority {owner['priority']})."
+                    )
+            image, _ = self.render(
+                template, config, update_live=False, client_id=requester["id"],
+            )
+            if (
+                self.live_output is not None
+                and self.live_preset == preset
+                and self.live_output_name == output_name
+            ):
+                self.live_output.update(image)
+                self.live_owner_id = requester["id"]
+                return self.live_status(requester["id"], remote_address)
             previous = self.live_output
+            if previous is not None:
+                previous.stop()
+                self.live_output = None
+                self.live_preset = None
+                self.live_output_name = None
+                self.live_owner_id = None
+            output = self.core.DeckLinkLiveOutput(
+                preset, self.core.DECKLINK_OUTPUTS[output_name]
+            )
+            output.start(image)
             self.live_output = output
             self.live_preset = preset
             self.live_output_name = output_name
-        if previous is not None:
-            previous.stop()
-        return self.live_status()
+            self.live_owner_id = requester["id"]
+        return self.live_status(requester["id"], remote_address)
 
-    def stop_live(self):
+    def stop_live(
+        self, client_id: Any = "", remote_address: str = "", force: bool = False,
+    ):
+        client_id = self._clean_client_id(client_id)
         with self.lock:
+            if (
+                self.live_output is not None and not force
+                and client_id != self.live_owner_id
+                and not self._is_local_request(remote_address)
+            ):
+                owner = self.sessions.get(self.live_owner_id, {})
+                raise PermissionError(
+                    f"Only {owner.get('name', 'the live operator')} can stop live output."
+                )
             output, self.live_output = self.live_output, None
             self.live_preset = None
             self.live_output_name = None
+            self.live_owner_id = None
         if output is not None:
             output.stop()
-        return self.live_status()
+        return self.live_status(client_id, remote_address)
 
-    def live_status(self):
+    def live_status(self, client_id: Any = "", remote_address: str = ""):
+        client_id = self._clean_client_id(client_id)
         with self.lock:
             error = self.live_output.poll_error() if self.live_output is not None else None
         if error:
-            self.stop_live()
+            self.stop_live(force=True)
             return {"active": False, "error": error}
+        with self.lock:
+            owner = self.sessions.get(self.live_owner_id)
         return {
             "active": self.live_output is not None,
             "preset": self.live_preset,
             "output": self.live_output_name,
+            "owner_id": self.live_owner_id,
+            "owner_name": owner["name"] if owner else None,
+            "owned_by_requester": bool(client_id and client_id == self.live_owner_id),
         }
 
     def export_mp4(self, template: str, value: Any, preset: str, duration: int) -> bytes:
@@ -264,14 +429,20 @@ def make_handler(runtime: ScoreboardWebRuntime):
             return value
 
         def do_GET(self):
-            path = urlparse(self.path).path.rstrip("/") or "/"
+            parsed = urlparse(self.path)
+            path = parsed.path.rstrip("/") or "/"
+            query = parse_qs(parsed.query)
+            client_id = query.get("client_id", [""])[0]
+            remote_address = self.client_address[0]
             try:
                 if path in {"/", "/scoreboard"}:
                     self._send(200, runtime.web_file.read_bytes(), "text/html; charset=utf-8")
                 elif path == "/api/bootstrap":
                     self._json(200, runtime.bootstrap())
                 elif path == "/api/live/status":
-                    self._json(200, runtime.live_status())
+                    self._json(200, runtime.live_status(client_id, remote_address))
+                elif path == "/api/sessions":
+                    self._json(200, runtime.session_status(client_id, remote_address))
                 elif path == "/healthz":
                     self._json(200, {
                         "ok": True,
@@ -287,20 +458,39 @@ def make_handler(runtime: ScoreboardWebRuntime):
             path = urlparse(self.path).path.rstrip("/")
             try:
                 payload = self._body()
-                if path == "/api/render":
-                    image, _ = runtime.render(payload.get("template", ""), payload.get("config"))
+                client_id = payload.get("client_id", "")
+                remote_address = self.client_address[0]
+                if path == "/api/session/register":
+                    self._json(200, runtime.register_session(
+                        client_id, payload.get("display_name", ""), remote_address,
+                    ))
+                elif path == "/api/session/heartbeat":
+                    self._json(200, runtime.touch_session(client_id, remote_address))
+                elif path == "/api/session/priority":
+                    self._json(200, runtime.set_session_priority(
+                        payload.get("target_id", ""), payload.get("priority"), remote_address,
+                    ))
+                elif path == "/api/render":
+                    runtime.touch_session(client_id, remote_address)
+                    image, _ = runtime.render(
+                        payload.get("template", ""), payload.get("config"),
+                        client_id=client_id,
+                    )
                     buffer = io.BytesIO()
                     image.save(buffer, "PNG")
                     self._send(200, buffer.getvalue(), "image/png")
                 elif path == "/api/upload":
+                    runtime.touch_session(client_id, remote_address)
                     self._json(200, runtime.upload(payload))
                 elif path == "/api/export/png":
+                    runtime.touch_session(client_id, remote_address)
                     template = payload.get("template", "")
                     image, _ = runtime.render(template, payload.get("config"))
                     buffer = io.BytesIO()
                     image.save(buffer, "PNG")
                     self._send(200, buffer.getvalue(), "image/png", f"scoreboard_{template}.png")
                 elif path == "/api/export/mp4":
+                    runtime.touch_session(client_id, remote_address)
                     template = payload.get("template", "")
                     data = runtime.export_mp4(
                         template, payload.get("config"), payload.get("preset", "HD 1080i50"),
@@ -311,13 +501,16 @@ def make_handler(runtime: ScoreboardWebRuntime):
                     self._json(200, runtime.start_live(
                         payload.get("template", ""), payload.get("config"),
                         payload.get("preset", ""), payload.get("output", ""),
+                        client_id, remote_address,
                     ))
                 elif path == "/api/live/stop":
-                    self._json(200, runtime.stop_live())
+                    self._json(200, runtime.stop_live(client_id, remote_address))
                 else:
                     self._json(404, {"error": "Not found"})
             except (ValueError, json.JSONDecodeError) as exc:
                 self._json(400, {"error": str(exc)})
+            except PermissionError as exc:
+                self._json(403, {"error": str(exc)})
             except Exception as exc:
                 self._json(500, {"error": str(exc)})
 
@@ -335,5 +528,5 @@ def run_server(core, host: str = "0.0.0.0", port: int = 8080):
     except KeyboardInterrupt:
         pass
     finally:
-        runtime.stop_live()
+        runtime.stop_live(force=True)
         server.server_close()

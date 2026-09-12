@@ -110,6 +110,17 @@ _ITALIC = [
     "C:/Windows/Fonts/ariali.ttf",
 ]
 _fc: Dict[Tuple, Any] = {}
+_PANGO_MODULES = None
+_PANGO_DLL_HANDLES = []
+
+
+class ShapedFont:
+    """Font request rendered through Pango for multilingual script shaping."""
+
+    def __init__(self, family: str, size: int, variant: str):
+        self.family = family
+        self.size = max(1, int(size))
+        self.variant = variant
 
 def _lf(paths, size):
     k = (paths[0], size)
@@ -130,6 +141,29 @@ def fi(s):  return _lf(_ITALIC, max(1, s))
 
 FONT_FAMILIES = {
     "Default": {"regular":_REG,"bold":_BOLD,"italic":_ITALIC,"bold_italic":_BOLD_ITALIC},
+    "Nirmala UI": {
+        "regular":["C:/Windows/Fonts/Nirmala.ttc"],
+        "bold":["C:/Windows/Fonts/Nirmala.ttc"],
+        "italic":["C:/Windows/Fonts/Nirmala.ttc"],
+        "bold_italic":["C:/Windows/Fonts/Nirmala.ttc"],
+    },
+    "Noto Sans": {
+        "regular":["C:/Windows/Fonts/NotoSans-Regular.ttf"],
+        "bold":["C:/Windows/Fonts/NotoSans-Bold.ttf"],
+        "italic":["C:/Windows/Fonts/NotoSans-Italic.ttf"],
+        "bold_italic":["C:/Windows/Fonts/NotoSans-BoldItalic.ttf"],
+    },
+    "Noto Sans Arabic": {
+        "regular":["C:/Windows/Fonts/NotoSansArabic-Regular.ttf"],
+        "bold":["C:/Windows/Fonts/NotoSansArabic-Bold.ttf"],
+    },
+    "Noto Sans Hebrew": {
+        "regular":["C:/Windows/Fonts/NotoSansHebrew-Regular.ttf"],
+        "bold":["C:/Windows/Fonts/NotoSansHebrew-Bold.ttf"],
+    },
+    "Microsoft YaHei": {"regular":["C:/Windows/Fonts/msyh.ttc"]},
+    "Malgun Gothic": {"regular":["C:/Windows/Fonts/malgun.ttf"]},
+    "SimSun": {"regular":["C:/Windows/Fonts/simsun.ttc"]},
     "Arial": {
         "regular":["C:/Windows/Fonts/arial.ttf"], "bold":["C:/Windows/Fonts/arialbd.ttf"],
         "italic":["C:/Windows/Fonts/ariali.ttf"], "bold_italic":["C:/Windows/Fonts/arialbi.ttf"],
@@ -201,6 +235,110 @@ def _font_paths(family: str, variant: str):
     selected=FONT_FAMILIES.get(family,FONT_FAMILIES["Default"])
     fallback=FONT_FAMILIES["Default"]
     return list(selected.get(variant,selected.get("regular",[]))) + list(fallback.get(variant,_REG))
+
+
+def _needs_shaped_text(text: Any) -> bool:
+    """Use Pango for scripts outside Latin Extended, including Indic and RTL."""
+    return any(ord(character) > 0x024F for character in str(text))
+
+
+def _automatic_multilingual_family(text: str, selected: str) -> str:
+    if selected != "Default":
+        return selected
+    codepoints = [ord(character) for character in text]
+    if any(0x0590 <= value <= 0x05FF for value in codepoints):
+        return "Noto Sans Hebrew"
+    if any(0x0600 <= value <= 0x08FF for value in codepoints):
+        return "Noto Sans Arabic"
+    if any(0x0900 <= value <= 0x0DFF for value in codepoints):
+        return "Nirmala UI"
+    if any(0xAC00 <= value <= 0xD7AF for value in codepoints):
+        return "Malgun Gothic"
+    if any(0x2E80 <= value <= 0x9FFF for value in codepoints):
+        return "Microsoft YaHei"
+    return "Noto Sans"
+
+
+def _load_pango_modules():
+    """Load Pango lazily; Pillow remains sufficient for ordinary Latin text."""
+    global _PANGO_MODULES
+    if _PANGO_MODULES is not None:
+        return _PANGO_MODULES
+    try:
+        import gstreamer_libs
+        environment, dll_paths = gstreamer_libs.gstreamer_env()
+        os.environ.update(environment)
+        if os.name == "nt" and hasattr(os, "add_dll_directory"):
+            for directory in str(dll_paths).split(os.pathsep):
+                if directory and Path(directory).is_dir():
+                    try:
+                        _PANGO_DLL_HANDLES.append(os.add_dll_directory(directory))
+                    except OSError:
+                        pass
+        import cairo
+        import gi
+        gi.require_version("Pango", "1.0")
+        gi.require_version("PangoCairo", "1.0")
+        from gi.repository import Pango, PangoCairo
+        _PANGO_MODULES = (cairo, Pango, PangoCairo)
+    except (ImportError, OSError, ValueError):
+        _PANGO_MODULES = False
+    return _PANGO_MODULES
+
+
+def _pango_layout(text: str, font: ShapedFont, context):
+    _, Pango, PangoCairo = _load_pango_modules()
+    layout = PangoCairo.create_layout(context)
+    description = Pango.FontDescription()
+    description.set_family(font.family)
+    description.set_absolute_size(font.size * Pango.SCALE)
+    if "bold" in font.variant:
+        description.set_weight(Pango.Weight.BOLD)
+    if "italic" in font.variant:
+        description.set_style(Pango.Style.ITALIC)
+    layout.set_font_description(description)
+    layout.set_text(str(text), -1)
+    return layout
+
+
+def _pango_text_bbox(text: str, font: ShapedFont):
+    cairo, _, _ = _load_pango_modules()
+    surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, 1, 1)
+    layout = _pango_layout(text, font, cairo.Context(surface))
+    ink, _ = layout.get_pixel_extents()
+    return ink.x, ink.y, ink.x + ink.width, ink.y + ink.height
+
+
+def draw_text(draw, xy, text, font, fill, anchor=None):
+    """Draw with Pillow for Latin text and Pango for correctly shaped scripts."""
+    if not isinstance(font, ShapedFont) or not _load_pango_modules():
+        draw.text(xy, text, font=font, fill=fill, anchor=anchor)
+        return
+    cairo, _, PangoCairo = _load_pango_modules()
+    bbox = _pango_text_bbox(str(text), font)
+    width = max(1, bbox[2] - bbox[0])
+    height = max(1, bbox[3] - bbox[1])
+    padding = 4
+    surface = cairo.ImageSurface(
+        cairo.FORMAT_ARGB32, width + padding * 2, height + padding * 2,
+    )
+    context = cairo.Context(surface)
+    layout = _pango_layout(str(text), font, context)
+    red, green, blue, *alpha = normalize_rgb(fill, (255, 255, 255))
+    context.set_source_rgba(red / 255, green / 255, blue / 255, (alpha[0] if alpha else 255) / 255)
+    context.move_to(padding - bbox[0], padding - bbox[1])
+    PangoCairo.show_layout(context, layout)
+    surface.flush()
+    overlay = Image.frombuffer(
+        "RGBA", (surface.get_width(), surface.get_height()), bytes(surface.get_data()),
+        "raw", "BGRa", 0, 1,
+    )
+    x, y = float(xy[0]), float(xy[1])
+    if anchor == "lm":
+        x -= bbox[0]
+        y -= (bbox[1] + bbox[3]) / 2
+    destination = (int(round(x + bbox[0] - padding)), int(round(y + bbox[1] - padding)))
+    draw._image.paste(overlay, destination, overlay)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -492,17 +630,26 @@ def cover_crop(img: Image.Image, w: int, h: int, zoom: float = 100.0,
     return img.crop((left, top, left+w, top+h))
 
 def text_bbox(draw, text, font):
+    if isinstance(font, ShapedFont) and _load_pango_modules():
+        bb = _pango_text_bbox(str(text), font)
+        return bb[2]-bb[0], bb[3]-bb[1]
     bb = draw.textbbox((0,0), text, font=font)
     return bb[2]-bb[0], bb[3]-bb[1]
 
+
+def text_bounds(draw, text, font):
+    if isinstance(font, ShapedFont) and _load_pango_modules():
+        return _pango_text_bbox(str(text), font)
+    return draw.textbbox((0,0), text, font=font)
+
 def draw_text_centered(draw, text, font, cx, cy, fill):
     w, h = text_bbox(draw, text, font)
-    bb = draw.textbbox((0,0), text, font=font)
-    draw.text((cx - w//2, cy - h//2 - bb[1]), text, font=font, fill=fill)
+    bb = text_bounds(draw, text, font)
+    draw_text(draw, (cx - w//2, cy - h//2 - bb[1]), text, font, fill)
 
 def draw_text_right(draw, text, font, rx, y, fill):
     w, _ = text_bbox(draw, text, font)
-    draw.text((rx - w, y), text, font=font, fill=fill)
+    draw_text(draw, (rx - w, y), text, font, fill)
 
 def fit_font(draw, text: str, max_width: int, start_size: int,
              minimum: int = 8, factory=fb):
@@ -702,7 +849,7 @@ def text_style_values(cfg: Dict, role: str, default_color) -> Tuple[Tuple[int, i
     return color, max(50, min(200, size_pct))
 
 
-def text_font_family(cfg: Dict, role: str) -> str:
+def text_font_family(cfg: Dict, role: str, text: Any="") -> str:
     """Resolve font inheritance independently from color and size."""
     family="Default"
     styles=cfg.get("text_styles",{})
@@ -713,7 +860,12 @@ def text_font_family(cfg: Dict, role: str) -> str:
             family=all_style.get("font_family",family)
         if role != "all" and isinstance(role_style,dict):
             family=role_style.get("font_family",family)
-    return family if family in FONT_CHOICES else "Default"
+    family = family if family in FONT_CHOICES else "Default"
+    if _needs_shaped_text(text):
+        automatic = _automatic_multilingual_family(str(text), family)
+        if automatic in FONT_CHOICES:
+            return automatic
+    return family
 
 
 def text_case_mode(cfg: Dict, role: str) -> str:
@@ -743,12 +895,15 @@ def apply_text_case(cfg: Dict, role: str, value: Any) -> str:
     return text
 
 
-def text_font(cfg: Dict, role: str, size: int, variant: str="regular"):
-    return _lf(_font_paths(text_font_family(cfg,role),variant),max(1,size))
+def text_font(cfg: Dict, role: str, size: int, variant: str="regular", text: Any=""):
+    family = text_font_family(cfg, role, text)
+    if _needs_shaped_text(text) and _load_pango_modules():
+        return ShapedFont(family if family != "Default" else "Noto Sans", size, variant)
+    return _lf(_font_paths(family,variant),max(1,size))
 
 
-def text_font_factory(cfg: Dict, role: str, variant: str="regular"):
-    return lambda size:text_font(cfg,role,size,variant)
+def text_font_factory(cfg: Dict, role: str, variant: str="regular", text: Any=""):
+    return lambda size:text_font(cfg,role,size,variant,text)
 
 
 def styled_text(cfg: Dict, role: str, default_color, default_size: int):
@@ -1022,9 +1177,15 @@ def render_t1(cfg: Dict) -> Image.Image:
         title_sz=max(8,int(round(requested_title_sz*scale)))
         label_sz=max(8,int(round(requested_label_sz*scale)))
         value_sz=max(10,int(round(requested_value_sz*scale)))
-        title_font=text_font(cfg,"title",title_sz,"bold")
-        label_font=text_font(cfg,"stat_labels",label_sz,"regular")
-        value_font=text_font(cfg,"stat_values",value_sz,"bold")
+        title_font=text_font(cfg,"title",title_sz,"bold",title_text)
+        label_sample=" ".join(
+            apply_text_case(cfg,"stat_labels",row.get("label","")) for row in rows
+        )
+        value_sample=" ".join(
+            apply_text_case(cfg,"stat_values",row.get("value","")) for row in rows
+        )
+        label_font=text_font(cfg,"stat_labels",label_sz,"regular",label_sample)
+        value_font=text_font(cfg,"stat_values",value_sz,"bold",value_sample)
         title_line_gap=max(0,int(title_sz*0.22))
         title_heights=[max(1,text_bbox(draw,line,title_font)[1]) for line in title_lines]
         title_height=sum(title_heights)+max(0,len(title_lines)-1)*title_line_gap
@@ -1078,9 +1239,9 @@ def render_t1(cfg: Dict) -> Image.Image:
     for index,line in enumerate(title_lines):
         line_font=fit_font(
             draw,line,tw,metrics["title_size"],minimum=8,
-            factory=text_font_factory(cfg,"title","bold"),
+            factory=text_font_factory(cfg,"title","bold",line),
         )
-        draw.text((tx0,cy),line,font=line_font,fill=title_col)
+        draw_text(draw,(tx0,cy),line,line_font,title_col)
         cy+=max(1,text_bbox(draw,line,line_font)[1])
         if index < len(title_lines)-1:
             cy+=metrics["title_line_gap"]
@@ -1095,15 +1256,15 @@ def render_t1(cfg: Dict) -> Image.Image:
         row_bar_col=normalize_rgb(row.get("bar_color"),group_bar_color)
         label_font=fit_font(
             draw,label,tw,metrics["label_size"],minimum=7,
-            factory=text_font_factory(cfg,"stat_labels","regular"),
+            factory=text_font_factory(cfg,"stat_labels","regular",label),
         )
         value_font=fit_font(
             draw,value,tw,metrics["value_size"],minimum=9,
-            factory=text_font_factory(cfg,"stat_values","bold"),
+            factory=text_font_factory(cfg,"stat_values","bold",value),
         )
-        draw.text((tx0,cy),label,font=label_font,fill=row_label_col)
+        draw_text(draw,(tx0,cy),label,label_font,row_label_col)
         cy+=metrics["label_height"]+metrics["inner_gap"]
-        draw.text((tx0,cy),value,font=value_font,fill=row_value_col)
+        draw_text(draw,(tx0,cy),value,value_font,row_value_col)
         cy+=metrics["value_height"]+metrics["bar_gap"]
 
         bar_h=metrics["bar_height"]
@@ -1148,21 +1309,21 @@ def _pill_row(draw, x0, w, cy, rh, bh, label, value, other_value,
     value_col=normalize_rgb(row_colors.get("value_color"),value_col)
     lf_     = fit_font(
         draw,str(label),int(w*.62),lsz,minimum=8,
-        factory=text_font_factory(cfg,"stat_labels","bold"),
+        factory=text_font_factory(cfg,"stat_labels","bold",label),
     )
     vf_     = fit_font(
         draw,str(value),int(w*.30),vsz,minimum=9,
-        factory=text_font_factory(cfg,value_role,"bold"),
+        factory=text_font_factory(cfg,value_role,"bold",value),
     )
 
     # Pill background
     draw.rounded_rectangle([x0, cy, x0+w, cy+rh], radius=8, fill=(*theme["row_bg"],230))
 
     if not mirrored:
-        draw.text((x0+pad, cy+rh//2), label, font=lf_, fill=label_col, anchor="lm")
+        draw_text(draw,(x0+pad, cy+rh//2),label,lf_,label_col,anchor="lm")
         draw_text_right(draw, str(value), vf_, x0+w-pad, cy+(rh-vsz)//2, value_col)
     else:
-        draw.text((x0+pad, cy+rh//2), str(value), font=vf_, fill=value_col, anchor="lm")
+        draw_text(draw,(x0+pad, cy+rh//2),str(value),vf_,value_col,anchor="lm")
         draw_text_right(draw, label, lf_, x0+w-pad, cy+(rh-lsz)//2, label_col)
 
     # Bar
@@ -1235,14 +1396,14 @@ def render_t2(cfg: Dict) -> Image.Image:
     )
     hdr_f = fit_font(
         draw,hdr_text,hdr_w-int(hdr_w*.08),header_sz,minimum=8,
-        factory=text_font_factory(cfg,"header","bold"),
+        factory=text_font_factory(cfg,"header","bold",hdr_text),
     )
     for hx in (ltz_x, rtz_x):
         draw.rectangle([hx, hdr_y, hx+hdr_w, hdr_y+hdr_h], fill=(255,255,255))
         tw_, th_ = text_bbox(draw, hdr_text, hdr_f)
-        bb = draw.textbbox((0,0), hdr_text, hdr_f)
-        draw.text((hx+(hdr_w-tw_)//2, hdr_y+(hdr_h-th_)//2-bb[1]),
-                  hdr_text, font=hdr_f, fill=header_col)
+        bb = text_bounds(draw,hdr_text,hdr_f)
+        draw_text(draw,(hx+(hdr_w-tw_)//2, hdr_y+(hdr_h-th_)//2-bb[1]),
+                  hdr_text,hdr_f,header_col)
 
     # Player names
     name_y = hdr_y + hdr_h + int(H*0.028)
@@ -1262,20 +1423,20 @@ def render_t2(cfg: Dict) -> Image.Image:
         )
         first_font = fit_font(
             draw,first,int(tz_w*.38),first_size,minimum=8,
-            factory=text_font_factory(cfg,role,"italic"),
+            factory=text_font_factory(cfg,role,"italic",first),
         )
         fw_ = text_bbox(draw, first+" ", first_font)[0]
-        country_font = text_font(cfg,country_role,country_size,"regular")
+        country_font = text_font(cfg,country_role,country_size,"regular",abbr)
         reserve = text_bbox(draw, abbr, country_font)[0] + 12 if abbr else 0
         last_font = fit_font(
             draw,last,max(20,tz_w-fw_-reserve),last_size,minimum=10,
-            factory=text_font_factory(cfg,role,"bold"),
+            factory=text_font_factory(cfg,role,"bold",last),
         )
-        draw.text((x, name_y), first, font=first_font, fill=first_col)
-        draw.text((x+fw_, name_y+(first_size-last_size)//2), last, font=last_font, fill=last_col)
+        draw_text(draw,(x,name_y),first,first_font,first_col)
+        draw_text(draw,(x+fw_,name_y+(first_size-last_size)//2),last,last_font,last_col)
         if abbr:
-            draw.text((x+fw_+text_bbox(draw,last,last_font)[0]+8, name_y+2),
-                      abbr, font=country_font, fill=country_col)
+            draw_text(draw,(x+fw_+text_bbox(draw,last,last_font)[0]+8,name_y+2),
+                      abbr,country_font,country_col)
 
     draw_name(ltz_x, cfg.get("name_a_first","Player"), cfg.get("name_a_last","One"),
               cfg.get("abbr_a",""), "player_1_names", "player_1_country")
@@ -1311,19 +1472,18 @@ def render_t2(cfg: Dict) -> Image.Image:
         style_col, style_sz = styled_text(
             cfg, "style_heading", THEME["white"], max(10,int(H*0.028))
         )
-        sf_     = text_font(cfg,"style_heading",style_sz,"bold")
         sl_lbl=apply_text_case(cfg,"style_heading",cfg.get("style_label","PLAYING STYLE"))
+        sf_     = text_font(cfg,"style_heading",style_sz,"bold",sl_lbl)
         for sx in (ltz_x, rtz_x):
             draw.rounded_rectangle([sx,cy,sx+tz_w,cy+style_h], radius=8, fill=(*THEME["row_bg"],230))
             tw_,th_ = text_bbox(draw,sl_lbl,sf_)
-            bb = draw.textbbox((0,0),sl_lbl,sf_)
-            draw.text((sx+(tz_w-tw_)//2, cy+(style_h-th_)//2-bb[1]), sl_lbl, font=sf_, fill=style_col)
+            bb = text_bounds(draw,sl_lbl,sf_)
+            draw_text(draw,(sx+(tz_w-tw_)//2,cy+(style_h-th_)//2-bb[1]),sl_lbl,sf_,style_col)
         cy2 = cy + style_h + int(H*0.014)
         tag_h  = int(H*0.072)
         tag_col, tag_sz = styled_text(
             cfg, "style_tags", acc, max(9,int(H*0.022))
         )
-        tag_f  = text_font(cfg,"style_tags",tag_sz,"bold")
         tags_a = cfg.get("tags_a",["",""])
         tags_b = cfg.get("tags_b",["",""])
         for sx, tags in ((ltz_x,tags_a),(rtz_x,tags_b)):
@@ -1332,11 +1492,13 @@ def render_t2(cfg: Dict) -> Image.Image:
                 tx0 = sx + i*(tw_2+6)
                 draw.rounded_rectangle([tx0,cy2,tx0+tw_2,cy2+tag_h], radius=6, fill=(*THEME["panel"],255))
                 draw.rectangle([tx0,cy2,tx0+tw_2,cy2+tag_h], outline=(75,92,118), width=1)
-                words=apply_text_case(cfg,"style_tags",tag).split()
+                tag_text=apply_text_case(cfg,"style_tags",tag)
+                tag_f=text_font(cfg,"style_tags",tag_sz,"bold",tag_text)
+                words=tag_text.split()
                 ly = cy2 + (tag_h - len(words)*int(H*0.026))//2
                 for wd in words:
                     ww,_ = text_bbox(draw,wd,tag_f)
-                    draw.text((tx0+(tw_2-ww)//2, ly), wd, font=tag_f, fill=tag_col)
+                    draw_text(draw,(tx0+(tw_2-ww)//2,ly),wd,tag_f,tag_col)
                     ly += max(tag_sz + 2, int(H*0.028))
 
     # Center V divider
@@ -1348,11 +1510,11 @@ def render_t2(cfg: Dict) -> Image.Image:
     divider_col, divider_sz = styled_text(
         cfg, "divider", THEME["white"], int(vbox_h*0.52)
     )
-    vf2    = text_font(cfg,"divider",divider_sz,"bold_italic")
     vt=apply_text_case(cfg,"divider",cfg.get("divider_text","V"))
+    vf2    = text_font(cfg,"divider",divider_sz,"bold_italic",vt)
     tw_,th_= text_bbox(draw,vt,vf2)
-    bb     = draw.textbbox((0,0),vt,vf2)
-    draw.text((vbox_x+(vbox_w-tw_)//2, vbox_y+(vbox_h-th_)//2-bb[1]), vt, font=vf2, fill=divider_col)
+    bb     = text_bounds(draw,vt,vf2)
+    draw_text(draw,(vbox_x+(vbox_w-tw_)//2,vbox_y+(vbox_h-th_)//2-bb[1]),vt,vf2,divider_col)
 
     paste_free_logo(img, cfg)
     return img.convert("RGB")
@@ -1427,15 +1589,15 @@ def render_t3(cfg: Dict) -> Image.Image:
     player_name_width = half - margin - int(W*0.10)
     fn_a_f = fit_font(
         draw,fn_a,player_name_width,fn_a_sz,minimum=9,
-        factory=text_font_factory(cfg,"player_1_names","italic"),
+        factory=text_font_factory(cfg,"player_1_names","italic",fn_a),
     )
     ln_a_f = fit_font(
         draw,ln_a,player_name_width,ln_a_sz,minimum=12,
-        factory=text_font_factory(cfg,"player_1_names","bold_italic"),
+        factory=text_font_factory(cfg,"player_1_names","bold_italic",ln_a),
     )
     team_a_f = fit_font(
         draw,team_a,player_name_width,team_a_sz,minimum=8,
-        factory=text_font_factory(cfg,"player_1_team","regular"),
+        factory=text_font_factory(cfg,"player_1_team","regular",team_a),
     )
 
     # Right player
@@ -1451,24 +1613,24 @@ def render_t3(cfg: Dict) -> Image.Image:
     team_b_col, team_b_sz = styled_text(cfg, "player_2_team", THEME["muted"], team_sz)
     fn_b_f = fit_font(
         draw,fn_b,player_name_width,fn_b_sz,minimum=9,
-        factory=text_font_factory(cfg,"player_2_names","italic"),
+        factory=text_font_factory(cfg,"player_2_names","italic",fn_b),
     )
     ln_b_f = fit_font(
         draw,ln_b,player_name_width,ln_b_sz,minimum=12,
-        factory=text_font_factory(cfg,"player_2_names","bold_italic"),
+        factory=text_font_factory(cfg,"player_2_names","bold_italic",ln_b),
     )
     team_b_f = fit_font(
         draw,team_b,player_name_width,team_b_sz,minimum=8,
-        factory=text_font_factory(cfg,"player_2_team","regular"),
+        factory=text_font_factory(cfg,"player_2_team","regular",team_b),
     )
 
     first_line_h = max(fn_a_sz, fn_b_sz)
     last_line_h = max(ln_a_sz, ln_b_sz)
     last_y = name_y + first_line_h + 4
     team_y = last_y + last_line_h + 4
-    draw.text((margin,name_y),fn_a,font=fn_a_f,fill=fn_a_col)
-    draw.text((margin,last_y),ln_a,font=ln_a_f,fill=ln_a_col)
-    draw.text((margin,team_y),team_a,font=team_a_f,fill=team_a_col)
+    draw_text(draw,(margin,name_y),fn_a,fn_a_f,fn_a_col)
+    draw_text(draw,(margin,last_y),ln_a,ln_a_f,ln_a_col)
+    draw_text(draw,(margin,team_y),team_a,team_a_f,team_a_col)
     draw_text_right(draw,fn_b,fn_b_f,rx,name_y,fn_b_col)
     draw_text_right(draw,ln_b,ln_b_f,rx,last_y,ln_b_col)
     draw_text_right(draw,team_b,team_b_f,rx,team_y,team_b_col)
@@ -1480,10 +1642,10 @@ def render_t3(cfg: Dict) -> Image.Image:
     score_col, score_sz = styled_text(
         cfg, "score", THEME["muted"], max(12, int(H*0.026))
     )
-    vs_f    = text_font(cfg,"versus",vs_sz,"bold_italic")
-    sc_f    = text_font(cfg,"score",score_sz,"bold")
     vs_text=apply_text_case(cfg,"versus",cfg.get("vs_text","VS"))
     score=apply_text_case(cfg,"score",cfg.get("score","6-4  3-6  10-4"))
+    vs_f    = text_font(cfg,"versus",vs_sz,"bold_italic",vs_text)
+    sc_f    = text_font(cfg,"score",score_sz,"bold",score)
     draw_text_centered(draw, vs_text, vs_f, half, last_y+last_line_h//2, vs_col)
     draw_text_centered(draw, score, sc_f, half, team_y+score_sz//2, score_col)
 
@@ -1503,10 +1665,6 @@ def render_t3(cfg: Dict) -> Image.Image:
         cfg, "units", THEME["muted"], max(9, int(value_default*0.50))
     )
     bar_h   = max(4,  int(H*0.011))
-    val_a_f = text_font(cfg,"player_1_values",value_a_sz,"bold")
-    val_b_f = text_font(cfg,"player_2_values",value_b_sz,"bold")
-    unit_f  = text_font(cfg,"units",unit_sz,"regular")
-
     rows    = cfg.get("rows",[])
     n_rows  = max(1,len(rows))
     avail   = H - rows_y - int(H*0.08)
@@ -1520,6 +1678,9 @@ def render_t3(cfg: Dict) -> Image.Image:
         vb=apply_text_case(cfg,"player_2_values",row.get("value_b","0"))
         maxv    = str(row.get("max","200"))
         unit=apply_text_case(cfg,"units",row.get("unit",""))
+        val_a_f = text_font(cfg,"player_1_values",value_a_sz,"bold",va)
+        val_b_f = text_font(cfg,"player_2_values",value_b_sz,"bold",vb)
+        unit_f  = text_font(cfg,"units",unit_sz,"regular",unit)
 
         na = exnum(va) or 0.0
         nb = exnum(vb) or 0.0
@@ -1532,7 +1693,7 @@ def render_t3(cfg: Dict) -> Image.Image:
         row_bar_color=normalize_rgb(row.get("bar_color"),bar_color)
         row_label_font = fit_font(
             draw,label,int(W*.54),lbl_sz,minimum=8,
-            factory=text_font_factory(cfg,"stat_labels","bold"),
+            factory=text_font_factory(cfg,"stat_labels","bold",label),
         )
         draw_text_centered(draw,label,row_label_font,half,label_y,row_label_col)
 
@@ -1549,15 +1710,15 @@ def render_t3(cfg: Dict) -> Image.Image:
         val_b_w, _ = text_bbox(draw, vb, val_b_f)
         unit_w,_=text_bbox(draw,unit,unit_f) if unit else (0,0)
         unit_gap = 5 if unit else 0
-        draw.text((side_pad, row_top), va, font=val_a_f, fill=row_value_a_col)
+        draw_text(draw,(side_pad,row_top),va,val_a_f,row_value_a_col)
         right_group_x = W - side_pad - val_b_w - unit_gap - unit_w
-        draw.text((right_group_x, row_top), vb, font=val_b_f, fill=row_value_b_col)
+        draw_text(draw,(right_group_x,row_top),vb,val_b_f,row_value_b_col)
 
         # Optional units (KMH etc)
         if unit:
             unit_y = row_top + int(value_line_h*0.23)
-            draw.text((side_pad+val_a_w+unit_gap,unit_y),unit,font=unit_f,fill=unit_col)
-            draw.text((right_group_x+val_b_w+unit_gap,unit_y),unit,font=unit_f,fill=unit_col)
+            draw_text(draw,(side_pad+val_a_w+unit_gap,unit_y),unit,unit_f,unit_col)
+            draw_text(draw,(right_group_x+val_b_w+unit_gap,unit_y),unit,unit_f,unit_col)
 
         # Bars — grow from center outward
         bar_cy = row_top + value_line_h + int(H*0.008)
@@ -1589,9 +1750,9 @@ def render_t3(cfg: Dict) -> Image.Image:
         footer_col, footer_sz = styled_text(
             cfg, "sponsor", THEME["muted"], max(10,int(H*0.022))
         )
-        ftf = text_font(cfg,"sponsor",footer_sz,"regular")
+        ftf = text_font(cfg,"sponsor",footer_sz,"regular",footer_text)
         tw_,_ = text_bbox(draw, footer_text, ftf)
-        draw.text((half-tw_//2, H-int(H*0.05)), footer_text, font=ftf, fill=footer_col)
+        draw_text(draw,(half-tw_//2,H-int(H*0.05)),footer_text,ftf,footer_col)
 
     paste_free_logo(img, cfg)
     return img
@@ -1622,11 +1783,11 @@ def render_t4(cfg: Dict) -> Image.Image:
     )
     bf   = fit_font(
         draw,banner_text,int(W*.92),banner_sz,minimum=12,
-        factory=text_font_factory(cfg,"banner","bold"),
+        factory=text_font_factory(cfg,"banner","bold",banner_text),
     )
     tw_,th_ = text_bbox(draw, banner_text, bf)
-    bb   = draw.textbbox((0,0),banner_text,bf)
-    draw.text((W//2-tw_//2, (banner_h-th_)//2-bb[1]+int(H*0.012)), banner_text, font=bf, fill=banner_col)
+    bb   = text_bounds(draw,banner_text,bf)
+    draw_text(draw,(W//2-tw_//2,(banner_h-th_)//2-bb[1]+int(H*0.012)),banner_text,bf,banner_col)
 
     # Column layout
     n_players = 3
@@ -1655,25 +1816,24 @@ def render_t4(cfg: Dict) -> Image.Image:
         last_col, name_sz_l = styled_text(
             cfg, f"{role_prefix}_names", THEME["white"], max(14, int(H*0.038))
         )
-        team_f_ = text_font(cfg,f"{role_prefix}_team",team_sz,"regular")
-
         name_y = col_y0 + int(H*0.005)
         team=apply_text_case(cfg,f"{role_prefix}_team",player.get("team",""))
         fn_=apply_text_case(cfg,f"{role_prefix}_names",player.get("first","Player"))
         ln_=apply_text_case(cfg,f"{role_prefix}_names",player.get("last",""))
+        team_f_ = text_font(cfg,f"{role_prefix}_team",team_sz,"regular",team)
         if team:
-            draw.text((cx0,name_y),team,font=team_f_,fill=team_col)
+            draw_text(draw,(cx0,name_y),team,team_f_,team_col)
             name_y += team_sz + 3
         fn_f_ = fit_font(
             draw,fn_,col_w,name_sz_s,minimum=8,
-            factory=text_font_factory(cfg,f"{role_prefix}_names","italic"),
+            factory=text_font_factory(cfg,f"{role_prefix}_names","italic",fn_),
         )
         ln_f_ = fit_font(
             draw,ln_,col_w,name_sz_l,minimum=10,
-            factory=text_font_factory(cfg,f"{role_prefix}_names","bold_italic"),
+            factory=text_font_factory(cfg,f"{role_prefix}_names","bold_italic",ln_),
         )
-        draw.text((cx0,name_y),fn_,font=fn_f_,fill=first_col)
-        draw.text((cx0,name_y+name_sz_s+2),ln_,font=ln_f_,fill=last_col)
+        draw_text(draw,(cx0,name_y),fn_,fn_f_,first_col)
+        draw_text(draw,(cx0,name_y+name_sz_s+2),ln_,ln_f_,last_col)
         name_block_h = (team_sz+3 if team else 0) + name_sz_s + 2 + name_sz_l
 
         # Photo
@@ -1715,9 +1875,6 @@ def render_t4(cfg: Dict) -> Image.Image:
             cfg, f"{role_prefix}_units", THEME["muted"], max(8, int(max(18, int(H*0.048))*0.45))
         )
         bar_h_ = max(3,  int(H*0.008))
-        vf__   = text_font(cfg,f"{role_prefix}_stat_values",val_sz,"bold")
-        unit_  = text_font(cfg,f"{role_prefix}_units",unit_sz,"regular")
-
         # First stat gets large treatment (Fastest Serve)
         first_stat = stats[0] if stats else None
         if first_stat:
@@ -1729,9 +1886,11 @@ def render_t4(cfg: Dict) -> Image.Image:
             )
             first_label_font = fit_font(
                 draw,first_label,col_w,lbl_sz,minimum=7,
-                factory=text_font_factory(cfg,f"{role_prefix}_stat_labels","regular"),
+                factory=text_font_factory(
+                    cfg,f"{role_prefix}_stat_labels","regular",first_label
+                ),
             )
-            draw.text((cx0, stat_y), first_label, font=first_label_font, fill=first_label_col)
+            draw_text(draw,(cx0,stat_y),first_label,first_label_font,first_label_col)
             stat_y += lbl_sz + 3
             val_str=apply_text_case(
                 cfg,f"{role_prefix}_stat_values",first_stat.get("value","0")
@@ -1739,10 +1898,12 @@ def render_t4(cfg: Dict) -> Image.Image:
             unit_str=apply_text_case(
                 cfg,f"{role_prefix}_units",first_stat.get("unit","")
             )
-            draw.text((cx0, stat_y), val_str, font=vf__, fill=first_value_col)
+            vf__=text_font(cfg,f"{role_prefix}_stat_values",val_sz,"bold",val_str)
+            unit_=text_font(cfg,f"{role_prefix}_units",unit_sz,"regular",unit_str)
+            draw_text(draw,(cx0,stat_y),val_str,vf__,first_value_col)
             vw,_ = text_bbox(draw, val_str, vf__)
             if unit_str:
-                draw.text((cx0+vw+4, stat_y+int(val_sz*0.2)), unit_str, font=unit_, fill=unit_col)
+                draw_text(draw,(cx0+vw+4,stat_y+int(val_sz*0.2)),unit_str,unit_,unit_col)
             stat_y += val_sz + 3
             # bar
             draw.rounded_rectangle([cx0,stat_y,cx1,stat_y+bar_h_], radius=bar_h_//2, fill=THEME["bar_track"])
@@ -1755,7 +1916,6 @@ def render_t4(cfg: Dict) -> Image.Image:
             cfg, f"{role_prefix}_stat_values", THEME["white"]
         )
         sm_val_sz = max(8, int(round(max(12, int(H*0.032)) * value_size_pct / 100.0)))
-        sm_vf     = text_font(cfg,f"{role_prefix}_stat_values",sm_val_sz,"bold")
         for st in (stats[1:] if stats else []):
             row_label_col=normalize_rgb(st.get("label_color"),stat_label_col)
             row_value_col=normalize_rgb(st.get("value_color"),stat_value_col)
@@ -1765,14 +1925,18 @@ def render_t4(cfg: Dict) -> Image.Image:
             unit_str=apply_text_case(cfg,f"{role_prefix}_units",st.get("unit",""))
             stat_label_font = fit_font(
                 draw,lbl_str,col_w,lbl_sz,minimum=7,
-                factory=text_font_factory(cfg,f"{role_prefix}_stat_labels","regular"),
+                factory=text_font_factory(
+                    cfg,f"{role_prefix}_stat_labels","regular",lbl_str
+                ),
             )
-            draw.text((cx0, stat_y), lbl_str, font=stat_label_font, fill=row_label_col)
+            sm_vf=text_font(cfg,f"{role_prefix}_stat_values",sm_val_sz,"bold",val_str)
+            unit_=text_font(cfg,f"{role_prefix}_units",unit_sz,"regular",unit_str)
+            draw_text(draw,(cx0,stat_y),lbl_str,stat_label_font,row_label_col)
             stat_y += lbl_sz + 2
-            draw.text((cx0, stat_y), val_str, font=sm_vf, fill=row_value_col)
+            draw_text(draw,(cx0,stat_y),val_str,sm_vf,row_value_col)
             svw,_ = text_bbox(draw, val_str, sm_vf)
             if unit_str:
-                draw.text((cx0+svw+3, stat_y+int(sm_val_sz*0.22)), unit_str, font=unit_, fill=unit_col)
+                draw_text(draw,(cx0+svw+3,stat_y+int(sm_val_sz*0.22)),unit_str,unit_,unit_col)
             stat_y += sm_val_sz + 2
             draw.rounded_rectangle([cx0,stat_y,cx1,stat_y+bar_h_],radius=bar_h_//2,fill=THEME["bar_track"])
             fw_=int(col_w*pct(val_str,st.get("max","100"))/100)
@@ -1785,12 +1949,12 @@ def render_t4(cfg: Dict) -> Image.Image:
             result_col, result_sz = styled_text(
                 cfg, f"{role_prefix}_result", THEME["muted"], max(9,int(H*0.019))
             )
-            rf  = text_font(cfg,f"{role_prefix}_result",result_sz,"regular")
             ry  = H - int(H*0.075)
             result=apply_text_case(cfg,f"{role_prefix}_result",result)
+            rf  = text_font(cfg,f"{role_prefix}_result",result_sz,"regular",result)
             result=ellipsize(draw,result,rf,col_w)
             tw__,_=text_bbox(draw,result,rf)
-            draw.text((cx0+(col_w-tw__)//2,ry),result,font=rf,fill=result_col)
+            draw_text(draw,(cx0+(col_w-tw__)//2,ry),result,rf,result_col)
 
     # Footer sponsors / logos
     footer_text=apply_text_case(cfg,"sponsor",cfg.get("sponsor_text",""))
@@ -1798,9 +1962,9 @@ def render_t4(cfg: Dict) -> Image.Image:
         footer_col, footer_sz = styled_text(
             cfg, "sponsor", THEME["muted"], max(11,int(H*0.024))
         )
-        ftf = text_font(cfg,"sponsor",footer_sz,"regular")
+        ftf = text_font(cfg,"sponsor",footer_sz,"regular",footer_text)
         tw_,_ = text_bbox(draw, footer_text, ftf)
-        draw.text((W//2-tw_//2, H-int(H*0.042)), footer_text, font=ftf, fill=footer_col)
+        draw_text(draw,(W//2-tw_//2,H-int(H*0.042)),footer_text,ftf,footer_col)
 
     # Vertical column dividers
     for i in range(1, n_players):

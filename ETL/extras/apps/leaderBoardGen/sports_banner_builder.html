@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sports Banner Builder</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+<style>
+  :root{
+    --bg:#0f1318; --panel:#171d24; --panel2:#202833; --text:#eef4fb;
+    --muted:#9fb0c3; --accent:#4f8cff; --border:#2b3745; --danger:#ff5f67;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}
+  button,input,select,textarea{font:inherit}
+  button{
+    border:1px solid var(--border);background:var(--panel2);color:var(--text);
+    border-radius:8px;padding:8px 10px;cursor:pointer
+  }
+  button:hover{border-color:#60758d;background:#26313d}
+  button.primary{background:var(--accent);border-color:var(--accent);color:white;font-weight:700}
+  button.danger{color:#ffd9db;border-color:#6d3438;background:#3d2225}
+  input,select,textarea{
+    width:100%;border:1px solid var(--border);border-radius:7px;
+    background:#111820;color:var(--text);padding:7px 8px;outline:none
+  }
+  input[type="color"]{height:34px;padding:3px}
+  input[type="checkbox"]{width:auto}
+  input[type="range"]{padding:0}
+  .app{height:100%;display:grid;grid-template-rows:auto 1fr;overflow:hidden}
+  .toolbar{
+    display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:10px 12px;
+    border-bottom:1px solid var(--border);background:#121820
+  }
+  .toolbar .spacer{flex:1}
+  .workspace{min-height:0;display:grid;grid-template-columns:250px 1fr 310px}
+  .side{overflow:auto;background:var(--panel);padding:12px;border-right:1px solid var(--border)}
+  .right{border-right:0;border-left:1px solid var(--border)}
+  .center{
+    min-width:0;min-height:0;overflow:auto;display:flex;align-items:center;justify-content:center;
+    background:
+      linear-gradient(45deg,#1b222b 25%,transparent 25%) -12px 0/24px 24px,
+      linear-gradient(45deg,transparent 75%,#1b222b 75%) -12px 0/24px 24px,
+      linear-gradient(45deg,transparent 75%,#1b222b 75%) 0 0/24px 24px,
+      linear-gradient(45deg,#1b222b 25%,#202833 25%) 0 0/24px 24px;
+    padding:24px
+  }
+  .canvas-shell{box-shadow:0 18px 60px rgba(0,0,0,.45);line-height:0;background:#222}
+  h3{margin:4px 0 10px;font-size:14px}
+  .section{border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:12px}
+  .section:last-child{border-bottom:0}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:7px 0}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:7px 0}
+  .label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px}
+  .mini{font-size:11px;color:var(--muted);line-height:1.35}
+  .btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .btn-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .layer{
+    display:flex;gap:6px;align-items:center;padding:7px;border:1px solid var(--border);
+    background:#111820;border-radius:7px;margin-bottom:6px
+  }
+  .layer.active{border-color:var(--accent)}
+  .layer .name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+  .pill{
+    display:inline-flex;padding:2px 6px;border-radius:999px;background:#253242;color:#a9bdd4;font-size:10px
+  }
+  #emptyInspector{padding:18px 8px;color:var(--muted);font-size:13px;line-height:1.45}
+  .hidden{display:none !important}
+  .inline-check{display:flex;align-items:center;gap:7px;font-size:12px;color:#c7d4e2;margin:7px 0}
+  .kbd{font-size:10px;border:1px solid #445365;border-bottom-width:2px;border-radius:4px;padding:1px 5px}
+  .status{font-size:11px;color:var(--muted);margin-left:4px}
+  .filebtn{position:relative;overflow:hidden}
+  .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  @media(max-width:1050px){
+    .workspace{grid-template-columns:220px 1fr 270px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="toolbar">
+    <button class="filebtn primary">Background<input id="bgUpload" type="file" accept="image/*"></button>
+    <button class="filebtn">Add Players<input id="playerUpload" type="file" accept="image/*" multiple></button>
+    <button class="filebtn">Add Logo<input id="logoUpload" type="file" accept="image/*" multiple></button>
+    <button id="addText">Add Text</button>
+    <button id="addNameTag">Text + Top Line</button>
+    <button id="addLine">Add Line</button>
+    <span class="spacer"></span>
+    <button id="saveProject">Save Project</button>
+    <button class="filebtn">Load Project<input id="loadProject" type="file" accept=".json,application/json"></button>
+    <select id="exportScale" style="width:78px">
+      <option value="1">1× PNG</option>
+      <option value="2" selected>2× PNG</option>
+      <option value="3">3× PNG</option>
+    </select>
+    <button id="exportPNG" class="primary">Export PNG</button>
+  </div>
+
+  <div class="workspace">
+    <aside class="side">
+      <div class="section">
+        <h3>Canvas</h3>
+        <label class="label">Preset size</label>
+        <select id="preset">
+          <option value="1240x696">Reference 1240×696</option>
+          <option value="1200x675">1200×675 (16:9)</option>
+          <option value="2000x400">2000×400</option>
+          <option value="1600x188">1600×188</option>
+          <option value="1600x180">1600×180</option>
+          <option value="900x576">900×576</option>
+          <option value="custom">Custom</option>
+        </select>
+        <div class="row">
+          <div><label class="label">Width</label><input id="canvasW" type="number" value="1240" min="100"></div>
+          <div><label class="label">Height</label><input id="canvasH" type="number" value="696" min="100"></div>
+        </div>
+        <button id="resizeCanvas" style="width:100%">Resize Canvas</button>
+      </div>
+
+      <div class="section">
+        <h3>Background</h3>
+        <label class="label">Fit</label>
+        <select id="bgFit">
+          <option value="cover">Cover</option>
+          <option value="contain">Contain</option>
+          <option value="stretch">Stretch</option>
+        </select>
+        <div class="row">
+          <div><label class="label">Canvas fill</label><input id="canvasFill" type="color" value="#08734f"></div>
+          <div><label class="label">BG opacity</label><input id="bgOpacity" type="range" min="0" max="1" step="0.01" value="1"></div>
+        </div>
+        <button id="removeBg" style="width:100%">Remove Background</button>
+      </div>
+
+      <div class="section">
+        <h3>Players</h3>
+        <div class="row">
+          <div><label class="label">Side padding</label><input id="playerPadding" type="number" value="65"></div>
+          <div><label class="label">Bottom margin</label><input id="playerBottom" type="number" value="88"></div>
+        </div>
+        <div class="row">
+          <div><label class="label">Target height</label><input id="playerHeight" type="number" value="420"></div>
+          <div><label class="label">Gap bias</label><input id="playerGap" type="number" value="0"></div>
+        </div>
+        <button id="autoArrange" style="width:100%">Auto Arrange All Players</button>
+        <div class="mini" style="margin-top:7px">Adds every player evenly, keeps a common bottom line and makes their display height consistent.</div>
+      </div>
+
+      <div class="section">
+        <h3>Layers</h3>
+        <div id="layers"></div>
+      </div>
+
+      <div class="section">
+        <div class="mini"><span class="kbd">Shift</span> multi-select · <span class="kbd">Del</span> remove · arrow keys nudge · Shift+arrow = 10 px</div>
+      </div>
+    </aside>
+
+    <main class="center">
+      <div class="canvas-shell"><canvas id="c"></canvas></div>
+    </main>
+
+    <aside class="side right">
+      <div id="emptyInspector">Click any player, logo, text, line or name-tag to see its controls here.</div>
+
+      <div id="inspector" class="hidden">
+        <div class="section">
+          <h3 id="selectedTitle">Selected element</h3>
+          <div class="row">
+            <div><label class="label">X</label><input id="posX" type="number"></div>
+            <div><label class="label">Y</label><input id="posY" type="number"></div>
+          </div>
+          <div class="row">
+            <div><label class="label">Width</label><input id="objW" type="number" min="1"></div>
+            <div><label class="label">Height</label><input id="objH" type="number" min="1"></div>
+          </div>
+          <div class="row">
+            <div><label class="label">Rotate</label><input id="angle" type="number" value="0"></div>
+            <div><label class="label">Opacity</label><input id="opacity" type="range" min="0" max="1" step="0.01"></div>
+          </div>
+          <div class="btn-grid3">
+            <button id="flipX">Flip X</button>
+            <button id="flipY">Flip Y</button>
+            <button id="duplicate">Duplicate</button>
+          </div>
+          <div class="btn-grid" style="margin-top:6px">
+            <button id="lock">Lock / Unlock</button>
+            <button id="delete" class="danger">Delete</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Layer Order</h3>
+          <div class="btn-grid">
+            <button id="front">Bring Front</button>
+            <button id="back">Send Back</button>
+            <button id="forward">Forward 1</button>
+            <button id="backward">Backward 1</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <h3>Align to Canvas</h3>
+          <div class="btn-grid3">
+            <button data-align="left">Left</button><button data-align="hcenter">Center</button><button data-align="right">Right</button>
+            <button data-align="top">Top</button><button data-align="vcenter">Middle</button><button data-align="bottom">Bottom</button>
+          </div>
+        </div>
+
+        <div id="imagePanel" class="section hidden">
+          <h3>Player / Logo Image</h3>
+          <div class="inline-check"><input id="uniformScale" type="checkbox" checked> Keep proportion while typing size</div>
+          <div class="row">
+            <div><label class="label">Crop left %</label><input id="cropL" type="number" min="0" max="95" value="0"></div>
+            <div><label class="label">Crop top %</label><input id="cropT" type="number" min="0" max="95" value="0"></div>
+          </div>
+          <div class="row">
+            <div><label class="label">Crop width %</label><input id="cropW" type="number" min="5" max="100" value="100"></div>
+            <div><label class="label">Crop height %</label><input id="cropH" type="number" min="5" max="100" value="100"></div>
+          </div>
+          <button id="resetCrop" style="width:100%">Reset Crop</button>
+
+          <h3 style="margin-top:14px">Shadow / Glow</h3>
+          <div class="row">
+            <div><label class="label">Color</label><input id="shadowColor" type="color" value="#000000"></div>
+            <div><label class="label">Blur</label><input id="shadowBlur" type="number" min="0" max="100" value="18"></div>
+          </div>
+          <div class="row">
+            <div><label class="label">Offset X</label><input id="shadowX" type="number" value="0"></div>
+            <div><label class="label">Offset Y</label><input id="shadowY" type="number" value="12"></div>
+          </div>
+          <div class="row">
+            <button id="applyShadow">Apply Shadow</button><button id="removeShadow">Remove Shadow</button>
+          </div>
+          <div class="row">
+            <button id="whiteGlow">White Glow</button><button id="darkShadow">Dark Shadow</button>
+          </div>
+        </div>
+
+        <div id="textPanel" class="section hidden">
+          <h3>Text</h3>
+          <label class="label">Content</label>
+          <textarea id="textValue" rows="3"></textarea>
+          <div class="row">
+            <div><label class="label">Font</label>
+              <select id="fontFamily">
+                <option>Arial</option><option>Arial Black</option><option>Impact</option>
+                <option>Georgia</option><option>Trebuchet MS</option><option>Verdana</option>
+                <option>Times New Roman</option><option>Courier New</option>
+              </select>
+            </div>
+            <div><label class="label">Size</label><input id="fontSize" type="number" min="6" max="300"></div>
+          </div>
+          <div class="row">
+            <div><label class="label">Text color</label><input id="textColor" type="color"></div>
+            <div><label class="label">Letter spacing</label><input id="charSpacing" type="number" min="-500" max="2000"></div>
+          </div>
+          <div class="btn-grid">
+            <button id="bold">Bold</button><button id="italic">Italic</button>
+          </div>
+          <div class="btn-grid3" style="margin-top:6px">
+            <button data-textalign="left">Text Left</button><button data-textalign="center">Text Center</button><button data-textalign="right">Text Right</button>
+          </div>
+        </div>
+
+        <div id="nameTagPanel" class="section hidden">
+          <h3>Text + Top Line</h3>
+          <label class="label">Tag text</label><textarea id="tagText" rows="2"></textarea>
+          <div class="row">
+            <div><label class="label">Text color</label><input id="tagTextColor" type="color"></div>
+            <div><label class="label">Font size</label><input id="tagFontSize" type="number" min="6" max="200"></div>
+          </div>
+          <div class="row">
+            <div><label class="label">Line color</label><input id="tagLineColor" type="color"></div>
+            <div><label class="label">Line thickness</label><input id="tagLineThickness" type="number" min="1" max="20"></div>
+          </div>
+          <div class="row">
+            <div><label class="label">Line width</label><input id="tagLineWidth" type="number" min="10" max="1000"></div>
+            <div><label class="label">Line gap</label><input id="tagLineGap" type="number" min="0" max="100"></div>
+          </div>
+          <div class="btn-grid"><button id="tagBold">Bold</button><button id="tagItalic">Italic</button></div>
+        </div>
+
+        <div id="linePanel" class="section hidden">
+          <h3>Line</h3>
+          <div class="row">
+            <div><label class="label">Color</label><input id="lineColor" type="color"></div>
+            <div><label class="label">Thickness</label><input id="lineThickness" type="number" min="1" max="50"></div>
+          </div>
+          <label class="label">Length</label><input id="lineLength" type="number" min="5" max="3000">
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+(function(){
+  if(!window.fabric){
+    alert("Fabric.js could not load. This editor needs an internet connection the first time it opens.");
+    return;
+  }
+
+  const canvas = new fabric.Canvas('c', {
+    width:1240, height:696, backgroundColor:'#08734f',
+    preserveObjectStacking:true, selection:true
+  });
+  canvas.setZoom(1);
+
+  const $ = id => document.getElementById(id);
+  const clamp = (v,min,max)=>Math.max(min,Math.min(max,v));
+  const center = ()=>({x:canvas.getWidth()/2,y:canvas.getHeight()/2});
+  let bgSource = null;
+  let ignoreInspector = false;
+
+  fabric.Object.prototype.set({
+    transparentCorners:false,
+    cornerStyle:'circle',
+    cornerColor:'#ffffff',
+    cornerStrokeColor:'#4f8cff',
+    borderColor:'#4f8cff',
+    cornerSize:10,
+    padding:2
+  });
+
+  function kindName(o){
+    if(!o) return '';
+    if(o.type === 'activeSelection') return 'Multiple selection';
+    if(o.kind==='player') return 'Player';
+    if(o.kind==='logo') return 'Logo';
+    if(o.kind==='text') return 'Text';
+    if(o.kind==='nametag') return 'Text + Top Line';
+    if(o.kind==='line') return 'Line';
+    return o.type || 'Element';
+  }
+
+  function refresh(){
+    canvas.requestRenderAll();
+    renderLayers();
+    syncInspector();
+  }
+
+  function addImageFromFile(file, kind){
+    const reader = new FileReader();
+    reader.onload = e => {
+      fabric.Image.fromURL(e.target.result, img=>{
+        img.set({
+          left:center().x, top:center().y, originX:'center', originY:'center',
+          kind, name:file.name, objectCaching:false
+        });
+        const maxH = kind==='player' ? canvas.getHeight()*0.62 : canvas.getHeight()*0.22;
+        const maxW = kind==='player' ? canvas.getWidth()*0.24 : canvas.getWidth()*0.28;
+        const s = Math.min(maxW/img.width, maxH/img.height, 1);
+        img.scale(s);
+        canvas.add(img).setActiveObject(img);
+        refresh();
+      }, {crossOrigin:'anonymous'});
+    };
+    reader.readAsDataURL(file);
+  }
+
+  $('playerUpload').addEventListener('change',e=>{
+    [...e.target.files].forEach(f=>addImageFromFile(f,'player'));
+    e.target.value='';
+  });
+  $('logoUpload').addEventListener('change',e=>{
+    [...e.target.files].forEach(f=>addImageFromFile(f,'logo'));
+    e.target.value='';
+  });
+
+  $('bgUpload').addEventListener('change',e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=ev=>{ bgSource=ev.target.result; applyBackground(); };
+    r.readAsDataURL(f);
+    e.target.value='';
+  });
+
+  function applyBackground(){
+    if(!bgSource) return;
+    fabric.Image.fromURL(bgSource,img=>{
+      const fit=$('bgFit').value, cw=canvas.getWidth(), ch=canvas.getHeight();
+      img.set({originX:'center',originY:'center',left:cw/2,top:ch/2,selectable:false,evented:false,opacity:+$('bgOpacity').value});
+      if(fit==='stretch'){
+        img.scaleX=cw/img.width; img.scaleY=ch/img.height;
+      }else{
+        const s = fit==='cover' ? Math.max(cw/img.width,ch/img.height) : Math.min(cw/img.width,ch/img.height);
+        img.scale(s);
+      }
+      canvas.setBackgroundImage(img,canvas.renderAll.bind(canvas));
+    }, {crossOrigin:'anonymous'});
+  }
+  $('bgFit').addEventListener('change',applyBackground);
+  $('bgOpacity').addEventListener('input',()=>{
+    if(canvas.backgroundImage){canvas.backgroundImage.set('opacity',+$('bgOpacity').value);canvas.requestRenderAll();}
+  });
+  $('canvasFill').addEventListener('input',e=>{canvas.setBackgroundColor(e.target.value,canvas.renderAll.bind(canvas));});
+  $('removeBg').onclick=()=>{bgSource=null;canvas.setBackgroundImage(null,canvas.renderAll.bind(canvas));};
+
+  $('preset').addEventListener('change',e=>{
+    if(e.target.value==='custom') return;
+    const [w,h]=e.target.value.split('x').map(Number);
+    $('canvasW').value=w;$('canvasH').value=h;
+  });
+  $('resizeCanvas').onclick=()=>{
+    const w=Math.max(100,+$('canvasW').value||1240), h=Math.max(100,+$('canvasH').value||696);
+    canvas.setDimensions({width:w,height:h});
+    if(bgSource) applyBackground();
+    refresh();
+  };
+
+  $('addText').onclick=()=>{
+    const t=new fabric.IText('YOUR TEXT',{
+      left:center().x,top:center().y,originX:'center',originY:'center',
+      fill:'#ffffff',fontFamily:'Arial',fontSize:42,fontWeight:'700',
+      kind:'text',name:'Text'
+    });
+    canvas.add(t).setActiveObject(t); refresh();
+  };
+
+  function createNameTag(text='PLAYER NAME'){
+    const line=new fabric.Line([-90,0,90,0],{stroke:'#87d45a',strokeWidth:3,originX:'center',originY:'center'});
+    const txt=new fabric.Textbox(text,{
+      width:220,textAlign:'center',fontFamily:'Arial',fontSize:28,fontWeight:'700',
+      fill:'#ffffff',originX:'center',originY:'top',left:0,top:14,lineHeight:1.0
+    });
+    const group=new fabric.Group([line,txt],{
+      left:center().x,top:center().y,originX:'center',originY:'center',
+      kind:'nametag',name:'Name Tag'
+    });
+    group.tagData={lineWidth:180,lineThickness:3,lineColor:'#87d45a',lineGap:14,textColor:'#ffffff',fontSize:28,bold:true,italic:false,text};
+    return group;
+  }
+
+  $('addNameTag').onclick=()=>{
+    const g=createNameTag(); canvas.add(g).setActiveObject(g); refresh();
+  };
+
+  $('addLine').onclick=()=>{
+    const l=new fabric.Line([-100,0,100,0],{
+      left:center().x,top:center().y,originX:'center',originY:'center',
+      stroke:'#ffffff',strokeWidth:3,kind:'line',name:'Line'
+    });
+    canvas.add(l).setActiveObject(l);refresh();
+  };
+
+  function rebuildNameTag(group){
+    if(!group || group.kind!=='nametag') return;
+    const d=group.tagData||{};
+    const line=group.item(0), txt=group.item(1);
+    line.set({x1:-d.lineWidth/2,y1:0,x2:d.lineWidth/2,y2:0,stroke:d.lineColor,strokeWidth:d.lineThickness});
+    txt.set({
+      text:d.text,fill:d.textColor,fontSize:d.fontSize,
+      fontWeight:d.bold?'700':'400',fontStyle:d.italic?'italic':'normal',
+      top:d.lineGap,width:Math.max(d.lineWidth+40,220)
+    });
+    group._calcBounds(); group._updateObjectsCoords(); group.setCoords();
+    canvas.requestRenderAll();
+  }
+
+  function renderLayers(){
+    const box=$('layers'); box.innerHTML='';
+    const active=canvas.getActiveObject();
+    [...canvas.getObjects()].reverse().forEach((o,idx)=>{
+      const div=document.createElement('div');
+      div.className='layer'+(o===active?' active':'');
+      const badge=document.createElement('span');badge.className='pill';badge.textContent=kindName(o);
+      const name=document.createElement('div');name.className='name';name.textContent=o.name||kindName(o);
+      div.append(badge,name);
+      div.onclick=()=>{canvas.setActiveObject(o);canvas.requestRenderAll();syncInspector();renderLayers();};
+      box.appendChild(div);
+    });
+  }
+
+  function showPanel(id,show){ $(id).classList.toggle('hidden',!show); }
+  function hexOrBlack(c){
+    if(typeof c!=='string') return '#000000';
+    if(/^#[0-9a-f]{6}$/i.test(c)) return c;
+    const ctx=document.createElement('canvas').getContext('2d');ctx.fillStyle=c;return ctx.fillStyle;
+  }
+
+  function syncInspector(){
+    if(ignoreInspector) return;
+    const o=canvas.getActiveObject();
+    $('emptyInspector').classList.toggle('hidden',!!o);
+    $('inspector').classList.toggle('hidden',!o);
+    if(!o) return;
+    $('selectedTitle').textContent=kindName(o);
+    $('posX').value=Math.round(o.left||0); $('posY').value=Math.round(o.top||0);
+    $('objW').value=Math.round(o.getScaledWidth()); $('objH').value=Math.round(o.getScaledHeight());
+    $('angle').value=Math.round(o.angle||0); $('opacity').value=o.opacity==null?1:o.opacity;
+
+    const isImg=o.type==='image' && (o.kind==='player'||o.kind==='logo');
+    const isText=o.kind==='text' && (o.type==='i-text'||o.type==='textbox'||o.type==='text');
+    const isTag=o.kind==='nametag';
+    const isLine=o.kind==='line';
+    showPanel('imagePanel',isImg);showPanel('textPanel',isText);showPanel('nameTagPanel',isTag);showPanel('linePanel',isLine);
+
+    if(isImg){
+      const el=o._originalElement||o._element;
+      const nw=el.naturalWidth||el.width||o.width, nh=el.naturalHeight||el.height||o.height;
+      $('cropL').value=Math.round((o.cropX||0)/nw*100);
+      $('cropT').value=Math.round((o.cropY||0)/nh*100);
+      $('cropW').value=Math.round(o.width/nw*100);
+      $('cropH').value=Math.round(o.height/nh*100);
+      if(o.shadow){
+        $('shadowBlur').value=o.shadow.blur||0;$('shadowX').value=o.shadow.offsetX||0;$('shadowY').value=o.shadow.offsetY||0;
+      }
+    }
+    if(isText){
+      $('textValue').value=o.text||'';$('fontFamily').value=o.fontFamily||'Arial';$('fontSize').value=o.fontSize||40;
+      $('textColor').value=hexOrBlack(o.fill||'#ffffff');$('charSpacing').value=o.charSpacing||0;
+      $('bold').style.outline=(String(o.fontWeight)==='700'||o.fontWeight==='bold')?'2px solid #4f8cff':'none';
+      $('italic').style.outline=o.fontStyle==='italic'?'2px solid #4f8cff':'none';
+    }
+    if(isTag){
+      const d=o.tagData||{};
+      $('tagText').value=d.text||'';$('tagTextColor').value=d.textColor||'#ffffff';$('tagFontSize').value=d.fontSize||28;
+      $('tagLineColor').value=d.lineColor||'#87d45a';$('tagLineThickness').value=d.lineThickness||3;
+      $('tagLineWidth').value=d.lineWidth||180;$('tagLineGap').value=d.lineGap||14;
+      $('tagBold').style.outline=d.bold?'2px solid #4f8cff':'none';$('tagItalic').style.outline=d.italic?'2px solid #4f8cff':'none';
+    }
+    if(isLine){
+      $('lineColor').value=hexOrBlack(o.stroke||'#ffffff');$('lineThickness').value=o.strokeWidth||3;
+      $('lineLength').value=Math.round(Math.hypot(o.x2-o.x1,o.y2-o.y1)*Math.abs(o.scaleX||1));
+    }
+  }
+
+  canvas.on('selection:created',()=>{syncInspector();renderLayers()});
+  canvas.on('selection:updated',()=>{syncInspector();renderLayers()});
+  canvas.on('selection:cleared',()=>{syncInspector();renderLayers()});
+  canvas.on('object:modified',()=>{syncInspector();renderLayers()});
+  canvas.on('object:added',renderLayers);
+  canvas.on('object:removed',renderLayers);
+
+  function act(){return canvas.getActiveObject();}
+  function updateGeneric(){
+    const o=act();if(!o)return;
+    ignoreInspector=true;
+    o.set({
+      left:+$('posX').value||0,top:+$('posY').value||0,
+      angle:+$('angle').value||0,opacity:+$('opacity').value
+    });
+    const wantW=Math.max(1,+$('objW').value||1),wantH=Math.max(1,+$('objH').value||1);
+    const curW=o.width||1,curH=o.height||1;
+    if(o.type!=='activeSelection'){
+      o.scaleX=wantW/curW;o.scaleY=wantH/curH;
+    }
+    o.setCoords();canvas.requestRenderAll();ignoreInspector=false;renderLayers();
+  }
+  ['posX','posY','objW','objH','angle','opacity'].forEach(id=>$(id).addEventListener(id==='opacity'?'input':'change',updateGeneric));
+
+  $('flipX').onclick=()=>{const o=act();if(o){o.set('flipX',!o.flipX);refresh()}};
+  $('flipY').onclick=()=>{const o=act();if(o){o.set('flipY',!o.flipY);refresh()}};
+  $('duplicate').onclick=()=>{const o=act();if(!o)return;o.clone(cl=>{cl.set({left:(o.left||0)+30,top:(o.top||0)+30});canvas.add(cl).setActiveObject(cl);refresh();},['kind','name','tagData'])};
+  $('lock').onclick=()=>{const o=act();if(!o)return;const lock=!o.lockMovementX;o.set({lockMovementX:lock,lockMovementY:lock,lockScalingX:lock,lockScalingY:lock,lockRotation:lock,hasControls:!lock});refresh()};
+  $('delete').onclick=()=>removeActive();
+
+  function removeActive(){
+    const o=act();if(!o)return;
+    if(o.type==='activeSelection'){o.getObjects().slice().forEach(x=>canvas.remove(x));canvas.discardActiveObject();}
+    else canvas.remove(o);
+    refresh();
+  }
+
+  $('front').onclick=()=>{const o=act();if(o){o.bringToFront();refresh()}};
+  $('back').onclick=()=>{const o=act();if(o){o.sendToBack();refresh()}};
+  $('forward').onclick=()=>{const o=act();if(o){o.bringForward();refresh()}};
+  $('backward').onclick=()=>{const o=act();if(o){o.sendBackwards();refresh()}};
+
+  document.querySelectorAll('[data-align]').forEach(b=>b.onclick=()=>{
+    const o=act();if(!o)return;
+    const m=b.dataset.align, w=o.getScaledWidth(),h=o.getScaledHeight();
+    if(m==='left')o.set('left',w/2);
+    if(m==='hcenter')o.set('left',canvas.getWidth()/2);
+    if(m==='right')o.set('left',canvas.getWidth()-w/2);
+    if(m==='top')o.set('top',h/2);
+    if(m==='vcenter')o.set('top',canvas.getHeight()/2);
+    if(m==='bottom')o.set('top',canvas.getHeight()-h/2);
+    o.setCoords();refresh();
+  });
+
+  function updateCrop(){
+    const o=act();if(!o||o.type!=='image')return;
+    const el=o._originalElement||o._element;
+    const nw=el.naturalWidth||el.width||o.width, nh=el.naturalHeight||el.height||o.height;
+    const displayW=o.getScaledWidth(), displayH=o.getScaledHeight();
+    let l=clamp(+$('cropL').value,0,95),t=clamp(+$('cropT').value,0,95);
+    let w=clamp(+$('cropW').value,5,100),h=clamp(+$('cropH').value,5,100);
+    w=Math.min(w,100-l);h=Math.min(h,100-t);
+    const pw=nw*w/100,ph=nh*h/100;
+    o.set({cropX:nw*l/100,cropY:nh*t/100,width:pw,height:ph,scaleX:displayW/pw,scaleY:displayH/ph});
+    o.setCoords();canvas.requestRenderAll();
+  }
+  ['cropL','cropT','cropW','cropH'].forEach(id=>$(id).addEventListener('change',updateCrop));
+  $('resetCrop').onclick=()=>{
+    const o=act();if(!o||o.type!=='image')return;
+    const el=o._originalElement||o._element;const nw=el.naturalWidth||el.width,nh=el.naturalHeight||el.height;
+    const dw=o.getScaledWidth(),dh=o.getScaledHeight();
+    o.set({cropX:0,cropY:0,width:nw,height:nh,scaleX:dw/nw,scaleY:dh/nh});refresh();
+  };
+
+  function setShadow(color,blur,x,y){
+    const o=act();if(!o)return;
+    o.set('shadow',new fabric.Shadow({color,blur:+blur||0,offsetX:+x||0,offsetY:+y||0,affectStroke:true}));
+    refresh();
+  }
+  $('applyShadow').onclick=()=>setShadow($('shadowColor').value,$('shadowBlur').value,$('shadowX').value,$('shadowY').value);
+  $('removeShadow').onclick=()=>{const o=act();if(o){o.set('shadow',null);refresh()}};
+  $('whiteGlow').onclick=()=>setShadow('rgba(255,255,255,0.85)',28,0,0);
+  $('darkShadow').onclick=()=>setShadow('rgba(0,0,0,0.75)',24,0,16);
+
+  function updateText(){
+    const o=act();if(!o||o.kind!=='text')return;
+    o.set({
+      text:$('textValue').value,fontFamily:$('fontFamily').value,fontSize:+$('fontSize').value||40,
+      fill:$('textColor').value,charSpacing:+$('charSpacing').value||0
+    });
+    o.setCoords();canvas.requestRenderAll();
+  }
+  ['textValue','fontFamily','fontSize','textColor','charSpacing'].forEach(id=>$(id).addEventListener(id==='textValue'?'input':'change',updateText));
+  $('bold').onclick=()=>{const o=act();if(o&&o.kind==='text'){const on=String(o.fontWeight)==='700'||o.fontWeight==='bold';o.set('fontWeight',on?'400':'700');refresh()}};
+  $('italic').onclick=()=>{const o=act();if(o&&o.kind==='text'){o.set('fontStyle',o.fontStyle==='italic'?'normal':'italic');refresh()}};
+  document.querySelectorAll('[data-textalign]').forEach(b=>b.onclick=()=>{const o=act();if(o&&o.kind==='text'){o.set('textAlign',b.dataset.textalign);refresh()}});
+
+  function updateTag(){
+    const o=act();if(!o||o.kind!=='nametag')return;
+    o.tagData=Object.assign(o.tagData||{},{
+      text:$('tagText').value,textColor:$('tagTextColor').value,fontSize:+$('tagFontSize').value||28,
+      lineColor:$('tagLineColor').value,lineThickness:+$('tagLineThickness').value||3,
+      lineWidth:+$('tagLineWidth').value||180,lineGap:+$('tagLineGap').value||14
+    });
+    rebuildNameTag(o);syncInspector();
+  }
+  ['tagText','tagTextColor','tagFontSize','tagLineColor','tagLineThickness','tagLineWidth','tagLineGap'].forEach(id=>$(id).addEventListener(id==='tagText'?'input':'change',updateTag));
+  $('tagBold').onclick=()=>{const o=act();if(o&&o.kind==='nametag'){o.tagData.bold=!o.tagData.bold;rebuildNameTag(o);syncInspector()}};
+  $('tagItalic').onclick=()=>{const o=act();if(o&&o.kind==='nametag'){o.tagData.italic=!o.tagData.italic;rebuildNameTag(o);syncInspector()}};
+
+  function updateLine(){
+    const o=act();if(!o||o.kind!=='line')return;
+    const len=Math.max(5,+$('lineLength').value||200);
+    o.set({x1:-len/2,x2:len/2,y1:0,y2:0,scaleX:1,stroke:$('lineColor').value,strokeWidth:+$('lineThickness').value||3});
+    o.setCoords();canvas.requestRenderAll();
+  }
+  ['lineColor','lineThickness','lineLength'].forEach(id=>$(id).addEventListener('change',updateLine));
+
+  $('autoArrange').onclick=()=>{
+    const players=canvas.getObjects().filter(o=>o.kind==='player');
+    if(!players.length)return;
+    const pad=Math.max(0,+$('playerPadding').value||0);
+    const bottom=Math.max(0,+$('playerBottom').value||0);
+    const targetH=Math.max(50,+$('playerHeight').value||420);
+    const gapBias=+$('playerGap').value||0;
+    const usable=Math.max(1,canvas.getWidth()-2*pad);
+    players.forEach((p,i)=>{
+      const h=p.height||1;
+      p.scale(targetH/h);
+      const x = players.length===1 ? canvas.getWidth()/2 : pad + i*(usable/(players.length-1));
+      p.set({left:x + gapBias*(i-(players.length-1)/2),top:canvas.getHeight()-bottom-p.getScaledHeight()/2});
+      p.setCoords();
+    });
+    canvas.discardActiveObject();refresh();
+  };
+
+  $('saveProject').onclick=()=>{
+    const json=JSON.stringify({
+      canvas:{w:canvas.getWidth(),h:canvas.getHeight(),fill:canvas.backgroundColor,bgSource,bgFit:$('bgFit').value,bgOpacity:+$('bgOpacity').value},
+      objects:canvas.toJSON(['kind','name','tagData']).objects
+    });
+    const blob=new Blob([json],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='sports-banner-project.json';a.click();URL.revokeObjectURL(a.href);
+  };
+
+  $('loadProject').addEventListener('change',e=>{
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();r.onload=ev=>{
+      try{
+        const data=JSON.parse(ev.target.result);
+        canvas.clear();
+        canvas.setDimensions({width:data.canvas.w,height:data.canvas.h});
+        $('canvasW').value=data.canvas.w;$('canvasH').value=data.canvas.h;
+        canvas.backgroundColor=data.canvas.fill||'#08734f';
+        bgSource=data.canvas.bgSource||null;$('bgFit').value=data.canvas.bgFit||'cover';$('bgOpacity').value=data.canvas.bgOpacity??1;
+        fabric.util.enlivenObjects(data.objects||[],objs=>{
+          objs.forEach(o=>canvas.add(o));
+          canvas.discardActiveObject();
+          if(bgSource)applyBackground();else canvas.requestRenderAll();
+          refresh();
+        });
+      }catch(err){alert('Could not load project file.');}
+    };r.readAsText(f);e.target.value='';
+  });
+
+  $('exportPNG').onclick=()=>{
+    canvas.discardActiveObject();canvas.requestRenderAll();
+    const mult=+$('exportScale').value||1;
+    const url=canvas.toDataURL({format:'png',multiplier:mult,enableRetinaScaling:false});
+    const a=document.createElement('a');a.href=url;a.download=`banner-${canvas.getWidth()}x${canvas.getHeight()}-${mult}x.png`;a.click();
+  };
+
+  document.addEventListener('keydown',e=>{
+    const tag=(document.activeElement||{}).tagName;
+    if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT')return;
+    const o=act();if(!o)return;
+    if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();removeActive();return;}
+    const d=e.shiftKey?10:1;
+    if(e.key==='ArrowLeft'){o.left-=d;e.preventDefault();}
+    if(e.key==='ArrowRight'){o.left+=d;e.preventDefault();}
+    if(e.key==='ArrowUp'){o.top-=d;e.preventDefault();}
+    if(e.key==='ArrowDown'){o.top+=d;e.preventDefault();}
+    o.setCoords();canvas.requestRenderAll();syncInspector();
+  });
+
+  renderLayers(); syncInspector();
+})();
+</script>
+</body>
+</html>

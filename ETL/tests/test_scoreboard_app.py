@@ -142,6 +142,95 @@ def test_web_upload_persists_and_can_be_rendered(tmp_path: Path) -> None:
     assert runtime.storage_status()["writable"] is True
 
 
+@pytest.mark.parametrize("template", ("t2", "t3", "t4"))
+def test_web_runtime_allows_uploaded_free_logo(template: str, tmp_path: Path) -> None:
+    upload_dir = tmp_path / "uploads"
+    runtime = scoreboard_web.ScoreboardWebRuntime(scoreboard, upload_dir)
+    logo = upload_dir / "logo.png"
+    scoreboard.Image.new("RGBA", (20, 10), (20, 200, 90, 255)).save(logo, "PNG")
+    config = copy.deepcopy(scoreboard.DEFAULT_CONFIGS[template])
+    config["logo_path"] = str(logo)
+
+    normalized = runtime.normalized_config(template, config)
+
+    assert normalized["logo_path"] == str(logo)
+
+
+def test_web_sessions_are_named_and_only_host_can_set_priority(tmp_path: Path) -> None:
+    runtime = scoreboard_web.ScoreboardWebRuntime(scoreboard, tmp_path / "uploads")
+    session = runtime.register_session("operator-0001", "  Main   operator  ", "192.168.50.20")
+
+    assert session["name"] == "Main operator"
+    assert runtime.session_status("operator-0001", "192.168.50.20")["can_manage"] is False
+    with pytest.raises(PermissionError, match="only be changed"):
+        runtime.set_session_priority("operator-0001", 100, "192.168.50.20")
+
+    updated = runtime.set_session_priority("operator-0001", 100, "127.0.0.1")
+
+    assert updated["priority"] == 100
+    assert runtime.session_status("operator-0001", "127.0.0.1")["can_manage"] is True
+
+
+def test_web_live_output_obeys_owner_and_priority(monkeypatch, tmp_path: Path) -> None:
+    outputs = []
+
+    class FakeLiveOutput:
+        def __init__(self, preset, device):
+            self.preset = preset
+            self.device = device
+            self.updates = 0
+            self.stopped = False
+            outputs.append(self)
+
+        def start(self, _image):
+            return None
+
+        def update(self, _image):
+            self.updates += 1
+
+        def poll_error(self):
+            return None
+
+        def stop(self):
+            self.stopped = True
+
+    monkeypatch.setattr(scoreboard, "DeckLinkLiveOutput", FakeLiveOutput)
+    runtime = scoreboard_web.ScoreboardWebRuntime(scoreboard, tmp_path / "uploads")
+    runtime.register_session("operator-0001", "Primary operator", "192.168.50.20")
+    runtime.register_session("operator-0002", "Backup operator", "192.168.50.21")
+    runtime.set_session_priority("operator-0001", 100, "127.0.0.1")
+    runtime.set_session_priority("operator-0002", 50, "127.0.0.1")
+    preset = next(iter(scoreboard.VIDEO_EXPORT_PRESETS))
+    output_names = list(scoreboard.DECKLINK_OUTPUTS)
+    output_name = output_names[0]
+
+    runtime.start_live(
+        "t1", scoreboard.DEF_T1, preset, output_name,
+        "operator-0001", "192.168.50.20",
+    )
+    with pytest.raises(PermissionError, match="Primary operator"):
+        runtime.start_live(
+            "t1", scoreboard.DEF_T1, preset, output_name,
+            "operator-0002", "192.168.50.21",
+        )
+    runtime.render("t1", scoreboard.DEF_T1, client_id="operator-0002")
+    runtime.render("t1", scoreboard.DEF_T1, client_id="operator-0001")
+
+    assert outputs[0].updates == 1
+    runtime.set_session_priority("operator-0001", 50, "127.0.0.1")
+    runtime.set_session_priority("operator-0002", 100, "127.0.0.1")
+    runtime.start_live(
+        "t1", scoreboard.DEF_T1, preset, output_names[1],
+        "operator-0002", "192.168.50.21",
+    )
+    assert outputs[0].stopped is True
+    assert runtime.live_status("operator-0002")["owned_by_requester"] is True
+    with pytest.raises(PermissionError, match="Backup operator"):
+        runtime.stop_live("operator-0001", "192.168.50.20")
+    runtime.stop_live("operator-0001", "127.0.0.1")
+    assert outputs[1].stopped is True
+
+
 def test_text_style_inheritance_and_role_override() -> None:
     selected_font = next(
         (family for family in scoreboard.FONT_CHOICES if family != "Default"),
@@ -167,6 +256,32 @@ def test_text_style_inheritance_and_role_override() -> None:
     )
     assert scoreboard.text_font_family(config, "title") == selected_font
     assert scoreboard.text_font_family(config, "stat_values") == selected_font
+
+
+def test_hindi_text_uses_multilingual_font_and_renders() -> None:
+    hindi = "\u0928\u092e\u0938\u094d\u0924\u0947 \u0926\u0941\u0928\u093f\u092f\u093e"
+    config = copy.deepcopy(scoreboard.DEF_T1)
+    config["title"] = hindi
+    config["rows"][0]["label"] = "\u092a\u0939\u0932\u0940 \u0938\u0930\u094d\u0935\u093f\u0938"
+    config["rows"][0]["value"] = "\u092c\u0939\u0941\u0924 \u0905\u091a\u094d\u091b\u093e"
+
+    image = scoreboard.render_t1(config)
+
+    assert image.size == scoreboard.T1_SIZES[config["canvas_size"]]
+    if "Nirmala UI" in scoreboard.FONT_CHOICES:
+        assert scoreboard.text_font_family(config, "title", hindi) == "Nirmala UI"
+    if scoreboard._load_pango_modules():
+        assert isinstance(
+            scoreboard.text_font(config, "title", 48, "bold", hindi),
+            scoreboard.ShapedFont,
+        )
+
+
+def test_web_editor_supports_unicode_fonts_and_live_text_input() -> None:
+    html = MODULE_PATH.with_name("scoreboard_web.html").read_text(encoding="utf-8")
+
+    assert '"Nirmala UI","Noto Sans"' in html
+    assert "el.oninput=()=>{update();scheduleRender()}" in html
 
 
 def test_text_case_preserves_typed_case_and_supports_explicit_transforms() -> None:
