@@ -53,7 +53,11 @@ class ScoreboardWebRuntime:
         configured = os.environ.get("SCOREBOARD_WEB_UPLOAD_DIR", "").strip()
         if configured:
             candidates.append(Path(configured))
-        candidates.append(self.app_dir.parents[2] / "output" / "scoreboard_web" / "uploads")
+        candidates.append(self.app_dir / "data" / "uploads")
+        if len(self.app_dir.parents) > 2:
+            candidates.append(
+                self.app_dir.parents[2] / "output" / "scoreboard_web" / "uploads"
+            )
         local_app_data = os.environ.get("LOCALAPPDATA", "").strip()
         if local_app_data:
             candidates.append(Path(local_app_data) / "Veto" / "ScoreboardMaker" / "uploads")
@@ -232,9 +236,19 @@ class ScoreboardWebRuntime:
         try:
             path = Path(str(value)).resolve()
             path.relative_to(self.upload_dir.resolve())
+            if path.is_file():
+                return str(path)
+        except (OSError, ValueError):
+            pass
+
+        # A transferred project may retain the old PC's absolute upload path.
+        # Only reconnect its generated filename inside this server's upload root.
+        try:
+            migrated = (self.upload_dir / Path(str(value)).name).resolve()
+            migrated.relative_to(self.upload_dir.resolve())
+            return str(migrated) if migrated.is_file() else ""
         except (OSError, ValueError):
             return ""
-        return str(path) if path.is_file() else ""
 
     def render(
         self, template: str, value: Any, update_live: bool = True, client_id: str = "",

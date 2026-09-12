@@ -122,6 +122,19 @@ def test_web_runtime_blocks_arbitrary_local_image_paths(tmp_path: Path) -> None:
     assert normalized["photo_path"] == ""
 
 
+def test_web_runtime_reconnects_transferred_upload_by_filename(tmp_path: Path) -> None:
+    upload_dir = tmp_path / "new-pc" / "uploads"
+    runtime = scoreboard_web.ScoreboardWebRuntime(scoreboard, upload_dir)
+    migrated = upload_dir / "generated-asset.png"
+    scoreboard.Image.new("RGB", (16, 16), (12, 80, 190)).save(migrated, "PNG")
+    config = copy.deepcopy(scoreboard.DEF_T1)
+    config["photo_path"] = str(tmp_path / "old-pc" / "generated-asset.png")
+
+    normalized = runtime.normalized_config("t1", config)
+
+    assert normalized["photo_path"] == str(migrated)
+
+
 def test_web_upload_persists_and_can_be_rendered(tmp_path: Path) -> None:
     runtime = scoreboard_web.ScoreboardWebRuntime(scoreboard, tmp_path / "uploads")
     source = scoreboard.Image.new("RGB", (32, 24), (20, 140, 220))

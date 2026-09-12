@@ -155,5 +155,6 @@ ETL/recorder.zip
 
 # Scoreboard browser uploads/exports and local working copies are workstation state.
 ETL/output/scoreboard_web/
+ETL/output/portable/
 ETL/extras/apps/leaderBoardGen/scoreboard_app - OG.py
 ETL/extras/apps/leaderBoardGen/scoreboard_app - SDI VERSION.py

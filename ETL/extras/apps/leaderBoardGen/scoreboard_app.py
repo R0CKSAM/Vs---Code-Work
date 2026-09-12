@@ -26,8 +26,13 @@ from __future__ import annotations
 import argparse, colorsys, copy, csv, json, os, re, shutil, subprocess, sys, tempfile, threading, time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
+
+try:
+    import tkinter as tk
+    from tkinter import ttk, filedialog, messagebox
+except ImportError:
+    tk = None
+    ttk = filedialog = messagebox = None
 
 try:
     from tkinterdnd2 import DND_FILES, TkinterDnD
@@ -36,9 +41,14 @@ except ImportError:
     TkinterDnD = None
 
 try:
-    from PIL import Image, ImageTk, ImageDraw, ImageFont, ImageFilter, ImageEnhance
+    from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 except ImportError:
     sys.exit("Pillow is required:  pip install pillow")
+
+try:
+    from PIL import ImageTk
+except ImportError:
+    ImageTk = None
 
 IMAGE_FILETYPES = [
     ("Images", "*.png *.jpg *.jpeg *.gif *.webp *.bmp *.avif"),
@@ -371,12 +381,16 @@ def load_photo(path: str) -> Optional[Image.Image]:
 
 def locate_ffmpeg(explicit: str = "") -> Optional[str]:
     """Find FFmpeg in an explicit path, the environment, or known local installs."""
-    app_root = Path(__file__).resolve().parents[3]
+    app_dir = Path(__file__).resolve().parent
+    roots = [app_dir]
+    if len(app_dir.parents) > 2:
+        roots.append(app_dir.parents[2])
     candidates = [
         explicit,
         os.getenv("FFMPEG_PATH", ""),
-        str(app_root / "tools" / "ffmpeg" / "bin" / "ffmpeg.exe"),
-        str(app_root / "tools" / "ffmpeg.exe"),
+        *(str(root / "tools" / "ffmpeg" / "bin" / "ffmpeg.exe") for root in roots),
+        *(str(root / "tools" / "ffmpeg.exe") for root in roots),
+        str(app_dir / "ffmpeg" / "bin" / "ffmpeg.exe"),
         shutil.which("ffmpeg") or "",
     ]
     for candidate in candidates:
@@ -2100,7 +2114,10 @@ class UndoStack:
         return None
 
 
-class PhotoFramingDialog(tk.Toplevel):
+_TkToplevel = tk.Toplevel if tk is not None else object
+
+
+class PhotoFramingDialog(_TkToplevel):
     """Small, visual crop editor shared by every photo slot."""
 
     def __init__(self, parent, path, target_size, zoom, focus_x, focus_y, on_apply):
@@ -2182,7 +2199,7 @@ class PhotoFramingDialog(tk.Toplevel):
         self.destroy()
 
 
-class LiveColorDialog(tk.Toplevel):
+class LiveColorDialog(_TkToplevel):
     """Visual palette that updates the main preview while it remains open."""
 
     PALETTE_WIDTH=320
@@ -2355,7 +2372,7 @@ class LiveColorDialog(tk.Toplevel):
         self.destroy()
 
 
-class MP4ExportDialog(tk.Toplevel):
+class MP4ExportDialog(_TkToplevel):
     """Collect the broadcast video mode and hold duration before export."""
 
     def __init__(self, parent, preset, duration, on_export):
@@ -2406,7 +2423,7 @@ class MP4ExportDialog(tk.Toplevel):
         self._on_export(preset, duration)
 
 
-class LiveOutputDialog(tk.Toplevel):
+class LiveOutputDialog(_TkToplevel):
     """Choose a DeckLink connector and television standard before going live."""
 
     def __init__(self, parent, preset, output_name, on_start):
@@ -5405,6 +5422,8 @@ def main(argv=None):
         scoreboard_web.run_server(sys.modules[__name__], args.host, args.port)
         return
 
+    if tk is None:
+        parser.error("The desktop editor needs a Python installation with Tk. Use --web for the portable browser editor.")
     root=TkinterDnD.Tk() if TkinterDnD else tk.Tk()
     App(root); root.mainloop()
 
