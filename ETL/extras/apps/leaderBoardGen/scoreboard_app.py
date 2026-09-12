@@ -762,6 +762,13 @@ TEXT_STYLE_TARGETS = {
         ("player_3_result", "Player 3 result"),
         ("sponsor", "Sponsor text"),
     ],
+    "t5": [
+        ("all", "All text"),
+        ("player_names", "Player name"),
+        ("stat_labels", "Stat headings"),
+        ("stat_values", "Stat values"),
+        ("years", "Years label"),
+    ],
 }
 
 GROUP_COLOR_SPECS = {
@@ -806,6 +813,10 @@ TEXT_ROLE_DEFAULT_COLORS = {
         "player_1_values":"white", "player_2_values":"white", "units":"muted", "sponsor":"muted",
     },
     "t4": {"banner":"white", "sponsor":"muted"},
+    "t5": {
+        "player_names":"white", "stat_labels":"header_ink",
+        "stat_values":"header_ink", "years":"header_ink",
+    },
 }
 for _player_number in range(1, 4):
     TEXT_ROLE_DEFAULT_COLORS["t4"].update({
@@ -1123,6 +1134,10 @@ T4_SIZES = {
     "Square(1080x1080)": (1080, 1080),
     "Wide  (1620x1080)": (1620, 1080),
     "4:5   (1080x1350)": (1080, 1350),
+}
+T5_SIZES = {
+    "HD  (1920x1080)": (1920, 1080),
+    "4K  (3840x2160)": (3840, 2160),
 }
 
 
@@ -1989,6 +2004,149 @@ def render_t4(cfg: Dict) -> Image.Image:
     return img
 
 
+# Player Band lower-third, ported from Player_Band_V3_UPDATED (1).py.
+T5_BASE_SIZE = (1920, 1080)
+
+
+def render_t5(cfg: Dict) -> Image.Image:
+    """Render the editable player lower-third without requiring PyQt."""
+    W, H = T5_SIZES.get(cfg.get("canvas_size", "HD  (1920x1080)"), T5_BASE_SIZE)
+    render_scale = max(1, int(cfg.get("_render_scale", 1)))
+    W, H = W * render_scale, H * render_scale
+    transparent = bool(cfg.get("transparent_background", False))
+    background = normalize_rgb(cfg.get("background_color"), (255, 255, 255))
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0) if transparent else (*background, 255))
+
+    background_image = load_photo(cfg.get("background_path", ""))
+    if background_image is not None and not transparent:
+        photo = cover_crop(
+            background_image, W, H, cfg.get("background_zoom", 100),
+            cfg.get("background_focus_x", 50), cfg.get("background_focus_y", 50),
+        ).convert("RGBA")
+        img.alpha_composite(photo)
+
+    base_scale = min(W / T5_BASE_SIZE[0], H / T5_BASE_SIZE[1])
+    band_scale = base_scale * clamp_number(cfg.get("band_scale_pct"), 25, 300, 100) / 100.0
+    origin_x = W * clamp_number(cfg.get("band_x_pct"), -75, 125, 20.34) / 100.0
+    origin_y = H * clamp_number(cfg.get("band_y_pct"), -75, 125, 82.87) / 100.0
+    player_dx = T5_BASE_SIZE[0] * clamp_number(
+        cfg.get("player_offset_x_pct"), -100, 100, 0
+    ) / 100.0
+    player_dy = T5_BASE_SIZE[1] * clamp_number(
+        cfg.get("player_offset_y_pct"), -100, 100, 0
+    ) / 100.0
+    name_dx = T5_BASE_SIZE[0] * clamp_number(
+        cfg.get("name_offset_x_pct"), -100, 100, 0
+    ) / 100.0
+    name_dy = T5_BASE_SIZE[1] * clamp_number(
+        cfg.get("name_offset_y_pct"), -100, 100, 0
+    ) / 100.0
+
+    def point(x, y, dx=0.0, dy=0.0):
+        return (origin_x + (x + dx) * band_scale, origin_y + (y + dy) * band_scale)
+
+    draw = ImageDraw.Draw(img, "RGBA")
+    band_green = normalize_rgb(cfg.get("band_green"), (8, 107, 59))
+    accent_green = normalize_rgb(cfg.get("accent_green"), (66, 194, 51))
+    accent_dark = normalize_rgb(cfg.get("accent_dark"), (21, 150, 69))
+    panel_white = normalize_rgb(cfg.get("panel_white"), (243, 243, 238))
+    stats_green = normalize_rgb(cfg.get("stats_green"), (0, 102, 58))
+    separator = normalize_rgb(cfg.get("separator_color"), (122, 158, 140))
+    name_text = normalize_rgb(cfg.get("name_text_color"), (245, 245, 241))
+
+    def polygon(points, color):
+        draw.polygon([point(x, y) for x, y in points], fill=(*color, 255))
+
+    polygon([(35, 30), (610, 30), (575, 120), (0, 120)], band_green)
+    polygon([(575, 30), (1112, 30), (1081, 120), (540, 120)], panel_white)
+    polygon([(18, 30), (48, 30), (15, 120), (-15, 120)], accent_green)
+    polygon([(50, 30), (64, 30), (32, 120), (18, 120)], accent_dark)
+    polygon([(1120, 30), (1131, 30), (1099, 120), (1088, 120)], accent_dark)
+    polygon([(1143, 30), (1154, 30), (1122, 120), (1111, 120)], accent_green)
+    polygon([(738, 47), (740, 47), (740, 104), (738, 104)], separator)
+    polygon([(883, 47), (885, 47), (885, 104), (883, 104)], separator)
+
+    player_height = max(1, int(178 * band_scale * clamp_number(
+        cfg.get("player_size_pct"), 20, 500, 100
+    ) / 100.0))
+    player = load_photo(cfg.get("player_path", ""))
+    center_x, feet_y = point(118, 121, player_dx, player_dy)
+    if player is not None and player.height > 0:
+        player_width = max(1, int(player.width * player_height / player.height))
+        player = player.resize((player_width, player_height), Image.LANCZOS)
+        img.alpha_composite(
+            player, (int(round(center_x - player_width / 2)), int(round(feet_y - player_height)))
+        )
+    else:
+        placeholder = Image.new("RGBA", (166, 178), (0, 0, 0, 0))
+        pd = ImageDraw.Draw(placeholder)
+        pd.ellipse((55, 8, 111, 64), fill=(239, 239, 234, 255), outline=(193, 196, 191, 255), width=2)
+        pd.rounded_rectangle(
+            (35, 62, 131, 174), radius=21, fill=(239, 239, 234, 255),
+            outline=(193, 196, 191, 255), width=2,
+        )
+        placeholder = placeholder.resize(
+            (max(1, int(166 * player_height / 178)), player_height), Image.LANCZOS
+        )
+        img.alpha_composite(
+            placeholder,
+            (int(round(center_x - placeholder.width / 2)), int(round(feet_y - player_height))),
+        )
+
+    draw = ImageDraw.Draw(img, "RGBA")
+
+    def band_font(role, source_size, variant="regular"):
+        _color, size = styled_text(
+            cfg, role, name_text if role == "player_names" else stats_green,
+            max(1, int(round(source_size * 4 / 3 * band_scale))),
+        )
+        return text_font(cfg, role, size, variant), _color, size
+
+    first = apply_text_case(cfg, "player_names", cfg.get("first_name", "SUMIT"))
+    last = apply_text_case(cfg, "player_names", cfg.get("last_name", "NAGAL"))
+    first_font, first_color, first_size = band_font("player_names", 18, "italic")
+    last_font, last_color, last_size = band_font("player_names", 34, "bold_italic")
+    first_font = fit_font(
+        draw, first, int(230 * band_scale), first_size, max(7, int(11 * band_scale)),
+        text_font_factory(cfg, "player_names", "italic"),
+    )
+    last_font = fit_font(
+        draw, last, int(330 * band_scale), last_size, max(9, int(18 * band_scale)),
+        text_font_factory(cfg, "player_names", "bold_italic"),
+    )
+    draw_text(draw, point(190, 39, name_dx, name_dy), first, first_font, first_color)
+    draw_text(draw, point(188, 59, name_dx, name_dy), last, last_font, last_color)
+
+    label_font, label_color, _ = band_font("stat_labels", 15, "bold_italic")
+    value_font, value_color, value_size = band_font("stat_values", 34, "bold_italic")
+    years_font, years_color, _ = band_font("years", 13, "bold_italic")
+    labels = (("AGE", 612), ("RANKING", 756), ("PLAYS", 913))
+    for label, x in labels:
+        draw_text(draw, point(x, 36), apply_text_case(cfg, "stat_labels", label), label_font, label_color)
+
+    values = (
+        (str(cfg.get("age", "29")), 610, 90),
+        (str(cfg.get("ranking", "XX")), 752, 100),
+        (str(cfg.get("plays", "XX")), 910, 100),
+    )
+    for value, x, maximum in values:
+        value = apply_text_case(cfg, "stat_values", value)
+        fitted = fit_font(
+            draw, value, int(maximum * band_scale), value_size,
+            max(9, int(17 * band_scale)), text_font_factory(cfg, "stat_values", "bold_italic"),
+        )
+        draw_text(draw, point(x, 56), value, fitted, value_color)
+
+    years = apply_text_case(cfg, "years", cfg.get("years_text", "YEARS"))
+    years_width, years_height = text_bbox(draw, years, years_font)
+    years_x, years_y = point(738 - 8, 110)
+    draw_text(
+        draw, (years_x - years_width, years_y - years_height),
+        years, years_font, years_color,
+    )
+    return img
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 # DEFAULTS
 # ═══════════════════════════════════════════════════════════════════════════
@@ -2092,6 +2250,31 @@ DEF_T4 = {
              {"label":"Long Points Won %","value":"74","unit":"%","max":"100"},
          ]},
     ],
+}
+
+DEF_T5 = {
+    "template":"t5", "canvas_size":"HD  (1920x1080)",
+    "first_name":"SUMIT", "last_name":"NAGAL",
+    "age":"29", "ranking":"XX", "plays":"XX", "years_text":"YEARS",
+    "background_path":"", "background_zoom":100,
+    "background_focus_x":50, "background_focus_y":50,
+    "player_path":"", "player_size_pct":100,
+    "player_offset_x_pct":0, "player_offset_y_pct":0,
+    "name_offset_x_pct":0, "name_offset_y_pct":0,
+    "band_x_pct":20.34, "band_y_pct":82.87, "band_scale_pct":100,
+    "transparent_background":False,
+    "background_color":[255,255,255],
+    "accent_color":[66,194,51], "bar_color":None,
+    "band_green":[8,107,59], "accent_green":[66,194,51],
+    "accent_dark":[21,150,69], "panel_white":[243,243,238],
+    "stats_green":[0,102,58], "separator_color":[122,158,140],
+    "name_text_color":[245,245,241],
+    "text_styles":{
+        "player_names":{"case":"UPPERCASE"},
+        "stat_labels":{"case":"UPPERCASE"},
+        "years":{"case":"UPPERCASE"},
+    },
+    "rows":[],
 }
 
 
@@ -2877,17 +3060,21 @@ TEMPLATE_NAMES = [
     "3 Player Spotlight",
 ]
 TEMPLATE_KEYS = ("t1", "t2", "t3", "t4")
+WEB_TEMPLATE_NAMES = TEMPLATE_NAMES + ["Player Band"]
+WEB_TEMPLATE_KEYS = TEMPLATE_KEYS + ("t5",)
 RENDERERS = {
     "t1": render_t1,
     "t2": render_t2,
     "t3": render_t3,
     "t4": render_t4,
+    "t5": render_t5,
 }
 DEFAULT_CONFIGS = {
     "t1": DEF_T1,
     "t2": DEF_T2,
     "t3": DEF_T3,
     "t4": DEF_T4,
+    "t5": DEF_T5,
 }
 
 
@@ -2924,7 +3111,9 @@ def normalise_text_styles(value: Any, template: str) -> Dict[str, Dict[str, Any]
 def normalise_project_configs(saved: Any) -> Dict[str, Dict]:
     """Merge a saved project with current defaults without trusting its shape."""
     source = saved if isinstance(saved, dict) else {}
-    size_options = {"t1":T1_SIZES,"t2":T2_SIZES,"t3":T3_SIZES,"t4":T4_SIZES}
+    size_options = {
+        "t1":T1_SIZES,"t2":T2_SIZES,"t3":T3_SIZES,"t4":T4_SIZES,"t5":T5_SIZES,
+    }
     result: Dict[str, Dict] = {}
     for key, default in DEFAULT_CONFIGS.items():
         config = copy.deepcopy(default)
@@ -2994,6 +3183,28 @@ def normalise_project_configs(saved: Any) -> Dict[str, Dict]:
                 config[field] = clamp_number(
                     config.get(field), minimum, maximum, default[field]
                 )
+        if key == "t5":
+            numeric_fields = {
+                "background_zoom":(100,300),
+                "background_focus_x":(0,100), "background_focus_y":(0,100),
+                "player_size_pct":(20,500),
+                "player_offset_x_pct":(-100,100), "player_offset_y_pct":(-100,100),
+                "name_offset_x_pct":(-100,100), "name_offset_y_pct":(-100,100),
+                "band_x_pct":(-75,125), "band_y_pct":(-75,125),
+                "band_scale_pct":(25,300),
+            }
+            for field,(minimum,maximum) in numeric_fields.items():
+                config[field]=clamp_number(
+                    config.get(field),minimum,maximum,default[field]
+                )
+            for color_key in (
+                "band_green","accent_green","accent_dark","panel_white",
+                "stats_green","separator_color","name_text_color",
+            ):
+                config[color_key]=list(normalize_rgb(
+                    config.get(color_key),default[color_key]
+                ))
+            config["transparent_background"]=bool(config.get("transparent_background",False))
         if key == "t4":
             incoming=config.get("players") if isinstance(config.get("players"),list) else []
             players=[]
@@ -5398,12 +5609,12 @@ def render_default(template: str, output: Path) -> None:
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Four-template match stats card generator.")
+    parser = argparse.ArgumentParser(description="Five-template match stats card generator.")
     output_group = parser.add_mutually_exclusive_group()
     output_group.add_argument("--headless", type=Path, help="Render one default template to PNG.")
     output_group.add_argument("--render-all", type=Path, help="Render all default templates into a directory.")
     output_group.add_argument("--web", action="store_true", help="Run the browser editor.")
-    parser.add_argument("--template", choices=TEMPLATE_KEYS, default="t1")
+    parser.add_argument("--template", choices=WEB_TEMPLATE_KEYS, default="t1")
     parser.add_argument("--host", default="127.0.0.1", help="Web bind address (default: 127.0.0.1).")
     parser.add_argument("--port", type=int, default=8080, help="Web port (default: 8080).")
     args = parser.parse_args(argv)
@@ -5412,7 +5623,7 @@ def main(argv=None):
         render_default(args.template, args.headless)
         return
     if args.render_all:
-        for key in TEMPLATE_KEYS:
+        for key in WEB_TEMPLATE_KEYS:
             render_default(key, args.render_all / f"scoreboard_{key}.png")
         return
     if args.web:

@@ -192,7 +192,9 @@ class ScoreboardWebRuntime:
 
     def bootstrap(self) -> Dict[str, Any]:
         return {
-            "template_names": dict(zip(self.core.TEMPLATE_KEYS, self.core.TEMPLATE_NAMES)),
+            "template_names": dict(zip(
+                self.core.WEB_TEMPLATE_KEYS, self.core.WEB_TEMPLATE_NAMES
+            )),
             "defaults": copy.deepcopy(self.core.DEFAULT_CONFIGS),
             "text_targets": {
                 key: [{"key": role, "label": label} for role, label in targets]
@@ -207,11 +209,12 @@ class ScoreboardWebRuntime:
                 "t2": list(self.core.T2_SIZES),
                 "t3": list(self.core.T3_SIZES),
                 "t4": list(self.core.T4_SIZES),
+                "t5": list(self.core.T5_SIZES),
             },
         }
 
     def normalized_config(self, template: str, value: Any) -> Dict[str, Any]:
-        if template not in self.core.TEMPLATE_KEYS:
+        if template not in self.core.WEB_TEMPLATE_KEYS:
             raise ValueError("Unknown scoreboard template.")
         config = self.core.normalise_project_configs({template: value})[template]
         self._validate_image_paths(template, config)
@@ -223,6 +226,7 @@ class ScoreboardWebRuntime:
             "t2": ("photo_a", "photo_b", "logo_path"),
             "t3": ("photo_a", "photo_b", "logo_path"),
             "t4": ("logo_path",),
+            "t5": ("background_path", "player_path"),
         }[template]
         for key in keys:
             config[key] = self._safe_uploaded_path(config.get(key, ""))

@@ -102,14 +102,40 @@ def test_decklink_pipeline_rejects_unknown_video_standard() -> None:
         scoreboard.build_decklink_pipeline("Cinema mystery mode", 0)
 
 
-def test_web_runtime_uses_the_same_four_template_renderers(tmp_path: Path) -> None:
+def test_web_runtime_includes_player_band_as_the_fifth_template(tmp_path: Path) -> None:
     runtime = scoreboard_web.ScoreboardWebRuntime(scoreboard, tmp_path)
 
-    image, config = runtime.render("t2", copy.deepcopy(scoreboard.DEF_T2))
+    image, config = runtime.render("t5", copy.deepcopy(scoreboard.DEF_T5))
 
-    assert image.size == scoreboard.T2_SIZES[scoreboard.DEF_T2["canvas_size"]]
-    assert config["template"] == "t2"
+    assert image.size == scoreboard.T5_SIZES[scoreboard.DEF_T5["canvas_size"]]
+    assert config["template"] == "t5"
+    assert runtime.bootstrap()["template_names"]["t5"] == "Player Band"
     assert runtime.bootstrap()["defaults"]["t3"] == scoreboard.DEF_T3
+
+
+def test_player_band_can_export_a_transparent_background() -> None:
+    config = copy.deepcopy(scoreboard.DEF_T5)
+    config["transparent_background"] = True
+
+    image = scoreboard.render_t5(config)
+
+    assert image.mode == "RGBA"
+    assert image.getpixel((0, 0))[3] == 0
+    assert image.getpixel((960, 1010))[3] == 255
+
+
+def test_player_band_settings_are_safely_normalized() -> None:
+    config = scoreboard.normalise_project_configs({
+        "t5": {
+            "band_scale_pct": 999,
+            "player_offset_x_pct": -999,
+            "band_green": [1, 2, 999],
+        }
+    })["t5"]
+
+    assert config["band_scale_pct"] == 300
+    assert config["player_offset_x_pct"] == -100
+    assert config["band_green"] == [1, 2, 255]
 
 
 def test_web_runtime_blocks_arbitrary_local_image_paths(tmp_path: Path) -> None:

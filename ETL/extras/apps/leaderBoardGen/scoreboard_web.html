@@ -69,19 +69,20 @@ let boot,configs={},template='t1',history=[],historyIndex=-1,renderTimer=null,re
 const clientId=localStorage.getItem('vetoScoreboardClientId')||(crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random().toString(16).slice(2)}`);
 localStorage.setItem('vetoScoreboardClientId',clientId);
 let latestLive={active:false},latestSessions={sessions:[],can_manage:false};
-const labels={canvas_size:'Canvas',panel_side:'Panel side',title:'Title',header_text:'Header',divider_text:'Divider',banner_text:'Banner',sponsor_text:'Sponsor',name_a_first:'Player 1 first',name_a_last:'Player 1 last',abbr_a:'Player 1 abbreviation',name_b_first:'Player 2 first',name_b_last:'Player 2 last',abbr_b:'Player 2 abbreviation',team_a:'Left team',team_b:'Right team',vs_text:'Versus text',score:'Score',show_playing_style:'Show playing style',style_label:'Style heading',photo_width_pct:'Photo width %',photo_fade_pct:'Photo edge blend %',photo_brightness_pct:'Photo brightness %',panel_width_pct:'Panel width %',panel_opacity_pct:'Panel opacity %',panel_fade_pct:'Panel edge fade %',panel_blur_pct:'Glass blur %',panel_style:'Panel effect',content_top_pct:'Text top position %',title_gap_pct:'Title gap %',row_gap_pct:'Row gap %',player_in_front:'Player above panel',team:'Team',first:'First name',last:'Last name',result:'Result',photo_zoom:'Photo zoom %',photo_focus_x:'Photo horizontal %',photo_focus_y:'Photo vertical %'};
+const labels={canvas_size:'Canvas',panel_side:'Panel side',title:'Title',header_text:'Header',divider_text:'Divider',banner_text:'Banner',sponsor_text:'Sponsor',name_a_first:'Player 1 first',name_a_last:'Player 1 last',abbr_a:'Player 1 abbreviation',name_b_first:'Player 2 first',name_b_last:'Player 2 last',abbr_b:'Player 2 abbreviation',team_a:'Left team',team_b:'Right team',vs_text:'Versus text',score:'Score',show_playing_style:'Show playing style',style_label:'Style heading',photo_width_pct:'Photo width %',photo_fade_pct:'Photo edge blend %',photo_brightness_pct:'Photo brightness %',panel_width_pct:'Panel width %',panel_opacity_pct:'Panel opacity %',panel_fade_pct:'Panel edge fade %',panel_blur_pct:'Glass blur %',panel_style:'Panel effect',content_top_pct:'Text top position %',title_gap_pct:'Title gap %',row_gap_pct:'Row gap %',player_in_front:'Player above panel',team:'Team',first:'First name',last:'Last name',result:'Result',photo_zoom:'Photo zoom %',photo_focus_x:'Photo horizontal %',photo_focus_y:'Photo vertical %',first_name:'First name',last_name:'Last name',age:'Age',ranking:'Ranking',plays:'Plays',years_text:'Age suffix',band_x_pct:'Band horizontal %',band_y_pct:'Band vertical %',band_scale_pct:'Whole band size %',player_size_pct:'Player size %',player_offset_x_pct:'Player horizontal offset %',player_offset_y_pct:'Player vertical offset %',name_offset_x_pct:'Name horizontal offset %',name_offset_y_pct:'Name vertical offset %',background_zoom:'Background zoom %',background_focus_x:'Background horizontal %',background_focus_y:'Background vertical %',transparent_background:'Transparent PNG background'};
 const mainFields={
  t1:['canvas_size','title','panel_side','panel_style','panel_width_pct','panel_opacity_pct','panel_fade_pct','panel_blur_pct','content_top_pct','title_gap_pct','row_gap_pct','player_in_front'],
  t2:['canvas_size','header_text','divider_text','name_a_first','name_a_last','abbr_a','name_b_first','name_b_last','abbr_b','photo_width_pct','photo_fade_pct','photo_brightness_pct','show_playing_style','style_label'],
  t3:['canvas_size','name_a_first','name_a_last','team_a','name_b_first','name_b_last','team_b','vs_text','score','sponsor_text'],
- t4:['canvas_size','banner_text','sponsor_text']
+ t4:['canvas_size','banner_text','sponsor_text'],
+ t5:['canvas_size','first_name','last_name','age','ranking','plays','years_text','band_x_pct','band_y_pct','band_scale_pct','player_size_pct','player_offset_x_pct','player_offset_y_pct','name_offset_x_pct','name_offset_y_pct','background_zoom','background_focus_x','background_focus_y','transparent_background']
 };
-const assetFields={t1:[['photo_path','Background'],['player_path','Player cutout'],['logo_path','Logo']],t2:[['photo_a','Player 1'],['photo_b','Player 2'],['logo_path','Logo']],t3:[['photo_a','Left player'],['photo_b','Right player'],['logo_path','Logo']],t4:[['logo_path','Logo']]};
-const colorFields={t1:[['accent_color','Accent'],['background_color','Background'],['panel_color','Panel'],['panel_color_2','Gradient end'],['bar_color','All bars']],t2:[['accent_color','Accent'],['background_color','Background'],['row_color','Stat rows'],['bar_track_color','Bar track'],['bar_lose_color','Losing bar']],t3:[['accent_color','Accent'],['background_color','Background'],['bar_track_color','Bar track']],t4:[['accent_color','Accent'],['background_color','Background'],['bar_track_color','Bar track']]};
+const assetFields={t1:[['photo_path','Background'],['player_path','Player cutout'],['logo_path','Logo']],t2:[['photo_a','Player 1'],['photo_b','Player 2'],['logo_path','Logo']],t3:[['photo_a','Left player'],['photo_b','Right player'],['logo_path','Logo']],t4:[['logo_path','Logo']],t5:[['background_path','Background'],['player_path','Player cutout']]};
+const colorFields={t1:[['accent_color','Accent'],['background_color','Background'],['panel_color','Panel'],['panel_color_2','Gradient end'],['bar_color','All bars']],t2:[['accent_color','Accent'],['background_color','Background'],['row_color','Stat rows'],['bar_track_color','Bar track'],['bar_lose_color','Losing bar']],t3:[['accent_color','Accent'],['background_color','Background'],['bar_track_color','Bar track']],t4:[['accent_color','Accent'],['background_color','Background'],['bar_track_color','Bar track']],t5:[['background_color','Background'],['band_green','Main green panel'],['accent_green','Bright accents'],['accent_dark','Dark accents'],['panel_white','Stats panel'],['stats_green','Stats text'],['separator_color','Separators'],['name_text_color','Player name']]};
 const rowFields={t1:['label','value','max'],t2:['label','value_a','value_b','max'],t3:['label','value_a','value_b','max','unit'],t4:['label','value','unit','max']};
 const rowLabels={label:'Stat',value:'Value',value_a:'P1',value_b:'P2',max:'Scale',unit:'Unit'};
-const imageMoveChoices={t1:[['photo_path','Background'],['player_path','Player cutout'],['logo_path','Logo']],t2:[['photo_a','Player 1'],['photo_b','Player 2'],['logo_path','Logo']],t3:[['photo_a','Left player'],['photo_b','Right player'],['logo_path','Logo']],t4:[['player_0','Player 1'],['player_1','Player 2'],['player_2','Player 3'],['logo_path','Logo']]};
-const selectedLayer={t1:'photo_path',t2:'photo_a',t3:'photo_a',t4:'player_0'};
+const imageMoveChoices={t1:[['photo_path','Background'],['player_path','Player cutout'],['logo_path','Logo']],t2:[['photo_a','Player 1'],['photo_b','Player 2'],['logo_path','Logo']],t3:[['photo_a','Left player'],['photo_b','Right player'],['logo_path','Logo']],t4:[['player_0','Player 1'],['player_1','Player 2'],['player_2','Player 3'],['logo_path','Logo']],t5:[['band','Whole band'],['player_path','Player cutout'],['player_name','Player name'],['background_path','Background']]};
+const selectedLayer={t1:'photo_path',t2:'photo_a',t3:'photo_a',t4:'player_0',t5:'band'};
 
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function hex(v,f='#ffffff'){return Array.isArray(v)&&v.length===3?'#'+v.map(n=>Math.max(0,Math.min(255,+n||0)).toString(16).padStart(2,'0')).join(''):f}
@@ -107,14 +108,14 @@ function scalarField(key,value,setter){
 }
 function buildAssets(){const cfg=getConfig();let body=assetFields[template].map(([key,label])=>uploadField(key,label,cfg[key])).join('');
  if(template==='t4')body+=cfg.players.map((p,i)=>uploadField(`player.${i}.photo`,`Player ${i+1}`,p.photo)).join('');
- const choices=imageMoveChoices[template];body+=`<div class="field" style="margin-top:8px"><label>Move image on preview</label><select id="moveLayer">${choices.map(([k,l])=>option(k,l,selectedLayer[template])).join('')}</select></div>`;
+ const choices=imageMoveChoices[template];body+=`<div class="field" style="margin-top:8px"><label>${template==='t5'?'Move element':'Move image'} on preview</label><select id="moveLayer">${choices.map(([k,l])=>option(k,l,selectedLayer[template])).join('')}</select></div>`;
  return group('Images',`<div class="grid">${body}</div>`)}
 function uploadField(key,label,path){return `<div class="field"><label>${esc(label)}</label><div class="upload"><input type="file" data-upload="${esc(key)}" accept="image/*"><button type="button" data-remove-image="${esc(key)}">Remove</button></div><div class="file-name">${esc(path?path.split(/[\\/]/).pop():'No image selected')}</div></div>`}
 function buildMain(){const cfg=getConfig();return group('Content and layout',`<div class="grid">${mainFields[template].map(k=>scalarField(k,cfg[k])).join('')}</div>${template==='t2'?`<div class="grid" style="margin-top:8px">${[0,1].map(i=>scalarField(`tags_a.${i}`,cfg.tags_a[i])).join('')}${[0,1].map(i=>scalarField(`tags_b.${i}`,cfg.tags_b[i])).join('')}</div>`:''}`)}
 function buildColors(){const cfg=getConfig();return group('Colors',`<div class="grid">${colorFields[template].map(([key,label])=>`<div class="field"><label>${label}</label><input type="color" data-color="${key}" value="${hex(cfg[key],key.includes('background')?'#0a1e30':'#d2eb3c')}"></div>`).join('')}</div>`)}
 function buildTextStyles(){const cfg=getConfig(),roles=boot.text_targets[template],active=cfg._web_text_role||'all',style=(cfg.text_styles||{})[active]||{};return group('Text styling',`<div class="grid"><div class="field"><label>Text group</label><select id="textRole">${roles.map(r=>option(r.key,r.label,active)).join('')}</select></div><div class="field"><label>Font</label><select id="textFont">${boot.fonts.map(f=>option(f,f,style.font_family||'Default')).join('')}</select></div><div class="field"><label>Case</label><select id="textCase">${boot.text_cases.map(c=>option(c,c,style.case||'As typed')).join('')}</select></div><div class="field"><label>Size %</label><input id="textSize" type="number" min="50" max="200" value="${style.size_pct||100}"></div><div class="field"><label>Color</label><input id="textColor" type="color" value="${hex(style.color)}"></div><div class="field"><label>&nbsp;</label><label class="inline-check"><input id="textColorEnabled" type="checkbox" ${style.color?'checked':''}> Custom color</label></div></div><div class="button-row"><button id="resetTextStyle">Reset selected group</button></div>`)}
 function rowsTable(rows,fields,path){let head=fields.map(f=>`<th>${esc(rowLabels[f]||f)}</th>`).join('');let body=rows.map((row,i)=>`<tr>${fields.map(f=>`<td><input data-row-path="${path}" data-row-index="${i}" data-row-field="${f}" value="${esc(row[f]??'')}"></td>`).join('')}<td style="width:35px"><button class="icon-button" data-remove-row="${path}" data-row-index="${i}" title="Remove">×</button></td></tr>`).join('');return `<table class="row-table"><thead><tr>${head}<th style="width:35px"></th></tr></thead><tbody>${body}</tbody></table><div class="button-row"><button data-add-row="${path}">Add stat</button></div>`}
-function buildRows(){const cfg=getConfig();if(template==='t4')return '';return group('Stat rows',rowsTable(cfg.rows||[],rowFields[template],'rows'))}
+function buildRows(){const cfg=getConfig();if(template==='t4'||template==='t5')return '';return group('Stat rows',rowsTable(cfg.rows||[],rowFields[template],'rows'))}
 function buildPlayers(){if(template!=='t4')return '';const cfg=getConfig();return group('Players',cfg.players.map((p,i)=>`<div class="player"><h3>Player ${i+1}</h3><div class="grid">${['team','first','last','result','photo_zoom','photo_focus_x','photo_focus_y'].map(k=>`<div class="field"><label>${labels[k]}</label><input data-player="${i}" data-player-field="${k}" type="${typeof p[k]==='number'?'number':'text'}" value="${esc(p[k]??'')}"></div>`).join('')}</div>${rowsTable(p.stats||[],rowFields.t4,`players.${i}.stats`)}</div>`).join(''))}
 function buildEditor(){$('editor').innerHTML=buildAssets()+buildMain()+buildColors()+buildTextStyles()+buildRows()+buildPlayers();bindEditor();$('preview').classList.toggle('movable',true);syncImageTools()}
 
@@ -150,6 +151,15 @@ function downloadJson(value,name){const blob=new Blob([JSON.stringify(value,null
 
 function moveTarget(){
  const cfg=getConfig(),key=selectedLayer[template];
+ if(template==='t5'){
+  if(key==='band')return {obj:cfg,x:'band_x_pct',y:'band_y_pct',size:'band_scale_pct',min:25,max:300,xMin:-75,xMax:125,yMin:-75,yMax:125};
+  if(key==='player_path')return {obj:cfg,x:'player_offset_x_pct',y:'player_offset_y_pct',size:'player_size_pct',min:20,max:500,xMin:-100,xMax:100,yMin:-100,yMax:100};
+  if(key==='player_name'){
+   cfg.text_styles=cfg.text_styles||{};cfg.text_styles.player_names=cfg.text_styles.player_names||{};
+   return {obj:cfg,x:'name_offset_x_pct',y:'name_offset_y_pct',sizeObj:cfg.text_styles.player_names,size:'size_pct',min:50,max:200,xMin:-100,xMax:100,yMin:-100,yMax:100};
+  }
+  return {obj:cfg,x:'background_focus_x',y:'background_focus_y',size:'background_zoom',reverse:true,min:100,max:300};
+ }
  if(key==='logo_path')return {obj:cfg,x:'logo_x_pct',y:'logo_y_pct',size:'logo_size_pct',min:2};
  if(template==='t1'){
   if(key==='photo_path')return {obj:cfg,x:'photo_focus_x',y:'photo_focus_y',size:'photo_zoom',reverse:true,min:100};
@@ -159,29 +169,30 @@ function moveTarget(){
  const p=cfg.players[+key.split('_')[1]];return {obj:p,x:'photo_focus_x',y:'photo_focus_y',size:'photo_zoom',reverse:true,min:100};
 }
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
-function selectedUploadKey(){const key=selectedLayer[template];return key.startsWith('player_')?`player.${key.split('_')[1]}.photo`:key}
-function selectedImagePath(){const cfg=getConfig(),key=selectedLayer[template];return key.startsWith('player_')?cfg.players[+key.split('_')[1]].photo:cfg[key]}
+function targetNumber(obj,key,fallback){const value=Number(obj[key]);return Number.isFinite(value)?value:fallback}
+function selectedUploadKey(){const key=selectedLayer[template];if(template==='t5')return key==='background_path'?'background_path':'player_path';return key.startsWith('player_')?`player.${key.split('_')[1]}.photo`:key}
+function selectedImagePath(){const cfg=getConfig(),key=selectedLayer[template];if(template==='t5')return key==='background_path'?cfg.background_path:true;return key.startsWith('player_')?cfg.players[+key.split('_')[1]].photo:cfg[key]}
 function syncImageTools(){
  const choices=imageMoveChoices[template],select=$('previewLayer');
  select.innerHTML=choices.map(([key,label])=>option(key,label,selectedLayer[template])).join('');select.value=selectedLayer[template];
  const editorSelect=$('moveLayer');if(editorSelect)editorSelect.value=selectedLayer[template];
- const target=moveTarget(),value=clamp(+target.obj[target.size]||100,target.min||2,300);
- $('previewScale').min=target.min||2;$('previewScale').value=value;$('previewScaleValue').textContent=`${Math.round(value)}%`;
+ const target=moveTarget(),sizeObj=target.sizeObj||target.obj,value=clamp(targetNumber(sizeObj,target.size,100),target.min??2,target.max??300);
+ $('previewScale').min=target.min??2;$('previewScale').max=target.max??300;$('previewScale').value=value;$('previewScaleValue').textContent=`${Math.round(value)}%`;
 }
-function resizeSelected(delta){const target=moveTarget(),current=+target.obj[target.size]||100;target.obj[target.size]=clamp(current+delta,target.min||2,300);commit();syncImageTools();scheduleRender()}
+function resizeSelected(delta){const target=moveTarget(),sizeObj=target.sizeObj||target.obj,current=targetNumber(sizeObj,target.size,100);sizeObj[target.size]=clamp(current+delta,target.min??2,target.max??300);commit();syncImageTools();scheduleRender()}
 function nudgeSelected(dx,dy){
  const target=moveTarget(),sign=target.reverse?-1:1;
- target.obj[target.x]=clamp((+target.obj[target.x]||50)+sign*dx,0,100);target.obj[target.y]=clamp((+target.obj[target.y]||50)+sign*dy,0,100);
+ target.obj[target.x]=clamp(targetNumber(target.obj,target.x,target.defaultX??50)+sign*dx,target.xMin??0,target.xMax??100);target.obj[target.y]=clamp(targetNumber(target.obj,target.y,target.defaultY??50)+sign*dy,target.yMin??0,target.yMax??100);
  commit();syncImageTools();scheduleRender();
 }
 $('previewLayer').onchange=()=>{selectedLayer[template]=$('previewLayer').value;syncImageTools();$('stage').focus()};
 $('moveLeft').onclick=()=>nudgeSelected(-1,0);$('moveRight').onclick=()=>nudgeSelected(1,0);$('moveUp').onclick=()=>nudgeSelected(0,-1);$('moveDown').onclick=()=>nudgeSelected(0,1);
 $('shrinkImage').onclick=()=>resizeSelected(-5);$('growImage').onclick=()=>resizeSelected(5);
-$('previewScale').oninput=()=>{const target=moveTarget();target.obj[target.size]=clamp(+$('previewScale').value,target.min||2,300);$('previewScaleValue').textContent=`${Math.round(target.obj[target.size])}%`;scheduleRender()};
+$('previewScale').oninput=()=>{const target=moveTarget(),sizeObj=target.sizeObj||target.obj;sizeObj[target.size]=clamp(+$('previewScale').value,target.min??2,target.max??300);$('previewScaleValue').textContent=`${Math.round(sizeObj[target.size])}%`;scheduleRender()};
 $('previewScale').onchange=()=>{commit();buildEditor()};
 $('preview').ondragstart=()=>false;
-$('preview').onpointerdown=e=>{if(!selectedImagePath())return;$('stage').focus();const t=moveTarget();drag={id:e.pointerId,x:e.clientX,y:e.clientY,t,startX:+t.obj[t.x]||50,startY:+t.obj[t.y]||50};$('preview').setPointerCapture(e.pointerId);e.preventDefault()};
-$('preview').onpointermove=e=>{if(!drag||drag.id!==e.pointerId)return;const sign=drag.t.reverse?-1:1,rect=$('preview').getBoundingClientRect();drag.t.obj[drag.t.x]=clamp(drag.startX+sign*(e.clientX-drag.x)*100/rect.width,0,100);drag.t.obj[drag.t.y]=clamp(drag.startY+sign*(e.clientY-drag.y)*100/rect.height,0,100);scheduleRender();e.preventDefault()};
+$('preview').onpointerdown=e=>{if(!selectedImagePath())return;$('stage').focus();const t=moveTarget();drag={id:e.pointerId,x:e.clientX,y:e.clientY,t,startX:targetNumber(t.obj,t.x,t.defaultX??50),startY:targetNumber(t.obj,t.y,t.defaultY??50)};$('preview').setPointerCapture(e.pointerId);e.preventDefault()};
+$('preview').onpointermove=e=>{if(!drag||drag.id!==e.pointerId)return;const sign=drag.t.reverse?-1:1,rect=$('preview').getBoundingClientRect();drag.t.obj[drag.t.x]=clamp(drag.startX+sign*(e.clientX-drag.x)*100/rect.width,drag.t.xMin??0,drag.t.xMax??100);drag.t.obj[drag.t.y]=clamp(drag.startY+sign*(e.clientY-drag.y)*100/rect.height,drag.t.yMin??0,drag.t.yMax??100);scheduleRender();e.preventDefault()};
 function finishImageDrag(){if(drag){drag=null;commit();buildEditor()}}
 $('preview').onpointerup=finishImageDrag;$('preview').onpointercancel=finishImageDrag;
 $('preview').onwheel=e=>{if(!e.ctrlKey)return;e.preventDefault();resizeSelected(e.deltaY<0?5:-5)};
