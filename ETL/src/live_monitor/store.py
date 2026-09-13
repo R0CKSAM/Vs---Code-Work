@@ -93,6 +93,25 @@ CREATE TABLE IF NOT EXISTS minute_dimensions (
 );
 CREATE INDEX IF NOT EXISTS minute_dimensions_target_idx
     ON minute_dimensions(target, dimension, minute_ist);
+CREATE TABLE IF NOT EXISTS minute_quality_dimensions (
+    minute_ist TEXT NOT NULL,
+    req_host TEXT NOT NULL,
+    target TEXT NOT NULL,
+    dimension TEXT NOT NULL,
+    value TEXT NOT NULL,
+    requests INTEGER NOT NULL,
+    errors_4xx INTEGER NOT NULL,
+    errors_5xx INTEGER NOT NULL,
+    ttfb_samples INTEGER NOT NULL,
+    ttfb_total_ms REAL NOT NULL,
+    turnaround_samples INTEGER NOT NULL,
+    turnaround_total_ms REAL NOT NULL,
+    throughput_samples INTEGER NOT NULL,
+    throughput_total REAL NOT NULL,
+    PRIMARY KEY(minute_ist, req_host, target, dimension, value)
+);
+CREATE INDEX IF NOT EXISTS minute_quality_dimensions_target_idx
+    ON minute_quality_dimensions(target, dimension, minute_ist);
 CREATE TABLE IF NOT EXISTS daily_viewers (
     date_ist TEXT NOT NULL,
     req_host TEXT NOT NULL,
@@ -275,6 +294,7 @@ class LiveStore:
             connection.execute("DELETE FROM minute_devices")
             connection.execute("DELETE FROM minute_sessions")
             connection.execute("DELETE FROM minute_dimensions")
+            connection.execute("DELETE FROM minute_quality_dimensions")
             connection.execute("DELETE FROM daily_viewers")
             connection.execute("DELETE FROM viewer_history")
             connection.execute(
@@ -456,6 +476,27 @@ class LiveStore:
                     bytes=bytes+excluded.bytes
                 """,
                 [(*key, *values) for key, values in batch.dimensions.items()],
+            )
+            connection.executemany(
+                """
+                INSERT INTO minute_quality_dimensions(
+                    minute_ist,req_host,target,dimension,value,requests,
+                    errors_4xx,errors_5xx,ttfb_samples,ttfb_total_ms,
+                    turnaround_samples,turnaround_total_ms,
+                    throughput_samples,throughput_total
+                ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                ON CONFLICT(minute_ist,req_host,target,dimension,value) DO UPDATE SET
+                    requests=requests+excluded.requests,
+                    errors_4xx=errors_4xx+excluded.errors_4xx,
+                    errors_5xx=errors_5xx+excluded.errors_5xx,
+                    ttfb_samples=ttfb_samples+excluded.ttfb_samples,
+                    ttfb_total_ms=ttfb_total_ms+excluded.ttfb_total_ms,
+                    turnaround_samples=turnaround_samples+excluded.turnaround_samples,
+                    turnaround_total_ms=turnaround_total_ms+excluded.turnaround_total_ms,
+                    throughput_samples=throughput_samples+excluded.throughput_samples,
+                    throughput_total=throughput_total+excluded.throughput_total
+                """,
+                [(*key, *values) for key, values in batch.quality_dimensions.items()],
             )
             connection.executemany(
                 "INSERT OR IGNORE INTO daily_viewers VALUES(?,?,?,?)",
@@ -706,6 +747,51 @@ class LiveStore:
                     "value": row["value"],
                     "requests": int(row["requests"]),
                     "bytes": int(row["bytes"]),
+                })
+            quality_rows = connection.execute(
+                """
+                SELECT target,dimension,value,SUM(requests) quality_requests,
+                       SUM(errors_4xx) errors_4xx,SUM(errors_5xx) errors_5xx,
+                       SUM(ttfb_samples) ttfb_samples,
+                       SUM(ttfb_total_ms) ttfb_total_ms,
+                       SUM(turnaround_samples) turnaround_samples,
+                       SUM(turnaround_total_ms) turnaround_total_ms,
+                       SUM(throughput_samples) throughput_samples,
+                       SUM(throughput_total) throughput_total
+                  FROM minute_quality_dimensions
+                 WHERE minute_ist>=?
+                 GROUP BY target,dimension,value
+                """,
+                (cutoff,),
+            ).fetchall()
+            for row in quality_rows:
+                target_dimensions = breakdowns.setdefault(row["target"], {})
+                values = target_dimensions.setdefault(row["dimension"], [])
+                item = next(
+                    (entry for entry in values if entry["value"] == row["value"]), None
+                )
+                if item is None:
+                    item = {"value": row["value"], "requests": 0, "bytes": 0}
+                    values.append(item)
+                item.update({
+                    "quality_requests": int(row["quality_requests"]),
+                    "errors_4xx": int(row["errors_4xx"]),
+                    "errors_5xx": int(row["errors_5xx"]),
+                    "ttfb_samples": int(row["ttfb_samples"]),
+                    "ttfb_avg_ms": (
+                        row["ttfb_total_ms"] / row["ttfb_samples"]
+                        if row["ttfb_samples"] else None
+                    ),
+                    "turnaround_samples": int(row["turnaround_samples"]),
+                    "turnaround_avg_ms": (
+                        row["turnaround_total_ms"] / row["turnaround_samples"]
+                        if row["turnaround_samples"] else None
+                    ),
+                    "throughput_samples": int(row["throughput_samples"]),
+                    "throughput_avg": (
+                        row["throughput_total"] / row["throughput_samples"]
+                        if row["throughput_samples"] else None
+                    ),
                 })
             for target_dimensions in breakdowns.values():
                 for dimension, rows in target_dimensions.items():

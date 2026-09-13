@@ -15,7 +15,20 @@ $EtlRoot = $PSScriptRoot
 $Launcher = Join-Path $EtlRoot "run_live_monitor.ps1"
 $StateDir = Join-Path $EtlRoot "output\live_monitor"
 $StopRequest = Join-Path $StateDir "stop.request"
+$LauncherPidFile = Join-Path $StateDir "launcher.pid"
 $HealthUri = "http://127.0.0.1:8790/healthz"
+
+function Get-LiveMonitorLauncherPid {
+    if (-not (Test-Path -LiteralPath $LauncherPidFile)) { return $null }
+    try {
+        $launcherPid = [int](Get-Content -LiteralPath $LauncherPidFile -Raw).Trim()
+        if (Get-Process -Id $launcherPid -ErrorAction SilentlyContinue) {
+            return $launcherPid
+        }
+    } catch {}
+    Remove-Item -LiteralPath $LauncherPidFile -Force -ErrorAction SilentlyContinue
+    return $null
+}
 
 function Test-LiveMonitor {
     try {
@@ -35,7 +48,12 @@ function Wait-LiveMonitor {
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     $matchingChecks = 0
     do {
-        if ((Test-LiveMonitor) -eq $Running) {
+        $matches = if ($Running) {
+            Test-LiveMonitor
+        } else {
+            (-not (Test-LiveMonitor)) -and ($null -eq (Get-LiveMonitorLauncherPid))
+        }
+        if ($matches) {
             $matchingChecks++
             # A stopped service must remain down long enough to outlast the
             # launcher's five-second crash-restart interval.
@@ -50,7 +68,7 @@ function Wait-LiveMonitor {
 }
 
 function Stop-LiveMonitor {
-    if (-not (Test-LiveMonitor)) {
+    if ((-not (Test-LiveMonitor)) -and ($null -eq (Get-LiveMonitorLauncherPid))) {
         Write-Host "Live monitor is already stopped."
         return
     }
@@ -64,6 +82,10 @@ function Stop-LiveMonitor {
     }
 
     Write-Warning "Graceful stop timed out; stopping only the process listening on port 8790."
+    $launcherPid = Get-LiveMonitorLauncherPid
+    if ($null -ne $launcherPid) {
+        & taskkill.exe /PID $launcherPid /T /F | Out-Null
+    }
     $listenerLines = netstat -ano | Select-String -Pattern '^\s*TCP\s+127\.0\.0\.1:8790\s+.*LISTENING\s+(\d+)\s*$'
     $listenerPids = @(
         $listenerLines | ForEach-Object {
@@ -85,6 +107,15 @@ function Start-LiveMonitor {
             Remove-Item -LiteralPath $StopRequest -Force
         }
         Write-Host "Live monitor is already running."
+        return
+    }
+    $launcherPid = Get-LiveMonitorLauncherPid
+    if ($null -ne $launcherPid) {
+        Write-Host "Live monitor is starting under launcher PID $launcherPid; waiting for port 8790."
+        if (-not (Wait-LiveMonitor -Running $true)) {
+            throw "Existing live-monitor launcher did not become available within $TimeoutSeconds seconds."
+        }
+        Write-Host "Live monitor started: http://127.0.0.1:8790/"
         return
     }
     if (-not (Test-Path -LiteralPath $Launcher)) {
@@ -114,6 +145,8 @@ switch ($Action) {
     "Status" {
         if (Test-LiveMonitor) {
             Write-Host "Live monitor is running: http://127.0.0.1:8790/"
+        } elseif ($null -ne (Get-LiveMonitorLauncherPid)) {
+            Write-Host "Live monitor is starting or stopping; its launcher is still active."
         } else {
             Write-Host "Live monitor is stopped."
         }

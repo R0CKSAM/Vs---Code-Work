@@ -15,6 +15,7 @@ import tempfile
 import threading
 import time
 import uuid
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Dict
@@ -23,6 +24,10 @@ from urllib.parse import parse_qs, urlparse
 
 MAX_REQUEST_BYTES = 35 * 1024 * 1024
 SESSION_TIMEOUT_SECONDS = 30
+
+
+class ProjectConflict(ValueError):
+    pass
 IMAGE_MIME_EXTENSIONS = {
     "image/png": ".png",
     "image/jpeg": ".jpg",
@@ -39,6 +44,8 @@ class ScoreboardWebRuntime:
         self.app_dir = Path(core.__file__).resolve().parent
         self.web_file = self.app_dir / "scoreboard_web.html"
         self.upload_dir = self._select_upload_dir(upload_dir)
+        self.project_dir = self.upload_dir.parent / "projects"
+        self.project_dir.mkdir(parents=True, exist_ok=True)
         self.lock = threading.RLock()
         self.live_output = None
         self.live_preset = None
@@ -81,8 +88,86 @@ class ScoreboardWebRuntime:
     def storage_status(self) -> Dict[str, Any]:
         return {
             "path": str(self.upload_dir),
+            "projects": str(self.project_dir),
             "writable": self.upload_dir.is_dir() and os.access(self.upload_dir, os.W_OK),
         }
+
+    def _project_path(self, project_id):
+        if not isinstance(project_id, str) or not re.fullmatch(r"[a-f0-9]{32}", project_id):
+            raise ValueError("Invalid project ID.")
+        return self.project_dir / (project_id + ".json")
+
+    @staticmethod
+    def _project_metadata(document):
+        return {key: document[key] for key in (
+            "id", "name", "revision", "updated_at", "updated_by", "active_template"
+        )}
+
+    def list_projects(self):
+        projects = []
+        with self.lock:
+            for path in self.project_dir.glob("*.json"):
+                try:
+                    projects.append(self._project_metadata(json.loads(path.read_text(encoding="utf-8"))))
+                except (OSError, ValueError, KeyError):
+                    continue
+        return sorted(projects, key=lambda item: item["updated_at"], reverse=True)
+
+    def open_project(self, project_id):
+        with self.lock:
+            path = self._project_path(project_id)
+            if not path.is_file():
+                raise ValueError("Project no longer exists.")
+            document = json.loads(path.read_text(encoding="utf-8"))
+        document["templates"] = {
+            key: self.normalized_config(key, value)
+            for key, value in document["templates"].items()
+        }
+        return document
+
+    def save_project(self, payload, remote_address):
+        name = str(payload.get("name", "")).strip()
+        if not name or len(name) > 100:
+            raise ValueError("Enter a project name of 1 to 100 characters.")
+        incoming = payload.get("templates")
+        if not isinstance(incoming, dict):
+            raise ValueError("Project templates are missing.")
+        templates = {key: self.normalized_config(key, incoming.get(key, {}))
+                     for key in self.core.WEB_TEMPLATE_KEYS}
+        # Store generated image filenames so the entire data folder is movable.
+        def portable(value):
+            if isinstance(value, dict):
+                return {key: portable(item) for key, item in value.items()}
+            if isinstance(value, list):
+                return [portable(item) for item in value]
+            if isinstance(value, str) and value.startswith(str(self.upload_dir) + os.sep):
+                return Path(value).name
+            return value
+        active = payload.get("active_template", "t1")
+        if active not in templates:
+            raise ValueError("Unknown active template.")
+        session = self.touch_session(payload.get("client_id"), remote_address)
+        with self.lock:
+            project_id = payload.get("id") or uuid.uuid4().hex
+            path = self._project_path(project_id)
+            previous = json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+            if payload.get("id") and (previous is None or payload.get("revision") != previous["revision"]):
+                raise ProjectConflict("Another operator saved this project. Reopen it or save a copy to keep your changes.")
+            document = dict(version=3, id=project_id, name=name,
+                            revision=(previous["revision"] + 1 if previous else 1),
+                            updated_at=datetime.now(timezone.utc).isoformat(),
+                            updated_by=session["name"] if session else "Operator",
+                            active_template=active, templates=portable(templates))
+            temporary = path.with_name("." + uuid.uuid4().hex + ".tmp")
+            try:
+                with temporary.open("w", encoding="utf-8") as stream:
+                    json.dump(document, stream, ensure_ascii=False)
+                    stream.flush()
+                    os.fsync(stream.fileno())
+                os.replace(temporary, path)
+            finally:
+                temporary.unlink(missing_ok=True)
+        return self._project_metadata(document)
 
     @staticmethod
     def _clean_client_id(value: Any) -> str:
@@ -192,6 +277,7 @@ class ScoreboardWebRuntime:
 
     def bootstrap(self) -> Dict[str, Any]:
         return {
+            "shared_projects": True,
             "template_names": dict(zip(
                 self.core.WEB_TEMPLATE_KEYS, self.core.WEB_TEMPLATE_NAMES
             )),
@@ -457,6 +543,10 @@ def make_handler(runtime: ScoreboardWebRuntime):
                     self._send(200, runtime.web_file.read_bytes(), "text/html; charset=utf-8")
                 elif path == "/api/bootstrap":
                     self._json(200, runtime.bootstrap())
+                elif path == "/api/projects":
+                    self._json(200, {"projects": runtime.list_projects()})
+                elif path == "/api/projects/open":
+                    self._json(200, runtime.open_project(query.get("id", [""])[0]))
                 elif path == "/api/live/status":
                     self._json(200, runtime.live_status(client_id, remote_address))
                 elif path == "/api/sessions":
@@ -478,7 +568,9 @@ def make_handler(runtime: ScoreboardWebRuntime):
                 payload = self._body()
                 client_id = payload.get("client_id", "")
                 remote_address = self.client_address[0]
-                if path == "/api/session/register":
+                if path == "/api/projects/save":
+                    self._json(200, runtime.save_project(payload, remote_address))
+                elif path == "/api/session/register":
                     self._json(200, runtime.register_session(
                         client_id, payload.get("display_name", ""), remote_address,
                     ))
@@ -525,6 +617,8 @@ def make_handler(runtime: ScoreboardWebRuntime):
                     self._json(200, runtime.stop_live(client_id, remote_address))
                 else:
                     self._json(404, {"error": "Not found"})
+            except ProjectConflict as exc:
+                self._json(409, {"error": str(exc)})
             except (ValueError, json.JSONDecodeError) as exc:
                 self._json(400, {"error": str(exc)})
             except PermissionError as exc:

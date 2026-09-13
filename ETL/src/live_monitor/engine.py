@@ -14,6 +14,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from .config import LiveConfig
+from .enrichment import enrichment_status
 from .parser import CHANNEL_MAPPING_VERSION, parse_gzip_file
 from .s3_index import list_recent_relative_key_sets
 from .server import SnapshotServer
@@ -454,6 +455,7 @@ class LiveEngine:
             health_issues.append(f"Event data is {int(lag_seconds)} seconds behind")
         if self.sync_enabled and runtime.get("last_sync_ok") is False:
             health_issues.append("Most recent source sync failed")
+        enrichment = enrichment_status()
         payload.update(
             {
                 "generated_at": dt.datetime.now(IST).isoformat(),
@@ -465,6 +467,7 @@ class LiveEngine:
                     "issues": health_issues,
                 },
                 "runtime": runtime,
+                "enrichment": enrichment,
                 "metric_note": (
                     "All channels and each mapped channel show exact distinct cliIP "
                     "per minute; known device/session counts are exact only where those "
@@ -505,10 +508,9 @@ class LiveEngine:
             for signal_name in ("SIGINT", "SIGTERM"):
                 if hasattr(signal, signal_name):
                     signal.signal(getattr(signal, signal_name), self.request_stop)
-            # Publish the durable database state and open the status endpoint
-            # before the potentially large local-spool reconciliation. The
-            # scanner thread performs that reconciliation immediately below.
-            self.publish_snapshot()
+            # Serve the last valid atomic snapshot immediately. Rebuilding a
+            # fresh snapshot can take minutes on a large live database and must
+            # not make the health endpoint disappear during startup.
             server = SnapshotServer(
                 self.config.http_host,
                 self.config.http_port,

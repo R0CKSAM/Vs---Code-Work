@@ -23,6 +23,38 @@ scoreboard_web = importlib.util.module_from_spec(WEB_SPEC)
 WEB_SPEC.loader.exec_module(scoreboard_web)
 
 
+def test_shared_projects_survive_restart_and_move_with_assets(tmp_path: Path) -> None:
+    import json
+    import shutil
+    runtime = scoreboard_web.ScoreboardWebRuntime(scoreboard, tmp_path / "original" / "uploads")
+    asset = runtime.upload_dir / "player.png"
+    scoreboard.Image.new("RGB", (8, 8)).save(asset)
+    payload = {"name": "Hindi match", "active_template": "t1",
+               "templates": {"t1": {"player_path": str(asset)}}, "client_id": "operator-one"}
+    saved = runtime.save_project(payload, "127.0.0.1")
+    stored = json.loads(runtime._project_path(saved["id"]).read_text(encoding="utf-8"))
+    assert stored["templates"]["t1"]["player_path"] == "player.png"
+    shutil.copytree(tmp_path / "original", tmp_path / "moved")
+    moved = scoreboard_web.ScoreboardWebRuntime(scoreboard, tmp_path / "moved" / "uploads")
+    assert moved.list_projects()[0]["name"] == "Hindi match"
+    opened = moved.open_project(saved["id"])
+    assert opened["templates"]["t1"]["player_path"] == str(moved.upload_dir / "player.png")
+    assert len(opened["templates"]) == 5
+
+
+def test_shared_projects_reject_stale_updates_and_traversal(tmp_path: Path) -> None:
+    runtime = scoreboard_web.ScoreboardWebRuntime(scoreboard, tmp_path / "uploads")
+    payload = {"name": "Match", "active_template": "t1", "templates": {}}
+    first = runtime.save_project(payload, "127.0.0.1")
+    update = {**payload, "id": first["id"], "revision": first["revision"]}
+    assert runtime.save_project(update, "127.0.0.1")["revision"] == 2
+    with pytest.raises(scoreboard_web.ProjectConflict):
+        runtime.save_project(update, "127.0.0.1")
+    with pytest.raises(ValueError):
+        runtime.open_project("../outside")
+    assert runtime.open_project(first["id"])["revision"] == 2
+
+
 def test_gif_files_are_selectable_and_load_the_first_animation_frame(tmp_path: Path) -> None:
     gif_path = tmp_path / "animated-player.gif"
     first = scoreboard.Image.new("RGB", (8, 6), (240, 20, 30))

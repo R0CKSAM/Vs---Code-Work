@@ -240,6 +240,9 @@ def select_candidates(distinct: pd.DataFrame, combined_cache: pd.DataFrame, args
         sort_columns.insert(0, "_status_priority")
         ascending.insert(0, True)
     candidates = candidates.sort_values(sort_columns, ascending=ascending)
+    # Multiple raw strings can normalize to the same hash. Decode each
+    # normalized UA once so duplicate source rows never consume API quota.
+    candidates = candidates.drop_duplicates("ua_hash", keep="first")
     if args.api_limit > 0:
         candidates = candidates.head(args.api_limit)
     return candidates

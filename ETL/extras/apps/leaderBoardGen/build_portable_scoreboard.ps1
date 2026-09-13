@@ -20,7 +20,7 @@ if (-not ($destinationPath + "\").StartsWith($outputPrefix, [System.StringCompar
 }
 
 New-Item -ItemType Directory -Path $destinationPath -Force | Out-Null
-foreach ($directory in @("data\uploads", "logs", "wheels", "packages")) {
+foreach ($directory in @("data\uploads", "data\projects", "logs", "wheels", "packages")) {
     New-Item -ItemType Directory -Path (Join-Path $destinationPath $directory) -Force | Out-Null
 }
 
@@ -64,11 +64,15 @@ $packageDirectory = Join-Path $destinationPath "packages"
 Get-ChildItem -LiteralPath $packageDirectory -File -ErrorAction SilentlyContinue | Remove-Item -Force
 
 if ($IncludeUploads) {
-    $uploadSource = Join-Path $etlRoot "output\scoreboard_web\uploads"
+    $uploadSource = Join-Path $source "data\uploads"
     $uploadTarget = Join-Path $destinationPath "data\uploads"
-    Get-ChildItem -LiteralPath $uploadTarget -File -ErrorAction SilentlyContinue | Remove-Item -Force
     if (Test-Path -LiteralPath $uploadSource) {
         Get-ChildItem -LiteralPath $uploadSource -File | Copy-Item -Destination $uploadTarget -Force
+    }
+    $projectSource = Join-Path $source "data\projects"
+    if (Test-Path -LiteralPath $projectSource) {
+        Get-ChildItem -LiteralPath $projectSource -File -Filter '*.json' |
+            Copy-Item -Destination (Join-Path $destinationPath "data\projects") -Force
     }
 }
 

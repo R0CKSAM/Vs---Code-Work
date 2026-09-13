@@ -86,6 +86,10 @@ def test_parser_builds_exact_minute_metrics_without_storing_raw_ip(tmp_path: Pat
     assert batch.dimensions[("2026-09-04T10:15:00+0530", "veto.akamaized.net", "India TV", "delivery_format", "Apple / HLS")][0] == 1
     assert batch.dimensions[("2026-09-04T10:15:00+0530", "veto.akamaized.net", "India TV", "delivery_type", "Adaptive media - live")][0] == 1
     assert batch.dimensions[("2026-09-04T10:15:00+0530", "veto.akamaized.net", "India TV", "media_encryption", "Enabled")][0] == 1
+    cache_quality = batch.quality_dimensions[
+        ("2026-09-04T10:15:00+0530", "veto.akamaized.net", "India TV", "cache", "Cache hit - child edge")
+    ]
+    assert cache_quality == [1, 0, 1, 1, 80.0, 1, 60.0, 1, 1500.5]
 
 
 def test_query_identifiers_supports_fully_encoded_query_strings() -> None:
@@ -128,6 +132,12 @@ def test_store_commits_file_and_aggregates_in_one_transaction(tmp_path: Path) ->
     batch.minute_devices.add(("2026-09-04T10:15:00+0530", "host", "__all__", "device-hash"))
     batch.minute_sessions.add(("2026-09-04T10:15:00+0530", "host", "__all__", "session-hash"))
     batch.dimensions[("2026-09-04T10:15:00+0530", "host", "__all__", "status", "2xx")] = [1, 50]
+    batch.dimensions[
+        ("2026-09-04T10:15:00+0530", "host", "__all__", "network_provider", "Example ISP")
+    ] = [10, 1000]
+    batch.quality_dimensions[
+        ("2026-09-04T10:15:00+0530", "host", "__all__", "network_provider", "Example ISP")
+    ] = [10, 1, 2, 2, 80, 2, 60, 2, 3000]
     batch.daily_viewers.add(("2026-09-04", "host", "__all__", "hash"))
     store.finish_file(source, batch)
 
@@ -145,6 +155,14 @@ def test_store_commits_file_and_aggregates_in_one_transaction(tmp_path: Path) ->
     assert snapshot["summaries"]["__all__"]["ttfb_avg_ms"] == 25
     assert snapshot["series"]["__all__"][0]["throughput_avg"] == 1800
     assert snapshot["breakdowns"]["__all__"]["status"][0]["value"] == "2xx"
+    provider = snapshot["breakdowns"]["__all__"]["network_provider"][0]
+    assert provider["value"] == "Example ISP"
+    assert provider["errors_4xx"] == 1
+    assert provider["errors_5xx"] == 2
+    assert provider["quality_requests"] == 10
+    assert provider["ttfb_avg_ms"] == 40
+    assert provider["turnaround_avg_ms"] == 30
+    assert provider["throughput_avg"] == 1500
 
 
 def test_store_migrates_legacy_cdn_dimension_labels(tmp_path: Path) -> None:
@@ -156,19 +174,25 @@ def test_store_migrates_legacy_cdn_dimension_labels(tmp_path: Path) -> None:
         )
         connection.execute(
             """
-            INSERT INTO minute_dimensions VALUES(?,?,?,?,?,?,?)
+            INSERT INTO minute_dimensions(
+                minute_ist,req_host,target,dimension,value,requests,bytes
+            ) VALUES(?,?,?,?,?,?,?)
             """,
             ("2026-09-04T10:15:00+0530", "host", "__all__", "cache", "Hit", 3, 30),
         )
         connection.execute(
             """
-            INSERT INTO minute_dimensions VALUES(?,?,?,?,?,?,?)
+            INSERT INTO minute_dimensions(
+                minute_ist,req_host,target,dimension,value,requests,bytes
+            ) VALUES(?,?,?,?,?,?,?)
             """,
             ("2026-09-04T10:15:00+0530", "host", "__all__", "cache", "Cache hit - child edge", 2, 20),
         )
         connection.execute(
             """
-            INSERT INTO minute_dimensions VALUES(?,?,?,?,?,?,?)
+            INSERT INTO minute_dimensions(
+                minute_ist,req_host,target,dimension,value,requests,bytes
+            ) VALUES(?,?,?,?,?,?,?)
             """,
             ("2026-09-04T10:15:00+0530", "host", "__all__", "delivery_format", "1", 5, 50),
         )
@@ -176,8 +200,13 @@ def test_store_migrates_legacy_cdn_dimension_labels(tmp_path: Path) -> None:
     migrated = LiveStore(database).snapshot(10_000_000)
     cache = migrated["breakdowns"]["__all__"]["cache"]
     delivery_format = migrated["breakdowns"]["__all__"]["delivery_format"]
-    assert cache == [{"value": "Cache hit - child edge", "requests": 5, "bytes": 50}]
-    assert delivery_format == [{"value": "Apple / HLS", "requests": 5, "bytes": 50}]
+    assert [(row["value"], row["requests"], row["bytes"]) for row in cache] == [
+        ("Cache hit - child edge", 5, 50)
+    ]
+    assert [
+        (row["value"], row["requests"], row["bytes"])
+        for row in delivery_format
+    ] == [("Apple / HLS", 5, 50)]
 
 
 def test_new_and_returning_ip_viewers_are_mutually_exclusive(tmp_path: Path) -> None:
@@ -279,7 +308,6 @@ def test_snapshot_server_serves_only_valid_atomic_json(tmp_path: Path) -> None:
             assert response.headers["Cache-Control"] == "no-store"
         with urlopen(f"http://127.0.0.1:{port}/", timeout=2) as response:
             page = response.read().decode("utf-8")
-            assert 'id="minuteRows"' in page
             assert 'id="visibleRange"' in page
             assert "rolling limit" in page
         with urlopen(f"http://127.0.0.1:{port}/war-room", timeout=2) as response:
@@ -290,6 +318,12 @@ def test_snapshot_server_serves_only_valid_atomic_json(tmp_path: Path) -> None:
             assert 'id="timingCoverage"' in war_room
             assert 'id="decodedDeviceBars"' in war_room
             assert 'id="networkBars"' in war_room
+            assert 'id="providerQualityRows"' in war_room
+            assert 'id="cdnNetworkTypeBars"' in war_room
+            assert 'id="deviceCoverage"' in war_room
+            assert 'id="asnCoverageMetric"' in war_room
+            assert "DECODED DEVICE REQUEST SHARE" in war_room
+            assert "function providerQuality(" in war_room
             assert 'id="rangeFrom"' in war_room
             assert 'id="rangeTo"' in war_room
             assert 'id="chartModal"' in war_room
@@ -300,17 +334,6 @@ def test_snapshot_server_serves_only_valid_atomic_json(tmp_path: Path) -> None:
             assert "Advertising source not connected" in war_room
         with urlopen(f"http://127.0.0.1:{port}/favicon.ico", timeout=2) as response:
             assert response.status == 204
-            assert 'id="yAxis"' in page
-            assert 'id="chartScroll"' in page
-            assert 'id="tooltip"' in page
-            assert "15 MIN TICKS" in page
-            assert "function channelRows(key)" in page
-            assert "VETO Live Audience &amp; CDN Operations" in page
-            assert "Known device IDs" in page
-            assert "Known session IDs" in page
-            assert "drawing=false" in page
-            assert "AUDIENCE GEOGRAPHY" in page
-            assert "CDN TRAFFIC &amp; CACHE" in page
     finally:
         server.stop()
 

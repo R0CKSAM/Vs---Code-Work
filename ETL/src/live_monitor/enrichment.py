@@ -4,6 +4,7 @@ import hashlib
 import json
 import re
 import threading
+import datetime as dt
 from pathlib import Path
 from typing import Any
 from urllib.parse import unquote_plus
@@ -16,6 +17,7 @@ ASN_LOOKUP_PATH = ETL_ROOT / "data" / "asn" / "ip2location_asn_cache.json"
 _LOCK = threading.RLock()
 _UA_STATE: tuple[int, dict[str, dict[str, str]]] = (-1, {})
 _ASN_STATE: tuple[int, dict[str, dict[str, str]]] = (-1, {})
+ENRICHMENT_SCHEMA_VERSION = 1
 
 
 def _mtime(path: Path) -> int:
@@ -23,6 +25,38 @@ def _mtime(path: Path) -> int:
         return path.stat().st_mtime_ns
     except OSError:
         return -1
+
+
+def _file_signature(path: Path) -> str:
+    try:
+        stat = path.stat()
+    except OSError:
+        return "missing"
+    return f"{stat.st_size}:{stat.st_mtime_ns}"
+
+
+def enrichment_revision() -> str:
+    """Identify the lookup inputs used to build persisted live aggregates."""
+    return (
+        f"v{ENRICHMENT_SCHEMA_VERSION};"
+        f"ua={_file_signature(UA_LOOKUP_PATH)};"
+        f"asn={_file_signature(ASN_LOOKUP_PATH)}"
+    )
+
+
+def _lookup_file_status(path: Path, entries: int) -> dict[str, Any]:
+    try:
+        stat = path.stat()
+    except OSError:
+        return {"available": False, "entries": 0, "updated_at": None}
+    updated_at = dt.datetime.fromtimestamp(
+        stat.st_mtime, tz=dt.timezone.utc
+    ).isoformat()
+    return {
+        "available": True,
+        "entries": entries,
+        "updated_at": updated_at,
+    }
 
 
 def normalize_ua(value: Any) -> str:
@@ -145,4 +179,15 @@ def decoded_asn_dimensions(value: Any) -> dict[str, str]:
         "network_provider": _clean(record.get("as_name")) or "Provider not exposed",
         "network_type": _clean(record.get("asn_type")) or "Type not exposed",
         "network_country": _clean(record.get("as_country")) or "Country not exposed",
+    }
+
+
+def enrichment_status() -> dict[str, Any]:
+    """Return privacy-safe lookup coverage metadata for dashboard operators."""
+    ua_lookup = _ua_lookup()
+    asn_lookup = _asn_lookup()
+    return {
+        "revision": enrichment_revision(),
+        "ua": _lookup_file_status(UA_LOOKUP_PATH, len(ua_lookup)),
+        "asn": _lookup_file_status(ASN_LOOKUP_PATH, len(asn_lookup)),
     }

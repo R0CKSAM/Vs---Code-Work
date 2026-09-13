@@ -42,5 +42,17 @@ DATA
 - Existing uploaded images from the source PC are included. Saved project JSON
   files can reconnect those images by their generated filename after transfer.
 - Runtime logs are kept in logs.
-- Project JSON, exported PNG, and MP4 files are saved by the browser to the
-  user's normal Downloads folder.
+- Save project writes to data/projects on the hosting PC. Open project lists
+  the shared projects for every connected operator. Stale saves are rejected;
+  reopen the latest version or choose Save a copy to preserve your changes.
+- Open project also has Import JSON and Download JSON for manual transfers.
+  PNG and MP4 exports still download to the operator's browser.
+- Move the complete data folder (projects AND uploads) to migrate saved work.
+  A JSON download alone does not contain image files.
+- For code updates replace scoreboard_app.py, scoreboard_web.py and
+  scoreboard_web.html together, or use the code-update ZIP. Keep data intact.
+- Build with -IncludeUploads to include current projects and images in a
+  portable package. If SCOREBOARD_WEB_UPLOAD_DIR overrides uploads, projects
+  are stored in a sibling projects folder; copy that data location manually.
+- Browser recovery drafts remain local; use Save project to share a version.
+- Shared operator names identify edits; they are not account authentication.

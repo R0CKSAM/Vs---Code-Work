@@ -68,6 +68,28 @@ def test_candidates_prioritize_highest_observed_usage(monkeypatch):
     assert selected["ua_hash"].tolist() == ["high", "middle", "low"]
 
 
+def test_candidates_decode_each_normalized_hash_only_once(monkeypatch):
+    distinct = pd.DataFrame(
+        [
+            {"ua_norm": "Duplicate/1.0", "ua_hash": "same"},
+            {"ua_norm": "Duplicate%2F1.0", "ua_hash": "same"},
+            {"ua_norm": "Other/1.0", "ua_hash": "other"},
+        ]
+    )
+    impact = pd.DataFrame(
+        [
+            {"ua_hash": "same", "rows": 500, "raw_ts_rows": 500, "status_200_ts_rows": 500, "approx_unique_ips": 20},
+            {"ua_hash": "other", "rows": 100, "raw_ts_rows": 100, "status_200_ts_rows": 100, "approx_unique_ips": 5},
+        ]
+    )
+    monkeypatch.setattr(module, "build_impact", lambda _path: impact)
+    args = Namespace(include_malformed=False, ua_daily=Path("unused"), api_limit=-1)
+
+    selected = module.select_candidates(distinct, pd.DataFrame(), args)
+
+    assert selected["ua_hash"].tolist() == ["same", "other"]
+
+
 def test_candidates_honor_requested_decode_status_order(tmp_path, monkeypatch):
     distinct = pd.DataFrame([
         {"ua_norm": "Local/1.0", "ua_hash": "local"},

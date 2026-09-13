@@ -13,6 +13,7 @@
 .feed-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(420px,100%),1fr));gap:12px}.feed{border:1px solid var(--line);background:var(--panel);border-radius:7px;overflow:hidden;min-width:0}.feed-head{height:48px;padding:0 12px;display:flex;align-items:center;gap:9px;border-bottom:1px solid var(--line)}.feed-title{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.feed-actions{margin-left:auto;display:flex;gap:6px}.icon-action{height:30px;border:1px solid var(--line);border-radius:4px;background:var(--panel2);color:var(--text);padding:0 9px}.icon-action.record{color:var(--green)}.icon-action.stop{color:#ff8e94}.video-wrap{position:relative;background:#02070b;aspect-ratio:16/9;overflow:hidden}.video-wrap video{width:100%;height:100%;display:block;object-fit:contain}.empty-feed{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);padding:20px;text-align:center}.feed-foot{min-height:38px;padding:7px 11px;display:flex;gap:14px;align-items:center;color:var(--muted);font-size:12px}.feed-foot span:last-child{margin-left:auto}.recording{color:var(--red)!important;font-weight:700}
 .blank{border:1px dashed var(--line);min-height:260px;display:flex;align-items:center;justify-content:center;color:var(--muted)}.history{margin-top:22px;border-top:1px solid var(--line);padding-top:15px}.section-head{display:flex;align-items:center;margin-bottom:9px}.section-head h2{font-size:15px;margin:0}.table-wrap{overflow:auto;border:1px solid var(--line)}table{width:100%;border-collapse:collapse;min-width:780px;background:var(--panel)}th,td{text-align:left;padding:9px 11px;border-bottom:1px solid #193344;white-space:nowrap}th{font-size:11px;text-transform:uppercase;color:var(--muted);background:#0b1b28}.state-recording{color:var(--green)}.state-failed,.state-interrupted{color:var(--red)}
 @media(max-width:900px){.toolbar{grid-template-columns:1fr 1fr}.picker{grid-column:1/-1}.system .disk{display:none}}@media(max-width:560px){.topbar{height:auto;min-height:64px;flex-wrap:wrap;padding:10px 12px}.system{margin-left:0;width:100%}.toolbar{padding:10px 12px;grid-template-columns:1fr}.picker{grid-column:auto}.content{padding:12px}.summary{flex-wrap:wrap;gap:8px 15px}.feed-grid{grid-template-columns:1fr}.sub{display:none}}
+.library-filters{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.library-filters input,.library-filters select{max-width:100%;min-width:0;background:var(--panel2);color:var(--text);border:1px solid var(--line);padding:8px;border-radius:4px}.library-actions{display:flex;gap:8px;align-items:center}.library-actions a{color:var(--blue)}dialog{width:min(960px,94vw);max-height:90vh;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:16px}dialog::backdrop{background:#000b}dialog video{width:100%;max-height:65vh;background:#000;display:block;margin-top:12px}#playTitle{overflow-wrap:anywhere;margin:0;flex:1}#playState{padding:10px 0;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -55,6 +56,16 @@
     </div>
     <section class="feed-grid" id="feedGrid"><div class="blank">Select channels to open live feeds</div></section>
     <section class="history">
+      <div class="section-head"><h2>Recordings library</h2></div>
+      <div class="library-filters">
+        <input type="date" id="libraryDate" aria-label="Recording date">
+        <select id="libraryChannel" aria-label="Recording channel"><option value="">All channels</option></select>
+        <button class="small" id="libraryClear">Clear filters</button>
+        <button class="small" id="libraryRefresh">Refresh</button>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>Channel</th><th>Date</th><th>File</th><th>Size</th><th>Status</th><th>Actions</th></tr></thead><tbody id="libraryRows"></tbody></table></div>
+    </section>
+    <section class="history">
       <div class="section-head"><h2>Recording history</h2></div>
       <div class="table-wrap">
         <table><thead><tr><th>Channel</th><th>Status</th><th>Started</th><th>Stopped</th><th>Output</th><th>Error</th></tr></thead><tbody id="historyRows"></tbody></table>
@@ -62,6 +73,7 @@
     </section>
   </main>
 </div>
+<dialog id="playDialog"><div class="section-head"><h2 id="playTitle"></h2><button class="small" id="playClose" aria-label="Close playback">Close</button></div><div id="playState" role="status"></div><video id="savedVideo" controls playsinline></video></dialog>
 <script>
 (() => {
 'use strict';
@@ -72,7 +84,8 @@ const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt
 const bytes=value=>{let amount=Number(value)||0,index=0;while(amount>=1024&&index<4){amount/=1024;index++}return `${amount.toFixed(index?1:0)} ${names(index)}`};
 const names=i=>['B','KB','MB','GB','TB'][i];
 function notify(message,kind='warn'){alertEl.textContent=message;alertEl.style.borderColor=kind==='error'?'#96363f':'#79581d';alertEl.classList.toggle('show',Boolean(message))}
-async function api(path,options={}){const response=await fetch(path,{headers:{'Content-Type':'application/json'},...options});const data=await response.json();if(!response.ok)throw new Error(data.error||`Request failed (${response.status})`);return data}
+const apiPrefix=location.pathname.startsWith('/recorder/')?'/recorder':'';
+async function api(path,options={}){const response=await fetch(apiPrefix+path,{headers:{'Content-Type':'application/json'},...options});const data=await response.json();if(!response.ok)throw new Error(data.error||`Request failed (${response.status})`);return data}
 function available(channel){return channel.enabled&&channel.hls_url}
 function visibleChannels(){const q=$('channelSearch').value.trim().toLowerCase();return S.channels.filter(c=>!q||`${c.name} ${c.group}`.toLowerCase().includes(q))}
 function renderPicker(){
@@ -123,6 +136,42 @@ async function stop(ids){try{notify('');await api('/api/recordings/stop',{method
 function renderHistory(){
   $('historyRows').innerHTML=S.recordings.length?S.recordings.map(row=>`<tr><td>${esc(row.channel_name)}</td><td class="state-${esc(row.status)}">${esc(row.status)}</td><td>${esc(row.started_at)}</td><td>${esc(row.stopped_at||'--')}</td><td title="${esc(row.output_pattern)}">${esc(row.output_pattern)}</td><td title="${esc(row.error)}">${esc(row.error?row.error.slice(0,80):'--')}</td></tr>`).join(''):'<tr><td colspan="6">No recordings yet</td></tr>';
 }
+let libraryFiles=[],playToken=null,playTimer=null;
+async function refreshLibrary(){
+  try{
+    const data=await api('/api/library');libraryFiles=data.files;
+    const selected=$('libraryChannel').value;
+    $('libraryChannel').innerHTML='<option value="">All channels</option>'+[...new Set(libraryFiles.map(x=>x.channel))].sort().map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
+    if([...$('libraryChannel').options].some(x=>x.value===selected))$('libraryChannel').value=selected;
+    renderLibrary();
+  }catch(error){$('libraryRows').innerHTML=`<tr><td colspan="6">${esc(error.message)}</td></tr>`}
+}
+function renderLibrary(){
+  const date=$('libraryDate').value,channel=$('libraryChannel').value;
+  const rows=libraryFiles.filter(x=>(!date||x.date===date)&&(!channel||x.channel===channel));
+  $('libraryRows').innerHTML=rows.length?rows.map(x=>`<tr><td>${esc(x.channel)}</td><td>${esc(x.date)}</td><td>${esc(x.name)}</td><td>${bytes(x.bytes)}</td><td>${esc(x.status)}</td><td><div class="library-actions"><button class="small" data-play="${esc(x.id)}">Play</button><a href="${apiPrefix}/api/library/${encodeURIComponent(x.id)}/download" download>Download MKV</a></div></td></tr>`).join(''):'<tr><td colspan="6">No completed files for this selection</td></tr>';
+}
+function closePlayback(){playToken=null;clearTimeout(playTimer);const video=$('savedVideo');video.pause();video.removeAttribute('src');video.load()}
+async function checkPreview(token,start=false){
+  try{
+    const state=await api(`/api/library/${token}/preview`,start?{method:'POST',body:'{}'}:{});
+    if(playToken!==token)return;
+    if(state.state==='ready'){
+      $('playState').textContent='';$('savedVideo').src=`${apiPrefix}/api/library/${token}/video`;
+      $('savedVideo').play().catch(()=>{});
+    }else if(state.state==='preparing'){
+      $('playState').textContent='Preparing browser playback...';playTimer=setTimeout(()=>checkPreview(token),2000);
+    }else $('playState').textContent=state.error||'Preview unavailable. Close and retry.';
+  }catch(error){if(playToken===token)$('playState').textContent=error.message}
+}
+$('libraryRows').addEventListener('click',event=>{const button=event.target.closest('[data-play]');if(!button)return;closePlayback();playToken=button.dataset.play;const item=libraryFiles.find(x=>x.id===playToken);$('playTitle').textContent=item?.name||'Recording';$('playState').textContent='Preparing browser playback...';$('playDialog').showModal();checkPreview(playToken,true)});
+$('playClose').addEventListener('click',()=>$('playDialog').close());
+$('playDialog').addEventListener('close',closePlayback);
+$('savedVideo').addEventListener('error',()=>{if(playToken)$('playState').textContent='Playback failed. Download the original or retry.'});
+$('libraryDate').addEventListener('change',renderLibrary);$('libraryChannel').addEventListener('change',renderLibrary);
+$('libraryClear').addEventListener('click',()=>{$('libraryDate').value='';$('libraryChannel').value='';renderLibrary()});
+$('libraryRefresh').addEventListener('click',refreshLibrary);
+setInterval(refreshLibrary,15000);refreshLibrary();
 async function refresh(){
   try{
     const [status,channels,history]=await Promise.all([api('/api/status'),api('/api/channels'),api('/api/recordings')]);

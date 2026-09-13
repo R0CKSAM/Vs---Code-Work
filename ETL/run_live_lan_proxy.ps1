@@ -46,4 +46,4 @@ if ($Running) {
     Write-Host "Nginx LAN proxy started."
 }
 
-Write-Host "Local network dashboard: http://192.168.50.126:8080/war-room"
+Write-Host "Local network dashboard: http://192.168.50.126:8090/war-room"

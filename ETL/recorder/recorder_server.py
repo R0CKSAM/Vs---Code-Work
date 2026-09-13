@@ -21,6 +21,8 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
+from recording_library import RecordingLibrary, send_file
+
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_CHANNELS = ROOT / "channels.json"
@@ -127,9 +129,11 @@ class RecorderManager:
         self.store = RecorderStore(db_path)
         self.ffmpeg = locate_ffmpeg(ffmpeg)
         self.lock = threading.RLock()
+        self.stopping = False
         self.processes: dict[str, subprocess.Popen] = {}
         self.channel_jobs: dict[str, str] = {}
         self.channels = self._load_channels()
+        self.library = RecordingLibrary(self)
 
     def _load_channels(self) -> dict[str, dict[str, Any]]:
         data = json.loads(self.channels_path.read_text(encoding="utf-8"))
@@ -170,6 +174,9 @@ class RecorderManager:
         with self.lock:
             active = len(self.processes)
         return {
+            "service": "veto-recorder",
+            "pid": os.getpid(),
+            "stopping": self.stopping,
             "ffmpeg_ready": bool(self.ffmpeg),
             "ffmpeg_path": self.ffmpeg or "",
             "active_recordings": active,
@@ -195,7 +202,12 @@ class RecorderManager:
                     skipped.append({"channel_id": channel_id, "reason": "Already recording"})
                     continue
             try:
-                started.append(self._start_one(channel, segment_seconds))
+                with self.lock:
+                    if self.stopping:
+                        raise RuntimeError("Recorder is shutting down")
+                    if channel_id in self.channel_jobs:
+                        continue
+                    started.append(self._start_one(channel, segment_seconds))
             except Exception as exc:
                 LOG.exception("Could not start %s", channel["name"])
                 errors.append({"channel_id": channel_id, "reason": str(exc)})
@@ -293,7 +305,10 @@ class RecorderManager:
         return {"stopped": stopped}
 
     def shutdown(self) -> None:
+        with self.lock:
+            self.stopping = True
         self.stop()
+        self.library.close()
 
 
 class RecorderHandler(SimpleHTTPRequestHandler):
@@ -324,6 +339,30 @@ class RecorderHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self) -> None:
         path = urlparse(self.path).path
+        if path == '/api/library':
+            self._json({'files': [
+                {key: value for key, value in item.items() if not key.startswith('_')}
+                for item in self.manager.library.files()
+            ]})
+            return
+        match = re.fullmatch(r'/api/library/([a-f0-9]{64})/(download|preview|video)', path)
+        if match:
+            token, action = match.groups()
+            try:
+                item = self.manager.library.get(token)
+                if action == 'download':
+                    send_file(self, item['_path'], download=True)
+                elif action == 'preview':
+                    self._json(self.manager.library.preview(token))
+                else:
+                    target = self.manager.library.target(item)
+                    if self.manager.library.preview(token)['state'] != 'ready':
+                        self._json({'error': 'Preview not ready'}, 409)
+                    else:
+                        send_file(self, target)
+            except (FileNotFoundError, ValueError, OSError):
+                self._json({'error': 'Recording unavailable'}, 404)
+            return
         if path == "/api/channels":
             self._json({"channels": self.manager.public_channels()})
         elif path == "/api/status":
@@ -336,13 +375,30 @@ class RecorderHandler(SimpleHTTPRequestHandler):
         elif path.startswith("/api/"):
             self._json({"error": "Not found"}, HTTPStatus.NOT_FOUND)
         else:
-            super().do_GET()
+            self._json({'error': 'Not found'}, HTTPStatus.NOT_FOUND)
+
+    def do_HEAD(self) -> None:
+        match = re.fullmatch(r'/api/library/([a-f0-9]{64})/(download|video)', urlparse(self.path).path)
+        if not match:
+            self.send_error(404)
+            return
+        try:
+            item = self.manager.library.get(match[1])
+            target = item['_path'] if match[2] == 'download' else self.manager.library.target(item)
+            if target.is_symlink() or not target.is_file():
+                raise FileNotFoundError()
+            send_file(self, target, download=match[2] == 'download')
+        except (OSError, ValueError):
+            self.send_error(404)
 
     def do_POST(self) -> None:
         path = urlparse(self.path).path
         body = self._body()
         try:
-            if path == "/api/recordings/start":
+            preview = re.fullmatch(r'/api/library/([a-f0-9]{64})/preview', path)
+            if preview:
+                self._json(self.manager.library.preview(preview[1], start=True))
+            elif path == "/api/recordings/start":
                 ids = body.get("channel_ids", [])
                 if not isinstance(ids, list) or not ids:
                     raise ValueError("Select at least one channel")
@@ -356,6 +412,8 @@ class RecorderHandler(SimpleHTTPRequestHandler):
                 ))
             else:
                 self._json({"error": "Not found"}, HTTPStatus.NOT_FOUND)
+        except FileNotFoundError:
+            self._json({'error': 'Recording not found'}, HTTPStatus.NOT_FOUND)
         except (RuntimeError, ValueError) as exc:
             self._json({"error": str(exc)}, HTTPStatus.BAD_REQUEST)
 
@@ -374,18 +432,30 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
-    manager = RecorderManager(args.channels, args.recordings, args.database, args.ffmpeg)
-    RecorderHandler.manager = manager
+    # Bind before opening the state store: duplicate launches must not mark
+    # the running instance's recordings as interrupted.
     server = ThreadingHTTPServer((args.host, args.port), RecorderHandler)
+    try:
+        manager = RecorderManager(args.channels, args.recordings, args.database, args.ffmpeg)
+    except Exception:
+        server.server_close()
+        raise
+    RecorderHandler.manager = manager
+    stop_file = ROOT / "logs" / f"recorder_{args.port}.stop"
+    stop_file.parent.mkdir(parents=True, exist_ok=True)
+    stop_file.unlink(missing_ok=True)
+    server.timeout = 0.5
     LOG.info("Recorder dashboard: http://%s:%s/recorder", args.host, args.port)
     LOG.info("FFmpeg: %s", manager.ffmpeg or "not found; preview-only mode")
     try:
-        server.serve_forever()
+        while not stop_file.exists():
+            server.handle_request()
     except KeyboardInterrupt:
         pass
     finally:
-        server.server_close()
         manager.shutdown()
+        server.server_close()
+        stop_file.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":

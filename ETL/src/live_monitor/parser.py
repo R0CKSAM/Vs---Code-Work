@@ -35,6 +35,9 @@ class FileBatch:
     dimensions: dict[tuple[str, str, str, str, str], list[int]] = field(
         default_factory=lambda: defaultdict(lambda: [0, 0])
     )
+    quality_dimensions: dict[tuple[str, str, str, str, str], list[float]] = field(
+        default_factory=lambda: defaultdict(lambda: [0] * 9)
+    )
 
 
 def request_timestamp(value: object) -> float | None:
@@ -312,6 +315,21 @@ def parse_gzip_file(path: Path, watched_paths: tuple[str, ...]) -> FileBatch:
                     ]
                     dimension_totals[0] += 1
                     dimension_totals[1] += byte_count
+                    if dimension in {"network_provider", "network_type", "cache"}:
+                        quality = batch.quality_dimensions[
+                            (minute, host, target, dimension, value)
+                        ]
+                        quality[0] += 1
+                        quality[1] += int(400 <= status < 500)
+                        quality[2] += int(500 <= status < 600)
+                        for count_index, total_index, measurement in (
+                            (3, 4, ttfb_ms),
+                            (5, 6, turnaround_ms),
+                            (7, 8, throughput),
+                        ):
+                            if measurement is not None:
+                                quality[count_index] += 1
+                                quality[total_index] += measurement
             batch.rows += 1
             batch.latest_timestamp = max(batch.latest_timestamp or timestamp, timestamp)
     return batch
