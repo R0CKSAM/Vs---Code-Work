@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Broadcast Image Validator</title>
+<style>
+  :root{color-scheme:dark;}
+  body{margin:0;font-family:system-ui,Arial,sans-serif;background:#111;color:#eee;padding:24px;}
+  h1{font-size:19px;margin:0 0 4px;}
+  p.sub{color:#888;font-size:13px;margin:0 0 18px;}
+  #pickBtn{padding:12px 22px;font-size:14px;font-weight:600;border:none;border-radius:6px;background:#2d6cdf;color:#fff;cursor:pointer;}
+  #pickBtn:hover{background:#255bc0;}
+  input[type=file]{display:none;}
+  #summary{margin:16px 0 6px;font-size:13px;color:#aaa;}
+  #grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-top:14px;}
+  .card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;overflow:hidden;}
+  .card img{width:100%;height:140px;object-fit:contain;background:#000;display:block;}
+  .card .info{padding:10px 12px;}
+  .name{font-size:12px;color:#999;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px;}
+  .dims{font-size:16px;font-weight:700;}
+  .ratio{font-size:13px;color:#ccc;margin-top:2px;}
+  .badge{display:inline-block;margin-top:8px;padding:3px 9px;border-radius:12px;font-size:11px;font-weight:700;letter-spacing:.3px;}
+  .pass{background:#173d24;color:#4ade80;border:1px solid #2c6b40;}
+  .warn{background:#3d3417;color:#fbbf24;border:1px solid #6b5a2c;}
+  .fail{background:#3d1717;color:#f87171;border:1px solid #6b2c2c;}
+  .meta{font-size:11px;color:#666;margin-top:6px;}
+  .std-list{font-size:12px;color:#777;margin-top:22px;line-height:1.6;}
+  .std-list b{color:#aaa;}
+</style>
+</head>
+<body>
+  <h1>Broadcast Image Validator</h1>
+  <p class="sub">Select one or more images — checks resolution, aspect ratio, and orientation against common live-broadcast / ad-break standards.</p>
+
+  <button id="pickBtn">📁 Select Image(s)</button>
+  <input type="file" id="fileInput" accept="image/*" multiple>
+
+  <div id="summary"></div>
+  <div id="grid"></div>
+
+  <div class="std-list">
+    <b>Validated against:</b> HD 1920×1080 (16:9), UHD/4K 3840×2160 (16:9), PAL SD 1024×576 (16:9 broadcast-safe), Square 1080×1080 (1:1), Vertical 1080×1920 (9:16).<br>
+    <b>Pass</b> = exact match to a standard. <b>Warn</b> = correct ratio, non-standard resolution (will scale cleanly). <b>Fail</b> = ratio doesn't match any standard (will letterbox/crop on air).
+  </div>
+
+<script>
+const pickBtn = document.getElementById('pickBtn');
+const fileInput = document.getElementById('fileInput');
+const grid = document.getElementById('grid');
+const summary = document.getElementById('summary');
+
+pickBtn.addEventListener('click', () => fileInput.click());
+
+// Broadcast-standard resolutions (exact match => pass) and accepted ratios (=> warn if not exact)
+const STANDARDS = [
+  { w: 3840, h: 2160, label: 'UHD 4K' },
+  { w: 1920, h: 1080, label: 'Full HD' },
+  { w: 1280, h: 720,  label: 'HD 720' },
+  { w: 1024, h: 576,  label: 'PAL SD 16:9' },
+  { w: 1080, h: 1080, label: 'Square' },
+  { w: 1080, h: 1920, label: 'Vertical 9:16' },
+];
+const ACCEPTED_RATIOS = ['16:9','4:3','1:1','9:16'];
+
+function gcd(a,b){ return b === 0 ? a : gcd(b, a % b); }
+
+function simplifyRatio(w, h){
+  const d = gcd(w, h);
+  return `${w/d}:${h/d}`;
+}
+
+function classify(w, h){
+  const exact = STANDARDS.find(s => s.w === w && s.h === h);
+  if (exact) return { level: 'pass', label: `PASS · ${exact.label}` };
+  const ratio = simplifyRatio(w, h);
+  if (ACCEPTED_RATIOS.includes(ratio)) return { level: 'warn', label: `WARN · non-standard res` };
+  return { level: 'fail', label: `FAIL · off-ratio` };
+}
+
+fileInput.addEventListener('change', () => {
+  const files = Array.from(fileInput.files);
+  if (!files.length) return;
+  grid.innerHTML = '';
+  summary.textContent = `Processing ${files.length} image(s)…`;
+
+  let done = 0;
+  files.forEach(file => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const w = img.naturalWidth, h = img.naturalHeight;
+      const ratio = simplifyRatio(w, h);
+      const check = classify(w, h);
+
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <img src="${url}" alt="${file.name}">
+        <div class="info">
+          <div class="name" title="${file.name}">${file.name}</div>
+          <div class="dims">${w} × ${h}</div>
+          <div class="ratio">${ratio}${img.naturalWidth < img.naturalHeight ? ' (portrait)' : ''}</div>
+          <span class="badge ${check.level}">${check.label}</span>
+          <div class="meta">${(file.size/1024).toFixed(1)} KB · ${file.type || 'unknown'}</div>
+        </div>`;
+      grid.appendChild(card);
+
+      done++;
+      summary.textContent = `${done} / ${files.length} processed`;
+    };
+    img.onerror = () => {
+      done++;
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `<div class="info"><div class="name">${file.name}</div><span class="badge fail">FAIL · unreadable</span></div>`;
+      grid.appendChild(card);
+      summary.textContent = `${done} / ${files.length} processed`;
+    };
+    img.src = url;
+  });
+});
+</script>
+</body>
+</html>
