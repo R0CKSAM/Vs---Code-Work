@@ -53,6 +53,15 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 TEAMS_URL = "https://www.daviscup.com/en/teams"
 
+# The 14 Round 2 Qualifier countries (Sep 2026) -- used as the default set
+# when --country isn't given. Names must match how they appear as link text
+# on daviscup.com/en/teams (substring matching is used as a fallback too).
+DEFAULT_COUNTRIES = [
+    "Chile", "Spain", "Germany", "Croatia", "Great Britain", "Ecuador",
+    "Austria", "Belgium", "Korea, Rep.", "India", "Czechia", "USA",
+    "Canada", "France",
+]
+
 # Label text as it's likely to appear on the player profile page, lowercased.
 # If a field comes back empty, add more variants here based on what you see
 # in a debug_player_*.html dump.
@@ -313,7 +322,12 @@ def main():
     parser.add_argument(
         "--country", nargs="+", default=None,
         help="One or more country names, e.g. --country India Spain Japan. "
-             "If omitted, scrapes EVERY country listed on the site."
+             "If omitted, scrapes the default 14 Round-2-qualifier countries "
+             "(use --all to scrape EVERY country on the site instead)."
+    )
+    parser.add_argument(
+        "--all", action="store_true",
+        help="Scrape every country listed on the site (overrides the default 14)."
     )
     parser.add_argument("--debug", action="store_true", help="Visible browser + save HTML dumps")
     parser.add_argument("--out", default="daviscup_players.csv", help="Output CSV filename")
@@ -328,12 +342,15 @@ def main():
     try:
         if args.country:
             targets = [(c, None) for c in args.country]
-        else:
-            print("No --country given: discovering every country on the site...")
+        elif args.all:
+            print("No --country given, --all set: discovering every country on the site...")
             targets = get_all_countries(driver)
             print(f"Found {len(targets)} countries.")
             if args.limit:
                 targets = targets[: args.limit]
+        else:
+            print(f"No --country given: using default list of {len(DEFAULT_COUNTRIES)} countries.")
+            targets = [(c, None) for c in DEFAULT_COUNTRIES]
 
         for country, team_url in targets:
             print(f"\n=== {country} ===")
@@ -347,6 +364,15 @@ def main():
             sys.exit(1)
 
         df = pd.DataFrame(all_rows)
+
+        # Excel auto-detects values like "4/0" as a date (e.g. "4-Jan") when a
+        # CSV is opened directly. Prefixing with a leading apostrophe forces
+        # Excel to treat the cell as TEXT (the apostrophe itself is hidden in
+        # the display) -- this only affects how Excel *opens* the CSV, the
+        # underlying value is unchanged.
+        for col in ("TOTAL W/L", "DEBUT YEAR"):
+            df[col] = df[col].apply(lambda v: f"'{v}" if v else v)
+
         df.to_csv(args.out, index=False)
         print(f"\nDone! Saved {len(df)} rows to {args.out}\n")
         print(df.to_string(index=False))
