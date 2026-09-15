@@ -30,7 +30,7 @@ def test_shared_projects_survive_restart_and_move_with_assets(tmp_path: Path) ->
     asset = runtime.upload_dir / "player.png"
     scoreboard.Image.new("RGB", (8, 8)).save(asset)
     payload = {"name": "Hindi match", "active_template": "t1",
-               "templates": {"t1": {"player_path": str(asset)}}, "client_id": "operator-one"}
+               "templates": {"t1": {"player_path": str(asset)}}, "client_id": "operator-one", "new_password": "test-password"}
     saved = runtime.save_project(payload, "127.0.0.1")
     stored = json.loads(runtime._project_path(saved["id"]).read_text(encoding="utf-8"))
     assert stored["templates"]["t1"]["player_path"] == "player.png"
@@ -39,20 +39,199 @@ def test_shared_projects_survive_restart_and_move_with_assets(tmp_path: Path) ->
     assert moved.list_projects()[0]["name"] == "Hindi match"
     opened = moved.open_project(saved["id"])
     assert opened["templates"]["t1"]["player_path"] == str(moved.upload_dir / "player.png")
-    assert len(opened["templates"]) == 5
+    assert len(opened["templates"]) == len(scoreboard.WEB_TEMPLATE_KEYS)
 
 
 def test_shared_projects_reject_stale_updates_and_traversal(tmp_path: Path) -> None:
     runtime = scoreboard_web.ScoreboardWebRuntime(scoreboard, tmp_path / "uploads")
-    payload = {"name": "Match", "active_template": "t1", "templates": {}}
+    runtime._write_credentials('test-editor', 'test-password')
+    payload = {"name": "Match", "active_template": "t1", "templates": {}, "client_id": "operator-one", "new_password": "test-password"}
     first = runtime.save_project(payload, "127.0.0.1")
-    update = {**payload, "id": first["id"], "revision": first["revision"]}
+    unlock = runtime.unlock_project({"id": first['id'], "client_id": "operator-one", "username": "test-editor", "password": "test-password"}, '127.0.0.1')
+    update = {**payload, "id": first["id"], "revision": first["revision"], "edit_token": unlock['edit_token']}
     assert runtime.save_project(update, "127.0.0.1")["revision"] == 2
     with pytest.raises(scoreboard_web.ProjectConflict):
         runtime.save_project(update, "127.0.0.1")
     with pytest.raises(ValueError):
         runtime.open_project("../outside")
     assert runtime.open_project(first["id"])["revision"] == 2
+
+
+def test_project_passwords_duplicate_names_and_expired_grants(tmp_path):
+    import json
+    runtime = scoreboard_web.ScoreboardWebRuntime(scoreboard, tmp_path / 'uploads')
+    runtime._write_credentials('test-editor', 'secret-test')
+    payload = {'name': 'Players Stats - Test - India', 'templates': {},
+               'client_id': 'operator-one', 'new_password': 'secret-test'}
+    saved = runtime.save_project(payload, '127.0.0.1')
+    assert saved['protected']
+    assert '_edit_password' not in runtime.open_project(saved['id'])
+    assert 'secret-test' not in runtime._project_path(saved['id']).read_text()
+    with pytest.raises(ValueError, match='already exists'):
+        runtime.save_project({**payload, 'name': '  PLAYERS STATS - Test - India  '}, '127.0.0.1')
+    update = {**payload, 'id': saved['id'], 'revision': saved['revision']}
+    with pytest.raises(ValueError, match='locked'):
+        runtime.save_project(update, '127.0.0.1')
+    with pytest.raises(ValueError, match='Incorrect'):
+        runtime.unlock_project({'id': saved['id'], 'client_id': 'operator-one', 'password': 'wrong'}, '127.0.0.1')
+    unlocked = runtime.unlock_project({'id': saved['id'], 'client_id': 'operator-one', 'username': 'test-editor', 'password': 'secret-test'}, '127.0.0.1')
+    update['edit_token'] = unlocked['edit_token']
+    with pytest.raises(ValueError, match='locked'):
+        runtime.save_project({**update, 'client_id': 'operator-two'}, '127.0.0.1')
+    runtime.project_unlocks[unlocked['edit_token']]['expires'] = 0
+    with pytest.raises(ValueError, match='locked'):
+        runtime.save_project(update, '127.0.0.1')
+    fresh = runtime.unlock_project({'id': saved['id'], 'client_id': 'operator-one', 'username': 'test-editor', 'password': 'secret-test'}, '127.0.0.1')
+    result = runtime.save_project({**update, 'edit_token': fresh['edit_token']}, '127.0.0.1')
+    assert result['revision'] == 2
+    assert fresh['edit_token'] not in runtime.project_unlocks
+    # Legacy files without a per-project password still require host credentials.
+    document = json.loads(runtime._project_path(saved['id']).read_text())
+    document.pop('_edit_password', None)
+    runtime._project_path(saved['id']).write_text(json.dumps(document))
+    assert runtime.open_project(saved['id'])['protected']
+    with pytest.raises(ValueError, match='locked'):
+        runtime.save_project({**update, 'revision': 2, 'new_password': ''}, '127.0.0.1')
+
+
+def test_template_presets_preserve_siblings_grants_and_legacy_files(tmp_path):
+    import json
+    import shutil
+    runtime = scoreboard_web.ScoreboardWebRuntime(scoreboard, tmp_path / 'data' / 'uploads')
+    runtime._write_credentials('test-editor', 'preset-test')
+    saved = runtime.save_project({'name':'Match', 'templates':{}, 'client_id':'operator-one',
+                                  'new_password':'preset-test'}, '127.0.0.1')
+    grant = runtime.unlock_project({'id':saved['id'], 'client_id':'operator-one',
+                                    'username':'test-editor', 'password':'preset-test'}, '127.0.0.1')
+    payload = dict(project_id=saved['id'], revision=1, edit_token=grant['edit_token'],
+                   client_id='operator-one', template='t6', name='Player stats',
+                   config={**scoreboard.DEF_T6,'player_name':'One','country':'India'})
+    first = runtime.save_preset(payload, '127.0.0.1')
+    assert grant['edit_token'] in runtime.project_unlocks
+    payload['revision'] = first['project']['revision']
+    with pytest.raises(ValueError, match='already has'):
+        runtime.save_preset(payload, '127.0.0.1')
+    second = runtime.save_preset({**payload, 'config':{**payload['config'],'player_name':'Two'}}, '127.0.0.1')
+    assert len(second['project']['presets']['t6']) == 2
+    third = runtime.save_preset({**payload, 'revision':second['project']['revision'],
+        'template':'t1','config':scoreboard.DEF_T1,'name':'Match score'}, '127.0.0.1')
+    assert len(third['project']['presets']['t6']) == 2
+    copied = runtime.save_project({'name':'Match copy', 'templates':third['project']['templates'],
+        'presets':third['project']['presets'], 'new_password':'copy-test'}, '127.0.0.1')
+    assert len(runtime.open_project(copied['id'])['presets']['t6']) == 2
+    assert runtime.open_project(copied['id'])['presets']['t6'][1]['config']['player_name'] == 'Two'
+    with pytest.raises(ValueError, match='Another operator'):
+        runtime.save_preset(payload, '127.0.0.1')
+    runtime.lock_project({'edit_token':grant['edit_token'], 'client_id':'operator-one'})
+    with pytest.raises(ValueError, match='locked'):
+        runtime.save_preset({**payload,'preset_id':first['preset_id'],
+                            'revision':third['project']['revision'],'name':'Other'}, '127.0.0.1')
+    shutil.copytree(tmp_path/'data',tmp_path/'moved')
+    moved = scoreboard_web.ScoreboardWebRuntime(scoreboard, tmp_path/'moved'/'uploads')
+    assert len(moved.open_project(saved['id'])['presets']['t6']) == 2
+    # Reading an old file exposes its snapshots without a destructive migration.
+    path = runtime._project_path(saved['id'])
+    document = json.loads(path.read_text())
+    document.pop('presets')
+    path.write_text(json.dumps(document))
+    original = path.read_bytes()
+    opened = runtime.open_project(saved['id'])
+    assert opened['presets']['t1'][0]['name'] == 'Original'
+    assert path.read_bytes() == original
+
+
+def test_players_stats_fixed_template_and_long_values():
+    cfg = {**scoreboard.DEF_T6, 'player_name': 'A Long Player Name', 'country': 'United States',
+           'age': '26', 'total_wl': '140/100', 'debut_year': '2025',
+           'favourite_hand': 'Right (Double Handed Backhand)'}
+    image = scoreboard.render_t6(cfg)
+    assert image.size == (1920, 1080)
+    assert scoreboard.WEB_TEMPLATE_NAMES[scoreboard.WEB_TEMPLATE_KEYS.index('t6')] == 'Players Stats'
+    assert image.getbbox() == (0, 0, 1920, 1080)
+
+
+@pytest.mark.skip(reason='Retired project editor UI; active preset and On Air UI covered in test_scoreboard_library.py')
+def test_project_lock_and_players_stats_browser(tmp_path):
+    import threading
+    from http.server import ThreadingHTTPServer
+    from playwright.sync_api import sync_playwright, expect
+    runtime = scoreboard_web.ScoreboardWebRuntime(scoreboard, tmp_path / 'uploads')
+    server = ThreadingHTTPServer(('127.0.0.1', 0), scoreboard_web.make_handler(runtime))
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page(viewport={'width': 1600, 'height': 1000})
+            errors = []
+            page.on('pageerror', lambda error: errors.append(str(error)))
+            page.on('dialog', lambda dialog: dialog.accept())
+            page.goto(f'http://127.0.0.1:{server.server_port}/scoreboard')
+            page.locator('#template option[value=t6]').wait_for(state='attached')
+            page.select_option('#template', 't6')
+            for key, value in [('player_name','Test Player'),('country','India'),('age','26'),
+                               ('total_wl','4/0'),('debut_year','2025'),('favourite_hand','Right (Double Handed Backhand)')]:
+                page.locator(f'[data-scalar={key}]').fill(value)
+            page.locator('#savePreset').click()
+            page.locator('#projectName').fill('Match project')
+            page.locator('#projectPassword').fill('browser-test')
+            page.locator('#projectPasswordConfirm').fill('browser-test')
+            page.locator('#confirmProjectSave').click()
+            expect(page.locator('#saveDialog')).not_to_be_visible()
+            expect(page.locator('[data-scalar=age]')).to_be_enabled()
+            page.locator('[data-scalar=age]').fill('27')
+            page.locator('#savePreset').click()
+            expect(page.locator('#savePreset')).to_be_enabled()
+            expect(page.locator('#saveDialog')).not_to_be_visible()
+            page.locator('#editProject').click()
+            expect(page.locator('[data-scalar=age]')).to_be_disabled()
+            expect(page.locator('#template')).to_be_enabled()
+            page.locator('#editProject').click()
+            page.locator('#editPassword').fill('wrong')
+            page.locator('#confirmUnlock').click()
+            expect(page.locator('#unlockError')).to_contain_text('Incorrect')
+            page.locator('#editPassword').fill('browser-test')
+            page.locator('#confirmUnlock').click()
+            expect(page.locator('[data-scalar=age]')).to_be_enabled()
+            page.locator('[data-scalar=age]').fill('28')
+            with page.expect_response('**/api/presets/save'):
+                page.locator('#savePreset').click()
+            expect(page.locator('[data-scalar=age]')).to_be_enabled()
+            first_id = page.locator('#presetSelect').input_value()
+            page.locator('#newPlayer').click()
+            for key,value in [('player_name','Second Player'),('country','France'),('age','22')]:
+                page.locator(f'[data-scalar={key}]').fill(value)
+            page.locator('#savePreset').click()
+            page.locator('#presetName').fill('Second player stats')
+            page.locator('#confirmPreset').click()
+            expect(page.locator('#presetDialog')).not_to_be_visible()
+            expect(page.locator('#presetCountry option')).to_have_count(3)
+            page.select_option('#presetSelect', first_id)
+            expect(page.locator('[data-scalar=age]')).to_have_value('28')
+            page.select_option('#template','t1')
+            expect(page.locator('#presetSelect option')).to_have_count(1)
+            page.select_option('#template','t6')
+            expect(page.locator('[data-scalar=age]')).to_have_value('28')
+            page.locator('#openProject').click()
+            page.locator('#projectSearch').fill('Match project')
+            page.locator('#projectList button').click()
+            page.select_option('#presetSelect', first_id)
+            expect(page.locator('[data-scalar=age]')).to_have_value('28')
+            expect(page.locator('[data-scalar=age]')).to_be_disabled()
+            page.wait_for_function("document.getElementById('preview').naturalWidth===1920")
+            expect(page.locator('.preview-tools')).not_to_be_visible()
+            page.wait_for_timeout(500)
+            page.screenshot(path=str(tmp_path / 'players-stats-desktop.png'), full_page=True)
+            page.set_viewport_size({'width':390,'height':844})
+            assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+            assert page.locator('#template').bounding_box()['height'] == 34
+            page.screenshot(path=str(tmp_path / 'players-stats-mobile.png'), full_page=True)
+            assert not errors
+            browser.close()
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join()
 
 
 def test_gif_files_are_selectable_and_load_the_first_animation_frame(tmp_path: Path) -> None:
@@ -468,8 +647,8 @@ def test_single_player_renderer_composites_player_and_logo(monkeypatch) -> None:
 
     image = scoreboard.render_t1(config)
 
-    assert image.getpixel((512, 288)) == (240, 20, 30)
-    assert image.getpixel((922, 58)) == (20, 220, 60)
+    assert image.getpixel((image.width//2, image.height//2)) == (240, 20, 30)
+    assert image.getpixel((int(image.width*.9), int(image.height*.1))) == (20, 220, 60)
 
 
 def test_single_player_row_colors_override_group_colors() -> None:

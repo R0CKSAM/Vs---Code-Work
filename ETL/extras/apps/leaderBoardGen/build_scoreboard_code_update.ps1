@@ -16,7 +16,7 @@ if (-not $destinationPath.StartsWith($outputPrefix, [System.StringComparison]::O
 New-Item -ItemType Directory -Path $outputRoot -Force | Out-Null
 $staging = Join-Path $outputRoot (".code-update-" + [guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $staging -Force | Out-Null
-$runtimeFiles = @("scoreboard_app.py", "scoreboard_web.py", "scoreboard_web.html")
+$runtimeFiles = @("scoreboard_app.py", "scoreboard_web.py", "scoreboard_media.py", "scoreboard_web.html", "players_stats_background.png", "qualifier_rounds_background.png", "head2head_background.png", "country_flags.zip", "country_flags.json", "QUALIFIER_ROUNDS.txt", "import_davis_players.py", "davis_cup_2026_round2.csv", "DAVIS_PLAYER_IMPORT.md", "publish_davis_presets.py", "prepare_korea_preview.py", "fill_davis_photos.py", "fill_qualifier_results.py", "davis_2026_round1_results.json")
 
 try {
     $hashes = [ordered]@{}
@@ -32,6 +32,8 @@ try {
         files = $hashes
     }
     $manifest | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $staging "manifest.json") -Encoding UTF8
+    Copy-Item -LiteralPath (Join-Path $source 'portable_support\apply_code_update.ps1') -Destination $staging
+    Copy-Item -LiteralPath (Join-Path $source 'portable_support\PROJECTS_UPDATE.txt') -Destination $staging
 
     if (Test-Path -LiteralPath $destinationPath) {
         Remove-Item -LiteralPath $destinationPath -Force

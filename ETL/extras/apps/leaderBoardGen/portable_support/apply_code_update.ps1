@@ -13,7 +13,7 @@ if (-not (Test-Path -LiteralPath $updatePath)) {
     throw "Place VetoScoreboardCodeUpdate.zip in this folder, then run this updater again."
 }
 
-$runtimeFiles = @("scoreboard_app.py", "scoreboard_web.py", "scoreboard_web.html")
+$runtimeFiles = @("scoreboard_app.py", "scoreboard_web.py", "scoreboard_media.py", "scoreboard_web.html", "players_stats_background.png", "qualifier_rounds_background.png", "head2head_background.png", "country_flags.zip", "country_flags.json", "QUALIFIER_ROUNDS.txt", "import_davis_players.py", "davis_cup_2026_round2.csv", "DAVIS_PLAYER_IMPORT.md", "publish_davis_presets.py", "prepare_korea_preview.py", "fill_davis_photos.py", "fill_qualifier_results.py", "davis_2026_round1_results.json")
 $dataRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot "data"))
 New-Item -ItemType Directory -Path $dataRoot -Force | Out-Null
 $staging = Join-Path $dataRoot ("update_staging_" + [guid]::NewGuid().ToString("N"))

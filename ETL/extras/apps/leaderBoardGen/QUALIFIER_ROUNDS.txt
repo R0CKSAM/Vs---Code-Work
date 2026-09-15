@@ -1,0 +1,25 @@
+Qualifier Rounds
+===============
+Uses qualifier_rounds_background.png supplied by the operator.
+Country flags and English country names: https://flagcdn.com/
+Source documentation: https://flagpedia.net/download/api
+Flag images are bundled in country_flags.zip for offline rendering.
+Names are matched case-insensitively; ISO two-letter codes are also accepted.
+Korea maps to South Korea (KR). Unrecognized countries show no flag.
+The heading QUALIFIER ROUND 1 and RESULTS label are part of the supplied artwork.
+Editable fields: left country, right country, overall score, M1-M5 left/right text.
+Copy the artwork, flag ZIP and country JSON with the updated runtime files.
+
+2026 Round 1 result import
+-------------------------
+fill_qualifier_results.py creates review PNGs and a source-attributed plan by default.
+Use --output <new-folder>; --publish additionally fills empty saved country presets.
+Publishing requires host editor credentials and uses revision checks plus backup history.
+Existing operator results are preserved. Live output is never changed by the importer.
+davis_2026_round1_results.json records source URLs and the fallback-source limitation.
+M1-M5 show W (win) or L (loss), with the overall tie result retained above.
+NOT PLAYED is not a loss. Pending matches remain blank.
+--convert-set-scores converts only unchanged imported numeric results to W/L.
+Original set scores remain in the source JSON and backup history.
+Spain received a bye into Round 2 and has no Round 1 match scores.
+Review source provenance and rendered results before taking them on air.

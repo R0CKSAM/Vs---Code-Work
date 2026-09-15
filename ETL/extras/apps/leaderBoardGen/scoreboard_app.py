@@ -82,6 +82,11 @@ VIDEO_EXPORT_PRESETS = {
     },
 }
 
+MP4_EXPORT_PRESETS = {**VIDEO_EXPORT_PRESETS,
+    'UHD 2160p25': {'width':3840,'height':2160,'fps':25,'level':'5.1'},
+    'UHD 2160p50': {'width':3840,'height':2160,'fps':50,'level':'5.2'},
+}
+
 DECKLINK_OUTPUTS = {
     "DeckLink output 1 (device 0)": 0,
     "DeckLink output 2 (device 1)": 1,
@@ -411,7 +416,7 @@ def build_mp4_command(
     ffmpeg: str, source_png: Path, output_mp4: Path, preset_name: str, duration: int,
 ) -> List[str]:
     """Build a deterministic, DeckLink-host-friendly H.264 MP4 command."""
-    preset = VIDEO_EXPORT_PRESETS.get(preset_name)
+    preset = MP4_EXPORT_PRESETS.get(preset_name)
     if preset is None:
         raise ValueError(f"Unknown video preset: {preset_name}")
     duration = max(1, min(3600, int(duration)))
@@ -447,6 +452,8 @@ def prepare_broadcast_frame(image: Image.Image, preset_name: str) -> Image.Image
         raise ValueError(f"Unknown video preset: {preset_name}")
     width, height = preset["width"], preset["height"]
     source = image.convert("RGB")
+    if source.size == (width, height):
+        return source
     scale = min(width / source.width, height / source.height)
     fitted_size = (
         max(1, int(round(source.width * scale))),
@@ -587,6 +594,13 @@ class DeckLinkLiveOutput:
         frame = prepare_broadcast_frame(image, self.preset_name)
         with self._frame_lock:
             self._frame_data = frame.tobytes("raw", "RGB")
+
+    def snapshot_frame(self):
+        """Copy the software output frame, not an SDI hardware return feed."""
+        with self._frame_lock:
+            data = self._frame_data
+        mode = VIDEO_EXPORT_PRESETS[self.preset_name]
+        return Image.frombytes('RGB',(mode['width'],mode['height']),data) if data else None
 
     def _feed_frames(self) -> None:
         fps = VIDEO_EXPORT_PRESETS[self.preset_name]["fps"]
@@ -1114,31 +1128,12 @@ def apply_t1_panel_effect(
 # CANVAS SIZES
 # ═══════════════════════════════════════════════════════════════════════════
 
-T1_SIZES = {
-    "16:9  (1920x1080)": (1920, 1080),
-    "16:9  (1024x576)":  (1024, 576),
-    "1:1   (1024x1024)": (1024, 1024),
-    "9:16  (576x1024)":  (576, 1024),
-}
-T2_SIZES = {
-    "Wide  (1152x640)":  (1152, 640),
-    "Square(1080x1080)": (1080, 1080),
-    "Story (1080x1920)": (1080, 1920),
-}
-T3_SIZES = {
-    "Square(1080x1080)": (1080, 1080),
-    "Wide  (1280x720)":  (1280, 720),
-    "4:5   (1080x1350)": (1080, 1350),
-}
-T4_SIZES = {
-    "Square(1080x1080)": (1080, 1080),
-    "Wide  (1620x1080)": (1620, 1080),
-    "4:5   (1080x1350)": (1080, 1350),
-}
-T5_SIZES = {
-    "HD  (1920x1080)": (1920, 1080),
-    "4K  (3840x2160)": (3840, 2160),
-}
+BROADCAST_SIZES = {"HD  (1920x1080)": (1920,1080), "4K  (3840x2160)": (3840,2160)}
+T1_SIZES = BROADCAST_SIZES.copy()
+T2_SIZES = BROADCAST_SIZES.copy()
+T3_SIZES = BROADCAST_SIZES.copy()
+T4_SIZES = BROADCAST_SIZES.copy()
+T5_SIZES = BROADCAST_SIZES.copy()
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -1148,7 +1143,7 @@ T5_SIZES = {
 # ═══════════════════════════════════════════════════════════════════════════
 
 def render_t1(cfg: Dict) -> Image.Image:
-    W, H = T1_SIZES.get(cfg.get("canvas_size","16:9  (1920x1080)"), (1920,1080))
+    W, H = T1_SIZES.get(cfg.get('canvas_size'), (1920,1080))
     render_scale = max(1, int(cfg.get("_render_scale", 1)))
     W, H = W * render_scale, H * render_scale
     acc   = normalize_rgb(cfg.get("accent_color"), THEME["accent"])
@@ -1365,7 +1360,7 @@ def _pill_row(draw, x0, w, cy, rh, bh, label, value, other_value,
     return by1
 
 def render_t2(cfg: Dict) -> Image.Image:
-    W, H = T2_SIZES.get(cfg.get("canvas_size","Wide  (1152x640)"), (1152,640))
+    W, H = T2_SIZES.get(cfg.get('canvas_size'), (1920,1080))
     render_scale = max(1, int(cfg.get("_render_scale", 1)))
     W, H = W * render_scale, H * render_scale
     acc  = normalize_rgb(cfg.get("accent_color"), THEME["accent"])
@@ -1556,7 +1551,7 @@ def render_t2(cfg: Dict) -> Image.Image:
 # ═══════════════════════════════════════════════════════════════════════════
 
 def render_t3(cfg: Dict) -> Image.Image:
-    W, H = T3_SIZES.get(cfg.get("canvas_size","Square(1080x1080)"), (1080,1080))
+    W, H = T3_SIZES.get(cfg.get('canvas_size'), (1920,1080))
     render_scale = max(1, int(cfg.get("_render_scale", 1)))
     W, H = W * render_scale, H * render_scale
     acc  = normalize_rgb(cfg.get("accent_color"), THEME["accent"])
@@ -1794,7 +1789,7 @@ def render_t3(cfg: Dict) -> Image.Image:
 # ═══════════════════════════════════════════════════════════════════════════
 
 def render_t4(cfg: Dict) -> Image.Image:
-    W, H = T4_SIZES.get(cfg.get("canvas_size","Square(1080x1080)"), (1080,1080))
+    W, H = T4_SIZES.get(cfg.get('canvas_size'), (1920,1080))
     render_scale = max(1, int(cfg.get("_render_scale", 1)))
     W, H = W * render_scale, H * render_scale
     acc  = normalize_rgb(cfg.get("accent_color"), THEME["accent"])
@@ -2566,7 +2561,7 @@ class MP4ExportDialog(_TkToplevel):
         self.grab_set()
         self._on_export = on_export
         self.preset_var = tk.StringVar(
-            value=preset if preset in VIDEO_EXPORT_PRESETS else next(iter(VIDEO_EXPORT_PRESETS))
+            value=preset if preset in MP4_EXPORT_PRESETS else next(iter(MP4_EXPORT_PRESETS))
         )
         self.duration_var = tk.StringVar(value=str(duration))
 
@@ -2574,7 +2569,7 @@ class MP4ExportDialog(_TkToplevel):
         body.pack(fill="both", expand=True)
         ttk.Label(body, text="Video format:").grid(row=0, column=0, sticky="w", pady=4)
         ttk.Combobox(
-            body, textvariable=self.preset_var, values=list(VIDEO_EXPORT_PRESETS),
+            body, textvariable=self.preset_var, values=list(MP4_EXPORT_PRESETS),
             state="readonly", width=22,
         ).grid(row=0, column=1, sticky="ew", padx=(10, 0), pady=4)
         ttk.Label(body, text="Duration (seconds):").grid(row=1, column=0, sticky="w", pady=4)
@@ -3060,14 +3055,322 @@ TEMPLATE_NAMES = [
     "3 Player Spotlight",
 ]
 TEMPLATE_KEYS = ("t1", "t2", "t3", "t4")
-WEB_TEMPLATE_NAMES = TEMPLATE_NAMES + ["Player Band"]
-WEB_TEMPLATE_KEYS = TEMPLATE_KEYS + ("t5",)
+T6_SIZES = BROADCAST_SIZES.copy()
+DEF_T6 = {
+    "template": "t6", "canvas_size": "HD  (1920x1080)",
+    "player_name": "", "country": "", "age": "", "total_wl": "",
+    "debut_year": "", "favourite_hand": "", "player_path": "",
+    "player_offset_x_pct": 0, "player_offset_y_pct": 0, "player_size_pct": 100,
+    "accent_color": [50, 237, 189], "background_color": [8, 56, 48],
+    "text_styles": {}, "rows": [],
+}
+TEXT_STYLE_TARGETS['t6'] = [('all', 'All text')]
+
+
+def render_t6(cfg: Dict) -> Image.Image:
+    """Fixed Players Stats artwork with fitted operator-entered values."""
+    scale = max(1, int(cfg.get('_render_scale', 1)))
+    W, H = T6_SIZES.get(cfg.get('canvas_size'), (1920,1080))
+    W, H = W * scale, H * scale
+    artwork = Path(__file__).resolve().with_name('players_stats_background.png')
+    with Image.open(artwork) as source:
+        img = source.convert('RGB').resize((W, H), Image.Resampling.LANCZOS)
+    portrait = load_photo(cfg.get('player_path', ''))
+    if portrait:
+        # Contain instead of crop so transparent player cutouts retain their edges.
+        box_w, box_h = int(W * .40), int(H * .97)
+        factor = min(box_w / portrait.width, box_h / portrait.height)
+        factor *= clamp_number(cfg.get('player_size_pct'), 10, 300, 100) / 100
+        portrait = portrait.resize((max(1, int(portrait.width * factor)), max(1, int(portrait.height * factor))), Image.Resampling.LANCZOS)
+        x = int(W * .10) + (box_w - portrait.width) // 2
+        y = H - portrait.height
+        x += round(W * clamp_number(cfg.get('player_offset_x_pct'), -100, 100, 0) / 100)
+        y += round(H * clamp_number(cfg.get('player_offset_y_pct'), -100, 100, 0) / 100)
+        img.paste(portrait, (x, y), portrait)
+    draw = ImageDraw.Draw(img)
+    ink = (8, 48, 40)
+    factory = lambda size: _lf(['C:/Windows/Fonts/impact.ttf'] + _BOLD, size)
+    for key, y in [('age', .285), ('total_wl', .458), ('debut_year', .630)]:
+        value = str(cfg.get(key, ''))
+        font = fit_font(draw, value, int(W * .19), int(H * .115), minimum=1, factory=factory)
+        draw_text_centered(draw, value, font, int(W * .872), int(H * y), ink)
+    value = str(cfg.get('favourite_hand', ''))
+    lines = value.splitlines() or ['']
+    if len(lines) > 2:
+        lines = [lines[0], ' '.join(lines[1:])]
+    if len(lines) == 1 and ' (' in value:
+        head, tail = value.split(' (', 1)
+        lines = [head, '(' + tail]
+    if len(lines) == 1 and len(value) > 25:
+        words = value.split()
+        best = min(range(1, len(words)), key=lambda n: abs(len(' '.join(words[:n])) - len(' '.join(words[n:]))), default=0)
+        if best:
+            lines = [' '.join(words[:best]), ' '.join(words[best:])]
+    size = int(H * .055)
+    while size > 1:
+        font = factory(size)
+        if max(text_bbox(draw, line, font)[0] for line in lines) <= W * .44 and len(lines) * size * 1.2 <= H * .13:
+            break
+        size -= 1
+    for index, line in enumerate(lines):
+        draw_text_centered(draw, line, factory(size), int(W * .734), int(H * .879 + (index - (len(lines)-1)/2) * size * 1.2), ink)
+    name, country = str(cfg.get('player_name', '')), str(cfg.get('country', ''))
+    if name or country:
+        strip = Image.new('RGB', (int(H * .603), int(W * .072)), (8, 56, 48))
+        sd = ImageDraw.Draw(strip)
+        split = int(strip.width * .72)
+        for text, cx, available, color, font_size in (
+            (name, split / 2, split - 24 * scale, (237, 230, 232), int(W * .045)),
+            (country, (split + strip.width) / 2, strip.width - split - 24 * scale, (50, 237, 189), int(W * .027)),
+        ):
+            font = fit_font(sd, text, int(available), font_size, minimum=1, factory=factory)
+            draw_text_centered(sd, text, font, int(cx), strip.height // 2, color)
+        sd.line([(split, 16*scale), (split, strip.height-16*scale)], fill=(237,230,232), width=2*scale)
+        img.paste(strip.rotate(90, expand=True), (int(W * .021), int(H * .375)))
+    return img
+
+
+T7_SIZES = T6_SIZES.copy()
+DEF_T7 = {
+    'template':'t7', 'canvas_size':'HD  (1920x1080)',
+    'country_a':'India', 'country_b':'Korea', 'score':'3-2',
+    'accent_color':[8,48,40], 'background_color':[8,48,40], 'text_styles':{},
+    'rows':[{'value_a':'', 'value_b':''} for _ in range(5)],
+}
+TEXT_STYLE_TARGETS['t7'] = [('all', 'All text')]
+
+
+QUALIFIER_ALPHA3 = dict(pair.split(':') for pair in '''
+ad:AND ae:ARE af:AFG ag:ATG ai:AIA al:ALB am:ARM ao:AGO aq:ATA ar:ARG as:ASM at:AUT au:AUS aw:ABW ax:ALA az:AZE
+ba:BIH bb:BRB bd:BGD be:BEL bf:BFA bg:BGR bh:BHR bi:BDI bj:BEN bl:BLM bm:BMU bn:BRN bo:BOL bq:BES br:BRA bs:BHS bt:BTN bv:BVT bw:BWA by:BLR bz:BLZ
+ca:CAN cc:CCK cd:COD cf:CAF cg:COG ch:CHE ci:CIV ck:COK cl:CHL cm:CMR cn:CHN co:COL cr:CRI cu:CUB cv:CPV cw:CUW cx:CXR cy:CYP cz:CZE
+de:DEU dj:DJI dk:DNK dm:DMA do:DOM dz:DZA ec:ECU ee:EST eg:EGY eh:ESH er:ERI es:ESP et:ETH
+fi:FIN fj:FJI fk:FLK fm:FSM fo:FRO fr:FRA ga:GAB gb:GBR gd:GRD ge:GEO gf:GUF gg:GGY gh:GHA gi:GIB gl:GRL gm:GMB gn:GIN gp:GLP gq:GNQ gr:GRC gs:SGS gt:GTM gu:GUM gw:GNB gy:GUY
+hk:HKG hm:HMD hn:HND hr:HRV ht:HTI hu:HUN id:IDN ie:IRL il:ISR im:IMN in:IND io:IOT iq:IRQ ir:IRN is:ISL it:ITA
+je:JEY jm:JAM jo:JOR jp:JPN ke:KEN kg:KGZ kh:KHM ki:KIR km:COM kn:KNA kp:PRK kr:KOR kw:KWT ky:CYM kz:KAZ
+la:LAO lb:LBN lc:LCA li:LIE lk:LKA lr:LBR ls:LSO lt:LTU lu:LUX lv:LVA ly:LBY
+ma:MAR mc:MCO md:MDA me:MNE mf:MAF mg:MDG mh:MHL mk:MKD ml:MLI mm:MMR mn:MNG mo:MAC mp:MNP mq:MTQ mr:MRT ms:MSR mt:MLT mu:MUS mv:MDV mw:MWI mx:MEX my:MYS mz:MOZ
+na:NAM nc:NCL ne:NER nf:NFK ng:NGA ni:NIC nl:NLD no:NOR np:NPL nr:NRU nu:NIU nz:NZL om:OMN
+pa:PAN pe:PER pf:PYF pg:PNG ph:PHL pk:PAK pl:POL pm:SPM pn:PCN pr:PRI ps:PSE pt:PRT pw:PLW py:PRY qa:QAT
+re:REU ro:ROU rs:SRB ru:RUS rw:RWA sa:SAU sb:SLB sc:SYC sd:SDN se:SWE sg:SGP sh:SHN si:SVN sj:SJM sk:SVK sl:SLE sm:SMR sn:SEN so:SOM sr:SUR ss:SSD st:STP sv:SLV sx:SXM sy:SYR sz:SWZ
+tc:TCA td:TCD tf:ATF tg:TGO th:THA tj:TJK tk:TKL tl:TLS tm:TKM tn:TUN to:TON tr:TUR tt:TTO tv:TUV tw:TWN tz:TZA
+ua:UKR ug:UGA um:UMI us:USA uy:URY uz:UZB va:VAT vc:VCT ve:VEN vg:VGB vi:VIR vn:VNM vu:VUT wf:WLF ws:WSM ye:YEM yt:MYT za:ZAF zm:ZMB zw:ZWE
+'''.split())
+
+
+def qualifier_country_label(country):
+    """ISO 3166-1 alpha-3 display labels, not truncated country names."""
+    return QUALIFIER_ALPHA3.get(qualifier_country_code(country), '---')
+
+
+def qualifier_country_code(country):
+    """Resolve names and ISO codes locally; never guess an unrecognized flag."""
+    names = json.loads(Path(__file__).with_name('country_flags.json').read_text(encoding='utf-8-sig'))
+    aliases = {'korea':'kr', 'republic of korea':'kr', 'usa':'us', 'uk':'gb',
+               'great britain':'gb', 'czech republic':'cz', 'pr china':'cn',
+               'united states of america':'us'}
+    value = ' '.join(str(country).strip().casefold().split())
+    if value in aliases:
+        return aliases[value]
+    alpha2 = next((code for code,alpha3 in QUALIFIER_ALPHA3.items() if alpha3.casefold() == value), None)
+    if alpha2:
+        return alpha2
+    return value if value in names else next((code for code,name in names.items() if name.casefold() == value), None)
+
+
+def render_t7(cfg: Dict) -> Image.Image:
+    """Qualifier results board using supplied artwork and bundled country flags."""
+    import zipfile
+    import io
+    scale = max(1, int(cfg.get('_render_scale', 1)))
+    W, H = T7_SIZES.get(cfg.get('canvas_size'), (1920,1080))
+    W, H = W * scale, H * scale
+    with Image.open(Path(__file__).with_name('qualifier_rounds_background.png')) as source:
+        img = source.convert('RGB').resize((W,H), Image.Resampling.LANCZOS)
+    draw = ImageDraw.Draw(img)
+    def fitted(value, cx, cy, width, height, size, color):
+        value = str(value).replace('\n', ' ')
+        font = fit_font(draw, value, int(W*width), int(H*size), minimum=1)
+        while text_bbox(draw,value,font)[1] > H*height and font.size > 1:
+            font = fb(font.size-1)
+        draw_text_centered(draw,value,font,int(W*cx),int(H*cy),color)
+    ink = (2,35,24)
+    for suffix, flag_x, name_x, header_x in [('a',.20,.305,.352),('b',.802,.69,.665)]:
+        country = str(cfg.get('country_'+suffix,''))
+        code = qualifier_country_code(country)
+        if code:
+            with zipfile.ZipFile(Path(__file__).with_name('country_flags.zip')) as archive:
+                with Image.open(io.BytesIO(archive.read(code+'.png'))) as source:
+                    flag = source.convert('RGBA')
+            flag.thumbnail((int(W*.073),int(H*.085)),Image.Resampling.LANCZOS)
+            img.paste(flag,(int(W*flag_x-flag.width/2),int(H*.376-flag.height/2)),flag)
+        label = qualifier_country_label(country)
+        fitted(label,name_x,.376,.155,.08,.052,(255,255,255))
+        fitted(label,header_x,.535,.28,.055,.050,(0,0,0))
+    fitted(cfg.get('score',''),.50,.35,.13,.07,.075,ink)
+    for index,row in enumerate(cfg.get('rows',[])[:5]):
+        y = .604 + index*.0702
+        fitted(row.get('value_a',''),.385,y,.224,.057,.034,ink)
+        fitted(row.get('value_b',''),.666,y,.302,.057,.034,ink)
+    return img
+
+
+T8_SIZES = BROADCAST_SIZES.copy()
+DEF_T8 = {'template':'t8','canvas_size':'HD  (1920x1080)', 'media_path':'',
+    'poster_path':'','media_kind':'image','loop':True,'rows':[],
+    'accent_color':[255,255,255],'background_color':[0,0,0],'text_styles':{},'text_boxes':[]}
+TEXT_STYLE_TARGETS['t8'] = [('all','All text')]
+
+
+def normalise_custom_text_boxes(value):
+    boxes = []
+    for incoming in (value[:20] if isinstance(value,list) else []):
+        if not isinstance(incoming,dict):
+            continue
+        def number(key, low, high, default):
+            import math
+            default = max(low,min(high,default))
+            try:
+                val = float(incoming.get(key,default))
+                return max(low,min(high,val)) if math.isfinite(val) else default
+            except (TypeError,ValueError,OverflowError):
+                return default
+        width,height = number('width',2,100,40),number('height',2,100,15)
+        boxes.append(dict(text=str(incoming.get('text',''))[:2000],
+            x=number('x',0,100-width,10),y=number('y',0,100-height,75),
+            width=width,height=height,font_size=number('font_size',8,180,54),
+            color=list(normalize_rgb(incoming.get('color'),(255,255,255))),
+            background=list(normalize_rgb(incoming.get('background'),(0,0,0))),
+            opacity=number('opacity',0,100,65),bold=bool(incoming.get('bold',True)),
+            align=incoming.get('align') if incoming.get('align') in ('left','center','right') else 'left',
+            font_family=incoming.get('font_family') if incoming.get('font_family') in FONT_CHOICES else 'Default'))
+    return boxes
+
+
+def render_custom_text_overlay(cfg, size):
+    """Render transparent, resolution-independent text boxes for every output path."""
+    overlay = Image.new('RGBA',size,(0,0,0,0))
+    W,H = size
+    for box in normalise_custom_text_boxes(cfg.get('text_boxes')):
+        x,y = round(W*box['x']/100),round(H*box['y']/100)
+        w,h = max(1,round(W*box['width']/100)),max(1,round(H*box['height']/100))
+        layer = Image.new('RGBA',(w,h),(*box['background'],round(255*box['opacity']/100)))
+        draw = ImageDraw.Draw(layer)
+        padding = max(1,min(round(H/108),w//10,h//10))
+        style = {'text_styles':{'all':{'font_family':box['font_family']}}}
+        def layout(font_size):
+            font = text_font(style,'all',font_size,'bold' if box['bold'] else 'regular')
+            lines = []
+            for paragraph in box['text'].split('\n'):
+                line = ''
+                for word in paragraph.split():
+                    candidate = (line+' '+word).strip()
+                    if line and draw.textlength(candidate,font=font) > w-2*padding:
+                        lines.append(line)
+                        line = word
+                    else:
+                        line = candidate
+                lines.append(line)
+            text = '\n'.join(lines)
+            spacing = max(1,round(font_size*.16))
+            bounds = draw.multiline_textbbox((0,0),text,font=font,spacing=spacing,align=box['align'])
+            return font,text,spacing,bounds
+        low,high = 1,max(1,round(box['font_size']*H/1080))
+        while low < high:
+            mid = (low+high+1)//2
+            *_,bounds = layout(mid)
+            if bounds[2]-bounds[0] <= w-2*padding and bounds[3]-bounds[1] <= h-2*padding:
+                low = mid
+            else:
+                high = mid-1
+        font,text,spacing,bounds = layout(low)
+        tw,th = bounds[2]-bounds[0],bounds[3]-bounds[1]
+        tx = padding if box['align']=='left' else w-padding-tw if box['align']=='right' else (w-tw)/2
+        draw.multiline_text((tx-bounds[0],(h-th)/2-bounds[1]),text,font=font,
+            fill=(*box['color'],255),spacing=spacing,align=box['align'])
+        overlay.alpha_composite(layer,(x,y))
+    return overlay
+
+
+def render_t8(cfg):
+    width,height = T8_SIZES.get(cfg.get('canvas_size'), (1920,1080))
+    scale = max(1,int(cfg.get('_render_scale',1)))
+    image = Image.new('RGB',(width*scale,height*scale),'black')
+    path = cfg.get('poster_path') if cfg.get('media_kind') == 'video' else cfg.get('media_path')
+    source = load_photo(path or '')
+    if source:
+        source.thumbnail(image.size,Image.Resampling.LANCZOS)
+        # Fit small and large source images into the same broadcast raster.
+        ratio = min(image.width/source.width,image.height/source.height)
+        source = source.resize((max(1,round(source.width*ratio)),max(1,round(source.height*ratio))),Image.Resampling.LANCZOS)
+        image.paste(source,((image.width-source.width)//2,(image.height-source.height)//2),source)
+    overlay = render_custom_text_overlay(cfg,image.size)
+    image.paste(overlay,(0,0),overlay)
+    return image
+
+
+T9_SIZES = BROADCAST_SIZES.copy()
+DEF_T9 = {
+    'template':'t9', 'canvas_size':'HD  (1920x1080)',
+    'player_a':'', 'player_b':'', 'country_a':'India', 'country_b':'Korea',
+    'photo_a':'', 'photo_b':'', 'meeting':'FIRST MEETING',
+    'photo_a_offset_x_pct':0, 'photo_a_offset_y_pct':0, 'photo_a_size_pct':100,
+    'photo_b_offset_x_pct':0, 'photo_b_offset_y_pct':0, 'photo_b_size_pct':100,
+    'accent_color':[8,48,40], 'background_color':[8,48,40], 'text_styles':{},
+    'rows':[{'label':label, 'value_a':'', 'value_b':''} for label in
+            ('ATP Ranking','Age','2026 W-L','Career High','Davis Cup W-L','Head-to-Head')],
+}
+TEXT_STYLE_TARGETS['t9'] = [('all', 'All text')]
+
+
+def render_t9(cfg: Dict) -> Image.Image:
+    """Fixed Head2Head artwork with fitted copy and two contained player images."""
+    W, H = T9_SIZES.get(cfg.get('canvas_size'), (1920,1080))
+    with Image.open(Path(__file__).with_name('head2head_background.png')) as source:
+        img = source.convert('RGB').resize((W,H), Image.Resampling.LANCZOS)
+    for suffix, left in (('a',.015), ('b',.705)):
+        photo = load_photo(cfg.get('photo_'+suffix,''))
+        if photo is not None:
+            ratio = min(W*.29/photo.width,H*.735/photo.height)
+            ratio *= clamp_number(cfg.get('photo_'+suffix+'_size_pct'),10,300,100)/100
+            photo = photo.resize((max(1,int(photo.width*ratio)),max(1,int(photo.height*ratio))),Image.Resampling.LANCZOS)
+            x=int(W*(left+.145)-photo.width/2)+round(W*clamp_number(cfg.get('photo_'+suffix+'_offset_x_pct'),-100,100,0)/100)
+            y=int(H*.803)-photo.height+round(H*clamp_number(cfg.get('photo_'+suffix+'_offset_y_pct'),-100,100,0)/100)
+            img.paste(photo,(x,y),photo)
+    draw = ImageDraw.Draw(img)
+    def fitted(value, x, y, width, height, size, color):
+        value = str(value).replace('\n',' ')
+        font = fit_font(draw,value,int(W*width),int(H*size),minimum=1)
+        while text_bbox(draw,value,font)[1] > H*height and font.size > 1:
+            font = fb(font.size-1)
+        draw_text_centered(draw,value,font,int(W*x),int(H*y),color)
+    for suffix, x, footer_x in (('a',.365,.167),('b',.643,.826)):
+        country = cfg.get('country_'+suffix,'')
+        fitted(country,x,.368,.103,.048,.041,(132,255,206))
+        fitted(cfg.get('player_'+suffix,''),footer_x,.85,.235,.055,.047,(255,255,255))
+        fitted(country,footer_x,.903,.23,.036,.032,(255,255,255))
+    fitted('VS',.504,.368,.14,.047,.037,(255,255,255))
+    for index,row in enumerate(cfg.get('rows',[])[:6]):
+        y = (.43,.49,.55,.61,.67,.741)[index]
+        fitted(row.get('label',''),.504,y,.153,.047,.025,(25,32,29))
+        for field,x in (('value_a',.365),('value_b',.643)):
+            fitted(row.get(field,''),x,y,.101,.047,.036,(255,255,255))
+    fitted(cfg.get('meeting',''),.5,.867,.307,.089,.055,(0,58,42))
+    return img
+
+
+WEB_TEMPLATE_NAMES = TEMPLATE_NAMES + ["Player Band", "Players Stats", "Qualifier Rounds", "Custom Upload", "Head2Head"]
+WEB_TEMPLATE_KEYS = TEMPLATE_KEYS + ("t5", "t6", "t7", "t8", "t9")
 RENDERERS = {
     "t1": render_t1,
     "t2": render_t2,
     "t3": render_t3,
     "t4": render_t4,
     "t5": render_t5,
+    "t6": render_t6,
+    "t7": render_t7,
+    "t8": render_t8,
+    "t9": render_t9,
 }
 DEFAULT_CONFIGS = {
     "t1": DEF_T1,
@@ -3075,7 +3378,15 @@ DEFAULT_CONFIGS = {
     "t3": DEF_T3,
     "t4": DEF_T4,
     "t5": DEF_T5,
+    "t6": DEF_T6,
+    "t7": DEF_T7,
+    "t8": DEF_T8,
+    "t9": DEF_T9,
 }
+
+
+for _broadcast_default in DEFAULT_CONFIGS.values():
+    _broadcast_default['canvas_size'] = 'HD  (1920x1080)'
 
 
 def normalise_text_styles(value: Any, template: str) -> Dict[str, Dict[str, Any]]:
@@ -3112,7 +3423,7 @@ def normalise_project_configs(saved: Any) -> Dict[str, Dict]:
     """Merge a saved project with current defaults without trusting its shape."""
     source = saved if isinstance(saved, dict) else {}
     size_options = {
-        "t1":T1_SIZES,"t2":T2_SIZES,"t3":T3_SIZES,"t4":T4_SIZES,"t5":T5_SIZES,
+        "t1":T1_SIZES,"t2":T2_SIZES,"t3":T3_SIZES,"t4":T4_SIZES,"t5":T5_SIZES,"t6":T6_SIZES,"t7":T7_SIZES,"t8":T8_SIZES,"t9":T9_SIZES,
     }
     result: Dict[str, Dict] = {}
     for key, default in DEFAULT_CONFIGS.items():
@@ -3121,6 +3432,39 @@ def normalise_project_configs(saved: Any) -> Dict[str, Dict]:
         if isinstance(candidate, dict):
             config.update(copy.deepcopy(candidate))
         config["template"] = key
+        if key == 't9':
+            config = {field:config.get(field,value) for field,value in default.items()}
+            for side in ('a','b'):
+                for suffix,lo,hi,fallback in (('offset_x_pct',-100,100,0),('offset_y_pct',-100,100,0),('size_pct',10,300,100)):
+                    field='photo_'+side+'_'+suffix
+                    config[field]=clamp_number(config.get(field),lo,hi,fallback)
+            for field in ('player_a','player_b','country_a','country_b','meeting'):
+                config[field] = str(config[field])[:200]
+            rows = config.get('rows')
+            rows = rows if isinstance(rows,list) else []
+            config['rows'] = [
+                {field:str(row.get(field,fallback[field]))[:200] for field in fallback}
+                for index,fallback in enumerate(default['rows'])
+                for row in [rows[index] if index<len(rows) and isinstance(rows[index],dict) else {}]
+            ]
+        if key == 't8':
+            config['text_boxes'] = normalise_custom_text_boxes(config.get('text_boxes'))
+        if key == 't7':
+            config = {field: config.get(field, value) for field,value in default.items()}
+            for field in ('country_a','country_b','score'):
+                config[field] = str(config[field])[:200]
+            incoming_rows = config.get('rows')
+            incoming_rows = incoming_rows if isinstance(incoming_rows,list) else []
+            config['rows'] = [{field:str(row.get(field,''))[:200] for field in ('value_a','value_b')}
+                for row in (incoming_rows + [{}]*5)[:5] if isinstance(row,dict)]
+            config['rows'] += [{'value_a':'','value_b':''} for _ in range(5-len(config['rows']))]
+        if key == 't6':
+            # Keep artwork fixed while allowing the portrait to be positioned.
+            config = {field: config.get(field, value) for field, value in default.items()}
+            for field, low, high in (('player_offset_x_pct',-100,100),('player_offset_y_pct',-100,100),('player_size_pct',10,300)):
+                config[field] = clamp_number(config.get(field), low, high, default[field])
+            for field in ('player_name','country','age','total_wl','debut_year','favourite_hand'):
+                config[field] = str(config.get(field, ''))[:200]
         if config.get("canvas_size") not in size_options[key]:
             config["canvas_size"] = default["canvas_size"]
         accent = config.get("accent_color")

@@ -158,3 +158,14 @@ ETL/output/scoreboard_web/
 ETL/output/portable/
 ETL/extras/apps/leaderBoardGen/scoreboard_app - OG.py
 ETL/extras/apps/leaderBoardGen/scoreboard_app - SDI VERSION.py
+# Local photo processing environment and downloaded model weights.
+ETL/output/davis_cup_2026_round2/cutout_env/
+ETL/output/davis_cup_2026_round2/models/
+
+# Scoreboard runtime data must never be shipped as application source.
+ETL/extras/apps/leaderBoardGen/data/
+ETL/output/davis_cup_2026_round2/
+ETL/output/*.png
+ETL/output/*.jpg
+ETL/output/inspect_players_reference.py
+!ETL/extras/apps/leaderBoardGen/davis_cup_2026_round2.csv

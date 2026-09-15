@@ -1,0 +1,80 @@
+TEMPLATE LIBRARY UPDATE
+
+BROADCAST CANVASES
+All eight layouts now offer HD 1920x1080 and UHD 3840x2160, both 16:9.
+HD is the default for responsive live operation. Uploaded 4K artwork is retained.
+Older square/portrait canvas settings load as HD without rewriting saved files.
+Choose the 4K canvas for native 4K graphics; UHD MP4 export offers 25p and 50p.
+Live DeckLink modes remain HD; match the format to the switcher, not the artwork.
+UHD resolution does not imply HDR or BT.2020 color. MP4 exports remain SDR BT.709.
+
+Replace the portable folder's apply_code_update.ps1 with the one in this ZIP
+before applying the update. The updated installer includes all artwork and flag
+assets required by Players Stats and Qualifier Rounds.
+
+Keep and back up the entire data folder. Do not overwrite it with another PC's
+data. Code updates do not contain saved templates, uploads or credentials.
+
+Workflow: choose a layout in the searchable header dropdown, choose a country,
+then choose a saved player. + creates a new draft. Save template asks for player
+name and country. The same layout + country + player combination cannot be
+overwritten; duplicate saves offer to open the existing entry.
+
+New saves are stored in data/templates beside data/uploads. Existing
+data/projects files are retained and exposed read-only in the library. Project
+editing and project/password controls are removed from the browser workflow.
+
+Start live stream starts DeckLink with a black standby frame. Show on live
+stream explicitly sends the preview. Preview edits and loading templates do not
+change SDI. Red = stopped; yellow = preview waiting to be shown; green on Show =
+this preview is on air. Existing operator priorities still apply.
+
+A restart stops SDI. Start the stream and Show the required graphic afterward.
+
+QUALIFIER COUNTRY LABELS
+Qualifier Rounds displays ISO 3166-1 alpha-3 codes in both country labels.
+Enter full country names, alpha-2 or alpha-3 codes; flags remain matched.
+Examples: India=IND, South Korea=KOR, United Kingdom=GBR, Germany=DEU.
+These are ISO codes, which can differ from tournament/IOC abbreviations.
+Unknown or non-ISO entries display ---; saved country names are not rewritten.
+Standard reference: https://www.iso.org/iso-3166-country-codes.html
+
+CUSTOM UPLOAD
+Choose Custom Upload and select an image or video from your own computer.
+The file transfers to the host's data/uploads directory. Maximum size: 512 MB.
+Save template asks only for a preset name. Names are unique within Custom Upload;
+duplicates offer to open the existing preset, never overwrite it.
+Images: PNG, JPEG, WebP, BMP, AVIF. Video: MP4, MOV, MKV, WebM, AVI, M4V,
+MPEG, TS and animated GIF, subject to the installed FFmpeg decoder support.
+Video uploads and SDI playback require FFmpeg. Browser preview codec support
+can differ; unsupported browser codecs show the poster instead.
+Media fits the 16:9 frame with black borders when needed, without cropping.
+Loop video repeats the source on SDI; otherwise its last frame remains on air.
+SDI output is VIDEO ONLY. Audio is not embedded. MP4 exports also have silence.
+PNG export is a still poster; MP4 export retains moving video and repeats it
+for the requested export duration. Switching to another template stops playback.
+Include scoreboard_media.py when replacing runtime files on another host.
+
+CUSTOM TEXT BOXES
+Custom Upload supports up to 20 independent text boxes saved with each preset.
+Each box has text/background colors, background opacity, font, bold, alignment
+and HD-relative font size. Text wraps and shrinks to fit within its box.
+Drag a box to move it; drag a corner to resize. Percentage position and size
+fields allow precise placement. Arrow keys nudge a focused box; Shift uses 5%.
+Duplicate and Delete affect only the selected box. Later boxes overlay earlier
+ones. Selection outlines and handles never appear in exports or SDI output.
+The same transparent overlay renderer is used for PNG, MP4 and SDI frames.
+Live video overlays are snapshots: edits apply only after Show on live stream.
+
+PREVIEW / ON AIR WORKFLOW
+The editor is Preview. Changing layouts, loading presets and editing content
+never publishes automatically. Start output begins on black. Push On Air sends
+the selected preview; its button then turns green and disables repeated pushes
+until the preview changes. Clear On Air confirms and sends black while keeping
+the SDI output running. Stop output separately confirms before stopping SDI.
+On Air shows the server output buffer at a lightweight 1.5-second refresh rate,
+including current video and text overlays. It is NOT a physical SDI return feed.
+Output name, operator, format and update time identify what is being monitored.
+Connection errors mask stale pictures and disable Push until monitoring resumes.
+Live-operator ownership is enforced by the server. Stale Push/Clear/Stop requests
+are rejected if output changed since the operator last checked its state.
