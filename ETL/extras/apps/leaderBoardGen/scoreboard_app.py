@@ -3365,7 +3365,13 @@ def render_t9(cfg: Dict) -> Image.Image:
             photo = photo.resize((max(1,int(photo.width*ratio)),max(1,int(photo.height*ratio))),Image.Resampling.LANCZOS)
             x=int(W*(left+.145)-photo.width/2)+round(W*clamp_number(cfg.get('photo_'+suffix+'_offset_x_pct'),-100,100,0)/100)
             y=int(H*.803)-photo.height+round(H*clamp_number(cfg.get('photo_'+suffix+'_offset_y_pct'),-100,100,0)/100)
-            img.paste(photo,(x,y),photo)
+            # Keep scaled portraits behind the artwork's footer and outside the
+            # central statistics, including at extreme drag offsets.
+            x0,y0=int(W*left),int(H*.068)
+            x1,y1=int(W*(left+.29)),int(H*.803)
+            portrait=Image.new('RGBA',(x1-x0,y1-y0),(0,0,0,0))
+            portrait.alpha_composite(photo,(x-x0,y-y0))
+            img.paste(portrait,(x0,y0),portrait)
     draw = ImageDraw.Draw(img)
     def fitted(value, x, y, width, height, size, color):
         value = str(value).replace('\n',' ')
@@ -3461,7 +3467,7 @@ def normalise_project_configs(saved: Any) -> Dict[str, Dict]:
     size_options = {
         "t1":T1_SIZES,"t2":T2_SIZES,"t3":T3_SIZES,"t4":T4_SIZES,"t5":T5_SIZES,"t6":T6_SIZES,"t7":T7_SIZES,"t8":T8_SIZES,"t9":T9_SIZES,
     }
-    size_options.update({key:BROADCAST_SIZES for key in ('t10','t11','t12')})
+    size_options.update({key:BROADCAST_SIZES for key in ('t10','t11','t12','t13')})
     result: Dict[str, Dict] = {}
     for key, default in DEFAULT_CONFIGS.items():
         config = copy.deepcopy(default)
@@ -3469,7 +3475,7 @@ def normalise_project_configs(saved: Any) -> Dict[str, Dict]:
         if isinstance(candidate, dict):
             config.update(copy.deepcopy(candidate))
         config["template"] = key
-        if key in ('t10','t11','t12'):
+        if key in ('t10','t11','t12','t13'):
             config = {field:config.get(field,value) for field,value in default.items()}
             for field,value in default.items():
                 if isinstance(value,str):
@@ -3477,6 +3483,18 @@ def normalise_project_configs(saved: Any) -> Dict[str, Dict]:
                 elif isinstance(value,(int,float)):
                     lo,hi=(-100,100) if 'offset_' in field else (10,200) if 'size_pct' in field else (0,100)
                     config[field]=clamp_number(config[field],lo,hi,value)
+        if key=='t13':
+            config['show_logo']=bool(config.get('show_logo',True))
+            for field in ('auto_text_height','auto_image_frame'):
+                config[field]=bool(config.get(field,True))
+            config['headline_height_pct']=clamp_number(config.get('headline_height_pct'),12,22,16)
+            config['subject_height_pct']=clamp_number(config.get('subject_height_pct'),15,46,40)
+            for role in ('headline','subject'):
+                config[role]=str(candidate.get(role,default[role]) if isinstance(candidate,dict) else default[role])[:2000]
+                config[role+'_font_size']=clamp_number(candidate.get(role+'_font_size') if isinstance(candidate,dict) else None,8,180,default[role+'_font_size'])
+                if config[role+'_align'] not in ('left','center','right'):
+                    config[role+'_align']='left'
+                config[role+'_box_color']=list(normalize_rgb(config[role+'_box_color'],default[role+'_box_color']))
         if key == 't9':
             config = {field:config.get(field,value) for field,value in default.items()}
             for side in ('a','b'):

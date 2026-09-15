@@ -79,28 +79,32 @@ class ScoreboardWebRuntime:
         self.credentials_path = self.upload_dir.parent / 'editor_credentials.json'
         if not self.credentials_path.exists():
             self._write_credentials('veto', 'veto@spark')
+        self.delete_credentials_path = self.upload_dir.parent / 'delete_credentials.json'
+        if not self.delete_credentials_path.exists():
+            self._write_credentials('veto', 'spark@veto', self.delete_credentials_path)
 
-    def _write_credentials(self, username, password):
+    def _write_credentials(self, username, password, path=None):
+        path = path or self.credentials_path
         username = str(username).strip()
         if not username or len(username) > 80:
             raise ValueError('Enter an editor ID of 1 to 80 characters.')
         record = dict(username=username, password=self._password_record(password))
-        temporary = self.credentials_path.with_name('.credentials-' + uuid.uuid4().hex + '.tmp')
+        temporary = path.with_name('.credentials-' + uuid.uuid4().hex + '.tmp')
         try:
             with temporary.open('w', encoding='utf-8') as stream:
                 json.dump(record, stream)
                 stream.flush()
                 os.fsync(stream.fileno())
-            os.replace(temporary, self.credentials_path)
+            os.replace(temporary, path)
         finally:
             temporary.unlink(missing_ok=True)
 
-    def _check_credentials(self, payload, remote_address):
+    def _check_credentials(self, payload, remote_address, path=None):
         now = time.monotonic()
         attempts = [t for t in self.project_attempts.get(remote_address, []) if now - t < 60]
         if len(attempts) >= 5:
             raise ValueError('Too many attempts. Wait one minute before retrying.')
-        record = json.loads(self.credentials_path.read_text(encoding='utf-8'))
+        record = json.loads((path or self.credentials_path).read_text(encoding='utf-8'))
         password = payload.get('password', '')
         if not isinstance(password, str) or len(password) > 128:
             password = ''
@@ -265,6 +269,56 @@ class ScoreboardWebRuntime:
             updated = next(entry for entry in self.list_templates() if entry['id'] == item['id'])
             return {'saved':True, 'item':updated}
 
+    def delete_template(self, payload, remote_address):
+        """Archive one saved preset; never remove uploads or alter program output."""
+        with self.lock:
+            self._check_credentials(payload, remote_address, self.delete_credentials_path)
+            item = next((p for p in self.list_templates() if p['id'] == payload.get('id')), None)
+            if item is None:
+                raise ProjectConflict('Saved template no longer exists.')
+            if payload.get('edit_revision') != item['edit_revision']:
+                raise ProjectConflict('Template changed. Reopen it before deleting.')
+            if item['id'].startswith('legacy-'):
+                _, project_id, preset_id = item['id'].split('-')
+                path = self._project_path(project_id)
+                document = json.loads(path.read_text(encoding='utf-8'))
+                presets = self._project_presets(document)
+                presets[item['template']] = [p for p in presets[item['template']] if p['id'] != preset_id]
+                def portable(value):
+                    if isinstance(value, dict):
+                        return {key: portable(child) for key, child in value.items()}
+                    if isinstance(value, list):
+                        return [portable(child) for child in value]
+                    if isinstance(value, str) and value.startswith(str(self.upload_dir) + os.sep):
+                        return Path(value).name
+                    return value
+                document['presets'] = portable(presets)
+                document['revision'] = int(document.get('revision', 0)) + 1
+                document['updated_at'] = datetime.now(timezone.utc).isoformat()
+                archive = path.parent / 'history'
+                archive.mkdir(exist_ok=True)
+                with (archive / (path.stem + '-' + uuid.uuid4().hex + '.json')).open('xb') as stream:
+                    stream.write(path.read_bytes())
+                    stream.flush()
+                    os.fsync(stream.fileno())
+                temporary = path.with_name(path.name + '.' + uuid.uuid4().hex + '.tmp')
+                try:
+                    with temporary.open('w', encoding='utf-8') as stream:
+                        json.dump(document, stream, ensure_ascii=False)
+                        stream.flush()
+                        os.fsync(stream.fileno())
+                    os.replace(temporary, path)
+                finally:
+                    temporary.unlink(missing_ok=True)
+            else:
+                path = self.library_dir / (item['id'] + '.json')
+                archive = self.library_dir / 'deleted'
+                archive.mkdir(exist_ok=True)
+                os.replace(path, archive / (item['id'] + '-' + uuid.uuid4().hex + '.json'))
+            self.library_revision = uuid.uuid4().hex
+            self.library_changed.notify_all()
+            return {'deleted': True, 'id': item['id']}
+
     def library_snapshot(self):
         with self.lock:
             entries = self.list_templates()
@@ -285,7 +339,9 @@ class ScoreboardWebRuntime:
             country = ''
             if not config.get('media_path'):
                 raise ValueError('Upload an image or video first.')
-        if not player or (not country and template != 't8') or max(len(player),len(country)) > 100:
+        if template=='t13':
+            country=''
+        if not player or (not country and template not in ('t8','t13')) or max(len(player),len(country)) > 100:
             raise ValueError('Enter player name and country (at most 100 characters each).')
         with self.lock:
             entries = self.list_templates()
@@ -707,7 +763,7 @@ class ScoreboardWebRuntime:
                 "t7": list(self.core.T7_SIZES),
                 "t8": list(self.core.T8_SIZES),
                 "t9": list(self.core.T9_SIZES),
-                **{key:list(self.core.BROADCAST_SIZES) for key in ('t10','t11','t12')},
+                **{key:list(self.core.BROADCAST_SIZES) for key in ('t10','t11','t12','t13')},
             },
             "qualifier_countries": sorted(set(json.loads((self.app_dir / 'country_flags.json').read_text(encoding='utf-8-sig')).values()) | set(self.core.QUALIFIER_ALPHA3.values())),
             "custom_text_boxes": True,
@@ -737,6 +793,7 @@ class ScoreboardWebRuntime:
             "t10": ('photo_a','photo_b','background_path','logo_path'),
             "t11": ('background_path',),
             "t12": ('background_path','logo_path'),
+            "t13": ('background_path','image_path','logo_path'),
         }[template]
         for key in keys:
             config[key] = self._safe_uploaded_path(config.get(key, ""))
@@ -862,7 +919,12 @@ class ScoreboardWebRuntime:
     def start_live(
         self, template: str, config: Any, preset: str, output_name: str,
         client_id: Any, remote_address: str, standby: bool = False,
+        clear_mode: str = 'black', keyer_confirmed: bool = False,
     ):
+        if clear_mode not in ('black','chroma-green','chroma-blue'):
+            raise ValueError('Unsupported output keying mode. Key/fill requires verified hardware configuration.')
+        if clear_mode != 'black' and keyer_confirmed is not True:
+            raise ValueError('Confirm the switcher chroma key colour before starting output.')
         if preset not in self.core.VIDEO_EXPORT_PRESETS:
             raise ValueError("Unknown video format.")
         capabilities=self.output_capabilities()
@@ -891,6 +953,7 @@ class ScoreboardWebRuntime:
                 self.live_output is not None
                 and self.live_preset == preset
                 and self.live_output_name == output_name
+                and getattr(self,'live_clear_mode','black') == clear_mode
             ):
                 if not standby:
                     self._stop_media()
@@ -911,12 +974,13 @@ class ScoreboardWebRuntime:
             output = self.core.DeckLinkLiveOutput(
                 preset, device['number']
             )
-            self.program_frame = self.core.Image.new('RGB', image.size, 'black') if standby else image.copy()
+            self.program_frame = self._clear_frame(image.size,clear_mode) if standby else image.copy()
             output.start(self.program_frame)
             self.program_revision = uuid.uuid4().hex
             self.on_air = None if standby else self.program_revision
             self.program_name = '' if standby else dict(zip(self.core.WEB_TEMPLATE_KEYS,self.core.WEB_TEMPLATE_NAMES))[template]
             self.live_output = output
+            self.live_clear_mode = clear_mode
             self.live_preset = preset
             self.live_output_name = output_name
             self.live_owner_id = requester["id"]
@@ -952,6 +1016,11 @@ class ScoreboardWebRuntime:
         if expected is not None and expected != self.program_revision:
             raise ProjectConflict('On Air changed. Check the output monitor and try again.')
 
+    def _clear_frame(self, size, mode=None):
+        mode=mode or getattr(self,'live_clear_mode','black')
+        colors={'black':(0,0,0),'chroma-green':(0,255,0),'chroma-blue':(0,0,255)}
+        return self.core.Image.new('RGB',size,colors[mode])
+
     def clear_live(self, client_id, remote_address, expected_revision=None):
         with self.lock:
             requester = self.touch_session(client_id,remote_address)
@@ -962,7 +1031,7 @@ class ScoreboardWebRuntime:
             self._check_program_revision(expected_revision)
             self._stop_media()
             mode = self.core.VIDEO_EXPORT_PRESETS[self.live_preset]
-            image = self.core.Image.new('RGB',(mode['width'],mode['height']),'black')
+            image = self._clear_frame((mode['width'],mode['height']))
             self.live_output.update(image)
             self.program_frame = image
             self.on_air = None
@@ -1033,6 +1102,7 @@ class ScoreboardWebRuntime:
                 "owner_id": self.live_owner_id,
                 "owner_name": owner["name"] if owner else None,
                 "owned_by_requester": bool(client_id and client_id == self.live_owner_id),
+                "clear_mode": getattr(self,'live_clear_mode','black'),
             }
 
     def export_mp4(self, template: str, value: Any, preset: str, duration: int) -> bytes:
@@ -1221,6 +1291,8 @@ def make_handler(runtime: ScoreboardWebRuntime):
                     self._json(200, runtime.save_template(payload, remote_address))
                 elif path == '/api/templates/update':
                     self._json(200, runtime.update_template(payload, remote_address))
+                elif path == '/api/templates/delete':
+                    self._json(200, runtime.delete_template(payload, remote_address))
                 elif path == "/api/projects/save":
                     self._json(200, runtime.save_project(payload, remote_address))
                 elif path == '/api/projects/unlock':
@@ -1280,6 +1352,8 @@ def make_handler(runtime: ScoreboardWebRuntime):
                         payload.get("preset", ""), payload.get("output", ""),
                         client_id, remote_address,
                         standby=True,
+                        clear_mode=payload.get('clear_mode','black'),
+                        keyer_confirmed=payload.get('keyer_confirmed',False),
                     ))
                 elif path == '/api/live/show':
                     self._json(200, runtime.show_live(payload.get('template'), payload.get('config'), client_id, remote_address,

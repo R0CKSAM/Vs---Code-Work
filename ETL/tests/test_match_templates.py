@@ -82,6 +82,13 @@ def test_browser_new_templates_and_cross_country(tmp_path,monkeypatch):
                 page.screenshot(path=str(tmp_path/(key+'-desktop.png')))
             page.click('#liveButton')
             page.wait_for_function('detectedOutputs.length===1')
+            page.select_option('#clearMode','chroma-blue')
+            assert page.locator('#keyerConfirmation').is_visible()
+            assert not page.locator('#keyerConfirmed').is_checked()
+            page.check('#keyerConfirmed')
+            page.select_option('#clearMode','chroma-green')
+            assert not page.locator('#keyerConfirmed').is_checked()
+            page.select_option('#clearMode','black')
             assert page.locator('#livePreset option').count()==2
             assert page.locator('#livePreset').input_value()=='HD 1080i50'
             assert page.locator('#startLive').is_disabled()

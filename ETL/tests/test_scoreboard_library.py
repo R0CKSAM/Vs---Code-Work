@@ -111,6 +111,8 @@ def test_library_browser_and_live_controls(tmp_path,monkeypatch):
         def poll_error(self): return None
     monkeypatch.setattr(scoreboard,'DeckLinkLiveOutput',Output)
     runtime = scoreboard_web.ScoreboardWebRuntime(scoreboard,tmp_path/'uploads')
+    monkeypatch.setattr(runtime,'output_capabilities',lambda:dict(devices=[
+        dict(name='SDI',model='Test card',number=0,modes=['HD 1080i50'])]))
     server=ThreadingHTTPServer(('127.0.0.1',0),scoreboard_web.make_handler(runtime))
     thread=threading.Thread(target=server.serve_forever,daemon=True)
     thread.start()
@@ -148,6 +150,8 @@ def test_library_browser_and_live_controls(tmp_path,monkeypatch):
             page.click('#playerLabel')
             page.locator('#playerOptions button').filter(has_text='Test Player').click()
             page.click('#liveButton')
+            page.wait_for_function('detectedOutputs.length===1')
+            page.check('#receiverConfirmed')
             page.click('#startLive')
             expect(page.locator('#liveDialog')).not_to_be_visible()
             assert runtime.live_output.image.getbbox() is None
