@@ -1,0 +1,268 @@
+{
+  "background": "D:/thumbnailGen/images/official/ChatGPT Image Sep 12, 2026, 07_08_02 PM.png",
+  "bg_effects": {
+    "blur": 7,
+    "gradient": 1,
+    "overlay": 41,
+    "overlay_color": "#000000",
+    "shadow": 0,
+    "glow": 9,
+    "pattern": 0,
+    "transparency": 51
+  },
+  "fixed_texts": {
+    "vs_text": {
+      "text": "VS",
+      "font_family": "Arial",
+      "font_size": 96,
+      "font_weight": 700,
+      "font_italic": false,
+      "font_bold": true,
+      "font_underline": false,
+      "color": "#ffffffff",
+      "center": [
+        960.0,
+        612.2766413734736
+      ],
+      "role": "vs",
+      "align": "center",
+      "line_spacing_pct": 100,
+      "letter_spacing_px": 0,
+      "z": 0.0,
+      "box_size": null,
+      "in_scene": true
+    },
+    "left_name": {
+      "text": "JAPAN",
+      "font_family": "Arial",
+      "font_size": 52,
+      "font_weight": 700,
+      "font_italic": false,
+      "font_bold": true,
+      "font_underline": false,
+      "color": "#ffffffff",
+      "center": [
+        472.2440455467038,
+        887.6782946398326
+      ],
+      "role": "team",
+      "align": "center",
+      "line_spacing_pct": 100,
+      "letter_spacing_px": 0,
+      "z": 0.0,
+      "box_size": null,
+      "in_scene": true
+    },
+    "right_name": {
+      "text": "Spain",
+      "font_family": "Arial",
+      "font_size": 52,
+      "font_weight": 700,
+      "font_italic": false,
+      "font_bold": true,
+      "font_underline": false,
+      "color": "#ffffffff",
+      "center": [
+        1479.322830694874,
+        887.6782946398326
+      ],
+      "role": "team",
+      "align": "center",
+      "line_spacing_pct": 100,
+      "letter_spacing_px": 0,
+      "z": 0.0,
+      "box_size": null,
+      "in_scene": true
+    }
+  },
+  "top_lines": [
+    {
+      "text": "QUARTER FINALS 2026",
+      "font_family": "Britannic",
+      "font_size": 75,
+      "font_weight": 700,
+      "font_italic": false,
+      "font_bold": true,
+      "font_underline": false,
+      "color": "#ffffffff",
+      "center": [
+        949.1047430830035,
+        226.02237379228342
+      ],
+      "role": "top_line",
+      "align": "center",
+      "line_spacing_pct": 100,
+      "letter_spacing_px": 0,
+      "z": 0.0,
+      "box_size": [
+        1128.221343873518,
+        147.4809441150377
+      ],
+      "in_scene": true
+    },
+    {
+      "text": "Match 3 Round 2",
+      "font_family": "Courier",
+      "font_size": 50,
+      "font_weight": 700,
+      "font_italic": false,
+      "font_bold": true,
+      "font_underline": false,
+      "color": "#ffffdfb7",
+      "center": [
+        960.0,
+        300.46490359981414
+      ],
+      "role": "top_line",
+      "align": "center",
+      "line_spacing_pct": 100,
+      "letter_spacing_px": 0,
+      "z": 0.0,
+      "box_size": [
+        629.881422924901,
+        87.13343390709088
+      ],
+      "in_scene": true
+    }
+  ],
+  "bottom_lines": [
+    {
+      "text": "18-19 Sep 2026",
+      "font_family": "Arial",
+      "font_size": 53,
+      "font_weight": 700,
+      "font_italic": false,
+      "font_bold": true,
+      "font_underline": false,
+      "color": "#ffffffff",
+      "center": [
+        960.0,
+        916.2175925765267
+      ],
+      "role": "bottom_line",
+      "align": "center",
+      "line_spacing_pct": 100,
+      "letter_spacing_px": 0,
+      "z": 0.0,
+      "box_size": null,
+      "in_scene": true
+    },
+    {
+      "text": "Seol Park",
+      "font_family": "Arial",
+      "font_size": 34,
+      "font_weight": 700,
+      "font_italic": false,
+      "font_bold": true,
+      "font_underline": false,
+      "color": "#ffffffff",
+      "center": [
+        960.0,
+        1010.4576634382147
+      ],
+      "role": "bottom_line",
+      "align": "center",
+      "line_spacing_pct": 100,
+      "letter_spacing_px": 4,
+      "z": 0.0,
+      "box_size": null,
+      "in_scene": true
+    }
+  ],
+  "flags": {
+    "left_flag": {
+      "in_scene": true,
+      "path": "D:\\thumbnailGen\\flag_cache\\jp_w320.png",
+      "size": [
+        492.049192078478,
+        322.7496702676831
+      ],
+      "center": [
+        472.7194495074648,
+        669.8333331575571
+      ],
+      "aspect_locked": false,
+      "aspect_ratio": 1.5023474178403755,
+      "shape": "Rounded Rectangle",
+      "z": 0.0,
+      "shadow": {
+        "enabled": true,
+        "color_mode": "Custom",
+        "custom_color": "#550000",
+        "direction": "Bottom-Left",
+        "distance": 26,
+        "blur": 12,
+        "opacity": 91,
+        "spread": 23,
+        "intensity": 70
+      }
+    },
+    "right_flag": {
+      "in_scene": true,
+      "path": "D:\\thumbnailGen\\flag_cache\\es_w320.png",
+      "size": [
+        489.77021851768404,
+        326.00330170083345
+      ],
+      "center": [
+        1468.94888283602,
+        670.3316823071405
+      ],
+      "aspect_locked": true,
+      "aspect_ratio": 1.5023474178403755,
+      "shape": "Rounded Rectangle",
+      "z": 0.0,
+      "shadow": {
+        "enabled": true,
+        "color_mode": "Custom",
+        "custom_color": "#460000",
+        "direction": "Bottom-Right",
+        "distance": 26,
+        "blur": 12,
+        "opacity": 91,
+        "spread": 23,
+        "intensity": 70
+      }
+    }
+  },
+  "logos": [
+    {
+      "path": "D:/thumbnailGen/images/official/Davis Cup Logo white.png",
+      "size": [
+        189.72332015810275,
+        114.5731738617114
+      ],
+      "center": [
+        949.2430830039522,
+        67.61660079051384
+      ],
+      "aspect_locked": true,
+      "aspect_ratio": 1.6559139784946237,
+      "shape": "Rectangle",
+      "rotation": 0.0,
+      "opacity": 1.0,
+      "z": 20.0,
+      "shadow": {
+        "enabled": true,
+        "color_mode": "Grey",
+        "custom_color": "#777777",
+        "direction": "Bottom-Right",
+        "distance": 24,
+        "blur": 30,
+        "opacity": 55,
+        "spread": 20,
+        "intensity": 70
+      }
+    }
+  ],
+  "layout": {
+    "top_start_y": 78,
+    "top_gap": 74,
+    "bottom_start_y": 845,
+    "bottom_gap": 56
+  },
+  "grid": {
+    "enabled": false,
+    "spacing": 40
+  }
+}

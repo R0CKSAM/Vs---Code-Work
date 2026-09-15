@@ -22,6 +22,9 @@ def test_program_snapshot_clear_ownership_and_stale_commands(tmp_path,monkeypatc
         def poll_error(self): return None
     monkeypatch.setattr(scoreboard,'DeckLinkLiveOutput',Output)
     runtime=scoreboard_web.ScoreboardWebRuntime(scoreboard,tmp_path/'uploads')
+    monkeypatch.setattr(runtime,'output_capabilities',lambda:dict(devices=[
+        dict(name=name,number=number,modes=list(scoreboard.VIDEO_EXPORT_PRESETS))
+        for name,number in scoreboard.DECKLINK_OUTPUTS.items()]))
     owner='owner-test'
     other='other-test'
     runtime.register_session(owner,'Operator','127.0.0.1')

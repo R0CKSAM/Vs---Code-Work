@@ -28,8 +28,8 @@ def test_old_aspect_ratio_migrates_without_mutating_saved_config():
     assert original['canvas_size'] == 'Square(1080x1080)'
 
 
-def test_uhd_mp4_is_separate_from_sdi_presets():
+def test_uhd_mp4_and_card_gated_sdi_presets():
     command = scoreboard.build_mp4_command('ffmpeg',Path('in.png'),Path('out.mp4'),'UHD 2160p50',1)
     assert 'scale=3840:2160' in command[command.index('-vf')+1]
-    assert command[command.index('-r')+1] == '50'
-    assert 'UHD 2160p50' not in scoreboard.VIDEO_EXPORT_PRESETS
+    assert command[command.index('-r')+1] == '50/1'
+    assert 'UHD 2160p50' in scoreboard.VIDEO_EXPORT_PRESETS

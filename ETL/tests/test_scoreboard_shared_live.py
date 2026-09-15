@@ -61,6 +61,9 @@ def test_two_browsers_instant_save_reconnect_without_changing_program(tmp_path,m
         def poll_error(self): return None
     monkeypatch.setattr(scoreboard,'DeckLinkLiveOutput',Output)
     runtime=scoreboard_web.ScoreboardWebRuntime(scoreboard,tmp_path/'uploads')
+    monkeypatch.setattr(runtime,'output_capabilities',lambda:dict(devices=[
+        dict(name=name,number=number,model='Test card',modes=list(scoreboard.VIDEO_EXPORT_PRESETS))
+        for name,number in scoreboard.DECKLINK_OUTPUTS.items()]))
     server=ThreadingHTTPServer(('127.0.0.1',0),scoreboard_web.make_handler(runtime))
     thread=threading.Thread(target=server.serve_forever,daemon=True)
     thread.start()
@@ -76,7 +79,8 @@ def test_two_browsers_instant_save_reconnect_without_changing_program(tmp_path,m
                 page.click('#templateLabel');page.fill('#templateSearch','Head2Head')
                 page.locator('#templateOptions button').click()
                 expect(page.locator('#libraryStatus')).to_have_text('Library synced')
-            operator.click('#liveButton');operator.click('#startLive')
+            operator.click('#liveButton');operator.wait_for_function('detectedOutputs.length>0')
+            operator.check('#receiverConfirmed');operator.click('#startLive')
             expect(operator.locator('#liveDialog')).not_to_be_visible()
             operator.click('#takeLive')
             expect(operator.locator('#takeLive')).to_have_class('signal-green')

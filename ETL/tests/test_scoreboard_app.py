@@ -268,7 +268,7 @@ def test_mp4_command_uses_broadcast_safe_video_and_audio_settings(tmp_path: Path
     assert command[0] == "ffmpeg.exe"
     video_filter = command[command.index("-vf") + 1]
     assert "scale=1920:1080:force_original_aspect_ratio=decrease" in video_filter
-    assert command[command.index("-r") + 1] == "25"
+    assert command[command.index("-r") + 1] == "25/1"
     assert command[command.index("-pix_fmt") + 1] == "yuv420p"
     assert command[command.index("-color_primaries") + 1] == "bt709"
     assert command[command.index("-ar") + 1] == "48000"
@@ -279,7 +279,7 @@ def test_mp4_command_uses_broadcast_safe_video_and_audio_settings(tmp_path: Path
     interlaced = scoreboard.build_mp4_command(
         "ffmpeg.exe", source, output, "HD 1080i50", 12,
     )
-    assert interlaced[interlaced.index("-r") + 1] == "25"
+    assert interlaced[interlaced.index("-r") + 1] == "25/1"
     assert interlaced[interlaced.index("-flags") + 1] == "+ildct+ilme"
     assert interlaced[interlaced.index("-x264-params") + 1] == "tff=1"
 
@@ -446,6 +446,9 @@ def test_web_live_output_obeys_owner_and_priority(monkeypatch, tmp_path: Path) -
 
     monkeypatch.setattr(scoreboard, "DeckLinkLiveOutput", FakeLiveOutput)
     runtime = scoreboard_web.ScoreboardWebRuntime(scoreboard, tmp_path / "uploads")
+    monkeypatch.setattr(runtime,'output_capabilities',lambda:dict(devices=[
+        dict(name=name,number=number,modes=list(scoreboard.VIDEO_EXPORT_PRESETS))
+        for name,number in scoreboard.DECKLINK_OUTPUTS.items()]))
     runtime.register_session("operator-0001", "Primary operator", "192.168.50.20")
     runtime.register_session("operator-0002", "Backup operator", "192.168.50.21")
     runtime.set_session_priority("operator-0001", 100, "127.0.0.1")

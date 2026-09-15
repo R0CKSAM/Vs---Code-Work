@@ -82,6 +82,32 @@ VIDEO_EXPORT_PRESETS = {
     },
 }
 
+# Interlaced rates here are frames, while mode suffixes denote fields/second.
+for _label,_w,_h,_n,_d,_mode,_interlaced,_level in (
+    ('HD 1080p23.98',1920,1080,24000,1001,'1080p2398',False,'4.1'),
+    ('HD 1080p24',1920,1080,24,1,'1080p24',False,'4.1'),
+    ('HD 1080p29.97',1920,1080,30000,1001,'1080p2997',False,'4.1'),
+    ('HD 1080p30',1920,1080,30,1,'1080p30',False,'4.1'),
+    ('HD 1080i59.94',1920,1080,30000,1001,'1080i5994',True,'4.1'),
+    ('HD 1080i60',1920,1080,30,1,'1080i60',True,'4.1'),
+    ('HD 1080p59.94',1920,1080,60000,1001,'1080p5994',False,'4.2'),
+    ('HD 1080p60',1920,1080,60,1,'1080p60',False,'4.2'),
+    ('HD 720p59.94',1280,720,60000,1001,'720p5994',False,'4.1'),
+    ('HD 720p60',1280,720,60,1,'720p60',False,'4.1'),
+    ('UHD 2160p25',3840,2160,25,1,'2160p25',False,'5.1'),
+    ('UHD 2160p30',3840,2160,30,1,'2160p30',False,'5.1'),
+    ('UHD 2160p50',3840,2160,50,1,'2160p50',False,'5.2'),
+    ('UHD 2160p59.94',3840,2160,60000,1001,'2160p5994',False,'5.2'),
+    ('UHD 2160p60',3840,2160,60,1,'2160p60',False,'5.2'),
+):
+    VIDEO_EXPORT_PRESETS[_label]=dict(width=_w,height=_h,fps=_n/_d,
+        fps_num=_n,fps_den=_d,gst_mode=_mode,interlaced=_interlaced,level=_level)
+
+
+def preset_rate(preset):
+    return f"{preset.get('fps_num',int(preset['fps']))}/{preset.get('fps_den',1)}"
+
+
 MP4_EXPORT_PRESETS = {**VIDEO_EXPORT_PRESETS,
     'UHD 2160p25': {'width':3840,'height':2160,'fps':25,'level':'5.1'},
     'UHD 2160p50': {'width':3840,'height':2160,'fps':50,'level':'5.2'},
@@ -428,7 +454,7 @@ def build_mp4_command(
     )
     command = [
         ffmpeg, "-hide_banner", "-loglevel", "error", "-y",
-        "-loop", "1", "-framerate", str(fps), "-i", str(source_png),
+        "-loop", "1", "-framerate", preset_rate(preset), "-i", str(source_png),
         "-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=48000",
         "-t", str(duration), "-vf", video_filter,
         "-c:v", "libx264", "-preset", "medium", "-crf", "18",
@@ -437,7 +463,7 @@ def build_mp4_command(
         command.extend(["-flags", "+ildct+ilme", "-x264-params", "tff=1"])
     command.extend([
         "-profile:v", "high", "-level:v", preset["level"],
-        "-r", str(fps), "-g", str(fps * 2), "-pix_fmt", "yuv420p",
+        "-r", preset_rate(preset), "-g", str(round(fps * 2)), "-pix_fmt", "yuv420p",
         "-color_primaries", "bt709", "-color_trc", "bt709", "-colorspace", "bt709",
         "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-ac", "2",
         "-shortest", "-movflags", "+faststart", str(output_mp4),
@@ -474,11 +500,11 @@ def build_decklink_pipeline(preset_name: str, device_number: int) -> str:
     width, height, fps = preset["width"], preset["height"], preset["fps"]
     source_caps = (
         f"video/x-raw,format=RGB,width={width},height={height},"
-        f"framerate={fps}/1,pixel-aspect-ratio=1/1"
+        f"framerate={preset_rate(preset)},pixel-aspect-ratio=1/1"
     )
     output_caps = (
         f"video/x-raw,format=UYVY,width={width},height={height},"
-        f"framerate={fps}/1,pixel-aspect-ratio=1/1,colorimetry=bt709"
+        f"framerate={preset_rate(preset)},pixel-aspect-ratio=1/1,colorimetry=bt709"
     )
     stages = [
         "appsrc name=scoreboard_source is-live=true block=false format=time "
@@ -604,16 +630,18 @@ class DeckLinkLiveOutput:
 
     def _feed_frames(self) -> None:
         fps = VIDEO_EXPORT_PRESETS[self.preset_name]["fps"]
-        duration = self.Gst.SECOND // fps
+        mode = VIDEO_EXPORT_PRESETS[self.preset_name]
+        numerator = mode.get('fps_num',int(fps))
+        denominator = mode.get('fps_den',1)
         frame_number = 0
         deadline = time.perf_counter()
         while not self._stop_event.is_set():
             with self._frame_lock:
                 data = self._frame_data
             buffer = self.Gst.Buffer.new_wrapped(data)
-            buffer.pts = frame_number * duration
+            buffer.pts = frame_number * self.Gst.SECOND * denominator // numerator
             buffer.dts = buffer.pts
-            buffer.duration = duration
+            buffer.duration = (frame_number+1)*self.Gst.SECOND*denominator//numerator-buffer.pts
             flow = self.source.emit("push-buffer", buffer)
             if flow != self.Gst.FlowReturn.OK:
                 if not self._stop_event.is_set():
@@ -3065,6 +3093,7 @@ DEF_T6 = {
     "text_styles": {}, "rows": [],
 }
 TEXT_STYLE_TARGETS['t6'] = [('all', 'All text')]
+DEF_T6.update(atp_ranking='',season_year='2026',season_wl='',career_high='',stats_as_of='')
 
 
 def render_t6(cfg: Dict) -> Image.Image:
@@ -3384,6 +3413,13 @@ DEFAULT_CONFIGS = {
     "t9": DEF_T9,
 }
 
+# Keep the additional match designs portable without importing their Qt editors.
+import importlib.util as _template_import
+_match_spec = _template_import.spec_from_file_location('scoreboard_match_templates', Path(__file__).with_name('scoreboard_match_templates.py'))
+_match_module = _template_import.module_from_spec(_match_spec)
+_match_spec.loader.exec_module(_match_module)
+_match_module.register(globals())
+
 
 for _broadcast_default in DEFAULT_CONFIGS.values():
     _broadcast_default['canvas_size'] = 'HD  (1920x1080)'
@@ -3425,6 +3461,7 @@ def normalise_project_configs(saved: Any) -> Dict[str, Dict]:
     size_options = {
         "t1":T1_SIZES,"t2":T2_SIZES,"t3":T3_SIZES,"t4":T4_SIZES,"t5":T5_SIZES,"t6":T6_SIZES,"t7":T7_SIZES,"t8":T8_SIZES,"t9":T9_SIZES,
     }
+    size_options.update({key:BROADCAST_SIZES for key in ('t10','t11','t12')})
     result: Dict[str, Dict] = {}
     for key, default in DEFAULT_CONFIGS.items():
         config = copy.deepcopy(default)
@@ -3432,6 +3469,14 @@ def normalise_project_configs(saved: Any) -> Dict[str, Dict]:
         if isinstance(candidate, dict):
             config.update(copy.deepcopy(candidate))
         config["template"] = key
+        if key in ('t10','t11','t12'):
+            config = {field:config.get(field,value) for field,value in default.items()}
+            for field,value in default.items():
+                if isinstance(value,str):
+                    config[field]=str(config[field])[:500]
+                elif isinstance(value,(int,float)):
+                    lo,hi=(-100,100) if 'offset_' in field else (10,200) if 'size_pct' in field else (0,100)
+                    config[field]=clamp_number(config[field],lo,hi,value)
         if key == 't9':
             config = {field:config.get(field,value) for field,value in default.items()}
             for side in ('a','b'):
@@ -3463,7 +3508,8 @@ def normalise_project_configs(saved: Any) -> Dict[str, Dict]:
             config = {field: config.get(field, value) for field, value in default.items()}
             for field, low, high in (('player_offset_x_pct',-100,100),('player_offset_y_pct',-100,100),('player_size_pct',10,300)):
                 config[field] = clamp_number(config.get(field), low, high, default[field])
-            for field in ('player_name','country','age','total_wl','debut_year','favourite_hand'):
+            for field in ('player_name','country','age','total_wl','debut_year','favourite_hand',
+                          'atp_ranking','season_year','season_wl','career_high','stats_as_of'):
                 config[field] = str(config.get(field, ''))[:200]
         if config.get("canvas_size") not in size_options[key]:
             config["canvas_size"] = default["canvas_size"]

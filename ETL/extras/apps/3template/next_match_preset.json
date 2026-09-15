@@ -1,0 +1,144 @@
+{
+  "title": "COMING NEXT",
+  "vs_text": "VS",
+  "left_country": "India",
+  "right_country": "Korea",
+  "band_scale": 100,
+  "band_position": [
+    408.38383838383845,
+    783.3333333333331
+  ],
+  "background_color": "#ff007f",
+  "background_image_path": null,
+  "shape_scales": {
+    "Left Flag Border": 100,
+    "Right Flag Border": 100,
+    "Left Code Panel": 100,
+    "Right Code Panel": 100,
+    "Left Panel Inner": 100,
+    "Right Panel Inner": 100,
+    "VS Panel": 100,
+    "VS Glow": 100
+  },
+  "shape_appearances": {
+    "Left Flag Border": {
+      "brush_style": 1,
+      "brush_color": "#00000000",
+      "pen_style": 1,
+      "pen_color": "#ffd3b55c",
+      "pen_width": 4.0
+    },
+    "Right Flag Border": {
+      "brush_style": 1,
+      "brush_color": "#00000000",
+      "pen_style": 1,
+      "pen_color": "#ffd3b55c",
+      "pen_width": 4.0
+    },
+    "Left Code Panel": {
+      "brush_style": 1,
+      "brush_color": "#fff4f5f1",
+      "pen_style": 1,
+      "pen_color": "#ffd3b55c",
+      "pen_width": 4.0
+    },
+    "Right Code Panel": {
+      "brush_style": 1,
+      "brush_color": "#fff4f5f1",
+      "pen_style": 1,
+      "pen_color": "#ffd3b55c",
+      "pen_width": 4.0
+    },
+    "Left Panel Inner": {
+      "brush_style": 1,
+      "brush_color": "#00000000",
+      "pen_style": 1,
+      "pen_color": "#46ffffff",
+      "pen_width": 1.0
+    },
+    "Right Panel Inner": {
+      "brush_style": 1,
+      "brush_color": "#00000000",
+      "pen_style": 1,
+      "pen_color": "#46ffffff",
+      "pen_width": 1.0
+    },
+    "VS Panel": {
+      "brush_style": 15,
+      "brush_color": "#ff000000",
+      "pen_style": 1,
+      "pen_color": "#ffd3b55c",
+      "pen_width": 4.0,
+      "linear_gradient": {
+        "start": [
+          462.0,
+          120.0
+        ],
+        "end": [
+          462.0,
+          232.0
+        ],
+        "stops": [
+          [
+            0.0,
+            "#ff127043"
+          ],
+          [
+            0.55,
+            "#ff07522f"
+          ],
+          [
+            1.0,
+            "#ff083823"
+          ]
+        ]
+      }
+    },
+    "VS Glow": {
+      "brush_style": 1,
+      "brush_color": "#1cffe178",
+      "pen_style": 0,
+      "pen_color": "#ff000000",
+      "pen_width": 1.0
+    }
+  },
+  "text_sizes": {
+    "Header Text": 68,
+    "Left Code": 64,
+    "Right Code": 64,
+    "VS Text": 72
+  },
+  "colors": {
+    "Header Text": "#ffffff",
+    "Left Flag Border": "#00000000",
+    "Right Flag Border": "#00000000",
+    "Left Code Panel": "#fff4f5f1",
+    "Right Code Panel": "#fff4f5f1",
+    "Left Panel Inner": "#00000000",
+    "Right Panel Inner": "#00000000",
+    "VS Panel": "#ff000000",
+    "VS Glow": "#1cffe178",
+    "Left Code": "#085839",
+    "Right Code": "#085839",
+    "VS Text": "#f0d06a"
+  },
+  "item_visibility": {
+    "Header Text": true,
+    "Left Flag Border": true,
+    "Right Flag Border": true,
+    "Left Code Panel": true,
+    "Right Code Panel": true,
+    "Left Panel Inner": true,
+    "Right Panel Inner": true,
+    "VS Panel": true,
+    "VS Glow": true,
+    "Left Code": true,
+    "Right Code": true,
+    "VS Text": true
+  },
+  "grid": {
+    "enabled": false,
+    "spacing": 80,
+    "snap": true
+  }
+}

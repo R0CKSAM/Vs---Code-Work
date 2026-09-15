@@ -57,6 +57,9 @@ class ScoreboardWebRuntime:
         self.live_preset = None
         self.live_output_name = None
         self.live_owner_id = None
+        self._capability_lock = threading.Lock()
+        self._capabilities = None
+        self._capability_time = 0
         self.sessions: Dict[str, Dict[str, Any]] = {}
         self.project_unlocks = {}
         self.project_attempts = {}
@@ -651,6 +654,30 @@ class ScoreboardWebRuntime:
             session["priority"] = priority
             return self._public_session(session)
 
+    def output_capabilities(self):
+        # Isolate driver discovery from the renderer and bound hangs in vendor code.
+        with self._capability_lock:
+            if self._capabilities is not None and time.monotonic()-self._capability_time < 30:
+                return copy.deepcopy(self._capabilities)
+            try:
+                # The bundle's Python startup shim adds these again in the child.
+                # Inheriting them can deadlock plugin discovery on Windows.
+                probe_env={key:value for key,value in os.environ.items()
+                           if not key.startswith(('GST_','GI_','PYGI_')) and key!='PYTHONPATH'}
+                result=subprocess.run([sys.executable,str(self.app_dir/'scoreboard_output_probe.py')],
+                    capture_output=True,text=True,timeout=12,env=probe_env,
+                    creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+                if result.returncode:
+                    raise ValueError('Driver probe exited unsuccessfully.')
+                data=json.loads(result.stdout)
+                if not isinstance(data.get('devices'),list):
+                    raise ValueError('Invalid driver response.')
+            except (OSError,ValueError,subprocess.TimeoutExpired) as error:
+                data=dict(devices=[],error='Cannot verify output hardware: '+str(error),switcher_detected=False)
+            self._capabilities=data
+            self._capability_time=time.monotonic()
+            return copy.deepcopy(data)
+
     def bootstrap(self) -> Dict[str, Any]:
         return {
             "shared_projects": False,
@@ -680,6 +707,7 @@ class ScoreboardWebRuntime:
                 "t7": list(self.core.T7_SIZES),
                 "t8": list(self.core.T8_SIZES),
                 "t9": list(self.core.T9_SIZES),
+                **{key:list(self.core.BROADCAST_SIZES) for key in ('t10','t11','t12')},
             },
             "qualifier_countries": sorted(set(json.loads((self.app_dir / 'country_flags.json').read_text(encoding='utf-8-sig')).values()) | set(self.core.QUALIFIER_ALPHA3.values())),
             "custom_text_boxes": True,
@@ -706,6 +734,9 @@ class ScoreboardWebRuntime:
             "t7": (),
             "t8": ('media_path','poster_path'),
             "t9": ('photo_a','photo_b'),
+            "t10": ('photo_a','photo_b','background_path','logo_path'),
+            "t11": ('background_path',),
+            "t12": ('background_path','logo_path'),
         }[template]
         for key in keys:
             config[key] = self._safe_uploaded_path(config.get(key, ""))
@@ -834,8 +865,12 @@ class ScoreboardWebRuntime:
     ):
         if preset not in self.core.VIDEO_EXPORT_PRESETS:
             raise ValueError("Unknown video format.")
-        if output_name not in self.core.DECKLINK_OUTPUTS:
-            raise ValueError("Unknown DeckLink output.")
+        capabilities=self.output_capabilities()
+        device=next((d for d in capabilities['devices'] if d['name']==output_name),None)
+        if device is None:
+            raise ValueError(capabilities.get('error') or 'Selected DeckLink output is not detected. Refresh output devices.')
+        if preset not in device['modes']:
+            raise ValueError('Selected video format is not supported by this output card.')
         requester = self.touch_session(client_id, remote_address)
         if requester is None:
             raise PermissionError("Register an operator name before starting live output.")
@@ -874,7 +909,7 @@ class ScoreboardWebRuntime:
                 self.live_output_name = None
                 self.live_owner_id = None
             output = self.core.DeckLinkLiveOutput(
-                preset, self.core.DECKLINK_OUTPUTS[output_name]
+                preset, device['number']
             )
             self.program_frame = self.core.Image.new('RGB', image.size, 'black') if standby else image.copy()
             output.start(self.program_frame)
@@ -1137,6 +1172,8 @@ def make_handler(runtime: ScoreboardWebRuntime):
                     self._send(200, runtime.web_file.read_bytes(), "text/html; charset=utf-8")
                 elif path == "/api/bootstrap":
                     self._json(200, runtime.bootstrap())
+                elif path == '/api/output/capabilities':
+                    self._json(200, runtime.output_capabilities())
                 elif path == "/api/projects":
                     self._json(200, {"projects": runtime.list_projects()})
                 elif path == '/api/templates':
