@@ -3,6 +3,7 @@ param(
     [switch]$IncludeOfflineWheels,
     [switch]$IncludeFfmpeg,
     [switch]$IncludeUploads,
+    [string]$DataSource = "",
     [switch]$CreateZip
 )
 
@@ -64,16 +65,9 @@ $packageDirectory = Join-Path $destinationPath "packages"
 Get-ChildItem -LiteralPath $packageDirectory -File -ErrorAction SilentlyContinue | Remove-Item -Force
 
 if ($IncludeUploads) {
-    $uploadSource = Join-Path $source "data\uploads"
-    $uploadTarget = Join-Path $destinationPath "data\uploads"
-    if (Test-Path -LiteralPath $uploadSource) {
-        Get-ChildItem -LiteralPath $uploadSource -File | Copy-Item -Destination $uploadTarget -Force
-    }
-    $projectSource = Join-Path $source "data\projects"
-    if (Test-Path -LiteralPath $projectSource) {
-        Get-ChildItem -LiteralPath $projectSource -File -Filter '*.json' |
-            Copy-Item -Destination (Join-Path $destinationPath "data\projects") -Force
-    }
+    if (-not $DataSource) { $DataSource = Join-Path $source "data" }
+    & $python (Join-Path $support "snapshot_scoreboard_data.py") $DataSource (Join-Path $destinationPath "data")
+    if ($LASTEXITCODE -ne 0) { throw "Saved data snapshot failed verification. Do not distribute this folder." }
 }
 
 if ($IncludeFfmpeg) {
