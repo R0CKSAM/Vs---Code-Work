@@ -169,3 +169,10 @@ ETL/output/*.png
 ETL/output/*.jpg
 ETL/output/inspect_players_reference.py
 !ETL/extras/apps/leaderBoardGen/davis_cup_2026_round2.csv
+
+# Local production deployment copies include dependencies and private runtime data.
+ETL/extras/apps/PRODUCTION/
+ETL/extras/apps/PRODUCTION.zip
+# Generated audience reports; keep helper scripts visible to Git.
+ETL/output/audience_ops/*.html
+ETL/output/audience_ops/*.csv
