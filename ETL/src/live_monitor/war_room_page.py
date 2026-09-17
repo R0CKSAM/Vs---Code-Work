@@ -1,4 +1,5 @@
 from __future__ import annotations
+from .channel_picker import SCRIPT as CHANNEL_PICKER_SCRIPT, STYLE as CHANNEL_PICKER_STYLE
 
 
 PAGE = r"""<!doctype html>
@@ -103,8 +104,34 @@ document.querySelectorAll('.spark').forEach(canvas=>spark(canvas,currentRows,can
 bars('audienceStateBars',breakdown.state,'requests',5,requests);bars('cityBars',cityBreakdown(breakdown.city),'requests',5,requests);bars('countryBars',countryBreakdown(breakdown.country),'requests',5,requests);donut('deviceDonut','deviceLegend',deviceRows,'requests',6,requests);providerQuality(breakdown.network_provider,requests);bars('cdnNetworkTypeBars',breakdown.network_type,'requests',5,requests);renderResolution(breakdown.resolution_inferred);
 $('deviceCoverage').textContent='UA decoded '+uaCoverage.percent.toFixed(2)+'% of requests; '+lookupNote('ua')+'. Request share is not unique-viewer share.';$('asnCoverage').textContent='ASN decoded '+asnCoverage.percent.toFixed(2)+'% of requests; '+lookupNote('asn')+'. Provider quality coverage '+pct(providerQualityRequests,requests).toFixed(1)+'% of rolling requests and reaches a full window within '+duration(Number(data.window_minutes||360)*60)+'.';
 $('alertRows').innerHTML=alertRows(currentRows,summary).map(([cls,title,text])=>'<div class="alert '+cls+'"><small>'+esc(title)+'</small>'+esc(text)+'</div>').join('');const ok=Boolean(data.health?.ok);$('sourceStatus').innerHTML=(ok?'SOURCE LIVE':'SOURCE DEGRADED')+' <i class="dot" style="background:'+(ok?'#57d36b':'#ec4454')+'"></i>';$('sourceSub').textContent=Number.isFinite(Number(data.lag_seconds))?Math.round(Number(data.lag_seconds))+' sec source lag':'No latest timestamp';renderProfile();drawExpandedChart()}
-async function refresh(){try{const response=await fetch('/api/state',{cache:'no-store'});if(!response.ok)throw Error(await response.text());const previous=$('target').value;data=await response.json();const keys=Object.keys(data.series||{}).sort((a,b)=>a==='__all__'?-1:b==='__all__'?1:a.localeCompare(b));$('target').innerHTML=keys.map(key=>'<option value="'+esc(key)+'">'+(key==='__all__'?'All channels':esc(key))+'</option>').join('');$('target').value=keys.includes(previous)?previous:'__all__';updateRangeBounds();render()}catch(error){$('sourceStatus').textContent='STATE UNAVAILABLE';$('sourceSub').textContent=error.message}}
+async function refresh(){try{const response=await fetch('/api/state',{cache:'no-store'});if(!response.ok)throw Error(await response.text());const previous=$('target').value;data=await response.json();const observed=Object.keys(data.series||{}),scheduled=Array.isArray(data.scheduled_targets)?data.scheduled_targets:[],keys=[...new Set([...observed,...scheduled])].sort((a,b)=>a==='__all__'?-1:b==='__all__'?1:a.localeCompare(b));$('target').innerHTML=keys.map(key=>'<option value="'+esc(key)+'">'+(key==='__all__'?'All channels':esc(key))+'</option>').join('');$('target').value=keys.includes(previous)?previous:'__all__';updateRangeBounds();render()}catch(error){$('sourceStatus').textContent='STATE UNAVAILABLE';$('sourceSub').textContent=error.message}}
 function clock(){const now=new Date(),zone={timeZone:'Asia/Kolkata'},dateFormat=new Intl.DateTimeFormat('en-GB',{...zone,day:'2-digit',month:'short',year:'numeric',weekday:'short'}),timeFormat=new Intl.DateTimeFormat('en-GB',{...zone,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});$('date').textContent='REAL TIME · '+dateFormat.format(now);$('clock').textContent=timeFormat.format(now)+' IST';const complete=completeMinute();if(!complete){$('dataClock').textContent='-';$('dataDelay').textContent='';return}const parsed=new Date(complete.replace(/([+-]\d\d)(\d\d)$/,'$1:$2')),completeEnd=new Date(parsed.getTime()+60000),delaySeconds=Math.max(0,Math.floor((now-completeEnd)/1000)),minutes=Math.floor(delaySeconds/60),seconds=delaySeconds%60;$('dataClock').textContent=dateFormat.format(parsed)+' '+time(complete)+' IST';$('dataDelay').textContent='['+minutes+'m '+String(seconds).padStart(2,'0')+'s delay]'}
 $('target').onchange=render;$('rangeFrom').onchange=()=>rangeChanged('from');$('rangeTo').onchange=()=>rangeChanged('to');$('resetRange').onclick=()=>{rangeFollowsLive=true;updateRangeBounds();render()};document.querySelectorAll('[data-expand]').forEach(chart=>chart.onclick=()=>openExpandedChart(chart.dataset.expand));$('closeChart').onclick=closeExpandedChart;$('chartModal').onclick=event=>{if(event.target===$('chartModal'))closeExpandedChart()};addEventListener('keydown',event=>{if(event.key==='Escape')closeExpandedChart()});$('exportMinutes').onclick=()=>{const header=['Minute IST','Channel','Concurrency Distinct cliIP','Distinct Device IDs','Distinct Session IDs','Requests','Bytes','4xx','5xx','Media Segments','TTFB Avg ms','Turnaround Avg ms','Transfer Avg ms','Throughput Avg kbps','TLS Overhead Avg ms','Delivery Edge Issues'],lines=[header,...currentRows.map(row=>[row.minute_ist,selectedKey==='__all__'?'All channels':selectedKey,row.active_cliips,row.device_ids,row.session_ids,row.requests,row.bytes,row.errors_4xx,row.errors_5xx,row.media_segments,row.ttfb_avg_ms,row.turnaround_avg_ms,row.transfer_avg_ms,row.throughput_avg,row.tls_overhead_avg_ms,row.delivery_edge_issues])];download('veto_live_minutes_'+date(currentRows.at(-1)?.minute_ist||'current')+'.csv','text/csv;charset=utf-8',lines.map(row=>row.map(csvCell).join(',')).join('\r\n'))};$('exportState').onclick=()=>download('veto_live_snapshot.json','application/json',JSON.stringify(data,null,2));addEventListener('resize',()=>data&&render());clock();setInterval(clock,1000);refresh();setInterval(refresh,5000);
 </script>
 </body></html>"""
+
+# The page is deliberately a single portable HTML literal. Add the recorder
+PAGE = PAGE.replace('</style>', CHANNEL_PICKER_STYLE + '</style>', 1)
+PAGE = PAGE.replace("$('target').onchange=render;", CHANNEL_PICKER_SCRIPT + "\n$('target').onchange=render;", 1)
+# control as a narrow post-processing layer so it remains usable on the
+# existing dense operations layout.
+PAGE = PAGE.replace(
+    '<label>Channel <select id="target"></select></label>',
+    '<label>Channel <select id="target"></select></label>'
+    '<button id="watchFeed" type="button" disabled>Watch in recorder</button>',
+)
+PAGE = PAGE.replace(
+    'function render(){',
+    "function recorderChannelId(target){const match=String(target||'').match(/^GRP (\\d+)\\/M(\\d+) \\| ([A-Z]{3}) vs ([A-Z]{3})$/);return match?`davis-cup-2026-grp-${match[1]}-m${match[2]}-${match[3].toLowerCase()}-${match[4].toLowerCase()}`:''}\nfunction render(){",
+    1,
+)
+PAGE = PAGE.replace(
+    "selectedKey=$('target').value||'__all__';currentRows=rowsFor(selectedKey);",
+    "selectedKey=$('target').value||'__all__';currentRows=rowsFor(selectedKey);$('watchFeed').disabled=false;",
+    1,
+)
+PAGE = PAGE.replace(
+    "$('target').onchange=render;",
+    "$('target').onchange=render;$('watchFeed').onclick=()=>{const local=['127.0.0.1','localhost','[::1]'].includes(location.hostname),url=new URL(local?'http://127.0.0.1:8810/recorder':`http://${location.hostname}:8070/`);for(const target of channelSelection){const channel=recorderChannelId(target);if(channel)url.searchParams.append('channel',channel)}window.open(url.href,'_blank','noopener')};",
+    1,
+)

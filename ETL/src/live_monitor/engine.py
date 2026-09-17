@@ -15,7 +15,7 @@ from zoneinfo import ZoneInfo
 
 from .config import LiveConfig
 from .enrichment import enrichment_status
-from .parser import CHANNEL_MAPPING_VERSION, parse_gzip_file
+from .parser import CHANNEL_MAPPING_VERSION, DAVIS_CUP_MENU_TARGETS, parse_gzip_file
 from .s3_index import list_recent_relative_key_sets
 from .server import SnapshotServer
 from .store import LiveStore
@@ -468,6 +468,7 @@ class LiveEngine:
                 },
                 "runtime": runtime,
                 "enrichment": enrichment,
+                "scheduled_targets": list(DAVIS_CUP_MENU_TARGETS),
                 "metric_note": (
                     "All channels and each mapped channel show exact distinct cliIP "
                     "per minute; known device/session counts are exact only where those "
@@ -515,6 +516,7 @@ class LiveEngine:
                 self.config.http_host,
                 self.config.http_port,
                 self.config.snapshot_path,
+                selection_snapshot=lambda targets: self.store.snapshot(self.config.dashboard_minutes, targets),
             )
             server.start()
             LOGGER.info(

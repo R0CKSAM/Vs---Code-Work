@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import threading
+import time
+from urllib.parse import urlsplit, parse_qs
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -38,12 +40,35 @@ PAGE = OPERATIONS_PAGE
 
 
 class SnapshotServer:
-    def __init__(self, host: str, port: int, snapshot_path: Path):
+    def __init__(self, host: str, port: int, snapshot_path: Path, selection_snapshot=None):
         self.snapshot_path = snapshot_path
         owner = self
+        selection_lock = threading.Lock()
+        selection_cache = {}
 
         class Handler(BaseHTTPRequestHandler):
             def do_GET(self):
+                if urlsplit(self.path).path == '/api/selection' and selection_snapshot is not None:
+                    targets = parse_qs(urlsplit(self.path).query).get('channel', [])
+                    if not targets or len(targets) > 100 or any(len(value) > 160 for value in targets):
+                        return self._send(400, 'application/json', b'{"error":"Invalid channel selection"}')
+                    if not selection_lock.acquire(blocking=False):
+                        return self._send(503, 'application/json', b'{"error":"Selection calculation busy; retry shortly"}')
+                    try:
+                        key = tuple(sorted(set(targets)))
+                        cached = selection_cache.get(key)
+                        if cached is None or time.monotonic() - cached[0] > 10:
+                            body = json.dumps(selection_snapshot(list(key))).encode()
+                            if len(selection_cache) >= 8:
+                                selection_cache.clear()
+                            selection_cache[key] = (time.monotonic(), body)
+                        else:
+                            body = cached[1]
+                        return self._send(200, 'application/json', body)
+                    except Exception:
+                        return self._send(503, 'application/json', b'{"error":"Selection temporarily unavailable"}')
+                    finally:
+                        selection_lock.release()
                 if self.path == "/favicon.ico":
                     return self._send(204, "image/x-icon", b"")
                 if self.path == "/":

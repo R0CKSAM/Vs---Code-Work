@@ -2411,7 +2411,10 @@ def main() -> None:
                 "--memory-limit",
                 args.concurrency_memory,
             ]
-            _append_temp_dir(identity_minute_fast_cmd, deep_profile_temp_dir)
+            # Identity DISTINCT aggregation can hang while closing a DuckDB
+            # connection backed by an SMB temp directory after output is written.
+            identity_temp_dir = output_root / "cache" / "duckdb_temp" / "identity_minute"
+            _append_temp_dir(identity_minute_fast_cmd, identity_temp_dir)
             if concurrency_start and concurrency_end:
                 identity_minute_fast_cmd.extend(["--start", concurrency_start, "--end", concurrency_end])
             run(
@@ -2439,7 +2442,7 @@ def main() -> None:
                     "--memory-limit",
                     args.concurrency_memory,
                 ]
-                _append_temp_dir(identity_minute_stream_cmd, deep_profile_temp_dir)
+                _append_temp_dir(identity_minute_stream_cmd, identity_temp_dir)
                 if concurrency_start and concurrency_end:
                     identity_minute_stream_cmd.extend(["--start", concurrency_start, "--end", concurrency_end])
                 run(

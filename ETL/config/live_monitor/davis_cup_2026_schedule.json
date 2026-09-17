@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "timezone": "Asia/Kolkata",
+  "events": [
+    {"date": "2026-09-18", "group": "GRP 1/M1", "host": "KOR", "opp": "IND", "start": "10:30", "asset_id": "f98c8ae68a354ab59a4e28e3dd700d4f"},
+    {"date": "2026-09-18", "group": "GRP 2/M1", "host": "AUT", "opp": "BEL", "start": "16:30", "asset_id": "3b9668eaa10546528bc10dc0fbaf23bd"},
+    {"date": "2026-09-18", "group": "GRP 3/M1", "host": "CZE", "opp": "USA", "start": "18:30", "asset_id": "bf34b69777604be0bc28ef9cb0136175"},
+    {"date": "2026-09-19", "group": "GRP 4/M1", "host": "CAN", "opp": "FRA", "start": "02:30", "asset_id": "d1ff5a8a65014ff9b5bac219e1cf7d52"},
+    {"date": "2026-09-19", "group": "GRP 1/M2", "host": "KOR", "opp": "IND", "start": "08:30", "asset_id": "f98c8ae68a354ab59a4e28e3dd700d4f"},
+    {"date": "2026-09-19", "group": "GRP 2/M2", "host": "AUT", "opp": "BEL", "start": "14:30", "asset_id": "3b9668eaa10546528bc10dc0fbaf23bd"},
+    {"date": "2026-09-19", "group": "GRP 5/M1", "host": "GBR", "opp": "ECU", "start": "17:30", "asset_id": "a9b4ff0235174bab8c5ddae2123bff72"},
+    {"date": "2026-09-19", "group": "GRP 3/M2", "host": "CZE", "opp": "USA", "start": "17:30", "asset_id": "bf34b69777604be0bc28ef9cb0136175"},
+    {"date": "2026-09-19", "group": "GRP 6/M1", "host": "GER", "opp": "CRO", "start": "17:30", "asset_id": "834dd92ceaae4da3b254facc10ef79cf"},
+    {"date": "2026-09-19", "group": "GRP 7/M1", "host": "CHL", "opp": "ESP", "start": "21:30", "asset_id": "3b9668eaa10546528bc10dc0fbaf23bd"},
+    {"date": "2026-09-19", "group": "GRP 4/M2", "host": "CAN", "opp": "FRA", "start": "23:30", "asset_id": "d1ff5a8a65014ff9b5bac219e1cf7d52"},
+    {"date": "2026-09-20", "group": "GRP 6/M2", "host": "GER", "opp": "CRO", "start": "15:30", "asset_id": "834dd92ceaae4da3b254facc10ef79cf"},
+    {"date": "2026-09-20", "group": "GRP 5/M2", "host": "GBR", "opp": "ECU", "start": "16:30", "asset_id": "a9b4ff0235174bab8c5ddae2123bff72"},
+    {"date": "2026-09-20", "group": "GRP 7/M2", "host": "CHL", "opp": "ESP", "start": "20:30", "asset_id": "3b9668eaa10546528bc10dc0fbaf23bd"}
+  ]
+}

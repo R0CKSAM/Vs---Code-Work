@@ -548,13 +548,29 @@ class LiveStore:
                 """
             )
 
-    def snapshot(self, dashboard_minutes: int) -> dict:
+    def snapshot(self, dashboard_minutes: int, selected_targets: list[str] | None = None) -> dict:
         cutoff = (
             dt.datetime.now(IST) - dt.timedelta(minutes=dashboard_minutes)
         ).strftime("%Y-%m-%dT%H:%M:00%z")
         with self.connect() as connection:
             # Pin every query below to one WAL snapshot while parser workers commit.
             connection.execute("BEGIN")
+            if selected_targets is not None:
+                # Connection-local views reuse the normal aggregation queries.
+                # DISTINCT identifiers span the selection; no source rows change.
+                connection.execute('CREATE TEMP TABLE selected_channels (target TEXT PRIMARY KEY)')
+                connection.executemany('INSERT INTO selected_channels VALUES (?)',
+                                       [(target,) for target in sorted(set(selected_targets)) if target != GLOBAL_TARGET])
+                for table in ('minute_metrics', 'minute_viewers', 'minute_devices',
+                              'minute_sessions', 'minute_dimensions', 'minute_quality_dimensions'):
+                    columns = [row['name'] for row in connection.execute(f'PRAGMA main.table_info({table})')]
+                    projection = ','.join("'__selection__' AS target" if col == 'target' else f'"{col}"' for col in columns)
+                    connection.execute(f'CREATE TEMP VIEW {table} AS SELECT {projection} FROM main.{table} WHERE target IN (SELECT target FROM selected_channels)')
+                connection.execute('''CREATE TEMP VIEW viewer_history AS
+                    SELECT '__selection__' AS target, viewer_key,
+                           MIN(first_seen_ist) first_seen_ist, MAX(last_seen_ist) last_seen_ist
+                    FROM main.viewer_history WHERE target IN (SELECT target FROM selected_channels)
+                    GROUP BY viewer_key''')
             files = {
                 row["status"]: row["count"]
                 for row in connection.execute(
@@ -577,6 +593,8 @@ class LiveStore:
                     (GLOBAL_TARGET,),
                 )
             ]]
+            if selected_targets is not None:
+                targets = ['__selection__']
             def distinct_counts(table: str, key_column: str) -> dict[str, int]:
                 return {
                     row["target"]: int(row["identifiers"])

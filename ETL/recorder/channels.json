@@ -333,6 +333,104 @@
     "enabled": false
   },
   {
+    "id": "davis-cup-2026-grp-1-m1-kor-ind",
+    "name": "GRP 1/M1 | KOR vs IND",
+    "group": "Davis Cup 2026",
+    "hls_url": "https://daviscup-veto.akamaized.net/f98c8ae68a354ab59a4e28e3dd700d4f/playlist.m3u8",
+    "enabled": true
+  },
+  {
+    "id": "davis-cup-2026-grp-2-m1-aut-bel",
+    "name": "GRP 2/M1 | AUT vs BEL",
+    "group": "Davis Cup 2026",
+    "hls_url": "https://daviscup-veto.akamaized.net/3b9668eaa10546528bc10dc0fbaf23bd/playlist.m3u8",
+    "enabled": true
+  },
+  {
+    "id": "davis-cup-2026-grp-3-m1-cze-usa",
+    "name": "GRP 3/M1 | CZE vs USA",
+    "group": "Davis Cup 2026",
+    "hls_url": "https://daviscup-veto.akamaized.net/bf34b69777604be0bc28ef9cb0136175/playlist.m3u8",
+    "enabled": true
+  },
+  {
+    "id": "davis-cup-2026-grp-4-m1-can-fra",
+    "name": "GRP 4/M1 | CAN vs FRA",
+    "group": "Davis Cup 2026",
+    "hls_url": "https://daviscup-veto.akamaized.net/d1ff5a8a65014ff9b5bac219e1cf7d52/playlist.m3u8",
+    "enabled": true
+  },
+  {
+    "id": "davis-cup-2026-grp-1-m2-kor-ind",
+    "name": "GRP 1/M2 | KOR vs IND",
+    "group": "Davis Cup 2026",
+    "hls_url": "https://daviscup-veto.akamaized.net/f98c8ae68a354ab59a4e28e3dd700d4f/playlist.m3u8",
+    "enabled": true
+  },
+  {
+    "id": "davis-cup-2026-grp-2-m2-aut-bel",
+    "name": "GRP 2/M2 | AUT vs BEL",
+    "group": "Davis Cup 2026",
+    "hls_url": "https://daviscup-veto.akamaized.net/3b9668eaa10546528bc10dc0fbaf23bd/playlist.m3u8",
+    "enabled": true
+  },
+  {
+    "id": "davis-cup-2026-grp-5-m1-gbr-ecu",
+    "name": "GRP 5/M1 | GBR vs ECU",
+    "group": "Davis Cup 2026",
+    "hls_url": "https://daviscup-veto.akamaized.net/a9b4ff0235174bab8c5ddae2123bff72/playlist.m3u8",
+    "enabled": true
+  },
+  {
+    "id": "davis-cup-2026-grp-3-m2-cze-usa",
+    "name": "GRP 3/M2 | CZE vs USA",
+    "group": "Davis Cup 2026",
+    "hls_url": "https://daviscup-veto.akamaized.net/bf34b69777604be0bc28ef9cb0136175/playlist.m3u8",
+    "enabled": true
+  },
+  {
+    "id": "davis-cup-2026-grp-6-m1-ger-cro",
+    "name": "GRP 6/M1 | GER vs CRO",
+    "group": "Davis Cup 2026",
+    "hls_url": "https://daviscup-veto.akamaized.net/834dd92ceaae4da3b254facc10ef79cf/playlist.m3u8",
+    "enabled": true
+  },
+  {
+    "id": "davis-cup-2026-grp-7-m1-chl-esp",
+    "name": "GRP 7/M1 | CHL vs ESP",
+    "group": "Davis Cup 2026",
+    "hls_url": "https://daviscup-veto.akamaized.net/3b9668eaa10546528bc10dc0fbaf23bd/playlist.m3u8",
+    "enabled": true
+  },
+  {
+    "id": "davis-cup-2026-grp-4-m2-can-fra",
+    "name": "GRP 4/M2 | CAN vs FRA",
+    "group": "Davis Cup 2026",
+    "hls_url": "https://daviscup-veto.akamaized.net/d1ff5a8a65014ff9b5bac219e1cf7d52/playlist.m3u8",
+    "enabled": true
+  },
+  {
+    "id": "davis-cup-2026-grp-6-m2-ger-cro",
+    "name": "GRP 6/M2 | GER vs CRO",
+    "group": "Davis Cup 2026",
+    "hls_url": "https://daviscup-veto.akamaized.net/834dd92ceaae4da3b254facc10ef79cf/playlist.m3u8",
+    "enabled": true
+  },
+  {
+    "id": "davis-cup-2026-grp-5-m2-gbr-ecu",
+    "name": "GRP 5/M2 | GBR vs ECU",
+    "group": "Davis Cup 2026",
+    "hls_url": "https://daviscup-veto.akamaized.net/a9b4ff0235174bab8c5ddae2123bff72/playlist.m3u8",
+    "enabled": true
+  },
+  {
+    "id": "davis-cup-2026-grp-7-m2-chl-esp",
+    "name": "GRP 7/M2 | CHL vs ESP",
+    "group": "Davis Cup 2026",
+    "hls_url": "https://daviscup-veto.akamaized.net/3b9668eaa10546528bc10dc0fbaf23bd/playlist.m3u8",
+    "enabled": true
+  },
+  {
     "id": "veto-cricket-live",
     "name": "Veto Cricket Live",
     "group": "Sports",

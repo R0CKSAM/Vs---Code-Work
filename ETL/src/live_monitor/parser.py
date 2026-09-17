@@ -17,7 +17,43 @@ from .enrichment import decoded_asn_dimensions, decoded_ua_dimensions
 
 IST = ZoneInfo("Asia/Kolkata")
 GLOBAL_TARGET = "__all__"
+# The Davis Cup schedule only labels future event dates. It does not change
+# existing channel assignments, so retain the current aggregate mapping version
+# and avoid a costly historical live-monitor rebuild.
 CHANNEL_MAPPING_VERSION = 4
+
+_DAVIS_CUP_SCHEDULE_PATH = (
+    Path(__file__).resolve().parents[2]
+    / "config"
+    / "live_monitor"
+    / "davis_cup_2026_schedule.json"
+)
+
+
+def _load_davis_cup_schedule() -> tuple[dict, tuple[str, ...]]:
+    """Load scheduled Davis Cup labels both for matching and the UI menu."""
+    try:
+        payload = json.loads(_DAVIS_CUP_SCHEDULE_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}, ()
+    labels: dict[tuple[str, str], list[tuple[str, str]]] = {}
+    menu_labels: list[tuple[str, str]] = []
+    for event in payload.get("events", []):
+        if not isinstance(event, dict):
+            continue
+        date = str(event.get("date") or "").strip()
+        asset_id = str(event.get("asset_id") or "").strip().casefold()
+        group = str(event.get("group") or "").strip().upper()
+        host = str(event.get("host") or "").strip().upper()
+        opponent = str(event.get("opp") or "").strip().upper()
+        if date and asset_id and group and host and opponent:
+            label = f"{group} | {host} vs {opponent}"
+            labels.setdefault((date, asset_id), []).append((event['start'], label))
+            menu_labels.append((f"{date} {str(event.get('start') or '')}", label))
+    return {key: sorted(value) for key, value in labels.items()}, tuple(label for _, label in sorted(menu_labels))
+
+
+DAVIS_CUP_SCHEDULE, DAVIS_CUP_MENU_TARGETS = _load_davis_cup_schedule()
 
 
 @dataclass
@@ -230,8 +266,25 @@ def channel_candidate(path: str) -> str:
     return re.sub(r"[_-]?(1080p?|720p?|480p?|360p?|[0-9]+)$", "", candidate)
 
 
-def matching_targets(host: str, path: str) -> tuple[str, str]:
-    return GLOBAL_TARGET, resolve_channel(host, channel_candidate(path))
+def davis_cup_target(event_time: dt.datetime, host: str, path: str) -> str | None:
+    """Return the scheduled match label for a Davis Cup CDN request, when known."""
+    normalized_host = str(host or "").strip().casefold()
+    if normalized_host.removesuffix(':443') != "daviscup-veto.akamaized.net":
+        return None
+    asset = re.search(r"(?i)(?:^|/)([0-9a-f]{32})(?:/|$)", str(path or ""))
+    if not asset:
+        return None
+    moment = event_time.astimezone(IST)
+    events = DAVIS_CUP_SCHEDULE.get((moment.strftime('%Y-%m-%d'), asset.group(1).casefold()), [])
+    started = [label for start, label in events if start <= moment.strftime('%H:%M')]
+    if started:
+        return started[-1]
+    return None
+
+
+def matching_targets(event_time: dt.datetime, host: str, path: str) -> tuple[str, str]:
+    scheduled = davis_cup_target(event_time, host, path)
+    return GLOBAL_TARGET, scheduled or resolve_channel(host, channel_candidate(path))
 
 
 def parse_gzip_file(path: Path, watched_paths: tuple[str, ...]) -> FileBatch:
@@ -284,7 +337,7 @@ def parse_gzip_file(path: Path, watched_paths: tuple[str, ...]) -> FileBatch:
             delivery_policy_status = integer_value(row.get("deliveryPolicyReqStatus"))
             edge_attempts = integer_value(row.get("edgeAttempts"))
             dimensions = request_dimensions(row, request_path, query)
-            for target in matching_targets(host, request_path):
+            for target in matching_targets(event_time, host, request_path):
                 values = batch.metrics[(minute, host, target)]
                 values[0] += 1
                 values[1] += byte_count

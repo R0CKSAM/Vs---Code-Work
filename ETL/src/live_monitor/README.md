@@ -40,6 +40,24 @@ The channel dropdown defaults to **All channels** and uses the same canonical
 host/path channel mapping as the batch ETL. Each selection reports exact
 distinct `cliIP` values per minute for that mapped channel.
 
+## Davis Cup schedule labels
+
+Edit `ETL/config/live_monitor/davis_cup_2026_schedule.json` to label a Davis
+Cup CDN asset in the War Room as `GRP n/Mn | HOST vs OPP`. The parser applies
+the match label by the request's IST calendar date, scheduled start time,
+production CDN host, and 32-character asset ID in the request path. A shared
+asset switches labels at the next scheduled start on that date. This is
+schedule-based attribution, not verification of the video content; overruns
+and overnight sessions require confirmed schedule updates. Pre-start traffic
+remains Other. This forward-only schedule does not invalidate or
+rebuild historical live-monitor aggregates.
+
+The War Room Channel menu supports search, multiple selections, Select visible,
+and Clear. Combined selections use a read-only database snapshot to deduplicate
+IPs, devices, and sessions across channels rather than summing their counts.
+Selected-channel results are cached for ten seconds; only one selection query
+runs at a time to limit competition with ingestion.
+
 Validate configuration without starting ingestion:
 
 ```powershell
