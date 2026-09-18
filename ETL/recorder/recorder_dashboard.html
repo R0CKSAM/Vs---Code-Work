@@ -14,6 +14,11 @@
 .blank{border:1px dashed var(--line);min-height:260px;display:flex;align-items:center;justify-content:center;color:var(--muted)}.history{margin-top:22px;border-top:1px solid var(--line);padding-top:15px}.section-head{display:flex;align-items:center;margin-bottom:9px}.section-head h2{font-size:15px;margin:0}.table-wrap{overflow:auto;border:1px solid var(--line)}table{width:100%;border-collapse:collapse;min-width:780px;background:var(--panel)}th,td{text-align:left;padding:9px 11px;border-bottom:1px solid #193344;white-space:nowrap}th{font-size:11px;text-transform:uppercase;color:var(--muted);background:#0b1b28}.state-recording{color:var(--green)}.state-failed,.state-interrupted{color:var(--red)}
 @media(max-width:900px){.toolbar{grid-template-columns:1fr 1fr}.picker{grid-column:1/-1}.system .disk{display:none}}@media(max-width:560px){.topbar{height:auto;min-height:64px;flex-wrap:wrap;padding:10px 12px}.system{margin-left:0;width:100%}.toolbar{padding:10px 12px;grid-template-columns:1fr}.picker{grid-column:auto}.content{padding:12px}.summary{flex-wrap:wrap;gap:8px 15px}.feed-grid{grid-template-columns:1fr}.sub{display:none}}
 .library-filters{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.library-filters input,.library-filters select{max-width:100%;min-width:0;background:var(--panel2);color:var(--text);border:1px solid var(--line);padding:8px;border-radius:4px}.library-actions{display:flex;gap:8px;align-items:center}.library-actions a{color:var(--blue)}dialog{width:min(960px,94vw);max-height:90vh;background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:16px}dialog::backdrop{background:#000b}dialog video{width:100%;max-height:65vh;background:#000;display:block;margin-top:12px}#playTitle{overflow-wrap:anywhere;margin:0;flex:1}#playState{padding:10px 0;color:var(--muted)}
+.feed-audio{display:flex;align-items:center;gap:12px;padding:8px 12px;border-top:1px solid var(--line);min-width:0}
+.feed-audio label{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.feed-audio input[type=checkbox]{width:16px;height:16px;accent-color:var(--green)}
+.feed-audio input[type=range]{flex:1;min-width:0;max-width:220px;accent-color:var(--green)}
+.feed-audio output{width:4ch;text-align:right;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -79,6 +84,7 @@
 'use strict';
 const $=id=>document.getElementById(id);
 const S={channels:[],selected:new Set(JSON.parse(localStorage.getItem('veto-recorder-selection')||'[]')),players:new Map(),status:null,recordings:[],feedSignature:''};
+const feedAudio=new Map();
 const requestedChannels=[...new Set(new URLSearchParams(location.search).getAll('channel'))];
 let requestedChannelApplied=false;
 const picker=$('picker'),list=$('channelList'),grid=$('feedGrid'),alertEl=$('alert');
@@ -130,7 +136,28 @@ function renderFeeds(force=false){
     const card=document.createElement('article');card.className='feed';card.dataset.id=channel.id;
     card.innerHTML=`<div class="feed-head"><span class="dot ${channel.recording?'':'ok'}"></span><span class="feed-title">${esc(channel.name)}</span><div class="feed-actions"><button class="icon-action record" data-action="record" ${channel.recording||!S.status?.ffmpeg_ready?'disabled':''}>Record</button><button class="icon-action stop" data-action="stop" ${channel.recording?'':'disabled'}>Stop</button></div></div><div class="video-wrap"><video muted autoplay playsinline controls></video><div class="empty-feed" hidden></div></div><div class="feed-foot"><span class="feed-status">Waiting</span><span>${esc(channel.group)}</span><span class="${channel.recording?'recording':''}">${channel.recording?'REC':''}</span></div>`;
     grid.appendChild(card);const video=card.querySelector('video'),status=card.querySelector('.feed-status');
-    if(available(channel))attachPlayer(channel,video,status);else{video.hidden=true;const empty=card.querySelector('.empty-feed');empty.hidden=false;empty.textContent='Playback URL required in channels.json';status.textContent='Unavailable'}
+    if(available(channel)){
+      attachPlayer(channel,video,status);
+      const audio=feedAudio.get(channel.id)||{muted:true,volume:1};
+      video.muted=audio.muted;video.volume=audio.volume;
+      const controls=document.createElement('div');controls.className='feed-audio';
+      controls.innerHTML='<label><input type="checkbox"> Audio</label><input type="range" min="0" max="100" step="1"><output></output>';
+      const toggle=controls.querySelector('input[type=checkbox]'),volume=controls.querySelector('input[type=range]'),value=controls.querySelector('output');
+      toggle.setAttribute('aria-label','Enable audio for '+channel.name);
+      volume.setAttribute('aria-label','Volume for '+channel.name);
+      function syncAudio(){toggle.checked=!video.muted;volume.value=Math.round(video.volume*100);value.textContent=volume.value+'%';feedAudio.set(channel.id,{muted:video.muted,volume:video.volume})}
+      toggle.onchange=()=>{
+        const enabled=toggle.checked;
+        video.muted=!enabled;if(enabled&&video.volume===0)video.volume=1;syncAudio();
+        if(enabled)video.play().catch(error=>{
+          if(!video.isConnected||video.muted)return;
+          video.muted=true;syncAudio();
+          notify('Audio playback could not start for '+channel.name+': '+error.message,'error');
+        });
+      };
+      volume.oninput=()=>{video.volume=Number(volume.value)/100;syncAudio()};
+      video.addEventListener('volumechange',syncAudio);syncAudio();card.append(controls);
+    }else{video.hidden=true;const empty=card.querySelector('.empty-feed');empty.hidden=false;empty.textContent='Playback URL required in channels.json';status.textContent='Unavailable'}
   }
 }
 async function start(ids){try{notify('');const data=await api('/api/recordings/start',{method:'POST',body:JSON.stringify({channel_ids:ids,segment_minutes:Number($('segmentMinutes').value)})});if(data.errors.length)notify(data.errors.map(x=>x.reason).join('; '),'error');await refresh()}catch(error){notify(error.message,'error')}}
