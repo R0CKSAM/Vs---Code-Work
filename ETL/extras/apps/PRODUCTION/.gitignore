@@ -1,0 +1,52 @@
+# Applies to every deployment under PRODUCTION, including dated copies.
+# Keep application source, tests, scripts, documentation and template assets visible.
+!*.csv
+
+# Reinstallable Python, Node and media-tool dependencies.
+python_packages/
+packages/
+wheels/
+node_modules/
+.venv/
+venv/
+.dropdown-tools/
+**/tools/ffmpeg/
+**/tools/gstreamer/
+*.whl
+*.exe
+*.dll
+*.pyd
+
+# Private workstation state and generated output, not application source.
+data/
+logs/
+recordings/
+uploads/
+exports/
+__pycache__/
+.pytest_cache/
+tmp*/
+Crashpad/
+chrome-*/
+edge-test/
+browser-memory-*/
+*.pma
+isolated-registry.bin
+hardware-report.json
+*.db*
+*.sqlite*
+*.log*
+*.pid
+*.lock
+*.lnk
+.setup-complete
+.env
+.env.*
+!.env.example
+*.htpasswd
+*.key
+*.pem
+
+# Generated deployment bundles; the country flag archive is an application asset.
+*.zip
+!country_flags.zip

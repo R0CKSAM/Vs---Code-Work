@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scoreboard Maker</title>
+<style>
+:root{color-scheme:light;--bg:#eaf0f4;--surface:#fff;--surface2:#f6f9fb;--line:#c9d4dc;--ink:#182630;--muted:#61717e;--green:#18794e;--green2:#11633f;--blue:#176b9b;--danger:#a33737}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px "Nirmala UI","Noto Sans","Segoe UI",Arial,sans-serif;letter-spacing:0}.toolbar{height:58px;display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}.brand{font-size:20px;font-weight:700;margin-right:8px;white-space:nowrap}.toolbar select{width:190px}.spacer{flex:1}.app{display:grid;grid-template-columns:minmax(390px,34vw) 1fr;height:calc(100vh - 58px)}.controls{overflow:auto;padding:10px 12px 40px;border-right:1px solid var(--line)}.preview-pane{min-width:0;display:flex;flex-direction:column;padding:10px}.preview-head{height:34px;display:flex;align-items:center;justify-content:space-between;font-weight:700}.stage{flex:1;min-height:0;background:#1c252d;display:flex;align-items:center;justify-content:center;padding:24px;overflow:auto}.stage img{display:block;max-width:100%;max-height:100%;object-fit:contain;box-shadow:0 10px 28px #0008;user-select:none;-webkit-user-drag:none}.stage img.movable{cursor:move}.group{background:var(--surface);border:1px solid var(--line);margin-bottom:10px}.group>h2{font-size:13px;margin:0;padding:8px 10px;background:var(--surface2);border-bottom:1px solid var(--line)}.group-body{padding:9px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.grid.one{grid-template-columns:1fr}.field{min-width:0}.field label{display:block;color:#344752;font-size:12px;font-weight:600;margin:0 0 4px}.field input:not([type=checkbox]):not([type=color]),.field select,.field textarea{width:100%;min-width:0;height:34px;border:1px solid #aebdc7;background:#fff;color:var(--ink);padding:6px 8px;font:inherit}.field textarea{height:58px;resize:vertical}.field input[type=color]{width:100%;height:34px;border:1px solid #aebdc7;background:#fff;padding:2px}.check{display:flex;align-items:center;gap:7px;height:34px;padding-top:15px}.check label{margin:0}.upload{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:end}.file-name{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}.row-table{width:100%;border-collapse:collapse;table-layout:fixed}.row-table th{font-size:11px;text-align:left;color:var(--muted);padding:4px}.row-table td{padding:3px}.row-table input{width:100%;min-width:0;height:31px;border:1px solid #b8c5ce;padding:4px}.row-table input[type=color]{padding:1px}.icon-button{width:31px;height:31px;padding:0;border:1px solid #b6c3cb;background:#fff;color:var(--danger);font-size:18px;cursor:pointer}.button-row{display:flex;gap:7px;margin-top:8px}button{height:34px;border:1px solid #aebbc4;background:#fff;color:var(--ink);padding:0 12px;font-weight:600;cursor:pointer}button:hover{background:#eef4f7}button.primary{background:var(--green);border-color:var(--green);color:#fff}button.primary:hover{background:var(--green2)}button.danger{color:#fff;background:var(--danger);border-color:var(--danger)}button:disabled{opacity:.55;cursor:not-allowed}.status{font-size:12px;color:var(--muted)}.live{color:#118044;font-weight:700}.error{display:none;background:#ffe8e8;color:#7f2020;border:1px solid #e4abab;padding:8px 10px;margin-bottom:10px}.player{border-top:1px solid var(--line);padding-top:9px;margin-top:9px}.player:first-child{border-top:0;padding-top:0;margin-top:0}.player h3{font-size:13px;margin:0 0 8px}.text-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.inline-check{display:flex;align-items:center;gap:6px;font-size:12px;margin-top:5px}dialog{border:1px solid #9cabb5;padding:0;box-shadow:0 20px 70px #0007;min-width:390px}dialog::backdrop{background:#17232c99}.dialog-head{font-size:16px;font-weight:700;padding:12px 14px;border-bottom:1px solid var(--line)}.dialog-body{padding:14px}.dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.busy{opacity:.7;pointer-events:none}@media(max-width:900px){body{overflow-x:hidden}.toolbar{height:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.toolbar>*{min-width:0}.toolbar .brand{grid-column:1/-1;width:auto}.toolbar select,.toolbar button{width:100%;min-width:0}.toolbar .status{text-align:center}.app{grid-template-columns:minmax(0,1fr);height:auto;width:100%;max-width:100%}.controls{grid-row:2;overflow:visible;border-right:0;min-width:0}.preview-pane{grid-row:1;height:52vh;min-height:360px;position:static;width:100%;max-width:100%;background:var(--bg)}.stage{min-width:0;width:100%;max-width:100%;overflow:hidden}.stage img{width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain}.spacer{display:none}}@media(max-width:520px){.grid,.text-row{grid-template-columns:1fr}.toolbar select{width:100%}.stage{padding:8px}dialog{min-width:calc(100vw - 24px)}}
+.project-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--line);background:var(--surface)}.project-bar input{width:180px;min-width:0;height:34px;padding:5px}.project-bar select{width:280px;max-width:100%;height:34px}.project-bar .status{overflow-wrap:anywhere}.app{height:calc(100vh - 110px)}fieldset.editor-fields{border:0;margin:0;padding:0;min-width:0}dialog{min-width:0;width:min(560px,94vw);max-height:90vh;overflow:auto}.dialog-actions{flex-wrap:wrap}@media(max-width:900px){.app{height:auto}.project-bar input,.project-bar select{flex:1 1 170px}}
+#keyerConfirmation[hidden]{display:none}
+</style>
+<style>.preview-tools[hidden]{display:none!important}</style>
+<style>
+.toolbar{height:66px;gap:10px}.brand{font-size:17px}.nav-field{display:flex;flex-direction:column;gap:3px;min-width:0}.nav-field>span{font-size:11px;color:var(--muted);font-weight:600}.toolbar .project-choice{width:240px}.nav-field select{width:100%;min-width:0;padding:0 8px;border:1px solid #aebbc4;background:#fff;height:34px}.project-bar{display:grid;grid-template-columns:190px 130px 150px minmax(180px,1fr) 150px 34px 64px 64px;align-items:end;padding:8px 14px;gap:8px}.project-bar input{width:100%}.app{height:calc(100vh - 132px);grid-template-columns:minmax(340px,31%) 1fr}.operator-menu{position:relative}.operator-menu>summary{cursor:pointer;padding:8px;border:1px solid var(--line);list-style:none}.menu-items{position:absolute;right:0;top:40px;z-index:30;width:220px;padding:10px;background:white;border:1px solid var(--line);box-shadow:0 5px 20px #0002;display:grid;gap:6px}.menu-items .operator-name{width:100%}.preview-head{height:42px;gap:8px}.preview-head>span{overflow-wrap:anywhere}.preview-head button{width:32px;padding:0;font-size:19px}.editor-detail{margin-bottom:10px;border-top:1px solid var(--line)}.editor-detail>summary{padding:10px 0;font-weight:600;cursor:pointer}.operator-menu[open] .menu-items button{text-align:left}#presetError{color:var(--danger);margin-top:8px}.group{border:0;border-bottom:1px solid var(--line)}.group>h2{background:transparent}.preview-tools{margin-top:4px}
+@media(max-width:1200px){.project-bar{grid-template-columns:180px 120px 140px minmax(150px,1fr) 34px 64px 64px}.project-bar #presetSearch{grid-column:1/5;grid-row:2}.app{height:calc(100vh - 174px)}}
+@media(max-width:900px){.toolbar{display:flex;flex-wrap:wrap;height:auto;position:static}.toolbar .brand{width:auto}.toolbar .project-choice{flex:1 1 190px}.toolbar button{width:auto}.toolbar .status{max-width:160px}.project-bar{grid-template-columns:repeat(3,minmax(0,1fr))}.project-bar .preset-choice{grid-column:1/3}.project-bar #presetSearch{grid-column:1/3;grid-row:auto}.project-bar input,.project-bar select{width:100%}.app{height:auto;grid-template-columns:minmax(0,1fr)}.menu-items{right:0}.preview-head{height:auto;min-height:42px}.preview-head>div{flex-shrink:0}.preview-head #dimensions{display:none}}
+</style>
+<style>
+.operator-name{width:130px;height:34px;border:1px solid #aebbc4;padding:0 8px;font:inherit}
+.users-table-wrap{max-height:360px;overflow:auto;margin-top:10px;border:1px solid var(--line)}
+.users-table{width:100%;border-collapse:collapse;min-width:560px}
+.users-table th,.users-table td{padding:7px 8px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+.users-table th{position:sticky;top:0;background:var(--surface2);font-size:12px}
+.users-table select{height:30px;min-width:110px;border:1px solid #aebbc4;background:#fff}
+.preview-tools{min-height:42px;display:grid;grid-template-columns:minmax(130px,190px) repeat(5,34px) minmax(90px,1fr) 34px 48px;gap:5px;align-items:center;padding:4px 0 7px}
+.preview-tools select{height:34px;min-width:0;border:1px solid #aebbc4;background:#fff;padding:0 7px}
+.preview-tools input[type=range]{width:100%;min-width:70px}
+.tool-button{width:34px;padding:0;font-size:17px}
+.stage{position:relative;touch-action:none}
+.stage.drop-ready{outline:3px solid #38a169;outline-offset:-6px}
+.stage.drop-ready::after{content:"Drop image";position:absolute;inset:16px;display:flex;align-items:center;justify-content:center;background:#0b1722dd;color:#fff;border:2px dashed #63d98c;font-size:22px;font-weight:700;z-index:3;pointer-events:none}
+@media(max-width:1100px) and (min-width:901px){.preview-tools{grid-template-columns:minmax(110px,1fr) repeat(7,34px) 42px}.toolbar{gap:5px;padding-left:8px;padding-right:8px}.toolbar button{padding-left:7px;padding-right:7px}.brand{font-size:17px}.operator-name{width:105px}.toolbar select{width:145px}}
+@media(max-width:900px){.toolbar .operator-name{width:100%;min-width:0}.users-table-wrap{max-width:calc(100vw - 54px)}.preview-tools{grid-template-columns:minmax(120px,1fr) repeat(5,34px) minmax(70px,1fr) 34px 44px}}
+@media(max-width:560px){.preview-tools{grid-template-columns:minmax(0,1fr) repeat(7,34px) 42px}.preview-tools input[type=range]{grid-column:1/-2;grid-row:2}.preview-tools #previewScaleValue{grid-column:-2/-1;grid-row:2}}
+</style>
+<style>.project-bar .nav-field select{flex:none;height:34px;min-height:34px;max-height:34px}</style>
+<style>@media(max-width:520px){.project-bar>.nav-field:first-child{grid-column:1/-1}}</style>
+<style>
+.template-picker{position:relative;min-width:200px}.template-picker summary{padding:8px 12px;border:1px solid var(--line);cursor:pointer;list-style:none}.template-popup{position:absolute;top:40px;left:0;z-index:40;background:white;border:1px solid var(--line);width:280px;max-width:85vw;padding:8px}.template-popup input{width:100%;height:34px;padding:6px}.template-popup #templateOptions{max-height:260px;overflow-y:auto;margin-top:6px;display:grid;gap:3px}.template-popup button{text-align:left;height:auto;min-height:34px;white-space:normal}.template-popup button[aria-pressed=true]{background:#deefe5}.library-bar{display:flex;gap:10px;align-items:end;padding:8px 14px;background:white;border-bottom:1px solid var(--line)}.library-bar .nav-field{width:220px}.library-bar .nav-field:nth-child(2){width:320px}.signal-red{background:#a83036;color:white;border-color:#a83036}.signal-yellow{background:#ffdc66;color:#352900;border-color:#d5aa27}.signal-green{background:#18794e;color:white;border-color:#18794e}.toolbar .signal-green:hover{background:#12603e}.toolbar .signal-red:hover{background:#89282c}.toolbar .signal-yellow:hover{background:#f8cc3d}#viewDuplicate[hidden]{display:none}.app{height:calc(100vh - 132px)}
+@media(max-width:1100px){.toolbar{height:auto;flex-wrap:wrap}.app{height:auto;min-height:calc(100vh - 150px)}.preview-pane{min-height:65vh}}
+@media(max-width:600px){.template-picker{flex:1}.library-bar{flex-wrap:wrap}.library-bar .nav-field,.library-bar .nav-field:nth-child(2){width:calc(50% - 5px)}.toolbar .brand{width:100%}.toolbar .spacer{display:none}.app{height:auto}.preview-pane{min-height:360px}}
+</style>
+<style>.template-picker summary{list-style:disclosure-closed inside}.template-picker[open] summary{list-style:disclosure-open inside}</style>
+<style>
+.preset-picker{position:relative;min-width:0;width:100%}.preset-picker summary{height:34px;padding:7px 9px;border:1px solid var(--line);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;list-style:disclosure-closed inside}.preset-picker[open] summary{list-style:disclosure-open inside}.preset-picker .template-popup{width:100%;min-width:0;max-width:100%;top:38px}.picker-options{display:grid;gap:3px;max-height:min(260px,50vh);overflow:auto;margin-top:6px;overscroll-behavior:contain}.picker-options button{width:100%;min-width:0;overflow-wrap:anywhere;padding:7px;text-align:left}.preset-picker[aria-disabled=true]{opacity:.55;pointer-events:none}.header-library select[hidden]{display:none!important}.template-popup{box-shadow:0 5px 16px #0002}.template-popup button{overflow-wrap:anywhere}.picker-empty{padding:8px;color:var(--muted)}
+@media(max-width:600px){.preset-picker .template-popup{position:fixed;left:8px;right:8px;top:auto;width:auto;max-width:none;margin-top:4px}.preview-tools{grid-template-columns:repeat(5,minmax(0,1fr))!important}.preview-tools select{grid-column:1/-1}.preview-tools input[type=range]{grid-column:1/4;grid-row:auto}.preview-tools #previewScaleValue{grid-column:auto;grid-row:auto}.preview-tools .tool-button{width:100%}}
+</style>
+</head>
+<body>
+<header class="toolbar">
+ <div class="header-library" role="group" aria-label="Template and saved presets">
+  <div class="brand">Scoreboard Maker</div>
+  <details id="templatePicker" class="template-picker"><summary id="templateLabel">Template</summary>
+    <div class="template-popup"><input id="templateSearch" type="search" placeholder="Search templates" aria-label="Search templates"><div id="templateOptions" role="group" aria-label="Templates"></div></div>
+  </details><select id="template" hidden aria-label="Layout"></select>
+  <div class="nav-field country-choice"><span>Country</span><details id="countryPicker" class="preset-picker"><summary id="countryLabel">All countries</summary><div class="template-popup"><input id="countrySearch" type="search" placeholder="Search countries" aria-label="Search countries"><div id="countryOptions" class="picker-options"></div></div></details><select id="presetCountry" hidden><option value="">All countries</option></select></div>
+  <div class="nav-field player-choice"><span>Player</span><details id="playerPicker" class="preset-picker"><summary id="playerLabel">Choose player</summary><div class="template-popup"><input id="playerSearch" type="search" placeholder="Search players" aria-label="Search players"><div id="playerOptions" class="picker-options"></div></div></details><select id="presetPlayer" hidden><option value="">Choose player</option></select></div>
+  <button id="newPlayer" title="New template draft" aria-label="New template draft">+</button>
+  <button id="savePreset" class="primary">Save template</button>
+  <button id="deletePreset" title="Delete selected saved template" disabled>Delete saved</button>
+  <span id="libraryStatus" class="status" role="status" aria-live="polite">Library connecting...</span>
+ </div>
+ <div class="header-operations">
+  <div class="header-group" role="group" aria-label="Operator controls">
+    <label class="operator-field"><span>Operator</span><input id="operatorName" class="operator-name" maxlength="40" aria-label="Operator name" title="Operator name"></label>
+    <button id="usersButton">Users: 0</button><span id="accessRole" class="status"></span>
+  </div>
+  <div class="header-group" role="group" aria-label="Export and reset">
+    <button id="mp4Button">Export MP4</button><button id="pngButton">Export PNG</button>
+    <button id="reset">Reset template</button>
+  </div>
+  <div class="header-group header-live" role="group" aria-label="Live output controls">
+  <span id="liveStatus" class="status">Stopped</span>
+  <button id="liveButton" class="signal-red">Start live stream</button>
+  <button id="takeLive" class="signal-yellow" disabled>Push On Air</button>
+  <button id="clearLive" disabled title="Clear the graphic while keeping output running">Clear On Air</button>
+  </div>
+ </div>
+</header>
+<main class="app">
+  <aside class="controls"><div id="error" class="error"></div><div id="editor"></div></aside>
+  <section class="preview-pane">
+    <div class="preview-head"><span id="presetState">Preview</span><div><button id="undo" title="Undo" aria-label="Undo">&#8630;</button><button id="redo" title="Redo" aria-label="Redo">&#8631;</button> <span id="dimensions" class="status"></span></div></div>
+    <div class="preview-tools">
+      <select id="previewLayer" aria-label="Selected image" title="Selected image"></select>
+      <button id="moveLeft" class="tool-button" title="Move left" aria-label="Move left">&#8592;</button>
+      <button id="moveUp" class="tool-button" title="Move up" aria-label="Move up">&#8593;</button>
+      <button id="moveDown" class="tool-button" title="Move down" aria-label="Move down">&#8595;</button>
+      <button id="moveRight" class="tool-button" title="Move right" aria-label="Move right">&#8594;</button>
+      <button id="shrinkImage" class="tool-button" title="Make image smaller" aria-label="Make image smaller">&#8722;</button>
+      <input id="previewScale" type="range" min="2" max="300" step="1" aria-label="Image size">
+      <button id="growImage" class="tool-button" title="Make image larger" aria-label="Make image larger">+</button>
+      <span id="previewScaleValue" class="status"></span>
+    </div>
+    <div id="stage" class="stage" tabindex="0"><img id="preview" alt="Scoreboard preview"></div>
+  </section>
+  <section class="program-pane" aria-label="On Air monitor">
+    <div class="program-head"><strong>ON AIR</strong><span id="programState" role="status">Output stopped</span></div>
+    <div id="programName">Black</div>
+    <div class="program-screen"><img id="programImage" alt="Server output preview" title="Software output frame; not an SDI hardware return feed"><span id="programUnavailable">Connecting...</span></div>
+    <div id="programDetails" class="status"></div>
+    <div id="programUpdated" class="status"></div>
+  </section>
+</main>
+<style>
+.app{grid-template-columns:minmax(330px,26%) minmax(0,1fr) minmax(0,1fr)}
+.program-pane{min-width:0;padding:10px;border-left:1px solid var(--line);background:#f5f8fa}
+.program-head{display:flex;gap:8px;align-items:center;justify-content:space-between;min-height:34px;flex-wrap:wrap}.program-head strong{color:#b52c34;font-size:14px}.program-head span{font-size:12px;padding:4px 8px;background:#e4e9ed;color:#344752}
+.program-head span.on-air{background:#d9f0e2;color:#10643b}.program-head span.stale{background:#ffe4cb;color:#852b13}
+#programName{font-weight:600;overflow-wrap:anywhere;padding:6px 0;min-height:30px}.program-screen{position:relative;width:100%;aspect-ratio:16/9;background:#000;overflow:hidden}.program-screen img{width:100%;height:100%;object-fit:contain;display:block}#programUnavailable{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#000d;color:#fff;font-size:13px;text-align:center;padding:12px}#programUnavailable[hidden]{display:none}#programDetails,#programUpdated{margin-top:8px;overflow-wrap:anywhere}
+.preview-head{height:auto;min-height:34px;gap:8px;flex-wrap:wrap}.preview-head>div{display:flex;gap:4px;align-items:center;flex-wrap:wrap}.preview-tools{grid-template-columns:minmax(100px,1fr) repeat(5,34px)}.preview-tools input[type=range]{grid-column:1/5;grid-row:2}.stage{flex:none;width:100%;aspect-ratio:16/9;padding:8px;overflow:hidden}.preview-pane{min-height:0;overflow:auto}.stage img{width:100%;height:100%;object-fit:contain}
+@media(min-width:901px) and (max-width:1200px){.app{grid-template-columns:minmax(330px,38%) minmax(0,1fr);height:auto}.controls{grid-column:1;grid-row:1/3}.preview-pane{grid-column:2;grid-row:1;height:auto;min-height:0}.program-pane{grid-column:2;grid-row:2}.toolbar{height:auto;flex-wrap:wrap}}
+@media(max-width:900px){.app{grid-template-columns:minmax(0,1fr);height:auto}.program-pane{grid-column:1;grid-row:1;border-left:0}.preview-pane{grid-column:1;grid-row:2;height:auto;min-height:0}.controls{grid-column:1;grid-row:3}.preview-tools{grid-template-columns:minmax(100px,1fr) repeat(5,34px)}.toolbar{display:flex;flex-wrap:wrap}.toolbar button{width:auto}.toolbar .template-picker{flex:1;min-width:180px}.stage{height:auto;min-height:0}}
+</style>
+
+<style>
+.toolbar{display:flex;flex-direction:column;align-items:stretch;height:auto;gap:0;padding:0;position:sticky;top:0}
+.header-library{display:flex;align-items:end;flex-wrap:wrap;gap:8px;padding:10px 14px}
+.header-library .brand{align-self:center;font-size:16px;margin-right:6px;width:auto}
+.header-library .template-picker{flex:0 1 210px;min-width:180px}
+.header-library .template-picker summary{height:34px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.header-library .country-choice{flex:0 1 150px}.header-library .player-choice{flex:1 1 230px;max-width:380px}
+.header-library .nav-field select{width:100%}.header-library #newPlayer{width:34px;padding:0;font-size:19px}
+.header-library #libraryStatus{margin-left:auto;align-self:center;overflow-wrap:anywhere;max-width:180px}
+.header-operations{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;border-top:1px solid var(--line);padding:8px 14px;background:var(--surface2)}
+.header-group{display:flex;gap:6px;align-items:center;flex-wrap:wrap;min-width:0}
+.header-group+.header-group{border-left:1px solid var(--line);padding-left:14px}
+.header-live{margin-left:auto}.header-live #liveStatus{max-width:220px;overflow-wrap:anywhere;text-align:left}
+.operator-field{display:flex;align-items:center;gap:6px;min-width:0}.operator-field>span{font-size:12px;color:var(--muted)}
+.toolbar .operator-name{width:145px;min-width:0}.toolbar button{white-space:nowrap;flex-shrink:0;width:auto}
+#accessRole{font-size:11px} .app{height:calc(100dvh - var(--header-height,130px))}
+@media(max-width:1200px){.header-live{margin-left:0}.app{height:auto}}
+@media(max-width:600px){.toolbar{position:static}.header-library{padding:8px;gap:8px}.header-library .brand{flex-basis:100%}.header-library .template-picker{flex-basis:100%;min-width:0}.header-library .country-choice{flex:1 1 100px}.header-library .player-choice{flex:2 1 150px;max-width:none}.header-library #libraryStatus{max-width:140px;text-align:left}.header-operations{padding:8px;gap:8px}.header-group{width:100%}.header-group+.header-group{border-left:0;border-top:1px solid var(--line);padding:8px 0 0}.toolbar .operator-name{width:140px}.header-live #liveStatus{flex-basis:100%;max-width:none}.app{height:auto}}
+</style>
+
+<dialog id="liveDialog"><div class="dialog-head">DeckLink live output</div><div class="dialog-body"><div class="grid one"><div class="field"><label>SDI output</label><select id="liveDevice"></select></div><div class="field"><label>Video format</label><select id="livePreset"></select></div><div class="field"><label for="clearMode">Output / Clear mode</label><select id="clearMode"><option value="black">Normal video - clear to black</option><option value="chroma-magenta">Chroma key - magenta / pink</option><option value="external-key">Fill + Key - alpha overlay</option><option disabled>Internal keyer - hardware setup required</option></select></div><label class="inline-check" id="keyerConfirmation" hidden><input id="keyerConfirmed" type="checkbox"><span id="keyerConfirmationText">Switcher chroma key matches this colour; matching graphic colours will also be removed</span></label><div id="outputHardwareStatus" role="status"></div><label class="inline-check"><input id="receiverConfirmed" type="checkbox">Switcher is set to this exact video format</label></div><div class="dialog-actions"><button data-close="liveDialog">Cancel</button><button id="startLive" class="primary" disabled>Start SDI output</button></div></div></dialog>
+<dialog id="mp4Dialog"><div class="dialog-head">Export MP4</div><div class="dialog-body"><div class="grid one"><div class="field"><label>Video format</label><select id="mp4Preset"></select></div><div class="field"><label>Duration in seconds</label><input id="mp4Duration" type="number" min="1" max="300" value="10"></div></div><div class="dialog-actions"><button data-close="mp4Dialog">Cancel</button><button id="exportMp4" class="primary">Export MP4</button></div></div></dialog>
+<dialog id="usersDialog"><div class="dialog-head">Users and live priority</div><div class="dialog-body"><div id="usersAccess" class="status"></div><div class="users-table-wrap"><table class="users-table"><thead><tr><th>User</th><th>Address</th><th>Seen</th><th>Priority</th><th>Live</th></tr></thead><tbody id="usersTable"></tbody></table></div><div class="dialog-actions"><button id="refreshUsers">Refresh</button><button data-close="usersDialog">Close</button></div></div></dialog>
+
+<dialog id="presetDialog"><div class="dialog-head">Save template</div><div class="dialog-body"><div class="grid">
+<div class="field"><label for="presetPlayerName">Player name</label><input id="presetPlayerName" maxlength="100"></div>
+<div class="field"><label for="presetCountryName">Country</label><input id="presetCountryName" maxlength="100"></div>
+</div><div id="presetError" role="alert"></div><button id="viewDuplicate" hidden>View existing template</button>
+<fieldset id="updateCredentials" hidden><legend>Update saved template</legend><div class="grid"><div class="field"><label for="editorUser">Editor ID</label><input id="editorUser" autocomplete="username"></div><div class="field"><label for="editorPassword">Password</label><input id="editorPassword" type="password" autocomplete="current-password"></div></div><button id="updatePreset">Update saved template</button></fieldset>
+<div class="dialog-actions"><button data-close="presetDialog">Cancel</button><button id="confirmPreset" class="primary">Save template</button></div></div></dialog>
+<dialog id="deleteDialog"><div class="dialog-head">Delete saved template</div><div class="dialog-body">
+<p id="deleteName"></p><div class="grid"><div class="field"><label for="deleteUser">ID</label><input id="deleteUser" autocomplete="username"></div><div class="field"><label for="deletePassword">Password</label><input id="deletePassword" type="password" autocomplete="current-password"></div></div>
+<div id="deleteError" role="alert"></div><div class="dialog-actions"><button data-close="deleteDialog">Cancel</button><button id="confirmDelete" class="signal-red">Confirm delete</button></div></div></dialog>
+<script>
+'use strict';
+const $=id=>document.getElementById(id),clone=x=>JSON.parse(JSON.stringify(x));
+new ResizeObserver(entries=>document.documentElement.style.setProperty('--header-height',entries[0].target.getBoundingClientRect().height+'px')).observe(document.querySelector('.toolbar'));
+let boot,configs={},template='t1',history=[],historyIndex=-1,renderTimer=null,renderToken=0,previewUrl='',drag=null;
+const clientId=localStorage.getItem('vetoScoreboardClientId')||(crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random().toString(16).slice(2)}`);
+localStorage.setItem('vetoScoreboardClientId',clientId);
+let latestLive={active:false},latestSessions={sessions:[],can_manage:false};
+let library=[],selectedSaved='',presetSaving=false,duplicateItem=null,lastShown=null,shownRevision=null;
+let liveCommandBusy=false,liveRefreshBusy=false,programUrl=null,programFetchBusy=false,programReady=false,displayedProgramRevision=null;
+for(const eventName of ['pointerdown','wheel','keydown','drop'])$('stage').addEventListener(eventName,event=>{if(['t7','t8'].includes(template)&&event.target.tagName!=='VIDEO'&&!event.target.closest('#customBoxCanvas')){event.preventDefault();event.stopImmediatePropagation()}},true);
+const mediaPreview=document.createElement('video');mediaPreview.id='mediaPreview';mediaPreview.muted=true;mediaPreview.controls=true;mediaPreview.playsInline=true;mediaPreview.style.cssText='display:none;width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain;background:black;aspect-ratio:16/9';$('stage').append(mediaPreview);
+mediaPreview.addEventListener('keydown',e=>e.stopPropagation());
+mediaPreview.onerror=()=>{mediaPreview.style.display='none';$('preview').style.display='';setError('Browser preview cannot play this codec. Showing its poster; SDI playback uses FFmpeg.')};
+function syncMediaPreview(){const cfg=getConfig(),path=template==='t8'&&cfg.media_kind==='video'?cfg.media_path:'';if(path){const url='/api/media?name='+encodeURIComponent(path.split(/[\\/]/).pop());$('preview').style.display='none';mediaPreview.style.display='block';mediaPreview.loop=!!cfg.loop;if(mediaPreview.getAttribute('src')!==url){mediaPreview.src=url;mediaPreview.play().catch(()=>{})}}else{mediaPreview.pause();mediaPreview.removeAttribute('src');mediaPreview.load();mediaPreview.style.display='none';$('preview').style.display=''}}
+let selectedTextBox=0,boxDrag=null,customOverlayUrl=null;
+const customBoxCanvas=document.createElement('div');customBoxCanvas.id='customBoxCanvas';customBoxCanvas.style.cssText='position:absolute;pointer-events:none;display:none;z-index:2';$('stage').append(customBoxCanvas);
+const boxStyle=document.createElement('style');boxStyle.textContent='.custom-box-hit{position:absolute;pointer-events:auto;cursor:move;touch-action:none;border:1px dashed transparent;outline:none}.custom-box-hit:hover{border-color:#eee}.custom-box-hit.selected{border:2px solid #ffd24a}.custom-box-handle{position:absolute;width:12px;height:12px;background:#fff;border:2px solid #1c252d;touch-action:none}.custom-box-handle[data-corner=nw]{left:-6px;top:-6px;cursor:nwse-resize}.custom-box-handle[data-corner=ne]{right:-6px;top:-6px;cursor:nesw-resize}.custom-box-handle[data-corner=sw]{left:-6px;bottom:-6px;cursor:nesw-resize}.custom-box-handle[data-corner=se]{right:-6px;bottom:-6px;cursor:nwse-resize}#customBoxCanvas>img{position:absolute;inset:0;width:100%;height:100%;box-shadow:none;pointer-events:none}.box-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.box-actions select{flex:1;min-width:100px;height:34px}';document.head.append(boxStyle);
+const customOverlayImage=document.createElement('img');customOverlayImage.alt='';customBoxCanvas.append(customOverlayImage);
+function textBoxes(){return getConfig().text_boxes||(getConfig().text_boxes=[])}
+function layoutTextBoxes(){if(!boot||template!=='t8'){customBoxCanvas.style.display='none';return}customBoxCanvas.style.display='block';const stage=$('stage'),style=getComputedStyle(stage),aw=stage.clientWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight),ah=stage.clientHeight-parseFloat(style.paddingTop)-parseFloat(style.paddingBottom),w=Math.min(aw,ah*16/9),h=w*9/16;Object.assign(customBoxCanvas.style,{left:(parseFloat(style.paddingLeft)+(aw-w)/2)+'px',top:(parseFloat(style.paddingTop)+(ah-h)/2)+'px',width:w+'px',height:h+'px'});customOverlayImage.style.display=mediaPreview.style.display==='block'?'block':'none';customBoxCanvas.querySelectorAll('[data-box-index]').forEach(el=>{const box=textBoxes()[+el.dataset.boxIndex];if(box)Object.assign(el.style,{left:box.x+'%',top:box.y+'%',width:box.width+'%',height:box.height+'%'})})}
+new ResizeObserver(layoutTextBoxes).observe($('stage'));
+function syncTextBoxes(){if(!boot||template!=='t8'){customBoxCanvas.style.display='none';return}customBoxCanvas.querySelectorAll('.custom-box-hit').forEach(el=>el.remove());textBoxes().forEach((box,i)=>{const el=document.createElement('div');el.className='custom-box-hit'+(i===selectedTextBox?' selected':'');el.dataset.boxIndex=i;el.tabIndex=0;el.setAttribute('aria-label','Text box '+(i+1));if(i===selectedTextBox)for(const corner of ['nw','ne','sw','se']){const handle=document.createElement('span');handle.className='custom-box-handle';handle.dataset.corner=corner;el.append(handle)}customBoxCanvas.append(el)});layoutTextBoxes()}
+customBoxCanvas.onpointerdown=e=>{const el=e.target.closest('[data-box-index]');if(!el)return;e.preventDefault();e.stopPropagation();selectedTextBox=+el.dataset.boxIndex;boxDrag={id:e.pointerId,x:e.clientX,y:e.clientY,box:clone(textBoxes()[selectedTextBox]),corner:e.target.dataset.corner,rect:customBoxCanvas.getBoundingClientRect()};customBoxCanvas.setPointerCapture(e.pointerId);el.focus();customBoxCanvas.querySelectorAll('.custom-box-hit').forEach(node=>node.classList.toggle('selected',node===el))};
+customBoxCanvas.onpointermove=e=>{if(!boxDrag||e.pointerId!==boxDrag.id)return;const d=boxDrag,b=textBoxes()[selectedTextBox],dx=(e.clientX-d.x)*100/d.rect.width,dy=(e.clientY-d.y)*100/d.rect.height;let x=d.box.x,y=d.box.y,w=d.box.width,h=d.box.height;if(!d.corner){x=clamp(x+dx,0,100-w);y=clamp(y+dy,0,100-h)}else{if(d.corner.includes('w')){x=clamp(x+dx,0,d.box.x+w-2);w=d.box.x+w-x}else w=clamp(w+dx,2,100-x);if(d.corner.includes('n')){y=clamp(y+dy,0,d.box.y+h-2);h=d.box.y+h-y}else h=clamp(h+dy,2,100-y)}Object.assign(b,{x,y,width:w,height:h});layoutTextBoxes();scheduleRender();e.preventDefault()};
+function finishTextBoxDrag(e){if(!boxDrag)return;boxDrag=null;if(customBoxCanvas.hasPointerCapture(e.pointerId))customBoxCanvas.releasePointerCapture(e.pointerId);commit();buildEditor();scheduleRender()}
+customBoxCanvas.onpointerup=finishTextBoxDrag;customBoxCanvas.onpointercancel=finishTextBoxDrag;
+customBoxCanvas.onkeydown=e=>{e.stopPropagation();const b=textBoxes()[selectedTextBox];if(!b)return;const step=e.shiftKey?5:1;if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();b.x=clamp(b.x+(e.key==='ArrowLeft'?-step:e.key==='ArrowRight'?step:0),0,100-b.width);b.y=clamp(b.y+(e.key==='ArrowUp'?-step:e.key==='ArrowDown'?step:0),0,100-b.height);commit();layoutTextBoxes();scheduleRender()}};
+async function renderCustomOverlay(token){if(!boot.custom_text_boxes||template!=='t8'||getConfig().media_kind!=='video'){layoutTextBoxes();return}const r=await fetch('/api/render/overlay',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request())});if(!r.ok)throw Error('Text overlay preview unavailable. Server update may require a restart.');const blob=await r.blob();if(token!==renderToken)return;const url=URL.createObjectURL(blob);customOverlayImage.src=url;if(customOverlayUrl)URL.revokeObjectURL(customOverlayUrl);customOverlayUrl=url;layoutTextBoxes()}
+let uploadBusy=false,previewReady=false,scheduledPreview='';
+function syncProjectLock(){const busy=presetSaving||uploadBusy;$('templatePicker').style.pointerEvents=busy?'none':'';for(const id of ['countryPicker','playerPicker']){$(id).setAttribute('aria-disabled',String(busy));if(busy)$(id).open=false}const fields=$('editorFields');if(fields)fields.disabled=busy;for(const id of ['presetCountry','presetPlayer','newPlayer','savePreset','confirmPreset','reset'])$(id).disabled=busy;$('undo').disabled=busy||historyIndex<=0;$('redo').disabled=busy||historyIndex>=history.length-1;$('presetState').textContent=(library.find(p=>p.id===selectedSaved)?.player||'New template')+' / Preview';$('deletePreset').disabled=busy||!library.some(p=>p.id===selectedSaved);updateLiveButtons()}
+function clearPresetFilters(){$('presetCountry').value='';$('presetPlayer').value=''}
+function renderPresetMenu(){const custom=['t8','t13'].includes(template);$('presetCountry').parentElement.style.display=custom?'none':'';$('presetPlayer').parentElement.querySelector('span').textContent=custom?'Preset':'Player';$('presetPlayer').setAttribute('aria-label',custom?'Saved media presets':'Player');const rows=library.filter(p=>p.template===template),country=custom?'':$('presetCountry').value;
+$('presetCountry').innerHTML='<option value="">All countries</option>'+[...new Set(rows.map(p=>p.country).filter(Boolean))].sort().map(c=>option(c,c,country)).join('');
+const filtered=rows.filter(p=>!$('presetCountry').value||p.country===$('presetCountry').value);
+$('presetPlayer').innerHTML='<option value="">'+(custom?'Choose preset':'Choose player')+'</option>'+filtered.map(p=>option(p.id,p.player+(!$('presetCountry').value&&p.country?' / '+p.country:''),selectedSaved)).join('');syncPresetPickers();syncProjectLock();for(const side of ['a','b'])fillRoster(side)}
+let libraryRevision='',libraryRequest=null,libraryRefreshAgain=false,libraryFingerprint='',libraryWatching=false;
+function libraryStatus(text,detail=''){$('libraryStatus').textContent=text;$('libraryStatus').title=detail}
+function refreshLibrary(){if(libraryRequest){libraryRefreshAgain=true;return libraryRequest}libraryRequest=(async()=>{do{libraryRefreshAgain=false;try{const r=await fetch('/api/templates',{cache:'no-store',signal:AbortSignal.timeout(8000)});if(!r.ok)throw Error('HTTP '+r.status);const result=await r.json();if(!Array.isArray(result.templates))throw Error('Invalid library response');const fingerprint=JSON.stringify(result.templates);libraryRevision=result.revision||'';if(fingerprint!==libraryFingerprint){libraryFingerprint=fingerprint;library=result.templates;renderPresetMenu()}const warnings=result.warnings||[];libraryStatus(warnings.length?'Library needs attention ('+warnings.length+')':'Library synced',warnings.join('\n'))}catch(error){libraryStatus('Library reconnecting...','Saved list retained. '+error.message)}}while(libraryRefreshAgain)})().finally(()=>{libraryRequest=null});return libraryRequest}
+async function watchLibrary(){if(libraryWatching)return;libraryWatching=true;let failures=0;while(true){try{if(!libraryRevision)await refreshLibrary();const response=await fetch('/api/templates/changes?revision='+encodeURIComponent(libraryRevision),{cache:'no-store',signal:AbortSignal.timeout(25000)});if(!response.ok)throw Error('HTTP '+response.status);const update=await response.json();if(typeof update.revision!=='string')throw Error('Invalid change notification');if(update.revision!==libraryRevision)await refreshLibrary();failures=0}catch(error){libraryStatus('Library reconnecting...','Saved list retained. '+error.message);failures=Math.min(failures+1,4);await new Promise(resolve=>setTimeout(resolve,Math.min(8000,500*2**failures)));await refreshLibrary()}}}
+window.addEventListener('online',()=>refreshLibrary());
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshLibrary()});
+let cleanDrafts={},savedDraftIds={},savedDraftRevisions={};
+let deleteCandidate=null;
+$('deletePreset').onclick=()=>{
+ const item=library.find(p=>p.id===selectedSaved);if(!item||presetSaving||uploadBusy)return;
+ deleteCandidate={id:item.id,edit_revision:item.edit_revision};
+ $('deleteName').textContent='Delete '+item.player+(item.country?' / '+item.country:'')+' from saved templates? Current preview and on-air output will remain unchanged.';
+ $('deleteError').textContent='';$('deletePassword').value='';$('deleteDialog').showModal();$('deleteUser').focus();
+};
+$('deleteDialog').addEventListener('close',()=>{$('deletePassword').value=''});
+$('confirmDelete').onclick=async()=>{
+ if(!deleteCandidate||presetSaving)return;
+ presetSaving=true;$('confirmDelete').disabled=true;syncProjectLock();
+ try{
+  const result=await apiJson('/api/templates/delete',{...deleteCandidate,username:$('deleteUser').value,password:$('deletePassword').value});
+  for(const key of Object.keys(savedDraftIds))if(savedDraftIds[key]===result.id){savedDraftIds[key]='';delete savedDraftRevisions[key]}
+  if(selectedSaved===result.id)selectedSaved='';
+  await refreshLibrary();renderPresetMenu();$('deleteDialog').close();
+ }catch(error){$('deleteError').textContent=error.message}
+ finally{presetSaving=false;$('confirmDelete').disabled=false;syncProjectLock()}
+};
+function syncPresetPickers(){
+ for(const [prefix,id] of [['country','presetCountry'],['player','presetPlayer']]){
+  const select=$(id),picker=$(prefix+'Picker'),label=$(prefix+'Label');
+  label.textContent=select.selectedOptions[0]?.textContent||select.options[0]?.textContent||'';
+  label.title=label.textContent;picker.setAttribute('aria-disabled',String(presetSaving||uploadBusy));
+  const box=$(prefix+'Options'),query=$(prefix+'Search').value.trim().toLocaleLowerCase();box.replaceChildren();
+  for(const option of select.options){if(query&&!option.textContent.toLocaleLowerCase().includes(query))continue;
+   const button=document.createElement('button');button.textContent=option.textContent;button.setAttribute('aria-pressed',String(option.selected));
+   button.onclick=()=>{if(presetSaving||uploadBusy)return;select.value=option.value;select.dispatchEvent(new Event('change'));picker.open=false;label.focus();syncPresetPickers()};box.append(button);
+  }
+  if(!box.children.length){const empty=document.createElement('span');empty.className='picker-empty';empty.textContent='No matches';box.append(empty)}
+ }
+}
+for(const prefix of ['country','player'])$(prefix+'Search').oninput=syncPresetPickers;
+for(const id of ['templatePicker','countryPicker','playerPicker']){
+ const picker=$(id);picker.querySelector('summary').addEventListener('click',event=>{if(presetSaving||uploadBusy){event.preventDefault();return}if(picker.open)return;for(const other of ['templatePicker','countryPicker','playerPicker'])if(other!==id)$(other).open=false;const search=picker.querySelector('input[type=search]');if(search){search.value='';search.dispatchEvent(new Event('input'))}});picker.addEventListener('toggle',()=>{if(picker.open)picker.querySelector('input[type=search]')?.focus()});
+ picker.addEventListener('keydown',event=>{if(event.key==='Escape'){picker.open=false;picker.querySelector('summary').focus()}else if(event.key==='ArrowDown'){const buttons=[...picker.querySelectorAll('.template-popup button')];const index=buttons.indexOf(document.activeElement);buttons[(index+1)%buttons.length]?.focus();event.preventDefault()}else if(event.key==='ArrowUp'){const buttons=[...picker.querySelectorAll('.template-popup button')];const index=buttons.indexOf(document.activeElement);buttons[(index-1+buttons.length)%buttons.length]?.focus();event.preventDefault()}});
+}
+document.addEventListener('pointerdown',event=>{for(const id of ['templatePicker','countryPicker','playerPicker'])if(!$(id).contains(event.target))$(id).open=false});
+function markDraftClean(){cleanDrafts[template]=clone(getConfig());savedDraftIds[template]=selectedSaved;const item=library.find(p=>p.id===selectedSaved);if(item&&JSON.stringify(item.config)===JSON.stringify(getConfig()))savedDraftRevisions[template]=item.edit_revision}
+function hasUnsavedChanges(){return JSON.stringify(getConfig())!==JSON.stringify(cleanDrafts[template]||boot.defaults[template])}
+function loadSaved(item){if(!item||presetSaving)return;if(!confirmDiscard()){renderPresetMenu();return}template=item.template;$('template').value=template;configs[template]=clone(item.config);selectedSaved=item.id;markDraftClean();history=[];historyIndex=-1;commit();buildEditor();renderTemplateOptions();renderPresetMenu();scheduleRender()}
+function confirmDiscard(){if(presetSaving||uploadBusy)return false;if(!hasUnsavedChanges())return true;if(!confirm('Discard unsaved preview changes? Your saved templates and On Air output will not change.'))return false;configs[template]=clone(cleanDrafts[template]||boot.defaults[template]);return true}
+function switchTemplate(key){if(presetSaving)return;if(key===template){$('templatePicker').open=false;return}if(!confirmDiscard()){$('template').value=template;return}template=key;$('template').value=key;selectedSaved=savedDraftIds[key]||'';clearPresetFilters();history=[];historyIndex=-1;commit();buildEditor();renderPresetMenu();renderTemplateOptions();$('templatePicker').open=false;scheduleRender()}
+function renderTemplateOptions(){if(!boot)return;const q=$('templateSearch').value.toLowerCase();$('templateLabel').textContent=boot.template_names[template];const box=$('templateOptions');box.replaceChildren();for(const [key,name] of Object.entries(boot.template_names)){if(!name.toLowerCase().includes(q))continue;const button=document.createElement('button');button.textContent=name;button.setAttribute('aria-pressed',String(key===template));button.onclick=()=>switchTemplate(key);box.append(button)}}
+$('templateSearch').oninput=renderTemplateOptions;
+$('presetCountry').onchange=()=>renderPresetMenu();
+$('presetPlayer').onchange=()=>loadSaved(library.find(p=>p.id===$('presetPlayer').value));
+$('newPlayer').onclick=()=>{if(!confirmDiscard())return;selectedSaved='';configs[template]=clone(boot.defaults[template]);markDraftClean();history=[];historyIndex=-1;commit();buildEditor();renderPresetMenu();scheduleRender()};
+$('savePreset').onclick=()=>{const cfg=getConfig(),item=library.find(p=>p.id===selectedSaved),custom=['t8','t13'].includes(template);document.querySelector('label[for=presetPlayerName]').textContent=custom?'Preset name':'Player name';$('presetCountryName').parentElement.hidden=custom;$('presetPlayerName').value=custom?(item?.player||cfg.media_name||''):(cfg.player_name||[cfg.first_name,cfg.last_name].filter(Boolean).join(' ')||item?.player||'');$('presetCountryName').value=custom?'':(cfg.country||cfg.country_a||item?.country||'');$('presetError').textContent='';$('viewDuplicate').hidden=true;$('presetDialog').showModal();$('presetPlayerName').focus()};
+$('confirmPreset').onclick=async()=>{if(presetSaving)return;presetSaving=true;syncProjectLock();try{const result=await apiJson('/api/templates/save',{template,config:clone(getConfig()),player:$('presetPlayerName').value,country:$('presetCountryName').value});if(!result.saved){duplicateItem=result.existing;$('presetError').textContent='This player and country already exist for this template. Open the saved version or save with a different name.';$('viewDuplicate').hidden=false;return}library=library.filter(p=>p.id!==result.item.id);library.push(result.item);configs[template]=clone(result.item.config);selectedSaved=result.item.id;markDraftClean();history=[];historyIndex=-1;commit();buildEditor();await refreshLibrary();renderPresetMenu();$('presetDialog').close();scheduleRender()}catch(error){$('presetError').textContent=error.message}finally{presetSaving=false;syncProjectLock()}};
+$('presetDialog').addEventListener('cancel',event=>{if(presetSaving)event.preventDefault()});
+$('viewDuplicate').onclick=()=>{$('presetDialog').close();loadSaved(duplicateItem)};
+const openPresetDialog=$('savePreset').onclick;
+const originalLoadSaved=loadSaved;
+loadSaved=function(item){originalLoadSaved(item);if(item&&selectedSaved===item.id&&!hasUnsavedChanges())savedDraftRevisions[template]=item.edit_revision};
+function prepareUpdate(){const item=library.find(p=>p.id===selectedSaved);$('updateCredentials').hidden=!item;$('editorPassword').value='';$('updatePreset').disabled=false}
+$('presetDialog').addEventListener('close',()=>{$('editorPassword').value=''});
+$('updatePreset').onclick=async()=>{
+ if(presetSaving)return;
+ const item=library.find(p=>p.id===selectedSaved);
+ if(!item)return;
+ if(!savedDraftRevisions[template]){$('presetError').textContent='Reopen the saved template before updating. Save with another name to keep this preview.';return}
+ if(!confirm('Replace the saved '+item.player+' template with this preview? On Air will not change.'))return;
+ presetSaving=true;syncProjectLock();$('updatePreset').disabled=true;
+ try{const result=await apiJson('/api/templates/update',{id:item.id,edit_revision:savedDraftRevisions[template],config:clone(getConfig()),username:$('editorUser').value,password:$('editorPassword').value});configs[template]=clone(result.item.config);savedDraftRevisions[template]=result.item.edit_revision;markDraftClean();history=[];historyIndex=-1;commit();await refreshLibrary();buildEditor();renderPresetMenu();$('presetDialog').close();scheduleRender()}
+ catch(error){$('presetError').textContent=error.message}
+ finally{$('editorPassword').value='';presetSaving=false;$('updatePreset').disabled=false;syncProjectLock()}
+};
+$('savePreset').onclick=()=>{if(presetSaving)return;openPresetDialog();prepareUpdate();if(template==='t9'){$('presetPlayerName').value=[getConfig().player_a,getConfig().player_b].filter(Boolean).join(' vs ');$('presetCountryName').value=getConfig().country_a||''}};
+const labels={canvas_size:'Canvas',panel_side:'Panel side',title:'Title',header_text:'Header',divider_text:'Divider',banner_text:'Banner',sponsor_text:'Sponsor',name_a_first:'Player 1 first',name_a_last:'Player 1 last',abbr_a:'Player 1 abbreviation',name_b_first:'Player 2 first',name_b_last:'Player 2 last',abbr_b:'Player 2 abbreviation',team_a:'Left team',team_b:'Right team',vs_text:'Versus text',score:'Score',show_playing_style:'Show playing style',style_label:'Style heading',photo_width_pct:'Photo width %',photo_fade_pct:'Photo edge blend %',photo_brightness_pct:'Photo brightness %',panel_width_pct:'Panel width %',panel_opacity_pct:'Panel opacity %',panel_fade_pct:'Panel edge fade %',panel_blur_pct:'Glass blur %',panel_style:'Panel effect',content_top_pct:'Text top position %',title_gap_pct:'Title gap %',row_gap_pct:'Row gap %',player_in_front:'Player above panel',team:'Team',first:'First name',last:'Last name',result:'Result',photo_zoom:'Photo zoom %',photo_focus_x:'Photo horizontal %',photo_focus_y:'Photo vertical %',first_name:'First name',last_name:'Last name',age:'Age',ranking:'Ranking',plays:'Plays',years_text:'Age suffix',band_x_pct:'Band horizontal %',band_y_pct:'Band vertical %',band_scale_pct:'Whole band size %',player_size_pct:'Player size %',player_offset_x_pct:'Player horizontal offset %',player_offset_y_pct:'Player vertical offset %',name_offset_x_pct:'Name horizontal offset %',name_offset_y_pct:'Name vertical offset %',background_zoom:'Background zoom %',background_focus_x:'Background horizontal %',background_focus_y:'Background vertical %',transparent_background:'Transparent background',overlay_opacity_pct:'Overlay opacity %'};
+const mainFields={
+ t1:['canvas_size','title','panel_side','panel_style','panel_width_pct','panel_opacity_pct','panel_fade_pct','panel_blur_pct','content_top_pct','title_gap_pct','row_gap_pct','player_in_front'],
+ t2:['canvas_size','header_text','divider_text','name_a_first','name_a_last','abbr_a','name_b_first','name_b_last','abbr_b','photo_width_pct','photo_fade_pct','photo_brightness_pct','show_playing_style','style_label'],
+ t3:['canvas_size','name_a_first','name_a_last','team_a','name_b_first','name_b_last','team_b','vs_text','score','sponsor_text'],
+ t4:['canvas_size','banner_text','sponsor_text'],
+ t5:['canvas_size','first_name','last_name','age','ranking','plays','years_text','band_x_pct','band_y_pct','band_scale_pct','player_size_pct','player_offset_x_pct','player_offset_y_pct','name_offset_x_pct','name_offset_y_pct','background_zoom','background_focus_x','background_focus_y','transparent_background','overlay_opacity_pct']
+};
+const assetFields={t1:[['photo_path','Background'],['player_path','Player cutout'],['logo_path','Logo']],t2:[['photo_a','Player 1'],['photo_b','Player 2'],['logo_path','Logo']],t3:[['photo_a','Left player'],['photo_b','Right player'],['logo_path','Logo']],t4:[['logo_path','Logo']],t5:[['background_path','Background'],['player_path','Player cutout']]};
+const colorFields={t1:[['accent_color','Accent'],['background_color','Background'],['panel_color','Panel'],['panel_color_2','Gradient end'],['bar_color','All bars']],t2:[['accent_color','Accent'],['background_color','Background'],['row_color','Stat rows'],['bar_track_color','Bar track'],['bar_lose_color','Losing bar']],t3:[['accent_color','Accent'],['background_color','Background'],['bar_track_color','Bar track']],t4:[['accent_color','Accent'],['background_color','Background'],['bar_track_color','Bar track']],t5:[['background_color','Background'],['band_green','Main green panel'],['accent_green','Bright accents'],['accent_dark','Dark accents'],['panel_white','Stats panel'],['stats_green','Stats text'],['separator_color','Separators'],['name_text_color','Player name']]};
+const rowFields={t1:['label','value','max'],t2:['label','value_a','value_b','max'],t3:['label','value_a','value_b','max','unit'],t4:['label','value','unit','max']};
+const rowLabels={label:'Stat',value:'Value',value_a:'P1',value_b:'P2',max:'Scale',unit:'Unit'};
+const imageMoveChoices={t1:[['photo_path','Background'],['player_path','Player cutout'],['logo_path','Logo']],t2:[['photo_a','Player 1'],['photo_b','Player 2'],['logo_path','Logo']],t3:[['photo_a','Left player'],['photo_b','Right player'],['logo_path','Logo']],t4:[['player_0','Player 1'],['player_1','Player 2'],['player_2','Player 3'],['logo_path','Logo']],t5:[['band','Whole band'],['player_path','Player cutout'],['player_name','Player name'],['background_path','Background']]};
+const selectedLayer={t1:'photo_path',t2:'photo_a',t3:'photo_a',t4:'player_0',t5:'band'};
+Object.assign(labels,{player_name:'Player name',country:'Country',total_wl:'Total W/L',debut_year:'Debut year',favourite_hand:'Favourite hand'});
+mainFields.t6=['canvas_size','player_name','country','age','total_wl','debut_year','favourite_hand','player_offset_x_pct','player_offset_y_pct','player_size_pct'];
+Object.assign(labels,{atp_ranking:'ATP ranking',season_year:'Season year',season_wl:'Season W/L',career_high:'Career-high ranking',stats_as_of:'Stats verified on',subtitle:'Match caption',date_text:'Match dates',venue:'Venue',band_size_pct:'Band size %'});
+function buildStoredStats(){return '<details class="editor-detail"><summary>Head2Head player statistics</summary>'+group('Stored statistics',`<div class="grid">${['atp_ranking','season_year','season_wl','career_high','stats_as_of'].map(k=>scalarField(k,getConfig()[k]||'')).join('')}</div>`)+'</details>'}
+assetFields.t6=[['player_path','Player image']];colorFields.t6=[];imageMoveChoices.t6=[['player_path','Player image']];selectedLayer.t6='player_path';
+mainFields.t7=['canvas_size','country_a','country_b','score'];assetFields.t7=[];colorFields.t7=[];imageMoveChoices.t7=[];selectedLayer.t7='';
+mainFields.t8=['canvas_size','loop'];assetFields.t8=[];colorFields.t8=[];imageMoveChoices.t8=[];selectedLayer.t8='';labels.loop='Loop video';
+mainFields.t9=['canvas_size','player_a','country_a','player_b','country_b','meeting'];
+assetFields.t9=[['photo_a','Left player image'],['photo_b','Right player image']];colorFields.t9=[];imageMoveChoices.t9=[['photo_a','Left player image'],['photo_b','Right player image']];selectedLayer.t9='photo_a';
+Object.assign(labels,{player_a:'Left player name',player_b:'Right player name',meeting:'Centre footer text'});
+mainFields.t10=['canvas_size','title','subtitle','country_a','country_b','player_a','player_b'];
+mainFields.t11=['canvas_size','title','country_a','country_b','band_x_pct','band_y_pct','band_size_pct','transparent_background','overlay_opacity_pct'];
+mainFields.t12=['canvas_size','title','subtitle','country_a','country_b','date_text','venue'];
+for(const key of ['t10','t11','t12']){assetFields[key]=[['background_path','Background']];colorFields[key]=[['accent_color','Accent'],['background_color','Background']];imageMoveChoices[key]=[];selectedLayer[key]='';}
+for(const key of ['t10','t12']){assetFields[key].push(['logo_path','Logo']);imageMoveChoices[key].push(['logo_path','Logo']);selectedLayer[key]='logo_path';}
+assetFields.t10.unshift(['photo_a','Left player image'],['photo_b','Right player image']);imageMoveChoices.t10.unshift(...imageMoveChoices.t9);selectedLayer.t10='photo_a';
+imageMoveChoices.t11=[['band','Whole band']];selectedLayer.t11='band';
+mainFields.t13=['canvas_size','headline','subject','headline_font_size','subject_font_size','headline_align','subject_align','auto_text_height','headline_height_pct','subject_height_pct','auto_image_frame','box_opacity_pct','show_logo'];
+assetFields.t13=[['image_path','News image'],['logo_path','Logo'],['background_path','Background']];
+colorFields.t13=[['headline_box_color','Headline box'],['subject_box_color','Subject box'],['accent_color','Frame trim']];
+imageMoveChoices.t13=[['image_path','News image']];selectedLayer.t13='image_path';
+labels.show_logo='Show logo';
+Object.assign(labels,{auto_text_height:'Automatic text box heights',headline_height_pct:'Manual headline height (%)',subject_height_pct:'Manual subject height (%)',auto_image_frame:'Fit frame to photo'});
+Object.assign(labels,{headline:'Headline',subject:'Subject',headline_font_size:'Headline size (px)',subject_font_size:'Subject size (px)',headline_align:'Headline alignment',subject_align:'Subject alignment',box_opacity_pct:'Box opacity (%)'});
+function buildMatchTemplate(){return buildPlayerLibrary()+buildMain()+buildAssets()+'<details class="editor-detail"><summary>Colors and typography</summary>'+buildColors()+buildTextStyles()+'</details>'}
+const rosterFilter={a:'',b:''};
+function buildPlayerLibrary(){if(!['t9','t10'].includes(template))return '';return group('Choose saved players',`<div class="grid">${['a','b'].map(side=>`<div class="field"><label>${side==='a'?'Left':'Right'} country</label><select data-roster-country="${side}"></select><label>Find player</label><input type="search" data-roster-search="${side}" placeholder="Player name"><select data-roster-player="${side}" aria-label="${side==='a'?'Left':'Right'} saved player"></select></div>`).join('')}</div>`)}
+function fillRoster(side){const country=document.querySelector(`[data-roster-country="${side}"]`),players=document.querySelector(`[data-roster-player="${side}"]`);if(!country||!players)return;const roster=library.filter(p=>p.template==='t6'),query=document.querySelector(`[data-roster-search="${side}"]`).value.toLocaleLowerCase(),cfg=getConfig(),selected=roster.find(p=>(p.config.player_name||p.player)===cfg['player_'+side]&&(p.config.country||p.country)===cfg['country_'+side])?.id||'';country.innerHTML=option('','All countries',rosterFilter[side])+[...new Set(roster.map(p=>p.country).filter(Boolean))].sort().map(v=>option(v,v,rosterFilter[side])).join('');players.innerHTML=option('','Choose player',selected)+roster.filter(p=>(!rosterFilter[side]||p.country===rosterFilter[side])&&p.player.toLocaleLowerCase().includes(query)).map(p=>option(p.id,p.player+(p.country?' / '+p.country:''),selected)).join('')}
+function bindPlayerLibrary(){for(const side of ['a','b']){const country=document.querySelector(`[data-roster-country="${side}"]`);if(!country)continue;fillRoster(side);country.onchange=()=>{rosterFilter[side]=country.value;fillRoster(side)};document.querySelector(`[data-roster-search="${side}"]`).oninput=()=>fillRoster(side);document.querySelector(`[data-roster-player="${side}"]`).onchange=e=>{const item=library.find(p=>p.id===e.target.value&&p.template==='t6');if(!item)return;const source=item.config,cfg=getConfig();cfg['player_'+side]=source.player_name||item.player;cfg['country_'+side]=source.country||item.country;cfg['photo_'+side]=source.player_path||'';cfg['photo_'+side+'_offset_x_pct']=0;cfg['photo_'+side+'_offset_y_pct']=0;cfg['photo_'+side+'_size_pct']=100;if(template==='t9'){cfg.meeting='FIRST MEETING';const values={'Age':source.age,'Davis Cup W-L':source.total_wl,'ATP Ranking':source.atp_ranking,'Career High':source.career_high,[String(source.season_year||'2026')+' W-L']:source.season_wl};for(const row of cfg.rows){row['value_'+side]=values[row.label]||'';if(row.label==='Head-to-Head'){row.value_a='';row.value_b=''}}}markChanged(true)}}}
+function buildHead2Head(){return buildMain()+group('Player images',`<div class="grid">${assetFields.t9.map(([key,label])=>uploadField(key,label,getConfig()[key])).join('')}</div>`)+group('Comparison',getConfig().rows.map((row,i)=>`<div class="field"><label>Statistic ${i+1}</label><input data-row-path="rows" data-row-index="${i}" data-row-field="label" value="${esc(row.label)}"></div><div class="grid">${['value_a','value_b'].map(key=>`<div class="field"><label>${key==='value_a'?'Left':'Right'}</label><input data-row-path="rows" data-row-index="${i}" data-row-field="${key}" value="${esc(row[key])}"></div>`).join('')}</div>`).join(''))}
+function buildMedia(){return group('Custom Upload',`<div class="field"><label for="customMedia">Image or video</label><input id="customMedia" type="file" accept=".png,.jpg,.jpeg,.webp,.bmp,.avif,.gif,.mp4,.mov,.mkv,.webm,.avi,.m4v,.mpg,.mpeg,.ts"><div class="file-name">${esc(getConfig().media_name||'No media selected')}</div></div><div class="status" id="mediaUploadStatus"></div>`)}
+function buildCustomBoxes(){const boxes=textBoxes();selectedTextBox=Math.max(0,Math.min(selectedTextBox,boxes.length-1));const b=boxes[selectedTextBox];let body=`<div class="box-actions"><button id="addTextBox" ${boxes.length>=20?'disabled':''}>Add text box</button>${b?`<select id="textBoxChoice" aria-label="Selected text box">${boxes.map((v,i)=>option(i,`${i+1}. ${v.text.slice(0,30)||'Empty text'}`,selectedTextBox)).join('')}</select><button id="duplicateTextBox" title="Duplicate text box" ${boxes.length>=20?'disabled':''}>Duplicate</button><button id="removeTextBox" title="Delete text box">Delete</button>`:''}</div>`;if(b){body+=`<div class="field" style="margin-top:10px"><label>Text</label><textarea data-box-field="text" maxlength="2000">${esc(b.text)}</textarea></div><div class="grid"><div class="field"><label>Text color</label><input data-box-field="color" type="color" value="${hex(b.color)}"></div><div class="field"><label>Box color</label><input data-box-field="background" type="color" value="${hex(b.background)}"></div><div class="field"><label>Background opacity %</label><input data-box-field="opacity" type="range" min="0" max="100" value="${b.opacity}"></div><div class="field"><label>Font</label><select data-box-field="font_family">${boot.fonts.map(f=>option(f,f,b.font_family)).join('')}</select></div><div class="field"><label>Font size (HD pixels)</label><input data-box-field="font_size" type="number" min="8" max="180" value="${b.font_size}"></div><div class="field"><label>Alignment</label><select data-box-field="align">${['left','center','right'].map(v=>option(v,v,b.align)).join('')}</select></div><label class="inline-check"><input data-box-field="bold" type="checkbox" ${b.bold?'checked':''}>Bold</label>${[['x','Horizontal %'],['y','Vertical %'],['width','Width %'],['height','Height %']].map(([key,label])=>`<div class="field"><label>${label}</label><input data-box-field="${key}" type="number" min="${key==='width'||key==='height'?2:0}" max="100" step="0.1" value="${Math.round(b[key]*10)/10}"></div>`).join('')}</div>`}return group('Text boxes',body)}
+function bindCustomBoxes(){if(!$('addTextBox'))return;$('addTextBox').onclick=()=>{if(textBoxes().length>=20)return;textBoxes().push({text:'Your text',x:10,y:75,width:40,height:15,color:[255,255,255],background:[0,0,0],opacity:65,font_size:54,font_family:'Default',bold:true,align:'left'});selectedTextBox=textBoxes().length-1;markChanged(true)};if(!$('textBoxChoice'))return;$('textBoxChoice').onchange=()=>{selectedTextBox=+$('textBoxChoice').value;buildEditor()};$('removeTextBox').onclick=()=>{textBoxes().splice(selectedTextBox,1);markChanged(true)};$('duplicateTextBox').onclick=()=>{if(textBoxes().length>=20)return;textBoxes().push(clone(textBoxes()[selectedTextBox]));selectedTextBox=textBoxes().length-1;markChanged(true)};document.querySelectorAll('[data-box-field]').forEach(el=>{const update=()=>{const b=textBoxes()[selectedTextBox],key=el.dataset.boxField;b[key]=el.type==='checkbox'?el.checked:el.type==='color'?rgb(el.value):['number','range'].includes(el.type)?Number(el.value):el.value;b.width=clamp(b.width,2,100);b.height=clamp(b.height,2,100);b.x=clamp(b.x,0,100-b.width);b.y=clamp(b.y,0,100-b.height);b.font_size=clamp(b.font_size,8,180);b.opacity=clamp(b.opacity,0,100);syncTextBoxes();scheduleRender()};el.oninput=update;el.onchange=()=>{update();commit()}})}
+Object.assign(labels,{country_a:'Left country',country_b:'Right country'});
+function buildQualifierRows(){return group('Matches',getConfig().rows.map((row,i)=>`<h3 style="font-size:12px">M${i+1}</h3><div class="grid">${['value_a','value_b'].map((key)=>{const choices=[['','Pending'],['W','Win (W)'],['L','Loss (L)'],['NOT PLAYED','Not played']];if(row[key]&&!choices.some(([value])=>value===row[key]))choices.push([row[key],row[key]]);return `<div class="field"><label>${esc(getConfig()[key==='value_a'?'country_a':'country_b'])}</label><select data-row-path="rows" data-row-index="${i}" data-row-field="${key}">${choices.map(([value,label])=>option(value,label,row[key])).join('')}</select></div>`}).join('')}</div>`).join(''))}
+
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function hex(v,f='#ffffff'){return Array.isArray(v)&&v.length===3?'#'+v.map(n=>Math.max(0,Math.min(255,+n||0)).toString(16).padStart(2,'0')).join(''):f}
+function rgb(v){return [1,3,5].map(i=>parseInt(v.slice(i,i+2),16))}
+function group(title,body){return `<section class="group"><h2>${esc(title)}</h2><div class="group-body">${body}</div></section>`}
+function option(value,text,selected){return `<option value="${esc(value)}"${value===selected?' selected':''}>${esc(text)}</option>`}
+function getConfig(){return configs[template]}
+function commit(){history=history.slice(0,historyIndex+1);history.push(clone(configs));if(history.length>60)history.shift();historyIndex=history.length-1;localStorage.setItem('vetoScoreboardWeb',JSON.stringify({template,configs}));syncHistory()}
+function syncHistory(){syncProjectLock()}
+function restore(index){if(index<0||index>=history.length)return;historyIndex=index;configs=clone(history[index]);buildEditor();scheduleRender(false);syncHistory()}
+function setError(message=''){const box=$('error');box.textContent=message;box.style.display=message?'block':'none'}
+function markChanged(rebuild=false){commit();if(rebuild)buildEditor();scheduleRender()}
+
+function scalarField(key,value,setter){
+ const label=labels[key]||key.replaceAll('_',' ');let control='';
+ if(typeof value==='boolean')return `<div class="field check"><input type="checkbox" data-scalar="${key}" ${value?'checked':''}><label>${esc(label)}</label></div>`;
+ let choices=null;if(key==='canvas_size')choices=boot.canvas_sizes[template];else if(key==='panel_side')choices=['right','left'];else if(key==='panel_style')choices=['solid','gradient','glass'];else if(key.endsWith('_align'))choices=['left','center','right'];
+ if(choices)control=`<select data-scalar="${key}">${choices.map(x=>option(x,x,value)).join('')}</select>`;
+ else if(['title','headline','subject'].includes(key))control=`<textarea data-scalar="${key}">${esc(value)}</textarea>`;
+ else if(key==='overlay_opacity_pct')control=`<input data-scalar="${key}" type="number" min="0" max="100" step="1" value="${esc(value??100)}">`;
+ else if(typeof value==='number')control=`<input data-scalar="${key}" type="number" step="0.5" value="${esc(value)}">`;
+ else control=`<input data-scalar="${key}" type="text" ${template==='t7'&&key.startsWith('country_')?'list="qualifierCountries"':''} value="${esc(value)}">`;
+ return `<div class="field"><label>${esc(label)}</label>${control}</div>`;
+}
+function buildAssets(){const cfg=getConfig();let body=assetFields[template].map(([key,label])=>uploadField(key,label,cfg[key])).join('');
+ if(template==='t4')body+=cfg.players.map((p,i)=>uploadField(`player.${i}.photo`,`Player ${i+1}`,p.photo)).join('');
+ const choices=imageMoveChoices[template];body+=`<div class="field" style="margin-top:8px"><label>${template==='t5'?'Move element':'Move image'} on preview</label><select id="moveLayer">${choices.map(([k,l])=>option(k,l,selectedLayer[template])).join('')}</select></div>`;
+ return group('Images',`<div class="grid">${body}</div>`)}
+function uploadField(key,label,path){return `<div class="field"><label>${esc(label)}</label><div class="upload"><input type="file" data-upload="${esc(key)}" accept="image/*"><button type="button" data-remove-image="${esc(key)}">Remove</button></div><div class="file-name">${esc(path?path.split(/[\\/]/).pop():'No image selected')}</div></div>`}
+function buildMain(){const cfg=getConfig();const countryList=template==='t7'?`<datalist id="qualifierCountries">${boot.qualifier_countries.map(c=>option(c,c,'')).join('')}</datalist>`:'';return countryList+group('Content and layout',`<div class="grid">${mainFields[template].map(k=>scalarField(k,cfg[k])).join('')}</div>${template==='t2'?`<div class="grid" style="margin-top:8px">${[0,1].map(i=>scalarField(`tags_a.${i}`,cfg.tags_a[i])).join('')}${[0,1].map(i=>scalarField(`tags_b.${i}`,cfg.tags_b[i])).join('')}</div>`:''}`)}
+function buildColors(){const cfg=getConfig();return group('Colors',`<div class="grid">${colorFields[template].map(([key,label])=>`<div class="field"><label>${label}</label><input type="color" data-color="${key}" value="${hex(cfg[key],key.includes('background')?'#0a1e30':'#d2eb3c')}"></div>`).join('')}</div>`)}
+function buildTextStyles(){const cfg=getConfig(),roles=boot.text_targets[template],active=cfg._web_text_role||'all',style=(cfg.text_styles||{})[active]||{};return group('Text styling',`<div class="grid"><div class="field"><label>Text group</label><select id="textRole">${roles.map(r=>option(r.key,r.label,active)).join('')}</select></div><div class="field"><label>Font</label><select id="textFont">${boot.fonts.map(f=>option(f,f,style.font_family||'Default')).join('')}</select></div><div class="field"><label>Case</label><select id="textCase">${boot.text_cases.map(c=>option(c,c,style.case||'As typed')).join('')}</select></div><div class="field"><label>Size %</label><input id="textSize" type="number" min="50" max="200" value="${style.size_pct||100}"></div><div class="field"><label>Color</label><input id="textColor" type="color" value="${hex(style.color)}"></div><div class="field"><label>&nbsp;</label><label class="inline-check"><input id="textColorEnabled" type="checkbox" ${style.color?'checked':''}> Custom color</label></div></div><div class="button-row"><button id="resetTextStyle">Reset selected group</button></div>`)}
+function rowsTable(rows,fields,path){let head=fields.map(f=>`<th>${esc(rowLabels[f]||f)}</th>`).join('');let body=rows.map((row,i)=>`<tr>${fields.map(f=>`<td><input data-row-path="${path}" data-row-index="${i}" data-row-field="${f}" value="${esc(row[f]??'')}"></td>`).join('')}<td style="width:35px"><button class="icon-button" data-remove-row="${path}" data-row-index="${i}" title="Remove">×</button></td></tr>`).join('');return `<table class="row-table"><thead><tr>${head}<th style="width:35px"></th></tr></thead><tbody>${body}</tbody></table><div class="button-row"><button data-add-row="${path}">Add stat</button></div>`}
+function buildRows(){const cfg=getConfig();if(template==='t4'||template==='t5')return '';return group('Stat rows',rowsTable(cfg.rows||[],rowFields[template],'rows'))}
+function buildPlayers(){if(template!=='t4')return '';const cfg=getConfig();return group('Players',cfg.players.map((p,i)=>`<div class="player"><h3>Player ${i+1}</h3><div class="grid">${['team','first','last','result','photo_zoom','photo_focus_x','photo_focus_y'].map(k=>`<div class="field"><label>${labels[k]}</label><input data-player="${i}" data-player-field="${k}" type="${typeof p[k]==='number'?'number':'text'}" value="${esc(p[k]??'')}"></div>`).join('')}</div>${rowsTable(p.stats||[],rowFields.t4,`players.${i}.stats`)}</div>`).join(''))}
+function buildEditor(){const content=template==='t13'?buildMain()+buildAssets()+buildColors()+buildTextStyles():['t10','t11','t12'].includes(template)?buildMatchTemplate():template==='t9'?buildPlayerLibrary()+buildHead2Head():template==='t8'?buildMedia()+buildMain()+(boot.custom_text_boxes?buildCustomBoxes():''):template==='t7'?buildMain()+buildQualifierRows():template==='t6'?buildMain()+group('Player image',uploadField('player_path','Player image',getConfig().player_path))+buildStoredStats():buildMain()+buildRows()+buildPlayers()+'<details class="editor-detail"><summary>Images and positioning</summary>'+buildAssets()+'</details><details class="editor-detail"><summary>Colors and typography</summary>'+buildColors()+buildTextStyles()+'</details>';$('editor').innerHTML='<fieldset class="editor-fields" id="editorFields">'+content+'</fieldset>';bindEditor();bindPlayerLibrary();bindCustomBoxes();syncTextBoxes();syncImageTools();syncProjectLock()}
+
+function pathTarget(path){const cfg=getConfig();if(path==='rows')return cfg.rows;const m=path.match(/^players\.(\d+)\.stats$/);return m?cfg.players[+m[1]].stats:null}
+function setImagePath(key,value){const cfg=getConfig();const m=key.match(/^player\.(\d+)\.photo$/);if(m)cfg.players[+m[1]].photo=value;else cfg[key]=value}
+async function uploadImageFile(file,key){
+ if(!file||!file.type.startsWith('image/'))throw new Error('Drop or choose a supported image file.');
+ if(uploadBusy||presetSaving)throw new Error('Wait for the current upload or save to finish.');
+ uploadBusy=true;syncProjectLock();document.body.classList.add('busy');
+ try{const data=await fileData(file),res=await apiJson('/api/upload',{name:file.name,data});setImagePath(key,res.path);selectedLayer[template]=key.startsWith('player.')?`player_${key.split('.')[1]}`:key;markChanged(true)}
+ finally{uploadBusy=false;document.body.classList.remove('busy');syncProjectLock()}
+}
+function bindEditor(){
+ if($('customMedia'))$('customMedia').onchange=async()=>{const file=$('customMedia').files[0];if(!file||uploadBusy||presetSaving)return;uploadBusy=true;syncProjectLock();try{if(file.size>512*1024*1024)throw Error('Maximum upload size is 512 MB.');document.body.classList.add('busy');$('mediaUploadStatus').textContent='Uploading and validating...';const response=await fetch('/api/media/upload',{method:'POST',headers:{'Content-Type':'application/octet-stream','X-Filename':encodeURIComponent(file.name)},body:file});const result=await response.json();if(!response.ok)throw Error(result.error||'Upload failed');Object.assign(getConfig(),result,{media_name:file.name.replace(/\.[^.]+$/,'')});selectedSaved='';markChanged(true)}catch(error){setError(error.message)}finally{uploadBusy=false;document.body.classList.remove('busy');syncProjectLock();if($('mediaUploadStatus'))$('mediaUploadStatus').textContent=''}};
+ document.querySelectorAll('[data-scalar]').forEach(el=>{const update=()=>{const key=el.dataset.scalar,val=el.type==='checkbox'?el.checked:el.type==='number'?Number(el.value):el.value;if(key.includes('.')){const [base,index]=key.split('.');getConfig()[base][+index]=val}else getConfig()[key]=val};el.onchange=()=>{update();markChanged()};if(el.matches('input[type=text],textarea'))el.oninput=()=>{update();scheduleRender()}});
+ document.querySelectorAll('[data-color]').forEach(el=>el.oninput=()=>{getConfig()[el.dataset.color]=rgb(el.value);markChanged()});
+ document.querySelectorAll('[data-upload]').forEach(el=>el.onchange=async()=>{const file=el.files[0];if(!file)return;try{await uploadImageFile(file,el.dataset.upload)}catch(e){setError(e.message)}});
+ document.querySelectorAll('[data-remove-image]').forEach(el=>el.onclick=()=>{setImagePath(el.dataset.removeImage,'');markChanged(true)});
+ document.querySelectorAll('[data-row-path]').forEach(el=>{const update=()=>pathTarget(el.dataset.rowPath)[+el.dataset.rowIndex][el.dataset.rowField]=el.value;el.oninput=()=>{update();scheduleRender()};el.onchange=()=>{update();markChanged()}});
+ document.querySelectorAll('[data-remove-row]').forEach(el=>el.onclick=()=>{pathTarget(el.dataset.removeRow).splice(+el.dataset.rowIndex,1);markChanged(true)});
+ document.querySelectorAll('[data-add-row]').forEach(el=>el.onclick=()=>{const fields=rowFields[template],row={};fields.forEach(f=>row[f]=f==='max'?'100':f.includes('value')?'0':'');pathTarget(el.dataset.addRow).push(row);markChanged(true)});
+ document.querySelectorAll('[data-player]').forEach(el=>{const update=()=>{const p=getConfig().players[+el.dataset.player],key=el.dataset.playerField;p[key]=el.type==='number'?Number(el.value):el.value};el.onchange=()=>{update();markChanged()};if(el.type==='text')el.oninput=()=>{update();scheduleRender()}});
+ if(['t6','t7','t8','t9'].includes(template))return;
+ $('moveLayer').onchange=()=>{selectedLayer[template]=$('moveLayer').value;syncImageTools()};
+ $('textRole').onchange=()=>{getConfig()._web_text_role=$('textRole').value;buildEditor()};
+ const updateText=()=>{const cfg=getConfig(),role=cfg._web_text_role||'all';cfg.text_styles=cfg.text_styles||{};const s=cfg.text_styles[role]||{};s.font_family=$('textFont').value;s.case=$('textCase').value;s.size_pct=Math.max(50,Math.min(200,Number($('textSize').value)||100));if($('textColorEnabled').checked)s.color=rgb($('textColor').value);else delete s.color;cfg.text_styles[role]=s;markChanged()};
+ ['textFont','textCase','textSize','textColorEnabled'].forEach(id=>$(id).onchange=updateText);$('textColor').oninput=()=>{$('textColorEnabled').checked=true;updateText()};$('resetTextStyle').onclick=()=>{const cfg=getConfig(),role=cfg._web_text_role||'all';delete cfg.text_styles[role];markChanged(true)};
+}
+function fileData(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(new Error('Could not read image'));r.readAsDataURL(file)})}
+async function apiJson(url,payload){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,client_id:clientId})});let value;try{value=await r.json()}catch{value={error:`HTTP ${r.status}`}}if(!r.ok)throw new Error(value.error||`HTTP ${r.status}`);return value}
+function request(){return {client_id:clientId,template,config:getConfig(),update_live:false}}
+function scheduleRender(save=true){const key=JSON.stringify({template,config:getConfig()});if(key===scheduledPreview){syncProjectLock();return}scheduledPreview=key;++renderToken;previewReady=false;$('stage').setAttribute('aria-busy','true');$('dimensions').textContent='Rendering...';syncProjectLock();syncMediaPreview();layoutTextBoxes();clearTimeout(renderTimer);renderTimer=setTimeout(renderNow,save?90:0)}
+async function renderNow(){
+ const token=++renderToken,renderedTemplate=template;let url;
+ try{
+  setError();
+  const r=await fetch('/api/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request())});
+  if(!r.ok){const x=await r.json();throw new Error(x.error||`HTTP ${r.status}`)}
+  const blob=await r.blob();if(token!==renderToken)return;
+  // Decode off-screen: never clear or revoke the frame an operator is editing against.
+  url=URL.createObjectURL(blob);const nextFrame=new Image();nextFrame.src=url;await nextFrame.decode();
+  if(token!==renderToken){URL.revokeObjectURL(url);return}
+  await renderCustomOverlay(token);
+  if(token!==renderToken){URL.revokeObjectURL(url);return}
+  const previousUrl=previewUrl;$('preview').src=url;previewUrl=url;
+  if(previousUrl)URL.revokeObjectURL(previousUrl);
+  previewReady=true;$('preview').dataset.template=renderedTemplate;$('stage').setAttribute('aria-busy','false');
+  $('dimensions').textContent=`${nextFrame.naturalWidth.toLocaleString()} × ${nextFrame.naturalHeight.toLocaleString()} px`;
+  layoutTextBoxes();updateLiveButtons();
+ }catch(e){
+  if(url&&url!==previewUrl)URL.revokeObjectURL(url);
+  if(token===renderToken){scheduledPreview='';$('stage').setAttribute('aria-busy','false');$('dimensions').textContent=previewUrl?'Update failed - previous preview':'Preview unavailable';setError(e.message);updateLiveButtons()}
+ }
+}
+async function download(url,payload,filename){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!r.ok){let x;try{x=await r.json()}catch{x={}}throw new Error(x.error||`HTTP ${r.status}`)}const blob=await r.blob(),a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+function downloadJson(value,name){const blob=new Blob([JSON.stringify(value,null,2)],{type:'application/json'}),a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+
+function moveTarget(){
+ const cfg=getConfig(),key=selectedLayer[template];
+ if(template==='t13')return {obj:cfg,x:'image_offset_x_pct',y:'image_offset_y_pct',size:'image_size_pct',min:10,max:200,xMin:-100,xMax:100,yMin:-100,yMax:100,defaultX:0,defaultY:0};
+ if(template==='t9'||(template==='t10'&&key.startsWith('photo_')))return {obj:cfg,x:key+'_offset_x_pct',y:key+'_offset_y_pct',size:key+'_size_pct',min:10,max:template==='t10'?200:300,xMin:-100,xMax:100,yMin:-100,yMax:100,defaultX:0,defaultY:0};
+ if(template==='t11')return {obj:cfg,x:'band_x_pct',y:'band_y_pct',size:'band_size_pct',min:10,max:200,xMin:0,xMax:100,yMin:0,yMax:100};
+ if(['t10','t12'].includes(template))return {obj:cfg,x:'logo_x_pct',y:'logo_y_pct',size:'logo_size_pct',min:10,max:200,xMin:0,xMax:100,yMin:0,yMax:100};
+ if(template==='t6')return {obj:cfg,x:'player_offset_x_pct',y:'player_offset_y_pct',size:'player_size_pct',min:10,max:300,xMin:-100,xMax:100,yMin:-100,yMax:100,defaultX:0,defaultY:0};
+ if(template==='t5'){
+  if(key==='band')return {obj:cfg,x:'band_x_pct',y:'band_y_pct',size:'band_scale_pct',min:25,max:300,xMin:-75,xMax:125,yMin:-75,yMax:125};
+  if(key==='player_path')return {obj:cfg,x:'player_offset_x_pct',y:'player_offset_y_pct',size:'player_size_pct',min:20,max:500,xMin:-100,xMax:100,yMin:-100,yMax:100};
+  if(key==='player_name'){
+   cfg.text_styles=cfg.text_styles||{};cfg.text_styles.player_names=cfg.text_styles.player_names||{};
+   return {obj:cfg,x:'name_offset_x_pct',y:'name_offset_y_pct',sizeObj:cfg.text_styles.player_names,size:'size_pct',min:50,max:200,xMin:-100,xMax:100,yMin:-100,yMax:100};
+  }
+  return {obj:cfg,x:'background_focus_x',y:'background_focus_y',size:'background_zoom',reverse:true,min:100,max:300};
+ }
+ if(key==='logo_path')return {obj:cfg,x:'logo_x_pct',y:'logo_y_pct',size:'logo_size_pct',min:2};
+ if(template==='t1'){
+  if(key==='photo_path')return {obj:cfg,x:'photo_focus_x',y:'photo_focus_y',size:'photo_zoom',reverse:true,min:100};
+  return {obj:cfg,x:'player_x_pct',y:'player_y_pct',size:'player_size_pct',min:2};
+ }
+ if(template==='t2'||template==='t3')return {obj:cfg,x:key+'_focus_x',y:key+'_focus_y',size:key+'_zoom',reverse:true,min:100};
+ const p=cfg.players[+key.split('_')[1]];return {obj:p,x:'photo_focus_x',y:'photo_focus_y',size:'photo_zoom',reverse:true,min:100};
+}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function targetNumber(obj,key,fallback){const value=Number(obj[key]);return Number.isFinite(value)?value:fallback}
+function selectedUploadKey(){const key=selectedLayer[template];if(template==='t6')return 'player_path';if(template==='t5')return key==='background_path'?'background_path':'player_path';return key.startsWith('player_')?`player.${key.split('_')[1]}.photo`:key}
+function selectedImagePath(){const cfg=getConfig(),key=selectedLayer[template];if(template==='t6')return cfg.player_path;if(template==='t5')return key==='background_path'?cfg.background_path:true;return key.startsWith('player_')?cfg.players[+key.split('_')[1]].photo:cfg[key]}
+function syncImageTools(){
+ if(['t7','t8'].includes(template)){document.querySelector('.preview-tools').hidden=true;return}
+ document.querySelector('.preview-tools').hidden=false;
+ const choices=imageMoveChoices[template],select=$('previewLayer');
+ select.innerHTML=choices.map(([key,label])=>option(key,label,selectedLayer[template])).join('');select.value=selectedLayer[template];
+ const editorSelect=$('moveLayer');if(editorSelect)editorSelect.value=selectedLayer[template];
+ const target=moveTarget(),sizeObj=target.sizeObj||target.obj,value=clamp(targetNumber(sizeObj,target.size,100),target.min??2,target.max??300);
+ $('previewScale').min=target.min??2;$('previewScale').max=target.max??300;$('previewScale').value=value;$('previewScaleValue').textContent=`${Math.round(value)}%`;
+ if(template==='t6')for(const key of [target.x,target.y,target.size]){const field=document.querySelector(`[data-scalar="${key}"]`);if(field)field.value=target.obj[key]}
+}
+function resizeSelected(delta){const target=moveTarget(),sizeObj=target.sizeObj||target.obj,current=targetNumber(sizeObj,target.size,100);sizeObj[target.size]=clamp(current+delta,target.min??2,target.max??300);commit();syncImageTools();scheduleRender()}
+function nudgeSelected(dx,dy){
+ const target=moveTarget(),sign=target.reverse?-1:1;
+ target.obj[target.x]=clamp(targetNumber(target.obj,target.x,target.defaultX??50)+sign*dx,target.xMin??0,target.xMax??100);target.obj[target.y]=clamp(targetNumber(target.obj,target.y,target.defaultY??50)+sign*dy,target.yMin??0,target.yMax??100);
+ commit();syncImageTools();scheduleRender();
+}
+$('previewLayer').onchange=()=>{selectedLayer[template]=$('previewLayer').value;syncImageTools();$('stage').focus()};
+$('moveLeft').onclick=()=>nudgeSelected(-1,0);$('moveRight').onclick=()=>nudgeSelected(1,0);$('moveUp').onclick=()=>nudgeSelected(0,-1);$('moveDown').onclick=()=>nudgeSelected(0,1);
+$('shrinkImage').onclick=()=>resizeSelected(-5);$('growImage').onclick=()=>resizeSelected(5);
+$('previewScale').oninput=()=>{const target=moveTarget(),sizeObj=target.sizeObj||target.obj;sizeObj[target.size]=clamp(+$('previewScale').value,target.min??2,target.max??300);syncImageTools();scheduleRender()};
+$('previewScale').onchange=()=>{commit();buildEditor()};
+$('preview').ondragstart=()=>false;
+$('preview').onpointerdown=e=>{if(!selectedImagePath())return;$('stage').focus();const t=moveTarget();drag={id:e.pointerId,x:e.clientX,y:e.clientY,t,startX:targetNumber(t.obj,t.x,t.defaultX??50),startY:targetNumber(t.obj,t.y,t.defaultY??50)};$('preview').setPointerCapture(e.pointerId);e.preventDefault()};
+$('preview').onpointermove=e=>{if(!drag||drag.id!==e.pointerId)return;const sign=drag.t.reverse?-1:1,rect=$('preview').getBoundingClientRect();drag.t.obj[drag.t.x]=clamp(drag.startX+sign*(e.clientX-drag.x)*100/rect.width,drag.t.xMin??0,drag.t.xMax??100);drag.t.obj[drag.t.y]=clamp(drag.startY+sign*(e.clientY-drag.y)*100/rect.height,drag.t.yMin??0,drag.t.yMax??100);scheduleRender();e.preventDefault()};
+function finishImageDrag(){if(drag){if(['t6','t9'].includes(template)){for(const key of [drag.t.x,drag.t.y])drag.t.obj[key]=Math.round(drag.t.obj[key]*10)/10}drag=null;commit();buildEditor()}}
+$('preview').onpointerup=finishImageDrag;$('preview').onpointercancel=finishImageDrag;
+$('preview').onwheel=e=>{if(!e.ctrlKey)return;e.preventDefault();resizeSelected(e.deltaY<0?5:-5)};
+$('stage').onkeydown=e=>{const step=e.shiftKey?5:1;if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();nudgeSelected(e.key==='ArrowLeft'?-step:e.key==='ArrowRight'?step:0,e.key==='ArrowUp'?-step:e.key==='ArrowDown'?step:0)}else if(e.ctrlKey&&['+','=','-','_'].includes(e.key)){e.preventDefault();resizeSelected(['+','='].includes(e.key)?5:-5)}};
+let dropDepth=0;
+$('stage').ondragenter=e=>{e.preventDefault();dropDepth++;$('stage').classList.add('drop-ready')};
+$('stage').ondragover=e=>{e.preventDefault();e.dataTransfer.dropEffect='copy'};
+$('stage').ondragleave=e=>{e.preventDefault();dropDepth=Math.max(0,dropDepth-1);if(!dropDepth)$('stage').classList.remove('drop-ready')};
+$('stage').ondrop=async e=>{e.preventDefault();dropDepth=0;$('stage').classList.remove('drop-ready');const file=e.dataTransfer.files[0];if(!file)return;try{await uploadImageFile(file,selectedUploadKey())}catch(error){setError(error.message)}};
+
+async function registerSession(){const name=$('operatorName').value.trim();localStorage.setItem('vetoScoreboardOperatorName',name);return apiJson('/api/session/register',{display_name:name})}
+function priorityName(value){return value>=100?'Primary':value<=0?'Viewer':'Operator'}
+async function refreshUsers(){
+ try{
+  const r=await fetch(`/api/sessions?client_id=${encodeURIComponent(clientId)}`),data=await r.json();
+  if(!r.ok)throw new Error(data.error||`HTTP ${r.status}`);
+  latestSessions=data;$('usersButton').textContent=`Users: ${data.sessions.length}`;
+  $('usersAccess').textContent=data.can_manage?'Priority control available on this computer':'Priority control is managed from the host computer';
+  $('accessRole').textContent=data.can_manage?'Host control':'LAN operator';updateLiveButtons();
+  $('usersTable').innerHTML=data.sessions.map(s=>{
+   const live=s.live_owner?(data.can_manage?'<button data-admin-stop-live>Stop</button>':'LIVE'):'';
+   const priority=data.can_manage?`<select data-user-priority="${esc(s.id)}"><option value="0"${s.priority===0?' selected':''}>Viewer</option><option value="50"${s.priority>0&&s.priority<100?' selected':''}>Operator</option><option value="100"${s.priority===100?' selected':''}>Primary</option></select>`:esc(`${priorityName(s.priority)} (${s.priority})`);
+   return `<tr><td>${esc(s.name)}${s.id===clientId?' (you)':''}</td><td>${esc(s.address)}</td><td>${s.age_seconds}s</td><td>${priority}</td><td>${live}</td></tr>`;
+  }).join('');
+  document.querySelectorAll('[data-user-priority]').forEach(select=>select.onchange=async()=>{try{await apiJson('/api/session/priority',{target_id:select.dataset.userPriority,priority:+select.value});await refreshUsers();await refreshLive()}catch(e){setError(e.message)}});
+  document.querySelectorAll('[data-admin-stop-live]').forEach(button=>button.onclick=async()=>{if(!confirm('Stop the current SDI output? This interrupts the live stream.'))return;try{button.disabled=true;await liveCommand('/api/live/stop',{expected_revision:latestLive.program_revision});await refreshUsers()}catch(e){setError(e.message)}});
+ }catch(e){setError(e.message)}
+}
+function updateLiveButtons(){const active=latestLive.active,owned=latestLive.owned_by_requester,canStop=owned||latestSessions.can_manage,same=active&&!!latestLive.on_air&&shownRevision===latestLive.on_air&&lastShown===JSON.stringify({template,config:getConfig()});$('liveButton').textContent=active&&canStop?'Stop output':active?'Output in use':'Start output';$('liveButton').disabled=liveCommandBusy||!!(active&&!canStop);$('liveButton').title=active?'Live operator: '+(latestLive.owner_name||'Unknown'):'Start SDI output';$('liveButton').className=active?'danger':'primary';$('takeLive').disabled=liveCommandBusy||!active||!owned||presetSaving||uploadBusy||!previewReady||same||(['external-key','chroma-magenta'].includes(latestLive.clear_mode)&&!['t5','t11'].includes(template))||!!(boot?.program_monitor&&!programReady);$('takeLive').className=same?'signal-green':'signal-yellow';$('takeLive').textContent=same?'On Air':'Push On Air';$('clearLive').disabled=liveCommandBusy||!active||!owned||!latestLive.on_air||!boot?.program_monitor}
+function programUnavailable(message){programReady=false;$('programUnavailable').hidden=false;$('programUnavailable').textContent=message;$('programState').className='stale';updateLiveButtons()}
+async function refreshProgram(){if(!boot?.program_monitor){programUnavailable('Output monitor pending server restart');return}if(programFetchBusy)return;programFetchBusy=true;try{if(displayedProgramRevision!==latestLive.program_revision)programUnavailable('Updating output...');const response=await fetch('/api/live/preview',{cache:'no-store',signal:AbortSignal.timeout(4000)});if(!response.ok)throw Error('Output preview unavailable');const revision=response.headers.get('X-Program-Revision'),blob=await response.blob();if(revision!==latestLive.program_revision)return;const url=URL.createObjectURL(blob);$('programImage').src=url;await $('programImage').decode();if(programUrl)URL.revokeObjectURL(programUrl);programUrl=url;if(revision!==latestLive.program_revision)return;displayedProgramRevision=revision;programReady=true;$('programUnavailable').hidden=true;$('programState').className=latestLive.on_air?'on-air':'';$('programUpdated').textContent='Updated '+new Date().toLocaleTimeString();updateLiveButtons()}catch(error){programUnavailable('Preview unavailable - last frame is not current');$('programUpdated').textContent='Connection interrupted'}finally{programFetchBusy=false}}
+async function refreshLive(){if(liveRefreshBusy)return;liveRefreshBusy=true;try{const r=await fetch('/api/live/status?client_id='+encodeURIComponent(clientId),{signal:AbortSignal.timeout(4000)});if(!r.ok)throw Error('Live status unavailable');latestLive=await r.json();$('liveStatus').textContent=latestLive.active?(latestLive.on_air?'On Air':(latestLive.clear_mode==='external-key'?'Transparent / Output running':latestLive.clear_mode==='black'?'Black / Output running':latestLive.clear_mode==='chroma-magenta'?'Magenta / Output running':'Chroma clear / Output running')):'Output stopped';$('programState').textContent=$('liveStatus').textContent;$('programName').textContent=latestLive.on_air?(latestLive.program_name||'Live graphic'):(latestLive.clear_mode==='external-key'?'Transparent':latestLive.clear_mode==='chroma-magenta'?'Magenta':latestLive.clear_mode&&latestLive.clear_mode!=='black'?'Chroma clear - switcher composite not monitored':'Black');$('programDetails').textContent=latestLive.active?[latestLive.clear_mode==='external-key'?boot.decklink_key_pairs[latestLive.output]:latestLive.output,latestLive.preset,latestLive.owner_name,latestLive.media_finished?'Last frame held':''].filter(Boolean).join(' | '):'';updateLiveButtons();if(latestLive.error||latestLive.media_error)setError(latestLive.error||latestLive.media_error);await refreshProgram()}catch(error){latestLive={active:false};$('liveStatus').textContent='Connection lost';$('programState').textContent='Status unknown';programUnavailable('Connection lost - output status unknown');setError(error.message)}finally{liveRefreshBusy=false}}
+async function init(){try{$('operatorName').value=localStorage.getItem('vetoScoreboardOperatorName')||`Operator ${clientId.slice(0,4).toUpperCase()}`;await registerSession();boot=await (await fetch('/api/bootstrap')).json();if(!boot.template_library)throw Error('Server update pending. Restart required.');configs=clone(boot.defaults);try{const saved=JSON.parse(localStorage.getItem('vetoScoreboardWeb')||'null');if(saved?.configs){configs={...configs,...saved.configs};template=saved.template in configs?saved.template:'t1'}}catch{}for(const key of ['t5','t11'])configs[key]={...boot.defaults[key],...configs[key]};Object.entries(boot.template_names).forEach(([k,v])=>$('template').insertAdjacentHTML('beforeend',option(k,v,template)));boot.video_presets.forEach(v=>{$('livePreset').insertAdjacentHTML('beforeend',option(v,v,v==='HD 1080i50'))});(boot.mp4_presets||boot.video_presets).forEach(v=>$('mp4Preset').insertAdjacentHTML('beforeend',option(v,v,v==='HD 1080i50')));Object.keys(boot.decklink_outputs).forEach(v=>$('liveDevice').insertAdjacentHTML('beforeend',option(v,v,false)));for(const cfg of Object.values(configs)){if(!Object.values(boot.canvas_sizes).flat().includes(cfg.canvas_size))cfg.canvas_size='HD  (1920x1080)'}history=[clone(configs)];historyIndex=0;buildEditor();syncHistory();scheduleRender(false);await refreshLive();await refreshUsers();setInterval(refreshLive,1500);setInterval(async()=>{try{await apiJson('/api/session/heartbeat',{});await refreshUsers()}catch{}},5000)}catch(e){setError(e.message)}}
+$('template').onchange=()=>switchTemplate($('template').value);$('undo').onclick=()=>restore(historyIndex-1);$('redo').onclick=()=>restore(historyIndex+1);$('reset').onclick=()=>{if(presetSaving||!confirm('Reset this template draft?'))return;configs[template]=clone(boot.defaults[template]);commit();buildEditor();scheduleRender()};
+$('pngButton').onclick=async()=>{try{await download('/api/export/png',request(),`scoreboard_${template}.png`)}catch(e){setError(e.message)}};$('mp4Button').onclick=()=>$('mp4Dialog').showModal();$('exportMp4').onclick=async()=>{try{$('exportMp4').disabled=true;await download('/api/export/mp4',{...request(),preset:$('mp4Preset').value,duration:+$('mp4Duration').value},`scoreboard_${template}.mp4`);$('mp4Dialog').close()}catch(e){setError(e.message)}finally{$('exportMp4').disabled=false}};
+$('operatorName').onchange=async()=>{try{await registerSession();await refreshUsers();await refreshLive()}catch(e){setError(e.message)}};$('usersButton').onclick=async()=>{$('usersDialog').showModal();await refreshUsers()};$('refreshUsers').onclick=refreshUsers;
+async function liveCommand(path,payload){if(liveCommandBusy)return;liveCommandBusy=true;updateLiveButtons();try{const result=await apiJson(path,payload);latestLive=result;programReady=false;return result}finally{liveCommandBusy=false;await refreshLive();updateLiveButtons()}}
+function outputStartReady(){
+ $('startLive').disabled=liveCommandBusy||!$('receiverConfirmed').checked||!$('livePreset').value||!$('liveDevice').value||($('clearMode').value!=='black'&&!$('keyerConfirmed').checked);
+}
+function chooseOutputModes(){
+ const mode=$('clearMode').value,external=mode==='external-key',magenta=mode==='chroma-magenta',fixedFormat=external||magenta;
+ $('livePreset').innerHTML=(fixedFormat?['HD 1080i50']:boot.video_presets).map(v=>option(v,v,'HD 1080i50')).join('');
+ $('livePreset').disabled=fixedFormat;$('receiverConfirmed').checked=false;$('receiverConfirmed').disabled=false;$('keyerConfirmed').checked=false;
+ $('keyerConfirmation').hidden=$('clearMode').value==='black';
+ $('keyerConfirmationText').textContent=external?'Fill and Key cables match this pair; switcher external key is configured':magenta?'Switcher chroma key is set to magenta / pink; matching graphic colours will also be removed':'Switcher chroma key matches this colour; matching graphic colours will also be removed';
+ $('outputHardwareStatus').textContent=external?(boot.decklink_key_pairs[$('liveDevice').value]+' | 1080i50'):magenta?('SDI '+[1,3,2,4][boot.decklink_outputs[$('liveDevice').value]]+' | Magenta #FF00FF | 1080i50'):'';
+ outputStartReady();
+}
+function configureOutputChoices(){
+ const previous=$('liveDevice').value,external=$('clearMode').value==='external-key',outputs=external?boot.decklink_key_pairs:boot.decklink_outputs;
+ $('liveDevice').innerHTML=Object.keys(outputs).map(name=>option(name,external?'Device '+boot.decklink_outputs[name]+': '+outputs[name]:name,previous)).join('');
+ $('liveDevice').disabled=false;chooseOutputModes();
+}
+function openOutputDialog(){
+ const overlay=['t5','t11'].includes(template);
+ for(const mode of ['external-key','chroma-magenta'])$('clearMode').querySelector('[value="'+mode+'"]').disabled=!overlay;
+ $('clearMode').value=overlay?'external-key':'black';
+ configureOutputChoices();
+ if(!$('liveDialog').open)$('liveDialog').showModal();
+}
+$('clearMode').onchange=configureOutputChoices;
+$('liveDevice').onchange=chooseOutputModes;
+$('livePreset').onchange=()=>{$('receiverConfirmed').checked=false;outputStartReady()};
+$('receiverConfirmed').onchange=outputStartReady;
+$('keyerConfirmed').onchange=outputStartReady;
+$('liveButton').onclick=async()=>{if(latestLive.active){if(!latestLive.owned_by_requester&&!latestSessions.can_manage)return;if(!confirm('Stop SDI output controlled by '+(latestLive.owner_name||'the live operator')+'? The live stream will stop. Clear On Air keeps output running in the selected clear mode.'))return;try{await liveCommand('/api/live/stop',{expected_revision:latestLive.program_revision});await refreshUsers()}catch(e){setError(e.message)}}else await openOutputDialog()};$('startLive').onclick=async()=>{if(!$('receiverConfirmed').checked)return;if($('clearMode').value!=='black'&&!$('keyerConfirmed').checked){setError('Confirm the switcher key setup first.');return;}try{$('startLive').disabled=true;await liveCommand('/api/live/start',{...request(),preset:$('livePreset').value,output:$('liveDevice').value,clear_mode:$('clearMode').value,keyer_confirmed:$('keyerConfirmed').checked});$('liveDialog').close();await refreshUsers()}catch(e){setError(e.message)}finally{outputStartReady()}};
+$('takeLive').onclick=async()=>{const snapshot=JSON.stringify({template,config:getConfig()}),name=library.find(p=>p.id===selectedSaved)?.player||boot.template_names[template];try{const result=await liveCommand('/api/live/show',{...request(),name,expected_revision:latestLive.program_revision});if(!result)return;lastShown=snapshot;shownRevision=result.on_air;updateLiveButtons()}catch(error){setError(error.message)}};
+$('clearLive').onclick=async()=>{if(!confirm('Clear On Air to '+(latestLive.clear_mode==='external-key'?'transparent':latestLive.clear_mode==='black'?'black':latestLive.clear_mode==='chroma-magenta'?'magenta':'chroma')+'? Output stays running; your preview and saved templates are kept.'))return;try{await liveCommand('/api/live/clear',{expected_revision:latestLive.program_revision});lastShown=null;shownRevision=null;updateLiveButtons()}catch(error){setError(error.message)}};
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{if(b.dataset.close==='presetDialog'&&presetSaving)return;$(b.dataset.close).close()});window.addEventListener('beforeunload',event=>{if(boot&&hasUnsavedChanges()){event.preventDefault();event.returnValue=''}});init().then(()=>{cleanDrafts=clone(configs);renderTemplateOptions();refreshLibrary();watchLibrary()});setInterval(()=>{if(boot)refreshLibrary()},30000);
+</script>
+</body>
+</html>

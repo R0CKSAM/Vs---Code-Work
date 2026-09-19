@@ -1,0 +1,26 @@
+{
+  "event": "Davis Cup 2026 Qualifiers Round 1",
+  "played": "2026-02-05 to 2026-02-08",
+  "checked": "2026-09-15",
+  "requested_source": "https://www.daviscup.com/en/draws-results/2026/qualifiers?tab=round-1",
+  "results_source": "https://en.wikipedia.org/wiki/2026_Davis_Cup_Qualifiers_first_round",
+  "source_note": "The official draw and tie pages currently return a shell without scores. Match facts are transcribed from the cited results tables; India and Korea final tie scores also agree with the official report. Review before broadcast. Values are set games, not player statistics; tie-break points within 7-6 sets are omitted. Brackets denote a deciding match tie-break. Empty match arrays mean not played.",
+  "crosscheck": "https://www.daviscup.com/en/news/korea-rep-stun-inexperienced-argentina-in-busan",
+  "bye_source": "https://www.daviscup.com/en/2026-davis-cup-where-to-watch",
+  "byes": ["Spain"],
+  "ties": [
+    {"a":"Germany","b":"Peru","score":[4,0],"matches":[[[6,6],[4,4]],[[6,6],[4,2]],[[6,2,6],[0,6,4]],[[6,6,10],[3,7,6]],[]]},
+    {"a":"Ecuador","b":"Australia","score":[3,1],"matches":[[[6,1,6],[4,6,4]],[[3,6,7],[6,3,5]],[[7,6],[6,4]],[[4,2],[6,6]],[]]},
+    {"a":"Bulgaria","b":"Belgium","score":[0,4],"matches":[[[3,3],[6,6]],[[7,4,1],[6,6,6]],[[6,6],[7,7]],[[2,2],[6,6]],[]]},
+    {"a":"India","b":"Netherlands","score":[3,2],"matches":[[[0,6,3],[6,4,6]],[[6,7],[4,5]],[[7,3,7],[6,6,6]],[[7,1,4],[5,6,6]],[[6,7],[4,6]]]},
+    {"a":"Hungary","b":"USA","score":[0,4],"matches":[[[6,3],[7,6]],[[6,3,6],[3,6,7]],[[4,6,3],[6,3,6]],[[2,3],[6,6]],[]]},
+    {"a":"France","b":"Slovakia","score":[3,1],"matches":[[[4,4],[6,6]],[[7,7],[6,6]],[[6,6],[2,3]],[[7,7],[5,6]],[]]},
+    {"a":"Canada","b":"Brazil","score":[3,2],"matches":[[[6,6],[3,3]],[[6,6,6],[7,3,7]],[[6,4,5],[3,6,7]],[[3,6,7],[6,1,6]],[[6,6],[3,4]]]},
+    {"a":"Czechia","b":"Sweden","score":[3,1],"matches":[[[6,6],[3,4]],[[6,6],[1,3]],[[7,6,7],[6,7,6]],[[4,6],[6,7]],[]]},
+    {"a":"South Korea","b":"Argentina","score":[3,2],"matches":[[[6,5,6],[2,7,7]],[[7,6],[6,2]],[[3,5],[6,7]],[[6,4,6],[4,6,3]],[[6,6],[4,3]]]},
+    {"a":"Japan","b":"Austria","score":[2,3],"matches":[[[6,6],[3,4]],[[4,5],[6,7]],[[7,6,6],[6,7,4]],[[3,3],[6,6]],[[7,1,0],[5,6,6]]]},
+    {"a":"Norway","b":"Great Britain","score":[0,4],"matches":[[[2,2],[6,6]],[[4,4],[6,6]],[[2,6,6],[6,2,7]],[[6,3,7],[3,6,10]],[]]},
+    {"a":"Croatia","b":"Denmark","score":[3,1],"matches":[[[4,6],[6,7]],[[5,6,6],[7,0,2]],[[6,7],[2,5]],[[7,7],[6,6]],[]]},
+    {"a":"Chile","b":"Serbia","score":[4,0],"matches":[[[7,7],[5,6]],[[6,6,6],[7,2,4]],[[6,6],[4,4]],[[6,7,10],[7,6,7]],[]]}
+  ]
+}

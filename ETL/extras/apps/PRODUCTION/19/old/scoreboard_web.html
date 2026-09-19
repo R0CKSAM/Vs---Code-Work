@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scoreboard Maker</title>
+<style>
+:root{color-scheme:light;--bg:#eaf0f4;--surface:#fff;--surface2:#f6f9fb;--line:#c9d4dc;--ink:#182630;--muted:#61717e;--green:#18794e;--green2:#11633f;--blue:#176b9b;--danger:#a33737}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px "Nirmala UI","Noto Sans","Segoe UI",Arial,sans-serif;letter-spacing:0}.toolbar{height:58px;display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}.brand{font-size:20px;font-weight:700;margin-right:8px;white-space:nowrap}.toolbar select{width:190px}.spacer{flex:1}.app{display:grid;grid-template-columns:minmax(390px,34vw) 1fr;height:calc(100vh - 58px)}.controls{overflow:auto;padding:10px 12px 40px;border-right:1px solid var(--line)}.preview-pane{min-width:0;display:flex;flex-direction:column;padding:10px}.preview-head{height:34px;display:flex;align-items:center;justify-content:space-between;font-weight:700}.stage{flex:1;min-height:0;background:#1c252d;display:flex;align-items:center;justify-content:center;padding:24px;overflow:auto}.stage img{display:block;max-width:100%;max-height:100%;object-fit:contain;box-shadow:0 10px 28px #0008;user-select:none;-webkit-user-drag:none}.stage img.movable{cursor:move}.group{background:var(--surface);border:1px solid var(--line);margin-bottom:10px}.group>h2{font-size:13px;margin:0;padding:8px 10px;background:var(--surface2);border-bottom:1px solid var(--line)}.group-body{padding:9px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.grid.one{grid-template-columns:1fr}.field{min-width:0}.field label{display:block;color:#344752;font-size:12px;font-weight:600;margin:0 0 4px}.field input:not([type=checkbox]):not([type=color]),.field select,.field textarea{width:100%;min-width:0;height:34px;border:1px solid #aebdc7;background:#fff;color:var(--ink);padding:6px 8px;font:inherit}.field textarea{height:58px;resize:vertical}.field input[type=color]{width:100%;height:34px;border:1px solid #aebdc7;background:#fff;padding:2px}.check{display:flex;align-items:center;gap:7px;height:34px;padding-top:15px}.check label{margin:0}.upload{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:end}.file-name{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}.row-table{width:100%;border-collapse:collapse;table-layout:fixed}.row-table th{font-size:11px;text-align:left;color:var(--muted);padding:4px}.row-table td{padding:3px}.row-table input{width:100%;min-width:0;height:31px;border:1px solid #b8c5ce;padding:4px}.row-table input[type=color]{padding:1px}.icon-button{width:31px;height:31px;padding:0;border:1px solid #b6c3cb;background:#fff;color:var(--danger);font-size:18px;cursor:pointer}.button-row{display:flex;gap:7px;margin-top:8px}button{height:34px;border:1px solid #aebbc4;background:#fff;color:var(--ink);padding:0 12px;font-weight:600;cursor:pointer}button:hover{background:#eef4f7}button.primary{background:var(--green);border-color:var(--green);color:#fff}button.primary:hover{background:var(--green2)}button.danger{color:#fff;background:var(--danger);border-color:var(--danger)}button:disabled{opacity:.55;cursor:not-allowed}.status{font-size:12px;color:var(--muted)}.live{color:#118044;font-weight:700}.error{display:none;background:#ffe8e8;color:#7f2020;border:1px solid #e4abab;padding:8px 10px;margin-bottom:10px}.player{border-top:1px solid var(--line);padding-top:9px;margin-top:9px}.player:first-child{border-top:0;padding-top:0;margin-top:0}.player h3{font-size:13px;margin:0 0 8px}.text-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.inline-check{display:flex;align-items:center;gap:6px;font-size:12px;margin-top:5px}dialog{border:1px solid #9cabb5;padding:0;box-shadow:0 20px 70px #0007;min-width:390px}dialog::backdrop{background:#17232c99}.dialog-head{font-size:16px;font-weight:700;padding:12px 14px;border-bottom:1px solid var(--line)}.dialog-body{padding:14px}.dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}.busy{opacity:.7;pointer-events:none}@media(max-width:900px){body{overflow-x:hidden}.toolbar{height:auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.toolbar>*{min-width:0}.toolbar .brand{grid-column:1/-1;width:auto}.toolbar select,.toolbar button{width:100%;min-width:0}.toolbar .status{text-align:center}.app{grid-template-columns:minmax(0,1fr);height:auto;width:100%;max-width:100%}.controls{grid-row:2;overflow:visible;border-right:0;min-width:0}.preview-pane{grid-row:1;height:52vh;min-height:360px;position:static;width:100%;max-width:100%;background:var(--bg)}.stage{min-width:0;width:100%;max-width:100%;overflow:hidden}.stage img{width:100%;height:100%;max-width:100%;max-height:100%;object-fit:contain}.spacer{display:none}}@media(max-width:520px){.grid,.text-row{grid-template-columns:1fr}.toolbar select{width:100%}.stage{padding:8px}dialog{min-width:calc(100vw - 24px)}}
+</style>
+<style>
+.operator-name{width:130px;height:34px;border:1px solid #aebbc4;padding:0 8px;font:inherit}
+.users-table-wrap{max-height:360px;overflow:auto;margin-top:10px;border:1px solid var(--line)}
+.users-table{width:100%;border-collapse:collapse;min-width:560px}
+.users-table th,.users-table td{padding:7px 8px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+.users-table th{position:sticky;top:0;background:var(--surface2);font-size:12px}
+.users-table select{height:30px;min-width:110px;border:1px solid #aebbc4;background:#fff}
+.preview-tools{min-height:42px;display:grid;grid-template-columns:minmax(130px,190px) repeat(5,34px) minmax(90px,1fr) 34px 48px;gap:5px;align-items:center;padding:4px 0 7px}
+.preview-tools select{height:34px;min-width:0;border:1px solid #aebbc4;background:#fff;padding:0 7px}
+.preview-tools input[type=range]{width:100%;min-width:70px}
+.tool-button{width:34px;padding:0;font-size:17px}
+.stage{position:relative;touch-action:none}
+.stage.drop-ready{outline:3px solid #38a169;outline-offset:-6px}
+.stage.drop-ready::after{content:"Drop image";position:absolute;inset:16px;display:flex;align-items:center;justify-content:center;background:#0b1722dd;color:#fff;border:2px dashed #63d98c;font-size:22px;font-weight:700;z-index:3;pointer-events:none}
+@media(max-width:1100px) and (min-width:901px){.preview-tools{grid-template-columns:minmax(110px,1fr) repeat(7,34px) 42px}.toolbar{gap:5px;padding-left:8px;padding-right:8px}.toolbar button{padding-left:7px;padding-right:7px}.brand{font-size:17px}.operator-name{width:105px}.toolbar select{width:145px}}
+@media(max-width:900px){.toolbar .operator-name{width:100%;min-width:0}.users-table-wrap{max-width:calc(100vw - 54px)}.preview-tools{grid-template-columns:minmax(120px,1fr) repeat(5,34px) minmax(70px,1fr) 34px 44px}}
+@media(max-width:560px){.preview-tools{grid-template-columns:minmax(0,1fr) repeat(7,34px) 42px}.preview-tools input[type=range]{grid-column:1/-2;grid-row:2}.preview-tools #previewScaleValue{grid-column:-2/-1;grid-row:2}}
+</style>
+</head>
+<body>
+<header class="toolbar">
+  <div class="brand">Scoreboard Maker</div>
+  <select id="template" aria-label="Layout"></select>
+  <input id="operatorName" class="operator-name" maxlength="40" aria-label="Operator name" title="Operator name">
+  <button id="usersButton" title="Connected users">Users: 0</button>
+  <button id="undo" title="Undo">Undo</button><button id="redo" title="Redo">Redo</button>
+  <button id="openProject">Open project</button><input id="projectFile" type="file" accept=".json,.scoreboard.json" hidden>
+  <button id="saveProject">Save project</button><button id="reset">Reset</button>
+  <div class="spacer"></div><span id="liveStatus" class="status">SDI stopped</span>
+  <button id="liveButton">Live Output</button><button id="mp4Button">Export MP4</button><button id="pngButton" class="primary">Export PNG</button>
+</header>
+<main class="app">
+  <aside class="controls"><div id="error" class="error"></div><div id="editor"></div></aside>
+  <section class="preview-pane">
+    <div class="preview-head"><span>Preview</span><span id="dimensions" class="status"></span></div>
+    <div class="preview-tools">
+      <select id="previewLayer" aria-label="Selected image" title="Selected image"></select>
+      <button id="moveLeft" class="tool-button" title="Move left" aria-label="Move left">&#8592;</button>
+      <button id="moveUp" class="tool-button" title="Move up" aria-label="Move up">&#8593;</button>
+      <button id="moveDown" class="tool-button" title="Move down" aria-label="Move down">&#8595;</button>
+      <button id="moveRight" class="tool-button" title="Move right" aria-label="Move right">&#8594;</button>
+      <button id="shrinkImage" class="tool-button" title="Make image smaller" aria-label="Make image smaller">&#8722;</button>
+      <input id="previewScale" type="range" min="2" max="300" step="1" aria-label="Image size">
+      <button id="growImage" class="tool-button" title="Make image larger" aria-label="Make image larger">+</button>
+      <span id="previewScaleValue" class="status"></span>
+    </div>
+    <div id="stage" class="stage" tabindex="0"><img id="preview" alt="Scoreboard preview"></div>
+  </section>
+</main>
+
+<dialog id="liveDialog"><div class="dialog-head">DeckLink live output</div><div class="dialog-body"><div class="grid one"><div class="field"><label>Video format</label><select id="livePreset"></select></div><div class="field"><label>SDI output</label><select id="liveDevice"></select></div></div><div class="dialog-actions"><button data-close="liveDialog">Cancel</button><button id="startLive" class="primary">Start SDI output</button></div></div></dialog>
+<dialog id="mp4Dialog"><div class="dialog-head">Export MP4</div><div class="dialog-body"><div class="grid one"><div class="field"><label>Video format</label><select id="mp4Preset"></select></div><div class="field"><label>Duration in seconds</label><input id="mp4Duration" type="number" min="1" max="300" value="10"></div></div><div class="dialog-actions"><button data-close="mp4Dialog">Cancel</button><button id="exportMp4" class="primary">Export MP4</button></div></div></dialog>
+<dialog id="usersDialog"><div class="dialog-head">Users and live priority</div><div class="dialog-body"><div id="usersAccess" class="status"></div><div class="users-table-wrap"><table class="users-table"><thead><tr><th>User</th><th>Address</th><th>Seen</th><th>Priority</th><th>Live</th></tr></thead><tbody id="usersTable"></tbody></table></div><div class="dialog-actions"><button id="refreshUsers">Refresh</button><button data-close="usersDialog">Close</button></div></div></dialog>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id),clone=x=>JSON.parse(JSON.stringify(x));
+let boot,configs={},template='t1',history=[],historyIndex=-1,renderTimer=null,renderToken=0,previewUrl='',drag=null;
+const clientId=localStorage.getItem('vetoScoreboardClientId')||(crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random().toString(16).slice(2)}`);
+localStorage.setItem('vetoScoreboardClientId',clientId);
+let latestLive={active:false},latestSessions={sessions:[],can_manage:false};
+const labels={canvas_size:'Canvas',panel_side:'Panel side',title:'Title',header_text:'Header',divider_text:'Divider',banner_text:'Banner',sponsor_text:'Sponsor',name_a_first:'Player 1 first',name_a_last:'Player 1 last',abbr_a:'Player 1 abbreviation',name_b_first:'Player 2 first',name_b_last:'Player 2 last',abbr_b:'Player 2 abbreviation',team_a:'Left team',team_b:'Right team',vs_text:'Versus text',score:'Score',show_playing_style:'Show playing style',style_label:'Style heading',photo_width_pct:'Photo width %',photo_fade_pct:'Photo edge blend %',photo_brightness_pct:'Photo brightness %',panel_width_pct:'Panel width %',panel_opacity_pct:'Panel opacity %',panel_fade_pct:'Panel edge fade %',panel_blur_pct:'Glass blur %',panel_style:'Panel effect',content_top_pct:'Text top position %',title_gap_pct:'Title gap %',row_gap_pct:'Row gap %',player_in_front:'Player above panel',team:'Team',first:'First name',last:'Last name',result:'Result',photo_zoom:'Photo zoom %',photo_focus_x:'Photo horizontal %',photo_focus_y:'Photo vertical %',first_name:'First name',last_name:'Last name',age:'Age',ranking:'Ranking',plays:'Plays',years_text:'Age suffix',band_x_pct:'Band horizontal %',band_y_pct:'Band vertical %',band_scale_pct:'Whole band size %',player_size_pct:'Player size %',player_offset_x_pct:'Player horizontal offset %',player_offset_y_pct:'Player vertical offset %',name_offset_x_pct:'Name horizontal offset %',name_offset_y_pct:'Name vertical offset %',background_zoom:'Background zoom %',background_focus_x:'Background horizontal %',background_focus_y:'Background vertical %',transparent_background:'Transparent PNG background'};
+const mainFields={
+ t1:['canvas_size','title','panel_side','panel_style','panel_width_pct','panel_opacity_pct','panel_fade_pct','panel_blur_pct','content_top_pct','title_gap_pct','row_gap_pct','player_in_front'],
+ t2:['canvas_size','header_text','divider_text','name_a_first','name_a_last','abbr_a','name_b_first','name_b_last','abbr_b','photo_width_pct','photo_fade_pct','photo_brightness_pct','show_playing_style','style_label'],
+ t3:['canvas_size','name_a_first','name_a_last','team_a','name_b_first','name_b_last','team_b','vs_text','score','sponsor_text'],
+ t4:['canvas_size','banner_text','sponsor_text'],
+ t5:['canvas_size','first_name','last_name','age','ranking','plays','years_text','band_x_pct','band_y_pct','band_scale_pct','player_size_pct','player_offset_x_pct','player_offset_y_pct','name_offset_x_pct','name_offset_y_pct','background_zoom','background_focus_x','background_focus_y','transparent_background']
+};
+const assetFields={t1:[['photo_path','Background'],['player_path','Player cutout'],['logo_path','Logo']],t2:[['photo_a','Player 1'],['photo_b','Player 2'],['logo_path','Logo']],t3:[['photo_a','Left player'],['photo_b','Right player'],['logo_path','Logo']],t4:[['logo_path','Logo']],t5:[['background_path','Background'],['player_path','Player cutout']]};
+const colorFields={t1:[['accent_color','Accent'],['background_color','Background'],['panel_color','Panel'],['panel_color_2','Gradient end'],['bar_color','All bars']],t2:[['accent_color','Accent'],['background_color','Background'],['row_color','Stat rows'],['bar_track_color','Bar track'],['bar_lose_color','Losing bar']],t3:[['accent_color','Accent'],['background_color','Background'],['bar_track_color','Bar track']],t4:[['accent_color','Accent'],['background_color','Background'],['bar_track_color','Bar track']],t5:[['background_color','Background'],['band_green','Main green panel'],['accent_green','Bright accents'],['accent_dark','Dark accents'],['panel_white','Stats panel'],['stats_green','Stats text'],['separator_color','Separators'],['name_text_color','Player name']]};
+const rowFields={t1:['label','value','max'],t2:['label','value_a','value_b','max'],t3:['label','value_a','value_b','max','unit'],t4:['label','value','unit','max']};
+const rowLabels={label:'Stat',value:'Value',value_a:'P1',value_b:'P2',max:'Scale',unit:'Unit'};
+const imageMoveChoices={t1:[['photo_path','Background'],['player_path','Player cutout'],['logo_path','Logo']],t2:[['photo_a','Player 1'],['photo_b','Player 2'],['logo_path','Logo']],t3:[['photo_a','Left player'],['photo_b','Right player'],['logo_path','Logo']],t4:[['player_0','Player 1'],['player_1','Player 2'],['player_2','Player 3'],['logo_path','Logo']],t5:[['band','Whole band'],['player_path','Player cutout'],['player_name','Player name'],['background_path','Background']]};
+const selectedLayer={t1:'photo_path',t2:'photo_a',t3:'photo_a',t4:'player_0',t5:'band'};
+
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function hex(v,f='#ffffff'){return Array.isArray(v)&&v.length===3?'#'+v.map(n=>Math.max(0,Math.min(255,+n||0)).toString(16).padStart(2,'0')).join(''):f}
+function rgb(v){return [1,3,5].map(i=>parseInt(v.slice(i,i+2),16))}
+function group(title,body){return `<section class="group"><h2>${esc(title)}</h2><div class="group-body">${body}</div></section>`}
+function option(value,text,selected){return `<option value="${esc(value)}"${value===selected?' selected':''}>${esc(text)}</option>`}
+function getConfig(){return configs[template]}
+function commit(){history=history.slice(0,historyIndex+1);history.push(clone(configs));if(history.length>60)history.shift();historyIndex=history.length-1;localStorage.setItem('vetoScoreboardWeb',JSON.stringify({template,configs}));syncHistory()}
+function syncHistory(){$('undo').disabled=historyIndex<=0;$('redo').disabled=historyIndex>=history.length-1}
+function restore(index){if(index<0||index>=history.length)return;historyIndex=index;configs=clone(history[index]);buildEditor();scheduleRender(false);syncHistory()}
+function setError(message=''){const box=$('error');box.textContent=message;box.style.display=message?'block':'none'}
+function markChanged(rebuild=false){commit();if(rebuild)buildEditor();scheduleRender()}
+
+function scalarField(key,value,setter){
+ const label=labels[key]||key.replaceAll('_',' ');let control='';
+ if(typeof value==='boolean')return `<div class="field check"><input type="checkbox" data-scalar="${key}" ${value?'checked':''}><label>${esc(label)}</label></div>`;
+ let choices=null;if(key==='canvas_size')choices=boot.canvas_sizes[template];else if(key==='panel_side')choices=['right','left'];else if(key==='panel_style')choices=['solid','gradient','glass'];
+ if(choices)control=`<select data-scalar="${key}">${choices.map(x=>option(x,x,value)).join('')}</select>`;
+ else if(key==='title')control=`<textarea data-scalar="${key}">${esc(value)}</textarea>`;
+ else if(typeof value==='number')control=`<input data-scalar="${key}" type="number" step="0.5" value="${esc(value)}">`;
+ else control=`<input data-scalar="${key}" type="text" value="${esc(value)}">`;
+ return `<div class="field"><label>${esc(label)}</label>${control}</div>`;
+}
+function buildAssets(){const cfg=getConfig();let body=assetFields[template].map(([key,label])=>uploadField(key,label,cfg[key])).join('');
+ if(template==='t4')body+=cfg.players.map((p,i)=>uploadField(`player.${i}.photo`,`Player ${i+1}`,p.photo)).join('');
+ const choices=imageMoveChoices[template];body+=`<div class="field" style="margin-top:8px"><label>${template==='t5'?'Move element':'Move image'} on preview</label><select id="moveLayer">${choices.map(([k,l])=>option(k,l,selectedLayer[template])).join('')}</select></div>`;
+ return group('Images',`<div class="grid">${body}</div>`)}
+function uploadField(key,label,path){return `<div class="field"><label>${esc(label)}</label><div class="upload"><input type="file" data-upload="${esc(key)}" accept="image/*"><button type="button" data-remove-image="${esc(key)}">Remove</button></div><div class="file-name">${esc(path?path.split(/[\\/]/).pop():'No image selected')}</div></div>`}
+function buildMain(){const cfg=getConfig();return group('Content and layout',`<div class="grid">${mainFields[template].map(k=>scalarField(k,cfg[k])).join('')}</div>${template==='t2'?`<div class="grid" style="margin-top:8px">${[0,1].map(i=>scalarField(`tags_a.${i}`,cfg.tags_a[i])).join('')}${[0,1].map(i=>scalarField(`tags_b.${i}`,cfg.tags_b[i])).join('')}</div>`:''}`)}
+function buildColors(){const cfg=getConfig();return group('Colors',`<div class="grid">${colorFields[template].map(([key,label])=>`<div class="field"><label>${label}</label><input type="color" data-color="${key}" value="${hex(cfg[key],key.includes('background')?'#0a1e30':'#d2eb3c')}"></div>`).join('')}</div>`)}
+function buildTextStyles(){const cfg=getConfig(),roles=boot.text_targets[template],active=cfg._web_text_role||'all',style=(cfg.text_styles||{})[active]||{};return group('Text styling',`<div class="grid"><div class="field"><label>Text group</label><select id="textRole">${roles.map(r=>option(r.key,r.label,active)).join('')}</select></div><div class="field"><label>Font</label><select id="textFont">${boot.fonts.map(f=>option(f,f,style.font_family||'Default')).join('')}</select></div><div class="field"><label>Case</label><select id="textCase">${boot.text_cases.map(c=>option(c,c,style.case||'As typed')).join('')}</select></div><div class="field"><label>Size %</label><input id="textSize" type="number" min="50" max="200" value="${style.size_pct||100}"></div><div class="field"><label>Color</label><input id="textColor" type="color" value="${hex(style.color)}"></div><div class="field"><label>&nbsp;</label><label class="inline-check"><input id="textColorEnabled" type="checkbox" ${style.color?'checked':''}> Custom color</label></div></div><div class="button-row"><button id="resetTextStyle">Reset selected group</button></div>`)}
+function rowsTable(rows,fields,path){let head=fields.map(f=>`<th>${esc(rowLabels[f]||f)}</th>`).join('');let body=rows.map((row,i)=>`<tr>${fields.map(f=>`<td><input data-row-path="${path}" data-row-index="${i}" data-row-field="${f}" value="${esc(row[f]??'')}"></td>`).join('')}<td style="width:35px"><button class="icon-button" data-remove-row="${path}" data-row-index="${i}" title="Remove">×</button></td></tr>`).join('');return `<table class="row-table"><thead><tr>${head}<th style="width:35px"></th></tr></thead><tbody>${body}</tbody></table><div class="button-row"><button data-add-row="${path}">Add stat</button></div>`}
+function buildRows(){const cfg=getConfig();if(template==='t4'||template==='t5')return '';return group('Stat rows',rowsTable(cfg.rows||[],rowFields[template],'rows'))}
+function buildPlayers(){if(template!=='t4')return '';const cfg=getConfig();return group('Players',cfg.players.map((p,i)=>`<div class="player"><h3>Player ${i+1}</h3><div class="grid">${['team','first','last','result','photo_zoom','photo_focus_x','photo_focus_y'].map(k=>`<div class="field"><label>${labels[k]}</label><input data-player="${i}" data-player-field="${k}" type="${typeof p[k]==='number'?'number':'text'}" value="${esc(p[k]??'')}"></div>`).join('')}</div>${rowsTable(p.stats||[],rowFields.t4,`players.${i}.stats`)}</div>`).join(''))}
+function buildEditor(){$('editor').innerHTML=buildAssets()+buildMain()+buildColors()+buildTextStyles()+buildRows()+buildPlayers();bindEditor();$('preview').classList.toggle('movable',true);syncImageTools()}
+
+function pathTarget(path){const cfg=getConfig();if(path==='rows')return cfg.rows;const m=path.match(/^players\.(\d+)\.stats$/);return m?cfg.players[+m[1]].stats:null}
+function setImagePath(key,value){const cfg=getConfig();const m=key.match(/^player\.(\d+)\.photo$/);if(m)cfg.players[+m[1]].photo=value;else cfg[key]=value}
+async function uploadImageFile(file,key){
+ if(!file||!file.type.startsWith('image/'))throw new Error('Drop or choose a supported image file.');
+ document.body.classList.add('busy');
+ try{const data=await fileData(file),res=await apiJson('/api/upload',{name:file.name,data});setImagePath(key,res.path);selectedLayer[template]=key.startsWith('player.')?`player_${key.split('.')[1]}`:key;markChanged(true)}
+ finally{document.body.classList.remove('busy')}
+}
+function bindEditor(){
+ document.querySelectorAll('[data-scalar]').forEach(el=>{const update=()=>{const key=el.dataset.scalar,val=el.type==='checkbox'?el.checked:el.type==='number'?Number(el.value):el.value;if(key.includes('.')){const [base,index]=key.split('.');getConfig()[base][+index]=val}else getConfig()[key]=val};el.onchange=()=>{update();markChanged()};if(el.matches('input[type=text],textarea'))el.oninput=()=>{update();scheduleRender()}});
+ document.querySelectorAll('[data-color]').forEach(el=>el.oninput=()=>{getConfig()[el.dataset.color]=rgb(el.value);markChanged()});
+ document.querySelectorAll('[data-upload]').forEach(el=>el.onchange=async()=>{const file=el.files[0];if(!file)return;try{await uploadImageFile(file,el.dataset.upload)}catch(e){setError(e.message)}});
+ document.querySelectorAll('[data-remove-image]').forEach(el=>el.onclick=()=>{setImagePath(el.dataset.removeImage,'');markChanged(true)});
+ document.querySelectorAll('[data-row-path]').forEach(el=>{const update=()=>pathTarget(el.dataset.rowPath)[+el.dataset.rowIndex][el.dataset.rowField]=el.value;el.oninput=()=>{update();scheduleRender()};el.onchange=()=>{update();markChanged()}});
+ document.querySelectorAll('[data-remove-row]').forEach(el=>el.onclick=()=>{pathTarget(el.dataset.removeRow).splice(+el.dataset.rowIndex,1);markChanged(true)});
+ document.querySelectorAll('[data-add-row]').forEach(el=>el.onclick=()=>{const fields=rowFields[template],row={};fields.forEach(f=>row[f]=f==='max'?'100':f.includes('value')?'0':'');pathTarget(el.dataset.addRow).push(row);markChanged(true)});
+ document.querySelectorAll('[data-player]').forEach(el=>{const update=()=>{const p=getConfig().players[+el.dataset.player],key=el.dataset.playerField;p[key]=el.type==='number'?Number(el.value):el.value};el.onchange=()=>{update();markChanged()};if(el.type==='text')el.oninput=()=>{update();scheduleRender()}});
+ $('moveLayer').onchange=()=>{selectedLayer[template]=$('moveLayer').value;syncImageTools()};
+ $('textRole').onchange=()=>{getConfig()._web_text_role=$('textRole').value;buildEditor()};
+ const updateText=()=>{const cfg=getConfig(),role=cfg._web_text_role||'all';cfg.text_styles=cfg.text_styles||{};const s=cfg.text_styles[role]||{};s.font_family=$('textFont').value;s.case=$('textCase').value;s.size_pct=Math.max(50,Math.min(200,Number($('textSize').value)||100));if($('textColorEnabled').checked)s.color=rgb($('textColor').value);else delete s.color;cfg.text_styles[role]=s;markChanged()};
+ ['textFont','textCase','textSize','textColorEnabled'].forEach(id=>$(id).onchange=updateText);$('textColor').oninput=()=>{$('textColorEnabled').checked=true;updateText()};$('resetTextStyle').onclick=()=>{const cfg=getConfig(),role=cfg._web_text_role||'all';delete cfg.text_styles[role];markChanged(true)};
+}
+function fileData(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(new Error('Could not read image'));r.readAsDataURL(file)})}
+async function apiJson(url,payload){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,client_id:clientId})});let value;try{value=await r.json()}catch{value={error:`HTTP ${r.status}`}}if(!r.ok)throw new Error(value.error||`HTTP ${r.status}`);return value}
+function request(){return {client_id:clientId,template,config:getConfig()}}
+function scheduleRender(save=true){clearTimeout(renderTimer);renderTimer=setTimeout(renderNow,save?90:0)}
+async function renderNow(){const token=++renderToken;try{setError();const r=await fetch('/api/render',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request())});if(!r.ok){const x=await r.json();throw new Error(x.error||`HTTP ${r.status}`)}const blob=await r.blob();if(token!==renderToken)return;const url=URL.createObjectURL(blob);$('preview').onload=()=>{$('dimensions').textContent=`${$('preview').naturalWidth.toLocaleString()} × ${$('preview').naturalHeight.toLocaleString()} px`;if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=url};$('preview').src=url}catch(e){setError(e.message)}}
+async function download(url,payload,filename){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!r.ok){let x;try{x=await r.json()}catch{x={}}throw new Error(x.error||`HTTP ${r.status}`)}const blob=await r.blob(),a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+function downloadJson(value,name){const blob=new Blob([JSON.stringify(value,null,2)],{type:'application/json'}),a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+
+function moveTarget(){
+ const cfg=getConfig(),key=selectedLayer[template];
+ if(template==='t5'){
+  if(key==='band')return {obj:cfg,x:'band_x_pct',y:'band_y_pct',size:'band_scale_pct',min:25,max:300,xMin:-75,xMax:125,yMin:-75,yMax:125};
+  if(key==='player_path')return {obj:cfg,x:'player_offset_x_pct',y:'player_offset_y_pct',size:'player_size_pct',min:20,max:500,xMin:-100,xMax:100,yMin:-100,yMax:100};
+  if(key==='player_name'){
+   cfg.text_styles=cfg.text_styles||{};cfg.text_styles.player_names=cfg.text_styles.player_names||{};
+   return {obj:cfg,x:'name_offset_x_pct',y:'name_offset_y_pct',sizeObj:cfg.text_styles.player_names,size:'size_pct',min:50,max:200,xMin:-100,xMax:100,yMin:-100,yMax:100};
+  }
+  return {obj:cfg,x:'background_focus_x',y:'background_focus_y',size:'background_zoom',reverse:true,min:100,max:300};
+ }
+ if(key==='logo_path')return {obj:cfg,x:'logo_x_pct',y:'logo_y_pct',size:'logo_size_pct',min:2};
+ if(template==='t1'){
+  if(key==='photo_path')return {obj:cfg,x:'photo_focus_x',y:'photo_focus_y',size:'photo_zoom',reverse:true,min:100};
+  return {obj:cfg,x:'player_x_pct',y:'player_y_pct',size:'player_size_pct',min:2};
+ }
+ if(template==='t2'||template==='t3')return {obj:cfg,x:key+'_focus_x',y:key+'_focus_y',size:key+'_zoom',reverse:true,min:100};
+ const p=cfg.players[+key.split('_')[1]];return {obj:p,x:'photo_focus_x',y:'photo_focus_y',size:'photo_zoom',reverse:true,min:100};
+}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function targetNumber(obj,key,fallback){const value=Number(obj[key]);return Number.isFinite(value)?value:fallback}
+function selectedUploadKey(){const key=selectedLayer[template];if(template==='t5')return key==='background_path'?'background_path':'player_path';return key.startsWith('player_')?`player.${key.split('_')[1]}.photo`:key}
+function selectedImagePath(){const cfg=getConfig(),key=selectedLayer[template];if(template==='t5')return key==='background_path'?cfg.background_path:true;return key.startsWith('player_')?cfg.players[+key.split('_')[1]].photo:cfg[key]}
+function syncImageTools(){
+ const choices=imageMoveChoices[template],select=$('previewLayer');
+ select.innerHTML=choices.map(([key,label])=>option(key,label,selectedLayer[template])).join('');select.value=selectedLayer[template];
+ const editorSelect=$('moveLayer');if(editorSelect)editorSelect.value=selectedLayer[template];
+ const target=moveTarget(),sizeObj=target.sizeObj||target.obj,value=clamp(targetNumber(sizeObj,target.size,100),target.min??2,target.max??300);
+ $('previewScale').min=target.min??2;$('previewScale').max=target.max??300;$('previewScale').value=value;$('previewScaleValue').textContent=`${Math.round(value)}%`;
+}
+function resizeSelected(delta){const target=moveTarget(),sizeObj=target.sizeObj||target.obj,current=targetNumber(sizeObj,target.size,100);sizeObj[target.size]=clamp(current+delta,target.min??2,target.max??300);commit();syncImageTools();scheduleRender()}
+function nudgeSelected(dx,dy){
+ const target=moveTarget(),sign=target.reverse?-1:1;
+ target.obj[target.x]=clamp(targetNumber(target.obj,target.x,target.defaultX??50)+sign*dx,target.xMin??0,target.xMax??100);target.obj[target.y]=clamp(targetNumber(target.obj,target.y,target.defaultY??50)+sign*dy,target.yMin??0,target.yMax??100);
+ commit();syncImageTools();scheduleRender();
+}
+$('previewLayer').onchange=()=>{selectedLayer[template]=$('previewLayer').value;syncImageTools();$('stage').focus()};
+$('moveLeft').onclick=()=>nudgeSelected(-1,0);$('moveRight').onclick=()=>nudgeSelected(1,0);$('moveUp').onclick=()=>nudgeSelected(0,-1);$('moveDown').onclick=()=>nudgeSelected(0,1);
+$('shrinkImage').onclick=()=>resizeSelected(-5);$('growImage').onclick=()=>resizeSelected(5);
+$('previewScale').oninput=()=>{const target=moveTarget(),sizeObj=target.sizeObj||target.obj;sizeObj[target.size]=clamp(+$('previewScale').value,target.min??2,target.max??300);$('previewScaleValue').textContent=`${Math.round(sizeObj[target.size])}%`;scheduleRender()};
+$('previewScale').onchange=()=>{commit();buildEditor()};
+$('preview').ondragstart=()=>false;
+$('preview').onpointerdown=e=>{if(!selectedImagePath())return;$('stage').focus();const t=moveTarget();drag={id:e.pointerId,x:e.clientX,y:e.clientY,t,startX:targetNumber(t.obj,t.x,t.defaultX??50),startY:targetNumber(t.obj,t.y,t.defaultY??50)};$('preview').setPointerCapture(e.pointerId);e.preventDefault()};
+$('preview').onpointermove=e=>{if(!drag||drag.id!==e.pointerId)return;const sign=drag.t.reverse?-1:1,rect=$('preview').getBoundingClientRect();drag.t.obj[drag.t.x]=clamp(drag.startX+sign*(e.clientX-drag.x)*100/rect.width,drag.t.xMin??0,drag.t.xMax??100);drag.t.obj[drag.t.y]=clamp(drag.startY+sign*(e.clientY-drag.y)*100/rect.height,drag.t.yMin??0,drag.t.yMax??100);scheduleRender();e.preventDefault()};
+function finishImageDrag(){if(drag){drag=null;commit();buildEditor()}}
+$('preview').onpointerup=finishImageDrag;$('preview').onpointercancel=finishImageDrag;
+$('preview').onwheel=e=>{if(!e.ctrlKey)return;e.preventDefault();resizeSelected(e.deltaY<0?5:-5)};
+$('stage').onkeydown=e=>{const step=e.shiftKey?5:1;if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();nudgeSelected(e.key==='ArrowLeft'?-step:e.key==='ArrowRight'?step:0,e.key==='ArrowUp'?-step:e.key==='ArrowDown'?step:0)}else if(e.ctrlKey&&['+','=','-','_'].includes(e.key)){e.preventDefault();resizeSelected(['+','='].includes(e.key)?5:-5)}};
+let dropDepth=0;
+$('stage').ondragenter=e=>{e.preventDefault();dropDepth++;$('stage').classList.add('drop-ready')};
+$('stage').ondragover=e=>{e.preventDefault();e.dataTransfer.dropEffect='copy'};
+$('stage').ondragleave=e=>{e.preventDefault();dropDepth=Math.max(0,dropDepth-1);if(!dropDepth)$('stage').classList.remove('drop-ready')};
+$('stage').ondrop=async e=>{e.preventDefault();dropDepth=0;$('stage').classList.remove('drop-ready');const file=e.dataTransfer.files[0];if(!file)return;try{await uploadImageFile(file,selectedUploadKey())}catch(error){setError(error.message)}};
+
+async function registerSession(){const name=$('operatorName').value.trim();localStorage.setItem('vetoScoreboardOperatorName',name);return apiJson('/api/session/register',{display_name:name})}
+function priorityName(value){return value>=100?'Primary':value<=0?'Viewer':'Operator'}
+async function refreshUsers(){
+ try{
+  const r=await fetch(`/api/sessions?client_id=${encodeURIComponent(clientId)}`),data=await r.json();
+  if(!r.ok)throw new Error(data.error||`HTTP ${r.status}`);
+  latestSessions=data;$('usersButton').textContent=`Users: ${data.sessions.length}`;
+  $('usersAccess').textContent=data.can_manage?'Priority control available on this computer':'Priority control is managed from the host computer';
+  $('usersTable').innerHTML=data.sessions.map(s=>{
+   const live=s.live_owner?(data.can_manage?'<button data-admin-stop-live>Stop</button>':'LIVE'):'';
+   const priority=data.can_manage?`<select data-user-priority="${esc(s.id)}"><option value="0"${s.priority===0?' selected':''}>Viewer</option><option value="50"${s.priority>0&&s.priority<100?' selected':''}>Operator</option><option value="100"${s.priority===100?' selected':''}>Primary</option></select>`:esc(`${priorityName(s.priority)} (${s.priority})`);
+   return `<tr><td>${esc(s.name)}${s.id===clientId?' (you)':''}</td><td>${esc(s.address)}</td><td>${s.age_seconds}s</td><td>${priority}</td><td>${live}</td></tr>`;
+  }).join('');
+  document.querySelectorAll('[data-user-priority]').forEach(select=>select.onchange=async()=>{try{await apiJson('/api/session/priority',{target_id:select.dataset.userPriority,priority:+select.value});await refreshUsers();await refreshLive()}catch(e){setError(e.message)}});
+  document.querySelectorAll('[data-admin-stop-live]').forEach(button=>button.onclick=async()=>{try{button.disabled=true;await apiJson('/api/live/stop',{});await refreshUsers();await refreshLive()}catch(e){setError(e.message)}});
+ }catch(e){setError(e.message)}
+}
+async function refreshLive(){try{const r=await fetch(`/api/live/status?client_id=${encodeURIComponent(clientId)}`),s=await r.json();latestLive=s;$('liveStatus').textContent=s.active?`LIVE: ${s.owner_name||'operator'} · ${s.preset}`:'SDI stopped';$('liveStatus').className=s.active?'status live':'status';$('liveButton').textContent=s.active&&s.owned_by_requester?'Stop Live':s.active?'Take Live':'Live Output';if(s.error)setError(s.error)}catch{}}
+async function init(){try{$('operatorName').value=localStorage.getItem('vetoScoreboardOperatorName')||`Operator ${clientId.slice(0,4).toUpperCase()}`;await registerSession();boot=await (await fetch('/api/bootstrap')).json();configs=clone(boot.defaults);try{const saved=JSON.parse(localStorage.getItem('vetoScoreboardWeb')||'null');if(saved?.configs){configs={...configs,...saved.configs};template=saved.template in configs?saved.template:'t1'}}catch{}Object.entries(boot.template_names).forEach(([k,v])=>$('template').insertAdjacentHTML('beforeend',option(k,v,template)));boot.video_presets.forEach(v=>{$('livePreset').insertAdjacentHTML('beforeend',option(v,v,v==='HD 1080i50'));$('mp4Preset').insertAdjacentHTML('beforeend',option(v,v,v==='HD 1080i50'))});Object.keys(boot.decklink_outputs).forEach(v=>$('liveDevice').insertAdjacentHTML('beforeend',option(v,v,false)));history=[clone(configs)];historyIndex=0;buildEditor();syncHistory();scheduleRender(false);await refreshLive();await refreshUsers();setInterval(refreshLive,1500);setInterval(async()=>{try{await apiJson('/api/session/heartbeat',{});await refreshUsers()}catch{}},5000)}catch(e){setError(e.message)}}
+$('template').onchange=()=>{template=$('template').value;commit();buildEditor();scheduleRender()};$('undo').onclick=()=>restore(historyIndex-1);$('redo').onclick=()=>restore(historyIndex+1);$('reset').onclick=()=>{configs[template]=clone(boot.defaults[template]);commit();buildEditor();scheduleRender()};
+$('saveProject').onclick=()=>downloadJson({version:2,active_template:template,templates:configs},'scoreboard_project.scoreboard.json');$('openProject').onclick=()=>$('projectFile').click();$('projectFile').onchange=async()=>{try{const p=JSON.parse(await $('projectFile').files[0].text()),incoming=p.templates||p;if(!incoming||typeof incoming!=='object')throw new Error('Invalid scoreboard project');configs={...clone(boot.defaults),...incoming};template=p.active_template in configs?p.active_template:template;$('template').value=template;commit();buildEditor();scheduleRender()}catch(e){setError(e.message)}finally{$('projectFile').value=''}};
+$('pngButton').onclick=async()=>{try{await download('/api/export/png',request(),`scoreboard_${template}.png`)}catch(e){setError(e.message)}};$('mp4Button').onclick=()=>$('mp4Dialog').showModal();$('exportMp4').onclick=async()=>{try{$('exportMp4').disabled=true;await download('/api/export/mp4',{...request(),preset:$('mp4Preset').value,duration:+$('mp4Duration').value},`scoreboard_${template}.mp4`);$('mp4Dialog').close()}catch(e){setError(e.message)}finally{$('exportMp4').disabled=false}};
+$('operatorName').onchange=async()=>{try{await registerSession();await refreshUsers();await refreshLive()}catch(e){setError(e.message)}};$('usersButton').onclick=async()=>{$('usersDialog').showModal();await refreshUsers()};$('refreshUsers').onclick=refreshUsers;
+$('liveButton').onclick=async()=>{if(latestLive.active&&latestLive.owned_by_requester){try{await apiJson('/api/live/stop',{});refreshLive();refreshUsers()}catch(e){setError(e.message)}}else $('liveDialog').showModal()};$('startLive').onclick=async()=>{try{$('startLive').disabled=true;await apiJson('/api/live/start',{...request(),preset:$('livePreset').value,output:$('liveDevice').value});$('liveDialog').close();refreshLive();refreshUsers()}catch(e){setError(e.message)}finally{$('startLive').disabled=false}};
+document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).close());window.addEventListener('beforeunload',()=>{if(previewUrl)URL.revokeObjectURL(previewUrl)});init();
+</script>
+</body>
+</html>

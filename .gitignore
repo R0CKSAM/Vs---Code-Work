@@ -170,8 +170,7 @@ ETL/output/*.jpg
 ETL/output/inspect_players_reference.py
 !ETL/extras/apps/leaderBoardGen/davis_cup_2026_round2.csv
 
-# Local production deployment copies include dependencies and private runtime data.
-ETL/extras/apps/PRODUCTION/
+# Production source is versioned; its scoped .gitignore excludes installed/runtime files.
 ETL/extras/apps/PRODUCTION.zip
 # Generated audience reports; keep helper scripts visible to Git.
 ETL/output/audience_ops/*.html

@@ -1,0 +1,78 @@
+country,role,name,profile_id
+Austria,player,Jurij Rodionov,9e5d91a0-9b9c-48cc-85a3-1b8c5269c270
+Austria,player,Joel Schwaerzler,de3c648d-059b-406d-82b0-9c1eec3cb97d
+Austria,player,Lukas Neumayer,b63fcb2f-4ecb-4b81-a5a2-73cd1cba9515
+Austria,player,Lucas Miedler,6b132d83-16c1-455c-8696-35b5e9c51fc6
+Austria,captain,Jurgen Melzer,
+Belgium,player,Alexander Blockx,c0b81ba3-a638-4280-958a-1feb2e463618
+Belgium,player,Zizou Bergs,b4588056-3b10-48e9-9169-d67be2abdb70
+Belgium,player,Raphael Collignon,37f748a6-e986-4a6f-8012-0fecdadee7ac
+Belgium,player,Sander Gille,bf5c0222-1cb0-4fc7-9487-df573a9dff33
+Belgium,player,Joran Vliegen,f90f9701-39cb-4d03-ace6-bce14a6274c7
+Belgium,captain,Steve Darcis,
+Canada,player,Felix Auger-Aliassime,40216f3a-0a6f-418a-a35d-908d298bd8be
+Canada,player,Gabriel Diallo,ded10725-b48e-4fe8-bc90-35ffa15344ff
+Canada,player,Liam Draxl,efe6b276-c135-4c80-9404-901da4639e9d
+Canada,player,Duncan Chan,399aa438-9579-4555-9f0a-46cab261c8d5
+Canada,captain,Frank Dancevic,
+Chile,player,Alejandro Tabilo,2b27167f-6995-44bb-aefa-1cc29eb05634
+Chile,player,Cristian Garin,4187deb7-4900-41dc-9ec0-c862e7c52974
+Chile,player,Tomas Barrios Vera,cdab1701-d0c9-45a5-888a-39f2a844449b
+Chile,player,Matias Soto,e53e2310-8e1e-4474-8781-24a450826a25
+Chile,captain,Nicolas Massu,
+Croatia,player,Marin Cilic,cde1a1bf-862d-4e66-8668-5f548a4ccb22
+Croatia,player,Dino Prizmic,5c805c07-e5bd-494a-bd6e-5d042311deed
+Croatia,player,Mate Pavic,d833c7ec-1d65-432e-ba10-6bd75dedf8d4
+Croatia,player,Nikola Mektic,d6830f7f-276b-497d-974b-1178b8c9dec0
+Croatia,captain,Ivan Dodig,
+Czechia,player,Jiri Lehecka,f07c8641-3582-42ef-9392-7f3223ecebb7
+Czechia,player,Jakub Mensik,8cc08383-40d6-45ab-ac46-36f3a9cc9064
+Czechia,player,Tomas Machac,c6764f3f-9e4e-429e-9395-385f63960ead
+Czechia,player,Vit Kopriva,7e2948e4-15f5-4d1a-b44d-1c9ac00038b1
+Czechia,player,Patrik Rikl,b4cc185d-df4e-4830-8f40-e3703a682693
+Czechia,captain,Tomas Berdych,
+Ecuador,player,Andres Andrade,f8be21e7-8996-4aaf-a13a-6cefc7c05afa
+Ecuador,player,Alvaro Guillen Meza,aa4bf44f-7a16-4b14-9d2c-1ead7933b706
+Ecuador,player,Angel Veliz,bea12cfa-276b-4a66-b635-2d5996f996b8
+Ecuador,player,Gonzalo Escobar,ea94951a-c315-4ed8-b492-218bc3af87dd
+Ecuador,player,Diego Hidalgo,ebeb6f47-19ed-4a76-a3e8-4643c9484f6a
+Ecuador,captain,Raul Viver,
+France,player,Arthur Fils,ec65a78a-be14-4172-a06c-36ac95abc496
+France,player,Arthur Rinderknech,8e8cc1ca-e30b-4ea9-8a9b-bb89c95d20a3
+France,player,Quentin Halys,c3476a40-2b1c-4797-909b-65e442ccab09
+France,player,Pierre-Hugues Herbert,40abc6ca-5696-42c4-944b-24744cdd33f4
+France,captain,Paul-Henri Mathieu,
+Germany,player,Alexander Zverev,033bfa6e-4bfa-4e66-afb5-55a3f1bcccc1
+Germany,player,Yannick Hanfmann,cab4a40c-0b8c-45b3-a23a-a22c008d29d7
+Germany,player,Tim Puetz,4a06205b-6488-4cab-b61b-e260c6882796
+Germany,player,Kevin Krawietz,ee385bc3-704e-467a-a390-ae8b85173a5f
+Germany,captain,Michael Kohlmann,
+Great Britain,player,Cameron Norrie,b5e1e20a-3d49-424d-a9a7-1041938af5e0
+Great Britain,player,Arthur Fery,9b03b84a-f5da-4f03-b610-bad0c3f854fd
+Great Britain,player,Toby Samuel,a207add2-2341-49fb-b782-4f1253838aac
+Great Britain,player,Henry Patten,55c3c240-6fa2-4709-8408-a2b69f5d85a9
+Great Britain,player,Lloyd Glasspool,65f4cadd-066e-457f-ba75-523ad6d88516
+Great Britain,captain,Leon Smith,
+India,player,Sumit Nagal,78a58ad4-212f-4d2c-80e9-639ff2955bf2
+India,player,Manas Dhamne,13cf6444-abb2-4e7d-9b8b-ab3df445783e
+India,player,Dhakshineswar Suresh,d2bfa70a-fd6a-44be-9e15-2fd3ab67b526
+India,player,Yuki Bhambri,980edcf9-65c2-49d2-bca3-502bd4fb399e
+India,player,N Sriram Balaji,8786f3c4-982f-49ce-ac73-af582f025db5
+India,captain,Rohit Rajpal,
+"Korea, Rep.",player,Soonwoo Kwon,709e01c5-fd17-42ab-86da-65c795d51cde
+"Korea, Rep.",player,Hyeon Chung,6a1bb4f0-2d94-4aa5-a7bf-577d3311c862
+"Korea, Rep.",player,Uisung Park,68d88188-7fd6-4c4a-83d6-9bb40fcd3fcf
+"Korea, Rep.",player,Jisung Nam,d4277f5f-fc25-44f7-bcb3-8aaba8120eb5
+"Korea, Rep.",player,Seongchan Hong,eb063d7c-0bf8-4bb9-bffa-a884af327aa7
+"Korea, Rep.",captain,Jong-Sam Chung,
+Spain,player,Rafael Jodar,6b8045ad-5b22-4997-916b-697bce37a2dd
+Spain,player,Daniel Merida,2b0de919-11fe-4772-b221-feb4d30a6877
+Spain,player,Jaume Munar,56d0335b-eba0-4385-a367-090abf56d1dd
+Spain,player,Martin Landaluce,02f8df3f-8898-4a07-aec2-22c02f16c76d
+Spain,player,Pedro Martinez,b32d3c90-e208-4510-a09b-95561ea6fcf4
+Spain,captain,David Ferrer,
+USA,player,Ben Shelton,2f77e817-cdb7-4fa0-9809-fb876b9b9ee8
+USA,player,Taylor Fritz,fc42dbb0-9d12-4e05-a357-1b0f7ce31307
+USA,player,Tommy Paul,3a3d9c8b-151d-45f4-8063-8aae29f144b0
+USA,player,Christian Harrison,f158b611-7862-4789-b93e-992fd9f23300
+USA,captain,Bob Bryan,

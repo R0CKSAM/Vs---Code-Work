@@ -1,0 +1,9 @@
+﻿{
+    "schema":  1,
+    "created_utc":  "2026-09-13T09:31:42.7423079Z",
+    "files":  {
+                  "scoreboard_app.py":  "23318DEE3DA1679087108A40E96368122B961481AB69DF555BE5EE3CFDC06CDD",
+                  "scoreboard_web.py":  "ADD7427549B1A25F65799F36481EB02B0307D62EFD667E7F1B01F963E0AAFC39",
+                  "scoreboard_web.html":  "3052657A98B71A2E8CE757723EF8AFC375B47179455023018B3ECAF03990BCD1"
+              }
+}
