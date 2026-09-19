@@ -1,0 +1,12 @@
+STREAM, all channels combined; confirmed decoded Fire TV Stick models only.
+Same five-column daily model report as the September 3-17 export.
+
+Coverage checked September 19, 2026, approximately 09:24 IST:
+September 18: processed event timestamps 00:00:00.012 to 23:59:59.995 IST.
+September 19: PARTIAL; processed event timestamps 00:00:00.022 to 05:29:54.672 IST.
+These ranges describe available records, not proof of gap-free log delivery.
+Later September 19 live/raw logs are NOT included in this processed-parquet report.
+
+Raw watch minutes are estimated as all .ts requests times 6 / 60.
+Distinct cliIP and device_id counts apply to matching .ts requests only.
+Do not sum distinct counts across model rows to obtain distinct day totals.

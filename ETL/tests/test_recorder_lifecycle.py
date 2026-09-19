@@ -32,3 +32,45 @@ def test_shutdown_closes_ffmpeg_and_rejects_new_recordings(tmp_path, monkeypatch
     result = manager.start(['one'])
     assert result['errors'][0]['reason'] == 'Recorder is shutting down'
     manager._start_one.assert_not_called()
+
+
+def load_recorder(monkeypatch):
+    path = Path(__file__).resolve().parents[1] / 'recorder/recorder_server.py'
+    monkeypatch.syspath_prepend(str(path.parent))
+    spec = importlib.util.spec_from_file_location('recorder_safety', path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_stale_or_empty_target_does_not_stop_other_recordings(tmp_path, monkeypatch):
+    module = load_recorder(monkeypatch)
+    channels = tmp_path / 'channels.json'
+    channels.write_text('[]')
+    manager = module.RecorderManager(channels, tmp_path / 'recordings', tmp_path / 'state.sqlite')
+    process = Mock()
+    manager.processes['active'] = process
+    manager.channel_jobs['other-channel'] = 'active'
+    assert manager.stop(channel_ids=['already-stopped']) == {'stopped': []}
+    assert manager.stop(channel_ids=[]) == {'stopped': []}
+    assert manager.stop(recording_ids=[]) == {'stopped': []}
+    assert manager.stop(recording_ids=['old-id']) == {'stopped': []}
+    process.wait.assert_not_called()
+    assert manager.processes == {'active': process}
+
+
+def test_active_list_and_restart_marks_interrupted(tmp_path, monkeypatch):
+    module = load_recorder(monkeypatch)
+    channels = tmp_path / 'channels.json'
+    channels.write_text('[]')
+    db_path = tmp_path / 'state.sqlite'
+    manager = module.RecorderManager(channels, tmp_path / 'recordings', db_path)
+    row = dict(id='active', channel_id='one', channel_name='One', status='recording',
+               started_at=module.now_text(), output_pattern='test_%03d.mkv', pid=123, error='')
+    manager.store.insert(row)
+    manager.processes['active'] = Mock(poll=Mock(return_value=None))
+    assert manager.active_recordings()[0]['id'] == 'active'
+    manager.processes['active'].poll.return_value = 1
+    assert manager.active_recordings() == []
+    reopened = module.RecorderStore(db_path)
+    assert reopened.recent()[0]['status'] == 'interrupted'

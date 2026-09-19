@@ -7,6 +7,19 @@ import subprocess
 import threading
 from pathlib import Path
 
+TV_BRANDS = ('Sony', 'LG', 'Xiaomi', 'Samsung', 'TCL')
+
+
+def tv_filter(brand):
+    if brand not in TV_BRANDS:
+        raise ValueError('Unsupported TV brand')
+    font = Path('C:/Windows/Fonts/arial.ttf')
+    font_arg = "fontfile='" + font.as_posix().replace(':', r'\:') + "':" if font.is_file() else ''
+    # Pad outside the source picture, retaining every pixel and its aspect ratio.
+    return ("scale=trunc(iw/2)*2:trunc(ih/2)*2,pad=iw+24:ih+64:12:12:color=0x24272b,"
+            f"drawtext={font_arg}text='{brand.upper() if brand == 'Sony' else brand}':"
+            "fontcolor=white:fontsize=24:x=(w-tw)/2:y=h-36")
+
 
 class RecordingLibrary:
     def __init__(self, manager):
@@ -62,23 +75,27 @@ class RecordingLibrary:
                 return item
         raise FileNotFoundError('Recording not found or still active')
 
-    def target(self, item):
+    def target(self, item, brand=''):
+        if brand and brand not in TV_BRANDS:
+            raise ValueError('Unsupported TV brand')
         root = self.manager.recordings_dir.resolve()
         cache = root / '.browser-previews'
         cache.mkdir(exist_ok=True)
         if not cache.resolve().is_relative_to(root):
             raise ValueError('Invalid preview directory')
-        return cache / f"{item['id']}_{item['bytes']}_{item['_mtime']}.mp4"
+        suffix = f'_tv_{brand}' if brand else ''
+        return cache / f"{item['id']}_{item['bytes']}_{item['_mtime']}{suffix}.mp4"
 
-    def preview(self, token, start=False):
+    def preview(self, token, start=False, brand=''):
         item = self.get(token)
-        target = self.target(item)
+        target = self.target(item, brand)
+        job_key = token + ':' + brand
         if target.is_file() and not target.is_symlink():
             return {'state': 'ready'}
         with self.lock:
             if self.closed:
                 raise ValueError('Recorder is shutting down')
-            state = self.jobs.get(token, {'state': 'idle'})
+            state = self.jobs.get(job_key, {'state': 'idle'})
             if not start or state['state'] == 'preparing':
                 return state
             if self.worker and self.worker.is_alive():
@@ -87,12 +104,13 @@ class RecordingLibrary:
                 raise ValueError('FFmpeg is unavailable; download the original recording instead.')
             if shutil.disk_usage(target.parent).free < max(2 * 1024**3, item['bytes'] * 2):
                 raise ValueError('Not enough free space for a browser preview')
-            self.jobs[token] = {'state': 'preparing'}
-            self.worker = threading.Thread(target=self._convert, args=(item, target), daemon=True)
+            self.jobs[job_key] = {'state': 'preparing'}
+            self.worker = threading.Thread(target=self._convert, args=(item, target, brand), daemon=True)
             self.worker.start()
-            return self.jobs[token]
+            return self.jobs[job_key]
 
-    def _convert(self, item, target):
+    def _convert(self, item, target, brand=''):
+        job_key = item['id'] + ':' + brand
         temp = target.with_suffix('.tmp.mp4')
         log = target.with_suffix('.log')
         try:
@@ -104,7 +122,7 @@ class RecordingLibrary:
                         self.manager.ffmpeg, '-hide_banner', '-loglevel', 'error', '-nostdin',
                         '-y', '-i', str(item['_path']), '-map', '0:v:0', '-map', '0:a:0?',
                         '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '23', '-threads', '2',
-                        '-vf', 'scale=trunc(iw/2)*2:trunc(ih/2)*2', '-pix_fmt', 'yuv420p',
+                        '-vf', tv_filter(brand) if brand else 'scale=trunc(iw/2)*2:trunc(ih/2)*2', '-pix_fmt', 'yuv420p',
                         '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', str(temp),
                     ], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=stderr,
                         creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
@@ -116,13 +134,13 @@ class RecordingLibrary:
                 if self.closed:
                     return
                 temp.replace(target)
-                self.jobs[item['id']] = {'state': 'ready'}
+                self.jobs[job_key] = {'state': 'ready'}
         except Exception:
             with self.lock:
                 if self.process and self.process.poll() is None:
                     self.process.kill()
                     self.process.wait()
-                self.jobs[item['id']] = {
+                self.jobs[job_key] = {
                     'state': 'failed', 'error': 'Preview conversion failed. Download the original or retry.'
                 }
         finally:

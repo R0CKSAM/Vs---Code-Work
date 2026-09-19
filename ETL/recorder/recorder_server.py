@@ -19,7 +19,7 @@ from http import HTTPStatus
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 
 from recording_library import RecordingLibrary, send_file
 
@@ -185,6 +185,16 @@ class RecorderManager:
             "server_time": now_text(),
         }
 
+    def active_recordings(self) -> list[dict[str, Any]]:
+        with self.lock, self.store.connect() as db:
+            ids = [key for key, process in self.processes.items() if process.poll() is None]
+            if not ids:
+                return []
+            rows = db.execute(
+                'SELECT * FROM recordings WHERE id IN (' + ','.join('?' for _ in ids) + ') ORDER BY started_at', ids
+            ).fetchall()
+        return [dict(row) for row in rows]
+
     def start(self, channel_ids: list[str], segment_minutes: int = 30) -> dict[str, Any]:
         if not self.ffmpeg:
             raise RuntimeError("FFmpeg is not installed or configured")
@@ -218,8 +228,8 @@ class RecorderManager:
         folder = self.recordings_dir / started.strftime("%Y-%m-%d") / safe_name(channel["name"])
         folder.mkdir(parents=True, exist_ok=True)
         stamp = started.strftime("%Y-%m-%d_%H-%M-%S")
-        pattern = folder / f"{safe_name(channel['name'])}_{stamp}_part_%03d.mkv"
         recording_id = uuid.uuid4().hex
+        pattern = folder / f"{safe_name(channel['name'])}_{stamp}_{recording_id[:8]}_part_%03d.mkv"
         command = [
             self.ffmpeg,
             "-hide_banner", "-loglevel", "warning", "-nostats",
@@ -251,7 +261,12 @@ class RecorderManager:
             "pid": process.pid,
             "error": "",
         }
-        self.store.insert(row)
+        try:
+            self.store.insert(row)
+        except Exception:
+            process.kill()
+            process.communicate(timeout=10)
+            raise
         with self.lock:
             self.processes[recording_id] = process
             self.channel_jobs[channel["id"]] = recording_id
@@ -281,7 +296,7 @@ class RecorderManager:
         with self.lock:
             ids = list(recording_ids or [])
             ids.extend(self.channel_jobs[item] for item in channel_ids or [] if item in self.channel_jobs)
-            if not ids:
+            if recording_ids is None and channel_ids is None:
                 ids = list(self.processes)
         stopped = []
         for recording_id in dict.fromkeys(ids):
@@ -301,6 +316,13 @@ class RecorderManager:
                     process.wait(timeout=5)
                 except subprocess.TimeoutExpired:
                     process.kill()
+                    process.wait(timeout=5)
+            # Commit completion before shutdown can end the daemon watcher.
+            self.store.update(recording_id, status='stopped' if process.returncode == 0 else 'interrupted', stopped_at=now_text())
+            with self.lock:
+                for channel_id, job_id in list(self.channel_jobs.items()):
+                    if job_id == recording_id:
+                        self.channel_jobs.pop(channel_id, None)
             stopped.append(recording_id)
         return {"stopped": stopped}
 
@@ -345,21 +367,22 @@ class RecorderHandler(SimpleHTTPRequestHandler):
                 for item in self.manager.library.files()
             ]})
             return
-        match = re.fullmatch(r'/api/library/([a-f0-9]{64})/(download|preview|video)', path)
+        match = re.fullmatch(r'/api/library/([a-f0-9]{64})/(download|preview|video|export)', path)
         if match:
             token, action = match.groups()
             try:
                 item = self.manager.library.get(token)
+                brand = parse_qs(urlparse(self.path).query).get('brand', [''])[0]
                 if action == 'download':
                     send_file(self, item['_path'], download=True)
                 elif action == 'preview':
-                    self._json(self.manager.library.preview(token))
+                    self._json(self.manager.library.preview(token, brand=brand))
                 else:
-                    target = self.manager.library.target(item)
-                    if self.manager.library.preview(token)['state'] != 'ready':
+                    target = self.manager.library.target(item, brand)
+                    if self.manager.library.preview(token, brand=brand)['state'] != 'ready':
                         self._json({'error': 'Preview not ready'}, 409)
                     else:
-                        send_file(self, target)
+                        send_file(self, target, download=action == 'export')
             except (FileNotFoundError, ValueError, OSError):
                 self._json({'error': 'Recording unavailable'}, 404)
             return
@@ -368,7 +391,7 @@ class RecorderHandler(SimpleHTTPRequestHandler):
         elif path == "/api/status":
             self._json(self.manager.system_status())
         elif path == "/api/recordings":
-            self._json({"recordings": self.manager.store.recent()})
+            self._json({"recordings": self.manager.store.recent(), "active": self.manager.active_recordings()})
         elif path in {"/", "/recorder"}:
             self.path = "/recorder_dashboard.html"
             super().do_GET()
@@ -397,7 +420,8 @@ class RecorderHandler(SimpleHTTPRequestHandler):
         try:
             preview = re.fullmatch(r'/api/library/([a-f0-9]{64})/preview', path)
             if preview:
-                self._json(self.manager.library.preview(preview[1], start=True))
+                brand = parse_qs(urlparse(self.path).query).get('brand', [''])[0]
+                self._json(self.manager.library.preview(preview[1], start=True, brand=brand))
             elif path == "/api/recordings/start":
                 ids = body.get("channel_ids", [])
                 if not isinstance(ids, list) or not ids:

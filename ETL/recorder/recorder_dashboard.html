@@ -19,6 +19,34 @@
 .feed-audio input[type=checkbox]{width:16px;height:16px;accent-color:var(--green)}
 .feed-audio input[type=range]{flex:1;min-width:0;max-width:220px;accent-color:var(--green)}
 .feed-audio output{width:4ch;text-align:right;font-variant-numeric:tabular-nums}
+.tv-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 12px;border-top:1px solid var(--line)}
+.tv-tools select{min-width:0;max-width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--line);padding:5px;border-radius:4px}
+.tv-shell{background:#000;min-width:0;position:relative}.tv-shell.branded{border:6px solid #24272b;border-bottom:0;box-shadow:inset 0 0 0 1px #70757c}
+.tv-brand{display:none;height:32px;align-items:center;justify-content:center;background:linear-gradient(#282c31,#121416);color:#eee;font:700 16px Arial,sans-serif}
+.branded>.tv-brand{display:flex}.tv-brand[data-brand=Sony]{font-family:Georgia,serif}.tv-brand[data-brand=LG]{color:#edb5c7}
+.tv-shell:fullscreen,.tv-shell.theater{width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;background:#000;box-sizing:border-box}
+.tv-shell:fullscreen .video-wrap,.tv-shell.theater .video-wrap{aspect-ratio:auto;flex:1;min-height:0;width:100%}
+.tv-shell:fullscreen video,.tv-shell.theater video{height:100%;max-height:none;margin:0;object-fit:contain}
+.tv-shell:fullscreen>.tv-brand,.tv-shell.theater>.tv-brand{flex:0 0 32px}
+.tv-shell:fullscreen>video,.tv-shell.theater>video{flex:1;min-height:0;height:0;width:100%}
+.tv-shell.theater{position:fixed;inset:0;z-index:10000}
+.tv-shell:fullscreen,.tv-shell.theater{cursor:none}
+.feed-grid{grid-template-columns:repeat(auto-fit,minmax(min(540px,100%),1fr));align-items:start}
+.feed:only-child{width:100%;max-width:760px}
+.feed-controls{display:flex;align-items:center;gap:8px;min-height:44px;padding:6px 9px;overflow-x:auto;white-space:nowrap;border-top:1px solid var(--line);font-size:12px}
+.feed-controls>*{flex-shrink:0}.feed-controls .feed-status{max-width:95px;overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+.feed-controls .feed-audio,.feed-controls .tv-tools{padding:0;border:0;gap:6px;flex-wrap:nowrap}
+.feed-controls .feed-audio input[type=range]{width:64px;flex:none}
+.feed-controls .tv-tools select{width:87px;height:30px;padding:3px}
+.feed-controls .small{height:30px;padding:0 7px}.feed-controls .tv-tools label{display:flex;gap:5px;align-items:center}
+.feed-remove{margin-left:auto;min-width:30px}
+dialog .tv-shell video{margin:0}body.tv-open{overflow:hidden}
+.active-recordings{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 0;margin-bottom:14px}
+.active-recordings h2{font-size:14px;margin:0}.active-recordings .section-head{gap:10px;flex-wrap:wrap}
+.active-job{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.active-job .job-name{flex:1;min-width:150px;overflow-wrap:anywhere}.active-job time{color:var(--muted);font-size:12px}
+#recordingSync,#recordingIssues{font-size:12px;color:var(--muted)}#recordingIssues{color:var(--amber);margin-top:6px}
+.feed-head .rec-mark{font-size:10px;color:var(--red);font-weight:bold}
 </style>
 </head>
 <body>
@@ -59,6 +87,10 @@
       <span>Recording <strong id="recordingCount">0</strong></span>
       <span id="clock"></span>
     </div>
+    <section class="active-recordings" aria-label="Server recordings">
+      <div class="section-head"><h2>Recording on server <span id="activeCount">-</span></h2><span id="recordingSync">Connecting...</span><button class="small" id="showRecordingFeeds" disabled>Show recording feeds</button></div>
+      <div id="activeJobs">Checking server...</div><div id="recordingIssues"></div>
+    </section>
     <section class="feed-grid" id="feedGrid"><div class="blank">Select channels to open live feeds</div></section>
     <section class="history">
       <div class="section-head"><h2>Recordings library</h2></div>
@@ -83,8 +115,10 @@
 (() => {
 'use strict';
 const $=id=>document.getElementById(id);
-const S={channels:[],selected:new Set(JSON.parse(localStorage.getItem('veto-recorder-selection')||'[]')),players:new Map(),status:null,recordings:[],feedSignature:''};
+function storedSelection(){try{const value=JSON.parse(localStorage.getItem('veto-recorder-selection')||'[]');return Array.isArray(value)?value.filter(x=>typeof x==='string'):[]}catch(error){return []}}
+const S={channels:[],selected:new Set(storedSelection()),players:new Map(),status:null,recordings:[],active:[],lastSync:0,refreshing:false,feedSignature:''};
 const feedAudio=new Map();
+const tvBrands=new Map();
 const requestedChannels=[...new Set(new URLSearchParams(location.search).getAll('channel'))];
 let requestedChannelApplied=false;
 const picker=$('picker'),list=$('channelList'),grid=$('feedGrid'),alertEl=$('alert');
@@ -106,7 +140,7 @@ function renderPicker(){
   }
   updateCounts();
 }
-function saveSelection(){localStorage.setItem('veto-recorder-selection',JSON.stringify([...S.selected]));updateCounts();renderFeeds(true)}
+function saveSelection(){try{localStorage.setItem('veto-recorder-selection',JSON.stringify([...S.selected]))}catch(error){}updateCounts();renderFeeds(true)}
 function updateCounts(){
   const selected=[...S.selected].filter(id=>S.channels.some(c=>c.id===id&&available(c)));
   $('selectedCount').textContent=selected.length;$('availableCount').textContent=S.channels.filter(available).length;
@@ -127,15 +161,63 @@ function attachPlayer(channel,video,status){
   }else if(video.canPlayType('application/vnd.apple.mpegurl')){video.src=channel.hls_url;video.addEventListener('loadedmetadata',()=>{status.textContent='Live';video.play().catch(()=>{})},{once:true})}
   else status.textContent='HLS playback unsupported';
 }
+function addTvView(video,container,key){
+  const picture=video.closest('.video-wrap')||video;
+  const shell=document.createElement('div');shell.className='tv-shell';
+  picture.before(shell);shell.append(picture);
+  const brand=document.createElement('div');brand.className='tv-brand';shell.append(brand);
+  const tools=document.createElement('div');tools.className='tv-tools';
+  tools.innerHTML='<label>TV frame <select aria-label="TV frame"><option value="">None</option><option>Sony</option><option>LG</option><option>Xiaomi</option><option>Samsung</option><option>TCL</option></select></label><button type="button" class="small">Full screen</button>';
+  container.append(tools);
+  const choice=tools.querySelector('select'),button=tools.querySelector('button');
+  choice.value=tvBrands.get(key)||'';
+  const update=()=>{tvBrands.set(key,choice.value);brand.textContent=choice.value==='Sony'?'SONY':choice.value;brand.dataset.brand=choice.value;shell.classList.toggle('branded',!!choice.value)};
+  choice.onchange=update;update();
+  button.onclick=async()=>{
+    video.dataset.restoreControls=video.controls?'yes':'no';video.controls=false;
+    shell.tabIndex=-1;shell.focus();
+    try{if(shell.requestFullscreen){await shell.requestFullscreen();return}}catch(error){/* Older TV browsers can reject native fullscreen. */}
+    shell.classList.add('theater');document.body.classList.add('tv-open');
+  };
+}
+function restoreVideoControls(){document.querySelectorAll('video[data-restore-controls]').forEach(video=>{if(!video.closest('.tv-shell.theater')&&!document.fullscreenElement?.contains(video)){video.controls=video.dataset.restoreControls==='yes';delete video.dataset.restoreControls}})}
+document.addEventListener('fullscreenchange',restoreVideoControls);
+document.addEventListener('keydown',event=>{if(event.key==='Escape'){document.querySelectorAll('.tv-shell.theater').forEach(el=>el.classList.remove('theater'));document.body.classList.remove('tv-open');if(document.fullscreenElement)document.exitFullscreen().catch(()=>{});restoreVideoControls()}});
+addTvView($('savedVideo'),$('playDialog'),'saved-recording');
+const exportTv=document.createElement('button');exportTv.type='button';exportTv.className='small';exportTv.textContent='Export framed MP4';
+$('playDialog').querySelector('.tv-tools').append(exportTv);
+const exportLink=document.createElement('a');exportLink.hidden=true;exportLink.textContent='Download MP4';exportLink.style.color='var(--blue)';exportLink.download='';
+$('playDialog').querySelector('.tv-tools').append(exportLink);
+let exportTimer=null,exportRevision=0;
+exportTv.onclick=async()=>{
+  const token=playToken,brand=tvBrands.get('saved-recording');if(!token)return;
+  if(!brand){$('playState').textContent='Select a TV frame before exporting.';return}
+  const revision=++exportRevision;clearTimeout(exportTimer);exportLink.hidden=true;exportTv.disabled=true;
+  const query='?brand='+encodeURIComponent(brand);
+  async function poll(start=false){
+    try{
+      const result=await api(`/api/library/${token}/preview${query}`,start?{method:'POST',body:'{}'}:{});
+      if(revision!==exportRevision)return;
+      if(result.state==='ready'){exportLink.href=`${apiPrefix}/api/library/${token}/export${query}`;exportLink.hidden=false;exportTv.disabled=false;$('playState').textContent=brand+' framed MP4 ready'}
+      else if(result.state==='preparing'){$('playState').textContent='Preparing '+brand+' framed MP4...';exportTimer=setTimeout(()=>poll(),2000)}
+      else throw Error(result.error||'Export unavailable');
+    }catch(error){if(revision===exportRevision){exportTv.disabled=false;$('playState').textContent=error.message}}
+  }
+  poll(true);
+};
 function renderFeeds(force=false){
+  if(grid.querySelector('.tv-shell.theater')||grid.contains(document.fullscreenElement)){S.feedSignature='';return}
   const selected=S.channels.filter(c=>S.selected.has(c.id));const keep=new Set(selected.map(c=>c.id));for(const id of [...S.players.keys()])if(!keep.has(id))destroyPlayer(id);
   const signature=selected.map(c=>`${c.id}:${c.recording}`).join('|')+`:${Boolean(S.status?.ffmpeg_ready)}`;
   if(!force&&signature===S.feedSignature)return;S.feedSignature=signature;
+  if(grid.querySelector('.tv-shell.theater')||grid.contains(document.fullscreenElement)){S.feedSignature='';return}
   grid.innerHTML='';if(!selected.length){grid.innerHTML='<div class="blank">Select channels to open live feeds</div>';return}
   for(const channel of selected){
     const card=document.createElement('article');card.className='feed';card.dataset.id=channel.id;
     card.innerHTML=`<div class="feed-head"><span class="dot ${channel.recording?'':'ok'}"></span><span class="feed-title">${esc(channel.name)}</span><div class="feed-actions"><button class="icon-action record" data-action="record" ${channel.recording||!S.status?.ffmpeg_ready?'disabled':''}>Record</button><button class="icon-action stop" data-action="stop" ${channel.recording?'':'disabled'}>Stop</button></div></div><div class="video-wrap"><video muted autoplay playsinline controls></video><div class="empty-feed" hidden></div></div><div class="feed-foot"><span class="feed-status">Waiting</span><span>${esc(channel.group)}</span><span class="${channel.recording?'recording':''}">${channel.recording?'REC':''}</span></div>`;
     grid.appendChild(card);const video=card.querySelector('video'),status=card.querySelector('.feed-status');
+    const bar=document.createElement('div');bar.className='feed-controls';
+    status.title=channel.group;bar.append(status);card.querySelector('.feed-foot').remove();card.append(bar);
     if(available(channel)){
       attachPlayer(channel,video,status);
       const audio=feedAudio.get(channel.id)||{muted:true,volume:1};
@@ -156,12 +238,39 @@ function renderFeeds(force=false){
         });
       };
       volume.oninput=()=>{video.volume=Number(volume.value)/100;syncAudio()};
-      video.addEventListener('volumechange',syncAudio);syncAudio();card.append(controls);
+      video.addEventListener('volumechange',syncAudio);syncAudio();bar.append(controls);
+      addTvView(video,bar,channel.id);
     }else{video.hidden=true;const empty=card.querySelector('.empty-feed');empty.hidden=false;empty.textContent='Playback URL required in channels.json';status.textContent='Unavailable'}
+    const remove=document.createElement('button');remove.type='button';remove.className='small feed-remove';remove.textContent='\u00d7';remove.title='Remove preview (recording continues)';remove.setAttribute('aria-label','Remove preview for '+channel.name);
+    remove.onclick=()=>{S.selected.delete(channel.id);saveSelection();renderPicker()};bar.append(remove);
   }
 }
 async function start(ids){try{notify('');const data=await api('/api/recordings/start',{method:'POST',body:JSON.stringify({channel_ids:ids,segment_minutes:Number($('segmentMinutes').value)})});if(data.errors.length)notify(data.errors.map(x=>x.reason).join('; '),'error');await refresh()}catch(error){notify(error.message,'error')}}
-async function stop(ids){try{notify('');await api('/api/recordings/stop',{method:'POST',body:JSON.stringify({channel_ids:ids})});await refresh()}catch(error){notify(error.message,'error')}}
+async function stop(ids){
+  const jobs=S.active.filter(job=>ids.includes(job.channel_id));
+  if(!jobs.length)return;
+  if(!confirm('Stop recording '+jobs.map(job=>job.channel_name).join(', ')+' on the server for everyone?'))return;
+  try{notify('');await api('/api/recordings/stop',{method:'POST',body:JSON.stringify({recording_ids:jobs.map(job=>job.id)})});await refresh()}catch(error){notify(error.message,'error')}
+}
+function renderActiveRecordings(){
+  $('activeCount').textContent=S.active.length;
+  $('recordingSync').textContent='Updated '+new Date(S.lastSync).toLocaleTimeString();
+  $('showRecordingFeeds').disabled=!S.active.length;
+  $('activeJobs').innerHTML=S.active.map(job=>`<div class="active-job"><strong class="recording">REC</strong><strong class="job-name">${esc(job.channel_name)}</strong><time>${esc(new Date(job.started_at).toLocaleString())}</time><button class="small" data-show-recording="${esc(job.channel_id)}">Show feed</button><button class="small" data-stop-recording="${esc(job.id)}">Stop recording</button></div>`).join('')||'<span class="sub">No active recordings on server</span>';
+  const issues=S.recordings.filter(job=>['failed','interrupted'].includes(job.status));
+  $('recordingIssues').textContent=issues.length?'Recent history: '+issues.length+' failed/interrupted recording(s). Check Recording history below.':'';
+  document.querySelectorAll('.feed').forEach(card=>{const active=S.active.some(job=>job.channel_id===card.dataset.id);let mark=card.querySelector('.rec-mark');if(active&&!mark){mark=document.createElement('span');mark.className='rec-mark';mark.textContent='REC';card.querySelector('.feed-title').after(mark)}else if(!active&&mark)mark.remove()});
+}
+$('showRecordingFeeds').onclick=()=>{S.active.forEach(job=>S.selected.add(job.channel_id));saveSelection();renderPicker();renderActiveRecordings()};
+$('activeJobs').onclick=async event=>{
+  const show=event.target.closest('[data-show-recording]');
+  if(show){S.selected.add(show.dataset.showRecording);saveSelection();renderPicker();renderActiveRecordings();return}
+  const stopButton=event.target.closest('[data-stop-recording]');if(!stopButton)return;
+  const job=S.active.find(row=>row.id===stopButton.dataset.stopRecording);if(!job)return;
+  if(!confirm('Stop recording '+job.channel_name+' on the server for everyone?'))return;
+  stopButton.disabled=true;
+  try{await api('/api/recordings/stop',{method:'POST',body:JSON.stringify({recording_ids:[job.id]})});await refresh()}catch(error){notify(error.message,'error');stopButton.disabled=false}
+};
 function renderHistory(){
   $('historyRows').innerHTML=S.recordings.length?S.recordings.map(row=>`<tr><td>${esc(row.channel_name)}</td><td class="state-${esc(row.status)}">${esc(row.status)}</td><td>${esc(row.started_at)}</td><td>${esc(row.stopped_at||'--')}</td><td title="${esc(row.output_pattern)}">${esc(row.output_pattern)}</td><td title="${esc(row.error)}">${esc(row.error?row.error.slice(0,80):'--')}</td></tr>`).join(''):'<tr><td colspan="6">No recordings yet</td></tr>';
 }
@@ -180,7 +289,7 @@ function renderLibrary(){
   const rows=libraryFiles.filter(x=>(!date||x.date===date)&&(!channel||x.channel===channel));
   $('libraryRows').innerHTML=rows.length?rows.map(x=>`<tr><td>${esc(x.channel)}</td><td>${esc(x.date)}</td><td>${esc(x.name)}</td><td>${bytes(x.bytes)}</td><td>${esc(x.status)}</td><td><div class="library-actions"><button class="small" data-play="${esc(x.id)}">Play</button><a href="${apiPrefix}/api/library/${encodeURIComponent(x.id)}/download" download>Download MKV</a></div></td></tr>`).join(''):'<tr><td colspan="6">No completed files for this selection</td></tr>';
 }
-function closePlayback(){playToken=null;clearTimeout(playTimer);const video=$('savedVideo');video.pause();video.removeAttribute('src');video.load()}
+function closePlayback(){exportRevision++;clearTimeout(exportTimer);exportTv.disabled=false;exportLink.hidden=true;playToken=null;clearTimeout(playTimer);const video=$('savedVideo');video.pause();video.removeAttribute('src');video.load();document.querySelectorAll('.tv-shell.theater').forEach(el=>el.classList.remove('theater'));document.body.classList.remove('tv-open')}
 async function checkPreview(token,start=false){
   try{
     const state=await api(`/api/library/${token}/preview`,start?{method:'POST',body:'{}'}:{});
@@ -202,16 +311,21 @@ $('libraryClear').addEventListener('click',()=>{$('libraryDate').value='';$('lib
 $('libraryRefresh').addEventListener('click',refreshLibrary);
 setInterval(refreshLibrary,15000);refreshLibrary();
 async function refresh(){
+  if(S.refreshing)return;S.refreshing=true;
   try{
     const [status,channels,history]=await Promise.all([api('/api/status'),api('/api/channels'),api('/api/recordings')]);
     S.status=status;S.channels=channels.channels;S.recordings=history.recordings;
+    S.active=history.active||S.recordings.filter(job=>['starting','recording','stopping'].includes(job.status)&&S.channels.some(channel=>channel.id===job.channel_id&&channel.recording));S.lastSync=Date.now();
     if(requestedChannels.length&&!requestedChannelApplied){const matches=requestedChannels.filter(id=>S.channels.some(channel=>channel.id===id&&available(channel)));if(matches.length){S.selected=new Set(matches);requestedChannelApplied=true;saveSelection()}}
     $('serverDot').classList.add('ok');$('serverState').textContent='Server online';$('ffmpegDot').classList.toggle('ok',status.ffmpeg_ready);$('ffmpegState').textContent=status.ffmpeg_ready?'FFmpeg ready':'Preview only';$('diskState').textContent=`Disk ${bytes(status.free_disk_bytes)} free`;
     for(const id of [...S.selected])if(!S.channels.some(c=>c.id===id&&available(c)))S.selected.delete(id);
-    renderPicker();renderFeeds();renderHistory();
+    renderPicker();renderFeeds();renderHistory();renderActiveRecordings();
     if(!status.ffmpeg_ready)notify('FFmpeg is not configured. Live previews work; recording controls are disabled.')
-  }catch(error){$('serverDot').classList.remove('ok');$('serverState').textContent='Server offline';notify(error.message,'error')}
+  }catch(error){$('serverDot').classList.remove('ok');$('serverState').textContent='Server unreachable';$('recordingSync').textContent='Status unknown - last confirmed '+(S.lastSync?new Date(S.lastSync).toLocaleTimeString():'never');notify(error.message,'error')}
+  finally{S.refreshing=false}
 }
+setInterval(()=>{if(S.lastSync&&Date.now()-S.lastSync>15000)$('recordingSync').textContent='Status stale - last confirmed '+new Date(S.lastSync).toLocaleTimeString()},1000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh()});
 $('pickerButton').addEventListener('click',()=>picker.classList.toggle('open'));
 document.addEventListener('click',event=>{if(!picker.contains(event.target))picker.classList.remove('open')});
 $('channelSearch').addEventListener('input',renderPicker);
