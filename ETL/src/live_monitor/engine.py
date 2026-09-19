@@ -466,7 +466,6 @@ class LiveEngine:
         payload.update(
             {
                 "generated_at": dt.datetime.now(IST).isoformat(),
-                "window_minutes": self.config.dashboard_minutes,
                 "lag_seconds": lag_seconds,
                 "health": {
                     "ok": not health_issues,

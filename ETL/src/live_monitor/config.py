@@ -59,7 +59,10 @@ class LiveConfig:
     stable_observations: int = 1
     stale_processing_seconds: int = 300
     recent_hours: int = 3
-    dashboard_minutes: int = 360
+    # Zero means today's IST calendar day, not a moving 24-hour window.
+    dashboard_minutes: int = field(
+        default_factory=lambda: max(0, int(os.getenv("VETO_LIVE_DASHBOARD_MINUTES", "0")))
+    )
     health_max_lag_seconds: int = field(
         default_factory=lambda: int(os.getenv("VETO_LIVE_MAX_LAG_SECONDS", "600"))
     )

@@ -36,27 +36,43 @@ The generated password file is local-only and ignored by Git. `/healthz`
 remains available without a login so automated monitoring can verify service
 availability.
 
-The channel dropdown defaults to **All channels** and uses the same canonical
-host/path channel mapping as the batch ETL. Each selection reports exact
+The channel dropdown defaults to **All channels** and builds on the canonical
+batch ETL mapping with the live-specific delivery rules below. Each selection reports exact
 distinct `cliIP` values per minute for that mapped channel.
 
 ## Davis Cup schedule labels
 
-Edit `ETL/config/live_monitor/davis_cup_2026_schedule.json` to label a Davis
-Cup CDN asset in the War Room as `GRP n/Mn | HOST vs OPP`. The parser applies
-the match label by the request's IST calendar date, scheduled start time,
-production CDN host, and 32-character asset ID in the request path. A shared
-asset switches labels at the next scheduled start on that date. This is
-schedule-based attribution, not verification of the video content; overruns
-and overnight sessions require confirmed schedule updates. Pre-start traffic
-remains Other. This forward-only schedule does not invalidate or
-rebuild historical live-monitor aggregates.
+`ETL/config/live_monitor/davis_cup_2026_schedule.json` supplies the six Davis Cup
+asset IDs. Their menu labels are `Davis Cup (f98c8)`, etc.; the stable internal
+keys are their five-character prefixes. URL identity is independent of match
+start times. Historical scheduled aliases are combined when reading snapshots;
+old unresolved `Other` records are not guessed into a feed.
 
 The War Room Channel menu supports search, multiple selections, Select visible,
 and Clear. Combined selections use a read-only database snapshot to deduplicate
 IPs, devices, and sessions across channels rather than summing their counts.
-Selected-channel results are cached for ten seconds; only one selection query
-runs at a time to limit competition with ingestion.
+Selected-channel results are cached by published snapshot revision and IST date.
+Concurrent LAN users requesting the same selection share one calculation. Cached
+results can be served while another selection is being calculated, and gzip/ETag
+responses avoid repeated large transfers. Only one new selection query runs at
+a time to limit competition with ingestion. Checkbox changes are debounced.
+
+## Today's live window
+
+- The default range is today's **00:00 IST through the latest processed data**,
+  not the last six hours. It rolls over at IST midnight without a restart.
+- `Today / Live` restores the day range. Charts retain their existing delayed
+  display endpoint so an incomplete newest minute is not shown as a sudden drop.
+  The completeness estimate is a request-volume heuristic, not a CDN guarantee.
+- Channel-scoped responses include a compact shared timeline, so single- and
+  multi-channel charts keep the same time axis. Missing source minutes are gaps,
+  not invented zeroes. The chart supports every minute of the day.
+- Interactive selections skip the global file-ledger scan and restrict viewer
+  history lookups to selected channels. IP/device/session unions remain exact.
+  Selecting every channel reuses the published all-channel snapshot.
+- Positive `VETO_LIVE_DASHBOARD_MINUTES` values opt back into a rolling window;
+  `0` (the default) selects today. Changes to this environment setting require
+  a War Room restart. No raw logs or historical aggregates are deleted.
 
 Validate configuration without starting ingestion:
 
@@ -73,6 +89,7 @@ Environment overrides:
 - `VETO_LIVE_WATCHED_PATHS` (comma-separated request-path tokens)
 - `VETO_LIVE_HTTP_HOST` and `VETO_LIVE_HTTP_PORT`
 - `VETO_LIVE_MAX_LAG_SECONDS` (default 600)
+- `VETO_LIVE_DASHBOARD_MINUTES` (default 0: today from midnight IST)
 
 ## Recovery guarantees
 

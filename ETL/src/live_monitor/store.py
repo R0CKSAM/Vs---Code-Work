@@ -565,10 +565,13 @@ class LiveStore:
                 """
             )
 
-    def snapshot(self, dashboard_minutes: int, selected_targets: list[str] | None = None) -> dict:
-        cutoff = (
-            dt.datetime.now(IST) - dt.timedelta(minutes=dashboard_minutes)
-        ).strftime("%Y-%m-%dT%H:%M:00%z")
+    def snapshot(self, dashboard_minutes: int, selected_targets: list[str] | None = None,
+                 *, now: dt.datetime | None = None) -> dict:
+        now = (now or dt.datetime.now(IST)).astimezone(IST)
+        start = (now - dt.timedelta(minutes=dashboard_minutes) if dashboard_minutes > 0
+                 else now.replace(hour=0, minute=0, second=0, microsecond=0))
+        cutoff = start.strftime("%Y-%m-%dT%H:%M:00%z")
+        end = now.strftime("%Y-%m-%dT%H:%M:00%z")
         with self.connect(write=False) as connection:
             # Pin every query below to one WAL snapshot while parser workers commit.
             connection.execute("BEGIN")
@@ -600,18 +603,24 @@ class LiveStore:
                     index = f'{table}_target_idx'
                 connection.execute(f'''CREATE TEMP VIEW {table} AS SELECT {projection}
                     FROM main.{table} INDEXED BY {index}
-                    WHERE minute_ist>={literal(cutoff)} AND ({predicate})''')
+                    WHERE minute_ist>={literal(cutoff)} AND minute_ist<={literal(end)}
+                      AND ({predicate})''')
+            history_index = ('minute_viewers_target_idx' if selected is not None
+                             else 'sqlite_autoindex_minute_viewers_1')
             connection.execute(f'''CREATE TEMP VIEW viewer_history AS
                 SELECT {projected_target} AS target, viewer_key,
                        MIN(first_seen_ist) first_seen_ist, MAX(last_seen_ist) last_seen_ist
                 FROM main.viewer_history WHERE ({predicate}) AND (target,viewer_key) IN (
                     SELECT target,viewer_key FROM main.minute_viewers
-                    INDEXED BY sqlite_autoindex_minute_viewers_1
-                    WHERE minute_ist>={literal(cutoff)})
+                    INDEXED BY {history_index}
+                    WHERE minute_ist>={literal(cutoff)} AND minute_ist<={literal(end)}
+                      AND ({predicate}))
                 GROUP BY 1,2''')
+            # Interactive selections need no full-ledger scan (millions of files).
+            # Runtime/ingestion metadata comes from the already-published snapshot.
             ledger = connection.execute('''SELECT status,COUNT(*) count,
                 COALESCE(SUM(rows),0) rows,COALESCE(SUM(rejected_rows),0) rejected_rows,
-                MAX(max_event_ts) latest FROM files NOT INDEXED GROUP BY status''').fetchall()
+                MAX(max_event_ts) latest FROM files NOT INDEXED GROUP BY status''').fetchall() if selected is None else []
             files = {row['status']: row['count'] for row in ledger}
             completed = [row for row in ledger if row['status'] in ('done', 'changed')]
             latest = max((row['latest'] for row in completed if row['latest'] is not None), default=None)
@@ -836,6 +845,11 @@ class LiveStore:
                 )
             ]
         return {
+            "window_mode": "rolling" if dashboard_minutes > 0 else "today",
+            "window_start_ist": cutoff,
+            "window_end_ist": end,
+            "window_minutes": int((now.replace(second=0, microsecond=0)
+                                    - start.replace(second=0, microsecond=0)).total_seconds() // 60) + 1,
             "files": files,
             "rows": int(totals["rows"]),
             "rejected_rows": int(totals["rejected_rows"]),

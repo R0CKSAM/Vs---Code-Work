@@ -12,6 +12,7 @@ from pathlib import Path
 
 from .operations_page import PAGE as OPERATIONS_PAGE
 from .war_room_page import PAGE as WAR_ROOM_PAGE
+from .parser import DAVIS_CUP_ALIASES, IST
 
 
 PAGE = """<!doctype html>
@@ -49,31 +50,13 @@ class SnapshotServer:
         state_lock = threading.Lock()
         state_cache = {}
         selection_lock = threading.Lock()
+        selection_cache_lock = threading.Lock()
         selection_cache = {}
 
         class Handler(BaseHTTPRequestHandler):
             def do_GET(self):
                 if urlsplit(self.path).path == '/api/selection' and selection_snapshot is not None:
-                    targets = parse_qs(urlsplit(self.path).query).get('channel', [])
-                    if not targets or len(targets) > 100 or any(len(value) > 160 for value in targets):
-                        return self._send(400, 'application/json', b'{"error":"Invalid channel selection"}')
-                    if not selection_lock.acquire(blocking=False):
-                        return self._send(503, 'application/json', b'{"error":"Selection calculation busy; retry shortly"}')
-                    try:
-                        key = tuple(sorted(set(targets)))
-                        cached = selection_cache.get(key)
-                        if cached is None or time.monotonic() - cached[0] > 10:
-                            body = json.dumps(selection_snapshot(list(key))).encode()
-                            if len(selection_cache) >= 8:
-                                selection_cache.clear()
-                            selection_cache[key] = (time.monotonic(), body)
-                        else:
-                            body = cached[1]
-                        return self._send(200, 'application/json', body)
-                    except Exception:
-                        return self._send(503, 'application/json', b'{"error":"Selection temporarily unavailable"}')
-                    finally:
-                        selection_lock.release()
+                    return self._selection()
                 if self.path == "/favicon.ico":
                     return self._send(204, "image/x-icon", b"")
                 if self.path == "/":
@@ -108,6 +91,12 @@ class SnapshotServer:
                                     if channel is not None:
                                         filtered = dict(payload)
                                         filtered['channels'] = sorted(set(payload.get('series', {})) | set(payload.get('scheduled_targets', [])))
+                                        # Keep the shared time axis without shipping every channel.
+                                        filtered['timeline'] = [
+                                            {key: row.get(key) for key in ('minute_ist', 'requests')}
+                                            for row in payload.get('series', {}).get('__all__', [])
+                                            if row.get('minute_ist')
+                                        ]
                                         for field in ('series', 'summaries', 'breakdowns'):
                                             filtered[field] = {channel: payload.get(field, {}).get(channel, [] if field == 'series' else {})}
                                         body = json.dumps(filtered, separators=(',', ':')).encode()
@@ -146,6 +135,48 @@ class SnapshotServer:
                         return self._send(200, "application/json", b'{"ok":true}')
                     return self._send(200, "application/json", body, headers)
                 self._send(404, "text/plain; charset=utf-8", b"Not found")
+
+            def _selection(self):
+                targets = parse_qs(urlsplit(self.path).query).get('channel', [])
+                if (not targets or len(targets) > 100
+                        or any(not value or len(value) > 160 or value.startswith('__') for value in targets)):
+                    return self._send(400, 'application/json', b'{"error":"Invalid channel selection"}')
+                targets = tuple(sorted({DAVIS_CUP_ALIASES.get(value, value) for value in targets}))
+                try:
+                    stat = owner.snapshot_path.stat()
+                    key = (stat.st_mtime_ns, stat.st_size, dt.datetime.now(IST).date(), targets)
+                    with selection_cache_lock:
+                        cached = selection_cache.get(key)
+                    if cached is None:
+                        # One DB calculation at a time; identical LAN requests reuse its result.
+                        if not selection_lock.acquire(timeout=20):
+                            return self._send(503, 'application/json', b'{"error":"Selection calculation busy; retry shortly"}')
+                        try:
+                            with selection_cache_lock:
+                                cached = selection_cache.get(key)
+                            if cached is None:
+                                started = time.monotonic()
+                                result = selection_snapshot(list(targets))
+                                result['selection_build_seconds'] = round(time.monotonic() - started, 3)
+                                raw = json.dumps(result, separators=(',', ':')).encode()
+                                cached = (raw, gzip.compress(raw, compresslevel=1))
+                                with selection_cache_lock:
+                                    if len(selection_cache) >= 16:
+                                        selection_cache.pop(next(iter(selection_cache)))
+                                    selection_cache[key] = cached
+                        finally:
+                            selection_lock.release()
+                    zipped = 'gzip' in self.headers.get('Accept-Encoding', '')
+                    body = cached[int(zipped)]
+                    tag = '"' + hashlib.sha256(body).hexdigest() + '"'
+                    headers = {'ETag': tag, 'Vary': 'Accept-Encoding'}
+                    if self.headers.get('If-None-Match') == tag:
+                        return self._send(304, 'application/json', b'', headers)
+                    if zipped:
+                        headers['Content-Encoding'] = 'gzip'
+                    return self._send(200, 'application/json', body, headers)
+                except Exception:
+                    return self._send(503, 'application/json', b'{"error":"Selection temporarily unavailable"}')
 
             def _send(self, status: int, content_type: str, body: bytes, headers=None):
                 self.send_response(status)
