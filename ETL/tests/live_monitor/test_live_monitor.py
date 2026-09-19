@@ -112,11 +112,10 @@ def test_resolution_inference_requires_resolution_evidence_in_path() -> None:
 def test_davis_cup_schedule_maps_same_asset_by_ist_event_date() -> None:
     host = "daviscup-veto.akamaized.net"
     korea_asset = "f98c8ae68a354ab59a4e28e3dd700d4f/playlist.m3u8"
-    assert davis_cup_target(dt.datetime(2026, 9, 18, 10, 30, tzinfo=IST), host, korea_asset) == "GRP 1/M1 | KOR vs IND"
-    assert davis_cup_target(dt.datetime(2026, 9, 19, 8, 30, tzinfo=IST), host, korea_asset) == "GRP 1/M2 | KOR vs IND"
-    assert davis_cup_target(dt.datetime(2026, 9, 17, 8, 30, tzinfo=IST), host, korea_asset) is None
-    assert DAVIS_CUP_MENU_TARGETS[0] == "GRP 1/M1 | KOR vs IND"
-    assert len(DAVIS_CUP_MENU_TARGETS) == 14
+    assert davis_cup_target(dt.datetime(2026, 9, 18, 10, 30, tzinfo=IST), host, korea_asset) == "f98c8"
+    assert davis_cup_target(dt.datetime(2026, 9, 19, 8, 30, tzinfo=IST), host, korea_asset) == "f98c8"
+    assert davis_cup_target(dt.datetime(2026, 9, 17, 8, 30, tzinfo=IST), host, korea_asset) == "f98c8"
+    assert set(DAVIS_CUP_MENU_TARGETS) == {'f98c8', '3b966', 'bf34b', 'd1ff5', 'a9b4f', '834dd'}
 
 
 def test_live_enrichment_normalizes_ua_and_resolves_asn_cache() -> None:

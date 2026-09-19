@@ -1,16 +1,23 @@
 """Searchable channel selection for the War Room."""
 
+import json
+
+from .parser import DAVIS_CUP_MENU_TARGETS
+
 SCRIPT = r"""
 let channelSelection=new Set(['__all__']),channelKeys=[],selectionRevision=0,selectionBusy=false;
+let stateTag='',stateUrl='',stateData=null,renderedRevision=-1;
+const davisCupFeedKeys=new Set(__DAVIS_CUP_FEED_KEYS__);
+function channelDisplayName(key){return key==='__all__'?'All channels':davisCupFeedKeys.has(key)?'Davis Cup ('+key+')':key}
 const nativeTarget=$('target');nativeTarget.closest('label').hidden=true;
 const channelPicker=document.createElement('details');channelPicker.className='channel-picker';
 channelPicker.innerHTML='<summary id="channelSummary">Channel: All channels</summary><div class="channel-menu"><input id="channelSearch" type="search" placeholder="Search channels or matches" aria-label="Search channels"><div class="channel-actions"><button type="button" id="allChannels">All channels</button><button type="button" id="selectVisibleChannels">Select visible</button><button type="button" id="clearChannels">Clear</button></div><div id="channelOptions"></div></div>';
 nativeTarget.closest('label').after(channelPicker);
-function visibleChannelKeys(){const q=$('channelSearch').value.trim().toLowerCase();return channelKeys.filter(k=>k!=='__all__'&&k.toLowerCase().includes(q))}
+function visibleChannelKeys(){const q=$('channelSearch').value.trim().toLowerCase();return channelKeys.filter(k=>k!=='__all__'&&channelDisplayName(k).toLowerCase().includes(q))}
 function paintChannelPicker(){
- $('channelSummary').textContent='Channel: '+(channelSelection.has('__all__')?'All channels':channelSelection.size===1?[...channelSelection][0]:channelSelection.size+' selected');
+ $('channelSummary').textContent='Channel: '+(channelSelection.has('__all__')?'All channels':channelSelection.size===1?channelDisplayName([...channelSelection][0]):channelSelection.size+' selected');
  $('channelOptions').replaceChildren();
- for(const key of visibleChannelKeys()){const label=document.createElement('label'),check=document.createElement('input'),text=document.createElement('span');check.type='checkbox';check.checked=channelSelection.has('__all__')||channelSelection.has(key);text.textContent=key;label.append(check,text);check.onchange=()=>{if(channelSelection.has('__all__'))channelSelection=new Set(channelKeys.filter(k=>k!=='__all__'));check.checked?channelSelection.add(key):channelSelection.delete(key);changeChannels()};$('channelOptions').append(label)}
+ for(const key of visibleChannelKeys()){const label=document.createElement('label'),check=document.createElement('input'),text=document.createElement('span');check.type='checkbox';check.checked=channelSelection.has('__all__')||channelSelection.has(key);text.textContent=channelDisplayName(key);label.append(check,text);check.onchange=()=>{if(channelSelection.has('__all__'))channelSelection=new Set(channelKeys.filter(k=>k!=='__all__'));check.checked?channelSelection.add(key):channelSelection.delete(key);changeChannels()};$('channelOptions').append(label)}
 }
 function changeChannels(){selectionRevision++;paintChannelPicker();refresh()}
 $('channelSearch').oninput=paintChannelPicker;
@@ -22,23 +29,28 @@ document.addEventListener('keydown',event=>{if(event.key==='Escape')channelPicke
 refresh=async function(){
  if(selectionBusy)return;selectionBusy=true;const revision=selectionRevision;
  try{
-  const response=await fetch('/api/state',{cache:'no-store'});if(!response.ok)throw Error('Dashboard unavailable');
-  const next=await response.json();channelKeys=[...new Set(['__all__',...Object.keys(next.series||{}),...(next.scheduled_targets||[])])].sort();
   let key=channelSelection.has('__all__')?'__all__':channelSelection.size===1?[...channelSelection][0]:'__selection__';
+  const url='/api/state?channel='+encodeURIComponent(key),headers={};if(stateUrl===url&&stateTag)headers['If-None-Match']=stateTag;
+  const response=await fetch(url,{cache:'no-store',headers,signal:AbortSignal.timeout(15000)});
+  if(response.status===304&&revision===renderedRevision&&key!=='__selection__')return;
+  if(response.status!==304&&!response.ok)throw Error('Dashboard unavailable');
+  if(response.status!==304){stateData=await response.json();stateTag=response.headers.get('ETag')||'';stateUrl=url}
+  const next=structuredClone(stateData);channelKeys=[...new Set(['__all__',...(next.channels||Object.keys(next.series||{})),...(next.scheduled_targets||[])])].sort();
   if(channelSelection.size>1&&!channelSelection.has('__all__')){
    $('channelSummary').textContent='Channel: Calculating selection...';
    const query=new URLSearchParams;channelSelection.forEach(k=>query.append('channel',k));
-   const result=await fetch('/api/selection?'+query,{cache:'no-store'});if(!result.ok)throw Error('Selected-channel totals unavailable');
+   const result=await fetch('/api/selection?'+query,{cache:'no-store',signal:AbortSignal.timeout(30000)});if(!result.ok)throw Error('Selected-channel totals unavailable');
    const combined=await result.json();for(const field of ['series','summaries','breakdowns'])next[field][key]=combined[field]?.[key]||(field==='series'?[]:{});
   }else if(!channelSelection.size){next.series[key]=[];next.summaries[key]={};next.breakdowns[key]={}}
   if(revision!==selectionRevision)return;
-  next.selected_channels=[...channelSelection];data=next;nativeTarget.replaceChildren();const option=document.createElement('option');option.value=key;option.textContent=key;nativeTarget.append(option);nativeTarget.value=key;
-  paintChannelPicker();updateRangeBounds();render();
+  next.selected_channels=[...channelSelection];data=next;nativeTarget.replaceChildren();const option=document.createElement('option');option.value=key;option.textContent=channelDisplayName(key);nativeTarget.append(option);nativeTarget.value=key;
+  paintChannelPicker();updateRangeBounds();render();renderedRevision=revision;
   if(!channelSelection.size||!(data.series[key]||[]).length)$('visibleRange').textContent=channelSelection.size?'No processed requests for this selection in the live window':'No channels selected';
  }catch(error){$('sourceStatus').textContent='SELECTION UNAVAILABLE';$('sourceSub').textContent=error.message}
  finally{selectionBusy=false;if(revision!==selectionRevision)refresh()}
 };
 """
+SCRIPT = SCRIPT.replace('__DAVIS_CUP_FEED_KEYS__', json.dumps(DAVIS_CUP_MENU_TARGETS))
 
 STYLE = """
 .toolbar label[hidden]{display:none!important}

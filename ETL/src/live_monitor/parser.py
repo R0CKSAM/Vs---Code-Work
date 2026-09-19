@@ -8,7 +8,7 @@ import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
-from urllib.parse import parse_qs, unquote
+from urllib.parse import parse_qs, unquote, urlsplit
 from zoneinfo import ZoneInfo
 
 from ..profile.vglive_core import SKIP_PATH_SEGMENTS, resolve_channel
@@ -17,9 +17,8 @@ from .enrichment import decoded_asn_dimensions, decoded_ua_dimensions
 
 IST = ZoneInfo("Asia/Kolkata")
 GLOBAL_TARGET = "__all__"
-# The Davis Cup schedule only labels future event dates. It does not change
-# existing channel assignments, so retain the current aggregate mapping version
-# and avoid a costly historical live-monitor rebuild.
+# Additive path rules apply to newly ingested files. Keep historical aggregates
+# intact: they lack the request paths needed for a safe retrospective remap.
 CHANNEL_MAPPING_VERSION = 4
 
 _DAVIS_CUP_SCHEDULE_PATH = (
@@ -54,6 +53,20 @@ def _load_davis_cup_schedule() -> tuple[dict, tuple[str, ...]]:
 
 
 DAVIS_CUP_SCHEDULE, DAVIS_CUP_MENU_TARGETS = _load_davis_cup_schedule()
+
+# Canonical feed IDs remain stable when the schedule changes or a URL is reused.
+DAVIS_CUP_ALIASES = {
+    label: asset[:5]
+    for (_date, asset), events in DAVIS_CUP_SCHEDULE.items()
+    for _start, label in events
+}
+DAVIS_CUP_FEEDS = {asset: asset[:5] for _date, asset in DAVIS_CUP_SCHEDULE}
+DAVIS_CUP_MENU_TARGETS = tuple(sorted(set(DAVIS_CUP_FEEDS.values())))
+DAVIS_CUP_RECORDER_IDS = {
+    prefix: 'davis-cup-2026-' + label.split(' | ')[0].lower().replace(' ', '-').replace('/', '-')
+    + '-' + label.split(' | ')[1].lower().replace(' vs ', '-')
+    for label, prefix in reversed(list(DAVIS_CUP_ALIASES.items()))
+}
 
 
 @dataclass
@@ -267,24 +280,69 @@ def channel_candidate(path: str) -> str:
 
 
 def davis_cup_target(event_time: dt.datetime, host: str, path: str) -> str | None:
-    """Return the scheduled match label for a Davis Cup CDN request, when known."""
+    """Map each known CDN asset to one feed, independently of match/date."""
     normalized_host = str(host or "").strip().casefold()
     if normalized_host.removesuffix(':443') != "daviscup-veto.akamaized.net":
         return None
-    asset = re.search(r"(?i)(?:^|/)([0-9a-f]{32})(?:/|$)", str(path or ""))
+    asset = re.search(r"(?i)(?:^|/)([0-9a-f]{31,32})(?:/|$)", str(path or ""))
     if not asset:
         return None
-    moment = event_time.astimezone(IST)
-    events = DAVIS_CUP_SCHEDULE.get((moment.strftime('%Y-%m-%d'), asset.group(1).casefold()), [])
-    started = [label for start, label in events if start <= moment.strftime('%H:%M')]
-    if started:
-        return started[-1]
-    return None
+    return DAVIS_CUP_FEEDS.get(asset.group(1).casefold())
 
 
 def matching_targets(event_time: dt.datetime, host: str, path: str) -> tuple[str, str]:
     scheduled = davis_cup_target(event_time, host, path)
-    return GLOBAL_TARGET, scheduled or resolve_channel(host, channel_candidate(path))
+    return GLOBAL_TARGET, scheduled or delivery_channel(host, path)
+
+
+_YRF_LEGACY_CHANNELS = {
+    "yrfmusic": "YRF Music",
+    "sagamusic": "SAGA Music",
+    "sagaharyanvi": "Saga Music Haryanvi",
+    "sikhratnavali": "Sikh Ratnavali",
+}
+_EPIC_HOST_CHANNELS = {
+    "epic-tv-veto": ("Epic TV", "epic-tv"),
+    "epic-veto": ("Epic Bhojpuri", "epic-bhojpuri"),
+    "epic-bharat-veto": ("Epic Bharat", "epic-bharat"),
+    "epic-kid-veto": ("Epic Kids", "epic-kids"),
+    "epic-music-veto": ("Epic Music", "epic-music"),
+}
+
+
+def delivery_channel(host: str, path: str) -> str:
+    """Resolve observed legacy delivery URLs without merging staging viewers."""
+    host = str(host or "").strip().casefold().removesuffix(":443").removesuffix(":80")
+    path = str(path or "").strip()
+    if path.casefold().startswith(("https://", "http://")):
+        try:
+            path = urlsplit(path).path
+        except ValueError:
+            return "Other"
+    path = unquote(path).casefold().split("?", 1)[0].lstrip("/")
+    candidate = channel_candidate(path)
+
+    if host == "yrf-veto.akamaized.net":
+        legacy = re.match(r"hls/live/[0-9]+/([^/]+)(?:/|$)", path)
+        if legacy and legacy.group(1) in _YRF_LEGACY_CHANNELS:
+            return _YRF_LEGACY_CHANNELS[legacy.group(1)]
+
+    for prefix, (channel, folder) in _EPIC_HOST_CHANNELS.items():
+        staging = host == f"{prefix}.akamaized-staging.net"
+        if not staging and host != f"{prefix}.akamaized.net":
+            continue
+        root = path.split("/", 1)[0].replace("_", "-")
+        rendition = re.fullmatch(re.escape(folder) + r"(?:-o)?(?:-[0-9]{3,4}p?)?", root)
+        # The observed Bharat staging endpoint uses a root-level manifest.
+        bharat_manifest = prefix == "epic-bharat-veto" and re.fullmatch(
+            r"master(?:[_-][0-9]{3,4}p?)?\.m3u8", path
+        )
+        if rendition or bharat_manifest:
+            return channel + (" (staging)" if staging else "")
+        if staging:
+            return "Other"
+
+    return resolve_channel(host, candidate)
 
 
 def parse_gzip_file(path: Path, watched_paths: tuple[str, ...]) -> FileBatch:

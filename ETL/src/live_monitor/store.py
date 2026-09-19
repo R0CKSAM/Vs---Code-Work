@@ -3,11 +3,12 @@ from __future__ import annotations
 import contextlib
 import datetime as dt
 import sqlite3
+import threading
 import time
 from pathlib import Path
 from typing import Iterator
 
-from .parser import FileBatch, GLOBAL_TARGET, IST
+from .parser import DAVIS_CUP_ALIASES, FileBatch, GLOBAL_TARGET, IST
 
 
 SCHEMA = """
@@ -148,6 +149,7 @@ class LiveStore:
 
     def __init__(self, path: Path):
         self.path = path
+        self._writer_lock = threading.RLock()
         path.parent.mkdir(parents=True, exist_ok=True)
         with self.connect() as connection:
             connection.executescript(SCHEMA)
@@ -252,10 +254,25 @@ class LiveStore:
         )
 
     @contextlib.contextmanager
-    def connect(self) -> Iterator[sqlite3.Connection]:
+    def connect(self, write: bool = True) -> Iterator[sqlite3.Connection]:
+        # SQLite has one writer. Queue our workers instead of racing its timeout.
+        if write:
+            self._writer_lock.acquire()
+        try:
+            with self._connection() as connection:
+                yield connection
+        finally:
+            if write:
+                self._writer_lock.release()
+
+    @contextlib.contextmanager
+    def _connection(self) -> Iterator[sqlite3.Connection]:
         connection = sqlite3.connect(self.path, timeout=10)
         connection.row_factory = sqlite3.Row
         connection.execute("PRAGMA busy_timeout=10000")
+        # This is connection-local; setting it only during schema creation left
+        # every subsequent small write at SQLite's more expensive default.
+        connection.execute("PRAGMA synchronous=NORMAL")
         try:
             yield connection
             connection.commit()
@@ -316,14 +333,14 @@ class LiveStore:
 
     def file_signatures(self) -> dict[str, tuple[int, int]]:
         """Load durable file signatures so filesystem scans avoid DB round trips."""
-        with self.connect() as connection:
+        with self.connect(write=False) as connection:
             rows = connection.execute(
                 "SELECT path,size,mtime_ns FROM files WHERE status <> 'observed'"
-            ).fetchall()
-        return {
-            str(row["path"]): (int(row["size"]), int(row["mtime_ns"]))
-            for row in rows
-        }
+            )
+            return {
+                str(row["path"]): (int(row["size"]), int(row["mtime_ns"]))
+                for row in rows
+            }
 
     def observe_file(
         self, path: Path, size: int, mtime_ns: int, stable_observations: int
@@ -552,41 +569,53 @@ class LiveStore:
         cutoff = (
             dt.datetime.now(IST) - dt.timedelta(minutes=dashboard_minutes)
         ).strftime("%Y-%m-%dT%H:%M:00%z")
-        with self.connect() as connection:
+        with self.connect(write=False) as connection:
             # Pin every query below to one WAL snapshot while parser workers commit.
             connection.execute("BEGIN")
-            if selected_targets is not None:
-                # Connection-local views reuse the normal aggregation queries.
-                # DISTINCT identifiers span the selection; no source rows change.
-                connection.execute('CREATE TEMP TABLE selected_channels (target TEXT PRIMARY KEY)')
-                connection.executemany('INSERT INTO selected_channels VALUES (?)',
-                                       [(target,) for target in sorted(set(selected_targets)) if target != GLOBAL_TARGET])
-                for table in ('minute_metrics', 'minute_viewers', 'minute_devices',
-                              'minute_sessions', 'minute_dimensions', 'minute_quality_dimensions'):
-                    columns = [row['name'] for row in connection.execute(f'PRAGMA main.table_info({table})')]
-                    projection = ','.join("'__selection__' AS target" if col == 'target' else f'"{col}"' for col in columns)
-                    connection.execute(f'CREATE TEMP VIEW {table} AS SELECT {projection} FROM main.{table} WHERE target IN (SELECT target FROM selected_channels)')
-                connection.execute('''CREATE TEMP VIEW viewer_history AS
-                    SELECT '__selection__' AS target, viewer_key,
-                           MIN(first_seen_ist) first_seen_ist, MAX(last_seen_ist) last_seen_ist
-                    FROM main.viewer_history WHERE target IN (SELECT target FROM selected_channels)
-                    GROUP BY viewer_key''')
-            files = {
-                row["status"]: row["count"]
-                for row in connection.execute(
-                    "SELECT status,COUNT(*) count FROM files GROUP BY status"
-                )
+            def literal(value):
+                return "'" + str(value).replace("'", "''") + "'"
+
+            canonical = 'CASE target ' + ' '.join(
+                f'WHEN {literal(old)} THEN {literal(new)}'
+                for old, new in DAVIS_CUP_ALIASES.items()
+            ) + ' ELSE target END' if DAVIS_CUP_ALIASES else 'target'
+            selected = None if selected_targets is None else {
+                DAVIS_CUP_ALIASES.get(target, target) for target in selected_targets
+                if target != GLOBAL_TARGET
             }
-            latest = connection.execute(
-                "SELECT MAX(max_event_ts) value FROM files WHERE status='done'"
-            ).fetchone()["value"]
-            totals = connection.execute(
-                """
-                SELECT COALESCE(SUM(rows),0) rows,
-                       COALESCE(SUM(rejected_rows),0) rejected_rows
-                  FROM files WHERE status='done'
-                """
-            ).fetchone()
+            raw_selected = set(selected or ())
+            raw_selected.update(old for old, new in DAVIS_CUP_ALIASES.items() if new in raw_selected)
+            predicate = 'TRUE' if selected is None else (
+                f"target IN ({','.join(map(literal, sorted(raw_selected)))})" if selected else 'FALSE'
+            )
+            projected_target = canonical if selected is None else "'__selection__'"
+            # Force the time-leading primary index: the target index otherwise
+            # scans all historical identity/dimension rows for an all-target query.
+            for table in ('minute_metrics', 'minute_viewers', 'minute_devices',
+                          'minute_sessions', 'minute_dimensions', 'minute_quality_dimensions'):
+                columns = [row['name'] for row in connection.execute(f'PRAGMA main.table_info({table})')]
+                projection = ','.join(f'{projected_target} AS target' if col == 'target' else f'"{col}"' for col in columns)
+                index = f'sqlite_autoindex_{table}_1'
+                if selected is not None and table in ('minute_viewers', 'minute_devices', 'minute_sessions'):
+                    index = f'{table}_target_idx'
+                connection.execute(f'''CREATE TEMP VIEW {table} AS SELECT {projection}
+                    FROM main.{table} INDEXED BY {index}
+                    WHERE minute_ist>={literal(cutoff)} AND ({predicate})''')
+            connection.execute(f'''CREATE TEMP VIEW viewer_history AS
+                SELECT {projected_target} AS target, viewer_key,
+                       MIN(first_seen_ist) first_seen_ist, MAX(last_seen_ist) last_seen_ist
+                FROM main.viewer_history WHERE ({predicate}) AND (target,viewer_key) IN (
+                    SELECT target,viewer_key FROM main.minute_viewers
+                    INDEXED BY sqlite_autoindex_minute_viewers_1
+                    WHERE minute_ist>={literal(cutoff)})
+                GROUP BY 1,2''')
+            ledger = connection.execute('''SELECT status,COUNT(*) count,
+                COALESCE(SUM(rows),0) rows,COALESCE(SUM(rejected_rows),0) rejected_rows,
+                MAX(max_event_ts) latest FROM files NOT INDEXED GROUP BY status''').fetchall()
+            files = {row['status']: row['count'] for row in ledger}
+            completed = [row for row in ledger if row['status'] in ('done', 'changed')]
+            latest = max((row['latest'] for row in completed if row['latest'] is not None), default=None)
+            totals = {key: sum(row[key] for row in completed) for key in ('rows', 'rejected_rows')}
             targets = [GLOBAL_TARGET, *[
                 row["target"] for row in connection.execute(
                     "SELECT DISTINCT target FROM minute_metrics WHERE target<>? ORDER BY target",
@@ -638,10 +667,10 @@ class LiveStore:
                 )
             }
             series: dict[str, list[dict]] = {}
-            for target in targets:
-                metric_rows = connection.execute(
+            metric_rows_by_target = {}
+            for row in connection.execute(
                     """
-                    SELECT minute_ist,SUM(requests) requests,SUM(bytes) bytes,
+                    SELECT target,minute_ist,SUM(requests) requests,SUM(bytes) bytes,
                            SUM(errors_4xx) errors_4xx,SUM(errors_5xx) errors_5xx,
                            SUM(media_segments) media_segments,
                            SUM(ttfb_samples) ttfb_samples,SUM(ttfb_total_ms) ttfb_total_ms,
@@ -655,47 +684,29 @@ class LiveStore:
                            SUM(tls_overhead_total_ms) tls_overhead_total_ms,
                            SUM(delivery_edge_issues) delivery_edge_issues
                       FROM minute_metrics
-                     WHERE target=? AND minute_ist>=?
-                     GROUP BY minute_ist ORDER BY minute_ist
+                     WHERE minute_ist>=?
+                     GROUP BY target,minute_ist ORDER BY target,minute_ist
                     """,
-                    (target, cutoff),
-                ).fetchall()
-                viewer_counts = {
-                    row["minute_ist"]: row["viewers"]
-                    for row in connection.execute(
-                        """
-                        SELECT minute_ist,COUNT(DISTINCT viewer_key) viewers
-                          FROM minute_viewers
-                         WHERE target=? AND minute_ist>=?
-                         GROUP BY minute_ist
-                        """,
-                        (target, cutoff),
-                    )
-                }
-                device_counts = {
-                    row["minute_ist"]: row["identifiers"]
-                    for row in connection.execute(
-                        """
-                        SELECT minute_ist,COUNT(DISTINCT device_key) identifiers
-                          FROM minute_devices
-                         WHERE target=? AND minute_ist>=?
-                         GROUP BY minute_ist
-                        """,
-                        (target, cutoff),
-                    )
-                }
-                session_counts = {
-                    row["minute_ist"]: row["identifiers"]
-                    for row in connection.execute(
-                        """
-                        SELECT minute_ist,COUNT(DISTINCT session_key) identifiers
-                          FROM minute_sessions
-                         WHERE target=? AND minute_ist>=?
-                         GROUP BY minute_ist
-                        """,
-                        (target, cutoff),
-                    )
-                }
+                    (cutoff,),
+                ):
+                metric_rows_by_target.setdefault(row['target'], []).append(row)
+
+            def minute_counts(table, identity):
+                counts = {}
+                for row in connection.execute(f'''SELECT target,minute_ist,
+                    COUNT(DISTINCT {identity}) identifiers FROM {table}
+                    WHERE minute_ist>=? GROUP BY target,minute_ist''', (cutoff,)):
+                    counts.setdefault(row['target'], {})[row['minute_ist']] = row['identifiers']
+                return counts
+
+            all_viewer_counts = minute_counts('minute_viewers', 'viewer_key')
+            all_device_counts = minute_counts('minute_devices', 'device_key')
+            all_session_counts = minute_counts('minute_sessions', 'session_key')
+            for target in targets:
+                metric_rows = metric_rows_by_target.get(target, [])
+                viewer_counts = all_viewer_counts.get(target, {})
+                device_counts = all_device_counts.get(target, {})
+                session_counts = all_session_counts.get(target, {})
                 series[target] = [
                     {
                         **dict(row),

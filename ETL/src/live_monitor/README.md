@@ -104,3 +104,46 @@ The S3 day prefix is flat and large. Rclone must enumerate it before filtering,
 so source-side hourly prefixes or S3 event notifications are required for
 guaranteed sub-minute ingestion. With the existing layout, the monitor orders
 recent objects first after enumeration and reports its actual data lag.
+
+## War Room performance and feed labels
+
+- Davis Cup channels use the first five characters of the six configured asset
+  IDs: `f98c8`, `3b966`, `bf34b`, `d1ff5`, `a9b4f`, `834dd`. The schedule JSON
+  remains the URL source of truth. Feed identity no longer changes at match time.
+- Legacy `GRP ...` labels are combined in read-only snapshot views. Exact IP,
+  device and session counts are deduplicated across their aliases. This does not
+  reset the file ledger or rebuild historical aggregates. Requests previously
+  classified as `Other` cannot be reassigned without replaying their raw logs.
+- Snapshot queries explicitly bound minute data to the configured live window.
+  Each minute series is aggregated once across channels, not once per channel.
+  Parser/scanner writes are serialized in-process to avoid SQLite writer races.
+- `/api/state?channel=f98c8` returns only that channel's series and breakdowns,
+  plus the channel menu. Gzip and ETag responses reduce repeated transfer and
+  rendering. `/api/state` still supports the complete export payload.
+- Partial successful downloads are queued even when a transfer batch fails.
+  Database queue errors no longer trigger an unrelated full S3 listing. UTC
+  source-day selection is separate from IST display times, and unchanged files
+  retain their modification timestamps during rclone copies.
+- `snapshot_build_seconds` in the published JSON measures actual build cost.
+  These changes do not guarantee sub-minute CDN delivery or eliminate upstream
+  source latency. No source/lake deletion or production database vacuum is used.
+
+## Legacy delivery paths and staging
+
+- War Room recognizes the legacy YRF `/hls/live/<id>/<channel>/` paths for
+  YRF Music, SAGA Music, Saga Music Haryanvi and Sikh Ratnavali. Matching requires
+  the exact YRF delivery host and a known channel directory, not a query value.
+- Epic rendition folders such as `epic-kids-o_360p` and the observed Bharat
+  root manifest `master_360.m3u8` use host-specific rules. Staging hosts produce
+  separate `Epic ... (staging)` channels, not the corresponding production
+  channel. `All channels` still includes both, as it does all CDN requests.
+- HTTP errors remain in request, byte and error metrics. The existing audience
+  definition is distinct requesting IPs, not player-confirmed successful viewers.
+  An error-only visible range now carries an explicit warning. Failed manifest
+  requests do not contribute to the segment-based watch-time estimate.
+- These additions apply on ingestion. Already-committed `Other` rows are not
+  guessed into a channel or replayed into the existing ledger; their request
+  paths are not stored in aggregates. They remain until the rolling window moves
+  past them. The `Other` selection identifies this historical/unresolved scope.
+- Labelling a failed URL does not repair the CDN origin or redirect external
+  players. Check the actual production playlist before replacing recorder URLs.

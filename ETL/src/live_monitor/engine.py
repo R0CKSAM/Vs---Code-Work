@@ -15,7 +15,7 @@ from zoneinfo import ZoneInfo
 
 from .config import LiveConfig
 from .enrichment import enrichment_status
-from .parser import CHANNEL_MAPPING_VERSION, DAVIS_CUP_MENU_TARGETS, parse_gzip_file
+from .parser import CHANNEL_MAPPING_VERSION, DAVIS_CUP_MENU_TARGETS, DAVIS_CUP_RECORDER_IDS, parse_gzip_file
 from .s3_index import list_recent_relative_key_sets
 from .server import SnapshotServer
 from .store import LiveStore
@@ -238,16 +238,22 @@ class LiveEngine:
 
     def worker_loop(self) -> None:
         while not self.stop_event.is_set():
-            path = self.store.claim_file()
-            if path is None:
-                self.stop_event.wait(0.25)
-                continue
+            path = None
             try:
+                path = self.store.claim_file()
+                if path is None:
+                    self.stop_event.wait(0.25)
+                    continue
                 batch = parse_gzip_file(path, self.config.watched_paths)
                 self.store.finish_file(path, batch)
             except Exception as exc:
                 LOGGER.exception("Could not process %s", path)
-                self.store.fail_file(path, f"{type(exc).__name__}: {exc}")
+                if path is not None:
+                    try:
+                        self.store.fail_file(path, f"{type(exc).__name__}: {exc}")
+                    except Exception:
+                        LOGGER.exception('Could not persist parser failure for %s', path)
+                self.stop_event.wait(1)
 
     def _rclone(
         self,
@@ -267,6 +273,7 @@ class LiveEngine:
             remote,
             str(local),
             "--size-only",
+            "--no-update-modtime",
             "--transfers",
             transfer_count,
             "--checkers",
@@ -327,7 +334,8 @@ class LiveEngine:
         return True
 
     def sync_once(self) -> bool:
-        now = dt.datetime.now(IST)
+        # Source folders are UTC days; dashboard display times remain IST.
+        now = dt.datetime.now(dt.timezone.utc)
         moments = [now, now - dt.timedelta(hours=self.config.recent_hours)]
         days = list({moment.date(): moment for moment in moments}.values())
         success = True
@@ -339,9 +347,18 @@ class LiveEngine:
                 local = self.config.spool_root / self._day_folder(moment)
                 key_file = None
                 try:
-                    keys, recent_keys = list_recent_relative_key_sets(
-                        remote, self.config.recent_hours, local_root=local
-                    )
+                    try:
+                        keys, recent_keys = list_recent_relative_key_sets(
+                            remote, self.config.recent_hours, local_root=local
+                        )
+                    except Exception as exc:
+                        self.store.event('WARNING', 'sync-index',
+                            f'{remote}: S3 index unavailable ({exc}); using rclone listing')
+                        synced = self._rclone(remote, local, timeout=900,
+                            max_age=f'{self.config.recent_hours}h')
+                        self.scan_directories([local], force=True)
+                        success = synced and success
+                        continue
                     if not recent_keys:
                         continue
                     if keys:
@@ -358,20 +375,9 @@ class LiveEngine:
                         )
                     else:
                         synced = True
-                    if synced:
-                        # The spool is intentionally flat and can hold hundreds of
-                        # thousands of files. Queue the exact recent keys now so live
-                        # ingestion never waits for a historical directory walk.
-                        self.observe_paths(local / Path(key) for key in recent_keys)
-                except Exception as exc:
-                    self.store.event(
-                        "WARNING", "sync-index",
-                        f"{remote}: parallel S3 index unavailable ({exc}); using rclone listing",
-                    )
-                    synced = self._rclone(
-                        remote, local, timeout=900,
-                        max_age=f"{self.config.recent_hours}h",
-                    )
+                    # Completed transfers are atomically published gzip files,
+                    # even when another transfer failed. Queue them immediately.
+                    self.observe_paths(local / Path(key) for key in recent_keys)
                 finally:
                     if key_file is not None:
                         key_file.unlink(missing_ok=True)
@@ -442,6 +448,7 @@ class LiveEngine:
             self.stop_event.wait(delay)
 
     def publish_snapshot(self) -> dict:
+        started = time.monotonic()
         payload = self.store.snapshot(self.config.dashboard_minutes)
         now = time.time()
         with self._status_lock:
@@ -469,6 +476,8 @@ class LiveEngine:
                 "runtime": runtime,
                 "enrichment": enrichment,
                 "scheduled_targets": list(DAVIS_CUP_MENU_TARGETS),
+                "recorder_channels": DAVIS_CUP_RECORDER_IDS,
+                "snapshot_build_seconds": round(time.monotonic() - started, 3),
                 "metric_note": (
                     "All channels and each mapped channel show exact distinct cliIP "
                     "per minute; known device/session counts are exact only where those "
@@ -493,7 +502,8 @@ class LiveEngine:
         with InstanceLock(self.config.state_dir / "live_monitor.lock"):
             stop_request_path = self.config.state_dir / "stop.request"
             reset_files = self.store.ensure_channel_mapping_version(CHANNEL_MAPPING_VERSION)
-            self._file_signatures = self.store.file_signatures()
+            if reset_files:
+                self._file_signatures = self.store.file_signatures()
             if reset_files:
                 self.store.event(
                     "WARNING",

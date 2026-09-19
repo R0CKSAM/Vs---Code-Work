@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import json
+import gzip
+import hashlib
+import datetime as dt
 import threading
 import time
 from urllib.parse import urlsplit, parse_qs
@@ -43,6 +46,8 @@ class SnapshotServer:
     def __init__(self, host: str, port: int, snapshot_path: Path, selection_snapshot=None):
         self.snapshot_path = snapshot_path
         owner = self
+        state_lock = threading.Lock()
+        state_cache = {}
         selection_lock = threading.Lock()
         selection_cache = {}
 
@@ -77,15 +82,61 @@ class SnapshotServer:
                     return self._send(
                         200, "text/html; charset=utf-8", WAR_ROOM_PAGE.encode()
                     )
-                if self.path in {"/api/state", "/healthz"}:
+                if urlsplit(self.path).path in {"/api/state", "/healthz"}:
                     try:
-                        raw = owner.snapshot_path.read_bytes()
-                        payload = json.loads(raw)
+                        with state_lock:
+                            stat = owner.snapshot_path.stat()
+                            signature = (stat.st_mtime_ns, stat.st_size)
+                            if state_cache.get('signature') != signature:
+                                raw = owner.snapshot_path.read_bytes()
+                                payload = json.loads(raw)
+                                state_cache.clear()
+                                state_cache.update(signature=signature, raw=raw, payload=payload, variants={})
+                            raw, payload = state_cache['raw'], state_cache['payload']
+                            query = parse_qs(urlsplit(self.path).query)
+                            channel = query.get('channel', [None])[0]
+                            zipped = 'gzip' in self.headers.get('Accept-Encoding', '')
+                            key = (channel, zipped)
+                            tag = '"' + hashlib.sha256(repr((signature, key)).encode()).hexdigest() + '"'
+                            if urlsplit(self.path).path == '/api/state':
+                                headers = {'ETag': tag, 'Vary': 'Accept-Encoding'}
+                                if self.headers.get('If-None-Match') == tag:
+                                    return self._send(304, 'application/json', b'', headers)
+                                variants = state_cache['variants']
+                                if key not in variants:
+                                    body = raw
+                                    if channel is not None:
+                                        filtered = dict(payload)
+                                        filtered['channels'] = sorted(set(payload.get('series', {})) | set(payload.get('scheduled_targets', [])))
+                                        for field in ('series', 'summaries', 'breakdowns'):
+                                            filtered[field] = {channel: payload.get(field, {}).get(channel, [] if field == 'series' else {})}
+                                        body = json.dumps(filtered, separators=(',', ':')).encode()
+                                    if zipped:
+                                        body = gzip.compress(body, compresslevel=1)
+                                    if len(variants) >= 16:
+                                        variants.clear()
+                                    variants[key] = body
+                                body = variants[key]
+                                if zipped:
+                                    headers['Content-Encoding'] = 'gzip'
+                            else:
+                                body, headers = raw, {}
                     except (OSError, json.JSONDecodeError):
                         return self._send(503, "application/json", b'{"error":"state unavailable"}')
                     if self.path == "/healthz":
                         health = payload.get("health") if isinstance(payload, dict) else None
                         if isinstance(health, dict):
+                            health = dict(health)
+                            generated = payload.get('generated_at')
+                            if generated:
+                                try:
+                                    age = max(0, time.time() - dt.datetime.fromisoformat(generated).timestamp())
+                                    health['snapshot_age_seconds'] = round(age, 1)
+                                    if age > max(60, 2 * float(payload.get('snapshot_build_seconds') or 0) + 15):
+                                        health.update(ok=False, status='degraded',
+                                            issues=[*health.get('issues', []), 'Dashboard snapshot is stale'])
+                                except (TypeError, ValueError):
+                                    health.update(ok=False, status='degraded', issues=['Invalid snapshot timestamp'])
                             body = json.dumps(health, separators=(",", ":")).encode()
                             return self._send(
                                 200 if health.get("ok") else 503,
@@ -93,17 +144,22 @@ class SnapshotServer:
                                 body,
                             )
                         return self._send(200, "application/json", b'{"ok":true}')
-                    return self._send(200, "application/json", raw)
+                    return self._send(200, "application/json", body, headers)
                 self._send(404, "text/plain; charset=utf-8", b"Not found")
 
-            def _send(self, status: int, content_type: str, body: bytes):
+            def _send(self, status: int, content_type: str, body: bytes, headers=None):
                 self.send_response(status)
                 self.send_header("Content-Type", content_type)
                 self.send_header("Content-Length", str(len(body)))
                 self.send_header("Cache-Control", "no-store")
                 self.send_header("X-Content-Type-Options", "nosniff")
+                for name, value in (headers or {}).items():
+                    self.send_header(name, value)
                 self.end_headers()
-                self.wfile.write(body)
+                try:
+                    self.wfile.write(body)
+                except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+                    pass
 
             def _redirect(self, location: str):
                 self.send_response(302)

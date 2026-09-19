@@ -4,14 +4,11 @@ from ETL.src.live_monitor.parser import IST, FileBatch, davis_cup_target
 from ETL.src.live_monitor.store import LiveStore
 
 
-def test_shared_asset_switches_only_at_scheduled_start():
+def test_shared_asset_is_one_feed_regardless_of_scheduled_match():
     host = 'daviscup-veto.akamaized.net'
     path = '/3b9668eaa10546528bc10dc0fbaf23bd/playlist.m3u8'
-    assert davis_cup_target(dt.datetime(2026, 9, 19, 14, 29, tzinfo=IST), host, path) is None
-    assert davis_cup_target(dt.datetime(2026, 9, 19, 14, 30, tzinfo=IST), host, path) == 'GRP 2/M2 | AUT vs BEL'
-    assert davis_cup_target(dt.datetime(2026, 9, 19, 21, 29, tzinfo=IST), host, path) == 'GRP 2/M2 | AUT vs BEL'
-    assert davis_cup_target(dt.datetime(2026, 9, 19, 21, 30, tzinfo=IST), host, path) == 'GRP 7/M1 | CHL vs ESP'
-    assert davis_cup_target(dt.datetime(2026, 9, 17, 21, 30, tzinfo=IST), host, path) is None
+    for day, hour, minute in [(19,14,29),(19,14,30),(19,21,29),(19,21,30),(17,21,30)]:
+        assert davis_cup_target(dt.datetime(2026,9,day,hour,minute,tzinfo=IST), host, path) == '3b966'
     assert davis_cup_target(dt.datetime(2026, 9, 19, 21, 30, tzinfo=IST), 'different-host', path) is None
 
 
