@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Broadcast News Template</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800;900&display=swap');
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    width:1920px; height:1080px;
+    background:#000;
+    font-family:'Montserrat', Arial, sans-serif;
+    position:relative;
+    overflow:hidden;
+  }
+
+  /* Background — swap this url() for your stadium/venue plate */
+  #bg{
+    position:absolute; inset:0;
+    background: radial-gradient(ellipse at 50% 0%, #1c4d5e 0%, #0a1f2b 55%, #050d12 100%);
+    background-size:cover; background-position:center;
+  }
+  #bg img{ width:100%; height:100%; object-fit:cover; opacity:.9; }
+  #bg::after{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(0,0,0,.15) 0%, rgba(0,0,0,.55) 100%);
+  }
+
+  /* Left player photo box */
+  #playerBox{
+    position:absolute; left:60px; top:230px;
+    width:520px; height:700px;
+    border-radius:16px;
+    overflow:hidden;
+    box-shadow:
+      0 0 0 2px rgba(255,255,255,.25),
+      0 0 0 6px rgba(16,122,74,.6),
+      0 25px 60px rgba(0,0,0,.6),
+      inset 0 0 40px rgba(0,0,0,.3);
+    background:linear-gradient(160deg,#0e3d29,#082419);
+  }
+  #playerBox img{ width:100%; height:100%; object-fit:cover; display:block; }
+  #playerBox .placeholder{
+    width:100%; height:100%;
+    display:flex; align-items:center; justify-content:center;
+    color:rgba(255,255,255,.35); font-size:22px; font-weight:700; text-align:center; padding:20px;
+    letter-spacing:1px;
+  }
+  #playerBox::before{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(180deg, transparent 60%, rgba(0,0,0,.75) 100%);
+    pointer-events:none;
+  }
+  #playerNameTag{
+    position:absolute; left:60px; top:950px;
+    background:linear-gradient(135deg,#12805a,#0b5c3f);
+    padding:14px 26px;
+    border-radius:8px;
+    box-shadow:0 10px 25px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.15);
+    font-size:30px; font-weight:900; color:#fff; letter-spacing:.5px;
+    text-transform:uppercase;
+  }
+  #playerNameTag span{
+    display:block; font-size:15px; font-weight:600; color:#bdf5da; letter-spacing:2px; margin-top:2px;
+  }
+
+  /* Right side logo placement */
+  #logoBox{
+    position:absolute; right:70px; top:60px;
+    width:320px; height:130px;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.15);
+    border-radius:12px;
+    backdrop-filter:blur(4px);
+  }
+  #logoBox img{ max-width:80%; max-height:80%; object-fit:contain; }
+  #logoBox .placeholder{ color:rgba(255,255,255,.4); font-size:16px; font-weight:700; text-align:center; }
+
+  /* Header + subheader glossy panels */
+  #textStack{
+    position:absolute; right:70px; top:230px;
+    width:1260px;
+    display:flex; flex-direction:column; gap:6px;
+  }
+  .panel{
+    position:relative;
+    border-radius:14px;
+    padding:34px 46px;
+    background:linear-gradient(135deg,#0f5c3e 0%, #0a3d2a 50%, #082c1e 100%);
+    box-shadow:
+      0 0 0 1px rgba(120,255,190,.35),
+      0 20px 45px rgba(0,0,0,.55),
+      inset 0 1px 0 rgba(255,255,255,.25),
+      inset 0 -20px 30px rgba(0,0,0,.35);
+    overflow:hidden;
+  }
+  .panel::before{ /* glossy top sheen */
+    content:''; position:absolute; top:0; left:0; right:0; height:45%;
+    background:linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,0));
+    pointer-events:none;
+  }
+  .panel::after{ /* light streak accent, matches sample's blue flare */
+    content:''; position:absolute; left:-10%; right:-10%; height:3px;
+    background:linear-gradient(90deg, transparent, #5ad1ff, #fff, #5ad1ff, transparent);
+    box-shadow:0 0 20px 4px rgba(90,209,255,.7);
+    opacity:.85;
+  }
+  #headerPanel{ min-height:150px; display:flex; align-items:center; }
+  #headerPanel::after{ bottom:0; }
+  #headerPanel h1{
+    font-size:64px; font-weight:900; color:#fff; letter-spacing:.5px; line-height:1.05;
+    text-shadow:0 4px 12px rgba(0,0,0,.5);
+  }
+  #subPanel{ min-height:220px; display:flex; align-items:flex-start; }
+  #subPanel::after{ top:0; }
+  #subPanel p{
+    font-size:32px; font-weight:600; color:#dff5ea; line-height:1.4;
+  }
+
+  /* lower strap / ticker accent bottom-left, optional branding bar */
+  #bottomBar{
+    position:absolute; left:0; right:0; bottom:0; height:14px;
+    background:linear-gradient(90deg,#0b5c3f,#12a06c,#0b5c3f);
+  }
+</style>
+</head>
+<body>
+
+  <div id="bg">
+    <!-- Replace src with your venue/stadium background plate -->
+    <!-- <img src="stadium.jpg" alt=""> -->
+  </div>
+
+  <div id="playerBox">
+    <!-- Replace with: <img src="player.jpg" alt=""> -->
+    <div class="placeholder">PLAYER<br>IMAGE<br>(520×700)</div>
+  </div>
+  <div id="playerNameTag">
+    D.K. SURESH
+    <span>INDIA</span>
+  </div>
+
+  <div id="logoBox">
+    <!-- Replace with: <img src="logo.png" alt=""> -->
+    <div class="placeholder">TOURNAMENT<br>LOGO</div>
+  </div>
+
+  <div id="textStack">
+    <div class="panel" id="headerPanel">
+      <h1>HEADLINE GOES HERE IN CAPS</h1>
+    </div>
+    <div class="panel" id="subPanel">
+      <p>Subheading / supporting line goes here — second sentence can continue the context of the story for the broadcast lower graphic.</p>
+    </div>
+  </div>
+
+  <div id="bottomBar"></div>
+
+</body>
+</html>

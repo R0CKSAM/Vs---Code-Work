@@ -1,0 +1,97 @@
+
+<style>
+  .wrap { font-family: var(--font-sans); padding: 1.5rem 0; max-width: 660px; }
+  h2 { font-size: 18px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 4px; }
+  .subtitle { font-size: 13px; color: var(--color-text-secondary); margin: 0 0 1.5rem; }
+  .section-label { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin: 1.5rem 0 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-weight: 500; color: var(--color-text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; padding: 0 10px 8px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  th:not(:first-child) { text-align: right; }
+  td { padding: 8px 10px 8px 0; color: var(--color-text-primary); border-bottom: 0.5px solid var(--color-border-tertiary); vertical-align: middle; }
+  td:not(:first-child) { text-align: right; }
+  .drop { color: #A32D2D; font-weight: 500; }
+  .pct { font-size: 12px; color: #A32D2D; }
+  .highlight { background: var(--color-background-secondary); }
+  .callout { background: var(--color-background-secondary); border-left: 3px solid #A32D2D; border-radius: 0; padding: 10px 14px; margin: 1.5rem 0; font-size: 13px; color: var(--color-text-primary); }
+  .period { display: inline-block; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: 6px; padding: 3px 8px; font-size: 12px; color: var(--color-text-secondary); margin-right: 6px; }
+</style>
+<div class="wrap">
+  <h2>SpeedNews — Usage Drop Analysis</h2>
+  <p class="subtitle">
+    <span class="period">Before: 25 May – 31 May 2026</span>
+    <span class="period">After: 03 Jun – 14 Jun 2026</span>
+    <span style="font-size:12px;color:var(--color-text-secondary);">01–02 Jun excluded</span>
+  </p>
+
+  <div class="callout">~97% of the total SpeedNews drop is driven by India.</div>
+
+  <div class="section-label">Country level</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Country</th>
+        <th>Before avg/day</th>
+        <th>After avg/day</th>
+        <th>Drop</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="highlight">
+        <td><strong>India</strong></td>
+        <td>1,565.0 hrs</td>
+        <td>330.5 hrs</td>
+        <td class="drop">−1,234.5 hrs/day</td>
+      </tr>
+      <tr>
+        <td>United States</td>
+        <td>49.2 hrs</td>
+        <td>33.8 hrs</td>
+        <td class="drop">−15.4 hrs/day</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="section-label">India — state / region level</div>
+  <table>
+    <thead>
+      <tr>
+        <th>State / Region</th>
+        <th>Before avg/day</th>
+        <th>After avg/day</th>
+        <th>Drop</th>
+        <th>Change</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Delhi</td><td>461.0 hrs</td><td>39.9 hrs</td><td class="drop">−421.0 hrs</td><td class="pct">−91.3%</td></tr>
+      <tr class="highlight"><td>Uttar Pradesh</td><td>232.8 hrs</td><td>32.3 hrs</td><td class="drop">−200.5 hrs</td><td class="pct">−86.1%</td></tr>
+      <tr><td>Maharashtra</td><td>345.8 hrs</td><td>176.9 hrs</td><td class="drop">−169.0 hrs</td><td class="pct">−48.9%</td></tr>
+      <tr class="highlight"><td>Gujarat</td><td>87.0 hrs</td><td>9.5 hrs</td><td class="drop">−77.5 hrs</td><td class="pct">−89.0%</td></tr>
+      <tr><td>Karnataka</td><td>86.3 hrs</td><td>9.3 hrs</td><td class="drop">−77.0 hrs</td><td class="pct">−89.3%</td></tr>
+      <tr class="highlight"><td>Madhya Pradesh</td><td>67.3 hrs</td><td>15.0 hrs</td><td class="drop">−52.3 hrs</td><td class="pct">−77.8%</td></tr>
+      <tr><td>Haryana</td><td>48.9 hrs</td><td>3.7 hrs</td><td class="drop">−45.2 hrs</td><td class="pct">−92.5%</td></tr>
+      <tr class="highlight"><td>Rajasthan</td><td>41.3 hrs</td><td>7.9 hrs</td><td class="drop">−33.5 hrs</td><td class="pct">−81.0%</td></tr>
+      <tr><td>West Bengal</td><td>33.5 hrs</td><td>6.6 hrs</td><td class="drop">−26.9 hrs</td><td class="pct">−80.4%</td></tr>
+    </tbody>
+  </table>
+
+  <div class="section-label">City level — biggest drops</div>
+  <table>
+    <thead>
+      <tr>
+        <th>City / Region</th>
+        <th>Before avg/day</th>
+        <th>After avg/day</th>
+        <th>Drop</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Delhi / New Delhi</td><td>421.8 hrs</td><td>37.9 hrs</td><td class="drop">−383.9 hrs</td></tr>
+      <tr class="highlight"><td>Uttar Pradesh / Unknown city</td><td>232.8 hrs</td><td>32.3 hrs</td><td class="drop">−200.5 hrs</td></tr>
+      <tr><td>Mumbai</td><td>261.3 hrs</td><td>174.3 hrs</td><td class="drop">−86.9 hrs</td></tr>
+      <tr class="highlight"><td>Bangalore</td><td>76.9 hrs</td><td>8.7 hrs</td><td class="drop">−68.2 hrs</td></tr>
+      <tr><td>Pune</td><td>36.5 hrs</td><td>0.5 hrs</td><td class="drop">−36.0 hrs</td></tr>
+      <tr class="highlight"><td>Hyderabad</td><td>19.8 hrs</td><td>1.4 hrs</td><td class="drop">−18.5 hrs</td></tr>
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,355 @@
+{
+  "version": 2,
+  "active_template": "t1",
+  "templates": {
+    "t1": {
+      "template": "t1",
+      "canvas_size": "16:9  (1920x1080)",
+      "panel_side": "right",
+      "photo_path": "C:/Users/Intern/Downloads/davis cup bg.png",
+      "photo_zoom": 100,
+      "photo_focus_x": 34.8,
+      "photo_focus_y": 50.0,
+      "player_path": "C:/Users/Intern/Downloads/2026020608871kimdowon  PARK UISUNG _KOR_ _1_.png",
+      "player_x_pct": 28.2,
+      "player_y_pct": 53.8,
+      "player_size_pct": 88,
+      "logo_path": "",
+      "logo_x_pct": 38.9,
+      "logo_y_pct": 12.1,
+      "logo_size_pct": 12,
+      "player_in_front": false,
+      "panel_width_pct": 40.0,
+      "panel_opacity_pct": 86.1,
+      "panel_fade_pct": 22.0,
+      "panel_style": "solid",
+      "panel_color": [
+        8,
+        10,
+        14
+      ],
+      "panel_color_2": [
+        24,
+        48,
+        72
+      ],
+      "panel_blur_pct": 1.8,
+      "content_top_pct": 8.0,
+      "title_gap_pct": 4.0,
+      "row_gap_pct": 2.0,
+      "title": "Match\nStatistics",
+      "background_color": [
+        10,
+        30,
+        48
+      ],
+      "accent_color": [
+        210,
+        235,
+        60
+      ],
+      "bar_color": null,
+      "text_styles": {
+        "all": {
+          "case": "UPPERCASE"
+        }
+      },
+      "rows": [
+        {
+          "label": "1st Serve %",
+          "value": "72 %",
+          "max": "100"
+        },
+        {
+          "label": "2nd Serve win %",
+          "value": "71 %",
+          "max": "100"
+        },
+        {
+          "label": "1st Serve Return win %",
+          "value": "54 %",
+          "max": "100"
+        },
+        {
+          "label": "Short Rallies Won (1-4 shots)",
+          "value": "66 %",
+          "max": "100"
+        }
+      ]
+    },
+    "t2": {
+      "template": "t2",
+      "canvas_size": "Wide  (1152x640)",
+      "header_text": "INSIGHTS | SHOT QUALITY",
+      "divider_text": "V",
+      "photo_a": "",
+      "photo_b": "",
+      "logo_path": "",
+      "logo_x_pct": 90,
+      "logo_y_pct": 9,
+      "logo_size_pct": 10,
+      "photo_a_zoom": 100,
+      "photo_a_focus_x": 50,
+      "photo_a_focus_y": 50,
+      "photo_b_zoom": 100,
+      "photo_b_focus_x": 50,
+      "photo_b_focus_y": 50,
+      "photo_width_pct": 40.0,
+      "photo_fade_pct": 12.0,
+      "photo_brightness_pct": 92.0,
+      "name_a_first": "Stefanos",
+      "name_a_last": "Tsitsipas",
+      "abbr_a": "GRE",
+      "name_b_first": "Diego",
+      "name_b_last": "Schwartzman",
+      "abbr_b": "ARG",
+      "background_color": [
+        18,
+        32,
+        54
+      ],
+      "accent_color": [
+        210,
+        235,
+        60
+      ],
+      "bar_color": null,
+      "text_styles": {},
+      "rows": [
+        {
+          "label": "SERVE",
+          "value_a": "8.2",
+          "value_b": "6.6",
+          "max": "10"
+        },
+        {
+          "label": "RETURN",
+          "value_a": "7.0",
+          "value_b": "7.5",
+          "max": "10"
+        },
+        {
+          "label": "FOREHAND",
+          "value_a": "8.0",
+          "value_b": "7.9",
+          "max": "10"
+        },
+        {
+          "label": "BACKHAND",
+          "value_a": "7.5",
+          "value_b": "8.1",
+          "max": "10"
+        }
+      ],
+      "show_playing_style": true,
+      "style_label": "PLAYING STYLE",
+      "tags_a": [
+        "Big Server",
+        "All Courter"
+      ],
+      "tags_b": [
+        "Big Server",
+        "All Courter"
+      ]
+    },
+    "t3": {
+      "template": "t3",
+      "canvas_size": "Square(1080x1080)",
+      "photo_a": "",
+      "photo_b": "",
+      "logo_path": "",
+      "logo_x_pct": 50,
+      "logo_y_pct": 6,
+      "logo_size_pct": 12,
+      "photo_a_zoom": 100,
+      "photo_a_focus_x": 50,
+      "photo_a_focus_y": 50,
+      "photo_b_zoom": 100,
+      "photo_b_focus_x": 50,
+      "photo_b_focus_y": 50,
+      "name_a_first": "Clarissa",
+      "name_a_last": "Blomqvist",
+      "team_a": "HLK",
+      "name_b_first": "Emelie",
+      "name_b_last": "Gabrán",
+      "team_b": "ÅLK",
+      "vs_text": "VS",
+      "score": "6-4  3-6  10-4",
+      "background_color": [
+        10,
+        30,
+        48
+      ],
+      "accent_color": [
+        210,
+        235,
+        60
+      ],
+      "bar_color": null,
+      "text_styles": {},
+      "sponsor_text": "zenniz",
+      "rows": [
+        {
+          "label": "Groundstroke Speed",
+          "value_a": "107",
+          "value_b": "111",
+          "max": "200",
+          "unit": "KMH"
+        },
+        {
+          "label": "1st Serve Speed",
+          "value_a": "154",
+          "value_b": "155",
+          "max": "250",
+          "unit": "KMH"
+        },
+        {
+          "label": "Short Rallies Won",
+          "value_a": "54",
+          "value_b": "45",
+          "max": "100",
+          "unit": ""
+        },
+        {
+          "label": "Long Rallies Won %",
+          "value_a": "4",
+          "value_b": "15",
+          "max": "100",
+          "unit": ""
+        }
+      ]
+    },
+    "t4": {
+      "template": "t4",
+      "canvas_size": "Square(1080x1080)",
+      "banner_text": "PERFORMANCE SPOTLIGHT",
+      "logo_path": "",
+      "logo_x_pct": 90,
+      "logo_y_pct": 5,
+      "logo_size_pct": 10,
+      "background_color": [
+        10,
+        30,
+        48
+      ],
+      "accent_color": [
+        210,
+        235,
+        60
+      ],
+      "bar_color": null,
+      "text_styles": {},
+      "sponsor_text": "TEHO TENNIS LIIGA   ·   zenniz",
+      "players": [
+        {
+          "team": "HVS",
+          "first": "Otto",
+          "last": "Virtanen",
+          "photo": "",
+          "photo_zoom": 100.0,
+          "photo_focus_x": 50.0,
+          "photo_focus_y": 50.0,
+          "result": "Def. J. Karlsson Wistrand 6-1, 6-2",
+          "stats": [
+            {
+              "label": "Fastest Serve",
+              "value": "218",
+              "unit": "KMH",
+              "max": "300"
+            },
+            {
+              "label": "1st Serve Won %",
+              "value": "89",
+              "unit": "%",
+              "max": "100"
+            },
+            {
+              "label": "1st Serve Return %",
+              "value": "82",
+              "unit": "%",
+              "max": "100"
+            },
+            {
+              "label": "Short Points Won %",
+              "value": "72",
+              "unit": "%",
+              "max": "100"
+            }
+          ]
+        },
+        {
+          "team": "HVS",
+          "first": "Viktor",
+          "last": "Durasovic",
+          "photo": "",
+          "photo_zoom": 100.0,
+          "photo_focus_x": 50.0,
+          "photo_focus_y": 50.0,
+          "result": "Def. V. Ahti 6-3, 6-1",
+          "stats": [
+            {
+              "label": "Fastest Serve",
+              "value": "200",
+              "unit": "KMH",
+              "max": "300"
+            },
+            {
+              "label": "1st Serve Won %",
+              "value": "68",
+              "unit": "%",
+              "max": "100"
+            },
+            {
+              "label": "1st Serve Return %",
+              "value": "75",
+              "unit": "%",
+              "max": "100"
+            },
+            {
+              "label": "Medium Points Won %",
+              "value": "71",
+              "unit": "%",
+              "max": "100"
+            }
+          ]
+        },
+        {
+          "team": "HVS",
+          "first": "Leevi",
+          "last": "Säätelä",
+          "photo": "",
+          "photo_zoom": 100.0,
+          "photo_focus_x": 50.0,
+          "photo_focus_y": 50.0,
+          "result": "Def. V. Ahti 6-4, 6-3",
+          "stats": [
+            {
+              "label": "Fastest Serve",
+              "value": "197",
+              "unit": "KMH",
+              "max": "300"
+            },
+            {
+              "label": "1st Serve Won %",
+              "value": "74",
+              "unit": "%",
+              "max": "100"
+            },
+            {
+              "label": "1st Serve Return %",
+              "value": "71",
+              "unit": "%",
+              "max": "100"
+            },
+            {
+              "label": "Long Points Won %",
+              "value": "74",
+              "unit": "%",
+              "max": "100"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

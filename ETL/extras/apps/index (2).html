@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Davis Cup Thumbnail Generator</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#111;color:#eee;font-family:Inter,Arial,sans-serif}
+.app{display:grid;grid-template-columns:360px 1fr;min-height:100vh}
+.panel{padding:18px;background:#181818;border-right:1px solid #333;overflow:auto}
+h1{font-size:20px;margin:0 0 4px}.sub{color:#aaa;font-size:12px;margin-bottom:18px}
+section{border-top:1px solid #333;padding:15px 0}.section-title{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#8ee6b5;margin-bottom:10px}
+label{display:block;font-size:12px;color:#bbb;margin:9px 0 5px}
+input[type=text],input[type=number]{width:100%;padding:9px;border:1px solid #444;border-radius:7px;background:#242424;color:#fff}
+input[type=file]{width:100%;font-size:11px;color:#bbb}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.range{display:grid;grid-template-columns:1fr 48px;gap:8px;align-items:center}
+input[type=range]{width:100%}
+button{border:0;border-radius:8px;padding:11px 12px;background:#08783f;color:#fff;font-weight:800;cursor:pointer;width:100%;margin-top:8px}
+button.secondary{background:#2a2a2a}.hint{font-size:11px;color:#888;line-height:1.45;margin-top:6px}
+.stage{display:flex;align-items:center;justify-content:center;padding:25px;overflow:auto;background:radial-gradient(circle at center,#263a30,#0d0d0d 70%)}
+.canvas-wrap{width:min(100%,1100px);aspect-ratio:1670/942;box-shadow:0 20px 60px #000;position:relative}
+canvas{width:100%;height:100%;display:block}
+.small{font-size:10px;color:#777;margin-top:8px}
+@media(max-width:900px){.app{grid-template-columns:1fr}.panel{max-height:none;border-right:0;border-bottom:1px solid #333}.stage{padding:10px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="panel">
+<h1>Davis Cup Thumbnail Generator</h1>
+<div class="sub">Editable 1670 × 942 (16:9) layout</div>
+
+<section>
+<div class="section-title">Assets</div>
+<label>Background</label><input id="bgFile" type="file" accept="image/*">
+<label>Tournament logo</label><input id="logoFile" type="file" accept="image/*">
+<div class="row">
+  <div><label>Left player</label><input id="leftPlayerFile" type="file" accept="image/*"></div>
+  <div><label>Right player</label><input id="rightPlayerFile" type="file" accept="image/*"></div>
+</div>
+<div class="row">
+  <div><label>Left flag</label><input id="leftFlagFile" type="file" accept="image/*"></div>
+  <div><label>Right flag</label><input id="rightFlagFile" type="file" accept="image/*"></div>
+</div>
+<div class="hint">Use transparent PNG/WebP player cutouts for the cleanest result. JPG player photos also work, but their rectangular background will remain.</div>
+</section>
+
+<section>
+<div class="section-title">Header</div>
+<div class="hint">The tournament name is intentionally removed. Upload your tournament/logo artwork above instead.</div>
+</section>
+
+<section>
+<div class="section-title">Matchup</div>
+<div class="row">
+<div><label>Left country</label><input id="leftCountry" type="text" value="IND"></div>
+<div><label>Right country</label><input id="rightCountry" type="text" value="KOR"></div>
+</div>
+<div class="range"><label>Matchup Y</label><input id="matchY" type="range" min="300" max="470" value="375"><output id="matchYv">375</output></div>
+</section>
+
+<section>
+<div class="section-title">Left player</div>
+<label>Name</label><input id="leftName" type="text" value="SUMIT NAGAL">
+<div class="range"><label>X</label><input id="lx" type="range" min="-250" max="250" value="0"><output id="lxv">0</output></div>
+<div class="range"><label>Y</label><input id="ly" type="range" min="-180" max="180" value="0"><output id="lyv">0</output></div>
+<div class="range"><label>Scale</label><input id="ls" type="range" min="60" max="140" value="100"><output id="lsv">100%</output></div>
+</section>
+
+<section>
+<div class="section-title">Right player</div>
+<label>Name</label><input id="rightName" type="text" value="SOONWOO KWON">
+<div class="range"><label>X</label><input id="rx" type="range" min="-250" max="250" value="0"><output id="rxv">0</output></div>
+<div class="range"><label>Y</label><input id="ry" type="range" min="-180" max="180" value="0"><output id="ryv">0</output></div>
+<div class="range"><label>Scale</label><input id="rs" type="range" min="60" max="140" value="100"><output id="rsv">100%</output></div>
+</section>
+
+<section>
+<div class="section-title">Bottom label</div>
+<div class="row">
+<div><label>Top</label><input id="day" type="text" value="DAY 1"></div>
+<div><label>Bottom</label><input id="match" type="text" value="MATCH 1"></div>
+</div>
+<div class="range"><label>Label Y</label><input id="labelY" type="range" min="620" max="820" value="735"><output id="labelYv">735</output></div>
+</section>
+
+<section>
+<div class="section-title">Glow & effects</div>
+<label>Glow intensity</label>
+<div class="range"><input id="glow" type="range" min="0" max="100" value="55"><output id="glowv">55</output></div>
+<label>Player rim light</label>
+<div class="range"><input id="rim" type="range" min="0" max="100" value="35"><output id="rimv">35</output></div>
+<label>Vignette</label>
+<div class="range"><input id="vignette" type="range" min="0" max="100" value="28"><output id="vignettev">28</output></div>
+</section>
+
+<section>
+<button id="download">Download PNG</button>
+<button class="secondary" id="reset">Reset controls</button>
+<div class="small">PNG export is exactly 1670 × 942.</div>
+</section>
+</aside>
+
+<main class="stage"><div class="canvas-wrap"><canvas id="canvas" width="1670" height="942"></canvas></div></main>
+</div>
+
+<script>
+const W=1670,H=942, canvas=document.getElementById('canvas'), ctx=canvas.getContext('2d');
+const img={bg:null,logo:null,leftPlayer:null,rightPlayer:null,leftFlag:null,rightFlag:null};
+
+const $=id=>document.getElementById(id);
+const controls=['leftCountry','rightCountry','leftName','rightName','day','match','matchY','lx','ly','ls','rx','ry','rs','labelY','glow','rim','vignette'];
+
+function loadFile(input,key){
+  input.addEventListener('change',()=>{
+    const f=input.files[0]; if(!f)return;
+    const url=URL.createObjectURL(f), im=new Image();
+    im.onload=()=>{img[key]=im; draw(); URL.revokeObjectURL(url)}
+    im.src=url;
+  });
+}
+loadFile($('bgFile'),'bg'); loadFile($('logoFile'),'logo');
+loadFile($('leftPlayerFile'),'leftPlayer'); loadFile($('rightPlayerFile'),'rightPlayer');
+loadFile($('leftFlagFile'),'leftFlag'); loadFile($('rightFlagFile'),'rightFlag');
+
+function val(id){return $(id).value}
+function bindRanges(){
+  controls.forEach(id=>$(id).addEventListener('input',()=>{updateOutputs();draw()}));
+  ['leftCountry','rightCountry','leftName','rightName','day','match'].forEach(id=>$(id).addEventListener('input',draw));
+}
+function updateOutputs(){
+  ['matchY','lx','ly','ls','rx','ry','rs','labelY','glow','rim','vignette'].forEach(id=>{
+    const o=$(id+'v'); if(o)o.textContent=$(id).value+(['ls','rs','glow','rim','vignette'].includes(id)?'%':'');
+  });
+}
+function fitImage(im,x,y,w,h,mode='contain'){
+  if(!im)return;
+  const s=mode==='cover'?Math.max(w/im.width,h/im.height):Math.min(w/im.width,h/im.height);
+  const dw=im.width*s,dh=im.height*s;
+  ctx.drawImage(im,x+(w-dw)/2,y+(h-dh)/2,dw,dh);
+}
+function roundRect(x,y,w,h,r,fill,stroke=null,lw=1){
+  ctx.beginPath();ctx.roundRect(x,y,w,h,r); if(fill){ctx.fillStyle=fill;ctx.fill()} if(stroke){ctx.lineWidth=lw;ctx.strokeStyle=stroke;ctx.stroke()}
+}
+function skewBox(x,y,w,h,skew,fill){
+  ctx.save();ctx.transform(1,0,skew,1,x,y);ctx.fillStyle=fill;ctx.fillRect(0,0,w,h);ctx.restore();
+}
+function textFit(text,maxWidth,startSize,weight='900',font='Arial'){
+  let size=startSize; do{ctx.font=`${weight} ${size}px ${font}`}while(ctx.measureText(text).width>maxWidth && --size>12); return size;
+}
+function nameParts(s){
+  const p=s.trim().split(/\\s+/); if(p.length<2)return [s,''];
+  return [p.slice(0,-1).join(' '),p[p.length-1]];
+}
+function drawPlayer(im,side,xoff,yoff,scale){
+  if(!im)return;
+  const baseW=650,baseH=670, w=baseW*scale/100,h=baseH*scale/100;
+  const x=(side==='left'?0:W-baseW)+(baseW-w)/2+xoff;
+  const y=205+(baseH-h)+yoff;
+  fitImage(im,x,y,w,h,'contain');
+}
+function draw(){
+  ctx.clearRect(0,0,W,H);
+
+  // Background
+  if(img.bg) fitImage(img.bg,0,0,W,H,'cover');
+  else{
+    const g=ctx.createLinearGradient(0,0,W,H);
+    g.addColorStop(0,'#b8e7c6'); g.addColorStop(.42,'#f6fff9'); g.addColorStop(1,'#087343');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='rgba(0,70,40,.18)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='rgba(20,80,55,.24)'; ctx.fillRect(0,600,W,342);
+    for(let i=0;i<18;i++){ctx.fillStyle='rgba(255,255,255,.2)';ctx.fillRect(40+i*95,510-(i%3)*15,5,100)}
+    ctx.strokeStyle='rgba(255,255,255,.8)';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-40,900);ctx.quadraticCurveTo(800,700,1710,880);ctx.stroke();
+  }
+
+  // Atmospheric wash
+  const ov=ctx.createLinearGradient(0,0,W,0);
+  ov.addColorStop(0,'rgba(0,90,50,.22)');ov.addColorStop(.5,'rgba(255,255,255,.08)');ov.addColorStop(1,'rgba(0,90,50,.22)');
+  ctx.fillStyle=ov;ctx.fillRect(0,0,W,H);
+
+  const glow = Number(val('glow'));
+  const rim = Number(val('rim'));
+  const vignette = Number(val('vignette'));
+
+  // Soft green/white light blooms
+  ctx.save();
+  ctx.globalCompositeOperation='screen';
+  const blooms=[
+    [130,180,260, 'rgba(100,255,190,.55)'],
+    [1530,170,300, 'rgba(100,255,190,.45)'],
+    [835,430,360, 'rgba(255,255,255,.30)'],
+    [835,820,420, 'rgba(70,255,170,.24)']
+  ];
+  blooms.forEach(([x,y,r,c])=>{
+    const a=glow/100;
+    const gg=ctx.createRadialGradient(x,y,0,x,y,r);
+    gg.addColorStop(0,c.replace(/[\d.]+\)$/,(parseFloat(c.match(/[\d.]+\)$/)?.[0]||'0.5')*a)+')'));
+    gg.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=gg;ctx.fillRect(x-r,y-r,r*2,r*2);
+  });
+  ctx.restore();
+
+  // Decorative energy arcs
+  ctx.save();
+  ctx.globalAlpha=.55*glow/100;
+  ctx.strokeStyle='#d9fff0';ctx.lineWidth=4;
+  ctx.beginPath();ctx.arc(1640,420,410,3.35,4.7);ctx.stroke();
+  ctx.globalAlpha=.30*glow/100;ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(40,760,350,5.0,6.15);ctx.stroke();
+  ctx.restore();
+
+  // Diagonal light streaks
+  ctx.save();
+  ctx.globalAlpha=.18*glow/100;
+  ctx.lineWidth=18;
+  ctx.strokeStyle='#ffffff';
+  [[-100,680,520,240],[1160,650,1780,250],[260,940,700,560],[980,930,1420,540]].forEach(p=>{
+    ctx.beginPath();ctx.moveTo(p[0],p[1]);ctx.lineTo(p[2],p[3]);ctx.stroke();
+  });
+  ctx.restore();
+
+  // Players with optional glow/rim treatment
+  function drawPlayerEnhanced(im,side,xoff,yoff,scale){
+    if(!im)return;
+    const baseW=650,baseH=670,w=baseW*scale/100,h=baseH*scale/100;
+    const x=(side==='left'?0:W-baseW)+(baseW-w)/2+xoff;
+    const y=205+(baseH-h)+yoff;
+
+    // glow behind player silhouette
+    if(rim>0){
+      ctx.save();
+      ctx.globalAlpha=.30*rim/100;
+      ctx.filter=`blur(${18+rim/3}px)`;
+      ctx.globalCompositeOperation='screen';
+      ctx.drawImage(im,x,y,w,h);
+      ctx.restore();
+    }
+    fitImage(im,x,y,w,h,'contain');
+  }
+
+  drawPlayerEnhanced(img.leftPlayer,'left',Number(val('lx')),Number(val('ly')),Number(val('ls')));
+  drawPlayerEnhanced(img.rightPlayer,'right',Number(val('rx')),Number(val('ry')),Number(val('rs')));
+
+  // Header: LOGO ONLY — no Davis Cup text
+  if(img.logo) fitImage(img.logo,560,35,550,300,'contain');
+  else {
+    ctx.save();
+    ctx.shadowColor='rgba(120,255,200,.75)';ctx.shadowBlur=28;
+    ctx.fillStyle='rgba(0,130,85,.75)';ctx.beginPath();ctx.arc(835,150,78,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+
+  // Matchup cards
+  const my=Number(val('matchY')),cardW=245,cardH=85;
+  const leftX=490,rightX=935;
+  const grad=ctx.createLinearGradient(leftX,my,leftX+cardW,my);
+  grad.addColorStop(0,'#226c4d');grad.addColorStop(1,'#194a38');
+  ctx.save();
+  ctx.shadowColor='rgba(80,255,180,.28)';ctx.shadowBlur=18;
+  roundRect(leftX,my,cardW,cardH,14,grad);
+  roundRect(rightX,my,cardW,cardH,14,grad);
+  ctx.restore();
+
+  if(img.leftFlag)fitImage(img.leftFlag,leftX,my,115,cardH,'cover');
+  else{ctx.fillStyle='#ff9933';ctx.fillRect(leftX,my,115,28);ctx.fillStyle='#fff';ctx.fillRect(leftX,my+28,115,29);ctx.fillStyle='#12853b';ctx.fillRect(leftX,my+57,115,28)}
+  if(img.rightFlag)fitImage(img.rightFlag,rightX+130,my,115,cardH,'cover');
+  else{ctx.fillStyle='#fff';ctx.fillRect(rightX+130,my,115,cardH);ctx.fillStyle='#d71920';ctx.beginPath();ctx.arc(rightX+188,my+42,24,0,Math.PI*2);ctx.fill()}
+
+  ctx.fillStyle='#fff';ctx.font='900 43px Arial';ctx.textAlign='center';
+  ctx.fillText(val('leftCountry'),leftX+180,my+56);ctx.fillText(val('rightCountry'),rightX+65,my+56);
+  ctx.fillStyle='#06130d';ctx.font='900 48px Arial';ctx.fillText('VS',835,my+56);
+
+  // separators
+  ctx.strokeStyle='#123b2a';ctx.lineWidth=2;ctx.beginPath();
+  ctx.moveTo(758,my+2);ctx.lineTo(758,my+83);ctx.moveTo(912,my+2);ctx.lineTo(912,my+83);ctx.stroke();
+
+  // Robust player name bars: text is measured and clamped before drawing.
+  function nameBar(side,name){
+    const x=side==='left'?40:1155,y=775,w=475,h=80;
+    const [a,b]=nameParts(name);
+    const maxTextW=w-55;
+    let fs=34;
+    while(fs>20){
+      ctx.font=`400 ${fs}px Arial`;
+      const aw=ctx.measureText(a).width;
+      ctx.font=`900 ${fs}px Arial`;
+      const bw=ctx.measureText(b).width;
+      if(aw+bw+10<=maxTextW)break;
+      fs--;
+    }
+
+    ctx.save();
+    ctx.transform(1,0,side==='left'?-0.12:0.12,1,0,0);
+    const gr=ctx.createLinearGradient(x,y,x+w,y);
+    gr.addColorStop(0,'#063b20');gr.addColorStop(1,'#006735');
+    ctx.shadowColor='rgba(40,255,150,.32)';ctx.shadowBlur=15;
+    roundRect(x,y,w,h,0,gr,'#62d79b',2);
+    ctx.restore();
+
+    // Keep text inside the actual visual box; center as one measured group.
+    ctx.textAlign='left';ctx.textBaseline='alphabetic';
+    ctx.font=`400 ${fs}px Arial`;
+    const aw=ctx.measureText(a).width;
+    ctx.font=`900 ${fs}px Arial`;
+    const bw=ctx.measureText(b).width;
+    const total=aw+bw+10;
+    const center=side==='left'?278:1392;
+    const sx=center-total/2;
+
+    ctx.fillStyle='#fff';ctx.font=`400 ${fs}px Arial`;ctx.fillText(a,sx,y+53);
+    ctx.font=`900 ${fs}px Arial`;ctx.fillText(' '+b,sx+aw,y+53);
+  }
+  nameBar('left',val('leftName'));nameBar('right',val('rightName'));
+
+  // Bottom labels with glow
+  const ly=Number(val('labelY'));
+  ctx.save();ctx.shadowColor='rgba(50,255,160,.35)';ctx.shadowBlur=20;
+  skewBox(605,ly,430,100,-.08,'#064426');
+  ctx.restore();
+  ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='900 65px Arial';ctx.fillText(val('day'),820,ly+70);
+  ctx.save();ctx.shadowColor='rgba(255,255,255,.22)';ctx.shadowBlur=12;
+  skewBox(550,ly+100,550,110,-.04,'#fff');
+  ctx.restore();
+  ctx.fillStyle='#050505';ctx.font='900 64px Arial';ctx.fillText(val('match'),825,ly+175);
+
+  // Vignette
+  const vg=ctx.createRadialGradient(W/2,H/2,250,W/2,H/2,900);
+  vg.addColorStop(0,'rgba(0,0,0,0)');
+  vg.addColorStop(1,`rgba(0,0,0,${Math.min(.6,vignette/100*.6)})`);
+  ctx.fillStyle=vg;ctx.fillRect(0,0,W,H);
+}
+
+bindRanges();updateOutputs();draw();
+
+$('download').onclick=()=>{
+  const a=document.createElement('a');a.download='davis-cup-thumbnail.png';a.href=canvas.toDataURL('image/png');a.click();
+};
+$('reset').onclick=()=>{
+  $('matchY').value=375;$('lx').value=0;$('ly').value=0;$('ls').value=100;
+  $('rx').value=0;$('ry').value=0;$('rs').value=100;$('labelY').value=735;
+  $('glow').value=55;$('rim').value=35;$('vignette').value=28;
+  updateOutputs();draw();
+};
+</script>
+</body>
+</html>

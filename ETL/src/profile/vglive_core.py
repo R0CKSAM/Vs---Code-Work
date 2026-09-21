@@ -52,6 +52,15 @@ HOST_CANDIDATE_MAP = {
 
 
 PATH_MAP = {
+    # Approved Davis Cup feed asset IDs, not date-dependent match labels.
+    # Match the entire candidate: the five-character prefix is display-only.
+    "f98c8ae68a354ab59a4e28e3dd700d4f": "Davis Cup (f98c8)",
+    "3b9668eaa10546528bc10dc0fbaf23bd": "Davis Cup (3b966)",
+    "bf34b69777604be0bc28ef9cb0136175": "Davis Cup (bf34b)",
+    "d1ff5a8a65014ff9b5bac219e1cf7d52": "Davis Cup (d1ff5)",
+    "a9b4ff0235174bab8c5ddae2123bff72": "Davis Cup (a9b4f)",
+    "834dd92ceaae4da3b254facc10ef79cf": "Davis Cup (834dd)",
+
     # User-approved VgLive stream IDs.
     "vglive-sk-238731": "NDTV Marathi",
     "vglive-sk-639201": "IndiaTV Cricket",
