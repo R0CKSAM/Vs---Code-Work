@@ -561,7 +561,9 @@ function sourceKey(row){return String(row.source||'fast').toLowerCase();}
 function rowInSource(row){return sourceScope==='all'||sourceKey(row)===sourceScope;}
 function platformKey(row){return String(row.platform_key||row.platform_name||'');}
 function channelLabel(row,withPlatform){
-  const label=String(row.channel_name||'Other')+(row.candidate_id?' ('+row.candidate_id+')':'');
+  const name=String(row.channel_name||'Other'),candidate=String(row.candidate_id||'');
+  const compactDavis=/^[a-f0-9]{31,32}$/i.test(candidate)&&name==='Davis Cup ('+candidate.slice(0,5).toLowerCase()+')';
+  const label=name+(candidate&&!compactDavis?' ('+candidate+')':'');
   return withPlatform?String(row.platform_name||'Unknown Platform')+' - '+label:label;
 }
 function activeIdentity(){return VIEWER_IDENTITIES[identity]||VIEWER_IDENTITIES.cliip;}
