@@ -80,3 +80,55 @@
 .account-panel>#export{width:100%;text-align:left;margin:0 0 8px}
 .revenue-header #channelOptions label{white-space:normal}
 .revenue-header #channelOptions label input{width:16px}
+:root,body{background:#fff}
+#signedInName{font-weight:700;font-size:13px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex-shrink:0}
+#appliedScope,#period,.analytics-toolbar,.chart-controls label:first-child{display:none}
+.scope-line{justify-content:flex-end;font-size:11px}
+.metrics{padding:16px 0 20px}
+.metrics strong{font-size:25px}
+.chart-grid{grid-template-columns:repeat(6,minmax(0,1fr));gap:0 20px}
+.chart-grid>.chart-block{grid-column:span 3;order:3}
+.chart-grid>.chart-block:nth-child(1),.chart-grid>.chart-block:nth-child(2){order:0}
+.chart-grid>.detail-trend{grid-column:span 2;order:1}
+.chart-grid>.chart-block:last-child{grid-column:span 3}
+.chart-frame{height:255px}
+.chart-heading{margin-bottom:12px}
+#singleChannelRevenue{min-height:255px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px}
+#singleChannelRevenue strong{font-size:30px;color:#08775d}
+@media(max-width:900px){.chart-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.chart-grid>.chart-block,.chart-grid>.detail-trend,.chart-grid>.chart-block:last-child{grid-column:span 1}}
+@media(max-width:560px){.chart-grid{grid-template-columns:minmax(0,1fr)}#signedInName{max-width:75px}}
+.chart-grid>.detail-trend{grid-column:span 3;order:2}
+.chart-grid>.detail-trend:has(#viewsTrend),.chart-grid>.views-share{grid-column:span 3;order:1}
+.share-values{display:grid;gap:6px;margin-top:12px;font-size:12px}
+.share-values>div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #edf1f2;padding:5px 0}
+.share-values span{min-width:0;overflow-wrap:anywhere}
+.share-values strong{white-space:nowrap;font-variant-numeric:tabular-nums}
+@media(max-width:900px){.chart-grid>.detail-trend,.chart-grid>.detail-trend:has(#viewsTrend),.chart-grid>.views-share{grid-column:span 1}}
+/* Dense paired rows: one share legend, alongside the ring rather than below it. */
+.workspace{padding-top:4px}
+.metrics{padding:10px 0;gap:12px}
+.metrics article{gap:5px}
+.metrics strong{font-size:23px}
+.chart-grid{gap:0 16px;margin-bottom:12px;align-items:start}
+.chart-block{padding:12px 0;align-self:start}
+.chart-heading{margin-bottom:8px;min-height:30px}
+.chart-heading h3{font-size:13px}
+.chart-frame{height:190px}
+.share-block{display:grid;grid-template-columns:minmax(130px,190px) minmax(0,1fr);gap:0 14px;align-items:center}
+.share-block>.chart-heading{grid-column:1/-1;width:100%}
+.share-block>.chart-frame{height:190px}
+.share-block>.share-values{margin:0;gap:0;min-width:0;max-height:190px;overflow-y:auto}
+.share-values>div{display:grid;grid-template-columns:8px minmax(0,1fr) auto;align-items:center;gap:7px;padding:5px 0;font-size:11px;min-height:25px}
+.share-item:before{content:'';width:7px;height:7px;background:var(--slice-color)}
+.share-values span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.share-values strong{font-weight:600;font-size:11px}
+.share-color-0{--slice-color:#087f68}.share-color-1{--slice-color:#328db5}.share-color-2{--slice-color:#bd7e16}.share-color-3{--slice-color:#9258a9}.share-color-4{--slice-color:#d36c70}.share-color-5{--slice-color:#568148}.share-color-6{--slice-color:#5368ba}
+.share-block .chart-note:empty{display:none}
+.share-block:has(.chart-frame[hidden])>.share-values{grid-column:1/-1}
+.single-point-note{margin:4px 0;font-size:11px}
+.scope-line{font-size:10px;padding:2px 0}
+th,td{padding:9px 12px}
+@media(min-width:1100px){.chart-grid>.trend-block,.chart-grid>.detail-trend:has(#viewsTrend){grid-column:span 3}}
+@media(max-width:1100px){.share-block{grid-template-columns:125px minmax(0,1fr);gap:0 8px}.share-block>.chart-frame{height:180px}.share-values>div{grid-template-columns:7px minmax(0,1fr)}.share-values strong{grid-column:2}.share-block>.share-values{max-height:180px}}
+@media(max-width:560px){.chart-frame{height:205px}.share-block{grid-template-columns:120px minmax(0,1fr)}}
+.ranking-scroll{height:220px;overflow-y:auto;overflow-x:hidden}

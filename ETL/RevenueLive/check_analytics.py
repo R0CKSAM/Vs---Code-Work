@@ -38,7 +38,12 @@ try:
         page.locator('#loginForm [name=password]').fill(password)
         page.locator('#loginForm button.primary').click()
         try:
+            expect(page.locator('#rowCount')).to_have_text('196 records')
+            expect(page.locator('#start')).to_have_value('2026-08-25')
+            page.locator('#reset').click()
             expect(page.locator('#rowCount')).to_have_text('868 records')
+            expect(page.locator('#start')).to_have_value('2026-08-01')
+            expect(page.locator('#end')).to_have_value('2026-08-31')
         except AssertionError:
             print('LOGIN ERROR:',page.locator('#loginError').text_content(), 'JS ERRORS:',errors,flush=True)
             raise
@@ -58,10 +63,14 @@ try:
                     mix:c.mixChart?.data.datasets.reduce((n,d)=>n+d.data.reduce((n,v)=>n+v,0),0)||0,
                     scatter:c.scatterChart?.data.datasets[0].data.reduce((n,v)=>n+v.y,0)||0};
             }''')
-            for key in ['trend','share','mix']:
+            for key in (['trend','share','mix'] if page.locator('#shareChart').is_visible() else ['trend','mix']):
                 assert abs(metrics[key]-metrics['total'])<.000001,(label,key,metrics)
             checks.append({'case':label,**metrics})
         reconcile('all channels / whole month')
+        assert page.evaluate('RevenueCharts.charts.viewsShare.data.datasets[0].data.reduce((a,b)=>a+b,0)===reportRows.reduce((a,r)=>a+r.views,0)')
+        expect(page.locator('.views-share .share-values')).to_contain_text('%')
+        for chart,key,divisor in [('adTrend','ad',100),('viewsTrend','views',1),('otherTrend','other',100)]:
+            assert page.evaluate('([chart,key,divisor])=>Math.abs(RevenueCharts.charts[chart].data.datasets[0].data.reduce((a,b)=>a+b,0)-reportRows.reduce((a,r)=>a+r[key],0)/divisor)<0.00001',[chart,key,divisor])
         page.evaluate("""() => {window.originalFetch=window.fetch;window.fetch=async (...args)=>{if(String(args[0]).includes('/api/report?'))await new Promise(r=>setTimeout(r,800));return window.originalFetch(...args);};void refresh();}""")
         expect(page.locator('#reportLoading')).to_be_visible()
         expect(page.locator('#reportLoading')).not_to_be_visible()
@@ -76,8 +85,9 @@ try:
         reconcile('six searched channels / 14 days')
         for interval in ['week','month','day']:
             page.locator('#interval').select_option(interval);reconcile(interval+' aggregation')
-        page.locator('#shareType').select_option('pie');reconcile('pie')
-        page.locator('#shareType').select_option('doughnut')
+        assert page.locator('header #interval').count()==1
+        assert page.locator('#chartGrid #interval, #shareType').count()==0
+        assert page.evaluate("RevenueCharts.charts.shareChart.config.type")=='doughnut'
         page.locator('#rankLimit').select_option('all')
         rank=page.evaluate('() => RevenueCharts.charts.rankChart.data.datasets[0].data.reduce((a,b)=>a+b,0)')
         assert abs(rank-result['totals']['total']/100)<.000001
@@ -104,19 +114,26 @@ try:
         page.locator('#channelSummary').click();page.locator('#clearChannels').click();page.locator('#channelSearch').fill('9X Jalwa');page.locator('#selectVisible').click()
         page.locator('#start').fill('2026-08-12');page.locator('#end').fill('2026-08-12');page.locator('#start').press('Tab')
         result=apply();assert len(result['rows'])==1 and result['totals']['total']==0,result;reconcile('single channel / zero day')
+        expect(page.locator('#shareChart')).not_to_be_visible()
+        expect(page.locator('#shareChart').locator('xpath=../..').locator('.share-values')).to_be_visible()
+        expect(page.locator('.trend-block .single-point-note')).to_be_visible()
+        assert page.evaluate("RevenueCharts.charts.trendChart.data.datasets[0].pointRadius")==6
+        assert page.evaluate("RevenueCharts.charts.trendChart.options.scales.x.offset")
         page.locator('#channelSummary').click();page.locator('#clearChannels').click();result=apply();assert result['rows']==[];reconcile('no channels')
         expect(page.locator('#chartsEmpty')).to_be_visible()
         page.locator('#reset').click();expect(page.locator('#rowCount')).to_have_text('868 records')
         for first,count in [('2026-08-25',196),('2026-08-02',840),('2026-08-01',868)]:
             page.locator('#start').fill(first);page.locator('#end').fill('2026-08-31');result=apply();assert len(result['rows'])==count;reconcile(first+' calendar range')
-        for metric in ['views','impressions','ad','total']:
-            page.locator('#trendMetric').select_option(metric)
+        for metric in ['total']:
             value=page.evaluate('() => RevenueCharts.charts.trendChart.data.datasets[0].data.reduce((a,b)=>a+b,0)')
             expected=result['totals'][metric]/(100 if metric in ['ad','total'] else 1)
             assert abs(value-expected)<.000001
         for width in [1440,768,390,320]:
             page.set_viewport_size({'width':width,'height':950})
             page.wait_for_timeout(200)
+            for chart in ['trendChart','adTrend','viewsTrend','otherTrend','mixChart']:
+                axis=page.evaluate('(id)=>{const c=RevenueCharts.charts[id],x=c.scales.x;return {ticks:x.ticks.length,visible:x.options.display,bottom:x.bottom,height:c.height,title:x.options.title.text};}',chart)
+                assert axis['visible'] and axis['ticks']>0 and axis['bottom']<=axis['height'] and axis['title']=='Date',(width,chart,axis)
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),width
             assert page.locator('#shell > header').bounding_box()['height']<160,width
             page.evaluate('window.scrollTo(0,600)')

@@ -1,0 +1,165 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&display=swap');
+
+:root{
+  --stage:#0B120F;
+  --stage-deep:#070B09;
+  --surface:#141E1A;
+  --surface-2:#1B2822;
+  --ink:#F4F1E8;
+  --muted:#8FA39B;
+  --line:rgba(244,241,232,.11);
+  --line-strong:rgba(244,241,232,.22);
+  --brand:#17B888;
+  --brand-dark:#0E8A66;
+  --brand-wash:rgba(23,184,136,.14);
+  --gold:#E8B355;
+  --gold-dim:#8A6A34;
+  --gold-wash:rgba(232,179,85,.14);
+  --danger:#FF7A6B;
+  --danger-wash:rgba(255,122,107,.14);
+  --amber-wash:rgba(232,179,85,.12);
+  --amber-ink:#E8B355;
+  --radius:10px;
+  --radius-sm:6px;
+  --shadow-menu:0 20px 50px rgba(0,0,0,.55);
+  font-family:'Inter',Arial,Helvetica,sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(ellipse 1200px 600px at 15% -10%,rgba(232,179,85,.07),transparent 60%),
+    radial-gradient(ellipse 900px 500px at 100% 0%,rgba(23,184,136,.08),transparent 55%),
+    var(--stage);
+  background-attachment:fixed;
+  font-size:14px;
+  letter-spacing:0;
+  font-feature-settings:'tnum' 1;
+}
+*{box-sizing:border-box}
+body{margin:0}
+::selection{background:var(--gold-wash);color:var(--ink)}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:99px;border:3px solid var(--stage)}
+h1,h2{font-family:'Fraunces',Georgia,serif;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+button,input,select{font:inherit}
+button{cursor:pointer;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);border-radius:var(--radius-sm);padding:10px 15px;min-height:40px;transition:background .15s,border-color .15s,transform .1s}
+button:hover{background:var(--surface-2);border-color:#33463D}
+button:active{transform:translateY(1px)}
+button:disabled{opacity:.4;cursor:wait}
+.primary{background:var(--brand);color:#04140F;border-color:var(--brand);font-weight:700}
+.primary:hover{background:#1ED89E;border-color:#1ED89E;box-shadow:0 0 0 3px var(--brand-wash)}
+input,select{border:1px solid var(--line-strong);border-radius:var(--radius-sm);background:var(--stage-deep);color:var(--ink);padding:10px;min-height:40px;max-width:100%;width:100%;color-scheme:dark}
+input::placeholder{color:var(--muted)}
+input:focus,select:focus,button:focus-visible,summary:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+label{display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:600;color:var(--muted);min-width:0;text-transform:uppercase;letter-spacing:.06em}
+h1{font-size:32px;margin:4px 0 18px;line-height:1.1}
+h2{font-size:19px;margin:22px 0 16px;line-height:1.2;text-transform:none}
+.muted,small{color:var(--muted)}
+
+.wordmark{text-decoration:none;color:var(--ink);font-family:'Fraunces',serif;font-weight:900;font-size:23px;white-space:nowrap;letter-spacing:-.01em}
+.wordmark span{font-family:'Inter',sans-serif;font-size:11px;font-weight:700;color:var(--gold);border-left:1px solid var(--line-strong);margin-left:10px;padding-left:12px;letter-spacing:.14em;text-transform:uppercase}
+
+/* Login — marquee poster feel */
+.login{max-width:400px;margin:10vh auto;padding:36px 32px;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-menu)}
+.login h1{margin-top:30px;font-size:36px}
+.login form{display:grid;gap:18px}
+.login label{text-transform:uppercase}
+.login button{width:100%}
+#loginForm button[type="button"]{border:0;background:none;color:var(--gold);min-height:auto;padding:2px 0;justify-self:start;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+#loginForm button[type="button"]:hover{background:none;text-decoration:underline}
+
+header{background:var(--stage-deep);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 30px}
+.identity{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+nav{display:flex;gap:2px;padding:6px 30px;background:var(--stage-deep);border-bottom:1px solid var(--line)}
+nav button{border:0;background:none;border-radius:var(--radius-sm);color:var(--muted);font-weight:700;font-size:12px;padding:10px 15px;text-transform:uppercase;letter-spacing:.05em;position:relative}
+nav button:hover{color:var(--ink);background:var(--surface)}
+nav .active{color:var(--gold);background:var(--gold-wash)}
+nav .active::after{content:"";position:absolute;left:14px;right:14px;bottom:0;height:2px;background:var(--gold);box-shadow:0 0 8px var(--gold),0 0 2px var(--gold)}
+.currency{margin-left:auto;align-self:center;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+
+.workspace{max-width:1600px;margin:auto;padding:30px 30px 50px}
+.eyebrow{font-size:11px;font-weight:700;color:var(--gold);margin:0;letter-spacing:.14em;text-transform:uppercase}
+.section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.section-title h2{margin:0}
+
+.filters{display:flex;gap:12px;align-items:end;flex-wrap:wrap;padding:16px 0 22px;border-bottom:1px solid var(--line)}
+.filters label{width:170px}
+.filters .channel-field{width:280px}
+
+/* Metrics strip — ticket-stub perforation between figures */
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-bottom:1px solid var(--line);padding:28px 0;gap:0}
+.metrics article{display:flex;flex-direction:column;gap:9px;padding:0 22px;border-right:1.5px dashed var(--line-strong);min-width:0}
+.metrics article:first-child{padding-left:0}
+.metrics article:last-child{border:0}
+.metrics span{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.metrics strong{font-size:32px;overflow-wrap:anywhere;font-variant-numeric:tabular-nums;font-weight:700;letter-spacing:-.02em;font-family:'Fraunces',serif}
+.metrics article:first-child strong{
+  color:var(--gold);
+  animation:spotlight-in 1.1s ease-out both;
+}
+@keyframes spotlight-in{
+  0%{text-shadow:0 0 0 rgba(232,179,85,0);opacity:.4}
+  40%{text-shadow:0 0 26px rgba(232,179,85,.65);opacity:1}
+  100%{text-shadow:0 0 0 rgba(232,179,85,0)}
+}
+@media(prefers-reduced-motion:reduce){.metrics article:first-child strong{animation:none}}
+
+.table-wrap{overflow-x:auto;border:1px solid var(--line);background:var(--surface);border-radius:var(--radius)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:13px 16px;border-bottom:1px solid var(--line);text-align:left}
+th{font-size:10px;font-weight:700;background:var(--stage-deep);color:var(--muted);white-space:nowrap;letter-spacing:.08em;text-transform:uppercase}
+td{overflow-wrap:anywhere}
+td:first-child{white-space:nowrap;font-variant-numeric:tabular-nums}
+.number{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tbody tr:hover{background:var(--surface-2)}
+.empty{text-align:center;padding:52px 20px;color:var(--muted)}
+
+.upload-form,.actions{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:20px 0}
+.upload-form label{max-width:480px;flex:1}
+#preview{border-block:1px solid var(--line);padding:20px 0}
+#preview .table-wrap{max-height:350px}
+#notice{padding:12px 30px;background:var(--amber-wash);color:var(--amber-ink);border-bottom:1px solid var(--gold-dim);overflow-wrap:anywhere;font-weight:600;font-size:13px}
+#loginError,.form-error{color:var(--danger);font-size:12px;font-weight:600;min-height:1em}
+footer{display:flex;justify-content:space-between;gap:12px;padding:18px 30px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+
+.directory{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.directory div{padding:10px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere;display:flex;align-items:center;justify-content:space-between;gap:8px}
+
+dialog{border:1px solid var(--line-strong);border-radius:16px;width:460px;max-width:calc(100% - 24px);max-height:90dvh;padding:26px;overflow:auto;box-shadow:var(--shadow-menu);background:var(--surface);color:var(--ink)}
+dialog::backdrop{background:rgba(3,6,5,.72);backdrop-filter:blur(2px)}
+dialog h2{margin-top:0;font-size:20px}
+dialog form>label{margin:14px 0}
+.check{display:flex;flex-direction:row;align-items:center;gap:9px;font-size:13px;margin:14px 0;font-weight:500;color:var(--ink);text-transform:none}
+.check input{width:16px;min-height:16px;flex-shrink:0}
+fieldset{border:1px solid var(--line);border-radius:var(--radius-sm);margin-top:15px;padding:14px}
+fieldset legend{font-size:11px;font-weight:700;color:var(--muted);padding:0 4px;text-transform:uppercase;letter-spacing:.06em}
+#assignments{max-height:220px;overflow:auto}
+#assignments label{font-weight:400;margin:9px 0;text-transform:none}
+.badge{display:inline-block;background:var(--brand-wash);color:#3EE8AE;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;letter-spacing:.04em}
+[hidden]{display:none!important}
+
+@media(max-width:760px){
+  header{padding:14px 16px;align-items:start;flex-direction:column}
+  .identity{width:100%}
+  .identity span{margin-right:auto}
+  .wordmark{font-size:20px}
+  nav{padding:6px 10px;overflow:auto}
+  nav button{font-size:11px;padding:10px}
+  .workspace{padding:20px 16px 40px}
+  h1{font-size:25px}
+  .login{margin:6vh 16px;padding:26px 22px}
+  .filters{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .filters label,.filters .channel-field{width:auto}
+  .channel-field{grid-column:1/-1}
+  .metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 0}
+  .metrics article{border-right:1.5px dashed var(--line-strong);padding:0 16px}
+  .metrics article:nth-child(2n){border-right:0}
+  .metrics strong{font-size:24px}
+  .directory{grid-template-columns:1fr 1fr}
+  .upload-form{align-items:stretch;flex-direction:column}
+  footer{padding:16px;flex-wrap:wrap}
+  #notice{padding:12px 16px}
+  th,td{padding:11px}
+  table{min-width:650px}
+}
+#dashboard table th:nth-child(2),#dashboard table td:nth-child(2){min-width:190px}
+#dashboard table th:first-child,#dashboard table td:first-child{min-width:115px}

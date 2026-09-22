@@ -184,7 +184,7 @@ def create_app(data_dir=None):
         response.headers['X-Frame-Options']='DENY'
         response.headers['Referrer-Policy']='same-origin'
         response.headers['Content-Security-Policy']="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
-        if request.path.startswith('/api/'):
+        if request.path.startswith('/api/') or request.path=='/' or request.path.startswith('/static/'):
             response.headers['Cache-Control']='no-store'
         return response
 

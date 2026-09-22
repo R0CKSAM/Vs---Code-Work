@@ -1,7 +1,5 @@
 'use strict';
 const $=id=>document.getElementById(id);
-const rankingScroll=document.createElement('div');rankingScroll.className='ranking-scroll';
-$('rankFrame').before(rankingScroll);rankingScroll.append($('rankFrame'));
 document.querySelector('#shell > header').append($('revenueHeader'));
 const topHeader=document.querySelector('#shell > header');
 const headerRow=document.createElement('div');headerRow.className='header-row';
@@ -23,17 +21,11 @@ let me=null,csrf='',pending=null,users=[],adminChannels=[];
 let selectedChannels=new Set(),reportRows=[],appliedQuery='',pageIndex=0,latestDay='',requestNumber=0;
 let accessEpoch=0,checkingAccess=false;
 let filterTimer;
-let initialWeek=true;
-let resetDateBounds=false;
-const signedInName=document.createElement('span');signedInName.id='signedInName';topHeader.prepend(signedInName);
-document.querySelector('#trendChart').closest('.chart-block').querySelector('h3').textContent='Total revenue';
-document.querySelectorAll('.metrics small:not(#impressions)').forEach(el=>el.remove());
 const availableDates=document.createElement('datalist');availableDates.id='availableDates';document.body.append(availableDates);
 for(const id of ['start','end'])$(id).removeAttribute('list');
 const dateCoverage=document.createElement('span');dateCoverage.id='dateCoverage';$('filterState').before(dateCoverage);
 $('filters').querySelector('button.primary').hidden=true;
-$('reset').before($('interval').closest('label'));
-$('interval').addEventListener('change',()=>{$('channelPicker').open=false;});
+document.querySelector('#trendChart').closest('.chart-block').querySelector('.chart-heading').append(document.querySelector('.chart-controls'));
 $('datePreset').closest('label').hidden=true;
 $('revenueHeader').querySelector('.section-title').hidden=true;
 const accountMenu=document.createElement('details');accountMenu.id='accountMenu';
@@ -71,13 +63,13 @@ function clearSensitive(){
   for(const dialog of document.querySelectorAll('dialog[open]'))dialog.close();
   for(const id of ['records','history','users','channelDirectory','previewRows','assignments','channelOptions'])$(id).replaceChildren();
   for(const id of ['total','ad','other','views','impressions','rowCount','period','pageInfo','appliedScope'])$(id).textContent='-';
+  $('dataSignal').textContent='';$('revenueMix').hidden=true;
   $('preview').hidden=true;$('export').disabled=true;$('userForm').reset();$('passwordForm').reset();$('uploadForm').reset();
   if(window.RevenueCharts)RevenueCharts.render([]);
 }
 function signOutView(message){clearSensitive();me=null;csrf='';selectedChannels.clear();$('shell').hidden=true;$('login').hidden=false;$('loginError').textContent=message;}
 function identity(value){
   me=value;csrf=value.csrf;$('login').hidden=true;$('shell').hidden=false;
-  signedInName.textContent=value.user.username;
   $('identity').textContent=value.user.username+' | '+(value.user.super_admin?'Super Admin':value.user.role);
   $('uploadNav').hidden=value.user.role==='viewer';$('adminNav').hidden=value.user.role!=='admin';$('demoBanner').hidden=!value.demo;
 }
@@ -129,7 +121,7 @@ function dirty(){
 }
 function query(){const params=new URLSearchParams({start:$('start').value,end:$('end').value});if(!selectedChannels.size)params.append('channel','none');else for(const id of [...selectedChannels].sort((a,b)=>Number(a)-Number(b)))params.append('channel',id);return params.toString();}
 function renderTable(){const size=Number($('pageSize').value),pages=Math.max(1,Math.ceil(reportRows.length/size));pageIndex=Math.min(pageIndex,pages-1);const subset=reportRows.slice(pageIndex*size,(pageIndex+1)*size);
-  $('records').innerHTML=subset.map(r=>`<tr><td>${esc(r.day)}</td><td>${esc(r.channel)}</td><td class="number">${number(r.views)}</td><td class="number">${number(r.impressions)}</td><td class="number">${money(r.ad)}</td><td class="number">${money(r.other)}</td><td class="number"><strong>${money(r.total)}</strong></td></tr>`).join('');
+  $('records').innerHTML=subset.map(r=>`<tr${r.total===0?' class="zero-row"':''}><td>${esc(r.day)}</td><td>${esc(r.channel)}</td><td class="number">${number(r.views)}</td><td class="number">${number(r.impressions)}</td><td class="number">${money(r.ad)}</td><td class="number">${money(r.other)}</td><td class="number"><strong>${money(r.total)}</strong></td></tr>`).join('');
   $('pageInfo').textContent=reportRows.length?`${pageIndex*size+1}-${Math.min((pageIndex+1)*size,reportRows.length)} of ${number(reportRows.length)}`:'0 records';$('previousPage').disabled=pageIndex===0;$('nextPage').disabled=pageIndex>=pages-1;
 }
 async function refresh(){
@@ -144,25 +136,6 @@ async function loadReport(){
   if(sequence!==requestNumber)return;
   appliedQuery=requested;reportRows=data.rows;pageIndex=0;
   const dates=data.available_dates||[];
-  if(resetDateBounds){
-    resetDateBounds=false;
-    if(dates.length){$('start').value=dates[0];$('end').value=dates.at(-1);return loadReport();}
-  }
-  if(initialWeek&&dates.length&&!$('start').value&&!$('end').value){
-    initialWeek=false;const last=dates.at(-1),first=new Date(last+'T00:00:00Z');first.setUTCDate(first.getUTCDate()-6);
-    $('start').value=dates.find(day=>day>=first.toISOString().slice(0,10))||last;$('end').value=last;return loadReport();
-  }
-  initialWeek=false;
-  if(dates.length){
-    let adjusted=false;
-    for(const id of ['start','end']){
-      const value=$(id).value;
-      if(value&&!dates.includes(value)){
-        $(id).value=dates.reduce((best,day)=>Math.abs(Date.parse(day)-Date.parse(value))<Math.abs(Date.parse(best)-Date.parse(value))?day:best,dates[0]);adjusted=true;
-      }
-    }
-    if(adjusted){notify('Date adjusted to the nearest available data date for the selected channels.');return loadReport();}
-  }
   availableDates.replaceChildren(...dates.map(day=>{const option=document.createElement('option');option.value=day;return option;}));
   for(const id of ['start','end']){if(dates.length){$(id).min=dates[0];$(id).max=dates[dates.length-1];}else{$(id).removeAttribute('min');$(id).removeAttribute('max');}}
   latestDay=dates.at(-1)||'';
@@ -170,6 +143,13 @@ async function loadReport(){
   if(data.rows.length)latestDay=data.rows.reduce((last,r)=>r.day>last?r.day:last,latestDay);
   for(const k of ['total','ad','other'])$(k).textContent=money(data.totals[k]);
   $('views').textContent=number(data.totals.views);$('impressions').textContent=number(data.totals.impressions)+' ad impressions';
+  const adShare=data.totals.total?Math.round(data.totals.ad/data.totals.total*100):0,otherShare=data.totals.total?100-adShare:0;
+  $('revenueMixAd').style.width=adShare+'%';$('revenueMixOther').style.width=otherShare+'%';
+  $('revenueMix').setAttribute('aria-label','Ad revenue '+adShare+'%, sponsorship and other '+otherShare+'%');
+  $('revenueMix').hidden=!data.totals.total;
+  const channelTotals=new Map();for(const r of data.rows)channelTotals.set(r.channel,(channelTotals.get(r.channel)||0)+r.total);
+  const active=[...channelTotals.values()].filter(v=>v>0).length,tracked=channelTotals.size;
+  $('dataSignal').textContent=tracked?active+' of '+tracked+' channels earned revenue in this period.'+(data.totals.other===0&&data.totals.total>0?' All revenue is from ads — no sponsorship recorded.':''):'';
   renderTable();
   try{RevenueCharts.render(data.rows);}catch(error){notify('Charts could not render. The table and CSV export remain available.');}
   $('rowCount').textContent=number(data.rows.length)+' records';$('empty').hidden=data.rows.length>0;
@@ -184,7 +164,7 @@ bind('loginForm','submit',async()=>{
 });
 bind('logout','click',async()=>{await api('/api/logout',{method:'POST'});location.reload();});
 bind('filters','submit',refresh);
-bind('reset','click',async()=>{initialWeek=false;resetDateBounds=true;HTMLFormElement.prototype.reset.call($('filters'));$('channelSearch').value='';$('end').disabled=false;selectedChannels=new Set(me.channels.map(c=>String(c.id)));renderChannelOptions();await refresh();});
+bind('reset','click',async()=>{HTMLFormElement.prototype.reset.call($('filters'));$('channelSearch').value='';$('end').disabled=false;selectedChannels=new Set(me.channels.map(c=>String(c.id)));renderChannelOptions();await refresh();});
 bind('export','click',async()=>{window.location.href='/api/export?'+appliedQuery;});
 $('channelSearch').addEventListener('input',filterChannelOptions);
 const selectAllChannels=document.createElement('button');
