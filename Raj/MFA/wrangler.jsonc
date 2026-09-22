@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mfa-demo-worker",
+  "main": "worker/index.ts",
+  "compatibility_date": "2024-12-30",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "mfa-demo-db",
+      "database_id": "mfa-demo-db-local"
+    }
+  ],
+  "vars": {
+    "BETTER_AUTH_URL": "http://localhost:5173",
+    "ENVIRONMENT": "development"
+  }
+}

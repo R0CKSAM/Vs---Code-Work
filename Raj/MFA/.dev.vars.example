@@ -1,0 +1,6 @@
+# Cloudflare Workers local development secrets template
+BETTER_AUTH_SECRET="generate-a-strong-random-32-char-secret-here"
+BETTER_AUTH_URL="http://localhost:5173"
+ENVIRONMENT="development"
+ADMIN_DEFAULT_EMAIL="admin@example.com"
+ADMIN_DEFAULT_PASSWORD="YourSecurePasswordHere"
