@@ -1,0 +1,11 @@
+.tools/
+.venv/
+__pycache__/
+*.pyc
+.env
+data/
+backups/
+logs/
+.test-data/
+.screenshots/
+demo_data/
