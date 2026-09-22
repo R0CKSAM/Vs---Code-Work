@@ -1,28 +1,68 @@
 'use strict';
 const $=id=>document.getElementById(id);
-let me=null,csrf='',pending=null,users=[];
+let me=null,csrf='',pending=null,users=[],adminChannels=[];
 let selectedChannels=new Set(),reportRows=[],appliedQuery='',pageIndex=0,latestDay='',requestNumber=0;
+let accessEpoch=0,checkingAccess=false;
 const money=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'}).format(n/100);
 const number=n=>new Intl.NumberFormat('en-IN').format(n);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function notify(message){$('notice').textContent=message;$('notice').hidden=false;}
 async function api(path,options={}){
+  const epoch=accessEpoch;
   const headers={'X-CSRF-Token':csrf,...options.headers};
   if(options.body && !(options.body instanceof FormData)){headers['Content-Type']='application/json';options.body=JSON.stringify(options.body);}
   const response=await fetch(path,{...options,headers});
   const data=await response.json();
-  if(!response.ok){if(response.status===401){$('shell').hidden=true;$('login').hidden=false;}throw new Error(data.error||'Request failed.');}
+  if(epoch!==accessEpoch){const error=new Error('Access changed; stale response discarded.');error.stale=true;throw error;}
+  if(!response.ok){if(response.status===401)signOutView('Session ended. Sign in again.');const error=new Error(data.error||'Request failed.');error.status=response.status;throw error;}
   return data;
 }
-function bind(id,event,fn){$(id).addEventListener(event,async e=>{e.preventDefault();const button=e.submitter||((e.target.tagName==='BUTTON')?e.target:null);if(button)button.disabled=true;try{await fn(e);}catch(error){const dialog=e.target.closest('dialog');if(dialog)dialog.querySelector('.form-error').textContent=error.message;else notify(error.message);}finally{if(button)button.disabled=false;}});}
+function bind(id,event,fn){$(id).addEventListener(event,async e=>{e.preventDefault();const button=e.submitter||((e.target.tagName==='BUTTON')?e.target:null);if(button)button.disabled=true;try{await fn(e);}catch(error){if(!error.stale){const dialog=e.target.closest('dialog');if(dialog?.open&&dialog.querySelector('.form-error'))dialog.querySelector('.form-error').textContent=error.message;else if(me)notify(error.message);else $('loginError').textContent=error.message;}}finally{if(button)button.disabled=false;}});}
+function clearSensitive(){
+  accessEpoch++;requestNumber++;reportRows=[];users=[];adminChannels=[];pending=null;appliedQuery='';latestDay='';pageIndex=0;
+  for(const dialog of document.querySelectorAll('dialog[open]'))dialog.close();
+  for(const id of ['records','history','users','channelDirectory','previewRows','assignments','channelOptions'])$(id).replaceChildren();
+  for(const id of ['total','ad','other','views','impressions','rowCount','period','pageInfo','appliedScope'])$(id).textContent='-';
+  $('preview').hidden=true;$('export').disabled=true;$('userForm').reset();$('passwordForm').reset();$('uploadForm').reset();
+  if(window.RevenueCharts)RevenueCharts.render([]);
+}
+function signOutView(message){clearSensitive();me=null;csrf='';selectedChannels.clear();$('shell').hidden=true;$('login').hidden=false;$('loginError').textContent=message;}
+function identity(value){
+  me=value;csrf=value.csrf;$('login').hidden=true;$('shell').hidden=false;
+  $('identity').textContent=value.user.username+' | '+(value.user.super_admin?'Super Admin':value.user.role);
+  $('uploadNav').hidden=value.user.role==='viewer';$('adminNav').hidden=value.user.role!=='admin';$('demoBanner').hidden=!value.demo;
+}
+function overview(){document.querySelectorAll('.view').forEach(v=>v.hidden=v.id!=='dashboard');document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view==='dashboard'));}
+function passwordPrompt(){
+  const first=!!me.user.must_change;
+  $('passwordTitle').textContent=first?'Set your own password':'Change password';
+  $('currentPasswordLabel').textContent=first?'Temporary password':'Current password';
+  $('passwordCancel').hidden=first;$('passwordDialog').querySelector('.form-error').textContent='';
+  if(!$('passwordDialog').open)$('passwordDialog').showModal();
+}
+function accessSignature(value){return JSON.stringify([value.user.id,value.user.username,value.user.role,value.user.super_admin,value.user.must_change,value.channels]);}
 async function session(){
-  const value=await api('/api/me');me=value;csrf=value.csrf;
-  $('login').hidden=true;$('shell').hidden=false;$('identity').textContent=value.user.username+' | '+value.user.role;
-  $('uploadNav').hidden=value.user.role==='viewer';$('adminNav').hidden=value.user.role!=='admin';
-  $('demoBanner').hidden=!value.demo;
+  const value=await api('/api/me');clearSensitive();identity(value);overview();
   selectedChannels=new Set(value.channels.map(c=>String(c.id)));renderChannelOptions();
-  if(value.user.must_change){$('passwordCancel').hidden=true;$('passwordDialog').showModal();return;}
+  if(value.user.must_change){passwordPrompt();return;}
   $('passwordCancel').hidden=false;await refresh();
+}
+async function syncAccess(){
+  if(!me||checkingAccess)return;
+  checkingAccess=true;
+  try{
+    const value=await api('/api/me');
+    if(!me||accessSignature(value)===accessSignature(me))return;
+    const params=new URLSearchParams(appliedQuery),oldIds=new Set(params.getAll('channel'));
+    const wasAll=me.channels.length===0||(!!appliedQuery&&me.channels.every(c=>oldIds.has(String(c.id)))&&oldIds.size===me.channels.length);
+    const next=new Set(value.channels.map(c=>String(c.id)));
+    const selection=wasAll?next:new Set([...oldIds].filter(id=>next.has(id)));
+    clearSensitive();identity(value);overview();selectedChannels=selection;renderChannelOptions();
+    if(params.has('start'))$('start').value=params.get('start');if(params.has('end'))$('end').value=params.get('end');
+    if(value.user.must_change){passwordPrompt();return;}
+    await refresh();notify('Your access was updated. Current permissions are now applied.');
+  }catch(error){if(!error.stale&&error.status!==401&&me)signOutView('Connection or access check failed. Sign in again to verify access.');}
+  finally{checkingAccess=false;}
 }
 function renderChannelOptions(){
   $('channelOptions').innerHTML=me.channels.map(c=>`<label><input type="checkbox" value="${c.id}" ${selectedChannels.has(String(c.id))?'checked':''}>${esc(c.name)}</label>`).join('');
@@ -42,7 +82,7 @@ function renderTable(){const size=Number($('pageSize').value),pages=Math.max(1,M
 async function refresh(){
   const sequence=++requestNumber,requested=query(),scope=$('channelSummary').textContent;
   $('filterState').textContent='Loading...';$('export').disabled=true;
-  let data;try{data=await api('/api/report?'+requested);}catch(error){if(sequence===requestNumber){$('filterState').textContent='Could not apply filters';$('export').disabled=!appliedQuery;}throw error;}
+  let data;try{data=await api('/api/report?'+requested);}catch(error){if(error.stale)return;if(sequence===requestNumber){$('filterState').textContent='Could not apply filters';$('export').disabled=!appliedQuery;}throw error;}
   if(sequence!==requestNumber)return;
   appliedQuery=requested;reportRows=data.rows;pageIndex=0;
   if(data.rows.length)latestDay=data.rows.reduce((last,r)=>r.day>last?r.day:last,latestDay);
@@ -58,13 +98,17 @@ async function refresh(){
 }
 bind('loginForm','submit',async()=>{
   const values=Object.fromEntries(new FormData($('loginForm')));
-  try{await api('/api/login',{method:'POST',body:values});$('loginError').textContent='';$('loginForm').reset();await session();}catch(error){$('loginError').textContent=error.message;}
+  try{await api('/api/login',{method:'POST',body:values});$('loginError').textContent='';$('loginForm').reset();await session();}catch(error){if(!error.stale){if(me)notify(error.message);else $('loginError').textContent=error.message;}}
 });
 bind('logout','click',async()=>{await api('/api/logout',{method:'POST'});location.reload();});
 bind('filters','submit',refresh);
 bind('reset','click',async()=>{HTMLFormElement.prototype.reset.call($('filters'));$('end').disabled=false;selectedChannels=new Set(me.channels.map(c=>String(c.id)));renderChannelOptions();await refresh();});
 bind('export','click',async()=>{window.location.href='/api/export?'+appliedQuery;});
 $('channelSearch').addEventListener('input',filterChannelOptions);
+const selectAllChannels=document.createElement('button');
+selectAllChannels.type='button';selectAllChannels.id='selectAllChannels';selectAllChannels.textContent='Select all';
+$('selectVisible').before(selectAllChannels);
+bind('selectAllChannels','click',async()=>{selectedChannels=new Set(me.channels.map(c=>String(c.id)));renderChannelOptions();dirty();});
 $('channelOptions').addEventListener('change',e=>{if(e.target.checked)selectedChannels.add(e.target.value);else selectedChannels.delete(e.target.value);channelSummary();dirty();});
 bind('selectVisible','click',async()=>{for(const label of $('channelOptions').children)if(!label.hidden){const input=label.querySelector('input');selectedChannels.add(input.value);input.checked=true;}channelSummary();dirty();});
 bind('clearChannels','click',async()=>{selectedChannels.clear();for(const input of $('channelOptions').querySelectorAll('input'))input.checked=false;channelSummary();dirty();});
@@ -83,10 +127,11 @@ $('pageSize').addEventListener('change',()=>{pageIndex=0;renderTable();});
 // Pagination owns its disabled state after rendering.
 $('previousPage').addEventListener('click',()=>{pageIndex--;renderTable();});
 $('nextPage').addEventListener('click',()=>{pageIndex++;renderTable();});
-bind('passwordButton','click',async()=>{$('passwordForm').reset();$('passwordDialog').querySelector('.form-error').textContent='';$('passwordDialog').showModal();});
+bind('passwordButton','click',async()=>{$('passwordForm').reset();passwordPrompt();});
+bind('passwordSignout','click',async()=>{await api('/api/logout',{method:'POST'});signOutView('Signed out.');});
 bind('passwordCancel','click',async()=>{$('passwordDialog').close();});
 $('passwordDialog').addEventListener('cancel',e=>{if(me?.user.must_change)e.preventDefault();});
-bind('passwordForm','submit',async()=>{await api('/api/password',{method:'POST',body:Object.fromEntries(new FormData($('passwordForm')))});$('passwordDialog').close();$('passwordForm').reset();await session();notify('Password updated.');});
+bind('passwordForm','submit',async()=>{const body=Object.fromEntries(new FormData($('passwordForm')));if(body.password!==body.confirm)throw new Error('The new passwords do not match.');await api('/api/password',{method:'POST',body});$('passwordDialog').close();$('passwordForm').reset();await session();notify('Password updated.');});
 for(const button of document.querySelectorAll('[data-view]'))button.addEventListener('click',async()=>{
   try{document.querySelectorAll('.view').forEach(v=>v.hidden=v.id!==button.dataset.view);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b===button));$('notice').hidden=true;if(button.dataset.view==='uploads')await history();if(button.dataset.view==='admin')await loadUsers();if(button.dataset.view==='dashboard')await refresh();}catch(e){notify(e.message);}
 });
@@ -104,14 +149,43 @@ bind('publish','click',async()=>{
   await api('/api/uploads/'+pending.id+'/commit',{method:'POST',body:{replace:$('replace').checked}});
   pending=null;$('preview').hidden=true;$('uploadForm').reset();notify('Data published.');await history();
 });
-async function history(){const data=await api('/api/uploads');$('history').innerHTML=data.rows.map(r=>`<tr><td>${esc(new Date(r.created).toLocaleString('en-IN'))}</td><td>${esc(r.filename)}</td><td>${esc(r.username)}</td><td><span class="badge">${esc(r.state)}</span></td><td>${me.user.role==='admin'&&r.state==='committed'?`<button data-restore="${esc(r.id)}">Roll back</button>`:''}</td></tr>`).join('');}
+const history=async()=>{const data=await api('/api/uploads');$('history').innerHTML=data.rows.map(r=>`<tr><td>${esc(new Date(r.created).toLocaleString('en-IN'))}</td><td>${esc(r.filename)}</td><td>${esc(r.username)}</td><td><span class="badge">${esc(r.state)}</span></td><td>${me.user.role==='admin'&&r.state==='committed'?`<button data-restore="${esc(r.id)}">Roll back</button>`:''}</td></tr>`).join('');};
 $('history').addEventListener('click',async e=>{const button=e.target.closest('[data-restore]');if(!button||!confirm('Restore the previous data for this upload?'))return;button.disabled=true;try{await api('/api/uploads/'+button.dataset.restore+'/restore',{method:'POST'});await history();notify('Previous data restored.');}catch(error){notify(error.message);}finally{button.disabled=false;}});
-async function loadUsers(){const data=await api('/api/admin/users');users=data.users;me.channels=data.channels;$('users').innerHTML=users.map(u=>`<tr><td>${esc(u.username)}</td><td>${esc(u.role)}</td><td>${u.role==='admin'?'All channels':u.channels.length+' assigned'}</td><td>${u.active?'Enabled':'Disabled'}</td><td><button data-user="${u.id}">Edit</button></td></tr>`).join('');$('channelDirectory').innerHTML=data.channels.map(c=>`<div>${esc(c.name)}</div>`).join('');}
-function editUser(user){const form=$('userForm');form.reset();form.elements.id.value=user?.id||'';form.elements.username.value=user?.username||'';form.elements.role.value=user?.role||'viewer';form.elements.active.checked=user?!!user.active:true;form.elements.password.required=!user;$('userTitle').textContent=user?'Edit user':'Add user';$('userDialog').querySelector('.form-error').textContent='';$('assignmentSearch').value='';$('assignments').innerHTML=me.channels.map(c=>`<label class="check"><input type="checkbox" value="${c.id}" ${user?.channels.includes(c.id)?'checked':''}>${esc(c.name)}</label>`).join('');$('userDialog').showModal();}
+async function loadUsers(){const data=await api('/api/admin/users');users=data.users;adminChannels=data.channels;$('users').innerHTML=users.map(u=>`<tr><td>${esc(u.username)}</td><td>${u.super_admin?'Super Admin':esc(u.role)}</td><td>${u.role==='admin'?'All channels':u.channels.length+' assigned'}</td><td>${!u.active?'Disabled':u.must_change?'Password setup pending':'Enabled'}</td><td>${u.super_admin||(!me.user.super_admin&&u.role==='admin')?'Protected':`<button data-user="${u.id}">Edit</button>`}</td></tr>`).join('');$('userForm').elements.role.querySelector('option[value="admin"]').disabled=!me.user.super_admin;$('channelDirectory').innerHTML=data.channels.map(c=>`<div>${esc(c.name)}</div>`).join('');}
+function assignmentSummary(){
+  const labels=[...$('assignments').children],shown=labels.filter(label=>!label.hidden).length,selected=$('assignments').querySelectorAll('input:checked').length;
+  $('assignmentCount').textContent=selected+' selected | '+shown+' shown | '+labels.length+' total';
+}
+function assignmentRole(){const admin=$('userForm').elements.role.value==='admin';$('assignmentFieldset').dataset.admin=String(admin);$('adminAccessNote').hidden=!admin;}
+function editUser(user){const form=$('userForm');form.reset();form.elements.id.value=user?.id||'';form.elements.username.value=user?.username||'';form.elements.role.value=user?.role||'viewer';form.elements.active.checked=user?!!user.active:true;form.elements.password.required=!user;form.elements.password.type='password';$('temporaryPasswordLabel').textContent=user?'Reset password (optional, 12+ characters)':'Temporary password (12+ characters)';$('userTitle').textContent=user?'Edit user':'Add user';$('userDialog').querySelector('.form-error').textContent='';$('assignmentSearch').value='';$('assignments').innerHTML=adminChannels.map(c=>`<label class="check"><input type="checkbox" value="${c.id}" ${user?.channels.includes(c.id)?'checked':''}>${esc(c.name)}</label>`).join('');assignmentSummary();assignmentRole();$('userDialog').showModal();}
 bind('addUser','click',async()=>editUser());
 $('users').addEventListener('click',e=>{const button=e.target.closest('[data-user]');if(button)editUser(users.find(u=>u.id===Number(button.dataset.user)));});
 bind('userCancel','click',async()=>$('userDialog').close());
-$('assignmentSearch').addEventListener('input',()=>{const search=$('assignmentSearch').value.toLowerCase();for(const label of $('assignments').children)label.hidden=!label.textContent.toLowerCase().includes(search);});
-bind('userForm','submit',async()=>{const form=$('userForm');const body={id:form.elements.id.value?Number(form.elements.id.value):null,username:form.elements.username.value,role:form.elements.role.value,password:form.elements.password.value,active:form.elements.active.checked,channels:[...$('assignments').querySelectorAll('input:checked')].map(c=>Number(c.value))};await api('/api/admin/users',{method:'POST',body});$('userDialog').close();await loadUsers();notify('User access saved.');});
+$('assignmentSearch').addEventListener('input',()=>{const search=$('assignmentSearch').value.trim().toLowerCase();for(const label of $('assignments').children)label.hidden=!label.textContent.toLowerCase().includes(search);assignmentSummary();});
+$('assignments').addEventListener('change',assignmentSummary);
+$('userForm').elements.role.addEventListener('change',assignmentRole);
+$('showTemporary').addEventListener('change',()=>{$('userForm').elements.password.type=$('showTemporary').checked?'text':'password';});
+for(const [id,mode] of [['assignAll','all'],['assignShown','shown'],['assignClear','clear']])bind(id,'click',async()=>{for(const label of $('assignments').children)if(mode!=='shown'||!label.hidden)label.querySelector('input').checked=mode!=='clear';assignmentSummary();});
+bind('userForm','submit',async()=>{const form=$('userForm');const body={invite:$('inviteEmail').checked,id:form.elements.id.value?Number(form.elements.id.value):null,username:form.elements.username.value,role:form.elements.role.value,password:form.elements.password.value,active:form.elements.active.checked,channels:form.elements.role.value==='admin'?[]:[...$('assignments').querySelectorAll('input:checked')].map(c=>Number(c.value))};await api('/api/admin/users',{method:'POST',body});$('userDialog').close();form.reset();await loadUsers();notify(body.invite?'Invitation sent. User will set their own password.':body.id?'User access saved. Open clients update automatically.':'User created: '+body.username.trim()+'. Sign-in address: '+location.origin+'/');});
 bind('channelForm','submit',async()=>{await api('/api/admin/channels',{method:'POST',body:Object.fromEntries(new FormData($('channelForm')))});$('channelForm').reset();await loadUsers();notify('Channel added.');});
-session().catch(()=>{$('login').hidden=false;$('shell').hidden=true;});
+const inviteLabel=document.createElement('label');inviteLabel.className='check';
+inviteLabel.innerHTML='<input type="checkbox" id="inviteEmail">Invite by email';
+$('userForm').elements.username.closest('label').after(inviteLabel);
+function inviteMode(){const form=$('userForm'),editing=!!form.elements.id.value;inviteLabel.hidden=editing;if(editing)$('inviteEmail').checked=false;const enabled=$('inviteEmail').checked;form.elements.password.required=!editing&&!enabled;form.elements.password.closest('label').hidden=enabled;form.elements.username.type=enabled?'email':'text';$('showTemporary').closest('label').hidden=enabled;}
+$('inviteEmail').addEventListener('change',inviteMode);
+new MutationObserver(inviteMode).observe($('userDialog'),{attributes:true,attributeFilter:['open']});
+const resetDialog=document.createElement('dialog');resetDialog.id='accountDialog';
+resetDialog.innerHTML='<form id="accountForm"><h2 id="accountTitle">Forgot password</h2><label id="accountEmailLabel">Email<input name="email" type="email" required autocomplete="email"></label><label id="accountPasswordLabel" hidden>New password<input name="password" type="password" minlength="12" maxlength="256" autocomplete="new-password"></label><label id="accountConfirmLabel" hidden>Confirm password<input name="confirm" type="password" autocomplete="new-password"></label><p class="form-error" role="alert"></p><div class="actions"><button class="primary">Continue</button><button type="button" id="accountCancel">Cancel</button></div></form>';
+document.body.append(resetDialog);
+const forgot=document.createElement('button');forgot.type='button';forgot.textContent='Forgot password';$('loginForm').append(forgot);
+let accountToken=new URLSearchParams(location.hash.slice(1)).get('account-token')||'';
+if(accountToken)window.history.replaceState(null,'',location.pathname+location.search);
+function openAccount(){const form=$('accountForm');form.reset();$('accountTitle').textContent=accountToken?'Set your password':'Forgot password';$('accountEmailLabel').hidden=!!accountToken;$('accountPasswordLabel').hidden=!accountToken;$('accountConfirmLabel').hidden=!accountToken;form.elements.email.required=!accountToken;form.elements.password.required=!!accountToken;form.elements.confirm.required=!!accountToken;resetDialog.querySelector('.form-error').textContent='';resetDialog.showModal();}
+forgot.addEventListener('click',()=>{accountToken='';openAccount();});
+bind('accountCancel','click',async()=>{accountToken='';resetDialog.close();});
+bind('accountForm','submit',async()=>{const form=$('accountForm');if(accountToken&&form.elements.password.value!==form.elements.confirm.value)throw new Error('Passwords do not match.');const result=await api(accountToken?'/api/account/complete':'/api/account/request',{method:'POST',body:accountToken?{token:accountToken,password:form.elements.password.value}:{email:form.elements.email.value}});const completed=!!accountToken;accountToken='';resetDialog.close();if(completed)signOutView('Password saved. Sign in with your email and new password.');else if(me)notify(result.message);else $('loginError').textContent=result.message;});
+session().catch(()=>{$('login').hidden=false;$('shell').hidden=true;}).finally(()=>{if(accountToken)openAccount();});
+setInterval(syncAccess,2000);
+window.addEventListener('focus',syncAccess);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncAccess();});
+window.addEventListener('offline',()=>{if(me)signOutView('Connection lost. Sign in again when connected.');});

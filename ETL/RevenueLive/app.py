@@ -131,6 +131,7 @@ def create_app(data_dir=None):
             CREATE TABLE IF NOT EXISTS records(day TEXT, channel_id INTEGER REFERENCES channels(id), views INTEGER, impressions INTEGER, ad INTEGER, other INTEGER, total INTEGER, upload_id TEXT, PRIMARY KEY(day,channel_id));
             CREATE TABLE IF NOT EXISTS revisions(upload_id TEXT, day TEXT, channel_id INTEGER, previous TEXT);
             CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY, created TEXT, user_id INTEGER, action TEXT, detail TEXT);
+            CREATE TABLE IF NOT EXISTS super_admin(singleton INTEGER PRIMARY KEY CHECK(singleton=1), user_id INTEGER UNIQUE NOT NULL REFERENCES users(id));
         ''')
         db().commit()
 
@@ -166,13 +167,14 @@ def create_app(data_dir=None):
         session = db().execute('SELECT s.*,u.username,u.role,u.active,u.must_change FROM sessions s JOIN users u ON u.id=s.user_id WHERE token=? AND expires>? AND active=1', (digest,time.time())).fetchone()
         if session:
             g.user = dict(id=session['user_id'], username=session['username'], role=session['role'], must_change=session['must_change'])
+            g.user['super_admin'] = bool(db().execute('SELECT 1 FROM super_admin WHERE user_id=?',(session['user_id'],)).fetchone())
             g.session = session
         if request.method in {'POST','PUT','DELETE'}:
             # Reject cross-site writes even on login, where no session exists yet.
             origin = request.headers.get('Origin')
             if origin and origin != request.host_url.rstrip('/'):
                 return jsonify(error='Cross-origin requests are not allowed.'), 403
-            if request.path != '/api/login' and (not session or not secrets.compare_digest(request.headers.get('X-CSRF-Token',''),session['csrf'])):
+            if request.path not in {'/api/login','/api/account/request','/api/account/complete'} and (not session or not secrets.compare_digest(request.headers.get('X-CSRF-Token',''),session['csrf'])):
                 return jsonify(error='Session expired. Sign in again.'), 403
 
     @app.after_request
@@ -208,7 +210,7 @@ def create_app(data_dir=None):
         attempt = db().execute('SELECT * FROM attempts WHERE ip=?',(ip,)).fetchone()
         if attempt and attempt['expires']>time.time() and attempt['failures']>=10:
             return jsonify(error='Too many attempts. Try again in 15 minutes.'),429
-        user = db().execute('SELECT * FROM users WHERE username=? AND active=1',(str(value.get('username',''))[:100],)).fetchone()
+        user = db().execute('SELECT * FROM users WHERE username=? AND active=1',(str(value.get('username','')).strip()[:100],)).fetchone()
         password = str(value.get('password',''))
         if not user or len(password)>256 or not check_password_hash(user['password'], password):
             failures = attempt['failures']+1 if attempt and attempt['expires']>time.time() else 1
@@ -246,6 +248,7 @@ def create_app(data_dir=None):
         if not check_password_hash(current,str(body.get('current',''))):
             raise InvalidData('Current password is incorrect.')
         db().execute('UPDATE users SET password=?,must_change=0 WHERE id=?',(generate_password_hash(value),g.user['id']))
+        db().execute('DELETE FROM email_tokens WHERE user_id=?',(g.user['id'],))
         db().execute('DELETE FROM sessions WHERE user_id=? AND token<>?',(g.user['id'],g.session['token']))
         log('password_changed');db().commit();return jsonify(ok=True)
 
@@ -386,8 +389,8 @@ def create_app(data_dir=None):
     @require('admin')
     def users():
         rows=[]
-        for user in db().execute('SELECT id,username,role,active FROM users ORDER BY username'):
-            rows.append({**dict(user),'channels':[r[0] for r in db().execute('SELECT channel_id FROM assignments WHERE user_id=?',(user['id'],))]})
+        for user in db().execute('SELECT id,username,role,active,must_change FROM users ORDER BY username'):
+            rows.append({**dict(user),'super_admin':bool(db().execute('SELECT 1 FROM super_admin WHERE user_id=?',(user['id'],)).fetchone()),'channels':[r[0] for r in db().execute('SELECT channel_id FROM assignments WHERE user_id=?',(user['id'],))]})
         return jsonify(users=rows,channels=[dict(c) for c in permitted()])
 
     @app.post('/api/admin/channels')
@@ -402,6 +405,9 @@ def create_app(data_dir=None):
             raise InvalidData('Channel already exists.')
         log('channel_created',name);db().commit();return jsonify(ok=True)
 
+    from account_email import install
+    email_address, mail_settings, send_invitation = install(app, db, data, InvalidData)
+
     @app.post('/api/admin/users')
     @require('admin')
     def save_user():
@@ -410,6 +416,15 @@ def create_app(data_dir=None):
         role=body.get('role')
         password=str(body.get('password',''))
         uid=body.get('id')
+        invite = body.get('invite') is True
+        if invite:
+            if uid:
+                raise InvalidData('Invitations are for new accounts. Existing email users can use Forgot password.')
+            username = email_address(username)
+            mail_settings()
+            password = secrets.token_urlsafe(48)
+        if uid is not None and (type(uid)!=int or uid<=0):
+            raise InvalidData('Invalid user ID.')
         if role not in {'admin','uploader','viewer'} or not username or len(username)>80:
             raise InvalidData('Enter a username and valid role.')
         if (not uid or password) and not 12<=len(password)<=256:
@@ -424,20 +439,37 @@ def create_app(data_dir=None):
         if uid==g.user['id'] and (role!='admin' or not active):
             raise InvalidData('You cannot remove your own admin access.')
         try:
+            db().execute('BEGIN IMMEDIATE')
+            owner=db().execute('SELECT user_id FROM super_admin WHERE singleton=1').fetchone()
+            existing=db().execute('SELECT role FROM users WHERE id=?',(uid,)).fetchone() if uid else None
+            if owner and uid==owner['user_id']:
+                raise InvalidData('The Super Admin account is protected. Use Change password for your own password.')
+            if not owner or owner['user_id']!=g.user['id']:
+                if role=='admin' or (existing and existing['role']=='admin'):
+                    return jsonify(error='Only the Super Admin can create or modify admin accounts.'),403
             if uid:
                 if not db().execute('SELECT 1 FROM users WHERE id=?',(uid,)).fetchone():
                     raise InvalidData('User not found.')
+                email_account=db().execute('SELECT email FROM email_accounts WHERE user_id=?',(uid,)).fetchone()
+                if email_account and username.casefold()!=email_account['email'].casefold():
+                    raise InvalidData('Email login cannot be renamed. Disable this account and invite the new email separately.')
                 db().execute('UPDATE users SET username=?,role=?,active=? WHERE id=?',(username,role,active,uid))
                 if password:
                     db().execute('UPDATE users SET password=?,must_change=1 WHERE id=?',(generate_password_hash(password),uid))
-                db().execute('DELETE FROM sessions WHERE user_id=? AND token<>?',(uid,g.session['token']))
+                if password or not active:
+                    db().execute('DELETE FROM sessions WHERE user_id=? AND token<>?',(uid,g.session['token']))
+                    db().execute('DELETE FROM email_tokens WHERE user_id=?',(uid,))
             else:
                 uid=db().execute('INSERT INTO users(username,password,role,active,must_change) VALUES (?,?,?,?,1)',(username,generate_password_hash(password),role,active)).lastrowid
             db().execute('DELETE FROM assignments WHERE user_id=?',(uid,))
             db().executemany('INSERT INTO assignments VALUES (?,?)',[(uid,c) for c in set(ids)])
+            if invite:
+                db().execute('INSERT INTO email_accounts(user_id,email) VALUES (?,?)',(uid,username))
             log('user_saved',str(uid));db().commit()
         except sqlite3.IntegrityError:
             raise InvalidData('Username already exists.')
+        if invite:
+            send_invitation(uid)
         return jsonify(ok=True)
 
     return app

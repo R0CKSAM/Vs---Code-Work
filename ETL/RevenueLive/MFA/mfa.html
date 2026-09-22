@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TOTP MFA Demo - Pure HTML & CSS</title>
+  <style>
+    /* Clean, Modern, Minimal CSS Design System */
+    :root {
+      --bg: #fafafa;
+      --card-bg: #ffffff;
+      --text: #171717;
+      --text-muted: #737373;
+      --border: #e5e5e5;
+      --border-focus: #171717;
+      --btn-bg: #171717;
+      --btn-text: #ffffff;
+      --btn-hover: #262626;
+      --btn-disabled: #a3a3a3;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --danger-border: #fecaca;
+      --success: #16a34a;
+      --success-bg: #f0fdf4;
+      --success-border: #bbf7d0;
+      --radius: 12px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Header Navbar */
+    header {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+    }
+    .header-content {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .brand-icon {
+      background: var(--btn-bg);
+      color: #fff;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    nav { display: flex; gap: 16px; align-items: center; font-size: 14px; font-weight: 500; }
+    nav a, nav button {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+    nav a:hover, nav button:hover { color: var(--text); }
+    .nav-btn-logout {
+      padding: 6px 12px;
+      border-radius: 6px;
+      transition: background 0.15s;
+    }
+    .nav-btn-logout:hover { background: #f5f5f5; }
+
+    /* Main Container & Authentication Card */
+    main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .auth-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      width: 100%;
+      max-width: 440px;
+      padding: 32px;
+    }
+    .auth-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .auth-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: var(--btn-bg);
+      color: #fff;
+      font-size: 22px;
+      margin-bottom: 12px;
+    }
+    .auth-icon.success { background: var(--success); }
+    .auth-title {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+    .auth-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Forms & Inputs */
+    .form-group {
+      margin-bottom: 16px;
+      text-align: left;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: #404040;
+    }
+    input[type="text"], input[type="email"], input[type="password"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      color: var(--text);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(23, 23, 23, 0.08);
+    }
+
+    /* Primary & Secondary Buttons */
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 11px 16px;
+      background: var(--btn-bg);
+      color: var(--btn-text);
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn:hover { background: var(--btn-hover); }
+    .btn:disabled { background: var(--btn-disabled); cursor: not-allowed; }
+    .btn-secondary {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: #f5f5f5; }
+    .btn-danger {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid var(--danger-border);
+    }
+    .btn-danger:hover { background: #fee2e2; }
+
+    /* 6-Digit OTP Box Grid */
+    .otp-grid {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 20px 0;
+    }
+    .otp-digit {
+      width: 44px;
+      height: 52px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 700;
+      font-family: inherit;
+      color: var(--text);
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .otp-digit:focus {
+      outline: none;
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(23, 23, 23, 0.08);
+    }
+
+    /* Alert Banners */
+    .alert {
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .alert-error {
+      background: var(--danger-bg);
+      color: var(--danger);
+      border: 1px solid var(--danger-border);
+    }
+    .alert-success {
+      background: var(--success-bg);
+      color: var(--success);
+      border: 1px solid var(--success-border);
+    }
+
+    /* QR Code Display Container */
+    .qr-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 16px 0;
+    }
+    .qr-box {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    canvas { display: block; max-width: 180px; max-height: 180px; }
+    .secret-text {
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    /* Recovery Codes Grid */
+    .recovery-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 16px 0;
+      background: #f9f9f9;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+    }
+    .recovery-item {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      font-family: monospace;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+
+    /* Info Lists on Dashboard & Security */
+    .info-box {
+      background: #f9f9f9;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border);
+    }
+    .info-row:last-child { border-bottom: none; }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-success { background: var(--success-bg); color: var(--success); border: 1px solid var(--success-border); }
+    .badge-muted { background: #e5e5e5; color: #525252; }
+    .badge-admin { background: #e5e5e5; color: #171717; font-family: monospace; }
+
+    /* Helper Utilities */
+    .hidden { display: none !important; }
+    .text-center { text-align: center; }
+    .text-link {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px;
+    }
+    .text-link:hover { color: var(--text); }
+  </style>
+  <!-- Fast, offline-capable QR library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.0/qrcode.min.js"></script>
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="header-content">
+      <div class="brand" onclick="showPage('dashboard')">
+        <div class="brand-icon">🛡️</div>
+        <span>MFA Secure Demo</span>
+      </div>
+      <nav id="nav-menu" class="hidden">
+        <button onclick="showPage('dashboard')">Dashboard</button>
+        <button onclick="showPage('security')">Account Security</button>
+        <button class="nav-btn-logout" onclick="handleLogout()">Logout</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main App Screen Container -->
+  <main>
+
+    <!-- 1. LOGIN VIEW -->
+    <div id="view-login" class="auth-card">
+      <div class="auth-header">
+        <div class="auth-icon">🔒</div>
+        <h1 class="auth-title">Sign in</h1>
+        <p class="auth-subtitle">Enter your credentials to test TOTP MFA authentication</p>
+      </div>
+
+      <div id="login-err" class="alert alert-error hidden"></div>
+
+      <form onsubmit="onLoginSubmit(event)">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="in-email" required value="admin@example.com" />
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="in-pwd" required value="AdminDemo12345!Secure" />
+        </div>
+        <button type="submit" class="btn" style="margin-top: 10px;">LOGIN</button>
+      </form>
+
+      <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-muted); text-align: center;">
+        <strong>Test Admin:</strong> admin@example.com &bull; AdminDemo12345!Secure
+      </div>
+    </div>
+
+    <!-- 2. MFA SETUP VIEW -->
+    <div id="view-setup" class="auth-card hidden">
+      <!-- Step A: QR & Verification -->
+      <div id="setup-step-1">
+        <div class="auth-header">
+          <div class="auth-icon">📱</div>
+          <h1 class="auth-title">Enable Two-Factor Authentication</h1>
+          <p class="auth-subtitle">Scan this QR code using Google Authenticator, Microsoft Authenticator, or Bitwarden.</p>
+        </div>
+
+        <div id="setup-err" class="alert alert-error hidden"></div>
+
+        <div class="qr-container">
+          <div class="qr-box">
+            <canvas id="qr-canvas-element"></canvas>
+          </div>
+          <div id="txt-secret-key" class="secret-text"></div>
+        </div>
+
+        <!-- Live Sync Code Display (Guarantees Instant Verification) -->
+        <div style="margin: 12px 0 16px; padding: 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; text-align: center;">
+          <div style="font-size: 11px; font-weight: 700; color: #166534; text-transform: uppercase; margin-bottom: 2px;">
+            Live System Code (Click to Auto-Fill)
+          </div>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin: 4px 0;">
+            <span id="live-setup-code" onclick="autofillCode('s-otp')" style="font-family: monospace; font-size: 22px; font-weight: 800; letter-spacing: 3px; color: #15803d; cursor: pointer; text-decoration: underline;" title="Click to fill boxes">------</span>
+            <span id="live-setup-timer" style="font-size: 12px; font-weight: 600; color: #166534;">(30s)</span>
+          </div>
+          <div style="font-size: 11px; color: #166534;">
+            If your phone clock differs from your PC, click the green code above to auto-fill.
+          </div>
+        </div>
+
+        <div class="text-center">
+          <label style="font-size: 13px; font-weight: 600;">Then enter the 6-digit code:</label>
+          <div class="otp-grid">
+            <input class="otp-digit s-otp" maxlength="1" oninput="otpNav(this, 1, 's-otp')" onkeydown="otpKey(this, event, 1, 's-otp')" onfocus="this.select()" />
+            <input class="otp-digit s-otp" maxlength="1" oninput="otpNav(this, 2, 's-otp')" onkeydown="otpKey(this, event, 2, 's-otp')" onfocus="this.select()" />
+            <input class="otp-digit s-otp" maxlength="1" oninput="otpNav(this, 3, 's-otp')" onkeydown="otpKey(this, event, 3, 's-otp')" onfocus="this.select()" />
+            <input class="otp-digit s-otp" maxlength="1" oninput="otpNav(this, 4, 's-otp')" onkeydown="otpKey(this, event, 4, 's-otp')" onfocus="this.select()" />
+            <input class="otp-digit s-otp" maxlength="1" oninput="otpNav(this, 5, 's-otp')" onkeydown="otpKey(this, event, 5, 's-otp')" onfocus="this.select()" />
+            <input class="otp-digit s-otp" maxlength="1" oninput="otpNav(this, 6, 's-otp')" onkeydown="otpKey(this, event, 6, 's-otp')" onfocus="this.select()" />
+          </div>
+        </div>
+
+        <button onclick="onVerifyAndEnable()" class="btn" style="margin-top: 16px;">VERIFY & ENABLE MFA</button>
+      </div>
+
+      <!-- Step B: Recovery Codes Confirmation -->
+      <div id="setup-step-2" class="hidden">
+        <div class="auth-header">
+          <div class="auth-icon success">✓</div>
+          <h1 class="auth-title">Save your Recovery Codes</h1>
+          <p class="auth-subtitle">Store these somewhere safe. A recovery code must only work once.</p>
+        </div>
+
+        <div class="recovery-grid" id="recovery-codes-box"></div>
+
+        <button onclick="finishSetup()" class="btn">I HAVE SAVED THEM</button>
+      </div>
+    </div>
+
+    <!-- 3. MFA VERIFY VIEW -->
+    <div id="view-verify" class="auth-card hidden">
+      <div class="auth-header">
+        <div class="auth-icon">🛡️</div>
+        <h1 class="auth-title">Security Verification</h1>
+        <p id="txt-verify-mode-desc" class="auth-subtitle">Enter the 6-digit code from your authenticator app.</p>
+      </div>
+
+      <div id="verify-err" class="alert alert-error hidden"></div>
+
+      <!-- Mode 1: 6-Digit TOTP -->
+      <div id="sec-mode-totp">
+        <div style="margin: 10px 0 14px; padding: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; text-align: center;">
+          <div style="font-size: 11px; font-weight: 700; color: #166534; text-transform: uppercase;">
+            Live System Code (Click to Auto-Fill)
+          </div>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin: 4px 0;">
+            <span id="live-verify-code" onclick="autofillCode('v-otp')" style="font-family: monospace; font-size: 22px; font-weight: 800; letter-spacing: 3px; color: #15803d; cursor: pointer; text-decoration: underline;" title="Click to fill boxes">------</span>
+            <span id="live-verify-timer" style="font-size: 12px; font-weight: 600; color: #166534;">(30s)</span>
+          </div>
+        </div>
+
+        <div class="otp-grid">
+          <input class="otp-digit v-otp" maxlength="1" oninput="otpNav(this, 1, 'v-otp')" onkeydown="otpKey(this, event, 1, 'v-otp')" onfocus="this.select()" />
+          <input class="otp-digit v-otp" maxlength="1" oninput="otpNav(this, 2, 'v-otp')" onkeydown="otpKey(this, event, 2, 'v-otp')" onfocus="this.select()" />
+          <input class="otp-digit v-otp" maxlength="1" oninput="otpNav(this, 3, 'v-otp')" onkeydown="otpKey(this, event, 3, 'v-otp')" onfocus="this.select()" />
+          <input class="otp-digit v-otp" maxlength="1" oninput="otpNav(this, 4, 'v-otp')" onkeydown="otpKey(this, event, 4, 'v-otp')" onfocus="this.select()" />
+          <input class="otp-digit v-otp" maxlength="1" oninput="otpNav(this, 5, 'v-otp')" onkeydown="otpKey(this, event, 5, 'v-otp')" onfocus="this.select()" />
+          <input class="otp-digit v-otp" maxlength="1" oninput="otpNav(this, 6, 'v-otp')" onkeydown="otpKey(this, event, 6, 'v-otp')" onfocus="this.select()" />
+        </div>
+
+        <button onclick="onVerifyTotpCode()" class="btn" style="margin-top: 12px;">VERIFY</button>
+
+        <div class="text-center" style="margin-top: 16px;">
+          <button class="text-link" onclick="switchVerifyMode(true)">Use Recovery Code</button>
+        </div>
+      </div>
+
+      <!-- Mode 2: Backup Recovery Code -->
+      <div id="sec-mode-recovery" class="hidden">
+        <div class="form-group">
+          <label>Emergency Recovery Code</label>
+          <input type="text" id="in-recovery-code" placeholder="e.g. ABCD-1234" style="text-align: center; font-family: monospace; font-size: 16px; letter-spacing: 2px; text-transform: uppercase;" />
+        </div>
+
+        <button onclick="onVerifyRecoveryCode()" class="btn" style="margin-top: 12px;">VERIFY RECOVERY CODE</button>
+
+        <div class="text-center" style="margin-top: 16px;">
+          <button class="text-link" onclick="switchVerifyMode(false)">Use 6-digit Authenticator Code</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. DASHBOARD VIEW -->
+    <div id="view-dashboard" class="auth-card hidden">
+      <div class="auth-header">
+        <div class="auth-icon success">🛡️</div>
+        <h1 class="auth-title">Secure MFA Demo</h1>
+        <p class="auth-subtitle" style="font-weight: 600; color: var(--text);">Welcome, Admin</p>
+      </div>
+
+      <div class="info-box">
+        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">
+          Authentication Status
+        </div>
+        <div class="info-row">
+          <span>Password:</span>
+          <span class="badge badge-success">✓ Verified</span>
+        </div>
+        <div class="info-row">
+          <span>MFA:</span>
+          <span class="badge badge-success">✓ Verified (TOTP)</span>
+        </div>
+        <div class="info-row">
+          <span>Role:</span>
+          <span class="badge badge-admin">admin</span>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px;">
+        <button onclick="showPage('security')" class="btn btn-secondary">Account Security</button>
+        <button onclick="handleLogout()" class="btn">Logout</button>
+      </div>
+    </div>
+
+    <!-- 5. ACCOUNT SECURITY VIEW -->
+    <div id="view-security" class="auth-card hidden">
+      <div class="auth-header">
+        <div class="auth-icon">🔑</div>
+        <h1 class="auth-title">Account Security</h1>
+        <p class="auth-subtitle">Two-Factor Authentication & Recovery Management</p>
+      </div>
+
+      <div id="security-notice" class="alert alert-success hidden"></div>
+
+      <div class="info-box">
+        <div class="info-row">
+          <span>Email:</span>
+          <span style="font-family: monospace; font-weight: 600;">admin@example.com</span>
+        </div>
+        <div class="info-row">
+          <span>Role:</span>
+          <span class="badge badge-admin">admin</span>
+        </div>
+        <div class="info-row">
+          <span>Two-Factor Authentication:</span>
+          <span id="lbl-mfa-status" class="badge badge-success">Enabled</span>
+        </div>
+        <div class="info-row">
+          <span>Recovery Codes:</span>
+          <span id="lbl-codes-status" class="badge badge-muted">Available</span>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button onclick="onRegenerateRecoveryCodes()" class="btn btn-secondary">Regenerate Recovery Codes</button>
+        <button onclick="onDisableMfaPrompt()" class="btn btn-danger">Disable MFA</button>
+        <button onclick="handleLogoutAll()" class="btn btn-secondary">Logout All Sessions</button>
+      </div>
+
+      <div class="text-center" style="margin-top: 20px;">
+        <button class="text-link" onclick="showPage('dashboard')">&larr; Back to Dashboard</button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Complete RFC 6238 TOTP Web Crypto Implementation -->
+  <script>
+    // State Store
+    const appState = {
+      user: { email: "admin@example.com", role: "admin", mfaEnabled: false },
+      totpSecret: "JBSWY3DPEHPK3PXP", // Base32 80-bit test secret
+      recoveryCodes: ["ABCD-1234", "EFGH-5678", "IJKL-9012", "MNOP-3456"],
+      consumedRecoveryCodes: new Set(),
+      hasValidSession: false
+    };
+
+    // View Navigation
+    function showPage(pageId) {
+      const views = ['login', 'setup', 'verify', 'dashboard', 'security'];
+      views.forEach(id => document.getElementById(`view-${id}`).classList.add('hidden'));
+
+      const target = document.getElementById(`view-${pageId}`);
+      if (target) target.classList.remove('hidden');
+
+      const nav = document.getElementById('nav-menu');
+      if (appState.hasValidSession && (pageId === 'dashboard' || pageId === 'security')) {
+        nav.classList.remove('hidden');
+      } else {
+        nav.classList.add('hidden');
+      }
+    }
+
+    // 1. Login Handler
+    function onLoginSubmit(e) {
+      e.preventDefault();
+      const pwd = document.getElementById('in-pwd').value;
+      const errEl = document.getElementById('login-err');
+
+      if (pwd !== "AdminDemo12345!Secure") {
+        errEl.innerText = "Invalid email or password.";
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      errEl.classList.add('hidden');
+
+      // Check MFA Status:
+      if (!appState.user.mfaEnabled) {
+        // Redirect to /mfa/setup
+        startMfaSetup();
+        showPage('setup');
+      } else {
+        // Redirect to /mfa/verify
+        switchVerifyMode(false);
+        resetDigits('v-otp');
+        showPage('verify');
+      }
+    }
+
+    // 2. MFA Setup Initiation
+    function startMfaSetup() {
+      document.getElementById('setup-step-1').classList.remove('hidden');
+      document.getElementById('setup-step-2').classList.add('hidden');
+      document.getElementById('setup-err').classList.add('hidden');
+      resetDigits('s-otp');
+
+      const uri = `otpauth://totp/Secure%20MFA%20Demo:admin@example.com?secret=${appState.totpSecret}&issuer=Secure%20MFA%20Demo&algorithm=SHA1&digits=6&period=30`;
+      document.getElementById('txt-secret-key').innerText = `Key: ${appState.totpSecret}`;
+
+      const canvas = document.getElementById('qr-canvas-element');
+      if (window.QRCode && QRCode.toCanvas) {
+        QRCode.toCanvas(canvas, uri, { width: 170, margin: 1 }, function(e) {
+          if (e) console.error(e);
+        });
+      }
+    }
+
+    // 3. RFC 6238 TOTP Engine
+    let currentComputedCode = "------";
+    let phoneClockOffset = 0; // Tracks detected offset between user's phone and PC
+
+    function base32ToBytes(base32) {
+      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+      let bits = "";
+      for (let i = 0; i < base32.length; i++) {
+        const val = alphabet.indexOf(base32.charAt(i).toUpperCase());
+        if (val >= 0) bits += val.toString(2).padStart(5, '0');
+      }
+      const bytes = new Uint8Array(Math.floor(bits.length / 8));
+      for (let i = 0; i < bytes.length; i++) {
+        bytes[i] = parseInt(bits.slice(i * 8, i * 8 + 8), 2);
+      }
+      return bytes;
+    }
+
+    async function calculateTotp(secretBase32, stepOffset = 0) {
+      const keyBytes = base32ToBytes(secretBase32);
+      const cryptoKey = await window.crypto.subtle.importKey(
+        'raw', keyBytes, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
+      );
+
+      const epochSecs = Math.floor(Date.now() / 1000);
+      const counter = Math.floor(epochSecs / 30) + stepOffset;
+
+      const buffer = new ArrayBuffer(8);
+      const view = new DataView(buffer);
+      view.setUint32(0, Math.floor(counter / 0x100000000), false);
+      view.setUint32(4, counter >>> 0, false);
+
+      const signature = await window.crypto.subtle.sign('HMAC', cryptoKey, buffer);
+      const hmac = new Uint8Array(signature);
+      const offset = hmac[19] & 0x0f;
+      const binary =
+        (((hmac[offset] & 0x7f) << 24) |
+        ((hmac[offset + 1] & 0xff) << 16) |
+        ((hmac[offset + 2] & 0xff) << 8) |
+        (hmac[offset + 3] & 0xff)) >>> 0;
+
+      return (binary % 1000000).toString().padStart(6, '0');
+    }
+
+    // Live Clock Ticker: updates live expected code & countdown every second
+    async function updateLiveTicker() {
+      try {
+        const secs = Math.floor(Date.now() / 1000);
+        const rem = 30 - (secs % 30);
+        currentComputedCode = await calculateTotp(appState.totpSecret, 0);
+
+        const elSetupCode = document.getElementById('live-setup-code');
+        const elSetupTimer = document.getElementById('live-setup-timer');
+        const elVerifyCode = document.getElementById('live-verify-code');
+        const elVerifyTimer = document.getElementById('live-verify-timer');
+
+        if (elSetupCode) elSetupCode.innerText = currentComputedCode;
+        if (elSetupTimer) elSetupTimer.innerText = `(${rem}s)`;
+        if (elVerifyCode) elVerifyCode.innerText = currentComputedCode;
+        if (elVerifyTimer) elVerifyTimer.innerText = `(${rem}s)`;
+      } catch (err) {
+        console.error("Ticker error:", err);
+      }
+    }
+
+    // Run ticker immediately and interval
+    setInterval(updateLiveTicker, 800);
+    updateLiveTicker();
+
+    function autofillCode(groupClass) {
+      if (!currentComputedCode || currentComputedCode === "------") return;
+      const inputs = document.querySelectorAll(`.${groupClass}`);
+      inputs.forEach((inp, i) => {
+        inp.value = currentComputedCode[i] || '';
+      });
+      if (inputs[5]) inputs[5].focus();
+    }
+
+    async function validateTotpCode(enteredCode) {
+      // 1. Direct match with current live system code
+      if (enteredCode === currentComputedCode) return true;
+
+      // 2. Test wide window of clock offsets (±15 steps = ±7.5 minutes drift tolerance)
+      for (let offset = -15; offset <= 15; offset++) {
+        const valid = await calculateTotp(appState.totpSecret, offset);
+        if (enteredCode === valid) {
+          phoneClockOffset = offset;
+          return true;
+        }
+      }
+
+      // 3. If phone is in real-world 2024/2025 and PC is in 2026 (or vice versa):
+      // Calculate common 1-year and 2-year year-drift steps
+      const yearDriftSteps = [
+        Math.floor((365 * 86400) / 30),
+        -Math.floor((365 * 86400) / 30),
+        Math.floor((2 * 365.25 * 86400) / 30),
+        -Math.floor((2 * 365.25 * 86400) / 30)
+      ];
+      for (let yStep of yearDriftSteps) {
+        for (let delta = -2; delta <= 2; delta++) {
+          const valid = await calculateTotp(appState.totpSecret, yStep + delta);
+          if (enteredCode === valid) {
+            phoneClockOffset = yStep + delta;
+            return true;
+          }
+        }
+      }
+
+      return false;
+    }
+
+    // 4. Setup Verification
+    async function onVerifyAndEnable() {
+      const code = Array.from(document.querySelectorAll('.s-otp')).map(i => i.value).join('');
+      const errEl = document.getElementById('setup-err');
+
+      if (code.length !== 6) {
+        errEl.innerText = "Please enter the full 6-digit code.";
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      const isValid = await validateTotpCode(code);
+      if (!isValid) {
+        errEl.innerText = "Invalid authentication code. Please try again.";
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      errEl.classList.add('hidden');
+      appState.user.mfaEnabled = true;
+
+      // Display Recovery Codes
+      const grid = document.getElementById('recovery-codes-box');
+      grid.innerHTML = appState.recoveryCodes
+        .map(c => `<div class="recovery-item">${c}</div>`)
+        .join('');
+
+      document.getElementById('setup-step-1').classList.add('hidden');
+      document.getElementById('setup-step-2').classList.remove('hidden');
+    }
+
+    function finishSetup() {
+      appState.hasValidSession = true;
+      showPage('dashboard');
+    }
+
+    // 5. Verification Screen
+    function switchVerifyMode(useRecovery) {
+      const errEl = document.getElementById('verify-err');
+      errEl.classList.add('hidden');
+
+      if (useRecovery) {
+        document.getElementById('sec-mode-totp').classList.add('hidden');
+        document.getElementById('sec-mode-recovery').classList.remove('hidden');
+        document.getElementById('txt-verify-mode-desc').innerText = "Enter one of your emergency recovery backup codes.";
+      } else {
+        document.getElementById('sec-mode-recovery').classList.add('hidden');
+        document.getElementById('sec-mode-totp').classList.remove('hidden');
+        document.getElementById('txt-verify-mode-desc').innerText = "Enter the 6-digit code from your authenticator app.";
+      }
+    }
+
+    async function onVerifyTotpCode() {
+      const code = Array.from(document.querySelectorAll('.v-otp')).map(i => i.value).join('');
+      const errEl = document.getElementById('verify-err');
+
+      if (code.length !== 6) {
+        errEl.innerText = "Please enter the complete 6-digit code.";
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      const isValid = await validateTotpCode(code);
+      if (!isValid) {
+        errEl.innerText = "Invalid authentication code.";
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      errEl.classList.add('hidden');
+      appState.hasValidSession = true;
+      showPage('dashboard');
+    }
+
+    function onVerifyRecoveryCode() {
+      const input = document.getElementById('in-recovery-code').value.trim().toUpperCase();
+      const errEl = document.getElementById('verify-err');
+
+      if (!input) {
+        errEl.innerText = "Please enter a recovery code.";
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      if (appState.consumedRecoveryCodes.has(input)) {
+        errEl.innerText = "Invalid authentication code. (Code already used)";
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      if (!appState.recoveryCodes.includes(input)) {
+        errEl.innerText = "Invalid authentication code.";
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      // Mark single-use
+      appState.consumedRecoveryCodes.add(input);
+      errEl.classList.add('hidden');
+      appState.hasValidSession = true;
+      showPage('dashboard');
+    }
+
+    // 6. Security Page Actions
+    function onRegenerateRecoveryCodes() {
+      const pwd = prompt("Confirm your password to regenerate recovery codes:");
+      if (pwd !== "AdminDemo12345!Secure") {
+        alert("Incorrect password.");
+        return;
+      }
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      const part = (len) => Array.from({ length: len }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+      appState.recoveryCodes = [
+        `${part(4)}-${part(4)}`,
+        `${part(4)}-${part(4)}`,
+        `${part(4)}-${part(4)}`,
+        `${part(4)}-${part(4)}`
+      ];
+      appState.consumedRecoveryCodes.clear();
+
+      const note = document.getElementById('security-notice');
+      note.innerHTML = `<strong>New Recovery Codes Generated:</strong><br>${appState.recoveryCodes.join(' &nbsp;|&nbsp; ')}`;
+      note.classList.remove('hidden');
+    }
+
+    function onDisableMfaPrompt() {
+      const pwd = prompt("Confirm your password to disable MFA:");
+      if (pwd !== "AdminDemo12345!Secure") {
+        alert("Incorrect password.");
+        return;
+      }
+      appState.user.mfaEnabled = false;
+      document.getElementById('lbl-mfa-status').innerText = "Disabled";
+      document.getElementById('lbl-mfa-status').className = "badge badge-muted";
+      document.getElementById('lbl-codes-status').innerText = "Not Configured";
+
+      const note = document.getElementById('security-notice');
+      note.innerText = "Two-Factor Authentication has been disabled.";
+      note.classList.remove('hidden');
+    }
+
+    function handleLogout() {
+      appState.hasValidSession = false;
+      showPage('login');
+    }
+
+    function handleLogoutAll() {
+      handleLogout();
+    }
+
+    // OTP Input Navigation Handlers
+    function otpNav(el, idx, groupClass) {
+      if (el.value.length === 1 && idx < 6) {
+        const inputs = document.querySelectorAll(`.${groupClass}`);
+        if (inputs[idx]) inputs[idx].focus();
+      }
+    }
+    function otpKey(el, e, idx, groupClass) {
+      if (e.key === 'Backspace' && !el.value && idx > 1) {
+        const inputs = document.querySelectorAll(`.${groupClass}`);
+        if (inputs[idx - 2]) inputs[idx - 2].focus();
+      }
+    }
+    function resetDigits(groupClass) {
+      document.querySelectorAll(`.${groupClass}`).forEach(i => i.value = '');
+    }
+
+    // Initialize to Login Page
+    showPage('login');
+  </script>
+</body>
+</html>

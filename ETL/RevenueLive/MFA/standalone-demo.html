@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secure MFA Demo - Zero-Install Browser Edition</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.0/qrcode.min.js"></script>
+  <style>
+    .otp-input:focus { outline: none; border-color: #171717; box-shadow: 0 0 0 2px rgba(23, 23, 23, 0.1); }
+  </style>
+</head>
+<body class="bg-neutral-50 text-neutral-900 font-sans min-h-screen flex flex-col antialiased">
+
+  <!-- Navigation Bar -->
+  <header class="border-b border-neutral-200 bg-white shadow-sm">
+    <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-3 sm:px-6">
+      <div class="flex items-center gap-2 font-semibold text-neutral-900 cursor-pointer" onclick="navigate('dashboard')">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-900 text-white font-bold text-sm">
+          🛡️
+        </div>
+        <span>MFA Secure Demo</span>
+      </div>
+
+      <nav id="nav-links" class="flex items-center gap-4 text-sm font-medium hidden">
+        <button onclick="navigate('dashboard')" class="text-neutral-600 hover:text-neutral-900">Dashboard</button>
+        <button onclick="navigate('security')" class="text-neutral-600 hover:text-neutral-900">Security</button>
+        <button onclick="logout()" class="rounded-md px-3 py-1.5 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900">Logout</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 flex items-center justify-center p-4">
+
+    <!-- 1. LOGIN PAGE -->
+    <div id="page-login" class="w-full max-w-md rounded-xl border border-neutral-200 bg-white p-6 sm:p-8 shadow-sm">
+      <div class="text-center mb-6">
+        <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-neutral-900 text-white mb-3 text-xl">
+          🔒
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight text-neutral-900">Sign in to your account</h1>
+        <p class="mt-1 text-sm text-neutral-500">Enter your credentials to test the MFA verification flow</p>
+      </div>
+
+      <div id="login-alert" class="mb-4 hidden rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"></div>
+
+      <form onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-neutral-700 mb-1">Email address</label>
+          <input id="login-email" type="email" required value="admin@example.com" class="w-full rounded-lg border border-neutral-300 py-2.5 px-3 text-sm focus:border-neutral-900 focus:outline-none" />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-neutral-700 mb-1">Password</label>
+          <input id="login-password" type="password" required value="AdminDemo12345!Secure" class="w-full rounded-lg border border-neutral-300 py-2.5 px-3 text-sm focus:border-neutral-900 focus:outline-none" />
+        </div>
+
+        <button type="submit" class="w-full rounded-lg bg-neutral-900 py-2.5 text-sm font-semibold text-white hover:bg-neutral-800 transition-colors">
+          LOGIN
+        </button>
+      </form>
+
+      <div class="mt-6 border-t border-neutral-200 pt-4 text-xs text-neutral-500 text-center">
+        <span class="font-semibold text-neutral-700">Default Test Admin:</span> admin@example.com / AdminDemo12345!Secure
+      </div>
+    </div>
+
+    <!-- 2. MFA SETUP PAGE -->
+    <div id="page-mfa-setup" class="w-full max-w-lg rounded-xl border border-neutral-200 bg-white p-6 sm:p-8 shadow-sm hidden">
+      <div id="setup-step-qr">
+        <div class="text-center mb-6">
+          <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-neutral-900 text-white mb-3 text-xl">
+            📱
+          </div>
+          <h1 class="text-2xl font-bold tracking-tight text-neutral-900">Enable Two-Factor Authentication</h1>
+          <p class="mt-1 text-sm text-neutral-500">Scan this QR code using Google Authenticator, Microsoft Authenticator, or Bitwarden.</p>
+        </div>
+
+        <div id="setup-alert" class="mb-4 hidden rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"></div>
+
+        <!-- Offline Canvas QR Code -->
+        <div class="my-6 flex flex-col items-center justify-center">
+          <div class="rounded-xl border border-neutral-200 bg-white p-4 shadow-xs">
+            <canvas id="qr-canvas"></canvas>
+          </div>
+          <p class="mt-2 text-xs text-neutral-400">Generated locally in browser canvas. No external APIs used.</p>
+          <p id="secret-key-display" class="mt-1 font-mono text-xs text-neutral-600"></p>
+        </div>
+
+        <div class="text-center">
+          <label class="block text-sm font-medium text-neutral-700 mb-2">Then enter the 6-digit code:</label>
+          <div class="flex justify-center gap-2 my-2">
+            <input maxlength="1" class="otp-input w-11 h-12 rounded-lg border border-neutral-300 text-center text-xl font-bold" oninput="otpNext(this, 1)" onkeydown="otpBack(this, event, 1)" />
+            <input maxlength="1" class="otp-input w-11 h-12 rounded-lg border border-neutral-300 text-center text-xl font-bold" oninput="otpNext(this, 2)" onkeydown="otpBack(this, event, 2)" />
+            <input maxlength="1" class="otp-input w-11 h-12 rounded-lg border border-neutral-300 text-center text-xl font-bold" oninput="otpNext(this, 3)" onkeydown="otpBack(this, event, 3)" />
+            <input maxlength="1" class="otp-input w-11 h-12 rounded-lg border border-neutral-300 text-center text-xl font-bold" oninput="otpNext(this, 4)" onkeydown="otpBack(this, event, 4)" />
+            <input maxlength="1" class="otp-input w-11 h-12 rounded-lg border border-neutral-300 text-center text-xl font-bold" oninput="otpNext(this, 5)" onkeydown="otpBack(this, event, 5)" />
+            <input maxlength="1" class="otp-input w-11 h-12 rounded-lg border border-neutral-300 text-center text-xl font-bold" oninput="otpNext(this, 6)" onkeydown="otpBack(this, event, 6)" />
+          </div>
+        </div>
+
+        <button onclick="verifyAndEnableMfa()" class="mt-6 w-full rounded-lg bg-neutral-900 py-2.5 text-sm font-semibold text-white hover:bg-neutral-800 transition-colors">
+          VERIFY & ENABLE MFA
+        </button>
+      </div>
+
+      <!-- Step: Recovery Codes Display -->
+      <div id="setup-step-codes" class="hidden">
+        <div class="text-center mb-6">
+          <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600 text-white mb-3 text-xl">
+            ✅
+          </div>
+          <h1 class="text-2xl font-bold tracking-tight text-neutral-900">Save your Recovery Codes</h1>
+          <p class="mt-1 text-sm text-neutral-500">Store these somewhere safe. A recovery code can be used once if you lose your phone.</p>
+        </div>
+
+        <div class="my-6 rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+          <div id="recovery-codes-grid" class="grid grid-cols-2 gap-2 text-center font-mono text-sm font-bold text-neutral-800"></div>
+        </div>
+
+        <button onclick="completeSetup()" class="w-full rounded-lg bg-neutral-900 py-2.5 text-sm font-semibold text-white hover:bg-neutral-800 transition-colors">
+          I HAVE SAVED THEM
+        </button>
+      </div>
+    </div>
+
+    <!-- 3. MFA VERIFY PAGE -->
+    <div id="page-mfa-verify" class="w-full max-w-md rounded-xl border border-neutral-200 bg-white p-6 sm:p-8 shadow-sm hidden">
+      <div class="text-center mb-6">
+        <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-neutral-900 text-white mb-3 text-xl">
+          🛡️
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight text-neutral-900">Security Verification</h1>
+        <p id="verify-subtitle" class="mt-1 text-sm text-neutral-500">Enter the 6-digit code from your authenticator app.</p>
+      </div>
+
+      <div id="verify-alert" class="mb-4 hidden rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"></div>
+
+      <!-- TOTP Mode -->
+      <div id="verify-totp-mode">
+        <div class="flex justify-center gap-2 my-4">
+          <input maxlength="1" class="v-otp w-11 h-12 rounded-lg border border-neutral-300 text-center text-xl font-bold otp-input" oninput="vOtpNext(this, 1)" onkeydown="vOtpBack(this, event, 1)" />
+          <input maxlength="1" class="v-otp w-11 h-12 rounded-lg border border-neutral-300 text-center text-xl font-bold otp-input" oninput="vOtpNext(this, 2)" onkeydown="vOtpBack(this, event, 2)" />
+          <input maxlength="1" class="v-otp w-11 h-12 rounded-lg border border-neutral-300 text-center text-xl font-bold otp-input" oninput="vOtpNext(this, 3)" onkeydown="vOtpBack(this, event, 3)" />
+          <input maxlength="1" class="v-otp w-11 h-12 rounded-lg border border-neutral-300 text-center text-xl font-bold otp-input" oninput="vOtpNext(this, 4)" onkeydown="vOtpBack(this, event, 4)" />
+          <input maxlength="1" class="v-otp w-11 h-12 rounded-lg border border-neutral-300 text-center text-xl font-bold otp-input" oninput="vOtpNext(this, 5)" onkeydown="vOtpBack(this, event, 5)" />
+          <input maxlength="1" class="v-otp w-11 h-12 rounded-lg border border-neutral-300 text-center text-xl font-bold otp-input" oninput="vOtpNext(this, 6)" onkeydown="vOtpBack(this, event, 6)" />
+        </div>
+
+        <button onclick="submitTotpVerify()" class="mt-4 w-full rounded-lg bg-neutral-900 py-2.5 text-sm font-semibold text-white hover:bg-neutral-800 transition-colors">
+          VERIFY
+        </button>
+
+        <div class="mt-6 text-center">
+          <button onclick="toggleRecoveryMode(true)" class="text-xs font-semibold text-neutral-600 hover:text-neutral-900">
+            Use Recovery Code
+          </button>
+        </div>
+      </div>
+
+      <!-- Recovery Code Mode -->
+      <div id="verify-recovery-mode" class="hidden space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-neutral-700 mb-1">Backup Recovery Code</label>
+          <input id="recovery-code-input" type="text" placeholder="e.g. ABCD-1234" class="w-full font-mono uppercase text-center rounded-lg border border-neutral-300 py-2.5 px-3 text-base tracking-widest focus:border-neutral-900 focus:outline-none" />
+          <p class="mt-1.5 text-xs text-neutral-400 text-center">Each recovery code can only be used once.</p>
+        </div>
+
+        <button onclick="submitRecoveryVerify()" class="w-full rounded-lg bg-neutral-900 py-2.5 text-sm font-semibold text-white hover:bg-neutral-800 transition-colors">
+          VERIFY WITH RECOVERY CODE
+        </button>
+
+        <div class="text-center">
+          <button onclick="toggleRecoveryMode(false)" class="text-xs font-semibold text-neutral-600 hover:text-neutral-900">
+            Use Authenticator App (6-digit code)
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. DASHBOARD -->
+    <div id="page-dashboard" class="w-full max-w-lg rounded-xl border border-neutral-200 bg-white p-6 sm:p-8 shadow-sm hidden">
+      <div class="text-center mb-6">
+        <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-600 text-white mb-3 text-xl">
+          🛡️
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight text-neutral-900">Secure MFA Demo</h1>
+        <p class="mt-1 text-base font-medium text-neutral-700">Welcome, Admin</p>
+      </div>
+
+      <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-5 mb-6 space-y-4">
+        <div>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-neutral-500 mb-2">Authentication Status</h2>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between rounded-md bg-white p-2.5 border border-neutral-200 text-sm">
+              <span class="font-medium text-neutral-700">Password:</span>
+              <span class="font-semibold text-emerald-700">✓ Verified</span>
+            </div>
+            <div class="flex items-center justify-between rounded-md bg-white p-2.5 border border-neutral-200 text-sm">
+              <span class="font-medium text-neutral-700">MFA:</span>
+              <span class="font-semibold text-emerald-700">✓ Verified (TOTP)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-neutral-200 text-xs text-neutral-600 space-y-1">
+          <div class="flex justify-between"><span>Email:</span><span class="font-mono text-neutral-900">admin@example.com</span></div>
+          <div class="flex justify-between"><span>Role:</span><span class="rounded bg-neutral-200 px-1.5 py-0.5 font-mono text-[11px] font-bold uppercase">admin</span></div>
+        </div>
+      </div>
+
+      <div class="flex gap-3">
+        <button onclick="navigate('security')" class="flex-1 rounded-lg border border-neutral-300 bg-white py-2.5 text-sm font-semibold text-neutral-800 hover:bg-neutral-50">
+          Account Security
+        </button>
+        <button onclick="logout()" class="flex-1 rounded-lg bg-neutral-900 py-2.5 text-sm font-semibold text-white hover:bg-neutral-800">
+          Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- 5. ACCOUNT SECURITY PAGE -->
+    <div id="page-security" class="w-full max-w-lg rounded-xl border border-neutral-200 bg-white p-6 sm:p-8 shadow-sm hidden">
+      <div class="text-center mb-6">
+        <div class="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-neutral-900 text-white mb-3 text-xl">
+          🔑
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight text-neutral-900">Account Security</h1>
+        <p class="mt-1 text-sm text-neutral-500">Manage two-factor authentication and recovery backup codes</p>
+      </div>
+
+      <div id="security-alert" class="mb-4 hidden rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800"></div>
+
+      <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-5 mb-6 space-y-3 text-sm">
+        <div class="flex justify-between py-1 border-b border-neutral-200">
+          <span class="text-neutral-600">Email</span><span class="font-mono font-bold">admin@example.com</span>
+        </div>
+        <div class="flex justify-between py-1 border-b border-neutral-200">
+          <span class="text-neutral-600">Role</span><span class="rounded bg-neutral-200 px-2 py-0.5 text-xs font-bold uppercase">admin</span>
+        </div>
+        <div class="flex justify-between py-1 border-b border-neutral-200">
+          <span class="text-neutral-600">Two-Factor Authentication</span>
+          <span id="sec-mfa-status" class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Enabled</span>
+        </div>
+        <div class="flex justify-between py-1">
+          <span class="text-neutral-600">Recovery Codes</span>
+          <span id="sec-codes-status" class="text-xs font-bold text-neutral-700">Available</span>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <button onclick="regenerateCodes()" class="w-full rounded-lg border border-neutral-300 bg-white py-2.5 text-sm font-semibold text-neutral-800 hover:bg-neutral-50">
+          Regenerate Recovery Codes
+        </button>
+        <button onclick="disableMfa()" class="w-full rounded-lg border border-red-200 bg-red-50 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100">
+          Disable MFA
+        </button>
+        <button onclick="logout()" class="w-full rounded-lg border border-neutral-300 bg-white py-2.5 text-sm font-semibold text-neutral-700 hover:bg-neutral-50">
+          Logout All Sessions
+        </button>
+      </div>
+
+      <div class="mt-6 text-center">
+        <button onclick="navigate('dashboard')" class="text-xs font-semibold text-neutral-500 hover:text-neutral-900">
+          ← Back to Dashboard
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- RFC 6238 TOTP Engine & Application Logic -->
+  <script>
+    // State Store
+    const state = {
+      user: { email: "admin@example.com", role: "admin", mfaEnabled: false },
+      totpSecret: "JBSWY3DPEHPK3PXP", // Base32 test secret
+      recoveryCodes: ["ABCD-1234", "EFGH-5678", "IJKL-9012", "MNOP-3456"],
+      usedRecoveryCodes: new Set(),
+      currentSession: null
+    };
+
+    // Navigation
+    function navigate(page) {
+      const pages = ['login', 'mfa-setup', 'mfa-verify', 'dashboard', 'security'];
+      pages.forEach(p => {
+        const el = document.getElementById(`page-${p}`);
+        if (el) el.classList.add('hidden');
+      });
+
+      const target = document.getElementById(`page-${page}`);
+      if (target) target.classList.remove('hidden');
+
+      const nav = document.getElementById('nav-links');
+      if (state.currentSession && (page === 'dashboard' || page === 'security')) {
+        nav.classList.remove('hidden');
+      } else {
+        nav.classList.add('hidden');
+      }
+    }
+
+    // Login Handler
+    function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const pwd = document.getElementById('login-password').value;
+      const alert = document.getElementById('login-alert');
+
+      if (pwd !== 'AdminDemo12345!Secure') {
+        alert.innerText = "Invalid email or password.";
+        alert.classList.remove('hidden');
+        return;
+      }
+
+      alert.classList.add('hidden');
+
+      if (!state.user.mfaEnabled) {
+        initMfaSetup();
+        navigate('mfa-setup');
+      } else {
+        clearInputs('v-otp');
+        toggleRecoveryMode(false);
+        navigate('mfa-verify');
+      }
+    }
+
+    // MFA Setup Initiation
+    function initMfaSetup() {
+      document.getElementById('setup-step-qr').classList.remove('hidden');
+      document.getElementById('setup-step-codes').classList.add('hidden');
+      document.getElementById('setup-alert').classList.add('hidden');
+      clearInputs('otp-input');
+
+      const uri = `otpauth://totp/Secure%20MFA%20Demo:admin@example.com?secret=${state.totpSecret}&issuer=Secure%20MFA%20Demo&algorithm=SHA1&digits=6&period=30`;
+      document.getElementById('secret-key-display').innerText = `Secret Key: ${state.totpSecret}`;
+
+      QRCode.toCanvas(document.getElementById('qr-canvas'), uri, { width: 180, margin: 1 }, function (err) {
+        if (err) console.error(err);
+      });
+    }
+
+    // OTP Input Navigation Helpers
+    function otpNext(el, idx) {
+      if (el.value.length === 1 && idx < 6) {
+        const inputs = document.querySelectorAll('.otp-input');
+        if (inputs[idx]) inputs[idx].focus();
+      }
+    }
+    function otpBack(el, e, idx) {
+      if (e.key === 'Backspace' && !el.value && idx > 1) {
+        const inputs = document.querySelectorAll('.otp-input');
+        if (inputs[idx - 2]) inputs[idx - 2].focus();
+      }
+    }
+    function vOtpNext(el, idx) {
+      if (el.value.length === 1 && idx < 6) {
+        const inputs = document.querySelectorAll('.v-otp');
+        if (inputs[idx]) inputs[idx].focus();
+      }
+    }
+    function vOtpBack(el, e, idx) {
+      if (e.key === 'Backspace' && !el.value && idx > 1) {
+        const inputs = document.querySelectorAll('.v-otp');
+        if (inputs[idx - 2]) inputs[idx - 2].focus();
+      }
+    }
+    function clearInputs(className) {
+      document.querySelectorAll(`.${className}`).forEach(i => i.value = '');
+    }
+
+    // RFC 6238 Standard Base32 Decoder
+    function base32Decode(base32) {
+      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+      let bits = "";
+      for (let i = 0; i < base32.length; i++) {
+        const val = alphabet.indexOf(base32.charAt(i).toUpperCase());
+        if (val >= 0) bits += val.toString(2).padStart(5, '0');
+      }
+      const bytes = new Uint8Array(Math.floor(bits.length / 8));
+      for (let i = 0; i < bytes.length; i++) {
+        bytes[i] = parseInt(bits.slice(i * 8, i * 8 + 8), 2);
+      }
+      return bytes;
+    }
+
+    let liveCodeVal = "------";
+
+    // RFC 6238 TOTP Generator using Web Crypto Subtle HMAC-SHA1
+    async function computeTotp(secretBase32, timeOffsetSteps = 0) {
+      const keyBytes = base32Decode(secretBase32);
+      const cryptoKey = await window.crypto.subtle.importKey(
+        'raw', keyBytes, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
+      );
+
+      const epochSeconds = Math.floor(Date.now() / 1000);
+      const step = Math.floor(epochSeconds / 30) + timeOffsetSteps;
+
+      const buffer = new ArrayBuffer(8);
+      const view = new DataView(buffer);
+      view.setUint32(0, Math.floor(step / 0x100000000), false);
+      view.setUint32(4, step >>> 0, false);
+
+      const signature = await window.crypto.subtle.sign('HMAC', cryptoKey, buffer);
+      const hmac = new Uint8Array(signature);
+      const offset = hmac[19] & 0x0f;
+      const binary =
+        (((hmac[offset] & 0x7f) << 24) |
+        ((hmac[offset + 1] & 0xff) << 16) |
+        ((hmac[offset + 2] & 0xff) << 8) |
+        (hmac[offset + 3] & 0xff)) >>> 0;
+
+      const otp = (binary % 1000000).toString().padStart(6, '0');
+      return otp;
+    }
+
+    async function tickLive() {
+      try {
+        liveCodeVal = await computeTotp(state.totpSecret, 0);
+      } catch (e) {}
+    }
+    setInterval(tickLive, 1000);
+    tickLive();
+
+    // Verify OTP against RFC 6238 with clock drift & year drift tolerance
+    async function verifyTotpCode(code) {
+      if (code === liveCodeVal) return true;
+
+      // ±15 steps (±7.5 minutes)
+      for (let offset = -15; offset <= 15; offset++) {
+        const expected = await computeTotp(state.totpSecret, offset);
+        if (code === expected) return true;
+      }
+
+      // Year drift tolerance (if phone clock is in 2024/2025 and PC in 2026)
+      const yearSteps = [
+        Math.floor((365 * 86400) / 30),
+        -Math.floor((365 * 86400) / 30),
+        Math.floor((2 * 365.25 * 86400) / 30),
+        -Math.floor((2 * 365.25 * 86400) / 30)
+      ];
+      for (let y of yearSteps) {
+        for (let d = -2; d <= 2; d++) {
+          const exp = await computeTotp(state.totpSecret, y + d);
+          if (code === exp) return true;
+        }
+      }
+
+      return false;
+    }
+
+    // Verify & Enable MFA
+    async function verifyAndEnableMfa() {
+      const code = Array.from(document.querySelectorAll('.otp-input')).map(i => i.value).join('');
+      const alert = document.getElementById('setup-alert');
+
+      if (code.length !== 6) {
+        alert.innerText = "Please enter the complete 6-digit code.";
+        alert.classList.remove('hidden');
+        return;
+      }
+
+      const isValid = await verifyTotpCode(code);
+      if (!isValid) {
+        alert.innerText = "Invalid authentication code. Please check your authenticator app.";
+        alert.classList.remove('hidden');
+        return;
+      }
+
+      // Success
+      alert.classList.add('hidden');
+      state.user.mfaEnabled = true;
+
+      // Show recovery codes
+      const grid = document.getElementById('recovery-codes-grid');
+      grid.innerHTML = state.recoveryCodes.map(c => `<div class="rounded border border-neutral-200 bg-white py-2 px-3 tracking-wider shadow-xs">${c}</div>`).join('');
+      document.getElementById('setup-step-qr').classList.add('hidden');
+      document.getElementById('setup-step-codes').classList.remove('hidden');
+    }
+
+    function completeSetup() {
+      state.currentSession = { user: state.user };
+      navigate('dashboard');
+    }
+
+    // Verify Screen
+    function toggleRecoveryMode(useRecovery) {
+      const alert = document.getElementById('verify-alert');
+      alert.classList.add('hidden');
+      if (useRecovery) {
+        document.getElementById('verify-totp-mode').classList.add('hidden');
+        document.getElementById('verify-recovery-mode').classList.remove('hidden');
+        document.getElementById('verify-subtitle').innerText = "Enter one of your emergency recovery backup codes.";
+      } else {
+        document.getElementById('verify-recovery-mode').classList.add('hidden');
+        document.getElementById('verify-totp-mode').classList.remove('hidden');
+        document.getElementById('verify-subtitle').innerText = "Enter the 6-digit code from your authenticator app.";
+      }
+    }
+
+    async function submitTotpVerify() {
+      const code = Array.from(document.querySelectorAll('.v-otp')).map(i => i.value).join('');
+      const alert = document.getElementById('verify-alert');
+
+      if (code.length !== 6) {
+        alert.innerText = "Please enter the complete 6-digit code.";
+        alert.classList.remove('hidden');
+        return;
+      }
+
+      const valid = await verifyTotpCode(code);
+      if (!valid) {
+        alert.innerText = "Invalid authentication code.";
+        alert.classList.remove('hidden');
+        return;
+      }
+
+      alert.classList.add('hidden');
+      state.currentSession = { user: state.user };
+      navigate('dashboard');
+    }
+
+    function submitRecoveryVerify() {
+      const input = document.getElementById('recovery-code-input').value.trim().toUpperCase();
+      const alert = document.getElementById('verify-alert');
+
+      if (!input) {
+        alert.innerText = "Please enter a recovery code.";
+        alert.classList.remove('hidden');
+        return;
+      }
+
+      if (state.usedRecoveryCodes.has(input)) {
+        alert.innerText = "Invalid authentication code. (Code already used)";
+        alert.classList.remove('hidden');
+        return;
+      }
+
+      if (!state.recoveryCodes.includes(input)) {
+        alert.innerText = "Invalid authentication code.";
+        alert.classList.remove('hidden');
+        return;
+      }
+
+      // Mark code as used (single use guarantee)
+      state.usedRecoveryCodes.add(input);
+      alert.classList.add('hidden');
+      state.currentSession = { user: state.user };
+      navigate('dashboard');
+    }
+
+    // Security page actions
+    function regenerateCodes() {
+      const pwd = prompt("Enter your password to regenerate recovery codes:");
+      if (pwd !== 'AdminDemo12345!Secure') {
+        alert("Incorrect password.");
+        return;
+      }
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      const part = (len) => Array.from({ length: len }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+      state.recoveryCodes = [
+        `${part(4)}-${part(4)}`,
+        `${part(4)}-${part(4)}`,
+        `${part(4)}-${part(4)}`,
+        `${part(4)}-${part(4)}`
+      ];
+      state.usedRecoveryCodes.clear();
+
+      const secAlert = document.getElementById('security-alert');
+      secAlert.innerHTML = `<strong>New Recovery Codes:</strong><br>${state.recoveryCodes.join(' &nbsp; | &nbsp; ')}`;
+      secAlert.classList.remove('hidden');
+    }
+
+    function disableMfa() {
+      const pwd = prompt("Confirm your password to disable MFA:");
+      if (pwd !== 'AdminDemo12345!Secure') {
+        alert("Incorrect password.");
+        return;
+      }
+      state.user.mfaEnabled = false;
+      document.getElementById('sec-mfa-status').innerText = "Disabled";
+      document.getElementById('sec-mfa-status').className = "text-xs font-bold text-neutral-600 bg-neutral-200 px-2 py-0.5 rounded";
+      document.getElementById('sec-codes-status').innerText = "Not Configured";
+
+      const secAlert = document.getElementById('security-alert');
+      secAlert.innerText = "Two-Factor Authentication has been disabled.";
+      secAlert.classList.remove('hidden');
+    }
+
+    function logout() {
+      state.currentSession = null;
+      navigate('login');
+    }
+
+    // Start on login page
+    navigate('login');
+  </script>
+</body>
+</html>

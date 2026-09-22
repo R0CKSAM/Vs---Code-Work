@@ -36,7 +36,7 @@ try:
         page.goto(url)
         page.locator('#loginForm [name=username]').fill('test-admin')
         page.locator('#loginForm [name=password]').fill(password)
-        page.locator('#loginForm button').click()
+        page.locator('#loginForm button.primary').click()
         page.locator('#shell').wait_for(state='visible')
         page.locator('#uploadNav').click()
         page.locator('input[type=file]').set_input_files(str(ROOT/'Upload File.xls'))

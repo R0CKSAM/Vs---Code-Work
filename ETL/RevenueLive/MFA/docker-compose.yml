@@ -1,0 +1,13 @@
+services:
+  app:
+    build: .
+    ports:
+      - "5173:5173"
+      - "8787:8787"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - BETTER_AUTH_SECRET=totp-mfa-demo-secure-secret-key-replace-in-production-min-32-chars
+      - BETTER_AUTH_URL=http://localhost:5173
+      - ENVIRONMENT=development

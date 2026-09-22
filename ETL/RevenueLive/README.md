@@ -24,7 +24,21 @@ Admins manage all channels and users. Uploaders may publish only assigned
 channels; viewers may read only assigned channels. Reports and CSV exports are
 filtered on the server. Unknown/unassigned channels reject the entire upload.
 No assignments means no revenue access. Admin assignments are unrestricted.
-Changing another user's permissions revokes their existing sessions.
+Channel and role changes are checked on every API request. Open online clients check for changes every two seconds and on focus, clear stale data, and refresh their permitted scope. Background browsers may throttle this check. Disabling an account or resetting its password revokes its sessions.
+
+Create accounts on the same instance where users will sign in (real: 8820; demo: 8822). New users sign in with their temporary password, then set and confirm their own password before accessing reports. Account assignment controls support Select all, Select shown (matching search), and Clear (including hidden choices).
+
+Run `check_accounts.py` with the workspace Python for isolated two-browser account lifecycle checks; it never changes production users.
+
+## Email invitations (optional)
+
+In Add user, choose Invite by email and enter the exact recipient email, role, and channels. Only explicitly created accounts can receive setup/reset links. Recipients can use Gmail or company email. Links expire after 30 minutes, are single-use, and are stored only as hashes. Completing a reset revokes all account sessions. Existing local accounts continue to work; they are not silently converted to email accounts.
+
+Host configuration: create `data/mail.json` (or `demo_data/mail.json` for demo) using `mail.example.json` as the schema. These data directories are ignored by Git. Configure a verified HTTPS public URL and a provider-approved STARTTLS SMTP sender. Restrict file access to the host account. Microsoft tenants may require an IT-approved relay rather than SMTP password authentication. No public tunnel or mail account is created automatically. Do not use the insecure standalone MFA demo as an authentication gateway.
+
+Without mail configuration invitations are rejected before creating an account. If SMTP fails after account creation, the saved account remains pending; after fixing delivery request a new link using Forgot password. Reset requests return the same response for unknown and known emails; delivery failures are logged without email/token contents. Reset requests are limited to one per minute per source IP. Reverse proxies need a separately reviewed trusted-proxy configuration.
+
+This invitation implementation is not MFA. Authenticator enrollment/recovery and account expiry remain a separate rollout; do not advertise mandatory MFA until those are enabled and tested.
 
 Phone access: `http://<host-LAN-IP>:8820`. Company routing and a narrow Windows
 firewall rule for approved subnets are required; this app does not modify them.

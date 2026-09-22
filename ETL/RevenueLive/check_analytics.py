@@ -36,7 +36,7 @@ try:
         page.goto('http://127.0.0.1:'+str(server.effective_port))
         page.locator('#loginForm [name=username]').fill('test-admin')
         page.locator('#loginForm [name=password]').fill(password)
-        page.locator('#loginForm button').click()
+        page.locator('#loginForm button.primary').click()
         try:
             expect(page.locator('#rowCount')).to_have_text('868 records')
         except AssertionError:

@@ -58,6 +58,24 @@ class RevenueTest(unittest.TestCase):
             db.execute('DELETE FROM assignments WHERE user_id=3')
         self.assertEqual(self.client.get('/api/report').json['rows'],[])
 
+    def test_single_super_admin_and_admin_boundaries(self):
+        with closing(sqlite3.connect(self.path/'revenuelive.db')) as db,db:
+            db.execute('INSERT INTO super_admin VALUES (1,1)')
+            db.execute("UPDATE users SET role='admin' WHERE id=2")
+            with self.assertRaises(sqlite3.IntegrityError):
+                db.execute('INSERT INTO super_admin VALUES (2,2)')
+        self.login('upload')
+        body={'id':1,'username':'admin','role':'admin','active':True,'channels':[]}
+        self.assertEqual(self.post('/api/admin/users',body).status_code,400)
+        body={'username':'another','password':'safe-admin-password','role':'admin','active':True,'channels':[]}
+        self.assertEqual(self.post('/api/admin/users',body).status_code,403)
+        body['id']=2;body['username']='upload';body['role']='viewer'
+        self.assertEqual(self.post('/api/admin/users',body).status_code,400)
+        self.login('admin')
+        self.assertTrue(self.client.get('/api/me').json['user']['super_admin'])
+        body.pop('id');body['username']='another';body['role']='admin'
+        self.assertEqual(self.post('/api/admin/users',body).status_code,200)
+
     def test_mixed_upload_rejected_atomically(self):
         self.login('upload')
         content=csv_file()+b'2026-09-21,Beta,1,1,1,0,1\n'
@@ -169,6 +187,36 @@ class RevenueTest(unittest.TestCase):
             db.execute("INSERT INTO users(username,password,role) VALUES (?,?,'admin')",('admin',generate_password_hash('safe-test-password')))
         second=other.test_client().post('/api/login',json={'username':'admin','password':'safe-test-password'})
         self.assertNotEqual(first.headers['Set-Cookie'].split('=')[0],second.headers['Set-Cookie'].split('=')[0])
+
+    def test_invitation_and_reset_are_single_use(self):
+        from unittest.mock import patch
+        import re
+        (self.path/'mail.json').write_text(json.dumps({'public_url':'https://revenue.example.com','host':'smtp.example.com','from':'sender@example.com'}))
+        self.login()
+        with patch('account_email.smtplib.SMTP') as smtp:
+            result=self.post('/api/admin/users',{'username':'guest@gmail.com','role':'viewer','invite':True,'channels':[1],'active':True})
+            self.assertEqual(result.status_code,200,result.text)
+            message=smtp.return_value.__enter__.return_value.send_message.call_args.args[0]
+            token=re.search(r'account-token=([^\s]+)',message.get_content())[1]
+        guest=self.app.test_client()
+        self.assertEqual(guest.post('/api/account/complete',json={'token':token,'password':'guest-safe-password'}).status_code,200)
+        self.assertEqual(guest.post('/api/account/complete',json={'token':token,'password':'guest-safe-password'}).status_code,400)
+        self.assertEqual(guest.post('/api/login',json={'username':'guest@gmail.com','password':'guest-safe-password'}).status_code,200)
+        self.assertEqual(len(guest.get('/api/report').json['rows']),1)
+        with patch('account_email.smtplib.SMTP') as smtp:
+            self.assertEqual(guest.post('/api/account/request',json={'email':'guest@gmail.com'}).status_code,200)
+            message=smtp.return_value.__enter__.return_value.send_message.call_args.args[0]
+            token=re.search(r'account-token=([^\s]+)',message.get_content())[1]
+        outsider=self.app.test_client()
+        self.assertEqual(outsider.post('/api/account/complete',json={'token':token,'password':'new-guest-password'}).status_code,200)
+        self.assertEqual(guest.get('/api/me').status_code,401)
+        self.assertEqual(outsider.post('/api/account/request',json={'email':'missing@gmail.com'}).status_code,429)
+
+    def test_invitation_requires_delivery_and_origin(self):
+        self.login()
+        self.assertEqual(self.post('/api/admin/users',{'username':'guest@gmail.com','role':'viewer','invite':True,'channels':[1]}).status_code,400)
+        self.assertEqual(self.client.post('/api/account/request',json={'email':'guest@gmail.com'},headers={'Origin':'https://evil.example'}).status_code,403)
+        self.assertEqual(self.client.post('/api/account/complete',json={'token':'fake','password':'long-safe-password'}).status_code,400)
 
 
 if __name__=='__main__':
