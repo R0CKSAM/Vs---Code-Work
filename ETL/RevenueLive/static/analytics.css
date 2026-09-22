@@ -2,3 +2,81 @@
 .filters{gap:10px}.filters label{width:145px}.filters .channel-field{width:250px;min-width:0}.field-label{display:block;font-weight:600;font-size:12px;margin-bottom:7px}#channelPicker{position:relative;background:white;border:1px solid #b9c5ca;border-radius:4px}#channelPicker summary{padding:11px;cursor:pointer;min-height:40px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.channel-menu{position:absolute;z-index:20;background:#fff;border:1px solid #bdcbd1;box-shadow:0 8px 24px #20333d20;top:calc(100% + 5px);left:0;width:320px;max-width:calc(100vw - 32px);padding:12px;border-radius:5px}.picker-actions{display:flex;gap:8px;margin:10px 0}.picker-actions button{font-size:12px;padding:6px 12px;min-height:34px}#channelOptions{max-height:280px;overflow:auto}#channelOptions label{width:auto;display:flex;flex-direction:row;align-items:center;font-weight:400;font-size:13px;gap:10px;padding:8px 2px;overflow-wrap:anywhere}#channelOptions input{width:16px;min-height:16px;flex-shrink:0}.scope-line{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12px;padding-top:12px;color:#65737b}#filterState{color:#915c00}.analytics-toolbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;margin:28px 0 18px}.analytics-toolbar h2{margin:0 0 5px}.chart-controls{display:flex;gap:12px}.chart-controls label{min-width:140px}.chart-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:0 28px;margin-bottom:30px}.chart-block{padding:20px 0;border-top:1px solid #dbe2e5;min-width:0}.chart-block:last-child{grid-column:1/-1}.chart-heading{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}.chart-heading h3{font-size:14px;margin:0;flex:1;min-width:100px}.chart-heading button{padding:5px 10px;font-size:12px;min-height:32px}.chart-heading select{width:135px;min-height:32px;padding:6px;font-size:12px}.chart-frame{position:relative;height:290px;width:100%;min-width:0}.chart-note{font-size:12px;color:#65737b;margin-bottom:0}.pagination{display:flex;align-items:center;justify-content:end;flex-wrap:wrap;gap:12px;padding:16px 0}.pagination label{flex-direction:row;align-items:center}.pagination select{width:75px}.pagination span{font-size:12px;color:#65737b}#chartDialog{width:1100px;max-width:calc(100vw - 24px)}#chartDialog h2{margin:0;flex:1}.expanded-frame{position:relative;height:65dvh;min-height:280px}canvas{max-width:100%}
 @media(max-width:760px){#demoBanner{padding:10px 16px;line-height:1.5}.filters label,.filters .channel-field{width:auto}.filters .channel-field{grid-column:1/-1}.channel-menu{width:100%;max-width:100%}.analytics-toolbar{align-items:stretch}.chart-controls{width:100%}.chart-controls label{flex:1;min-width:0}.chart-grid{grid-template-columns:minmax(0,1fr);gap:0}.chart-block:last-child{grid-column:auto}.chart-frame{height:270px}.chart-heading{gap:8px}.pagination{justify-content:start}.metrics strong{font-size:21px}.scope-line{line-height:1.5}}
 .assignment-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.assignment-actions button{font-size:12px;padding:6px 10px;min-height:34px}#assignmentCount{font-size:12px;margin:10px 0}#userDialog{max-height:92dvh}#assignmentFieldset[data-admin="true"] #assignments,#assignmentFieldset[data-admin="true"] #assignmentSearch,#assignmentFieldset[data-admin="true"] .assignment-actions,#assignmentFieldset[data-admin="true"] #assignmentCount{display:none}
+#shell>header{flex-wrap:wrap}
+.revenue-header{flex:0 0 100%;width:100%;min-width:0;border-top:1px solid #dbe2e5;padding-top:12px}
+.revenue-header .section-title{margin-bottom:6px}
+.revenue-header h1{font-size:20px;margin:4px 0}
+.revenue-header .filters{padding:8px 0 0;border:0}
+.chart-grid .chart-block:last-child{grid-column:auto}
+.picker-actions{flex-wrap:wrap}
+@media(max-width:760px){.revenue-header .filters{grid-template-columns:repeat(2,minmax(0,1fr))}.revenue-header input,.revenue-header select{min-width:0}.revenue-header .filters .channel-field{width:100%}}
+#shell>header{position:sticky;top:0;z-index:30;display:block;padding:0 20px;box-shadow:0 2px 6px #20333d12}
+.header-row{display:flex;align-items:center;gap:20px;min-height:58px;overflow-x:auto;white-space:nowrap}
+.header-row .wordmark{font-size:20px;flex-shrink:0}
+.header-row .wordmark span{font-size:14px}
+.header-row nav{padding:0;border:0;flex:1;align-items:center;overflow:visible}
+.header-row .identity{flex-wrap:nowrap;width:auto;flex-shrink:0;gap:8px}
+.header-row button{padding:7px 10px;min-height:36px}
+.header-row .currency{margin:0 8px}
+.revenue-header{display:flex;align-items:center;gap:12px;min-height:66px;padding:8px 0;overflow-x:auto;white-space:nowrap}
+.revenue-header .section-title{margin:0;flex-shrink:0}
+.revenue-header .eyebrow{font-size:9px}
+.revenue-header h1{font-size:16px;margin:3px 0}
+.revenue-header .filters{display:flex;flex-wrap:nowrap;align-items:center;padding:0;gap:8px;flex:1}
+.revenue-header .filters label{width:132px;flex-shrink:0;gap:3px;font-size:10px}
+.revenue-header .filters .channel-field{width:210px;flex-shrink:0}
+.revenue-header .field-label{font-size:10px;margin-bottom:3px}
+.revenue-header input,.revenue-header select{padding:7px;min-height:34px;font-size:12px}
+.revenue-header button{padding:7px 10px;min-height:34px;flex-shrink:0}
+.revenue-header #channelPicker summary{padding:8px;min-height:34px;font-size:12px}
+.revenue-header .channel-menu{position:fixed;max-width:none;overflow-y:auto;white-space:normal}
+.revenue-header #channelOptions label{width:auto}
+@media(max-width:760px){#shell>header{padding:0 12px}.header-row{gap:16px}.revenue-header .filters .channel-field{width:210px}}
+.revenue-header .filters{align-items:end}
+.revenue-header{align-items:end}
+.revenue-header .section-title{align-self:center}
+.chart-heading .chart-controls{width:100%;gap:12px}
+.chart-heading .chart-controls label{min-width:0;flex:0 1 180px}
+.chart-heading .chart-controls select{width:100%;font-size:12px}
+#dateCoverage{margin-left:auto}
+#shell>header{display:flex;flex-direction:row;align-items:center;gap:14px;min-height:64px;padding:8px 20px}
+.revenue-header{flex:1;min-width:0;min-height:0;border:0;padding:0;gap:10px}
+.revenue-header .filters{flex:initial}
+.revenue-header .filters label{width:135px}
+.revenue-header .filters .channel-field{width:220px}
+.revenue-header #export{margin-left:auto}
+.compact-brand{font-size:14px;font-weight:700;white-space:nowrap;color:#132d36}
+#accountMenu{position:relative;flex-shrink:0}
+#accountMenu>summary{cursor:pointer;padding:10px;border:1px solid #b9c5ca;border-radius:4px;font-size:13px;background:white}
+.account-panel{position:absolute;right:0;top:calc(100% + 10px);width:270px;max-width:calc(100vw - 24px);padding:14px;background:white;border:1px solid #ccd9db;box-shadow:0 6px 20px #20333d22;border-radius:5px}
+.account-panel nav{display:flex;flex-direction:column;padding:0;border:0;gap:4px;overflow:visible}
+.account-panel nav button{text-align:left}
+.account-panel .currency{margin:8px 0;align-self:start}
+.account-panel .identity{border-top:1px solid #dbe2e5;padding-top:12px;gap:8px;display:flex;flex-wrap:wrap}
+.account-panel #identity{width:100%;overflow-wrap:anywhere}
+#reportLoading{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:10px;background:#fff;color:#173e34;border:1px solid #b9cfc7;border-radius:6px;padding:12px 18px;box-shadow:0 4px 18px #20333d20;pointer-events:none}
+.loading-spinner{width:18px;height:18px;border:2px solid #d5e5df;border-top-color:#08775d;border-radius:50%;animation:loading-spin .75s linear infinite;flex-shrink:0}
+@keyframes loading-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.loading-spinner{animation:none}}
+@media(max-width:1100px){.compact-brand{display:none}#shell>header{gap:8px;padding:8px 12px}.revenue-header .filters .channel-field{width:180px}}
+#shell>header{padding:6px 8px;gap:8px;align-items:end;flex-wrap:nowrap;min-height:62px}
+#accountMenu>summary,#shell>header>#export{min-height:34px;padding:8px 10px;font-size:12px;white-space:nowrap}
+#shell>header>#export{flex-shrink:0}
+.account-panel{left:0;right:auto}
+.workspace{max-width:none;width:100%;padding:10px 8px;min-height:75vh}
+.scope-line{padding-top:0}
+.metrics{padding:18px 0;gap:14px}
+.analytics-toolbar{margin:18px 0 10px}
+.chart-grid{gap:0 18px;margin-bottom:20px}
+@media(max-width:760px){.workspace{padding:10px 6px}.chart-grid{gap:0}#shell>header{padding:6px;gap:6px}}
+#shell>header{align-items:center;min-height:48px}
+.revenue-header{align-items:center}
+.revenue-header .filters{align-items:center}
+.revenue-header .filters label{display:flex;flex-direction:row;align-items:center;gap:7px;width:auto;font-size:12px}
+.revenue-header .filters label input{width:135px;flex-shrink:0}
+.revenue-header .filters .channel-field{display:flex;align-items:center;gap:7px;width:auto}
+.revenue-header .field-label{margin:0;font-size:12px}
+.revenue-header #channelPicker{width:220px}
+.account-panel>#export{width:100%;text-align:left;margin:0 0 8px}
+.revenue-header #channelOptions label{white-space:normal}
+.revenue-header #channelOptions label input{width:16px}

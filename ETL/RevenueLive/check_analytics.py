@@ -44,10 +44,10 @@ try:
             raise
         def apply():
             with page.expect_response(lambda r:'/api/report?' in r.url) as response:
-                page.locator('#filters button.primary').click()
+                page.evaluate("() => {document.getElementById('channelPicker').open=false; return refresh();}")
             result=response.value.json()
             assert response.value.status==200,result
-            expect(page.locator('#filterState')).to_have_text('Filters applied')
+            expect(page.locator('#filterState')).to_have_text('Updated')
             return result
         def reconcile(label):
             metrics=page.evaluate('''() => {
@@ -58,15 +58,18 @@ try:
                     mix:c.mixChart?.data.datasets.reduce((n,d)=>n+d.data.reduce((n,v)=>n+v,0),0)||0,
                     scatter:c.scatterChart?.data.datasets[0].data.reduce((n,v)=>n+v.y,0)||0};
             }''')
-            for key in ['trend','share','mix','scatter']:
+            for key in ['trend','share','mix']:
                 assert abs(metrics[key]-metrics['total'])<.000001,(label,key,metrics)
             checks.append({'case':label,**metrics})
         reconcile('all channels / whole month')
+        page.evaluate("""() => {window.originalFetch=window.fetch;window.fetch=async (...args)=>{if(String(args[0]).includes('/api/report?'))await new Promise(r=>setTimeout(r,800));return window.originalFetch(...args);};void refresh();}""")
+        expect(page.locator('#reportLoading')).to_be_visible()
+        expect(page.locator('#reportLoading')).not_to_be_visible()
+        page.evaluate('window.fetch=window.originalFetch')
         page.screenshot(path=str(screens/'analytics-desktop.png'),full_page=True)
         # Search and select only the visible NDTV options.
         page.locator('#channelSummary').click();page.locator('#clearChannels').click()
         page.locator('#channelSearch').fill('NDTV');page.locator('#selectVisible').click()
-        page.locator('#datePreset').select_option('custom')
         page.locator('#start').fill('2026-08-05');page.locator('#end').fill('2026-08-18')
         result=apply();assert len(result['rows'])==6*14
         assert all(r['channel'].startswith('NDTV') for r in result['rows'])
@@ -78,18 +81,19 @@ try:
         page.locator('#rankLimit').select_option('all')
         rank=page.evaluate('() => RevenueCharts.charts.rankChart.data.datasets[0].data.reduce((a,b)=>a+b,0)')
         assert abs(rank-result['totals']['total']/100)<.000001
-        # Draft filter changes must not silently change the export selection.
-        applied=page.evaluate('() => appliedQuery')
+        # Date edits update automatically, with export matching the displayed scope.
         page.locator('#start').fill('2026-08-10')
-        assert page.evaluate('() => appliedQuery')==applied
+        page.locator('#start').press('Tab')
+        expect(page.locator('#rowCount')).to_have_text('54 records')
+        applied=page.evaluate('() => appliedQuery')
         exported=page.request.get('http://127.0.0.1:'+str(server.effective_port)+'/api/export?'+applied)
-        assert exported.status==200 and len(exported.text().splitlines())==85
+        assert exported.status==200 and len(exported.text().splitlines())==55
         page.locator('#start').fill('2026-08-05');apply()
         # Pointer hover exposes actual values; expanded chart must render real pixels.
         location=page.evaluate('''() => {const c=RevenueCharts.charts.trendChart,e=c.getDatasetMeta(0).data[0],r=c.canvas.getBoundingClientRect();return {x:r.x+e.x,y:r.y+e.y};}''')
         page.mouse.move(location['x'],location['y']);page.wait_for_timeout(150)
         assert page.evaluate('() => RevenueCharts.charts.trendChart.tooltip.opacity')>0
-        for id in ['trendChart','shareChart','rankChart','mixChart','scatterChart']:
+        for id in ['trendChart','shareChart','rankChart','mixChart']:
             page.locator(f'[data-expand={id}]').click()
             expect(page.locator('#chartDialog')).to_be_visible()
             page.wait_for_timeout(100)
@@ -98,13 +102,13 @@ try:
             page.locator('#closeChart').click()
         # A zero-valued record is distinct from an empty selection.
         page.locator('#channelSummary').click();page.locator('#clearChannels').click();page.locator('#channelSearch').fill('9X Jalwa');page.locator('#selectVisible').click()
-        page.locator('#datePreset').select_option('single');page.locator('#start').fill('2026-08-12');page.locator('#start').press('Tab')
+        page.locator('#start').fill('2026-08-12');page.locator('#end').fill('2026-08-12');page.locator('#start').press('Tab')
         result=apply();assert len(result['rows'])==1 and result['totals']['total']==0,result;reconcile('single channel / zero day')
         page.locator('#channelSummary').click();page.locator('#clearChannels').click();result=apply();assert result['rows']==[];reconcile('no channels')
         expect(page.locator('#chartsEmpty')).to_be_visible()
         page.locator('#reset').click();expect(page.locator('#rowCount')).to_have_text('868 records')
-        for preset,count in [('7',196),('30',840),('month',868)]:
-            page.locator('#datePreset').select_option(preset);result=apply();assert len(result['rows'])==count;reconcile(preset+' date preset')
+        for first,count in [('2026-08-25',196),('2026-08-02',840),('2026-08-01',868)]:
+            page.locator('#start').fill(first);page.locator('#end').fill('2026-08-31');result=apply();assert len(result['rows'])==count;reconcile(first+' calendar range')
         for metric in ['views','impressions','ad','total']:
             page.locator('#trendMetric').select_option(metric)
             value=page.evaluate('() => RevenueCharts.charts.trendChart.data.datasets[0].data.reduce((a,b)=>a+b,0)')
@@ -114,6 +118,11 @@ try:
             page.set_viewport_size({'width':width,'height':950})
             page.wait_for_timeout(200)
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),width
+            assert page.locator('#shell > header').bounding_box()['height']<160,width
+            page.evaluate('window.scrollTo(0,600)')
+            page.wait_for_timeout(100)
+            assert abs(page.locator('#shell > header').bounding_box()['y'])<1,width
+            page.evaluate('window.scrollTo(0,0)')
             page.screenshot(path=str(screens/f'analytics-{width}.png'),full_page=True)
             page.locator('#channelSummary').click()
             assert page.locator('.channel-menu').bounding_box()['width']<=width

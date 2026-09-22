@@ -58,6 +58,22 @@ class RevenueTest(unittest.TestCase):
             db.execute('DELETE FROM assignments WHERE user_id=3')
         self.assertEqual(self.client.get('/api/report').json['rows'],[])
 
+    def test_archive_restore_preserves_data_and_enforces_scope(self):
+        self.login('view')
+        self.assertEqual(self.post('/api/admin/channels/1/archive',{'archived':True}).status_code,403)
+        self.login()
+        self.assertEqual(self.post('/api/admin/channels/1/archive',{'archived':True}).status_code,200)
+        self.assertEqual(len(self.client.get('/api/report').json['rows']),1)
+        self.assertEqual(self.preview().status_code,400)
+        self.assertEqual(len(self.client.get('/api/admin/users').json['archived']),1)
+        self.login('view')
+        self.assertEqual(self.client.get('/api/report').json['rows'],[])
+        self.assertEqual(self.client.get('/api/report?channel=1').status_code,400)
+        self.login()
+        self.assertEqual(self.post('/api/admin/channels/1/archive',{'archived':False}).status_code,200)
+        self.login('view')
+        self.assertEqual(len(self.client.get('/api/report').json['rows']),1)
+
     def test_single_super_admin_and_admin_boundaries(self):
         with closing(sqlite3.connect(self.path/'revenuelive.db')) as db,db:
             db.execute('INSERT INTO super_admin VALUES (1,1)')

@@ -38,6 +38,7 @@ try:
         page.locator('#loginForm [name=password]').fill(password)
         page.locator('#loginForm button.primary').click()
         page.locator('#shell').wait_for(state='visible')
+        page.locator('#accountMenu summary').click()
         page.locator('#uploadNav').click()
         page.locator('input[type=file]').set_input_files(str(ROOT/'Upload File.xls'))
         page.locator('#uploadForm button').click()
@@ -46,6 +47,7 @@ try:
         page.on('dialog',lambda d:d.accept())
         page.locator('#publish').click()
         expect(page.locator('#history')).to_contain_text('committed')
+        page.locator('#accountMenu summary').click()
         page.locator('[data-view=dashboard]').click()
         expect(page.locator('#total')).to_contain_text('313.89')
         assert '1,49,938' in page.locator('#views').inner_text()
@@ -54,6 +56,7 @@ try:
             page.set_viewport_size({'width':width,'height':844})
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),width
             page.screenshot(path=str(screens/f'mobile-{width}.png'),full_page=True)
+        page.locator('#accountMenu summary').click()
         page.locator('#adminNav').click()
         page.locator('#addUser').click()
         page.locator('#userForm [name=username]').fill('Mobile Viewer')

@@ -132,6 +132,7 @@ def create_app(data_dir=None):
             CREATE TABLE IF NOT EXISTS revisions(upload_id TEXT, day TEXT, channel_id INTEGER, previous TEXT);
             CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY, created TEXT, user_id INTEGER, action TEXT, detail TEXT);
             CREATE TABLE IF NOT EXISTS super_admin(singleton INTEGER PRIMARY KEY CHECK(singleton=1), user_id INTEGER UNIQUE NOT NULL REFERENCES users(id));
+            CREATE TABLE IF NOT EXISTS archived_channels(channel_id INTEGER PRIMARY KEY REFERENCES channels(id));
         ''')
         db().commit()
 
@@ -140,8 +141,8 @@ def create_app(data_dir=None):
 
     def permitted():
         if g.user['role'] == 'admin':
-            return db().execute('SELECT * FROM channels ORDER BY name COLLATE NOCASE').fetchall()
-        return db().execute('SELECT c.* FROM channels c JOIN assignments a ON c.id=a.channel_id WHERE a.user_id=? ORDER BY c.name COLLATE NOCASE', (g.user['id'],)).fetchall()
+            return db().execute('SELECT * FROM channels WHERE id NOT IN (SELECT channel_id FROM archived_channels) ORDER BY name COLLATE NOCASE').fetchall()
+        return db().execute('SELECT c.* FROM channels c JOIN assignments a ON c.id=a.channel_id WHERE a.user_id=? AND c.id NOT IN (SELECT channel_id FROM archived_channels) ORDER BY c.name COLLATE NOCASE', (g.user['id'],)).fetchall()
 
     def require(*roles):
         def decorator(fn):
@@ -252,7 +253,7 @@ def create_app(data_dir=None):
         db().execute('DELETE FROM sessions WHERE user_id=? AND token<>?',(g.user['id'],g.session['token']))
         log('password_changed');db().commit();return jsonify(ok=True)
 
-    def report_rows():
+    def report_rows(available_dates=False):
         ids={c['id'] for c in permitted()}
         selected=[v for v in request.args.getlist('channel') if v]
         if selected == ['none']:
@@ -275,6 +276,8 @@ def create_app(data_dir=None):
         if start>end:
             raise InvalidData('Start date must not be after end date.')
         placeholders=','.join('?' for _ in ids) or 'NULL'
+        if available_dates:
+            return [r[0] for r in db().execute(f'SELECT DISTINCT day FROM records WHERE channel_id IN ({placeholders}) ORDER BY day',tuple(sorted(ids)))]
         return [dict(r) for r in db().execute(f'SELECT r.*,c.name AS channel FROM records r JOIN channels c ON c.id=r.channel_id WHERE r.channel_id IN ({placeholders}) AND day>=? AND day<=? ORDER BY day DESC,c.name COLLATE NOCASE',(*sorted(ids),start,end))]
 
     @app.get('/api/report')
@@ -282,7 +285,7 @@ def create_app(data_dir=None):
     def report():
         rows=report_rows()
         totals={key:sum(r[key] for r in rows) for key in ('views','impressions','ad','other','total')}
-        return jsonify(rows=rows,totals=totals,currency='INR',money_unit='paise')
+        return jsonify(rows=rows,totals=totals,currency='INR',money_unit='paise',available_dates=report_rows(available_dates=True))
 
     @app.get('/api/export')
     @require()
@@ -391,7 +394,24 @@ def create_app(data_dir=None):
         rows=[]
         for user in db().execute('SELECT id,username,role,active,must_change FROM users ORDER BY username'):
             rows.append({**dict(user),'super_admin':bool(db().execute('SELECT 1 FROM super_admin WHERE user_id=?',(user['id'],)).fetchone()),'channels':[r[0] for r in db().execute('SELECT channel_id FROM assignments WHERE user_id=?',(user['id'],))]})
-        return jsonify(users=rows,channels=[dict(c) for c in permitted()])
+        return jsonify(users=rows,channels=[dict(c) for c in permitted()],archived=[dict(c) for c in db().execute('SELECT c.* FROM channels c JOIN archived_channels a ON a.channel_id=c.id ORDER BY c.name COLLATE NOCASE')])
+
+    @app.post('/api/admin/channels/<int:cid>/archive')
+    @require('admin')
+    def archive_channel(cid):
+        archived=(request.get_json(silent=True) or {}).get('archived')
+        if type(archived) is not bool:
+            raise InvalidData('Specify archive or restore.')
+        db().execute('BEGIN IMMEDIATE')
+        if not db().execute('SELECT 1 FROM channels WHERE id=?',(cid,)).fetchone():
+            raise InvalidData('Channel not found.')
+        if archived:
+            db().execute('INSERT OR IGNORE INTO archived_channels VALUES (?)',(cid,))
+        else:
+            db().execute('DELETE FROM archived_channels WHERE channel_id=?',(cid,))
+        log('channel_archived' if archived else 'channel_restored',str(cid))
+        db().commit()
+        return jsonify(ok=True)
 
     @app.post('/api/admin/channels')
     @require('admin')

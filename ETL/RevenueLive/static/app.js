@@ -1,8 +1,46 @@
 'use strict';
 const $=id=>document.getElementById(id);
+document.querySelector('#shell > header').append($('revenueHeader'));
+const topHeader=document.querySelector('#shell > header');
+const headerRow=document.createElement('div');headerRow.className='header-row';
+headerRow.append(topHeader.querySelector('.wordmark'),document.querySelector('#shell > nav'),topHeader.querySelector('.identity'));
+topHeader.prepend(headerRow);
+$('revenueHeader').append($('export'));
+function positionChannelMenu(){
+  if(!$('channelPicker').open)return;
+  const rect=$('channelPicker').getBoundingClientRect(),menu=$('channelPicker').querySelector('.channel-menu');
+  const width=Math.min(320,innerWidth-24);
+  menu.style.width=width+'px';menu.style.left=Math.max(12,Math.min(rect.left,innerWidth-width-12))+'px';
+  menu.style.top=Math.min(rect.bottom+5,innerHeight-100)+'px';menu.style.maxHeight=Math.max(80,innerHeight-rect.bottom-17)+'px';
+}
+$('channelPicker').addEventListener('toggle',positionChannelMenu);
+window.addEventListener('resize',positionChannelMenu);
+document.addEventListener('scroll',positionChannelMenu,true);
+new MutationObserver(()=>{$('revenueHeader').hidden=$('dashboard').hidden;}).observe($('dashboard'),{attributes:true,attributeFilter:['hidden']});
 let me=null,csrf='',pending=null,users=[],adminChannels=[];
 let selectedChannels=new Set(),reportRows=[],appliedQuery='',pageIndex=0,latestDay='',requestNumber=0;
 let accessEpoch=0,checkingAccess=false;
+let filterTimer;
+const availableDates=document.createElement('datalist');availableDates.id='availableDates';document.body.append(availableDates);
+for(const id of ['start','end'])$(id).removeAttribute('list');
+const dateCoverage=document.createElement('span');dateCoverage.id='dateCoverage';$('filterState').before(dateCoverage);
+$('filters').querySelector('button.primary').hidden=true;
+document.querySelector('#trendChart').closest('.chart-block').querySelector('.chart-heading').append(document.querySelector('.chart-controls'));
+$('datePreset').closest('label').hidden=true;
+$('revenueHeader').querySelector('.section-title').hidden=true;
+const accountMenu=document.createElement('details');accountMenu.id='accountMenu';
+const menuTitle=document.createElement('summary');menuTitle.textContent='Menu';accountMenu.append(menuTitle);
+const menuPanel=document.createElement('div');menuPanel.className='account-panel';
+menuPanel.append(headerRow.querySelector('nav'),headerRow.querySelector('.identity'));accountMenu.append(menuPanel);
+topHeader.prepend(accountMenu);
+menuPanel.prepend($('export'));
+menuPanel.querySelector('.currency')?.remove();
+headerRow.remove();
+document.addEventListener('click',e=>{if(!accountMenu.contains(e.target))accountMenu.open=false;});
+menuPanel.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>{accountMenu.open=false;}));
+const loading=document.createElement('div');loading.id='reportLoading';loading.hidden=true;loading.setAttribute('role','status');loading.innerHTML='<span class="loading-spinner" aria-hidden="true"></span><span>Updating data...</span>';document.body.append(loading);
+let loadingTicket=0;
+function setLoading(value){loading.hidden=!value;$('dashboard').setAttribute('aria-busy',String(value));}
 const money=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'}).format(n/100);
 const number=n=>new Intl.NumberFormat('en-IN').format(n);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -19,6 +57,8 @@ async function api(path,options={}){
 }
 function bind(id,event,fn){$(id).addEventListener(event,async e=>{e.preventDefault();const button=e.submitter||((e.target.tagName==='BUTTON')?e.target:null);if(button)button.disabled=true;try{await fn(e);}catch(error){if(!error.stale){const dialog=e.target.closest('dialog');if(dialog?.open&&dialog.querySelector('.form-error'))dialog.querySelector('.form-error').textContent=error.message;else if(me)notify(error.message);else $('loginError').textContent=error.message;}}finally{if(button)button.disabled=false;}});}
 function clearSensitive(){
+  loadingTicket++;setLoading(false);
+  clearTimeout(filterTimer);availableDates.replaceChildren();dateCoverage.textContent='';
   accessEpoch++;requestNumber++;reportRows=[];users=[];adminChannels=[];pending=null;appliedQuery='';latestDay='';pageIndex=0;
   for(const dialog of document.querySelectorAll('dialog[open]'))dialog.close();
   for(const id of ['records','history','users','channelDirectory','previewRows','assignments','channelOptions'])$(id).replaceChildren();
@@ -73,18 +113,32 @@ function channelSummary(){
   $('channelSummary').textContent=size===0?'No channels selected':size===me.channels.length?'All assigned channels ('+size+')':size===1?me.channels.find(c=>selectedChannels.has(String(c.id))).name:size+' channels selected';
 }
 function filterChannelOptions(){const text=$('channelSearch').value.trim().toLowerCase();for(const label of $('channelOptions').children)label.hidden=!label.textContent.toLowerCase().includes(text);}
-function dirty(){$('filterState').textContent='Unapplied changes';}
+function dirty(){
+  clearTimeout(filterTimer);requestNumber++;$('export').disabled=true;
+  $('filterState').textContent='Updating...';
+  filterTimer=setTimeout(()=>{if(!me)return;if($('start').value&&$('end').value&&$('start').value>$('end').value){$('filterState').textContent='Choose an end date on or after the start date';return;}refresh().catch(error=>{if(!error.stale)notify(error.message);});},300);
+}
 function query(){const params=new URLSearchParams({start:$('start').value,end:$('end').value});if(!selectedChannels.size)params.append('channel','none');else for(const id of [...selectedChannels].sort((a,b)=>Number(a)-Number(b)))params.append('channel',id);return params.toString();}
 function renderTable(){const size=Number($('pageSize').value),pages=Math.max(1,Math.ceil(reportRows.length/size));pageIndex=Math.min(pageIndex,pages-1);const subset=reportRows.slice(pageIndex*size,(pageIndex+1)*size);
   $('records').innerHTML=subset.map(r=>`<tr><td>${esc(r.day)}</td><td>${esc(r.channel)}</td><td class="number">${number(r.views)}</td><td class="number">${number(r.impressions)}</td><td class="number">${money(r.ad)}</td><td class="number">${money(r.other)}</td><td class="number"><strong>${money(r.total)}</strong></td></tr>`).join('');
   $('pageInfo').textContent=reportRows.length?`${pageIndex*size+1}-${Math.min((pageIndex+1)*size,reportRows.length)} of ${number(reportRows.length)}`:'0 records';$('previousPage').disabled=pageIndex===0;$('nextPage').disabled=pageIndex>=pages-1;
 }
 async function refresh(){
+  const ticket=++loadingTicket;setLoading(true);
+  try{return await loadReport();}finally{if(ticket===loadingTicket)setLoading(false);}
+}
+async function loadReport(){
+  clearTimeout(filterTimer);
   const sequence=++requestNumber,requested=query(),scope=$('channelSummary').textContent;
   $('filterState').textContent='Loading...';$('export').disabled=true;
   let data;try{data=await api('/api/report?'+requested);}catch(error){if(error.stale)return;if(sequence===requestNumber){$('filterState').textContent='Could not apply filters';$('export').disabled=!appliedQuery;}throw error;}
   if(sequence!==requestNumber)return;
   appliedQuery=requested;reportRows=data.rows;pageIndex=0;
+  const dates=data.available_dates||[];
+  availableDates.replaceChildren(...dates.map(day=>{const option=document.createElement('option');option.value=day;return option;}));
+  for(const id of ['start','end']){if(dates.length){$(id).min=dates[0];$(id).max=dates[dates.length-1];}else{$(id).removeAttribute('min');$(id).removeAttribute('max');}}
+  latestDay=dates.at(-1)||'';
+  dateCoverage.textContent=dates.length?'Available data: '+dates[0]+' to '+dates.at(-1)+' ('+dates.length+' days)':'No data for selected channels';
   if(data.rows.length)latestDay=data.rows.reduce((last,r)=>r.day>last?r.day:last,latestDay);
   for(const k of ['total','ad','other'])$(k).textContent=money(data.totals[k]);
   $('views').textContent=number(data.totals.views);$('impressions').textContent=number(data.totals.impressions)+' ad impressions';
@@ -93,7 +147,7 @@ async function refresh(){
   $('rowCount').textContent=number(data.rows.length)+' records';$('empty').hidden=data.rows.length>0;
   $('period').textContent=data.rows.length?[...new Set(data.rows.map(r=>r.day))].sort().filter((v,i,a)=>i===0||i===a.length-1).join(' to '):'No data';
   const params=new URLSearchParams(requested);$('appliedScope').textContent=scope+' | '+(params.get('start')||'Beginning')+' to '+(params.get('end')||'Latest');
-  $('filterState').textContent=query()===requested?'Filters applied':'Unapplied changes';$('export').disabled=false;$('channelPicker').open=false;
+  $('filterState').textContent=query()===requested?'Updated':'Updating...';$('export').disabled=false;
   $('updated').textContent='Updated '+new Date().toLocaleTimeString('en-IN');
 }
 bind('loginForm','submit',async()=>{
@@ -102,7 +156,7 @@ bind('loginForm','submit',async()=>{
 });
 bind('logout','click',async()=>{await api('/api/logout',{method:'POST'});location.reload();});
 bind('filters','submit',refresh);
-bind('reset','click',async()=>{HTMLFormElement.prototype.reset.call($('filters'));$('end').disabled=false;selectedChannels=new Set(me.channels.map(c=>String(c.id)));renderChannelOptions();await refresh();});
+bind('reset','click',async()=>{HTMLFormElement.prototype.reset.call($('filters'));$('channelSearch').value='';$('end').disabled=false;selectedChannels=new Set(me.channels.map(c=>String(c.id)));renderChannelOptions();await refresh();});
 bind('export','click',async()=>{window.location.href='/api/export?'+appliedQuery;});
 $('channelSearch').addEventListener('input',filterChannelOptions);
 const selectAllChannels=document.createElement('button');
@@ -151,7 +205,21 @@ bind('publish','click',async()=>{
 });
 const history=async()=>{const data=await api('/api/uploads');$('history').innerHTML=data.rows.map(r=>`<tr><td>${esc(new Date(r.created).toLocaleString('en-IN'))}</td><td>${esc(r.filename)}</td><td>${esc(r.username)}</td><td><span class="badge">${esc(r.state)}</span></td><td>${me.user.role==='admin'&&r.state==='committed'?`<button data-restore="${esc(r.id)}">Roll back</button>`:''}</td></tr>`).join('');};
 $('history').addEventListener('click',async e=>{const button=e.target.closest('[data-restore]');if(!button||!confirm('Restore the previous data for this upload?'))return;button.disabled=true;try{await api('/api/uploads/'+button.dataset.restore+'/restore',{method:'POST'});await history();notify('Previous data restored.');}catch(error){notify(error.message);}finally{button.disabled=false;}});
-async function loadUsers(){const data=await api('/api/admin/users');users=data.users;adminChannels=data.channels;$('users').innerHTML=users.map(u=>`<tr><td>${esc(u.username)}</td><td>${u.super_admin?'Super Admin':esc(u.role)}</td><td>${u.role==='admin'?'All channels':u.channels.length+' assigned'}</td><td>${!u.active?'Disabled':u.must_change?'Password setup pending':'Enabled'}</td><td>${u.super_admin||(!me.user.super_admin&&u.role==='admin')?'Protected':`<button data-user="${u.id}">Edit</button>`}</td></tr>`).join('');$('userForm').elements.role.querySelector('option[value="admin"]').disabled=!me.user.super_admin;$('channelDirectory').innerHTML=data.channels.map(c=>`<div>${esc(c.name)}</div>`).join('');}
+async function loadUsers(){
+  const data=await api('/api/admin/users');users=data.users;adminChannels=data.channels;
+  const active=new Set(adminChannels.map(c=>c.id));
+  const scope=u=>{const count=u.channels.filter(id=>active.has(id)).length;return u.role==='admin'?'All channels':count===0?'No channels':count===active.size?'All assigned channels ('+count+')':count+' of '+active.size+' channels';};
+  $('users').innerHTML=users.map(u=>`<tr><td>${esc(u.username)}</td><td>${u.super_admin?'Super Admin':esc(u.role)}</td><td>${scope(u)}</td><td>${!u.active?'Disabled':u.must_change?'Password setup pending':'Enabled'}</td><td>${u.super_admin||(!me.user.super_admin&&u.role==='admin')?'Protected':`<button data-user="${u.id}">Edit</button>`}</td></tr>`).join('');
+  $('userForm').elements.role.querySelector('option[value="admin"]').disabled=!me.user.super_admin;
+  $('channelDirectory').innerHTML=[...data.channels.map(c=>({...c,archived:false})),...(data.archived||[]).map(c=>({...c,archived:true}))].map(c=>`<div><span>${esc(c.name)}${c.archived?' (archived)':''}</span> <button type="button" data-channel="${c.id}" data-archived="${!c.archived}">${c.archived?'Restore':'Remove'}</button></div>`).join('');
+}
+$('channelDirectory').addEventListener('click',async e=>{
+  const button=e.target.closest('[data-channel]');if(!button)return;
+  const archived=button.dataset.archived==='true';
+  if(!confirm(archived?'Remove this channel from active reports, uploads and user selections? Saved revenue is retained; Restore brings it back.':'Restore this channel and its retained user assignments?'))return;
+  button.disabled=true;
+  try{await api('/api/admin/channels/'+button.dataset.channel+'/archive',{method:'POST',body:{archived}});await syncAccess();if(me?.user.role==='admin')await loadUsers();notify(archived?'Channel archived. Saved revenue retained.':'Channel restored.');}catch(error){if(!error.stale)notify(error.message);}finally{button.disabled=false;}
+});
 function assignmentSummary(){
   const labels=[...$('assignments').children],shown=labels.filter(label=>!label.hidden).length,selected=$('assignments').querySelectorAll('input:checked').length;
   $('assignmentCount').textContent=selected+' selected | '+shown+' shown | '+labels.length+' total';
