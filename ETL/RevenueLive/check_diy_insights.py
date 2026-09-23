@@ -67,6 +67,10 @@ try:
         }""")
         findings={row['id']:row for row in checks['insights']}
         assert '+33.3%' in findings['change-total']['evidence']
+        assert findings['change-total']['kpi']['value']=='\u20b9400'
+        assert [row['value'] for row in findings['change-total']['kpi']['pairs']]==[40000,30000]
+        assert findings['change-total']['kpi']['badge']=='+33.3%'
+        assert findings['gainer']['kpi']['channel']=='Alpha'
         assert '+100.0%' in findings['change-views']['evidence']
         assert '-33.3%' in findings['yield-change']['evidence']
         assert 'Alpha, Beta' in findings['leader']['evidence']
@@ -106,7 +110,7 @@ try:
         assert priorities==sorted(priorities,reverse=True)
         expect(page.locator('#insightList article')).to_have_count(4)
         assert page.evaluate("()=>{const rows=QuickInsights.curate([{id:'coverage',priority:100},{id:'comparison',priority:90,evidence:'Incomplete prior period'},{id:'concentration',priority:84},{id:'leader',priority:80},{id:'yield-change',priority:85},{id:'yield',priority:40}]);return rows.length===3&&!rows.some(r=>['comparison','leader','yield'].includes(r.id));}")
-        for width in [1440,944,390]:
+        for width in [1440,944,390,320]:
             page.set_viewport_size({'width':width,'height':1000})
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
             page.locator('#quickInsights').screenshot(path=str(screens/f'quick-insights-{width}.png'))
@@ -115,6 +119,13 @@ try:
         expect(page.locator('#insightScope')).to_contain_text('1 selected channel')
         expect(page.locator('#insightScope')).to_contain_text('21 Sept 2026')
         assert 'Beta' not in page.locator('#insightList').inner_text()
+        expect(page.locator('[data-insight="change-total"] .insight-value')).to_have_text('\u20b9200')
+        assert page.locator('#insightList .kpi-icon svg').count()==page.locator('#insightList article').count()
+        for width in [1440,1024,390,320]:
+            page.set_viewport_size({'width':width,'height':1000})
+            assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),('production-kpi',width)
+            assert page.locator('#insightList article').evaluate_all('nodes=>nodes.every(n=>n.scrollWidth<=n.clientWidth)'),width
+            page.screenshot(path=str(screens/f'production-kpi-{width}.png'),full_page=True)
         page.evaluate("()=>{document.getElementById('end').value='2026-09-23';dirty();}")
         expect(page.locator('#insightList article')).to_have_count(0)
         page.wait_for_function("()=>document.getElementById('insightScope').textContent.includes('23 Sept 2026')")

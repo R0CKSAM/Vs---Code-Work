@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Veto Partners | KPI design preview</title>
+<style>
+:root{font-family:Arial,Helvetica,sans-serif;color:#243e47;background:#f4f7fa;color-scheme:light;--line:#d8e3e9;--muted:#586e7a}
+*{box-sizing:border-box;letter-spacing:0}body{margin:0}main{max-width:1280px;margin:auto;padding:32px 24px 40px}
+.brand{font-size:16px;font-weight:800;color:#30525c;margin:0 0 28px}.brand span{display:block;margin-top:5px;color:var(--muted);font-size:12px;font-weight:400}
+header{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:24px}h1{font-size:28px;margin:0 0 8px;font-weight:800}.scope{font-size:15px;margin:0;color:var(--muted);line-height:1.6}.periods{text-align:right;font-size:13px;line-height:1.8;color:var(--muted)}.periods strong{color:#243e47}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.card{--accent:#386d91;--tint:#edf4f9;background:#fff;border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:8px;padding:20px;min-width:0;display:flex;flex-direction:column;gap:12px}
+.down{--accent:#ac3048;--tint:#fff0f3}.up{--accent:#14734f;--tint:#edf8f2}.peak{--accent:#936009;--tint:#fff6e6}
+.heading{display:flex;gap:10px;align-items:center;min-height:36px}.icon{width:34px;height:34px;flex:none;display:grid;place-items:center;background:var(--tint);color:var(--accent);border-radius:6px}.icon svg{width:19px;height:19px}h2{font-size:16px;line-height:1.4;margin:0;font-weight:800}.value{font-size:36px;font-weight:800;line-height:1.15;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.value.accent{color:var(--accent)}
+.context{font-size:14px;font-weight:600;color:var(--muted);margin:0;line-height:1.5}.channel{font-size:16px;font-weight:700;line-height:1.45;margin:0;overflow-wrap:anywhere}
+.change{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:14px;line-height:1.5}.badge{display:inline-flex;align-items:center;gap:5px;background:var(--tint);color:var(--accent);font-weight:800;border-radius:4px;padding:5px 8px}.badge svg{height:15px;width:15px}.change>span:last-child{color:var(--muted)}
+.comparison{border-top:1px solid var(--line);padding-top:14px;margin-top:auto;display:grid;gap:10px}.bar-row{display:grid;grid-template-columns:66px minmax(0,1fr) auto;align-items:center;gap:8px;font-size:12px}.bar-row strong{font-size:13px;font-variant-numeric:tabular-nums}.track{height:8px;background:#eef2f5;border-radius:3px;overflow:hidden}.fill{height:100%;background:var(--accent)}.previous .fill{background:#a9bcc9}.bar-label{color:var(--muted)}.summary{font-size:14px;line-height:1.5;margin:0;color:#30525c}
+.mini-chart{height:64px;display:flex;align-items:end;gap:6px}.day{height:100%;flex:1;display:flex;align-items:end}.day span{display:block;width:100%;background:#d5e1e9;border-radius:3px 3px 0 0}.day.best span{background:#cf902a}.chart-labels{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+@media(max-width:1050px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){main{padding:24px 16px}.grid{grid-template-columns:minmax(0,1fr)}header{align-items:start;flex-direction:column}.periods{text-align:left}.value{font-size:34px}h1{font-size:26px}.brand{margin-bottom:22px}}
+@media(prefers-reduced-motion:no-preference){.card{animation:appear .25s ease-out}@keyframes appear{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}}
+</style>
+<script src="../static/lucide.min.js" defer></script>
+</head>
+<body><main>
+<p class="brand">VETO PARTNERS<span>Design preview &middot; Illustrative data</span></p>
+<header><div><h1>Quick Insights</h1><p class="scope">11 - 18 Aug 2026 &middot; 28 selected channels</p></div><div class="periods"><strong>8-day comparison</strong><br>Previous: 3 - 10 Aug 2026</div></header>
+<section class="grid" id="cards" aria-label="Revenue insights"></section>
+</main>
+<script>
+const money=(n,decimals=0)=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',minimumFractionDigits:decimals,maximumFractionDigits:decimals}).format(n);
+const percent=(n,base)=>(n>=base?'+':'')+((n-base)/base*100).toFixed(1)+'%';
+const daily=[12500,13700,11900,15200,12400,14200,12541,18163],total=daily.reduce((a,b)=>a+b,0),average=total/daily.length,peak=Math.max(...daily);
+const cards=[
+ {title:'Total revenue',icon:'indian-rupee',tone:'down',now:total,before:123040,context:'Earned during the selected 8 days',summary:money(123040-total)+' less revenue than the previous period.'},
+ {title:'Earnings per 1,000 views',icon:'eye',tone:'down',now:25.70,before:27.51,decimals:2,context:'Includes ads and sponsorship / others',summary:'Each 1,000 views earned '+money(27.51-25.70,2)+' less.'},
+ {title:'Largest channel decline',icon:'trending-down',tone:'down',now:2313,before:8689,delta:true,context:'Less revenue than the previous 8 days',channel:'News Nation State Punjab/HR',summary:'Review this channel\'s ad and sponsorship changes.'},
+ {title:'Largest channel gain',icon:'trending-up',tone:'up',now:7801,before:2342,delta:true,context:'More revenue than the previous 8 days',channel:'News Nation State MP/CG',summary:'Check whether the additional income is recurring.'},
+ {title:'Highest-earning channel',icon:'trophy',now:10499,before:9055,channel:'Wasim Jaffer',share:true,summary:money(10499-9055)+' ahead of Ssoftoons (#2).'},
+ {title:'Highest-earning day',icon:'calendar-days',tone:'peak',now:peak,before:average,channel:'18 Aug 2026',daily:true,summary:'Daily average: '+money(average)+'. Peak: '+money(peak)+'.'}
+];
+function node(tag,className,text){const element=document.createElement(tag);element.className=className;if(text!==undefined)element.textContent=text;return element;}
+for(const item of cards){
+ const card=node('article','card '+(item.tone||'')),heading=node('div','heading'),icon=node('span','icon'),glyph=document.createElement('i');glyph.dataset.lucide=item.icon;glyph.setAttribute('aria-hidden','true');icon.append(glyph);heading.append(icon,node('h2','',item.title));card.append(heading);
+ card.append(node('div','value'+(item.delta?' accent':''),item.delta?(item.now>=item.before?'+':'-')+money(Math.abs(item.now-item.before)):money(item.now,item.decimals||0)));
+ if(item.context)card.append(node('p','context',item.context));if(item.channel)card.append(node('p','channel',item.channel));
+ if(!item.delta){const change=node('div','change'),badge=node('span','badge',item.share?(item.now/total*100).toFixed(1)+'%':percent(item.now,item.before));change.append(badge,node('span','',item.share?'of selected revenue':item.daily?'above the range\'s daily average':'vs previous 8 days'));card.append(change);}
+ const comparison=node('div','comparison');
+ if(item.daily){const chart=node('div','mini-chart');chart.setAttribute('role','img');chart.setAttribute('aria-label',daily.map((v,i)=>(11+i)+' Aug: '+money(v)).join('; '));daily.forEach((v,i)=>{const day=node('div','day'+(v===peak?' best':'')),bar=node('span','');day.title=(11+i)+' Aug: '+money(v);bar.style.height=v/peak*100+'%';day.append(bar);chart.append(day);});const labels=node('div','chart-labels');labels.append(node('span','','11 Aug'),node('span','','18 Aug'));comparison.append(chart,labels);}
+ else [item.now,item.before].forEach((value,index)=>{const row=node('div','bar-row'+(index?' previous':'')),track=node('div','track'),fill=node('div','fill');track.setAttribute('aria-hidden','true');fill.style.width=value/Math.max(item.now,item.before)*100+'%';track.append(fill);row.append(node('span','bar-label',item.share?(index?'#2':'#1'):(index?'Previous':'Current')),track,node('strong','',money(value,item.decimals||0)));comparison.append(row);});
+ card.append(comparison,node('p','summary',item.summary));document.getElementById('cards').append(card);
+}
+window.addEventListener('DOMContentLoaded',()=>window.lucide?.createIcons());
+</script>
+</body></html>
