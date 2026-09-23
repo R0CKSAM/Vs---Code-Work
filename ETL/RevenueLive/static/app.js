@@ -1,4 +1,6 @@
 'use strict';
+const themeStyle=document.createElement('link');themeStyle.rel='stylesheet';themeStyle.href='/static/dark.css';document.head.append(themeStyle);
+const lightStyle=document.createElement('link');lightStyle.rel='stylesheet';lightStyle.href='/static/light.css';document.head.append(lightStyle);
 const $=id=>document.getElementById(id);
 const rankingScroll=document.createElement('div');rankingScroll.className='ranking-scroll';
 $('rankFrame').before(rankingScroll);rankingScroll.append($('rankFrame'));
@@ -11,21 +13,32 @@ $('revenueHeader').append($('export'));
 function positionChannelMenu(){
   if(!$('channelPicker').open)return;
   const rect=$('channelPicker').getBoundingClientRect(),menu=$('channelPicker').querySelector('.channel-menu');
-  const width=Math.min(320,innerWidth-24);
+  const width=Math.min(rect.width,innerWidth-24);
   menu.style.width=width+'px';menu.style.left=Math.max(12,Math.min(rect.left,innerWidth-width-12))+'px';
   menu.style.top=Math.min(rect.bottom+5,innerHeight-100)+'px';menu.style.maxHeight=Math.max(80,innerHeight-rect.bottom-17)+'px';
 }
 $('channelPicker').addEventListener('toggle',positionChannelMenu);
+$('channelPicker').addEventListener('toggle',()=>{if($('channelPicker').open)rangePicker.open=false;});
 window.addEventListener('resize',positionChannelMenu);
 document.addEventListener('scroll',positionChannelMenu,true);
-new MutationObserver(()=>{$('revenueHeader').hidden=$('dashboard').hidden;}).observe($('dashboard'),{attributes:true,attributeFilter:['hidden']});
+const tabular=document.createElement('section');tabular.id='tabular';tabular.className='view';tabular.hidden=true;
+const tableHeading=$('rowCount').closest('.section-title');
+const tableWrap=$('records').closest('.table-wrap');
+tabular.append(tableHeading,tableWrap,$('empty'),document.querySelector('.pagination'));
+$('dashboard').after(tabular);
+const tableNav=document.createElement('button');tableNav.dataset.view='tabular';tableNav.textContent='Tabular data';
+document.querySelector('[data-view="dashboard"]').textContent='Dashboard';
+document.querySelector('[data-view="dashboard"]').after(tableNav);
+const updateFilterVisibility=()=>{$('revenueHeader').hidden=$('dashboard').hidden&&tabular.hidden;};
+for(const view of [$('dashboard'),tabular])new MutationObserver(updateFilterVisibility).observe(view,{attributes:true,attributeFilter:['hidden']});
 let me=null,csrf='',pending=null,users=[],adminChannels=[];
 let selectedChannels=new Set(),reportRows=[],appliedQuery='',pageIndex=0,latestDay='',requestNumber=0;
 let accessEpoch=0,checkingAccess=false;
 let filterTimer;
 let initialWeek=true;
 let resetDateBounds=false;
-const signedInName=document.createElement('span');signedInName.id='signedInName';topHeader.prepend(signedInName);
+const signedInName=document.createElement('span');signedInName.id='signedInName';
+document.querySelector('.metrics').innerHTML='<article><span>Total revenue</span><strong id="total">-</strong></article><article class="revenue-split"><div id="adMetric"><span>Ad revenue</span><strong id="ad">-</strong></div><div id="sponsorMetric"><span>Sponsorship / others</span><strong id="other">-</strong></div></article><article><span>Views</span><strong id="views">-</strong></article><article><span>Ad impressions</span><strong id="impressions">-</strong></article><span id="channelCount" hidden></span>';
 document.querySelector('#trendChart').closest('.chart-block').querySelector('h3').textContent='Total revenue';
 document.querySelectorAll('.metrics small:not(#impressions)').forEach(el=>el.remove());
 const availableDates=document.createElement('datalist');availableDates.id='availableDates';document.body.append(availableDates);
@@ -37,20 +50,61 @@ $('interval').addEventListener('change',()=>{$('channelPicker').open=false;});
 $('datePreset').closest('label').hidden=true;
 $('revenueHeader').querySelector('.section-title').hidden=true;
 const accountMenu=document.createElement('details');accountMenu.id='accountMenu';
-const menuTitle=document.createElement('summary');menuTitle.textContent='Menu';accountMenu.append(menuTitle);
+const menuTitle=document.createElement('summary');menuTitle.append(signedInName);menuTitle.setAttribute('aria-label','Open account navigation');accountMenu.append(menuTitle);
 const menuPanel=document.createElement('div');menuPanel.className='account-panel';
 menuPanel.append(headerRow.querySelector('nav'),headerRow.querySelector('.identity'));accountMenu.append(menuPanel);
 topHeader.prepend(accountMenu);
 menuPanel.prepend($('export'));
+const closeMenu=document.createElement('button');closeMenu.type='button';closeMenu.className='drawer-close';closeMenu.textContent='Close';closeMenu.addEventListener('click',()=>{accountMenu.open=false;menuTitle.focus();});menuPanel.prepend(closeMenu);
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&accountMenu.open){accountMenu.open=false;menuTitle.focus();}});
 menuPanel.querySelector('.currency')?.remove();
 headerRow.remove();
+document.body.classList.add('summary-phase');
+const rangePicker=document.createElement('details');rangePicker.id='rangePicker';
+const rangeTitle=document.createElement('summary');rangeTitle.id='rangeTitle';rangeTitle.textContent='Latest week';rangePicker.append(rangeTitle);
+const rangeText=document.createElement('span');rangeText.textContent='Latest week';rangeTitle.replaceChildren(rangeText);
+const rangePanel=document.createElement('div');rangePanel.className='range-panel';rangePanel.append($('start').closest('label'),$('end').closest('label'));
+rangePanel.querySelectorAll('label').forEach(label=>label.hidden=true);
+let calendar=null,calendarDates=[];
+const calendarInput=document.createElement('input');calendarInput.id='calendarInput';calendarInput.type='text';calendarInput.setAttribute('aria-label','Choose date or range');
+const calendarHost=document.createElement('div');calendarHost.className='calendar-host';rangePanel.prepend(calendarHost);calendarHost.append(calendarInput);
+const calendarNav=document.createElement('div');calendarNav.className='calendar-nav';calendarNav.innerHTML='<button type="button" aria-label="Previous month" title="Previous month">&#8249;</button><button type="button" id="chooseCalendarMonth"></button><button type="button" id="chooseCalendarYear"></button><button type="button" aria-label="Next month" title="Next month">&#8250;</button>';
+const calendarChoices=document.createElement('div');calendarChoices.className='calendar-choices';calendarChoices.hidden=true;calendarHost.prepend(calendarNav,calendarChoices);
+const navButtons=calendarNav.querySelectorAll('button');
+function updateCalendarNav(){if(!calendar)return;navButtons[1].textContent=calendar.l10n.months.longhand[calendar.currentMonth];navButtons[2].textContent=String(calendar.currentYear);calendarChoices.hidden=true;}
+navButtons[0].onclick=()=>{calendar.changeMonth(-1);updateCalendarNav();};navButtons[3].onclick=()=>{calendar.changeMonth(1);updateCalendarNav();};
+function calendarOptions(years){if(!calendar)return;const values=years?[...new Set(calendarDates.map(day=>Number(day.slice(0,4))))]:Array.from({length:12},(_,i)=>i);calendarChoices.replaceChildren(...values.map(value=>{const button=document.createElement('button');button.type='button';button.textContent=years?String(value):calendar.l10n.months.shorthand[value];button.disabled=!years&&!calendarDates.some(day=>day.startsWith(calendar.currentYear+'-'+String(value+1).padStart(2,'0')));button.onclick=()=>{calendar.jumpToDate(new Date(years?value:calendar.currentYear,years?calendar.currentMonth:value,1));updateCalendarNav();};return button;}));calendarChoices.hidden=false;}
+navButtons[1].onclick=()=>calendarOptions(false);navButtons[2].onclick=()=>calendarOptions(true);
+const calendarStatus=document.createElement('p');calendarStatus.className='calendar-status sr-only';calendarStatus.setAttribute('role','status');rangePanel.append(calendarStatus);
+let rangeStart=null;
+function autoRange(dates,_,instance){if(!rangeStart){rangeStart=instance.latestSelectedDateObj||dates[0];if(rangeStart)instance.setDate([rangeStart],false);calendarStatus.textContent='Select the end date. Select the same date again for a single day.';return;}const end=dates.find(day=>day.getTime()!==rangeStart.getTime())||rangeStart;const days=[rangeStart,end].map(day=>instance.formatDate(day,'Y-m-d')).sort();$('start').value=days[0];$('end').value=days[1];$('datePreset').value='custom';rangeStart=null;rangePicker.open=false;dirty();}
+function syncCalendar(){if(!calendar)return;rangeStart=null;calendar.set('monthSelectorType','static');calendar.set('enable',calendarDates);calendar.setDate([$('start').value,$('end').value].filter(Boolean),false);if($('end').value)calendar.jumpToDate($('end').value);updateCalendarNav();calendarStatus.textContent=calendarDates.length?'Select start and end dates.':'No dates available for the selected channels.';}
+const calendarStyle=document.createElement('link');calendarStyle.rel='stylesheet';calendarStyle.href='/static/flatpickr.min.css';document.head.insertBefore(calendarStyle,themeStyle);
+const calendarScript=document.createElement('script');calendarScript.src='/static/flatpickr.min.js';calendarScript.onload=()=>{calendar=flatpickr(calendarInput,{inline:true,mode:'multiple',dateFormat:'Y-m-d',disableMobile:true,enable:[],onChange:autoRange});syncCalendar();};document.head.append(calendarScript);
+rangePicker.addEventListener('toggle',()=>{if(rangePicker.open){$('channelPicker').open=false;syncCalendar();}});
+rangePicker.append(rangePanel);$('filters').prepend(rangePicker);$('revenueHeader').append($('export'));
+function icon(name,className=''){const tile=document.createElement('span');tile.className=className;tile.setAttribute('aria-hidden','true');const glyph=document.createElement('i');glyph.dataset.lucide=name;tile.append(glyph);return tile;}
+menuTitle.prepend(icon('chart-no-axes-combined','brand-icon'));
+rangeTitle.prepend(icon('calendar-days'));
+$('export').replaceChildren(icon('download'));$('export').title='Download CSV';$('export').setAttribute('aria-label','Download CSV');
+document.querySelectorAll('.metrics article').forEach((card,index)=>card.prepend(icon(['indian-rupee','chart-pie','eye','megaphone'][index],'metric-icon')));
+const revenueLabel=$('total').previousElementSibling;revenueLabel.id='totalLabel';
+for(const id of ['total','views','impressions','ad','other']){const value=$(id),label=value.previousElementSibling;label.before(value);}
+const iconsScript=document.createElement('script');iconsScript.src='/static/lucide.min.js';iconsScript.onload=()=>lucide.createIcons();document.head.append(iconsScript);
+const shareScript=document.createElement('script');shareScript.src='/static/revenue-share.js';shareScript.onload=()=>window.RevenueShare.render(reportRows);document.head.append(shareScript);
+document.addEventListener('click',event=>{if(!rangePicker.contains(event.target))rangePicker.open=false;});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&rangePicker.open){rangePicker.open=false;rangeTitle.focus();}});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&$('channelPicker').open){$('channelPicker').open=false;$('channelSummary').focus();}});
 document.addEventListener('click',e=>{if(!accountMenu.contains(e.target))accountMenu.open=false;});
 menuPanel.querySelectorAll('[data-view]').forEach(button=>button.addEventListener('click',()=>{accountMenu.open=false;}));
 const loading=document.createElement('div');loading.id='reportLoading';loading.hidden=true;loading.setAttribute('role','status');loading.innerHTML='<span class="loading-spinner" aria-hidden="true"></span><span>Updating data...</span>';document.body.append(loading);
 let loadingTicket=0;
 function setLoading(value){loading.hidden=!value;$('dashboard').setAttribute('aria-busy',String(value));}
-const money=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR'}).format(n/100);
+const money=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0,minimumFractionDigits:0}).format(n/100);
 const number=n=>new Intl.NumberFormat('en-IN').format(n);
+function fitMetricValues(){document.querySelectorAll('.metrics strong').forEach(value=>{value.style.fontSize='';let size=parseFloat(getComputedStyle(value).fontSize);while(value.scrollWidth>value.clientWidth&&size>18){size--;value.style.fontSize=size+'px';}});}
+window.addEventListener('resize',()=>requestAnimationFrame(fitMetricValues));
+lightStyle.addEventListener('load',fitMetricValues);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function notify(message){$('notice').textContent=message;$('notice').hidden=false;}
 async function api(path,options={}){
@@ -67,12 +121,14 @@ function bind(id,event,fn){$(id).addEventListener(event,async e=>{e.preventDefau
 function clearSensitive(){
   loadingTicket++;setLoading(false);
   clearTimeout(filterTimer);availableDates.replaceChildren();dateCoverage.textContent='';
+  calendarDates=[];if(calendar){calendar.clear(false);calendar.set('enable',[]);}revenueLabel.textContent='Total Revenue';
   accessEpoch++;requestNumber++;reportRows=[];users=[];adminChannels=[];pending=null;appliedQuery='';latestDay='';pageIndex=0;
   for(const dialog of document.querySelectorAll('dialog[open]'))dialog.close();
   for(const id of ['records','history','users','channelDirectory','previewRows','assignments','channelOptions'])$(id).replaceChildren();
-  for(const id of ['total','ad','other','views','impressions','rowCount','period','pageInfo','appliedScope'])$(id).textContent='-';
+  for(const id of ['channelCount','total','ad','other','views','impressions','rowCount','period','pageInfo','appliedScope'])$(id).textContent='-';
   $('preview').hidden=true;$('export').disabled=true;$('userForm').reset();$('passwordForm').reset();$('uploadForm').reset();
   if(window.RevenueCharts)RevenueCharts.render([]);
+  window.RevenueShare?.clear();
 }
 function signOutView(message){clearSensitive();me=null;csrf='';selectedChannels.clear();$('shell').hidden=true;$('login').hidden=false;$('loginError').textContent=message;}
 function identity(value){
@@ -119,7 +175,10 @@ function renderChannelOptions(){
 }
 function channelSummary(){
   const size=selectedChannels.size;
-  $('channelSummary').textContent=size===0?'No channels selected':size===me.channels.length?'All assigned channels ('+size+')':size===1?me.channels.find(c=>selectedChannels.has(String(c.id))).name:size+' channels selected';
+  $('channelSummary').textContent='Channels';
+  const selection=size===0?'No channels selected':size===me.channels.length?'All assigned channels ('+size+')':size===1?me.channels.find(c=>selectedChannels.has(String(c.id))).name:size+' channels selected';
+  $('channelSummary').title=selection;
+  $('channelSummary').setAttribute('aria-label','Channels: '+selection);
 }
 function filterChannelOptions(){const text=$('channelSearch').value.trim().toLowerCase();for(const label of $('channelOptions').children)label.hidden=!label.textContent.toLowerCase().includes(text);}
 function dirty(){
@@ -144,6 +203,7 @@ async function loadReport(){
   if(sequence!==requestNumber)return;
   appliedQuery=requested;reportRows=data.rows;pageIndex=0;
   const dates=data.available_dates||[];
+  calendarDates=dates;
   if(resetDateBounds){
     resetDateBounds=false;
     if(dates.length){$('start').value=dates[0];$('end').value=dates.at(-1);return loadReport();}
@@ -169,9 +229,17 @@ async function loadReport(){
   dateCoverage.textContent=dates.length?'Available data: '+dates[0]+' to '+dates.at(-1)+' ('+dates.length+' days)':'No data for selected channels';
   if(data.rows.length)latestDay=data.rows.reduce((last,r)=>r.day>last?r.day:last,latestDay);
   for(const k of ['total','ad','other'])$(k).textContent=money(data.totals[k]);
-  $('views').textContent=number(data.totals.views);$('impressions').textContent=number(data.totals.impressions)+' ad impressions';
+  $('adMetric').hidden=data.totals.ad===0&&data.totals.other!==0;
+  $('sponsorMetric').hidden=data.totals.other===0;
+  const appliedIds=new Set(new URLSearchParams(requested).getAll('channel'));const appliedChannels=me.channels.filter(channel=>appliedIds.has(String(channel.id)));
+  revenueLabel.textContent='TOTAL REVENUE ('+(appliedChannels.length===1?appliedChannels[0].name:appliedChannels.length+' Channels')+')';
+  syncCalendar();
+  rangeText.textContent=$('start').value&&$('end').value?new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date($('start').value+'T00:00:00Z'))+' - '+new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date($('end').value+'T00:00:00Z')):'Latest week';
+  $('views').textContent=number(data.totals.views);$('impressions').textContent=number(data.totals.impressions);
+  $('channelCount').textContent=number(new Set(data.rows.map(row=>row.channel)).size);
+  requestAnimationFrame(fitMetricValues);
   renderTable();
-  try{RevenueCharts.render(data.rows);}catch(error){notify('Charts could not render. The table and CSV export remain available.');}
+  window.RevenueShare?.render(data.rows);
   $('rowCount').textContent=number(data.rows.length)+' records';$('empty').hidden=data.rows.length>0;
   $('period').textContent=data.rows.length?[...new Set(data.rows.map(r=>r.day))].sort().filter((v,i,a)=>i===0||i===a.length-1).join(' to '):'No data';
   const params=new URLSearchParams(requested);$('appliedScope').textContent=scope+' | '+(params.get('start')||'Beginning')+' to '+(params.get('end')||'Latest');
@@ -190,10 +258,13 @@ $('channelSearch').addEventListener('input',filterChannelOptions);
 const selectAllChannels=document.createElement('button');
 selectAllChannels.type='button';selectAllChannels.id='selectAllChannels';selectAllChannels.textContent='Select all';
 $('selectVisible').before(selectAllChannels);
-bind('selectAllChannels','click',async()=>{selectedChannels=new Set(me.channels.map(c=>String(c.id)));renderChannelOptions();dirty();});
+function selectShown(checked){for(const label of $('channelOptions').children)if(!label.hidden){const input=label.querySelector('input');input.checked=checked;if(checked)selectedChannels.add(input.value);else selectedChannels.delete(input.value);}channelSummary();dirty();}
+$('selectVisible').hidden=true;$('clearChannels').textContent='Clear';
+selectAllChannels.title='Select all search results';$('clearChannels').title='Clear search results';
+bind('selectAllChannels','click',async()=>selectShown(true));
 $('channelOptions').addEventListener('change',e=>{if(e.target.checked)selectedChannels.add(e.target.value);else selectedChannels.delete(e.target.value);channelSummary();dirty();});
-bind('selectVisible','click',async()=>{for(const label of $('channelOptions').children)if(!label.hidden){const input=label.querySelector('input');selectedChannels.add(input.value);input.checked=true;}channelSummary();dirty();});
-bind('clearChannels','click',async()=>{selectedChannels.clear();for(const input of $('channelOptions').querySelectorAll('input'))input.checked=false;channelSummary();dirty();});
+bind('selectVisible','click',async()=>selectShown(true));
+bind('clearChannels','click',async()=>selectShown(false));
 document.addEventListener('click',e=>{if(!$('channelPicker').contains(e.target))$('channelPicker').open=false;});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$('channelPicker').open=false;});
 for(const id of ['start','end'])$(id).addEventListener('change',()=>{if($('datePreset').value==='single')$('end').value=$('start').value;else $('datePreset').value='custom';dirty();});

@@ -55,6 +55,10 @@ try:
             expect(page.locator('#filterState')).to_have_text('Updated')
             return result
         def reconcile(label):
+            assert page.evaluate('''() => {const c=RevenueCharts.charts;if(!reportRows.length)return !c.combinedChart;return Math.abs(c.combinedChart.data.datasets[1].data.reduce((a,b)=>a+b,0)-reportRows.reduce((a,r)=>a+r.total,0)/100)<.00001 && c.combinedChart.data.datasets[0].data.reduce((a,b)=>a+b,0)===reportRows.reduce((a,r)=>a+r.views,0);}'''),label
+            if page.locator('.tree-tile').count():
+                area=page.locator('.tree-tile').evaluate_all('(nodes)=>nodes.reduce((sum,n)=>sum+parseFloat(n.style.width)*parseFloat(n.style.height),0)')
+                assert abs(area-10000)<.1,(label,area)
             metrics=page.evaluate('''() => {
                 const c=RevenueCharts.charts;
                 return {rows:reportRows.length,total:reportRows.reduce((n,r)=>n+r.total,0)/100,
@@ -103,7 +107,7 @@ try:
         location=page.evaluate('''() => {const c=RevenueCharts.charts.trendChart,e=c.getDatasetMeta(0).data[0],r=c.canvas.getBoundingClientRect();return {x:r.x+e.x,y:r.y+e.y};}''')
         page.mouse.move(location['x'],location['y']);page.wait_for_timeout(150)
         assert page.evaluate('() => RevenueCharts.charts.trendChart.tooltip.opacity')>0
-        for id in ['trendChart','shareChart','rankChart','mixChart']:
+        for id in ['trendChart','shareChart','rankChart','mixChart','combinedChart']:
             page.locator(f'[data-expand={id}]').click()
             expect(page.locator('#chartDialog')).to_be_visible()
             page.wait_for_timeout(100)

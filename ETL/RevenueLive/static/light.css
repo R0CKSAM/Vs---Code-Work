@@ -1,0 +1,79 @@
+:root{color-scheme:light;color:#29222e;background:#fff}
+body,.summary-phase{background:#fff;color:#29222e;font-family:Arial,Helvetica,sans-serif}
+.summary-phase #shell>header{background:#fff;border-color:#e4dce8;box-shadow:0 2px 8px #35203e08}
+.summary-phase #signedInName{color:#332039}
+.summary-phase #rangePicker>summary,.summary-phase .revenue-header #channelPicker>summary,.summary-phase #revenueHeader #export{background:#f8f3fa;color:#713d80;border-color:#d8c9df;font-size:14px}
+.summary-phase #rangePicker[open]>summary,.summary-phase #channelPicker[open]>summary{background:#f0e4f5;color:#592768}
+.summary-phase .metrics article{background:#fff;border-color:#e4dce8;box-shadow:0 3px 12px #43204e08;min-height:196px;padding:24px;gap:14px;transition:none}
+.summary-phase .metrics strong{font-size:36px;line-height:1.15;color:#302336;font-weight:800;overflow-wrap:normal}
+.summary-phase .metrics #total{color:#80366e}
+.summary-phase .metrics article:nth-child(2) strong{color:#923754}
+.summary-phase .metrics article:nth-child(3) strong{color:#754396}
+.summary-phase .metrics article>span:not(.metric-icon),.summary-phase .revenue-split div>span{font-size:14px;color:#64596a;line-height:1.45}
+.summary-phase .revenue-split:has(#sponsorMetric:not([hidden])):has(#adMetric:not([hidden])) strong{font-size:29px}
+.summary-phase .metrics article:nth-child(1){--tile:#f6e2f1;--accent:#9c387d}.summary-phase .metrics article:nth-child(2){--tile:#f7e5ea;--accent:#a1395c}.summary-phase .metrics article:nth-child(3){--tile:#eee4f8;--accent:#81419f}.summary-phase .metrics article:nth-child(4){--tile:#eee7f8;--accent:#79469e}
+#revenueShare,#viewsTreeButton{background:#fff;color:#302336;border-color:#e0d6e5}
+.share-title,.daily-revenue h2,#viewsDistribution h2{color:#302336;font-size:17px}
+.compact-share-row strong,.share-centre>span,#dailyRevenueNote,#viewsDistributionEmpty{color:#665a6c;font-size:13px}
+.share-channel{font-size:14px}.share-centre strong{color:#302336}
+.daily-revenue,#revenueShareExpanded,.summary-phase #dashboard>#viewsDistribution,.summary-phase #dashboard>#channelMetrics{border-color:#e6dfe9}
+.distribution-track{background:#f0ebf3}
+.full-share-row strong{font-size:15px;color:#3e3047}
+.metrics-toggle,.distribution-collapse,.share-dialog-heading .distribution-collapse{background:#f7f1fa;color:#713d80;border-color:#d9c7e2}
+#channelMetrics thead th{background:#f1eaf5;color:#493450}
+#channelMetrics tbody th{color:#493450;background:#fff}
+#channelMetrics .metric-heat-0{background:#faf7fc}#channelMetrics .metric-heat-1{background:#f2e9f7}#channelMetrics .metric-heat-2{background:#e6d6ee}#channelMetrics .metric-heat-3{background:#d4b7e0}#channelMetrics .metric-heat-4{background:#bb91cb}
+#channelMetrics td{color:#38253e;font-size:14px}
+.summary-phase .channel-menu,.summary-phase .range-panel,#accountMenu .account-panel,dialog,nav{background:#fff;color:#35293d;border-color:#dbcfe1}
+button,input,select{background:#fff;color:#3e3047;border-color:#d5c8dd}
+.summary-phase .picker-actions button,.summary-phase .calendar-nav button,.summary-phase .calendar-choices button{background:#f6eff9;color:#673374;border-color:#d8c9df}
+.summary-phase #channelOptions label{color:#403447;font-size:14px}
+.summary-phase #channelOptions label:hover{background:#f3eaf8}
+.flatpickr-calendar.inline,.flatpickr-weekdays{background:#fff;color:#493450}
+.summary-phase .flatpickr-weekdays .flatpickr-weekday{background:#fff;color:#695d72}
+.flatpickr-day{color:#713582;background:#f3e8f8;border-color:#fff}
+.flatpickr-day.flatpickr-disabled,.flatpickr-day.flatpickr-disabled:hover{color:#a7a0ac;background:#fff}
+.flatpickr-day:hover{background:#e5ceee;color:#582668}
+.flatpickr-day.selected,.flatpickr-day.selected:hover{background:#864396;color:white}
+.account-panel nav button.active{background:#f2e6f7;color:#75388a}
+table,thead,th,td,.table-wrap{color:#403447;border-color:#e1d7e6}
+thead th{background:#f5eff8}
+.views-tree-tile{border-color:#fff}
+#reportLoading,#notice{background:#f6eff9;color:#63366e;border-color:#d9c3e3}
+.muted,small,.identity{color:#716476}
+@media(max-width:1100px){.summary-phase .metrics strong{font-size:32px}}
+@media(max-width:600px){.summary-phase .metrics article{padding:16px;min-height:176px}.summary-phase .metrics strong{font-size:25px}.summary-phase .revenue-split:has(#sponsorMetric:not([hidden])):has(#adMetric:not([hidden])) strong{font-size:23px}}
+/* Seashell / garnet palette: white surfaces, muted borders, saturated data accents. */
+.summary-phase #shell>header{border-color:#dce4ea}
+.summary-phase #signedInName,.summary-phase .metrics strong{color:#30525c}
+.brand-icon{background:#5484a4}
+.summary-phase #rangePicker>summary,.summary-phase .revenue-header #channelPicker>summary,.summary-phase #revenueHeader #export,.metrics-toggle,.distribution-collapse,.share-dialog-heading .distribution-collapse{background:#f1f6f8;color:#30525c;border-color:#acc0d3}
+.summary-phase #rangePicker[open]>summary,.summary-phase #channelPicker[open]>summary{background:#e1eef0;border-color:#5484a4;color:#30525c}
+.summary-phase .metrics article{border-color:#dae3e9;box-shadow:0 3px 12px #30525c08}
+.summary-phase .metrics #total{color:#30525c}
+.summary-phase .metrics article:nth-child(2) strong{color:#99475c}
+.summary-phase .metrics article:nth-child(3) strong{color:#416d88}
+.summary-phase .metrics article:nth-child(1){--tile:#e0f3f2;--accent:#087c7c}.summary-phase .metrics article:nth-child(2){--tile:#fae7ec;--accent:#99475c}.summary-phase .metrics article:nth-child(3){--tile:#e5edf4;--accent:#416d88}.summary-phase .metrics article:nth-child(4){--tile:#fff0dc;--accent:#86551e}
+.summary-phase button:not(:disabled):hover,.summary-phase summary:hover{border-color:#5484a4;box-shadow:0 0 0 1px #5484a433,0 0 14px #09a1a118}
+.summary-phase #channelPicker>summary:focus-visible,.summary-phase #rangePicker>summary:focus-visible,input:focus,select:focus,button:focus-visible{outline-color:#5484a4}
+.summary-phase .picker-actions button,.summary-phase .calendar-nav button,.summary-phase .calendar-choices button{background:#edf4f7;color:#30525c;border-color:#acc0d3}
+.summary-phase #channelOptions input{accent-color:#087c7c}
+.summary-phase #channelOptions label:hover{background:#e7f3f3;box-shadow:inset 0 0 0 1px #acc0d3}
+.flatpickr-day{background:#e5f4f3;color:#096f70;border-color:white}.flatpickr-day:hover{background:#cae9e7;color:#30525c}.flatpickr-day.selected,.flatpickr-day.selected:hover{background:#5484a4;border-color:#5484a4;color:white}
+.primary{background:#46738f;border-color:#46738f;color:white}.primary:hover{background:#30525c}
+.account-panel nav button.active{background:#e5f2f3;color:#30525c;border-left-color:#09a1a1}
+#revenueShare,#viewsTreeButton{border-color:#dce4ea}
+#channelMetrics thead th{background:#eaf0f5;color:#30525c}
+#channelMetrics .metric-heat-0{background:#f7fafc}#channelMetrics .metric-heat-1{background:#e6eef5}#channelMetrics .metric-heat-2{background:#cedeea}#channelMetrics .metric-heat-3{background:#acc0d3}#channelMetrics .metric-heat-4{background:#5484a4;color:white}
+.distribution-track{background:#eaf0f5}
+.loading-spinner{border-color:#d5e5eb;border-top-color:#5484a4}
+#reportLoading,#notice{background:#edf5f7;color:#30525c;border-color:#acc0d3}
+.summary-phase #accountMenu .account-panel button{background:#fff;color:#30525c;border-color:#cbdbe5}
+.summary-phase #accountMenu .account-panel button:hover{background:#edf5f7;color:#234653;border-color:#8eafc3;box-shadow:none}
+.summary-phase #accountMenu .account-panel nav button{background:transparent;color:#30525c}
+.summary-phase #accountMenu .account-panel nav button:hover{background:#edf5f7;color:#234653;box-shadow:inset 3px 0 #acc0d3}
+.summary-phase #accountMenu .account-panel nav button.active{background:#e2f1f2;color:#235360;border-left-color:#09a1a1}
+.summary-phase #accountMenu .account-panel nav button.active:hover{background:#d6ebed;color:#235360;box-shadow:none}
+.summary-phase #accountMenu>summary:hover{background:#f1f6f8;box-shadow:none;border-radius:8px}
+.summary-phase #accountMenu>summary:focus:not(:focus-visible){outline:none}
+.summary-phase #accountMenu>summary:focus-visible{outline:2px solid #5484a4;outline-offset:4px;border-radius:8px}

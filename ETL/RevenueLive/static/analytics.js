@@ -3,6 +3,44 @@
 window.RevenueCharts=(()=>{
   const palette=['#087f68','#328db5','#bd7e16','#9258a9','#d36c70','#568148','#5368ba','#627b89'];
   const charts={};let rows=[],expanded=null;
+  const extra=document.createElement('div');extra.id='channelAnalysis';extra.className='channel-analysis';
+  extra.innerHTML='<section class="chart-block"><div class="chart-heading"><h3>Views and revenue</h3><button data-expand="combinedChart" type="button">Expand</button></div><div class="chart-frame"><canvas id="combinedChart" role="img" aria-label="Views and revenue trend"></canvas></div></section><section class="chart-block"><div class="chart-heading"><h3>Channel comparison</h3><button data-expand="radarChart" type="button">Expand</button></div><div class="chart-frame"><canvas id="radarChart" role="img" aria-label="Normalized channel comparison"></canvas></div><small>Top six by revenue. Each metric normalized to the selected-channel maximum.</small></section><section class="chart-block"><h3>Views distribution</h3><div id="viewsTreemap" class="views-treemap"></div></section><section class="chart-block heatmap-block"><h3>Channel metrics</h3><small>RPM: revenue per 1,000 views. Shading compares values within each column.</small><div class="heatmap-scroll"><table><thead><tr><th>Channel</th><th>Views</th><th>Ad impressions</th><th>Ad revenue</th><th>Total revenue</th><th>RPM</th></tr></thead><tbody id="metricHeatmap"></tbody></table></div></section>';
+  extra.querySelector('#radarChart').closest('.chart-block').remove();
+  const relationship=document.createElement('section');relationship.className='chart-block revenue-composition';
+  relationship.innerHTML='<div class="chart-heading"><h3>Revenue composition</h3><button type="button" data-expand="compositionChart">Expand</button></div><div class="composition-ring"><div class="chart-frame"><canvas id="compositionChart" role="img" aria-label="Ad revenue and sponsorship share"></canvas></div><div class="composition-total"><span>Total revenue</span><strong id="compositionTotal"></strong></div></div><div id="compositionLegend" class="composition-legend"></div>';
+  const audience=document.createElement('section');audience.className='chart-block';audience.innerHTML='<div class="chart-heading"><h3>Audience activity</h3><button type="button" data-expand="audienceChart">Expand</button></div><div class="chart-frame"><canvas id="audienceChart" role="img" aria-label="Views and ad impressions over time"></canvas></div>';
+  extra.firstElementChild.after(relationship,audience);
+  const legacyGrid=document.getElementById('chartGrid');
+  const additional=document.createElement('details');additional.id='additionalCharts';
+  const summary=document.createElement('summary');summary.textContent='Additional charts';additional.append(summary);
+  legacyGrid.before(extra,additional);additional.append(legacyGrid);
+  additional.addEventListener('toggle',()=>{if(additional.open)requestAnimationFrame(()=>Object.values(charts).forEach(chart=>{if(legacyGrid.contains(chart.canvas))chart.resize();}));});
+  function additionalCharts(a,labels){
+    const totals=a.channels.reduce((sum,[,v])=>({ad:sum.ad+v.ad,other:sum.other+v.other,total:sum.total+v.total}),{ad:0,other:0,total:0});
+    const valid=totals.ad>=0&&totals.other>=0&&totals.total>0;
+    document.getElementById('compositionTotal').textContent=rupee(totals.total/100);
+    document.getElementById('compositionLegend').replaceChildren(...[['Ad revenue',totals.ad,'#42d6ad'],['Sponsorship / others',totals.other,'#f2b764']].map(([label,value,color])=>{const item=document.createElement('div');item.style.borderLeft='3px solid '+color;const name=document.createElement('span'),amount=document.createElement('strong');name.textContent=label;amount.textContent=rupee(value/100)+(valid?' | '+(value/totals.total*100).toFixed(1)+'%':'');item.append(name,amount);return item;}));
+    draw('compositionChart','doughnut',{labels:['Ad revenue','Sponsorship / others'],datasets:[{data:valid?[totals.ad/100,totals.other/100]:[],backgroundColor:['#42d6ad','#f2b764'],borderWidth:0,hoverOffset:4}]},{responsive:true,maintainAspectRatio:false,cutout:'78%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+rupee(c.raw)}}}});
+    const audienceOptions=base();audienceOptions.plugins.legend.display=true;audienceOptions.plugins.legend.position='bottom';
+    draw('audienceChart','line',{labels,datasets:[['Views','views','#66c8f0'],['Ad impressions','impressions','#f2b764']].map(([label,key,color])=>({label,data:a.dates.map(([,v])=>v[key]),borderColor:color,backgroundColor:color+'16',fill:true,borderWidth:2,pointRadius:labels.length===1?5:2,tension:.15}))},audienceOptions);
+    let opts=base();opts.plugins.legend.display=true;opts.plugins.legend.position='bottom';opts.scales.y.title={display:true,text:'Views'};opts.scales.revenue={position:'right',beginAtZero:true,grid:{drawOnChartArea:false},title:{display:true,text:'Revenue (INR)'},ticks:{callback:short}};
+    opts.plugins.tooltip={callbacks:{label:c=>c.dataset.label+': '+(c.dataset.yAxisID==='revenue'?rupee(c.raw):fmt(c.raw))}};
+    draw('combinedChart','bar',{labels,datasets:[{type:'line',label:'Views',data:a.dates.map(([,v])=>v.views),borderColor:'#328db5',pointRadius:2,yAxisID:'y',order:0},{label:'Revenue',data:a.dates.map(([,v])=>v.total/100),backgroundColor:'#a9bdde',yAxisID:'revenue',order:1}]},opts);
+    const metrics=a.channels.map(([name,v])=>({name,values:[v.views,v.impressions,v.ad/100,v.total/100,v.views?v.total/100/v.views*1000:null]}));
+    const maxima=Array.from({length:5},(_,i)=>Math.max(0,...metrics.map(v=>v.values[i]||0)));
+    const heat=document.getElementById('metricHeatmap');heat.replaceChildren();
+    for(const v of metrics){const tr=document.createElement('tr'),name=document.createElement('td');name.textContent=v.name;tr.append(name);v.values.forEach((n,i)=>{const td=document.createElement('td');td.className='heat-'+(n===null||!maxima[i]?0:Math.min(4,Math.floor(n/maxima[i]*4)));td.textContent=n===null?'N/A':i>=2?rupee(n):fmt(n);tr.append(td);});heat.append(tr);}
+    const tree=document.getElementById('viewsTreemap');tree.replaceChildren();
+    const values=[...a.channels].filter(([,v])=>v.views>0).sort((a,b)=>b[1].views-a[1].views);
+    const total=values.reduce((n,[,v])=>n+v.views,0);
+    function tile(items,x,y,w,h){
+      if(!items.length)return;
+      if(items.length===1){const [name,v]=items[0],el=document.createElement('div');el.className='tree-tile';el.style.left=x+'%';el.style.top=y+'%';el.style.width=w+'%';el.style.height=h+'%';el.style.background=palette[values.indexOf(items[0])%palette.length];el.tabIndex=0;el.title=name+': '+fmt(v.views)+' views ('+(v.views/total*100).toFixed(1)+'%)';el.setAttribute('aria-label',el.title);const label=document.createElement('strong'),amount=document.createElement('span');label.textContent=name;amount.textContent=short(v.views)+' | '+(v.views/total*100).toFixed(1)+'%';el.append(label,amount);tree.append(el);return;}
+      const sum=items.reduce((n,[,v])=>n+v.views,0);let subtotal=0,k=0;while(k<items.length-1&&subtotal<sum/2)subtotal+=items[k++][1].views;const f=subtotal/sum;
+      if(w*tree.clientWidth>=h*tree.clientHeight){tile(items.slice(0,k),x,y,w*f,h);tile(items.slice(k),x+w*f,y,w*(1-f),h);}else{tile(items.slice(0,k),x,y,w,h*f);tile(items.slice(k),x,y+h*f,w,h*(1-f));}
+    }
+    if(total)tile(values,0,0,100,100);else tree.textContent='No views in this selection.';
+  }
   Chart.register({id:'visibleSharePercent',afterDatasetsDraw(chart){
     if(chart.config.type!=='doughnut')return;
     const values=chart.data.datasets[0].data,total=values.reduce((sum,v)=>sum+v,0);if(!total)return;
@@ -47,6 +85,9 @@ window.RevenueCharts=(()=>{
   };}
   function draw(id,type,data,options){
     const canvas=document.getElementById(id);
+    options.animation=matchMedia('(prefers-reduced-motion: reduce)').matches?false:{duration:350};
+    for(const axis of Object.values(options.scales||{})){if(axis.ticks)axis.ticks.color='#b7c2c9';if(axis.title)axis.title.color='#b7c2c9';if(axis.grid&&axis.grid.display!==false)axis.grid.color='#ffffff12';}
+    if(options.plugins?.legend)options.plugins.legend.labels={...options.plugins.legend.labels,color:'#b7c2c9'};
     if(type==='line'){
       let note=canvas.closest('.chart-block').querySelector('.single-point-note');
       if(!note){note=document.createElement('p');note.className='single-point-note chart-note';canvas.parentElement.after(note);}
@@ -61,8 +102,10 @@ window.RevenueCharts=(()=>{
     rows=values;const interval=document.getElementById('interval').value,metric=document.getElementById('trendMetric').value;
     const a=aggregate(rows,interval),monetary=['total','ad'].includes(metric),divisor=monetary?100:1;
     document.getElementById('chartsEmpty').hidden=rows.length>0;document.getElementById('chartGrid').hidden=rows.length===0;
+    extra.hidden=rows.length===0;additional.hidden=rows.length===0;document.getElementById('metricHeatmap').replaceChildren();document.getElementById('viewsTreemap').replaceChildren();
     if(!rows.length){Object.values(charts).forEach(c=>c.destroy());for(const k in charts)delete charts[k];return;}
     const labels=a.dates.map(([d])=>interval==='week'?'Week of '+d:d);
+    additionalCharts(a,labels);
     let options=base();options.scales.y.title={display:true,text:monetary?'INR':metric==='views'?'Views':'Ad impressions'};options.plugins.tooltip={callbacks:{label:c=>(monetary?rupee:fmt)(c.parsed.y)}};
     draw('trendChart','line',{labels,datasets:[{label:metric,data:a.dates.map(([,v])=>v[metric]/divisor),borderColor:palette[0],backgroundColor:'#087f6812',fill:true,tension:.15,pointRadius:labels.length>40?0:3,pointHoverRadius:6,borderWidth:2}]},options);
     for(const [id,key,color] of [['adTrend','ad',palette[1]],['viewsTrend','views',palette[3]],['otherTrend','other',palette[2]]]){
