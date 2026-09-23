@@ -58,6 +58,35 @@ class RevenueTest(unittest.TestCase):
             db.execute('DELETE FROM assignments WHERE user_id=3')
         self.assertEqual(self.client.get('/api/report').json['rows'],[])
 
+    def test_insight_presets_validation_and_ownership(self):
+        self.login('view')
+        examples=self.client.get('/api/graph-presets').json['examples']
+        self.assertEqual(len(examples),4)
+        for example in examples:
+            self.assertEqual(self.post('/api/graph-presets',example).status_code,200)
+        saved=self.client.get('/api/graph-presets').json['rows']
+        self.assertEqual(len(saved),4)
+        config=dict(examples[0]['config'])
+        for key,value in [('type',[]),('start',{}),('end',False),('channels',[2])]:
+            self.assertEqual(self.post('/api/graph-presets',{'name':'Invalid','config':{**config,key:value}}).status_code,400)
+        self.login('upload')
+        self.assertEqual(self.client.get('/api/graph-presets').json['rows'],[])
+        self.assertEqual(self.client.delete('/api/graph-presets/'+str(saved[0]['id']),headers={'X-CSRF-Token':self.csrf}).status_code,404)
+
+    def test_reversed_date_ranges(self):
+        self.login()
+        forward='start=2026-09-19&end=2026-09-21'
+        reverse='start=2026-09-21&end=2026-09-19'
+        self.assertEqual(self.client.get('/api/report?'+forward).json,self.client.get('/api/report?'+reverse).json)
+        self.assertEqual(self.client.get('/api/export?'+forward).data,self.client.get('/api/export?'+reverse).data)
+        for start,end in [('2026-09-21','2026-09-19'),('2026-09-20','2026-09-20'),('','2026-09-20'),('2026-09-20','')]:
+            config={'type':'line','group':'day','first':'views','second':'total','start':start,'end':end}
+            self.assertEqual(self.post('/api/graph-presets',{'name':start+' to '+end,'config':config}).status_code,200)
+        rows=self.client.get('/api/graph-presets').json['rows']
+        saved=next(row['config'] for row in rows if row['name']=='2026-09-21 to 2026-09-19')
+        self.assertEqual((saved['start'],saved['end']),('2026-09-19','2026-09-21'))
+        self.assertEqual(self.client.get('/api/report?start=invalid&end=2026-09-20').status_code,400)
+
     def test_archive_restore_preserves_data_and_enforces_scope(self):
         self.login('view')
         self.assertEqual(self.post('/api/admin/channels/1/archive',{'archived':True}).status_code,403)
@@ -191,7 +220,7 @@ class RevenueTest(unittest.TestCase):
                     self.assertEqual(result.json['totals']['total'],sum(r[6] for r in expected))
                     exported=list(csv.reader(io.StringIO(self.client.get('/api/export?'+query).text.lstrip('\ufeff'))))
                     self.assertEqual(len(exported)-1,len(expected))
-        self.assertEqual(self.client.get('/api/report?start=2026-08-31&end=2026-08-01').status_code,400)
+        self.assertEqual(self.client.get('/api/report?start=2026-08-31&end=2026-08-01').json,self.client.get('/api/report?start=2026-08-01&end=2026-08-31').json)
         self.login('view')
         self.assertEqual(self.client.get('/api/report?channel=1&channel=2').status_code,400)
 

@@ -18,6 +18,7 @@ from decimal import Decimal, InvalidOperation
 from flask import Flask, g, jsonify, request, send_from_directory
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
+from insight_presets import INSIGHT_PRESETS
 
 ROOT = Path(__file__).resolve().parent
 HEADERS = ['Date', 'Channel Name', 'Views', 'Ad Impressions', 'Ad Revenue', 'Sponsorship/Others', 'Total Revenue']
@@ -133,6 +134,7 @@ def create_app(data_dir=None):
             CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY, created TEXT, user_id INTEGER, action TEXT, detail TEXT);
             CREATE TABLE IF NOT EXISTS super_admin(singleton INTEGER PRIMARY KEY CHECK(singleton=1), user_id INTEGER UNIQUE NOT NULL REFERENCES users(id));
             CREATE TABLE IF NOT EXISTS archived_channels(channel_id INTEGER PRIMARY KEY REFERENCES channels(id));
+            CREATE TABLE IF NOT EXISTS graph_presets(id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), name TEXT NOT NULL COLLATE NOCASE, config TEXT NOT NULL, UNIQUE(user_id,name));
         ''')
         db().commit()
 
@@ -274,7 +276,7 @@ def create_app(data_dir=None):
                     raise InvalidData('Use YYYY-MM-DD dates.')
         start,end=request.args.get('start',''),request.args.get('end','9999-12-31') or '9999-12-31'
         if start>end:
-            raise InvalidData('Start date must not be after end date.')
+            start,end=end,start
         placeholders=','.join('?' for _ in ids) or 'NULL'
         if available_dates:
             return [r[0] for r in db().execute(f'SELECT DISTINCT day FROM records WHERE channel_id IN ({placeholders}) ORDER BY day',tuple(sorted(ids)))]
@@ -286,6 +288,57 @@ def create_app(data_dir=None):
         rows=report_rows()
         totals={key:sum(r[key] for r in rows) for key in ('views','impressions','ad','other','total')}
         return jsonify(rows=rows,totals=totals,currency='INR',money_unit='paise',available_dates=report_rows(available_dates=True))
+
+    @app.get('/api/graph-presets')
+    @require()
+    def graph_presets():
+        return jsonify(rows=[dict(id=r['id'],name=r['name'],config=json.loads(r['config'])) for r in db().execute('SELECT * FROM graph_presets WHERE user_id=? ORDER BY name',(g.user['id'],))],examples=INSIGHT_PRESETS)
+
+    @app.post('/api/graph-presets')
+    @require()
+    def save_graph_preset():
+        body=request.get_json(silent=True) or {}
+        name=body.get('name','')
+        config=body.get('config')
+        if not isinstance(name,str) or not 1<=len(name.strip())<=80 or not isinstance(config,dict):
+            return jsonify(error='Enter a preset name (1-80 characters).'),400
+        allowed={'views','impressions','ad','other','total'}
+        if any(not isinstance(config.get(key),str) for key in ('type','group','first','second')) or config.get('type') not in {'bar','line','grouped','mixed','pie'} or config.get('group') not in {'day','channel','leader'} or config.get('first') not in allowed or config.get('second') not in allowed|{'none'}:
+            return jsonify(error='Invalid chart configuration.'),400
+        clean={k:config[k] for k in ('type','group','first','second')}
+        for key in ('start','end'):
+            value=config.get(key,'')
+            if not isinstance(value,str):
+                return jsonify(error='Invalid preset date.'),400
+            try:
+                if value:
+                    dt.date.fromisoformat(value)
+            except (TypeError,ValueError):
+                return jsonify(error='Invalid preset date.'),400
+            clean[key]=value
+        if clean['start'] and clean['end'] and clean['start']>clean['end']:
+            clean['start'],clean['end']=clean['end'],clean['start']
+        if 'channels' in config:
+            channels=config['channels']
+            permitted_ids={c['id'] for c in permitted()}
+            if not isinstance(channels,list) or any(type(c) is not int or c not in permitted_ids for c in channels):
+                return jsonify(error='Invalid channel selection.'),400
+            clean['channels']=sorted(set(channels))
+        try:
+            db().execute('INSERT INTO graph_presets(user_id,name,config) VALUES (?,?,?)',(g.user['id'],name.strip(),json.dumps(clean)))
+            db().commit()
+        except sqlite3.IntegrityError:
+            return jsonify(error='A preset with that name already exists. Choose another name.'),409
+        return jsonify(ok=True)
+
+    @app.delete('/api/graph-presets/<int:pid>')
+    @require()
+    def delete_graph_preset(pid):
+        result=db().execute('DELETE FROM graph_presets WHERE id=? AND user_id=?',(pid,g.user['id']))
+        db().commit()
+        if not result.rowcount:
+            return jsonify(error='Preset not found.'),404
+        return jsonify(ok=True)
 
     @app.get('/api/export')
     @require()

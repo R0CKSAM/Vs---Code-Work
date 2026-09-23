@@ -59,15 +59,23 @@ try:
         assert page.evaluate("Chart.getChart('dailyRevenueCanvas').data.datasets.reduce((s,d)=>s+d.data.reduce((a,b)=>a+b,0),0)") == page.evaluate('reportRows.reduce((s,r)=>s+r.total,0)/100')
         assert page.locator('.full-share-row strong').first.text_content().endswith('%')
         page.locator('#revenueShareExpanded button').click()
-        for width in [1388, 1024, 768, 390, 320]:
+        for width in [1920, 1388, 1024, 944, 900, 768, 390, 320]:
             page.set_viewport_size({'width': width, 'height': 805})
             page.wait_for_timeout(350)
+            if width>=900:
+                edges=page.evaluate('''()=>{const left=document.getElementById('accountMenu').getBoundingClientRect(),right=document.getElementById('export').getBoundingClientRect(),body=document.querySelector('.metrics').getBoundingClientRect();return [Math.abs(left.left-body.left),Math.abs(right.right-body.right)];}''')
+                assert max(edges)<2,('header alignment',width,edges)
+            if width>=900:
+                assert page.locator('.metrics article').evaluate_all('(cards)=>new Set(cards.map(c=>Math.round(c.getBoundingClientRect().top))).size===1'),width
+            assert page.locator('.revenue-split > .metric-topline').evaluate('(el)=>getComputedStyle(el).flexDirection==="row"')
+            assert page.locator('.revenue-split .metric-changes').evaluate('(el)=>getComputedStyle(el).flexWrap==="nowrap"')
             page.mouse.move(0,0)
             for card in page.locator('.metrics article').all():
-                before=card.evaluate('(el)=>[el,...el.querySelectorAll("strong,div,span")].map(n=>{const r=n.getBoundingClientRect();return [r.x,r.y,r.width,r.height];})')
+                card.scroll_into_view_if_needed()
+                before=card.evaluate('(el)=>[el,...el.querySelectorAll("strong,div,span")].map(n=>{const r=n.getBoundingClientRect();return [r.x+scrollX,r.y+scrollY,r.width,r.height];})')
                 card.hover()
                 page.wait_for_timeout(200)
-                after=card.evaluate('(el)=>[el,...el.querySelectorAll("strong,div,span")].map(n=>{const r=n.getBoundingClientRect();return [r.x,r.y,r.width,r.height];})')
+                after=card.evaluate('(el)=>[el,...el.querySelectorAll("strong,div,span")].map(n=>{const r=n.getBoundingClientRect();return [r.x+scrollX,r.y+scrollY,r.width,r.height];})')
                 assert before==after,('metric hover layout shift',width,before,after)
                 page.mouse.move(0,0)
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), width
@@ -89,6 +97,15 @@ try:
         assert page.evaluate("Array.from(document.querySelectorAll('#channelMetrics tbody tr')).reduce((s,r)=>s+Number(r.lastElementChild.textContent.replace(/[^0-9.-]/g,'')),0)") == page.evaluate("()=>{const sums={};for(const r of reportRows)sums[r.channel]=(sums[r.channel]||0)+r.total;return Object.values(sums).reduce((s,n)=>s+Math.round(n/100),0);}")
         expect(page.locator('.flatpickr-calendar')).to_be_visible()
         expect(page.locator('.flatpickr-day.flatpickr-disabled').first).to_be_visible()
+        page.locator('.flatpickr-day[aria-label="August 28, 2026"]').click()
+        page.locator('.flatpickr-day[aria-label="August 24, 2026"]').click()
+        expect(page.locator('#start')).to_have_value('2026-08-24')
+        expect(page.locator('#end')).to_have_value('2026-08-28')
+        expect(page.locator('#rangeTitle')).to_contain_text('24 Aug 2026')
+        page.evaluate("()=>{document.getElementById('start').value='2026-08-28';document.getElementById('end').value='2026-08-24';document.getElementById('end').dispatchEvent(new Event('change'));}")
+        expect(page.locator('#start')).to_have_value('2026-08-24')
+        expect(page.locator('#end')).to_have_value('2026-08-28')
+        page.locator('#rangeTitle').click()
         page.locator('.flatpickr-day[aria-label="August 26, 2026"]').click()
         page.locator('.flatpickr-day[aria-label="August 26, 2026"]').click()
         expect(page.locator('#rangeTitle')).to_contain_text('26 Aug 2026')
@@ -129,6 +146,16 @@ try:
                     result=page.evaluate('''()=>{const c=Chart.getChart('dailyRevenueCanvas'),a=c.chartArea;return {bad:c.config.type==='bar'&&c.data.datasets.some((_,i)=>c.getDatasetMeta(i).data.some(b=>b.x-b.width/2<a.left-1||b.x+b.width/2>a.right+1||Math.min(b.y,b.base)<a.top-1||Math.max(b.y,b.base)>a.bottom+1)),overflow:document.documentElement.scrollWidth>innerWidth};}''')
                     assert not result['bad'] and not result['overflow'],(width,count,first,last,result)
         assert not errors, errors
+        page.evaluate("RevenueShare.render([{channel:'Scale check',day:'2026-08-31',views:100,impressions:50,ad:0,other:2500,total:2500}])")
+        colors=page.locator('#channelMetrics tbody td').evaluate_all('(cells)=>cells.map(c=>c.style.backgroundColor)')
+        assert colors[0]=='rgb(255, 235, 132)' and colors[2]=='rgb(248, 105, 107)' and colors[3]=='rgb(255, 235, 132)',colors
+        page.evaluate("RevenueShare.render([1,2,3].map((n)=>({channel:'Channel '+n,day:'2026-08-31',views:n*100000,impressions:(4-n)*10,ad:n*100,other:0,total:n*100})))")
+        cells=page.locator('#channelMetrics tbody tr').evaluate_all('(rows)=>rows.map(r=>Array.from(r.querySelectorAll("td")).map(c=>c.style.backgroundColor))')
+        assert cells[0][0]=='rgb(99, 190, 123)' and cells[0][1]=='rgb(248, 105, 107)' and cells[0][2]=='rgb(99, 190, 123)',cells
+        assert cells[1][0]==cells[1][1]==cells[1][2]=='rgb(255, 235, 132)',cells
+        page.evaluate("RevenueShare.render([{channel:'All zero',day:'2026-08-31',views:0,impressions:0,ad:0,other:0,total:0}])")
+        assert page.locator('#channelMetrics tbody td').evaluate_all('(cells)=>cells.every(c=>c.style.backgroundColor==="rgb(248, 105, 107)")')
+        page.evaluate('refresh()')
         print('PASS: four cards, local icons, weekly default, date change, CSV, table navigation, five responsive screenshots; no page errors.')
         browser.close()
 finally:
