@@ -91,6 +91,14 @@ try:
             page.locator('.overview-metric-selector [data-metric='+metric+']').click()
             expect(page.locator('.daily-revenue h2')).to_have_text(title+' over time')
             expect(page.locator('.overview-metric-selector [aria-pressed=true]')).to_have_text(title)
+            before_chart=page.evaluate("JSON.stringify(Chart.getChart('dailyRevenueCanvas').data)")
+            page.get_by_role('button',name='Expand timeline',exact=True).click()
+            expect(page.locator('#timelineDetailDialog')).to_be_visible()
+            expect(page.locator('#timelineDetailTitle')).to_have_text(title+' over time')
+            assert page.evaluate("JSON.stringify(Chart.getChart('dailyRevenueCanvas').data)")==before_chart
+            page.keyboard.press('Escape')
+            expect(page.locator('#timelineDetailDialog')).not_to_be_visible()
+            expect(page.locator('.daily-revenue #dailyRevenueCanvas')).to_be_visible()
             assert page.evaluate('''key=>{
                 const expected=reportRows.reduce((s,r)=>s+r[key],0),share=Chart.getChart('summaryShareCanvas'),trend=Chart.getChart('dailyRevenueCanvas');
                 const shareSum=share.data.datasets[0].data.reduce((a,b)=>a+b,0),trendSum=trend.data.datasets.reduce((s,d)=>s+d.data.reduce((a,b)=>a+b,0),0);

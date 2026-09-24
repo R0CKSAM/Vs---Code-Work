@@ -449,6 +449,15 @@ body.summary-phase:has(#shell:not([hidden])){background:linear-gradient(180deg,#
 .daily-revenue-canvas>canvas{position:absolute;inset:0;width:100%!important;height:100%!important}
 .trend-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 .trend-header h2{margin:0!important}
+.trend-header .overview-metric-selector{margin-left:auto}
+.timeline-expand,.timeline-dialog-heading button{width:36px;height:36px;min-height:36px;padding:7px;display:grid;place-items:center;flex:none}
+.timeline-expand svg,.timeline-dialog-heading svg{width:20px;height:20px}
+#timelineDetailDialog{width:calc(100vw - 40px);max-width:1500px;height:min(800px,90dvh);max-height:90dvh;padding:20px;box-sizing:border-box;background:#fff;color:#183452}
+#timelineDetailDialog[open]{display:flex;flex-direction:column;gap:16px}
+.timeline-dialog-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.timeline-dialog-heading h2{margin:0;font-size:22px;font-weight:800}
+#timelineDetailDialog .daily-revenue-canvas{min-height:160px;height:auto;flex:1}
+@media(max-width:600px){#timelineDetailDialog{width:calc(100vw - 16px);padding:12px}.timeline-dialog-heading h2{font-size:18px}}
 #viewsTreeButton>.share-title{width:100%;border:0;text-align:left;cursor:pointer}
 #viewsTree .views-tree-tile{cursor:pointer;text-align:left}
 #viewsTree .views-tree-tile:focus-visible{outline:3px solid #1266dc;outline-offset:3px}

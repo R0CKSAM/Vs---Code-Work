@@ -95,42 +95,42 @@
     "background": "#ffffff",
     "source": "Logo/Aakash Vani.jpg",
     "user_supplied": true,
-    "sha256": "82c6b591bd5ce2f6e44b164bd859dd1b2f379a3954fc2b6ccb875ec345d59cdb"
+    "sha256": "4cc720f90498e2bfac8ba57566c686871eaf24ae5e821d0b0d01e570736b1e65"
   },
   "bollywood masala": {
     "file": "bollywoodmasala.png",
     "background": "#ffffff",
     "source": "Logo/Bollywood Masala.png",
     "user_supplied": true,
-    "sha256": "35ecaf35fd45c1198bf0f8b74bf24603e139fedc2216a3791c8a05a6a7b12b91"
+    "sha256": "598757cf81342744bf6e5c88736ff93a6c893c6f663450cad9db2889405cc17b"
   },
   "digital commentary": {
     "file": "digitalcommentary.png",
     "background": "#ffffff",
     "source": "Logo/Digital Commentary.jpg",
     "user_supplied": true,
-    "sha256": "3f86263d51da17ebfcfe9efaadbbcecb7822e6fdce81df1a3734f9a96a6055c4"
+    "sha256": "10f44693a3b387cb42be5af87003a0e2a6508c62edd48a9e8e2511b038447857"
   },
   "epic bharat": {
     "file": "epicbharat.png",
     "background": "#ffffff",
     "source": "Logo/Epic Bharat.jpg",
     "user_supplied": true,
-    "sha256": "0e9f23c5d7a73c86c61aaf5500826d379ff00808a1fefd26e38b28f249380370"
+    "sha256": "7973dd2ace012c57efed7f549339bf22a095ff5fa0f8ea8ae484a35da085806c"
   },
   "epic bhojpuri": {
     "file": "epicbhojpuri.png",
     "background": "#ffffff",
     "source": "Logo/Epic Bhojpuri.jpg",
     "user_supplied": true,
-    "sha256": "554a8aa6e2c44b0f2c4d9abdaef0f367f205f0f379ddf2d0b2eb7a5283d43a79"
+    "sha256": "58516f2e874aac8e154a5827a9b4452e5fc197150abefe305a349771a5cc7579"
   },
   "epic kids": {
     "file": "epickids.png",
     "background": "#ffffff",
     "source": "Logo/Epic Kids.png",
     "user_supplied": true,
-    "sha256": "6ae3dbe5f4ad3e7224fcfd47d660dc3e9f0e0d92b71a13b409352024e491427f"
+    "sha256": "541b496a09e35a2734f10c03b272ffbf4f9f26903bded8155bef236bb4445236"
   },
   "epic music": {
     "file": "epicmusic.png",
@@ -151,21 +151,21 @@
     "background": "#ffffff",
     "source": "Logo/News Nation State Bihar-JH.jpg",
     "user_supplied": true,
-    "sha256": "a463a194d12b8ecf0f5708a151a5120a3129f8a94aebe25861775992316c592e"
+    "sha256": "8194b748d5900339b275f7f18f14d94acab329a99a2a552f8bf1c7c47aa35ef0"
   },
   "news nation state mp/cg": {
     "file": "newsnationstatempcg.png",
     "background": "#ffffff",
     "source": "Logo/News Nation State MP-CG.jpg",
     "user_supplied": true,
-    "sha256": "4812ae4fd797941fc087ace2f1cc1ccdaf0285d240b611832b784e39ef9ebe29"
+    "sha256": "f351101a4d1d797b424ad19fc3eb11217f85c1a4014456e62f5b39c7b8dc9085"
   },
   "news nation state punjab/hr": {
     "file": "newsnationstatepunjabhr.png",
     "background": "#ffffff",
     "source": "Logo/News Nation State Punjab-HR.jpg",
     "user_supplied": true,
-    "sha256": "c7ca5561c27ee2e050c3f94401ce80503341aa5b76b4296de31836e04a9d53c0"
+    "sha256": "f99fb2e86acce5b77230b86ab28c8e1e05e68bf382e297823a79d566a48db71d"
   },
   "ssoftoons": {
     "file": "ssoftoons.png",

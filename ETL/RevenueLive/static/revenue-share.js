@@ -102,6 +102,17 @@ window.RevenueShare=(()=>{
     button.addEventListener('click',()=>{if(selectedMetric===key)return;selectedMetric=key;const changes=new Map(channelChanges);render(currentRows);channelChanges=changes;applyChannelChanges();});metricSelector.append(button);
   }
   trendHeader.append(trend.querySelector('h2'),metricSelector);trend.prepend(trendHeader);
+  const expandTimeline=document.createElement('button');expandTimeline.type='button';expandTimeline.className='timeline-expand';expandTimeline.title='Expand timeline';expandTimeline.setAttribute('aria-label','Expand timeline');expandTimeline.setAttribute('aria-haspopup','dialog');expandTimeline.innerHTML='<i data-lucide="maximize-2" aria-hidden="true"></i>';trendHeader.append(expandTimeline);
+  const timelineDialog=document.createElement('dialog');timelineDialog.id='timelineDetailDialog';timelineDialog.setAttribute('aria-labelledby','timelineDetailTitle');
+  timelineDialog.innerHTML='<div class="timeline-dialog-heading"><h2 id="timelineDetailTitle"></h2><button type="button" aria-label="Close expanded timeline" title="Close"><i data-lucide="x" aria-hidden="true"></i></button></div>';
+  document.body.append(timelineDialog);
+  const timelineFrame=trend.querySelector('.daily-revenue-canvas');
+  expandTimeline.addEventListener('click',()=>{
+    document.getElementById('timelineDetailTitle').textContent=metricNames[selectedMetric]+' over time';
+    timelineDialog.append(timelineFrame);timelineDialog.showModal();lineChart?.resize();
+  });
+  timelineDialog.querySelector('button').addEventListener('click',()=>timelineDialog.close());
+  timelineDialog.addEventListener('close',()=>{trend.insertBefore(timelineFrame,document.getElementById('dailyRevenueNote'));lineChart?.resize();expandTimeline.focus({preventScroll:true});});
   const views=document.createElement('section');views.id='viewsDistribution';views.innerHTML='<h2>Views distribution</h2><div id="viewsDistributionRows"></div><p id="viewsDistributionEmpty"></p>';overview.after(views);
   const metrics=document.createElement('section');metrics.id='channelMetrics';metrics.innerHTML='<h2>Channel metrics</h2><div class="metrics-table-scroll"><table><thead><tr><th scope="col">Channel</th><th scope="col">Views</th><th scope="col">Ad impressions</th><th scope="col">Ad revenue</th><th scope="col">Sponsorship / others</th><th scope="col">Total revenue</th></tr></thead><tbody></tbody></table></div><p class="metrics-empty"></p>';views.before(metrics);
   const metricsToggle=document.createElement('button');metricsToggle.type='button';metricsToggle.className='metrics-toggle';metricsToggle.setAttribute('aria-expanded','false');metricsToggle.setAttribute('aria-controls','channelMetricsBody');metricsToggle.title='Expand channel metrics';metricsToggle.innerHTML='<span>Channel metrics</span><i data-lucide="maximize-2" aria-hidden="true"></i>';metrics.querySelector('h2').replaceWith(metricsToggle);metrics.querySelector('tbody').id='channelMetricsBody';let metricsExpanded=false;
@@ -118,7 +129,7 @@ window.RevenueShare=(()=>{
   for(const button of [collapseViews,modal.querySelector('button')]){button.classList.add('distribution-collapse');button.setAttribute('aria-label','Collapse distribution');button.title='Collapse distribution';button.innerHTML='<i data-lucide="minimize-2" aria-hidden="true"></i>';}
   for(const button of [trigger,treeButton]){const arrow=button.querySelector('.share-title>span');arrow.innerHTML='<i data-lucide="maximize-2" aria-hidden="true"></i>';button.title='Expand distribution';}
   window.lucide?.createIcons();
-  document.addEventListener('keydown',event=>{if(event.key!=='Escape'||channelDialog.open)return;if(!modal.hidden){collapse();trigger.focus();}else if(!collapseViews.hidden){closeViews();treeExpand.focus();}});
+  document.addEventListener('keydown',event=>{if(event.key!=='Escape'||channelDialog.open||timelineDialog.open)return;if(!modal.hidden){collapse();trigger.focus();}else if(!collapseViews.hidden){closeViews();treeExpand.focus();}});
   const channelDialog=document.createElement('dialog');channelDialog.id='channelDetailDialog';channelDialog.setAttribute('aria-labelledby','channelDetailTitle');
   channelDialog.innerHTML='<div class="channel-detail-heading"><div><h2 id="channelDetailTitle"></h2><p id="channelDetailRange"></p></div><button type="button" aria-label="Close channel details" title="Close"><i data-lucide="x" aria-hidden="true"></i></button></div><dl class="channel-detail-totals"></dl><p id="channelDetailCoverage"></p><div class="channel-detail-table"><table><thead><tr><th scope="col">Date</th><th scope="col">Views</th><th scope="col">Ad impressions</th><th scope="col">Ad revenue</th><th scope="col">Sponsorship / others</th><th scope="col">Total revenue</th></tr></thead><tbody></tbody></table></div>';
   document.body.append(channelDialog);channelDialog.querySelector('button').addEventListener('click',()=>channelDialog.close());window.lucide?.createIcons();
@@ -166,6 +177,7 @@ window.RevenueShare=(()=>{
     return el;
   }
   function render(rows){
+    if(timelineDialog.open)timelineDialog.close();
     if(channelDialog.open)channelDialog.close();
     currentRows=rows;
     const metricName=metricNames[selectedMetric],isRevenue=selectedMetric==='total';
