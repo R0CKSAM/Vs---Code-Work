@@ -113,7 +113,24 @@ window.QuickInsights=(()=>{
     for(const item of filtered)if(important.length<4&&!important.includes(item))important.push(item);
     return important.sort((a,b)=>b.priority-a.priority||(b.impact||0)-(a.impact||0)||a.id.localeCompare(b.id));
   }
-  let section,list,scope,note,insights=[];
+  let section,list,scope,note,insights=[],stripInsight=null,lastStripId=null;
+  function paintStrip(){
+    const strip=document.getElementById('performanceInsight');if(!strip)return;
+    strip.hidden=!stripInsight;
+    const text=strip.querySelector('p');text.replaceChildren();
+    if(!stripInsight){delete strip.dataset.insight;return;}
+    strip.dataset.insight=stripInsight.id;
+    const title=document.createElement('strong');title.textContent=stripInsight.title+'. ';
+    text.append(title,document.createTextNode(stripInsight.evidence+' '+stripInsight.action));
+  }
+  function selectStrip(status){
+    if(status==='pending'){stripInsight=null;paintStrip();return;}
+    const pool=curate(insights).filter(item=>item.id!=='comparison');
+    const alternatives=pool.filter(item=>item.id!==lastStripId),eligible=alternatives.length?alternatives:pool;
+    stripInsight=eligible.length?eligible[Math.floor(Math.random()*eligible.length)]:null;
+    if(stripInsight)lastStripId=stripInsight.id;
+    paintStrip();
+  }
   function mount(){if(section)return;
     section=document.createElement('section');section.id='quickInsights';section.setAttribute('aria-labelledby','quickInsightsTitle');
     section.innerHTML='<div class="insights-heading"><div><h2 id="quickInsightsTitle">Quick Insights</h2><p id="insightScope"></p></div></div><p id="insightNote" role="status"></p><div id="insightList"></div>';
@@ -142,7 +159,8 @@ window.QuickInsights=(()=>{
     const first=params.get('start'),last=params.get('end'),date=value=>new Date(value+'T00:00:00Z').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'});
     scope.textContent=(first&&last?(first===last?date(first):date(first)+' - '+date(last)):'All available dates')+' | '+count+' selected channel'+(count===1?'':'s')+(count>0&&count<=2&&channelNames.length?' | '+channelNames.join(' + '):'');
     insights=build(data,requested,previous,status);note.textContent=!data.rows.length?'No data for this selection.':status==='pending'?'Comparing with the preceding period...':'';section.removeAttribute('aria-busy');paint();
+    selectStrip(status);
   }
-  function clear(message=''){insights=[];if(!section)return;scope.textContent='';note.textContent=message;list.replaceChildren();}
-  return {build,curate,render,clear};
+  function clear(message=''){insights=[];stripInsight=null;paintStrip();if(!section)return;scope.textContent='';note.textContent=message;list.replaceChildren();}
+  return {build,curate,render,clear,paintStrip};
 })();

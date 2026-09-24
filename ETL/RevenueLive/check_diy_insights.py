@@ -200,6 +200,18 @@ try:
         expect(page.locator('.channel-brand[data-channel-name="Unknown Channel"]').first).to_have_text('UC')
         page.locator('.channel-brand[data-channel-name="9X Tashan"] img').first.evaluate("image=>image.dispatchEvent(new Event('error'))")
         expect(page.locator('.channel-brand[data-channel-name="9X Tashan"]').first).to_have_text('9T')
+        assert page.evaluate('''()=>{
+            const data={rows:[{channel:'Test channel',channel_id:1,day:'2026-09-21',views:1000,impressions:400,ad:10000,other:5000,total:15000}]},query='start=2026-09-21&end=2026-09-21&channel=1';
+            const valid=QuickInsights.curate(QuickInsights.build(data,query,null,'none'));
+            let last=null;
+            for(let i=0;i<12;i++){
+                QuickInsights.render(data,query,null,'none');const strip=document.getElementById('performanceInsight'),id=strip.dataset.insight;
+                if(strip.hidden||id===last||!valid.some(item=>item.id===id&&strip.textContent.includes(item.evidence)))return false;
+                last=id;QuickInsights.paintStrip();if(strip.dataset.insight!==last)return false;
+            }
+            QuickInsights.render(data,query,null,'pending');if(!document.getElementById('performanceInsight').hidden)return false;
+            QuickInsights.render({rows:[]},query,null,'none');return document.getElementById('performanceInsight').hidden;
+        }'''), 'Random strip uses eligible insights without immediate repeats or stale content'
         page.evaluate("signOutView('')")
         assert page.evaluate("!Chart.getChart('metricSpark-total')")
         expect(page.locator('#insightList article')).to_have_count(0)

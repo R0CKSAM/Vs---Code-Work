@@ -122,10 +122,25 @@ window.RevenueShare=(()=>{
   const channelDialog=document.createElement('dialog');channelDialog.id='channelDetailDialog';channelDialog.setAttribute('aria-labelledby','channelDetailTitle');
   channelDialog.innerHTML='<div class="channel-detail-heading"><div><h2 id="channelDetailTitle"></h2><p id="channelDetailRange"></p></div><button type="button" aria-label="Close channel details" title="Close"><i data-lucide="x" aria-hidden="true"></i></button></div><dl class="channel-detail-totals"></dl><p id="channelDetailCoverage"></p><div class="channel-detail-table"><table><thead><tr><th scope="col">Date</th><th scope="col">Views</th><th scope="col">Ad impressions</th><th scope="col">Ad revenue</th><th scope="col">Sponsorship / others</th><th scope="col">Total revenue</th></tr></thead><tbody></tbody></table></div>';
   document.body.append(channelDialog);channelDialog.querySelector('button').addEventListener('click',()=>channelDialog.close());window.lucide?.createIcons();
+  const detailActions=document.createElement('div');detailActions.className='channel-detail-actions';
+  const detailDownload=document.createElement('button');detailDownload.type='button';detailDownload.title='Download channel CSV';detailDownload.setAttribute('aria-label','Download channel CSV');detailDownload.innerHTML='<i data-lucide="download" aria-hidden="true"></i>';
+  const detailClose=channelDialog.querySelector('button');detailClose.before(detailActions);detailActions.append(detailDownload,detailClose);window.lucide?.createIcons();
+  let detailExport=null;
+  channelDialog.addEventListener('close',()=>{detailExport=null;});
+  detailDownload.addEventListener('click',()=>{
+    if(!detailExport)return;
+    const {name,first,last,days}=detailExport;
+    const safeName=/^[\s]*[=+@\-\t\r\n]/.test(name)?"'"+name:name;
+    const records=[['Date','Channel','Views','Ad impressions','Ad revenue (INR)','Sponsorship / others (INR)','Total revenue (INR)'],...days.map(([day,value])=>[day,safeName,value.views,value.impressions,(value.ad/100).toFixed(2),(value.other/100).toFixed(2),(value.total/100).toFixed(2)])];
+    const csv=records.map(record=>record.map(value=>'"'+String(value).replace(/"/g,'""')+'"').join(',')).join('\r\n');
+    const url=URL.createObjectURL(new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'})),link=document.createElement('a');
+    link.href=url;link.download=(name.replace(/[^a-z0-9_-]+/gi,'-').slice(0,80)||'channel')+'_'+first+'_'+last+'.csv';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  });
   function openChannel(name){
     const rows=currentRows.filter(row=>row.channel===name),days=new Map(),keys=['views','impressions','ad','other','total'],labels=['Views','Ad impressions','Ad revenue','Sponsorship / others','Total revenue'];
     for(const row of rows){if(!days.has(row.day))days.set(row.day,Object.fromEntries(keys.map(key=>[key,0])));for(const key of keys)days.get(row.day)[key]+=row[key];}
     const sorted=[...days].sort(([a],[b])=>a.localeCompare(b)),first=document.getElementById('start').value||sorted[0]?.[0],last=document.getElementById('end').value||sorted.at(-1)?.[0];
+    detailExport={name,first,last,days:sorted};detailDownload.disabled=!sorted.length;
     const dateLabel=day=>new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(day+'T00:00:00Z'));
     document.getElementById('channelDetailTitle').textContent=name;
     document.getElementById('channelDetailRange').textContent=first&&last?dateLabel(first)+' - '+dateLabel(last):'Selected range';
@@ -173,8 +188,7 @@ window.RevenueShare=(()=>{
     metrics.querySelector('tbody').replaceChildren(...[...metricSums].sort((a,b)=>b[1].total-a[1].total||a[0].localeCompare(b[0])).map(([name,values])=>{const tr=document.createElement('tr'),label=document.createElement('th');label.scope='row';label.textContent=name;tr.append(label);keys.forEach((key,i)=>{const cell=document.createElement('td'),n=values[key];cell.dataset.label=['Views','Ad impressions','Ad revenue','Sponsorship / others','Total revenue'][i];cell.textContent=i<2?new Intl.NumberFormat('en-IN').format(n):cash(n);cell.style.backgroundColor=heatColor(n,scales[i]);cell.style.color='#202a30';cell.title=cell.dataset.label+': independent column scale; minimum red, median yellow, maximum green. Equal nonzero values yellow; all-zero values red.';tr.append(cell);});return tr;}));
     for(const [index,label] of [...metrics.querySelectorAll('tbody th')].entries()){const name=document.createElement('span'),badge=document.createElement('span'),glyph=document.createElement('i');name.textContent=label.textContent;badge.className='channel-glyph';badge.style.backgroundColor=colors[index%colors.length]+'55';glyph.dataset.lucide=channelIcon(name.textContent);glyph.setAttribute('aria-hidden','true');badge.append(glyph);label.replaceChildren(badge,name);}
     const ranked=[...metricSums].sort((a,b)=>b[1].total-a[1].total||a[0].localeCompare(b[0]));
-    const selectedTotal=ranked.reduce((sum,[,value])=>sum+value.total,0),adTotal=ranked.reduce((sum,[,value])=>sum+value.ad,0),otherTotal=ranked.reduce((sum,[,value])=>sum+value.other,0);
-    insight.querySelector('p').textContent=ranked.length?`${ranked[0][0]} ${ranked.length===1?'generated':'leads with'} ${cash(ranked[0][1].total)}${selectedTotal>0?' ('+percent(ranked[0][1].total,selectedTotal)+' of selected revenue)':''}. Ad revenue: ${cash(adTotal)}. Sponsorship / others: ${cash(otherTotal)}.`:'';
+    window.QuickInsights?.paintStrip();
     metrics.querySelectorAll('tbody tr').forEach((tr,index)=>{
       const rank=document.createElement('small');rank.className='channel-rank';rank.textContent=index+1;tr.querySelector('th').prepend(rank);
       tr.querySelectorAll('td').forEach((cell,i)=>{
@@ -195,7 +209,7 @@ window.RevenueShare=(()=>{
     const first=document.getElementById('start').value||sorted[0]?.[0],last=document.getElementById('end').value||sorted.at(-1)?.[0];
     const span=first&&last?(Date.parse(last)-Date.parse(first))/86400000+1:0;
     const useBars=sorted.length===1||(span>0&&span<=7);
-    if(useBars)for(const dataset of datasets){dataset.type='bar';dataset.backgroundColor=dataset.borderColor;dataset.borderWidth=0;dataset.borderRadius=3;dataset.maxBarThickness=48;dataset.categoryPercentage=.7;dataset.barPercentage=.85;}
+    if(useBars)for(const dataset of datasets){dataset.type='bar';dataset.backgroundColor=dataset.borderColor;dataset.borderWidth=0;dataset.borderRadius=6;dataset.borderSkipped=false;dataset.maxBarThickness=48;dataset.categoryPercentage=.7;dataset.barPercentage=.85;}
     if(lineChart)lineChart.destroy();
     Chart.defaults.color='#514958';Chart.defaults.font.size=13;
     lineChart=new Chart(document.getElementById('dailyRevenueCanvas'),{type:useBars?'bar':'line',data:{labels:sorted.map(([day])=>day),datasets},options:{responsive:true,maintainAspectRatio:false,animation:matchMedia('(prefers-reduced-motion: reduce)').matches?false:{duration:250},interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom',labels:{color:'#d1d1dc',boxWidth:12}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+cash(ctx.raw*100)}}},scales:{x:{type:'category',offset:useBars,title:{display:true,text:'Date',color:'#bcbccc'},grid:{display:false,offset:useBars},ticks:{color:'#bcbccc',maxTicksLimit:6,maxRotation:0,callback:function(value){const day=this.getLabelForValue(value);return new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',timeZone:'UTC'}).format(new Date(day+'T00:00:00Z'));}}},y:{beginAtZero:true,title:{display:true,text:'Revenue (INR)',color:'#bcbccc'},grid:{color:'#ffffff0d'},ticks:{color:'#bcbccc'}}}}});

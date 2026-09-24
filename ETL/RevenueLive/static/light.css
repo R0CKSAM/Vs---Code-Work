@@ -458,6 +458,8 @@ body.summary-phase:has(#shell:not([hidden])){background:linear-gradient(180deg,#
 .channel-detail-heading p{margin:6px 0 0;color:#52677c;font-size:14px}
 .channel-detail-heading button{flex:none;width:36px;height:36px;display:grid;place-items:center;padding:6px}
 .channel-detail-heading svg{width:20px;height:20px}
+.channel-detail-actions{display:flex;gap:8px;flex:none}
+.channel-detail-heading>div:first-child{min-width:0}
 .channel-detail-totals{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px;padding:18px 0;margin:16px 0;border-block:1px solid #dce7f2}
 .channel-detail-totals dt{font-size:13px;color:#52677c;font-weight:600}
 .channel-detail-totals dd{font-size:22px;font-weight:800;margin:6px 0 0;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
@@ -495,16 +497,34 @@ td:nth-child(3) .channel-value-track>span{background:#32b59d}
 td:nth-child(4) .channel-value-track>span{background:#eea75a}
 td:nth-child(5) .channel-value-track>span{background:#a881db}
 /* An unframed channel leaderboard, with revenue as the reading anchor. */
+.summary-phase :is(button,input:not([type=checkbox]):not([type=radio]),select,textarea,dialog,.table-wrap,.range-panel,.channel-menu,.account-panel,.overview-metric-selector){border-radius:8px}
+.summary-phase :is(.channel-rank,.channel-glyph,.share-percent,.metric-icon,.distribution-collapse){border-radius:8px}
+.summary-phase :is(.distribution-track,.channel-value-track,.tile-progress,.diy-share-track),
+.summary-phase :is(.distribution-track,.channel-value-track,.tile-progress,.diy-share-track)>span{border-radius:8px;overflow:hidden}
+.summary-phase .compact-share-row{border-radius:8px}
+.summary-phase #viewsTreeButton>.share-title,.summary-phase #viewsDistribution>h2,
+.summary-phase #channelMetrics .metrics-toggle>span,.summary-phase #channelMetrics .metrics-toggle>svg{border-radius:8px}
+.summary-phase #channelMetrics :is(thead,tbody) tr>:first-child{border-radius:8px 0 0 8px}
+.summary-phase #channelMetrics :is(thead,tbody) tr>:last-child{border-radius:0 8px 8px 0}
+.summary-phase .overview-metric-selector button{border-radius:6px}
+.summary-phase #viewsTreeButton{padding:0;border:0}
+.summary-phase #dashboard>#viewsDistribution:has(#viewsTreeButton[hidden]){padding-left:0;padding-right:0;border-left:0;border-right:0}
+.summary-phase #viewsDistribution>h2:not([hidden]){margin-right:72px}
+@media(min-width:801px){
+  .summary-phase{--dashboard-gutter:max(12px,calc(25% - 308px))}
+  .summary-phase .workspace{max-width:none;padding-left:var(--dashboard-gutter);padding-right:var(--dashboard-gutter)}
+  .summary-phase #shell>header{padding-left:var(--dashboard-gutter);padding-right:var(--dashboard-gutter)}
+}
 .summary-phase #channelMetrics .metrics-toggle>span,
 #viewsTreeButton>.share-title,#viewsDistribution>h2{background:#edf5ff;color:#172f50;border-radius:4px;padding:5px 8px}
 .summary-phase #channelMetrics .metrics-toggle>svg{background:#edf5ff;color:#172f50;border-radius:4px;padding:3px;box-sizing:content-box}
 #viewsDistributionRows .full-share-row{background:#edf5ff;color:#172f50;padding:10px;border-radius:4px}
-#channelMetrics table{border-collapse:separate;border-spacing:0 6px}
-#channelMetrics thead th{background:#edf5ff;box-shadow:none;border:0;padding:8px 10px;color:#405b78;font-size:12px;font-weight:700}
+#channelMetrics table{border-collapse:separate;border-spacing:0 6px;font-family:'Segoe UI',Arial,sans-serif;font-variant-numeric:tabular-nums}
+#channelMetrics thead th{background:#edf5ff;box-shadow:none;border:0;padding:8px 10px;color:#304c6c;font-size:14px;font-weight:700}
 #channelMetrics tbody :is(th,td){padding:12px 10px;border-top:1px solid #e3edf7;border-bottom:1px solid #e3edf7;background:#ffffffeb;vertical-align:middle}
-#channelMetrics tbody th{border-left:1px solid #e3edf7;border-radius:6px 0 0 6px;font-size:14px}
-#channelMetrics tbody td{font-size:14px;font-weight:600}
-#channelMetrics tbody td:last-child{border-right:1px solid #dbe8f7;border-radius:0 6px 6px 0;background:#edf5ff;color:#123b72;font-size:16px;font-weight:800}
+#channelMetrics tbody th{border-left:1px solid #e3edf7;border-radius:6px 0 0 6px;font-size:16px;font-weight:700}
+#channelMetrics tbody td{font-size:18px;font-weight:700;line-height:1.35;white-space:nowrap}
+#channelMetrics tbody td:last-child{border-right:1px solid #dbe8f7;border-radius:0 6px 6px 0;background:#edf5ff;color:#123b72;font-size:20px;font-weight:800}
 #channelMetrics tbody tr:hover :is(th,td){background:#f1f7fe}
 #channelMetrics tbody tr:hover td:last-child{background:#e3efff}
 #channelMetrics .channel-rank{min-width:24px;height:28px;background:#edf3fa;color:#486382;font-size:13px}
@@ -517,6 +537,6 @@ td:nth-child(5) .channel-value-track>span{background:#a881db}
 #channelMetrics td:nth-child(3) .channel-value-track>span{background:linear-gradient(90deg,#8bdbcc,#269d88)}
 #channelMetrics td:nth-child(4) .channel-value-track>span{background:linear-gradient(90deg,#f8d3a4,#df9742)}
 #channelMetrics td:nth-child(5) .channel-value-track>span{background:linear-gradient(90deg,#d2bbf1,#9870cc)}
-#channelMetrics .channel-comparison{font-size:12px;line-height:1.4;margin-top:6px}
-@media(max-width:650px){#channelMetrics tbody :is(th,td){padding:10px 8px}#channelMetrics tbody th{font-size:13px}#channelMetrics tbody td{font-size:13px}#channelMetrics tbody td:last-child{font-size:15px}}
+#channelMetrics .channel-comparison{font-size:14px;line-height:1.4;margin-top:6px}
+@media(max-width:650px){#channelMetrics tbody :is(th,td){padding:10px 8px}}
 @media(max-width:800px){.summary-phase #dashboard>#revenueOverview{grid-template-columns:minmax(0,1fr)}.summary-phase #dashboard>#performanceInsight:not([hidden]){display:block!important;padding:16px}#performanceInsight p{padding:8px 0 0;border:0}.summary-phase .metrics strong{font-size:32px}}

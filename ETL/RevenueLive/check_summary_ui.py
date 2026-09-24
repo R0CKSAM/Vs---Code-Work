@@ -1,5 +1,7 @@
 """Isolated first-phase dashboard visual and interaction checks."""
 import secrets
+import csv
+import io
 import sqlite3
 import sys
 import threading
@@ -67,6 +69,14 @@ try:
             actual=int(page.locator('.channel-detail-totals dd').first.inner_text().replace(',',''))
             assert actual==expected,('channel summary',actual,expected)
             assert page.locator('.channel-detail-table tbody tr').count()==7
+            with page.expect_download() as download_info:
+                page.get_by_role('button',name='Download channel CSV',exact=True).click()
+            download=download_info.value
+            exported=list(csv.DictReader(io.StringIO(Path(download.path()).read_text(encoding='utf-8-sig'))))
+            assert len(exported)==7 and all(row['Channel']==channel for row in exported)
+            assert sum(int(row['Views']) for row in exported)==expected
+            assert download.suggested_filename.endswith('_2026-08-25_2026-08-31.csv')
+            expect(page.locator('#channelDetailDialog')).to_be_visible()
             assert page.locator('#channelDetailDialog').evaluate('el=>el.scrollWidth<=el.clientWidth'),width
             page.screenshot(path=str(screens/f'channel-detail-{width}.png'))
             page.keyboard.press('Escape')
