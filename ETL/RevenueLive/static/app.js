@@ -104,6 +104,7 @@ async function updateMetricChanges(data,requested,sequence){
     window.QuickInsights?.render(data,requested,previous,'ready');
     const ids=params.getAll('channel'),coverage=new Set(previous.rows.map(row=>row.day+'|'+row.channel));
     const currentCoverage=new Set(data.rows.map(row=>row.day+'|'+row.channel));const complete=coverage.size===span*ids.length&&currentCoverage.size===span*ids.length;
+    window.RevenueShare?.compare(data,previous,complete);
     for(const key of ['total','ad','other','views','impressions']){
       const badge=$('change-'+key),before=previous.totals[key],now=data.totals[key];
       if(!complete||!previous.rows.length||!Number.isFinite(before)||!Number.isFinite(now)||(before===0&&now!==0))continue;

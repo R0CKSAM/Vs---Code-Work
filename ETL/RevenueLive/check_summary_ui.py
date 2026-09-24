@@ -50,20 +50,54 @@ try:
         expect(page.locator('.tree-legend-item')).to_have_count(28)
         assert page.locator('.views-tree-tile').count()==page.evaluate('new Set(reportRows.filter(r=>r.views>0).map(r=>r.channel)).size')
         expect(page.locator('#viewsDistributionRows')).not_to_be_visible()
-        page.locator('#viewsTreeButton').click()
+        page.locator('#viewsTreeButton>.share-title').click()
         expect(page.locator('#viewsDistributionRows')).to_be_visible()
         page.locator('#viewsDistribution > .distribution-collapse').click()
         expect(page.locator('#viewsTreeButton')).to_be_visible()
         expect(page.locator('#viewsDistribution > .distribution-collapse')).to_be_hidden()
+        for width in [1388,390]:
+            page.set_viewport_size({'width':width,'height':805})
+            tile=page.locator('.views-tree-tile').first
+            channel=tile.locator('.channel-brand').get_attribute('data-channel-name')
+            tile.focus()
+            tile.press('Enter')
+            expect(page.locator('#channelDetailDialog')).to_be_visible()
+            expect(page.locator('#channelDetailTitle')).to_have_text(channel)
+            expected=page.evaluate('name=>reportRows.filter(r=>r.channel===name).reduce((s,r)=>s+r.views,0)',channel)
+            actual=int(page.locator('.channel-detail-totals dd').first.inner_text().replace(',',''))
+            assert actual==expected,('channel summary',actual,expected)
+            assert page.locator('.channel-detail-table tbody tr').count()==7
+            assert page.locator('#channelDetailDialog').evaluate('el=>el.scrollWidth<=el.clientWidth'),width
+            page.screenshot(path=str(screens/f'channel-detail-{width}.png'))
+            page.keyboard.press('Escape')
+            expect(page.locator('#channelDetailDialog')).not_to_be_visible()
+        page.set_viewport_size({'width':1388,'height':805})
         assert page.evaluate("Chart.getChart('dailyRevenueCanvas').data.datasets.length") == 2
         assert page.evaluate("Chart.getChart('dailyRevenueCanvas').data.datasets.every(d=>d.type==='bar')")
         assert page.evaluate("Chart.getChart('dailyRevenueCanvas').data.datasets.reduce((s,d)=>s+d.data.reduce((a,b)=>a+b,0),0)") == page.evaluate('reportRows.reduce((s,r)=>s+r.total,0)/100')
         assert page.locator('.full-share-row strong').first.text_content().endswith('%')
         page.locator('#revenueShareExpanded button').click()
+        for metric,title in [('views','Views'),('impressions','Ad impressions'),('total','Revenue')]:
+            page.locator('.overview-metric-selector [data-metric='+metric+']').click()
+            expect(page.locator('.daily-revenue h2')).to_have_text(title+' over time')
+            expect(page.locator('.overview-metric-selector [aria-pressed=true]')).to_have_text(title)
+            assert page.evaluate('''key=>{
+                const expected=reportRows.reduce((s,r)=>s+r[key],0),share=Chart.getChart('summaryShareCanvas'),trend=Chart.getChart('dailyRevenueCanvas');
+                const shareSum=share.data.datasets[0].data.reduce((a,b)=>a+b,0),trendSum=trend.data.datasets.reduce((s,d)=>s+d.data.reduce((a,b)=>a+b,0),0);
+                return Math.abs(shareSum-expected)<.01 && Math.abs(trendSum-expected/(key==='total'?100:1))<.01;
+            }''',metric),('linked metric totals',metric)
+            if metric!='total':
+                assert '₹' not in page.locator('#shareSum').inner_text()
+                assert page.evaluate("Chart.getChart('dailyRevenueCanvas').data.datasets.length") == 1
+                page.locator('#revenueShare').click()
+                expect(page.locator('#revenueShareTitle')).to_have_text(title+' by channel')
+                assert '₹' not in page.locator('#fullShareRows').inner_text()
+                page.locator('#revenueShareExpanded button').click()
+        expect(page.locator('#performanceInsight')).to_be_visible()
         for width in [1920, 1388, 1024, 944, 900, 768, 390, 320]:
             page.set_viewport_size({'width': width, 'height': 805})
             page.wait_for_timeout(350)
-            page.locator('#viewsTreeButton').click()
+            page.locator('#viewsTreeButton>.share-title').click()
             assert page.locator('#viewsDistribution').evaluate('''node=>{
                 const heading=node.querySelector('h2').getBoundingClientRect(),close=node.querySelector('.distribution-collapse').getBoundingClientRect(),rows=node.querySelector('#viewsDistributionRows').getBoundingClientRect();
                 return heading.right<=close.left && rows.top>=Math.max(heading.bottom,close.bottom);
@@ -141,7 +175,7 @@ try:
         expect(page.locator('#channelMetrics tbody tr:visible')).to_have_count(28)
         page.locator('.metrics-toggle').click()
         page.locator('#rangeTitle').click()
-        assert page.evaluate("Array.from(document.querySelectorAll('#channelMetrics tbody tr')).reduce((s,r)=>s+Number(r.lastElementChild.textContent.replace(/[^0-9.-]/g,'')),0)") == page.evaluate("()=>{const sums={};for(const r of reportRows)sums[r.channel]=(sums[r.channel]||0)+r.total;return Object.values(sums).reduce((s,n)=>s+Math.round(n/100),0);}")
+        assert page.evaluate("Array.from(document.querySelectorAll('#channelMetrics tbody tr')).reduce((s,r)=>s+Number(r.lastElementChild.firstElementChild.textContent.replace(/[^0-9.-]/g,'')),0)") == page.evaluate("()=>{const sums={};for(const r of reportRows)sums[r.channel]=(sums[r.channel]||0)+r.total;return Object.values(sums).reduce((s,n)=>s+Math.round(n/100),0);}")
         expect(page.locator('.flatpickr-calendar')).to_be_visible()
         expect(page.locator('.flatpickr-day.flatpickr-disabled').first).to_be_visible()
         page.locator('.flatpickr-day[aria-label="August 28, 2026"]').click()
@@ -194,14 +228,14 @@ try:
                     assert not result['bad'] and not result['overflow'],(width,count,first,last,result)
         assert not errors, errors
         page.evaluate("RevenueShare.render([{channel:'Scale check',day:'2026-08-31',views:100,impressions:50,ad:0,other:2500,total:2500}])")
-        colors=page.locator('#channelMetrics tbody td').evaluate_all('(cells)=>cells.map(c=>c.style.backgroundColor)')
-        assert colors[0]=='rgb(255, 235, 132)' and colors[2]=='rgb(248, 105, 107)' and colors[3]=='rgb(255, 235, 132)',colors
+        bars=page.locator('#channelMetrics .channel-value-track>span').evaluate_all('(nodes)=>nodes.map(n=>n.style.width)')
+        assert bars==['100%','100%','0%','100%','100%'],bars
         page.evaluate("RevenueShare.render([1,2,3].map((n)=>({channel:'Channel '+n,day:'2026-08-31',views:n*100000,impressions:(4-n)*10,ad:n*100,other:0,total:n*100})))")
-        cells=page.locator('#channelMetrics tbody tr').evaluate_all('(rows)=>rows.map(r=>Array.from(r.querySelectorAll("td")).map(c=>c.style.backgroundColor))')
-        assert cells[0][0]=='rgb(99, 190, 123)' and cells[0][1]=='rgb(248, 105, 107)' and cells[0][2]=='rgb(99, 190, 123)',cells
-        assert cells[1][0]==cells[1][1]==cells[1][2]=='rgb(255, 235, 132)',cells
+        cells=page.locator('#channelMetrics tbody tr').evaluate_all('(rows)=>rows.map(r=>Array.from(r.querySelectorAll(".channel-value-track>span")).map(c=>parseFloat(c.style.width)))')
+        assert cells[0][0]==100 and abs(cells[0][1]-100/3)<.01 and cells[0][2]==100,cells
+        assert abs(cells[1][0]-200/3)<.01 and cells[1][0]==cells[1][1]==cells[1][2],cells
         page.evaluate("RevenueShare.render([{channel:'All zero',day:'2026-08-31',views:0,impressions:0,ad:0,other:0,total:0}])")
-        assert page.locator('#channelMetrics tbody td').evaluate_all('(cells)=>cells.every(c=>c.style.backgroundColor==="rgb(248, 105, 107)")')
+        assert page.locator('#channelMetrics .channel-value-track>span').evaluate_all('(nodes)=>nodes.every(n=>n.style.width==="0%")')
         page.evaluate('refresh()')
         print('PASS: four cards, local icons, weekly default, date change, CSV, table navigation, five responsive screenshots; no page errors.')
         browser.close()

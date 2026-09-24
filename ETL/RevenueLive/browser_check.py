@@ -69,7 +69,19 @@ try:
         page.locator('[data-view=dashboard]').click()
         expect(page.locator('#total')).to_contain_text('314')
         assert '1,49,938' in page.locator('#views').inner_text()
+        assert page.locator('#channelMetrics tbody tr:not([hidden]) th').evaluate_all('''cells=>cells.every(cell=>{
+            const rank=cell.querySelector('.channel-rank').getBoundingClientRect(),logo=cell.querySelector('.channel-brand').getBoundingClientRect();
+            return logo.left-rank.right>=9;
+        })'''), 'Rank and logo spacing'
+        assert page.locator('.metrics article').first.evaluate("el=>!getComputedStyle(el).boxShadow.includes('inset')"), 'Hero has no white inset rim'
         page.screenshot(path=str(screens/'desktop.png'),full_page=True)
+        for width in [1440,390]:
+            page.set_viewport_size({'width':width,'height':844})
+            for section in ['channelMetrics','viewsDistribution']:
+                page.locator('#'+section).evaluate('el=>window.scrollTo(0,el.getBoundingClientRect().top+scrollY-document.querySelector("#shell>header").getBoundingClientRect().height-8)')
+                page.wait_for_timeout(150)
+                page.screenshot(path=str(screens/f'scroll-{section}-{width}.png'))
+        page.evaluate('window.scrollTo(0,0)')
         for width in [390,360,768]:
             page.set_viewport_size({'width':width,'height':844})
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),width

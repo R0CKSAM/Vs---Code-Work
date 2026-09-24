@@ -1,6 +1,28 @@
 'use strict';
 window.RevenueShare=(()=>{
   let redrawTree=()=>{};
+  let selectedMetric='total',currentRows=[];
+  const metricNames={total:'Revenue',views:'Views',impressions:'Ad impressions'};
+  const metricValue=value=>selectedMetric==='total'?cash(value):new Intl.NumberFormat('en-IN').format(value);
+  let channelChanges=new Map();
+  function applyChannelChanges(){
+    document.querySelectorAll('.channel-comparison').forEach(node=>node.remove());
+    for(const node of document.querySelectorAll('#channelMetrics tbody tr,#viewsTree .views-tree-tile')){
+      const name=node.querySelector('.channel-brand')?.dataset.channelName,key=node.matches('tr')?'total':'views',change=channelChanges.get(name)?.[key];
+      if(!Number.isFinite(change))continue;
+      const badge=document.createElement('span');badge.className='channel-comparison '+(change<0?'down':'up');badge.textContent=(change<0?'\u2193 ':change>0?'\u2191 ':'')+Math.abs(change).toFixed(1)+'%';badge.title='Compared with the preceding equal-length period';
+      (node.matches('tr')?node.lastElementChild:node).append(badge);
+    }
+  }
+  function compare(current,previous,complete){
+    channelChanges.clear();
+    if(complete){
+      const sums=rows=>{const map=new Map();for(const r of rows){if(!map.has(r.channel))map.set(r.channel,{total:0,views:0});for(const key of ['total','views'])map.get(r.channel)[key]+=r[key];}return map;};
+      const before=sums(previous.rows);
+      for(const [name,values] of sums(current.rows)){const old=before.get(name);if(!old)continue;const changes={};for(const key of ['total','views'])if(old[key]!==0)changes[key]=(values[key]-old[key])/Math.abs(old[key])*100;channelChanges.set(name,changes);}
+    }
+    applyChannelChanges();
+  }
   window.addEventListener('resize',()=>requestAnimationFrame(()=>redrawTree()));
   const colors=['#f8cf96','#f990ad','#a8c7ec','#c9b1e5','#8dd4bf','#91b9cd'];
   // Draw the existing arcs beneath their faces; data angles remain unchanged.
@@ -73,22 +95,47 @@ window.RevenueShare=(()=>{
   trigger.after(modal);
   const overview=document.createElement('div');overview.id='revenueOverview';trigger.before(overview);overview.append(trigger,modal);
   const trend=document.createElement('section');trend.className='daily-revenue';trend.innerHTML='<h2>Revenue over time</h2><div class="daily-revenue-canvas"><canvas id="dailyRevenueCanvas" role="img" aria-label="Daily ad and sponsorship revenue"></canvas></div><p id="dailyRevenueNote"></p>';overview.append(trend);
+  const trendHeader=document.createElement('div');trendHeader.className='trend-header';
+  const metricSelector=document.createElement('div');metricSelector.className='overview-metric-selector';metricSelector.setAttribute('role','group');metricSelector.setAttribute('aria-label','Timeline and channel share metric');
+  for(const [key,name] of Object.entries(metricNames)){
+    const button=document.createElement('button');button.type='button';button.textContent=name;button.dataset.metric=key;button.setAttribute('aria-pressed',String(key===selectedMetric));
+    button.addEventListener('click',()=>{if(selectedMetric===key)return;selectedMetric=key;const changes=new Map(channelChanges);render(currentRows);channelChanges=changes;applyChannelChanges();});metricSelector.append(button);
+  }
+  trendHeader.append(trend.querySelector('h2'),metricSelector);trend.prepend(trendHeader);
   const views=document.createElement('section');views.id='viewsDistribution';views.innerHTML='<h2>Views distribution</h2><div id="viewsDistributionRows"></div><p id="viewsDistributionEmpty"></p>';overview.after(views);
   const metrics=document.createElement('section');metrics.id='channelMetrics';metrics.innerHTML='<h2>Channel metrics</h2><div class="metrics-table-scroll"><table><thead><tr><th scope="col">Channel</th><th scope="col">Views</th><th scope="col">Ad impressions</th><th scope="col">Ad revenue</th><th scope="col">Sponsorship / others</th><th scope="col">Total revenue</th></tr></thead><tbody></tbody></table></div><p class="metrics-empty"></p>';views.before(metrics);
   const metricsToggle=document.createElement('button');metricsToggle.type='button';metricsToggle.className='metrics-toggle';metricsToggle.setAttribute('aria-expanded','false');metricsToggle.setAttribute('aria-controls','channelMetricsBody');metricsToggle.title='Expand channel metrics';metricsToggle.innerHTML='<span>Channel metrics</span><i data-lucide="maximize-2" aria-hidden="true"></i>';metrics.querySelector('h2').replaceWith(metricsToggle);metrics.querySelector('tbody').id='channelMetricsBody';let metricsExpanded=false;
   function sizeMetrics(){metrics.querySelectorAll('tbody tr').forEach((row,i)=>row.hidden=!metricsExpanded&&i>=5);metricsToggle.setAttribute('aria-expanded',String(metricsExpanded));const action=metricsExpanded?'Collapse':'Expand';metricsToggle.title=action+' channel metrics';metricsToggle.setAttribute('aria-label',action+' channel metrics');metricsToggle.querySelector('span').textContent='Channel metrics';const oldIcon=metricsToggle.querySelector('svg,i');const nextIcon=document.createElement('i');nextIcon.dataset.lucide=metricsExpanded?'minimize-2':'maximize-2';nextIcon.setAttribute('aria-hidden','true');oldIcon.replaceWith(nextIcon);window.lucide?.createIcons();}
   metricsToggle.addEventListener('click',()=>{metricsExpanded=!metricsExpanded;sizeMetrics();});
-  const treeButton=document.createElement('button');treeButton.type='button';treeButton.id='viewsTreeButton';treeButton.setAttribute('aria-expanded','false');treeButton.setAttribute('aria-controls','viewsDistributionRows');treeButton.innerHTML='<span class="share-title">Views distribution <span aria-hidden="true">&#8599;</span></span><span id="viewsTree"></span>';
+  const treeButton=document.createElement('div');treeButton.id='viewsTreeButton';treeButton.innerHTML='<button type="button" class="share-title" aria-expanded="false" aria-controls="viewsDistributionRows">Views distribution <span aria-hidden="true">&#8599;</span></button><span id="viewsTree"></span>';
+  const treeExpand=treeButton.querySelector('.share-title');
   views.prepend(treeButton);views.querySelector('h2').hidden=true;document.getElementById('viewsDistributionRows').hidden=true;
   const treeLegend=document.createElement('span');treeLegend.id='viewsTreeLegend';treeButton.append(treeLegend);
   const collapseViews=document.createElement('button');collapseViews.type='button';collapseViews.textContent='Collapse';collapseViews.hidden=true;treeButton.after(collapseViews);
-  function closeViews(){treeButton.hidden=false;collapseViews.hidden=true;views.querySelector('h2').hidden=true;document.getElementById('viewsDistributionRows').hidden=true;treeButton.setAttribute('aria-expanded','false');redrawTree();}
-  treeButton.addEventListener('click',()=>{treeButton.hidden=true;collapseViews.hidden=false;views.querySelector('h2').hidden=false;document.getElementById('viewsDistributionRows').hidden=false;treeButton.setAttribute('aria-expanded','true');collapseViews.focus({preventScroll:true});});
-  collapseViews.addEventListener('click',()=>{closeViews();treeButton.focus();});
+  function closeViews(){treeButton.hidden=false;collapseViews.hidden=true;views.querySelector('h2').hidden=true;document.getElementById('viewsDistributionRows').hidden=true;treeExpand.setAttribute('aria-expanded','false');redrawTree();}
+  treeExpand.addEventListener('click',()=>{treeButton.hidden=true;collapseViews.hidden=false;views.querySelector('h2').hidden=false;document.getElementById('viewsDistributionRows').hidden=false;treeExpand.setAttribute('aria-expanded','true');collapseViews.focus({preventScroll:true});});
+  collapseViews.addEventListener('click',()=>{closeViews();treeExpand.focus();});
   for(const button of [collapseViews,modal.querySelector('button')]){button.classList.add('distribution-collapse');button.setAttribute('aria-label','Collapse distribution');button.title='Collapse distribution';button.innerHTML='<i data-lucide="minimize-2" aria-hidden="true"></i>';}
   for(const button of [trigger,treeButton]){const arrow=button.querySelector('.share-title>span');arrow.innerHTML='<i data-lucide="maximize-2" aria-hidden="true"></i>';button.title='Expand distribution';}
   window.lucide?.createIcons();
-  document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(!modal.hidden){collapse();trigger.focus();}else if(!collapseViews.hidden){closeViews();treeButton.focus();}});
+  document.addEventListener('keydown',event=>{if(event.key!=='Escape'||channelDialog.open)return;if(!modal.hidden){collapse();trigger.focus();}else if(!collapseViews.hidden){closeViews();treeExpand.focus();}});
+  const channelDialog=document.createElement('dialog');channelDialog.id='channelDetailDialog';channelDialog.setAttribute('aria-labelledby','channelDetailTitle');
+  channelDialog.innerHTML='<div class="channel-detail-heading"><div><h2 id="channelDetailTitle"></h2><p id="channelDetailRange"></p></div><button type="button" aria-label="Close channel details" title="Close"><i data-lucide="x" aria-hidden="true"></i></button></div><dl class="channel-detail-totals"></dl><p id="channelDetailCoverage"></p><div class="channel-detail-table"><table><thead><tr><th scope="col">Date</th><th scope="col">Views</th><th scope="col">Ad impressions</th><th scope="col">Ad revenue</th><th scope="col">Sponsorship / others</th><th scope="col">Total revenue</th></tr></thead><tbody></tbody></table></div>';
+  document.body.append(channelDialog);channelDialog.querySelector('button').addEventListener('click',()=>channelDialog.close());window.lucide?.createIcons();
+  function openChannel(name){
+    const rows=currentRows.filter(row=>row.channel===name),days=new Map(),keys=['views','impressions','ad','other','total'],labels=['Views','Ad impressions','Ad revenue','Sponsorship / others','Total revenue'];
+    for(const row of rows){if(!days.has(row.day))days.set(row.day,Object.fromEntries(keys.map(key=>[key,0])));for(const key of keys)days.get(row.day)[key]+=row[key];}
+    const sorted=[...days].sort(([a],[b])=>a.localeCompare(b)),first=document.getElementById('start').value||sorted[0]?.[0],last=document.getElementById('end').value||sorted.at(-1)?.[0];
+    const dateLabel=day=>new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(day+'T00:00:00Z'));
+    document.getElementById('channelDetailTitle').textContent=name;
+    document.getElementById('channelDetailRange').textContent=first&&last?dateLabel(first)+' - '+dateLabel(last):'Selected range';
+    const format=(value,index)=>index<2?new Intl.NumberFormat('en-IN').format(value):cash(value);
+    channelDialog.querySelector('dl').replaceChildren(...keys.map((key,index)=>{const item=document.createElement('div'),label=document.createElement('dt'),value=document.createElement('dd');label.textContent=labels[index];value.textContent=format(rows.reduce((sum,row)=>sum+row[key],0),index);item.append(label,value);return item;}));
+    channelDialog.querySelector('tbody').replaceChildren(...sorted.map(([day,values])=>{const row=document.createElement('tr'),date=document.createElement('th');date.scope='row';date.textContent=dateLabel(day);row.append(date);keys.forEach((key,index)=>{const cell=document.createElement('td');cell.textContent=format(values[key],index);row.append(cell);});return row;}));
+    const expected=first&&last?Math.round((Date.parse(last)-Date.parse(first))/86400000)+1:days.size;
+    document.getElementById('channelDetailCoverage').textContent=!rows.length?'No records for this channel in the selected range.':days.size<expected?days.size+' of '+expected+' days reported. Missing dates are not counted as zero.':'';
+    channelDialog.showModal();
+  }
   let lineChart=null;
   let chart=null,entries=[],total=0;
   function collapse(){modal.hidden=true;trigger.hidden=false;trigger.setAttribute('aria-expanded','false');}
@@ -97,13 +144,23 @@ window.RevenueShare=(()=>{
   function row(name,value,index,full=false){
     const el=document.createElement('span');el.className=full?'full-share-row':'compact-share-row';
     const label=document.createElement('span');label.className='share-channel';label.textContent=name;label.title=name;
-    const values=document.createElement('strong');values.textContent=cash(value)+' | '+percent(value,total);
-    if(!full){const amount=document.createElement('span'),badge=document.createElement('span');amount.textContent=cash(value);badge.className='share-percent';badge.textContent=percent(value,total);values.replaceChildren(amount,badge);}
+    const values=document.createElement('strong');values.textContent=metricValue(value)+' | '+percent(value,total);
+    if(!full){const amount=document.createElement('span'),badge=document.createElement('span');amount.textContent=metricValue(value);badge.className='share-percent';badge.textContent=percent(value,total);values.replaceChildren(amount,badge);}
     el.style.setProperty('--share-color',colors[index%colors.length]);el.append(label,values);
-    if(full){const track=document.createElement('span');track.className='distribution-track';const fill=document.createElement('span');fill.style.width=(total>0?Math.max(0,value)/total*100:0)+'%';track.append(fill);el.append(track);}
+    {const track=document.createElement('span');track.className='distribution-track';track.setAttribute('aria-hidden','true');const fill=document.createElement('span');fill.style.width=(total>0?Math.max(0,value)/total*100:0)+'%';track.append(fill);el.append(track);}
     return el;
   }
   function render(rows){
+    if(channelDialog.open)channelDialog.close();
+    currentRows=rows;
+    const metricName=metricNames[selectedMetric],isRevenue=selectedMetric==='total';
+    metricSelector.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.metric===selectedMetric)));
+    trend.querySelector('h2').textContent=metricName+' over time';
+    trigger.querySelector('.share-title').firstChild.textContent=metricName+' share ';
+    trigger.setAttribute('aria-label',metricName+' share: expand all channels');
+    document.getElementById('revenueShareTitle').textContent=metricName+' by channel';
+    trigger.querySelector('.share-centre>span').textContent='Total '+metricName.toLowerCase();
+    channelChanges.clear();
     renderSparks(rows);
     let insight=document.getElementById('performanceInsight');
     if(!insight){insight=document.createElement('section');insight.id='performanceInsight';const title=document.createElement('h2');title.textContent='Performance Insight';insight.append(title,document.createElement('p'));document.querySelector('#dashboard .metrics').after(insight);}
@@ -131,9 +188,10 @@ window.RevenueShare=(()=>{
     metrics.querySelectorAll('tbody th').forEach(label=>brandLogo(label.querySelector('.channel-glyph'),label.lastElementChild.textContent));
     metrics.querySelector('.metrics-empty').textContent=rows.length?'':'No channel data for this selection.';
     const days=new Map(),viewSums=new Map();
-    for(const r of rows){if(!days.has(r.day))days.set(r.day,{ad:0,other:0});days.get(r.day).ad+=r.ad;days.get(r.day).other+=r.other;viewSums.set(r.channel,(viewSums.get(r.channel)||0)+r.views);}
+    for(const r of rows){if(!days.has(r.day))days.set(r.day,{ad:0,other:0,views:0,impressions:0});for(const key of ['ad','other','views','impressions'])days.get(r.day)[key]+=r[key];viewSums.set(r.channel,(viewSums.get(r.channel)||0)+r.views);}
     const sorted=[...days].sort(([a],[b])=>a.localeCompare(b));
-    const datasets=[['Ad revenue','ad','#09aaa1'],['Sponsorship / others','other','#fa668c']].filter(([,key])=>sorted.some(([,v])=>v[key]!==0)).map(([label,key,color])=>({label,data:sorted.map(([,v])=>v[key]/100),borderColor:color,backgroundColor:color+'12',borderWidth:2,fill:true,tension:0,pointRadius:sorted.length===1?5:3,pointHoverRadius:5}));
+    const series=isRevenue?[['Ad revenue','ad','#09aaa1'],['Sponsorship / others','other','#fa668c']]:[[metricName,selectedMetric,selectedMetric==='views'?'#3689ef':'#d68a28']];
+    const datasets=series.filter(([,key])=>!isRevenue||sorted.some(([,v])=>v[key]!==0)).map(([label,key,color])=>({label,data:sorted.map(([,v])=>v[key]/(isRevenue?100:1)),borderColor:color,backgroundColor:color+'12',borderWidth:2,fill:true,tension:0,pointRadius:sorted.length===1?5:3,pointHoverRadius:5}));
     const first=document.getElementById('start').value||sorted[0]?.[0],last=document.getElementById('end').value||sorted.at(-1)?.[0];
     const span=first&&last?(Date.parse(last)-Date.parse(first))/86400000+1:0;
     const useBars=sorted.length===1||(span>0&&span<=7);
@@ -142,8 +200,14 @@ window.RevenueShare=(()=>{
     Chart.defaults.color='#514958';Chart.defaults.font.size=13;
     lineChart=new Chart(document.getElementById('dailyRevenueCanvas'),{type:useBars?'bar':'line',data:{labels:sorted.map(([day])=>day),datasets},options:{responsive:true,maintainAspectRatio:false,animation:matchMedia('(prefers-reduced-motion: reduce)').matches?false:{duration:250},interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom',labels:{color:'#d1d1dc',boxWidth:12}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+cash(ctx.raw*100)}}},scales:{x:{type:'category',offset:useBars,title:{display:true,text:'Date',color:'#bcbccc'},grid:{display:false,offset:useBars},ticks:{color:'#bcbccc',maxTicksLimit:6,maxRotation:0,callback:function(value){const day=this.getLabelForValue(value);return new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',timeZone:'UTC'}).format(new Date(day+'T00:00:00Z'));}}},y:{beginAtZero:true,title:{display:true,text:'Revenue (INR)',color:'#bcbccc'},grid:{color:'#ffffff0d'},ticks:{color:'#bcbccc'}}}}});
     lineChart.stop();for(const axis of Object.values(lineChart.options.scales)){axis.ticks.color='#506889';axis.title.color='#506889';axis.grid.color='#edf2f8';}lineChart.options.plugins.legend.labels.color='#506889';lineChart.options.plugins.legend.labels.usePointStyle=true;lineChart.options.plugins.legend.labels.pointStyle='circle';lineChart.options.plugins.legend.labels.padding=20;lineChart.update('none');
-    document.getElementById('dailyRevenueNote').textContent=!rows.length?'No data in this selection.':!datasets.length?'No revenue in this selection.':sorted.length===1?'One date available. Select a wider range to compare days.':'';
-    document.getElementById('dailyRevenueCanvas').setAttribute('aria-label',useBars?'Daily ad and sponsorship revenue grouped bars':'Daily ad and sponsorship revenue lines');
+    lineChart.options.scales.x.ticks.maxTicksLimit=10;
+    lineChart.options.scales.y.ticks.maxTicksLimit=12;
+    lineChart.options.scales.y.title.text= isRevenue?'Revenue (INR)':metricName;
+    lineChart.options.scales.y.ticks.precision=0;
+    lineChart.options.plugins.tooltip.callbacks.label=ctx=>ctx.dataset.label+': '+metricValue(ctx.raw*(isRevenue?100:1));
+    lineChart.update('none');
+    document.getElementById('dailyRevenueNote').textContent=!rows.length?'No data in this selection.':!datasets.length?'No '+metricName.toLowerCase()+' in this selection.':sorted.length===1?'One date available. Select a wider range to compare days.':'';
+    document.getElementById('dailyRevenueCanvas').setAttribute('aria-label','Daily '+metricName.toLowerCase()+(useBars?' bars':' lines'));
     const viewEntries=[...viewSums].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])),viewTotal=viewEntries.reduce((sum,[,n])=>sum+n,0);
     const tree=document.getElementById('viewsTree');tree.replaceChildren();
     const positive=viewEntries;
@@ -159,29 +223,36 @@ window.RevenueShare=(()=>{
       tree.style.height='auto';tree.replaceChildren();
       for(const item of positive)tile([item],0,0,100,100);
       for(const [index,element] of [...tree.children].entries())element.style.setProperty('--channel-accent',colors[index%colors.length]);
-      for(const [index,element] of [...tree.children].entries())brandLogo(element.querySelector('.tile-channel-icon'),positive[index][0]);
+      for(const [index,element] of [...tree.children].entries()){
+        brandLogo(element.querySelector('.tile-channel-icon'),positive[index][0]);
+        element.setAttribute('role','button');element.tabIndex=0;element.setAttribute('aria-haspopup','dialog');element.setAttribute('aria-label','View daily metrics for '+positive[index][0]);
+        element.addEventListener('click',()=>openChannel(positive[index][0]));
+        element.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openChannel(positive[index][0]);}});
+        const track=document.createElement('span'),fill=document.createElement('span');track.className='tile-progress';track.setAttribute('aria-hidden','true');fill.style.width=(viewTotal>0?positive[index][1]/viewTotal*100:0)+'%';track.append(fill);element.append(track);
+      }
+      applyChannelChanges();
       window.lucide?.createIcons();
     };
     redrawTree();treeButton.disabled=!positive.length;
     document.getElementById('viewsDistributionRows').replaceChildren(...viewEntries.map(([name,n],i)=>{const el=document.createElement('div');el.className='full-share-row';el.style.setProperty('--share-color',colors[i%colors.length]);const label=document.createElement('span');label.className='share-channel';label.textContent=name;const value=document.createElement('strong');value.textContent=new Intl.NumberFormat('en-IN').format(n)+' views | '+percent(n,viewTotal);const track=document.createElement('span');track.className='distribution-track';const fill=document.createElement('span');fill.style.width=(viewTotal>0?n/viewTotal*100:0)+'%';track.append(fill);el.append(label,value,track);return el;}));
     document.getElementById('viewsDistributionEmpty').textContent=!viewEntries.length?'No views data in this selection.':viewTotal===0?'No views recorded.':'';
-    const sums=new Map();for(const r of rows)sums.set(r.channel,(sums.get(r.channel)||0)+r.total);
+    const sums=new Map();for(const r of rows)sums.set(r.channel,(sums.get(r.channel)||0)+r[selectedMetric]);
     entries=[...sums].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));total=entries.reduce((sum,[,value])=>sum+value,0);
     trigger.classList.toggle('few-channels',entries.length<=2);
     document.getElementById('fullShareRows').classList.toggle('many-channels',entries.length>8);
     document.getElementById('viewsDistributionRows').classList.toggle('many-channels',viewEntries.length>8);
     const valid=total>0&&entries.every(([,value])=>value>=0);
     const shown=entries.slice(0,5);if(entries.length>5)shown.push(['Others ('+(entries.length-5)+')',entries.slice(5).reduce((sum,[,value])=>sum+value,0)]);
-    document.getElementById('shareSum').textContent=cash(total);
-    document.getElementById('shareSum').title=cash(total);
+    document.getElementById('shareSum').textContent=metricValue(total);
+    document.getElementById('shareSum').title=metricValue(total);
     document.getElementById('summaryShareLegend').replaceChildren(...shown.map(([name,value],i)=>row(name,value,i)));
     document.getElementById('fullShareRows').replaceChildren(...entries.map(([name,value],i)=>row(name,value,i,true)));
-    document.getElementById('shareMessage').textContent=!rows.length?'No revenue data in this selection.':!valid?'Share chart unavailable for zero or negative revenue.':'';
+    document.getElementById('shareMessage').textContent=!rows.length?'No '+metricName.toLowerCase()+' data in this selection.':!valid?'Share chart unavailable for zero or negative '+metricName.toLowerCase()+'.':'';
     trigger.disabled=!entries.length;
     if(chart)chart.destroy();
     chart=new Chart(document.getElementById('summaryShareCanvas'),{type:'doughnut',plugins:[raisedRing],data:{labels:shown.map(([name])=>name),datasets:[{data:valid?shown.map(([,value])=>value):[],backgroundColor:colors,borderWidth:1,borderColor:'#fff',hoverOffset:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'66%',layout:{padding:{top:2,right:2,bottom:10,left:2}},events:[],animation:false,plugins:{visibleSharePercent:false,legend:{display:false},tooltip:{enabled:false}}}});
     modal.querySelectorAll('.distribution-track').forEach(el=>el.hidden=!valid);
   }
-  function clear(){collapse();closeViews();render([]);}
-  return{render,clear};
+  function clear(){selectedMetric='total';collapse();closeViews();render([]);}
+  return{render,clear,compare};
 })();
