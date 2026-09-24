@@ -78,7 +78,7 @@ try:
             if width>=900:
                 assert page.locator('.metrics article').evaluate_all('(cards)=>new Set(cards.map(c=>Math.round(c.getBoundingClientRect().top))).size===1'),width
             assert page.locator('.revenue-split > .metric-topline').evaluate('(el)=>getComputedStyle(el).flexDirection==="row"')
-            assert page.locator('.revenue-split .metric-changes').evaluate('(el)=>el.scrollWidth<=el.clientWidth')
+            assert page.locator('.revenue-split .metric-changes').evaluate_all('nodes=>nodes.every(el=>el.scrollWidth<=el.clientWidth)')
             page.mouse.move(0,0)
             for card in page.locator('.metrics article').all():
                 card.scroll_into_view_if_needed()
@@ -89,8 +89,21 @@ try:
                 assert before==after,('metric hover layout shift',width,before,after)
                 page.mouse.move(0,0)
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), width
+            assert page.locator('#revenueShare .share-centre').evaluate('''node=>{
+                const chart=Chart.getChart('summaryShareCanvas'),arc=chart.getDatasetMeta(0).data[0],canvas=chart.canvas.getBoundingClientRect(),box=node.getBoundingClientRect();
+                return [...node.children].every(n=>n.scrollWidth<=n.clientWidth)&&node.scrollHeight<=node.clientHeight&&
+                    [box.left,box.right].every(x=>[box.top,box.bottom].every(y=>Math.hypot(x-canvas.left-arc.x,y-canvas.top-arc.y)<arc.innerRadius));
+            }'''),('doughnut text inside opening',width)
+            assert page.evaluate('''()=>{
+                const label=document.getElementById('shareSum'),original=label.textContent,chart=Chart.getChart('summaryShareCanvas');
+                const fits=['₹4,72,204','₹12,34,56,789'].every(value=>{
+                    label.textContent=value;chart.draw();
+                    return label.scrollWidth<=label.clientWidth && label.parentElement.scrollHeight<=label.parentElement.clientHeight;
+                });
+                label.textContent=original;chart.draw();return fits;
+            }'''),('large doughnut totals fit',width)
             assert page.locator('.compact-share-row').evaluate_all('''rows=>rows.every(row=>{
-                const name=row.querySelector('.share-channel').getBoundingClientRect(),value=row.querySelector('strong').getBoundingClientRect();
+                const name=row.querySelector('.share-channel').getBoundingClientRect(),value=row.querySelector('strong>span').getBoundingClientRect();
                 return name.right<=value.left && Math.abs(name.top-value.top)<4 && row.scrollWidth<=row.clientWidth;
             })'''),('pie legend name beside value',width)
             assert page.locator('.share-content').evaluate('''node=>{
@@ -106,12 +119,13 @@ try:
             })'''),('treemap text fit',width)
             for metric in ['total', 'ad', 'other', 'views', 'impressions']:
                 assert page.locator('#' + metric).evaluate('(el)=>el.hidden || el.scrollWidth<=el.clientWidth'), (width, metric)
-                assert page.locator('#' + metric).evaluate('(el)=>el.previousElementSibling.getBoundingClientRect().bottom<=el.getBoundingClientRect().top'), ('label above value',width,metric)
-            assert page.locator('.metrics article').evaluate_all('''cards=>cards.every(card=>{
-                const values=[...card.querySelectorAll('strong')].filter(n=>n.getClientRects().length);
-                const changes=card.querySelector('.metric-changes');
-                return !changes.getClientRects().length||values.every(n=>changes.getBoundingClientRect().bottom<=n.getBoundingClientRect().top);
-            })'''),('comparison above values',width)
+                assert page.locator('#' + metric).evaluate('(el)=>el.closest("article").querySelector(".metric-topline").getBoundingClientRect().bottom<=el.getBoundingClientRect().top'), ('heading above value',width,metric)
+            assert page.locator('.metric-value-row').evaluate_all('''rows=>rows.every(row=>{
+                const value=row.querySelector('strong').getBoundingClientRect(),changes=row.querySelector('.metric-changes');
+                if(!changes.getClientRects().length)return true;
+                const rect=changes.getBoundingClientRect();
+                return value.right<=rect.left && Math.abs((value.top+value.bottom-rect.top-rect.bottom)/2)<2;
+            })'''),('comparison beside value',width)
             assert page.locator('.metric-change:not([hidden])').evaluate_all('nodes=>nodes.every(n=>parseFloat(getComputedStyle(n).fontSize)>=15)'),('readable comparison',width)
             page.locator('.metrics').screenshot(path=str(screens / f'metric-cards-{width}.png'))
             page.screenshot(path=str(screens / f'summary-{width}.png'), full_page=True)

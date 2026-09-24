@@ -3,7 +3,49 @@ window.RevenueShare=(()=>{
   let redrawTree=()=>{};
   window.addEventListener('resize',()=>requestAnimationFrame(()=>redrawTree()));
   const colors=['#f8cf96','#f990ad','#a8c7ec','#c9b1e5','#8dd4bf','#91b9cd'];
+  // Draw the existing arcs beneath their faces; data angles remain unchanged.
+  const raisedRing={id:'raisedRing',beforeDatasetsDraw(chart){
+    const ctx=chart.ctx;ctx.save();
+    for(let depth=7;depth>0;depth--){
+      chart.getDatasetMeta(0).data.forEach((arc,index)=>{
+        const {x,y,innerRadius,outerRadius,startAngle,endAngle}=arc;
+        if(!outerRadius||endAngle<=startAngle)return;
+        const color=colors[index%colors.length];
+        const rgb=[1,3,5].map(offset=>Math.round(parseInt(color.slice(offset,offset+2),16)*.72));
+        ctx.fillStyle='rgb('+rgb.join(',')+')';ctx.beginPath();
+        ctx.arc(x,y+depth,outerRadius,startAngle,endAngle);
+        ctx.arc(x,y+depth,innerRadius,endAngle,startAngle,true);
+        ctx.closePath();ctx.fill();
+      });
+    }
+    ctx.restore();
+  },afterDraw(chart){
+    const arc=chart.getDatasetMeta(0).data[0],centre=document.querySelector('#revenueShare .share-centre');
+    const radius=arc?.innerRadius||chart.width*.3;
+    // Keep the entire text block inside the circular opening, including its raised lip.
+    Object.assign(centre.style,{inset:'auto',left:(arc?.x??chart.width/2)+'px',top:((arc?.y??chart.height/2)+3)+'px',width:Math.max(20,radius*1.4-6)+'px',height:Math.max(20,radius-4)+'px',padding:'0',transform:'translate(-50%,-50%)'});
+    for(const [index,label] of [...centre.children].entries()){
+      let size=index===0?22:11;label.style.fontSize=size+'px';
+      while((label.scrollWidth>label.clientWidth||centre.scrollHeight>centre.clientHeight)&&size>6){size-=.5;label.style.fontSize=size+'px';}
+    }
+  }};
   const channelIcon=name=>/music|9xm|tashan|jhakaas|jalwa/i.test(name)?'music-2':/kids/i.test(name)?'smile':/bhojpuri|bollywood/i.test(name)?'clapperboard':'tv-minimal';
+  let channelLogos={};
+  function brandLogo(target,name){
+    target.dataset.channelName=name;target.classList.add('channel-brand');
+    const initials=name.trim().split(/\s+/).slice(0,2).map(word=>word[0]).join('').toUpperCase();
+    target.textContent=initials;target.setAttribute('aria-hidden','true');
+    const asset=channelLogos[name.trim().toLowerCase()];
+    target.style.backgroundColor=asset?.background||'#fff';
+    if(!asset||! /^[a-z0-9]+\.png$/.test(asset.file))return;
+    const image=document.createElement('img');image.alt='';image.width=44;image.height=32;
+    image.onerror=()=>{target.style.backgroundColor='#fff';target.replaceChildren(document.createTextNode(initials));};
+    image.src='/static/channel-logos/'+asset.file;target.replaceChildren(image);
+  }
+  fetch('/static/channel-logos/manifest.json').then(response=>{if(!response.ok)throw new Error('Logo manifest unavailable');return response.json();}).then(manifest=>{
+    channelLogos=manifest;
+    document.querySelectorAll('.channel-brand').forEach(target=>brandLogo(target,target.dataset.channelName));
+  }).catch(()=>{});
   const sparks=new Map();
   function sparkFill(context,color){
     const {ctx,chartArea}=context.chart;if(!chartArea)return color+'26';
@@ -56,12 +98,16 @@ window.RevenueShare=(()=>{
     const el=document.createElement('span');el.className=full?'full-share-row':'compact-share-row';
     const label=document.createElement('span');label.className='share-channel';label.textContent=name;label.title=name;
     const values=document.createElement('strong');values.textContent=cash(value)+' | '+percent(value,total);
+    if(!full){const amount=document.createElement('span'),badge=document.createElement('span');amount.textContent=cash(value);badge.className='share-percent';badge.textContent=percent(value,total);values.replaceChildren(amount,badge);}
     el.style.setProperty('--share-color',colors[index%colors.length]);el.append(label,values);
     if(full){const track=document.createElement('span');track.className='distribution-track';const fill=document.createElement('span');fill.style.width=(total>0?Math.max(0,value)/total*100:0)+'%';track.append(fill);el.append(track);}
     return el;
   }
   function render(rows){
     renderSparks(rows);
+    let insight=document.getElementById('performanceInsight');
+    if(!insight){insight=document.createElement('section');insight.id='performanceInsight';const title=document.createElement('h2');title.textContent='Performance Insight';insight.append(title,document.createElement('p'));document.querySelector('#dashboard .metrics').after(insight);}
+    insight.hidden=!rows.length;
     const metricSums=new Map();for(const r of rows){if(!metricSums.has(r.channel))metricSums.set(r.channel,{views:0,impressions:0,ad:0,other:0,total:0});for(const key of ['views','impressions','ad','other','total'])metricSums.get(r.channel)[key]+=r[key];}
     const keys=['views','impressions','ad','other','total'];
     // Independent column scales use unrounded values and all selected channels.
@@ -69,7 +115,20 @@ window.RevenueShare=(()=>{
     function heatColor(n,{minimum,maximum,middle}){let low,high,f;if(minimum===maximum){low=high=n===0?[248,105,107]:[255,235,132];f=0;}else if(n<=minimum){low=high=[248,105,107];f=0;}else if(n>=maximum){low=high=[99,190,123];f=0;}else if(n<=middle&&middle>minimum){low=[248,105,107];high=[255,235,132];f=(n-minimum)/(middle-minimum);}else{low=[255,235,132];high=[99,190,123];f=(n-middle)/(maximum-middle);}return 'rgb('+low.map((value,i)=>(value+(high[i]-value)*f).toFixed(3)).join(',')+')';}
     metrics.querySelector('tbody').replaceChildren(...[...metricSums].sort((a,b)=>b[1].total-a[1].total||a[0].localeCompare(b[0])).map(([name,values])=>{const tr=document.createElement('tr'),label=document.createElement('th');label.scope='row';label.textContent=name;tr.append(label);keys.forEach((key,i)=>{const cell=document.createElement('td'),n=values[key];cell.dataset.label=['Views','Ad impressions','Ad revenue','Sponsorship / others','Total revenue'][i];cell.textContent=i<2?new Intl.NumberFormat('en-IN').format(n):cash(n);cell.style.backgroundColor=heatColor(n,scales[i]);cell.style.color='#202a30';cell.title=cell.dataset.label+': independent column scale; minimum red, median yellow, maximum green. Equal nonzero values yellow; all-zero values red.';tr.append(cell);});return tr;}));
     for(const [index,label] of [...metrics.querySelectorAll('tbody th')].entries()){const name=document.createElement('span'),badge=document.createElement('span'),glyph=document.createElement('i');name.textContent=label.textContent;badge.className='channel-glyph';badge.style.backgroundColor=colors[index%colors.length]+'55';glyph.dataset.lucide=channelIcon(name.textContent);glyph.setAttribute('aria-hidden','true');badge.append(glyph);label.replaceChildren(badge,name);}
+    const ranked=[...metricSums].sort((a,b)=>b[1].total-a[1].total||a[0].localeCompare(b[0]));
+    const selectedTotal=ranked.reduce((sum,[,value])=>sum+value.total,0),adTotal=ranked.reduce((sum,[,value])=>sum+value.ad,0),otherTotal=ranked.reduce((sum,[,value])=>sum+value.other,0);
+    insight.querySelector('p').textContent=ranked.length?`${ranked[0][0]} ${ranked.length===1?'generated':'leads with'} ${cash(ranked[0][1].total)}${selectedTotal>0?' ('+percent(ranked[0][1].total,selectedTotal)+' of selected revenue)':''}. Ad revenue: ${cash(adTotal)}. Sponsorship / others: ${cash(otherTotal)}.`:'';
+    metrics.querySelectorAll('tbody tr').forEach((tr,index)=>{
+      const rank=document.createElement('small');rank.className='channel-rank';rank.textContent=index+1;tr.querySelector('th').prepend(rank);
+      tr.querySelectorAll('td').forEach((cell,i)=>{
+        const value=ranked[index][1][keys[i]],maximum=scales[i].maximum;
+        cell.style.removeProperty('background-color');cell.style.removeProperty('color');cell.title=cell.dataset.label+': '+cell.textContent;
+        const number=document.createElement('span');number.textContent=cell.textContent;
+        const track=document.createElement('span'),fill=document.createElement('span');track.className='channel-value-track';track.setAttribute('aria-hidden','true');fill.style.width=(maximum>0?Math.max(0,value)/maximum*100:0)+'%';track.append(fill);cell.replaceChildren(number,track);
+      });
+    });
     window.lucide?.createIcons();sizeMetrics();
+    metrics.querySelectorAll('tbody th').forEach(label=>brandLogo(label.querySelector('.channel-glyph'),label.lastElementChild.textContent));
     metrics.querySelector('.metrics-empty').textContent=rows.length?'':'No channel data for this selection.';
     const days=new Map(),viewSums=new Map();
     for(const r of rows){if(!days.has(r.day))days.set(r.day,{ad:0,other:0});days.get(r.day).ad+=r.ad;days.get(r.day).other+=r.other;viewSums.set(r.channel,(viewSums.get(r.channel)||0)+r.views);}
@@ -100,6 +159,7 @@ window.RevenueShare=(()=>{
       tree.style.height='auto';tree.replaceChildren();
       for(const item of positive)tile([item],0,0,100,100);
       for(const [index,element] of [...tree.children].entries())element.style.setProperty('--channel-accent',colors[index%colors.length]);
+      for(const [index,element] of [...tree.children].entries())brandLogo(element.querySelector('.tile-channel-icon'),positive[index][0]);
       window.lucide?.createIcons();
     };
     redrawTree();treeButton.disabled=!positive.length;
@@ -113,14 +173,13 @@ window.RevenueShare=(()=>{
     const valid=total>0&&entries.every(([,value])=>value>=0);
     const shown=entries.slice(0,5);if(entries.length>5)shown.push(['Others ('+(entries.length-5)+')',entries.slice(5).reduce((sum,[,value])=>sum+value,0)]);
     document.getElementById('shareSum').textContent=cash(total);
-    const sumLabel=document.getElementById('shareSum');sumLabel.title=cash(total);sumLabel.style.fontSize='14px';
-    requestAnimationFrame(()=>{let size=14;while(sumLabel.scrollWidth>sumLabel.clientWidth&&size>8){size-=.5;sumLabel.style.fontSize=size+'px';}});
+    document.getElementById('shareSum').title=cash(total);
     document.getElementById('summaryShareLegend').replaceChildren(...shown.map(([name,value],i)=>row(name,value,i)));
     document.getElementById('fullShareRows').replaceChildren(...entries.map(([name,value],i)=>row(name,value,i,true)));
     document.getElementById('shareMessage').textContent=!rows.length?'No revenue data in this selection.':!valid?'Share chart unavailable for zero or negative revenue.':'';
     trigger.disabled=!entries.length;
     if(chart)chart.destroy();
-    chart=new Chart(document.getElementById('summaryShareCanvas'),{type:'doughnut',data:{labels:shown.map(([name])=>name),datasets:[{data:valid?shown.map(([,value])=>value):[],backgroundColor:colors,borderWidth:1,borderColor:'#fff',hoverOffset:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'66%',events:[],animation:false,plugins:{visibleSharePercent:false,legend:{display:false},tooltip:{enabled:false}}}});
+    chart=new Chart(document.getElementById('summaryShareCanvas'),{type:'doughnut',plugins:[raisedRing],data:{labels:shown.map(([name])=>name),datasets:[{data:valid?shown.map(([,value])=>value):[],backgroundColor:colors,borderWidth:1,borderColor:'#fff',hoverOffset:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'66%',layout:{padding:{top:2,right:2,bottom:10,left:2}},events:[],animation:false,plugins:{visibleSharePercent:false,legend:{display:false},tooltip:{enabled:false}}}});
     modal.querySelectorAll('.distribution-track').forEach(el=>el.hidden=!valid);
   }
   function clear(){collapse();closeViews();render([]);}

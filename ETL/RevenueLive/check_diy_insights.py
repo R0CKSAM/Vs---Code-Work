@@ -194,6 +194,12 @@ try:
         page.locator('#diySaved').select_option('insight-leader')
         assert page.evaluate("Chart.getChart('diyCanvas').data.datasets[0].data")[0]==-300
         assert not errors,errors
+        page.evaluate("RevenueShare.render([{channel:'9X Tashan',day:'2026-09-21',views:100,impressions:50,ad:100,other:0,total:100},{channel:'Unknown Channel',day:'2026-09-21',views:10,impressions:5,ad:10,other:0,total:10}])")
+        page.wait_for_function("()=>document.querySelector('.channel-brand[data-channel-name=\"9X Tashan\"] img')?.naturalWidth>0")
+        assert page.locator('.channel-brand[data-channel-name="9X Tashan"]').first.evaluate("node=>node.style.backgroundColor==='rgb(24, 54, 77)'")
+        expect(page.locator('.channel-brand[data-channel-name="Unknown Channel"]').first).to_have_text('UC')
+        page.locator('.channel-brand[data-channel-name="9X Tashan"] img').first.evaluate("image=>image.dispatchEvent(new Event('error'))")
+        expect(page.locator('.channel-brand[data-channel-name="9X Tashan"]').first).to_have_text('9T')
         page.evaluate("signOutView('')")
         assert page.evaluate("!Chart.getChart('metricSpark-total')")
         expect(page.locator('#insightList article')).to_have_count(0)

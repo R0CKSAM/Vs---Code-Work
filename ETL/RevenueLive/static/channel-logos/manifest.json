@@ -1,0 +1,184 @@
+{
+  "9xm": {
+    "file": "9xm.png",
+    "channel_id": "9XM.in",
+    "background": "#ffffff",
+    "source": "https://jiotvimages.cdn.jio.com/dare_images/images/9xm.png",
+    "sha256": "19de74a599443ea3505932daacd9351fecea365670be521d4ea89d5f7ca0fdee"
+  },
+  "9x jalwa": {
+    "file": "9xjalwa.png",
+    "channel_id": "9XJalwa.in",
+    "background": "#ffffff",
+    "source": "https://jiotvimages.cdn.jio.com/dare_images/images/9XJalwa.png",
+    "sha256": "07cd214bafe79406751879646002e6abf474ae68772dc7580caae470abff05ee"
+  },
+  "9x jhakaas": {
+    "file": "9xjhakaas.png",
+    "channel_id": "9XJhakaas.in",
+    "background": "#ffffff",
+    "source": "https://jiotvimages.cdn.jio.com/dare_images/images/9xjhakaas.png",
+    "sha256": "d9fb08b6c5642c9ce6caaa9c675e8e0c85ec08d9b429cc690a3d0ab4dce81505"
+  },
+  "9x tashan": {
+    "file": "9xtashan.png",
+    "channel_id": "9XTashan.in",
+    "background": "#18364d",
+    "source": "https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_9X_TASHAN/images/LOGO_HD/image.png",
+    "sha256": "15ff36d88e720e6ef2e911e432f61396f7512c43141e6d597d91413d021f60d9"
+  },
+  "ndtv 24x7": {
+    "file": "ndtv24x7.png",
+    "channel_id": "NDTV24x7.in",
+    "background": "#ffffff",
+    "source": "https://jiotvimages.cdn.jio.com/dare_images/images/NDTV_24x7.png",
+    "sha256": "17fcb0964ed932d5e8eb9128a4246549e751f671aec07846a1fdd6146cfa5d30"
+  },
+  "ndtv india": {
+    "file": "ndtvindia.png",
+    "channel_id": "NDTVIndia.in",
+    "background": "#ffffff",
+    "source": "https://jiotvimages.cdn.jio.com/dare_images/images/NDTV_India.png",
+    "sha256": "892cb693176f590a611559ed6f2ce057397eb8051ac5b6bce8d95c028f411beb"
+  },
+  "ndtv marathi": {
+    "file": "ndtvmarathi.png",
+    "channel_id": "NDTVMarathi.in",
+    "background": "#ffffff",
+    "source": "https://jiotvimages.cdn.jio.com/dare_images/images/NDTV_Marathi.png",
+    "sha256": "8b40bd9568b2b4109ddfb5078e08df612edd586747bd07a06c52ff1ac2462f4c"
+  },
+  "ndtv profit": {
+    "file": "ndtvprofit.png",
+    "channel_id": "NDTVProfit.in",
+    "background": "#ffffff",
+    "source": "https://jiotvimages.cdn.jio.com/dare_images/images/NDTV_Profit.png",
+    "sha256": "f05f63ab25751bb26c236cc1a78ced9026b28a9a3de522bcb5f0f3f844f13b08"
+  },
+  "ndtv rajasthan": {
+    "file": "ndtvrajasthan.png",
+    "channel_id": "NDTVRajasthan.in",
+    "background": "#ffffff",
+    "source": "https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_NDTV_RAJASTHAN/images/LOGO_HD/image.png",
+    "sha256": "c1bde2d287468df475763ef717a2f2d77546c222739081bd01f5acb5f6361d86"
+  },
+  "ndtv madhya prades": {
+    "file": "ndtvmadhyapradeshchhattisgarh.png",
+    "channel_id": "NDTVMadhyaPradeshChhattisgarh.in",
+    "background": "#ffffff",
+    "source": "https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_NDTV_MPCG/images/LOGO_HD/image.png",
+    "sha256": "9cb06c40a8725cccb9091db251cc29bdf7840ca1da25c72176601b7ff9f7a98a"
+  },
+  "ndtv madhya pradesh": {
+    "file": "ndtvmadhyapradeshchhattisgarh.png",
+    "channel_id": "NDTVMadhyaPradeshChhattisgarh.in",
+    "background": "#ffffff",
+    "source": "https://xstreamcp-assets-msp.streamready.in/assets/LIVETV/LIVECHANNEL/LIVETV_LIVETVCHANNEL_NDTV_MPCG/images/LOGO_HD/image.png",
+    "sha256": "9cb06c40a8725cccb9091db251cc29bdf7840ca1da25c72176601b7ff9f7a98a"
+  },
+  "news nation national": {
+    "file": "newsnation.png",
+    "channel_id": "NewsNation.in",
+    "background": "#ffffff",
+    "source": "https://jiotvimages.cdn.jio.com/dare_images/images/News_Nation.png",
+    "sha256": "223353e0f2c78439bde4bbee9049ceb933784d1b03bf7278471c39544b9190f5"
+  },
+  "epic tv": {
+    "file": "epictv.png",
+    "channel_id": "EpicTV.in",
+    "background": "#ffffff",
+    "source": "https://jiotvimages.cdn.jio.com/dare_images/images/EPIC_TV.png",
+    "sha256": "0c8c353793379b3409a9ebdd845e7a342b71c1089e5fcfa51e36ce7d9a592ff1"
+  },
+  "aakash vani": {
+    "file": "aakashvani.png",
+    "background": "#ffffff",
+    "source": "Logo/Aakash Vani.jpg",
+    "user_supplied": true,
+    "sha256": "82c6b591bd5ce2f6e44b164bd859dd1b2f379a3954fc2b6ccb875ec345d59cdb"
+  },
+  "bollywood masala": {
+    "file": "bollywoodmasala.png",
+    "background": "#ffffff",
+    "source": "Logo/Bollywood Masala.png",
+    "user_supplied": true,
+    "sha256": "35ecaf35fd45c1198bf0f8b74bf24603e139fedc2216a3791c8a05a6a7b12b91"
+  },
+  "digital commentary": {
+    "file": "digitalcommentary.png",
+    "background": "#ffffff",
+    "source": "Logo/Digital Commentary.jpg",
+    "user_supplied": true,
+    "sha256": "3f86263d51da17ebfcfe9efaadbbcecb7822e6fdce81df1a3734f9a96a6055c4"
+  },
+  "epic bharat": {
+    "file": "epicbharat.png",
+    "background": "#ffffff",
+    "source": "Logo/Epic Bharat.jpg",
+    "user_supplied": true,
+    "sha256": "0e9f23c5d7a73c86c61aaf5500826d379ff00808a1fefd26e38b28f249380370"
+  },
+  "epic bhojpuri": {
+    "file": "epicbhojpuri.png",
+    "background": "#ffffff",
+    "source": "Logo/Epic Bhojpuri.jpg",
+    "user_supplied": true,
+    "sha256": "554a8aa6e2c44b0f2c4d9abdaef0f367f205f0f379ddf2d0b2eb7a5283d43a79"
+  },
+  "epic kids": {
+    "file": "epickids.png",
+    "background": "#ffffff",
+    "source": "Logo/Epic Kids.png",
+    "user_supplied": true,
+    "sha256": "6ae3dbe5f4ad3e7224fcfd47d660dc3e9f0e0d92b71a13b409352024e491427f"
+  },
+  "epic music": {
+    "file": "epicmusic.png",
+    "background": "#ffffff",
+    "source": "Logo/Epic_Music.jpg",
+    "user_supplied": true,
+    "sha256": "5a297e2a054903a3747d4d64a9643e565eb8a4a416d7afb4f259f076975407fe"
+  },
+  "khabargaon": {
+    "file": "khabargaon.png",
+    "background": "#ffffff",
+    "source": "Logo/Khabargaon.png",
+    "user_supplied": true,
+    "sha256": "ffbd9e4d66c61a2205b21c863934fc9847341efd095de66a1390145b335c1307"
+  },
+  "news nation state bihar/jh": {
+    "file": "newsnationstatebiharjh.png",
+    "background": "#ffffff",
+    "source": "Logo/News Nation State Bihar-JH.jpg",
+    "user_supplied": true,
+    "sha256": "a463a194d12b8ecf0f5708a151a5120a3129f8a94aebe25861775992316c592e"
+  },
+  "news nation state mp/cg": {
+    "file": "newsnationstatempcg.png",
+    "background": "#ffffff",
+    "source": "Logo/News Nation State MP-CG.jpg",
+    "user_supplied": true,
+    "sha256": "4812ae4fd797941fc087ace2f1cc1ccdaf0285d240b611832b784e39ef9ebe29"
+  },
+  "news nation state punjab/hr": {
+    "file": "newsnationstatepunjabhr.png",
+    "background": "#ffffff",
+    "source": "Logo/News Nation State Punjab-HR.jpg",
+    "user_supplied": true,
+    "sha256": "c7ca5561c27ee2e050c3f94401ce80503341aa5b76b4296de31836e04a9d53c0"
+  },
+  "ssoftoons": {
+    "file": "ssoftoons.png",
+    "background": "#ffffff",
+    "source": "Logo/Ssoftoons.jpg",
+    "user_supplied": true,
+    "sha256": "4a6d4b3a4588cf6d67b462be519d0558a0e7e75ccbfe2538a8aaba1f225fe33b"
+  },
+  "news nation state up/uk": {
+    "file": "newsnationstateupuk.png",
+    "background": "#ffffff",
+    "source": "Logo/News Nation State UPUK.png",
+    "user_supplied": true,
+    "sha256": "add55213b3ff671abbdad1b7c833b6a4e35ecaacdbf786369ea1c428ec1f4802"
+  }
+}

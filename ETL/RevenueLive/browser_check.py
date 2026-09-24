@@ -35,6 +35,7 @@ try:
         page.on('pageerror',lambda e: errors.append(str(e)))
         page.goto(url)
         expect(page.locator('#login h1')).to_have_text('Veto I Partners')
+        page.wait_for_function("()=>getComputedStyle(document.body).backgroundImage==='none'")
         page.locator('#loginForm [name=username]').fill('test-admin')
         page.locator('#loginForm [name=password]').fill('incorrect-password')
         page.locator('#loginForm button.primary').click()
@@ -44,6 +45,7 @@ try:
         for width in [1440,390,320]:
             page.set_viewport_size({'width':width,'height':844})
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),('login',width)
+            assert page.evaluate("getComputedStyle(document.body).backgroundImage==='none'"),('plain login background',width)
             page.screenshot(path=str(screens/f'login-{width}.png'),full_page=True)
         page.locator('.forgot-password').click()
         expect(page.locator('#accountForm')).to_be_visible()
@@ -53,6 +55,7 @@ try:
         page.locator('#loginForm [name=password]').fill(password)
         page.locator('#loginForm button.primary').click()
         page.locator('#shell').wait_for(state='visible')
+        assert page.evaluate("getComputedStyle(document.body).backgroundImage.includes('linear-gradient')"), 'Dashboard keeps gradient'
         page.locator('#accountMenu summary').click()
         page.locator('#uploadNav').click()
         page.locator('input[type=file]').set_input_files(str(ROOT/'Upload File.xls'))
@@ -81,13 +84,14 @@ try:
         page.screenshot(path=str(screens/'user-dialog.png'))
         page.locator('#userForm button[type=submit], #userForm button.primary').click()
         expect(page.locator('#users')).to_contain_text('Mobile Viewer')
-        for view in ['tabular','uploads','admin']:
+        for view in ['tabular','uploads','admin','diyGraphs','insightsView']:
             page.locator('#accountMenu summary').click()
             page.locator('[data-view='+view+']').click()
             for width in [1440,390]:
                 page.set_viewport_size({'width':width,'height':950})
                 page.wait_for_timeout(150)
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),(view,width)
+                assert page.locator('.workspace').evaluate("el=>getComputedStyle(el).backgroundColor==='rgb(255, 255, 255)'"),(view,width,'opaque work surface')
                 page.screenshot(path=str(screens/f'light-{view}-{width}.png'),full_page=True)
         assert not errors,errors
         page.locator('#accountMenu summary').click()

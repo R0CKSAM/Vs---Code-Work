@@ -111,13 +111,24 @@ async function updateMetricChanges(data,requested,sequence){
       const change=before===0?0:(now-before)/Math.abs(before)*100;
       const kind=Math.abs(change)<1?'steady':change>0?'up':'down';
       const label=(change>0?'+':'')+(Math.abs(change)<1&&change!==0?change.toFixed(1):Math.round(change))+'%';
-      badge.textContent=(key==='ad'&&!$('sponsorMetric').hidden?'Ads ':key==='other'&&!$('adMetric').hidden?'Other ':'')+label;
+      badge.textContent=label;
       badge.className='metric-change '+kind;badge.hidden=false;
       badge.title='Compared with '+start+' to '+end+' for the same selected channels. Changes below 1% are amber.';
     }
+    requestAnimationFrame(fitMetricValues);
   }catch(error){if(sequence!==requestNumber||error.stale)return;window.QuickInsights?.render(data,requested,null,'unavailable');}
 }
 const revenueLabel=$('total').previousElementSibling;revenueLabel.id='totalLabel';
+for(const key of ['total','ad','other','views','impressions']){
+  const value=$(key),label=value.previousElementSibling,card=value.closest('article');
+  if(!['ad','other'].includes(key)){label.classList.add('metric-heading');card.querySelector('.metric-topline').append(label);}
+  const row=document.createElement('div'),changes=document.createElement('div');
+  row.className='metric-value-row';changes.className='metric-changes';
+  value.before(row);changes.append($('change-'+key));row.append(value,changes);
+}
+const splitHeading=document.createElement('span');splitHeading.className='metric-heading';splitHeading.textContent='Revenue sources';
+document.querySelector('.revenue-split .metric-topline').append(splitHeading);
+document.querySelectorAll('.metric-topline>.metric-changes').forEach(node=>node.remove());
 const iconsScript=document.createElement('script');iconsScript.src='/static/lucide.min.js';iconsScript.onload=()=>lucide.createIcons();document.head.append(iconsScript);
 const shareScript=document.createElement('script');shareScript.src='/static/revenue-share.js';shareScript.onload=()=>window.RevenueShare.render(reportRows);document.head.append(shareScript);
 document.addEventListener('click',event=>{if(!rangePicker.contains(event.target))rangePicker.open=false;});
