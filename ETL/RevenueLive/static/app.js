@@ -90,6 +90,7 @@ rangePicker.addEventListener('toggle',()=>{if(rangePicker.open){$('channelPicker
 rangePicker.append(rangePanel);$('filters').prepend(rangePicker);$('revenueHeader').append($('export'));
 function icon(name,className=''){const tile=document.createElement('span');tile.className=className;tile.setAttribute('aria-hidden','true');const glyph=document.createElement('i');glyph.dataset.lucide=name;tile.append(glyph);return tile;}
 menuTitle.prepend(icon('chart-no-axes-combined','brand-icon'));
+const headerArtwork=document.createElement('span');headerArtwork.className='header-wave-art';headerArtwork.setAttribute('aria-hidden','true');document.querySelector('#shell>header').prepend(headerArtwork);
 rangeTitle.prepend(icon('calendar-days'));
 $('export').replaceChildren(icon('download'));$('export').title='Download CSV';$('export').setAttribute('aria-label','Download CSV');
 document.querySelectorAll('.metrics article').forEach((card,index)=>card.prepend(icon(['indian-rupee','chart-pie','eye','megaphone'][index],'metric-icon')));
@@ -131,7 +132,7 @@ const splitHeading=document.createElement('span');splitHeading.className='metric
 document.querySelector('.revenue-split .metric-topline').append(splitHeading);
 document.querySelectorAll('.metric-topline>.metric-changes').forEach(node=>node.remove());
 const iconsScript=document.createElement('script');iconsScript.src='/static/lucide.min.js';iconsScript.onload=()=>lucide.createIcons();document.head.append(iconsScript);
-const shareScript=document.createElement('script');shareScript.src='/static/revenue-share.js';shareScript.onload=()=>window.RevenueShare.render(reportRows);document.head.append(shareScript);
+const comparisonScript=document.createElement('script');comparisonScript.src='/static/channel-comparison.js';comparisonScript.onload=()=>{const shareScript=document.createElement('script');shareScript.src='/static/revenue-share.js';shareScript.onload=()=>window.RevenueShare.render(reportRows);document.head.append(shareScript);};document.head.append(comparisonScript);
 document.addEventListener('click',event=>{if(!rangePicker.contains(event.target))rangePicker.open=false;});
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&rangePicker.open){rangePicker.open=false;rangeTitle.focus();}});
 document.addEventListener('keydown',event=>{if(event.key==='Escape'&&$('channelPicker').open){$('channelPicker').open=false;$('channelSummary').focus();}});

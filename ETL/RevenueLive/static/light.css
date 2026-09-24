@@ -286,7 +286,7 @@ dialog label,dialog legend{color:#30525c}
 .diy-share-track{height:5px;background:#edf2f5}.diy-share-track span{display:block;height:100%;background:var(--share-color)}
 /* Soft dashboard surfaces; data colours and comparison states retain their meaning. */
 body.summary-phase{background:#fff;color:#17243a}
-body.summary-phase:has(#shell:not([hidden])){background:linear-gradient(180deg,#09244c 0,#154b83 110px,#b9d8f4 290px,#edf6ff 470px,#f5f9fe 780px);background-attachment:fixed;background-repeat:no-repeat;background-color:#f5f9fe}
+body.summary-phase:has(#shell:not([hidden])){background:linear-gradient(180deg,transparent 0,transparent 72px,#edf5ff70 210px,#f3f7ffdc 420px,#f5f8fff2 760px),linear-gradient(100deg,#041a3b 0%,#104b96 42%,#303b91 72%,#4b2788 100%);background-attachment:fixed;background-repeat:no-repeat;background-color:#f3f6fd}
 .summary-phase #shell>header{background:linear-gradient(110deg,#06152f 0%,#103773 38%,#155bb3 72%,#083557 100%);border-bottom:1px solid #81c7ff80;box-shadow:inset 0 1px 0 #ffffff12,0 5px 18px #06152f40}
 .summary-phase #signedInName{color:#fff;font-weight:800}
 .summary-phase #accountMenu>summary:hover{background:#ffffff12}
@@ -395,7 +395,7 @@ body.summary-phase:has(#shell:not([hidden])){background:linear-gradient(180deg,#
 @media(min-width:801px) and (max-width:1200px){.share-content{grid-template-columns:minmax(0,1fr)}.share-ring{width:170px;height:170px}}
 #viewsTree{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;height:auto;overflow:visible}
 #viewsTree .views-tree-tile{position:relative;inset:auto!important;width:auto!important;height:auto!important;min-height:146px;padding:12px 14px;gap:8px;border:0;overflow:visible}
-#viewsTree .views-tree-tile:nth-child(-n+5){min-height:156px}
+#viewsTree .views-tree-tile:nth-child(-n+5){min-height:0}
 #viewsTree .views-tree-tile .tile-channel-icon{display:inline-flex;width:30px;height:30px;background:#ffffff55;border:1px solid #ffffff60;box-shadow:0 2px 5px #233c5410;color:#284860}
 #viewsTree .views-tree-tile>strong{font-size:18px;line-height:1.3}
 #viewsTree .views-tree-tile>span{overflow-wrap:anywhere}
@@ -427,7 +427,12 @@ body.summary-phase:has(#shell:not([hidden])){background:linear-gradient(180deg,#
 #viewsDistributionRows .distribution-track>span{box-shadow:inset 0 1px 0 #ffffff90,inset 0 -1px 0 #173c7020}
 .summary-phase #viewsTreeButton:hover,.summary-phase #channelMetrics .metrics-toggle:hover{border-color:#86afd7}
 /* Stakeholder overview: restrained colour, stronger hierarchy and quantitative bars. */
-.summary-phase #shell>header{background:linear-gradient(110deg,#071b3a,#123c7a)}
+.summary-phase #shell>header{background:linear-gradient(115deg,#ffffff08,transparent 45%),linear-gradient(100deg,#041a3b 0%,#104b96 42%,#303b91 72%,#4b2788 100%);box-shadow:inset 0 1px 0 #ffffff12,0 10px 28px #04183647;border-bottom-color:#8daee33d}
+.summary-phase .brand-icon{background:linear-gradient(145deg,#177cff,#235bd5);border:1px solid #ffffff2e;box-shadow:0 5px 16px #1464ff45,inset 0 1px 0 #ffffff38}
+.summary-phase #rangePicker>summary,.summary-phase .revenue-header #channelPicker>summary,.summary-phase #revenueHeader #export{background:#0b234e8a;color:#fff;border-color:#9fc0ff57;box-shadow:inset 0 1px 0 #ffffff0d,0 4px 12px #0000000d;backdrop-filter:blur(8px);font-weight:600}
+.summary-phase #rangePicker>summary:hover,.summary-phase .revenue-header #channelPicker>summary:hover,.summary-phase #revenueHeader #export:hover,
+.summary-phase #rangePicker[open]>summary,.summary-phase .revenue-header #channelPicker[open]>summary{background:#204980bf;color:#fff;border-color:#b9d3ff99;box-shadow:inset 0 1px 0 #ffffff1a}
+.summary-phase #rangePicker>summary:focus-visible,.summary-phase .revenue-header #channelPicker>summary:focus-visible,.summary-phase #revenueHeader #export:focus-visible{outline:2px solid #b8ddff;outline-offset:3px}
 .summary-phase .metrics article:first-child{background:linear-gradient(125deg,#0b57c2,#3f3bbe);border-color:#3567c8;box-shadow:0 3px 0 #153f8a40,0 9px 18px #173c7026;color:#fff}
 .summary-phase .metrics article:first-child :is(strong,.metric-heading),.summary-phase .metrics #total{color:#fff}
 .summary-phase .metrics .metric-changes .metric-change{padding:3px 6px;border-radius:5px;background:#fff1ce}
@@ -437,11 +442,37 @@ body.summary-phase:has(#shell:not([hidden])){background:linear-gradient(180deg,#
 .summary-phase .metrics article:nth-child(3){background:linear-gradient(130deg,#fff,#edf6ff)}
 .summary-phase .metrics article:nth-child(4){background:linear-gradient(130deg,#fff,#fff5e6)}
 .summary-phase .metrics article:first-child .metric-icon{background:#ffffff24;color:#fff}
+/* Static, clipped trails stay behind the real metrics and sparklines. */
+.summary-phase .metrics article{isolation:isolate;--trail-color:#527db51a}
+.summary-phase .metrics article:first-child{--trail-color:#a8dcff38}
+.summary-phase .metrics article:nth-child(2){--trail-color:#ba6b991a}
+.summary-phase .metrics article:nth-child(4){--trail-color:#be8e471a}
+.summary-phase .metrics article::before{content:"";position:absolute;right:-45px;bottom:26px;width:180px;height:110px;border-radius:50%;border-top:1px solid var(--trail-color);box-shadow:0 -9px 0 -8px var(--trail-color),0 -19px 0 -18px var(--trail-color);transform:rotate(-32deg);pointer-events:none;z-index:-1}
+.summary-phase .metrics article::after{content:"";position:absolute;top:0;right:0;width:38%;height:70px;background:linear-gradient(132deg,transparent 40%,var(--trail-color) 40.5%,transparent 42%,transparent 58%,var(--trail-color) 58.5%,transparent 60%);pointer-events:none;z-index:-1}
+.summary-phase .metrics article:first-child::after{background:linear-gradient(90deg,transparent,#a8dcff24,transparent);height:1px;top:16px;width:35%}
+.summary-phase .metrics article:nth-child(2)::before{display:none}
+.summary-phase .metrics article:nth-child(2)::after{top:auto;bottom:43px;right:12px;width:30%;height:34px;background:repeating-linear-gradient(180deg,transparent 0 10px,#ba6b991a 10px 11px);mask-image:linear-gradient(90deg,transparent,#000)}
+.summary-phase .metrics article:nth-child(3)::before{display:none}
+.summary-phase .metrics article:nth-child(3)::after{top:12px;right:12px;width:30%;height:48px;background:linear-gradient(#527db51a 1px,transparent 1px),linear-gradient(90deg,#527db51a 1px,transparent 1px);background-size:14px 14px;mask-image:linear-gradient(135deg,transparent,#000)}
+.summary-phase .metrics article:nth-child(4)::before{display:none}
+.summary-phase .metrics article:nth-child(4)::after{top:14px;right:12px;width:30px;height:54px;background:none;border-right:1px solid #be8e4733;border-top:1px solid #be8e4733;border-radius:0 8px 0 0;box-shadow:5px -5px 0 -4px #be8e4726}
 .summary-phase .metrics strong{font-size:36px;line-height:1.12}
 .summary-phase .metrics .revenue-split strong{font-size:28px}
-#performanceInsight{display:flex;align-items:center;gap:24px;margin:18px 0;padding:16px 20px;background:linear-gradient(110deg,#103d83,#4540a2);color:#fff;border-radius:8px}
+#performanceInsight{display:flex;align-items:center;gap:24px;margin:18px 0;padding:18px 22px;background:linear-gradient(180deg,#ffffff12,transparent 55%),linear-gradient(100deg,#0758b9 0%,#244bb3 38%,#4936b9 72%,#6832b8 100%);border:1px solid #7299ee85;box-shadow:0 10px 24px #2d3f9d30,inset 0 1px 0 #ffffff14;color:#fff;border-radius:8px}
 .summary-phase #dashboard>#performanceInsight:not([hidden]){display:flex!important}
-#performanceInsight h2{margin:0;flex:0 0 auto;font-size:18px;color:#fff}
+#performanceInsight h2{margin:0;flex:0 0 auto;font-size:18px;color:#fff;display:flex;align-items:center;gap:12px;font-weight:800}
+#performanceInsight h2 svg{width:28px;height:28px;color:#b7ddff;flex:none;filter:drop-shadow(0 2px 5px #10275d50)}
+#performanceInsight p strong{font-weight:800}
+.header-wave-art{position:absolute;left:24%;top:0;width:430px;height:72px;pointer-events:none;overflow:hidden;opacity:.9}
+.header-wave-art::before{content:"";position:absolute;left:0;top:-38px;width:430px;height:125px;border-radius:50%;border-top:1px solid #4c87ff57;transform:rotate(-7deg);box-shadow:0 -10px 0 -9px #4683ff3d,0 -20px 0 -19px #4683ff2e,0 -30px 0 -29px #4683ff21}
+.summary-phase #shell>header>#accountMenu,.summary-phase #shell>header>#revenueHeader{position:relative;z-index:1}
+#performanceInsight{position:relative;padding-right:130px}
+.insight-growth-art{position:absolute;right:14px;top:50%;transform:translateY(-50%);width:104px;height:64px;pointer-events:none}
+.insight-growth-bars{position:absolute;left:0;bottom:0;height:50px;display:flex;align-items:flex-end;gap:5px;opacity:.92}
+.insight-growth-bars i{width:10px;border-radius:2px 2px 0 0;background:linear-gradient(180deg,#6ecdffcc,#5b5df07a);box-shadow:0 0 10px #479cff2e}
+.insight-growth-arrow{position:absolute;right:0;top:0;width:75px;height:48px;filter:drop-shadow(0 4px 8px #3e2db359)}
+@media(max-width:1100px){.header-wave-art{display:none}}
+@media(max-width:800px){.insight-growth-art{display:none}}
 #performanceInsight p{margin:0;padding-left:24px;border-left:1px solid #ffffff60;font-size:16px;line-height:1.55;color:#fff}
 .summary-phase #dashboard>#revenueOverview{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
 #revenueOverview .daily-revenue{order:-1;display:flex;flex-direction:column}
@@ -458,9 +489,44 @@ body.summary-phase:has(#shell:not([hidden])){background:linear-gradient(180deg,#
 .timeline-dialog-heading h2{margin:0;font-size:22px;font-weight:800}
 #timelineDetailDialog .daily-revenue-canvas{min-height:160px;height:auto;flex:1}
 @media(max-width:600px){#timelineDetailDialog{width:calc(100vw - 16px);padding:12px}.timeline-dialog-heading h2{font-size:18px}}
-#viewsTreeButton>.share-title{width:100%;border:0;text-align:left;cursor:pointer}
+.summary-phase #dashboard>#channelComparison{display:block!important;margin-top:20px;padding:16px 0;color:#203a59;min-width:0}
+#channelComparison h2{font-size:20px;font-weight:800;margin:0 0 14px;background:#edf5ff;padding:6px 8px;border-radius:4px;width:fit-content}
+.comparison-controls{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;background:#edf3fc;padding:12px;border-radius:8px}
+.comparison-controls details{position:relative;min-width:220px;max-width:100%;background:#f3f7ff;border:1px solid #c9daed;border-radius:8px}
+.comparison-controls summary{padding:10px 14px;cursor:pointer;font-weight:700}
+.comparison-channel-options{max-height:260px;overflow:auto;padding:8px 12px}
+.comparison-controls label{display:flex;flex-direction:row;align-items:center;gap:8px;font-size:15px;font-weight:600;padding:5px 0;overflow-wrap:anywhere}
+.comparison-controls input{width:16px;height:16px;min-height:16px;padding:0;flex:none;accent-color:#1769d5}
+.comparison-controls fieldset{flex:1;min-width:0;border:0;padding:0;margin:0}
+.comparison-controls legend{font-weight:700;font-size:14px}
+.comparison-parameters{display:flex;flex-wrap:wrap;gap:6px 18px}
+.comparison-status{font-size:14px;margin:10px 0;color:#405873}
+.comparison-status:empty{display:none}
+.comparison-canvas{position:relative;height:420px;margin-top:14px;background:linear-gradient(135deg,#fafdff,#eef1fb);border-radius:8px;padding:12px;box-sizing:border-box}
+@media(max-width:600px){.comparison-controls{display:block}.comparison-controls fieldset{margin-top:12px}.comparison-canvas{height:460px}}
+#viewsTreeButton>.share-title{width:100%;box-sizing:border-box;border:0;text-align:left;cursor:default;margin:0 0 12px}
 #viewsTree .views-tree-tile{cursor:pointer;text-align:left}
 #viewsTree .views-tree-tile:focus-visible{outline:3px solid #1266dc;outline-offset:3px}
+#viewsTree .views-tree-tile{--distribution-tint:#edf3fa;background:linear-gradient(145deg,#fafcff,var(--distribution-tint))!important;border:1px solid #d9e3ef;box-shadow:0 2px 7px #173c700a;color:#233a54;transition:border-color .15s,box-shadow .15s}
+#viewsTree .views-tree-tile:nth-child(3n+2){--distribution-tint:#f1eef8}
+#viewsTree .views-tree-tile:nth-child(3n){--distribution-tint:#eef5f3}
+#viewsTree .views-tree-tile:hover{border-color:#8daecc;box-shadow:0 3px 10px #173c7014}
+#viewsTree .views-tree-tile>.tile-channel-icon.channel-brand{width:40px;height:34px;border:1px solid #dfe6ef;background:#fff;box-shadow:none;border-radius:6px}
+#viewsTree .tile-share{color:#405873;font-size:16px;font-weight:700;margin-top:4px}
+#viewsTree .views-tree-tile{display:grid;grid-template-columns:minmax(0,1fr) 40px;align-content:start;align-items:start;min-height:0;padding:12px;gap:6px 10px}
+#viewsTree .views-tree-tile>span:first-child{grid-column:1;grid-row:1;min-width:0;font-size:16px;line-height:1.35}
+#viewsTree .views-tree-tile>.tile-channel-icon{grid-column:2;grid-row:1;justify-self:end}
+#viewsTree .views-tree-tile>strong{grid-column:1/-1;min-width:0;margin-top:0;font-size:22px;line-height:1.3;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+#viewsTree .views-tree-tile>.channel-comparison{grid-column:1/-1}
+/* Expanded share rows own their spacing instead of inheriting compact legend geometry. */
+#revenueOverview #revenueShareExpanded{box-sizing:border-box;min-width:0;padding:16px;color:#233a54;border:1px solid #d9e3ef;border-radius:8px}
+#revenueShareExpanded .share-dialog-heading{gap:12px}
+#revenueShareExpanded .share-dialog-heading h2{min-width:0;overflow-wrap:anywhere;color:#172f50}
+#revenueShareExpanded .distribution-collapse{flex:none}
+#revenueShareExpanded #fullShareRows{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px 24px}
+#fullShareRows .full-share-row{min-width:0;padding:8px 0;box-sizing:border-box}
+#fullShareRows .share-channel,#fullShareRows .full-share-row strong{min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.4;color:#233a54;font-size:16px;font-weight:700}
+#viewsTree .channel-comparison{background:transparent;font-size:12px;padding:2px 0;font-weight:700}
 #channelDetailDialog{width:min(1000px,calc(100vw - 32px));max-width:calc(100vw - 32px);max-height:85vh;padding:20px;box-sizing:border-box;border-radius:8px;color:#183452}
 .channel-detail-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
 .channel-detail-heading h2{margin:0;font-size:22px;font-weight:800;overflow-wrap:anywhere}
@@ -493,8 +559,6 @@ body.summary-phase:has(#shell:not([hidden])){background:linear-gradient(180deg,#
 .channel-rank{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:24px;margin-right:10px;vertical-align:middle;border-radius:4px;background:#eaf2fc;color:#20599c;font-weight:800}
 .channel-value-track{display:block;height:5px;margin-top:6px;background:#edf3fa;border-radius:3px;overflow:hidden}
 .channel-value-track>span{display:block;height:100%;background:#518fee;border-radius:3px}
-.tile-progress{position:absolute!important;bottom:8px;left:12px;right:12px;height:5px;background:#ffffff70;border-radius:3px;overflow:hidden}
-.tile-progress>span{display:block;height:100%;background:#386fbd;border-radius:3px}
 .channel-comparison{display:block;font-size:12px;font-weight:700;margin-top:4px;color:#146943}
 .channel-comparison.down{color:#a72e3c}
 .summary-phase #viewsTreeButton,.summary-phase #viewsTreeButton:hover,
@@ -506,10 +570,23 @@ td:nth-child(3) .channel-value-track>span{background:#32b59d}
 td:nth-child(4) .channel-value-track>span{background:#eea75a}
 td:nth-child(5) .channel-value-track>span{background:#a881db}
 /* An unframed channel leaderboard, with revenue as the reading anchor. */
+/* Light tints retain opaque, readable surfaces over the fixed page gradient. */
+.summary-phase #revenueOverview .daily-revenue{background:linear-gradient(145deg,#fbfdff 30%,#eef5ff 100%)}
+.summary-phase #revenueOverview #revenueShare,.summary-phase #revenueOverview #revenueShare:hover,
+.summary-phase #revenueShareExpanded{background:linear-gradient(135deg,#fcfdff 25%,#f1effb 100%)}
+.summary-phase .workspace:has(>.view:not(#dashboard):not([hidden])){background:#fff linear-gradient(145deg,#fcfdff 20%,#edf5fb 70%,#f3effa)}
+.summary-phase :is(.range-panel,.channel-menu,#accountMenu .account-panel,.diy-channel-menu){background:linear-gradient(150deg,#fcfdff 40%,#eef3fb)}
+.summary-phase :is(#channelDetailDialog,#timelineDetailDialog){background:linear-gradient(145deg,#fcfdff 35%,#eef5ff 80%,#f4effb)}
+.summary-phase #quickInsights .insight-item{background:linear-gradient(145deg,#fcfdff 35%,var(--kpi-tint))}
+.summary-phase #channelMetrics tbody :is(th,td){background:linear-gradient(135deg,#fafcff,#f0f5fc)}
+.summary-phase #channelMetrics tbody td:last-child{background:linear-gradient(120deg,#eaf4ff,#eeecfb)}
+.summary-phase #channelMetrics tbody tr:hover :is(th,td){background:linear-gradient(135deg,#eef5ff,#e5edfb)}
+.summary-phase .channel-detail-table :is(th,td){background:linear-gradient(135deg,#fbfdff,#f1f5fc)}
+.summary-phase .channel-detail-table thead th{background:linear-gradient(110deg,#e8f1fd,#eeedf8)}
 .summary-phase :is(button,input:not([type=checkbox]):not([type=radio]),select,textarea,dialog,.table-wrap,.range-panel,.channel-menu,.account-panel,.overview-metric-selector){border-radius:8px}
 .summary-phase :is(.channel-rank,.channel-glyph,.share-percent,.metric-icon,.distribution-collapse){border-radius:8px}
-.summary-phase :is(.distribution-track,.channel-value-track,.tile-progress,.diy-share-track),
-.summary-phase :is(.distribution-track,.channel-value-track,.tile-progress,.diy-share-track)>span{border-radius:8px;overflow:hidden}
+.summary-phase :is(.distribution-track,.channel-value-track,.diy-share-track),
+.summary-phase :is(.distribution-track,.channel-value-track,.diy-share-track)>span{border-radius:8px;overflow:hidden}
 .summary-phase .compact-share-row{border-radius:8px}
 .summary-phase #viewsTreeButton>.share-title,.summary-phase #viewsDistribution>h2,
 .summary-phase #channelMetrics .metrics-toggle>span,.summary-phase #channelMetrics .metrics-toggle>svg{border-radius:8px}
@@ -526,6 +603,8 @@ td:nth-child(5) .channel-value-track>span{background:#a881db}
 }
 .summary-phase #channelMetrics .metrics-toggle>span,
 #viewsTreeButton>.share-title,#viewsDistribution>h2{background:#edf5ff;color:#172f50;border-radius:4px;padding:5px 8px}
+.summary-phase #channelMetrics .metrics-toggle>span,#viewsTreeButton>.share-title{font-size:18px;font-weight:800;line-height:24px;letter-spacing:0;border-radius:8px}
+#viewsTreeButton>.share-title{width:fit-content;max-width:100%;margin-bottom:8px}
 .summary-phase #channelMetrics .metrics-toggle>svg{background:#edf5ff;color:#172f50;border-radius:4px;padding:3px;box-sizing:content-box}
 #viewsDistributionRows .full-share-row{background:#edf5ff;color:#172f50;padding:10px;border-radius:4px}
 #channelMetrics table{border-collapse:separate;border-spacing:0 6px;font-family:'Segoe UI',Arial,sans-serif;font-variant-numeric:tabular-nums}

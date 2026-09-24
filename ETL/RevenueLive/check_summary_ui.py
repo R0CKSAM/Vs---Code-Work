@@ -43,20 +43,42 @@ try:
         expect(page.locator('#end')).to_have_value('2026-08-31')
         expect(page.locator('.metric-icon svg')).to_have_count(4)
         expect(page.locator('.metrics article')).to_have_count(4)
+        expect(page.locator('#channelComparison')).to_be_visible()
+        assert page.evaluate("Chart.getChart('channelComparisonCanvas').data.datasets.length")==2
+        page.locator('.comparison-parameters input[value=ad]').check()
+        assert page.evaluate("Chart.getChart('channelComparisonCanvas').data.datasets.length")==4
+        assert page.evaluate("Chart.getChart('channelComparisonCanvas').data.datasets.filter(d=>d.yAxisID==='money').every(d=>Math.abs(d.data.reduce((s,n)=>s+(n||0),0)-reportRows.filter(r=>d.label===r.channel+' - Ad revenue').reduce((s,r)=>s+r.ad/100,0))<0.00001)")
+        page.locator('.comparison-parameters input[value=views]').uncheck()
+        page.locator('.comparison-parameters input[value=ad]').uncheck()
+        expect(page.locator('.comparison-status')).to_have_text('Select at least one parameter.')
+        page.locator('.comparison-parameters input[value=views]').check()
+        for comparison_width in [1388,390]:
+            page.set_viewport_size({'width':comparison_width,'height':805})
+            page.locator('#channelComparison').scroll_into_view_if_needed()
+            page.wait_for_timeout(300)
+            assert page.locator('#channelComparison').evaluate('el=>el.scrollWidth<=el.clientWidth')
+            page.locator('#channelComparison').screenshot(path=str(screens/f'channel-comparison-{comparison_width}.png'))
+        page.set_viewport_size({'width':1388,'height':805})
         expect(page.locator('#channelAnalysis')).not_to_be_visible()
         expect(page.locator('#summaryShareLegend .compact-share-row')).to_have_count(6)
         page.locator('#revenueShare').click()
         expect(page.locator('#revenueShareExpanded')).to_be_visible()
         expect(page.locator('#fullShareRows .full-share-row')).to_have_count(28)
-        expect(page.locator('#viewsDistributionRows .full-share-row')).to_have_count(28)
+        for width in [1388,944,390,320]:
+            page.set_viewport_size({'width':width,'height':805})
+            assert page.locator('#revenueShareExpanded').evaluate('el=>el.scrollWidth<=el.clientWidth'),width
+            assert page.locator('#fullShareRows').evaluate('el=>[...el.querySelectorAll(".full-share-row")].every(row=>row.scrollWidth<=row.clientWidth)'),width
+            assert page.locator('#viewsTree').evaluate('el=>[...el.children].every(tile=>{const name=tile.firstElementChild.getBoundingClientRect(),logo=tile.querySelector(".tile-channel-icon").getBoundingClientRect();return name.right<=logo.left && tile.scrollWidth<=tile.clientWidth})'),width
+            page.locator('#revenueShareExpanded').screenshot(path=str(screens/f'share-expanded-{width}.png'))
+        page.set_viewport_size({'width':1388,'height':805})
+        expect(page.locator('#viewsDistributionRows')).to_have_count(0)
+        expect(page.locator('#viewsTreeButton>button')).to_have_count(0)
+        expect(page.locator('#viewsTree .tile-progress')).to_have_count(0)
+        assert page.locator('#viewsTreeButton>.share-title').evaluate('el=>getComputedStyle(el).fontSize')==page.locator('.metrics-toggle>span').evaluate('el=>getComputedStyle(el).fontSize')
         expect(page.locator('.tree-legend-item')).to_have_count(28)
         assert page.locator('.views-tree-tile').count()==page.evaluate('new Set(reportRows.filter(r=>r.views>0).map(r=>r.channel)).size')
-        expect(page.locator('#viewsDistributionRows')).not_to_be_visible()
-        page.locator('#viewsTreeButton>.share-title').click()
-        expect(page.locator('#viewsDistributionRows')).to_be_visible()
-        page.locator('#viewsDistribution > .distribution-collapse').click()
         expect(page.locator('#viewsTreeButton')).to_be_visible()
-        expect(page.locator('#viewsDistribution > .distribution-collapse')).to_be_hidden()
+        expect(page.locator('#viewsDistribution > .distribution-collapse')).to_have_count(0)
         for width in [1388,390]:
             page.set_viewport_size({'width':width,'height':805})
             tile=page.locator('.views-tree-tile').first
@@ -115,13 +137,7 @@ try:
         for width in [1920, 1388, 1024, 944, 900, 768, 390, 320]:
             page.set_viewport_size({'width': width, 'height': 805})
             page.wait_for_timeout(350)
-            page.locator('#viewsTreeButton>.share-title').click()
-            assert page.locator('#viewsDistribution').evaluate('''node=>{
-                const heading=node.querySelector('h2').getBoundingClientRect(),close=node.querySelector('.distribution-collapse').getBoundingClientRect(),rows=node.querySelector('#viewsDistributionRows').getBoundingClientRect();
-                return heading.right<=close.left && rows.top>=Math.max(heading.bottom,close.bottom);
-            }'''),('expanded views header fit',width)
-            page.locator('#viewsDistribution').screenshot(path=str(screens / f'views-expanded-{width}.png'))
-            page.locator('#viewsDistribution > .distribution-collapse').click()
+            page.locator('#viewsDistribution').screenshot(path=str(screens / f'views-cards-{width}.png'))
             if width>800:
                 assert page.evaluate("()=>Math.abs(document.getElementById('revenueShare').getBoundingClientRect().height-document.querySelector('.daily-revenue').getBoundingClientRect().height)<2"),('matched chart heights',width)
             if width>=900:

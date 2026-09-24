@@ -113,23 +113,18 @@ window.RevenueShare=(()=>{
   });
   timelineDialog.querySelector('button').addEventListener('click',()=>timelineDialog.close());
   timelineDialog.addEventListener('close',()=>{trend.insertBefore(timelineFrame,document.getElementById('dailyRevenueNote'));lineChart?.resize();expandTimeline.focus({preventScroll:true});});
-  const views=document.createElement('section');views.id='viewsDistribution';views.innerHTML='<h2>Views distribution</h2><div id="viewsDistributionRows"></div><p id="viewsDistributionEmpty"></p>';overview.after(views);
+  const views=document.createElement('section');views.id='viewsDistribution';views.innerHTML='<p id="viewsDistributionEmpty"></p>';overview.after(views);
   const metrics=document.createElement('section');metrics.id='channelMetrics';metrics.innerHTML='<h2>Channel metrics</h2><div class="metrics-table-scroll"><table><thead><tr><th scope="col">Channel</th><th scope="col">Views</th><th scope="col">Ad impressions</th><th scope="col">Ad revenue</th><th scope="col">Sponsorship / others</th><th scope="col">Total revenue</th></tr></thead><tbody></tbody></table></div><p class="metrics-empty"></p>';views.before(metrics);
   const metricsToggle=document.createElement('button');metricsToggle.type='button';metricsToggle.className='metrics-toggle';metricsToggle.setAttribute('aria-expanded','false');metricsToggle.setAttribute('aria-controls','channelMetricsBody');metricsToggle.title='Expand channel metrics';metricsToggle.innerHTML='<span>Channel metrics</span><i data-lucide="maximize-2" aria-hidden="true"></i>';metrics.querySelector('h2').replaceWith(metricsToggle);metrics.querySelector('tbody').id='channelMetricsBody';let metricsExpanded=false;
   function sizeMetrics(){metrics.querySelectorAll('tbody tr').forEach((row,i)=>row.hidden=!metricsExpanded&&i>=5);metricsToggle.setAttribute('aria-expanded',String(metricsExpanded));const action=metricsExpanded?'Collapse':'Expand';metricsToggle.title=action+' channel metrics';metricsToggle.setAttribute('aria-label',action+' channel metrics');metricsToggle.querySelector('span').textContent='Channel metrics';const oldIcon=metricsToggle.querySelector('svg,i');const nextIcon=document.createElement('i');nextIcon.dataset.lucide=metricsExpanded?'minimize-2':'maximize-2';nextIcon.setAttribute('aria-hidden','true');oldIcon.replaceWith(nextIcon);window.lucide?.createIcons();}
   metricsToggle.addEventListener('click',()=>{metricsExpanded=!metricsExpanded;sizeMetrics();});
-  const treeButton=document.createElement('div');treeButton.id='viewsTreeButton';treeButton.innerHTML='<button type="button" class="share-title" aria-expanded="false" aria-controls="viewsDistributionRows">Views distribution <span aria-hidden="true">&#8599;</span></button><span id="viewsTree"></span>';
-  const treeExpand=treeButton.querySelector('.share-title');
-  views.prepend(treeButton);views.querySelector('h2').hidden=true;document.getElementById('viewsDistributionRows').hidden=true;
+  const treeButton=document.createElement('div');treeButton.id='viewsTreeButton';treeButton.innerHTML='<h2 class="share-title">Views distribution</h2><span id="viewsTree"></span>';
+  views.prepend(treeButton);
   const treeLegend=document.createElement('span');treeLegend.id='viewsTreeLegend';treeButton.append(treeLegend);
-  const collapseViews=document.createElement('button');collapseViews.type='button';collapseViews.textContent='Collapse';collapseViews.hidden=true;treeButton.after(collapseViews);
-  function closeViews(){treeButton.hidden=false;collapseViews.hidden=true;views.querySelector('h2').hidden=true;document.getElementById('viewsDistributionRows').hidden=true;treeExpand.setAttribute('aria-expanded','false');redrawTree();}
-  treeExpand.addEventListener('click',()=>{treeButton.hidden=true;collapseViews.hidden=false;views.querySelector('h2').hidden=false;document.getElementById('viewsDistributionRows').hidden=false;treeExpand.setAttribute('aria-expanded','true');collapseViews.focus({preventScroll:true});});
-  collapseViews.addEventListener('click',()=>{closeViews();treeExpand.focus();});
-  for(const button of [collapseViews,modal.querySelector('button')]){button.classList.add('distribution-collapse');button.setAttribute('aria-label','Collapse distribution');button.title='Collapse distribution';button.innerHTML='<i data-lucide="minimize-2" aria-hidden="true"></i>';}
-  for(const button of [trigger,treeButton]){const arrow=button.querySelector('.share-title>span');arrow.innerHTML='<i data-lucide="maximize-2" aria-hidden="true"></i>';button.title='Expand distribution';}
+  for(const button of [modal.querySelector('button')]){button.classList.add('distribution-collapse');button.setAttribute('aria-label','Collapse distribution');button.title='Collapse distribution';button.innerHTML='<i data-lucide="minimize-2" aria-hidden="true"></i>';}
+  trigger.querySelector('.share-title>span').innerHTML='<i data-lucide="maximize-2" aria-hidden="true"></i>';trigger.title='Expand distribution';
   window.lucide?.createIcons();
-  document.addEventListener('keydown',event=>{if(event.key!=='Escape'||channelDialog.open||timelineDialog.open)return;if(!modal.hidden){collapse();trigger.focus();}else if(!collapseViews.hidden){closeViews();treeExpand.focus();}});
+  document.addEventListener('keydown',event=>{if(event.key!=='Escape'||channelDialog.open||timelineDialog.open)return;if(!modal.hidden){collapse();trigger.focus();}});
   const channelDialog=document.createElement('dialog');channelDialog.id='channelDetailDialog';channelDialog.setAttribute('aria-labelledby','channelDetailTitle');
   channelDialog.innerHTML='<div class="channel-detail-heading"><div><h2 id="channelDetailTitle"></h2><p id="channelDetailRange"></p></div><button type="button" aria-label="Close channel details" title="Close"><i data-lucide="x" aria-hidden="true"></i></button></div><dl class="channel-detail-totals"></dl><p id="channelDetailCoverage"></p><div class="channel-detail-table"><table><thead><tr><th scope="col">Date</th><th scope="col">Views</th><th scope="col">Ad impressions</th><th scope="col">Ad revenue</th><th scope="col">Sponsorship / others</th><th scope="col">Total revenue</th></tr></thead><tbody></tbody></table></div>';
   document.body.append(channelDialog);channelDialog.querySelector('button').addEventListener('click',()=>channelDialog.close());window.lucide?.createIcons();
@@ -180,6 +175,7 @@ window.RevenueShare=(()=>{
     if(timelineDialog.open)timelineDialog.close();
     if(channelDialog.open)channelDialog.close();
     currentRows=rows;
+    window.ChannelComparison.render(rows);
     const metricName=metricNames[selectedMetric],isRevenue=selectedMetric==='total';
     metricSelector.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.metric===selectedMetric)));
     trend.querySelector('h2').textContent=metricName+' over time';
@@ -190,8 +186,9 @@ window.RevenueShare=(()=>{
     channelChanges.clear();
     renderSparks(rows);
     let insight=document.getElementById('performanceInsight');
-    if(!insight){insight=document.createElement('section');insight.id='performanceInsight';const title=document.createElement('h2');title.textContent='Performance Insight';insight.append(title,document.createElement('p'));document.querySelector('#dashboard .metrics').after(insight);}
+    if(!insight){insight=document.createElement('section');insight.id='performanceInsight';const title=document.createElement('h2');title.textContent='Performance Insight';const glyph=document.createElement('i');glyph.dataset.lucide='sparkles';glyph.setAttribute('aria-hidden','true');title.prepend(glyph);insight.append(title,document.createElement('p'));document.querySelector('#dashboard .metrics').after(insight);}
     insight.hidden=!rows.length;
+    if(!insight.querySelector('.insight-growth-art')){const artwork=document.createElement('span');artwork.className='insight-growth-art';artwork.setAttribute('aria-hidden','true');const bars=document.createElement('span');bars.className='insight-growth-bars';for(const height of [10,15,20,29,39,48]){const bar=document.createElement('i');bar.style.height=height+'px';bars.append(bar);}const arrow=document.createElement('img');arrow.src='/static/insight-growth-arrow.svg';arrow.alt='';arrow.className='insight-growth-arrow';artwork.append(bars,arrow);insight.append(artwork);}
     const metricSums=new Map();for(const r of rows){if(!metricSums.has(r.channel))metricSums.set(r.channel,{views:0,impressions:0,ad:0,other:0,total:0});for(const key of ['views','impressions','ad','other','total'])metricSums.get(r.channel)[key]+=r[key];}
     const keys=['views','impressions','ad','other','total'];
     // Independent column scales use unrounded values and all selected channels.
@@ -237,7 +234,6 @@ window.RevenueShare=(()=>{
     const viewEntries=[...viewSums].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])),viewTotal=viewEntries.reduce((sum,[,n])=>sum+n,0);
     const tree=document.getElementById('viewsTree');tree.replaceChildren();
     const positive=viewEntries;
-    treeButton.title='Expand views distribution';
     treeLegend.replaceChildren(...viewEntries.map(([name,n],index)=>{const item=document.createElement('span');item.className='tree-legend-item';item.style.setProperty('--share-color',colors[index%colors.length]);const label=document.createElement('span');label.textContent=(index+1)+'. '+name;const value=document.createElement('strong');value.textContent=new Intl.NumberFormat('en-IN').format(n)+' views | '+percent(n,viewTotal);item.append(label,value);return item;}));
     // Equal-sized tiles keep every channel readable; percentages convey its actual share.
     function tile(items,x,y,w,h){
@@ -254,19 +250,16 @@ window.RevenueShare=(()=>{
         element.setAttribute('role','button');element.tabIndex=0;element.setAttribute('aria-haspopup','dialog');element.setAttribute('aria-label','View daily metrics for '+positive[index][0]);
         element.addEventListener('click',()=>openChannel(positive[index][0]));
         element.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();openChannel(positive[index][0]);}});
-        const track=document.createElement('span'),fill=document.createElement('span');track.className='tile-progress';track.setAttribute('aria-hidden','true');fill.style.width=(viewTotal>0?positive[index][1]/viewTotal*100:0)+'%';track.append(fill);element.append(track);
       }
       applyChannelChanges();
       window.lucide?.createIcons();
     };
-    redrawTree();treeButton.disabled=!positive.length;
-    document.getElementById('viewsDistributionRows').replaceChildren(...viewEntries.map(([name,n],i)=>{const el=document.createElement('div');el.className='full-share-row';el.style.setProperty('--share-color',colors[i%colors.length]);const label=document.createElement('span');label.className='share-channel';label.textContent=name;const value=document.createElement('strong');value.textContent=new Intl.NumberFormat('en-IN').format(n)+' views | '+percent(n,viewTotal);const track=document.createElement('span');track.className='distribution-track';const fill=document.createElement('span');fill.style.width=(viewTotal>0?n/viewTotal*100:0)+'%';track.append(fill);el.append(label,value,track);return el;}));
+    redrawTree();
     document.getElementById('viewsDistributionEmpty').textContent=!viewEntries.length?'No views data in this selection.':viewTotal===0?'No views recorded.':'';
     const sums=new Map();for(const r of rows)sums.set(r.channel,(sums.get(r.channel)||0)+r[selectedMetric]);
     entries=[...sums].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));total=entries.reduce((sum,[,value])=>sum+value,0);
     trigger.classList.toggle('few-channels',entries.length<=2);
     document.getElementById('fullShareRows').classList.toggle('many-channels',entries.length>8);
-    document.getElementById('viewsDistributionRows').classList.toggle('many-channels',viewEntries.length>8);
     const valid=total>0&&entries.every(([,value])=>value>=0);
     const shown=entries.slice(0,5);if(entries.length>5)shown.push(['Others ('+(entries.length-5)+')',entries.slice(5).reduce((sum,[,value])=>sum+value,0)]);
     document.getElementById('shareSum').textContent=metricValue(total);
@@ -279,6 +272,6 @@ window.RevenueShare=(()=>{
     chart=new Chart(document.getElementById('summaryShareCanvas'),{type:'doughnut',plugins:[raisedRing],data:{labels:shown.map(([name])=>name),datasets:[{data:valid?shown.map(([,value])=>value):[],backgroundColor:colors,borderWidth:1,borderColor:'#fff',hoverOffset:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'66%',layout:{padding:{top:2,right:2,bottom:10,left:2}},events:[],animation:false,plugins:{visibleSharePercent:false,legend:{display:false},tooltip:{enabled:false}}}});
     modal.querySelectorAll('.distribution-track').forEach(el=>el.hidden=!valid);
   }
-  function clear(){selectedMetric='total';collapse();closeViews();render([]);}
+  function clear(){selectedMetric='total';collapse();render([]);}
   return{render,clear,compare};
 })();
