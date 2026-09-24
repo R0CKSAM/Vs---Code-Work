@@ -93,23 +93,31 @@ menuTitle.prepend(icon('chart-no-axes-combined','brand-icon'));
 rangeTitle.prepend(icon('calendar-days'));
 $('export').replaceChildren(icon('download'));$('export').title='Download CSV';$('export').setAttribute('aria-label','Download CSV');
 document.querySelectorAll('.metrics article').forEach((card,index)=>card.prepend(icon(['indian-rupee','chart-pie','eye','megaphone'][index],'metric-icon')));
-for(const key of ['total','ad','other','views','impressions']){const badge=document.createElement('span');badge.id='change-'+key;badge.className='metric-change neutral';badge.textContent='No comparison';badge.setAttribute('role','status');$(key).closest('article').append(badge);}
+for(const key of ['total','ad','other','views','impressions']){const badge=document.createElement('span');badge.id='change-'+key;badge.className='metric-change';badge.hidden=true;badge.setAttribute('role','status');$(key).closest('article').append(badge);}
 document.querySelectorAll('.metrics article').forEach(card=>{const top=document.createElement('div');top.className='metric-topline';const changes=document.createElement('div');changes.className='metric-changes';top.append(card.querySelector('.metric-icon'),changes);card.querySelectorAll('.metric-change').forEach(badge=>changes.append(badge));card.prepend(top);});
 async function updateMetricChanges(data,requested,sequence){
   const params=new URLSearchParams(requested),first=params.get('start'),last=params.get('end');
-  for(const key of ['total','ad','other','views','impressions']){$('change-'+key).textContent='Comparing';$('change-'+key).className='metric-change neutral';}
-  $('change-ad').hidden=$('adMetric').hidden;$('change-other').hidden=$('sponsorMetric').hidden;
-  if(!first||!last||!data.rows.length){for(const key of ['total','ad','other','views','impressions'])$('change-'+key).textContent='No comparison';window.QuickInsights?.render(data,requested,null,'none');return;}
+  document.querySelectorAll('.metric-change').forEach(badge=>{badge.hidden=true;badge.textContent='';badge.removeAttribute('title');});
+  if(!first||!last||!data.rows.length){window.QuickInsights?.render(data,requested,null,'none');return;}
   const span=(Date.parse(last)-Date.parse(first))/86400000+1,end=new Date(Date.parse(first)-86400000).toISOString().slice(0,10),start=new Date(Date.parse(first)-span*86400000).toISOString().slice(0,10);params.set('start',start);params.set('end',end);
   try{const previous=await api('/api/report?'+params);if(sequence!==requestNumber)return;
     window.QuickInsights?.render(data,requested,previous,'ready');
     const ids=params.getAll('channel'),coverage=new Set(previous.rows.map(row=>row.day+'|'+row.channel));
     const currentCoverage=new Set(data.rows.map(row=>row.day+'|'+row.channel));const complete=coverage.size===span*ids.length&&currentCoverage.size===span*ids.length;
-    for(const key of ['total','ad','other','views','impressions']){const badge=$('change-'+key),before=previous.totals[key],now=data.totals[key];let label='No prior data',kind='neutral';if(previous.rows.length&&!complete)label='Partial data';else if(complete){if(before===0)label=now===0?'0%':'New';else{const change=(now-before)/Math.abs(before)*100;kind=Math.abs(change)<1?'steady':change>0?'up':'down';label=(change>0?'+':'')+(Math.abs(change)<1&&change!==0?change.toFixed(1):Math.round(change))+'%';}if(before===0&&now===0)kind='steady';}badge.textContent=(key==='ad'&&!$('sponsorMetric').hidden?'Ads ':key==='other'&&!$('adMetric').hidden?'Other ':'')+label;badge.className='metric-change '+kind;badge.title='Compared with '+start+' to '+end+' for the same selected channels. Changes below 1% are amber.';}
-  }catch(error){if(sequence!==requestNumber||error.stale)return;for(const key of ['total','ad','other','views','impressions'])$('change-'+key).textContent='Unavailable';window.QuickInsights?.render(data,requested,null,'unavailable');}
+    for(const key of ['total','ad','other','views','impressions']){
+      const badge=$('change-'+key),before=previous.totals[key],now=data.totals[key];
+      if(!complete||!previous.rows.length||!Number.isFinite(before)||!Number.isFinite(now)||(before===0&&now!==0))continue;
+      if((key==='ad'&&$('adMetric').hidden)||(key==='other'&&$('sponsorMetric').hidden))continue;
+      const change=before===0?0:(now-before)/Math.abs(before)*100;
+      const kind=Math.abs(change)<1?'steady':change>0?'up':'down';
+      const label=(change>0?'+':'')+(Math.abs(change)<1&&change!==0?change.toFixed(1):Math.round(change))+'%';
+      badge.textContent=(key==='ad'&&!$('sponsorMetric').hidden?'Ads ':key==='other'&&!$('adMetric').hidden?'Other ':'')+label;
+      badge.className='metric-change '+kind;badge.hidden=false;
+      badge.title='Compared with '+start+' to '+end+' for the same selected channels. Changes below 1% are amber.';
+    }
+  }catch(error){if(sequence!==requestNumber||error.stale)return;window.QuickInsights?.render(data,requested,null,'unavailable');}
 }
 const revenueLabel=$('total').previousElementSibling;revenueLabel.id='totalLabel';
-for(const id of ['total','views','impressions','ad','other']){const value=$(id),label=value.previousElementSibling;label.before(value);}
 const iconsScript=document.createElement('script');iconsScript.src='/static/lucide.min.js';iconsScript.onload=()=>lucide.createIcons();document.head.append(iconsScript);
 const shareScript=document.createElement('script');shareScript.src='/static/revenue-share.js';shareScript.onload=()=>window.RevenueShare.render(reportRows);document.head.append(shareScript);
 document.addEventListener('click',event=>{if(!rangePicker.contains(event.target))rangePicker.open=false;});
@@ -140,7 +148,7 @@ async function api(path,options={}){
 function bind(id,event,fn){$(id).addEventListener(event,async e=>{e.preventDefault();const button=e.submitter||((e.target.tagName==='BUTTON')?e.target:null);if(button)button.disabled=true;try{await fn(e);}catch(error){if(!error.stale){const dialog=e.target.closest('dialog');if(dialog?.open&&dialog.querySelector('.form-error'))dialog.querySelector('.form-error').textContent=error.message;else if(me)notify(error.message);else $('loginError').textContent=error.message;}}finally{if(button)button.disabled=false;}});}
 function clearSensitive(){
   window.QuickInsights?.clear();
-  document.querySelectorAll('.metric-change').forEach(badge=>{badge.textContent='No comparison';badge.className='metric-change neutral';});
+  document.querySelectorAll('.metric-change').forEach(badge=>{badge.hidden=true;badge.textContent='';badge.removeAttribute('title');});
   loadingTicket++;setLoading(false);
   clearTimeout(filterTimer);availableDates.replaceChildren();dateCoverage.textContent='';
   calendarDates=[];if(calendar){calendar.clear(false);calendar.set('enable',[]);}revenueLabel.textContent='Total Revenue';

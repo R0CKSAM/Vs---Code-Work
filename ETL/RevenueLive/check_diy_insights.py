@@ -46,6 +46,9 @@ try:
         page.locator('#loginForm [name=password]').fill(password)
         page.locator('#loginForm button.primary').click()
         page.locator('#shell').wait_for(state='visible')
+        page.wait_for_function("()=>!!Chart.getChart('metricSpark-total')")
+        assert page.evaluate("Chart.getChart('metricSpark-total').data.datasets[0].data")==[30000,40000,None,5000]
+        assert page.evaluate("Chart.getChart('metricSpark-views').data.datasets[0].data")==[200,400,None,0]
         expect(page.locator('#insightsView')).to_be_hidden()
         page.locator('#accountMenu summary').click()
         page.locator('[data-view=insightsView]').click()
@@ -53,6 +56,7 @@ try:
         expect(page.locator('#revenueHeader')).to_be_visible()
         expect(page.locator('#quickInsights')).to_be_visible()
         page.wait_for_function("()=>document.getElementById('insightNote').textContent!== 'Comparing with the preceding period...'")
+        assert page.locator('.metric-change').evaluate_all('nodes=>nodes.every(n=>n.hidden && !n.textContent)'), 'Incomplete comparison must be silent'
         assert page.locator('#insightList article').count()>0
         checks=page.evaluate("""()=>{
           const row=(day,id,views,ad,other=0)=>({day,channel_id:id,channel:id===1?'Alpha':'Beta',views,impressions:views/2,ad,other,total:ad+other});
@@ -118,6 +122,11 @@ try:
         page.wait_for_function("()=>document.getElementById('insightNote').textContent!== 'Comparing with the preceding period...'")
         expect(page.locator('#insightScope')).to_contain_text('1 selected channel')
         expect(page.locator('#insightScope')).to_contain_text('21 Sept 2026')
+        assert page.locator('.metric-spark').evaluate_all('nodes=>nodes.every(n=>n.hidden)'), 'Single-day cards must not show isolated dots'
+        assert page.evaluate("!Chart.getChart('metricSpark-total')"), 'Single-day trend chart should be removed'
+        expect(page.locator('#change-total')).to_have_text('+100%')
+        assert not page.locator('#change-total').evaluate('node=>node.hidden')
+        assert page.locator('#change-other').evaluate('node=>node.hidden')
         assert 'Beta' not in page.locator('#insightList').inner_text()
         expect(page.locator('[data-insight="change-total"] .insight-value')).to_have_text('\u20b9200')
         assert page.locator('#insightList .kpi-icon svg').count()==page.locator('#insightList article').count()
@@ -186,6 +195,7 @@ try:
         assert page.evaluate("Chart.getChart('diyCanvas').data.datasets[0].data")[0]==-300
         assert not errors,errors
         page.evaluate("signOutView('')")
+        assert page.evaluate("!Chart.getChart('metricSpark-total')")
         expect(page.locator('#insightList article')).to_have_count(0)
         expect(page.locator('#insightScope')).to_be_empty()
         print(json.dumps({'presets':4,'daily_totals':True,'separate_axes':True,'ties':True,'missing_dates':True,'zero_views':True,'negative_values':True,'scope':True,'saved_reload':True,'overflow':False,'errors':errors}))

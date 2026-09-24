@@ -54,6 +54,7 @@ try:
         expect(page.locator('#viewsDistributionRows')).to_be_visible()
         page.locator('#viewsDistribution > .distribution-collapse').click()
         expect(page.locator('#viewsTreeButton')).to_be_visible()
+        expect(page.locator('#viewsDistribution > .distribution-collapse')).to_be_hidden()
         assert page.evaluate("Chart.getChart('dailyRevenueCanvas').data.datasets.length") == 2
         assert page.evaluate("Chart.getChart('dailyRevenueCanvas').data.datasets.every(d=>d.type==='bar')")
         assert page.evaluate("Chart.getChart('dailyRevenueCanvas').data.datasets.reduce((s,d)=>s+d.data.reduce((a,b)=>a+b,0),0)") == page.evaluate('reportRows.reduce((s,r)=>s+r.total,0)/100')
@@ -62,13 +63,22 @@ try:
         for width in [1920, 1388, 1024, 944, 900, 768, 390, 320]:
             page.set_viewport_size({'width': width, 'height': 805})
             page.wait_for_timeout(350)
+            page.locator('#viewsTreeButton').click()
+            assert page.locator('#viewsDistribution').evaluate('''node=>{
+                const heading=node.querySelector('h2').getBoundingClientRect(),close=node.querySelector('.distribution-collapse').getBoundingClientRect(),rows=node.querySelector('#viewsDistributionRows').getBoundingClientRect();
+                return heading.right<=close.left && rows.top>=Math.max(heading.bottom,close.bottom);
+            }'''),('expanded views header fit',width)
+            page.locator('#viewsDistribution').screenshot(path=str(screens / f'views-expanded-{width}.png'))
+            page.locator('#viewsDistribution > .distribution-collapse').click()
+            if width>800:
+                assert page.evaluate("()=>Math.abs(document.getElementById('revenueShare').getBoundingClientRect().height-document.querySelector('.daily-revenue').getBoundingClientRect().height)<2"),('matched chart heights',width)
             if width>=900:
                 edges=page.evaluate('''()=>{const left=document.getElementById('accountMenu').getBoundingClientRect(),right=document.getElementById('export').getBoundingClientRect(),body=document.querySelector('.metrics').getBoundingClientRect();return [Math.abs(left.left-body.left),Math.abs(right.right-body.right)];}''')
                 assert max(edges)<2,('header alignment',width,edges)
             if width>=900:
                 assert page.locator('.metrics article').evaluate_all('(cards)=>new Set(cards.map(c=>Math.round(c.getBoundingClientRect().top))).size===1'),width
             assert page.locator('.revenue-split > .metric-topline').evaluate('(el)=>getComputedStyle(el).flexDirection==="row"')
-            assert page.locator('.revenue-split .metric-changes').evaluate('(el)=>getComputedStyle(el).flexWrap==="nowrap"')
+            assert page.locator('.revenue-split .metric-changes').evaluate('(el)=>el.scrollWidth<=el.clientWidth')
             page.mouse.move(0,0)
             for card in page.locator('.metrics article').all():
                 card.scroll_into_view_if_needed()
@@ -79,8 +89,31 @@ try:
                 assert before==after,('metric hover layout shift',width,before,after)
                 page.mouse.move(0,0)
             assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'), width
+            assert page.locator('.compact-share-row').evaluate_all('''rows=>rows.every(row=>{
+                const name=row.querySelector('.share-channel').getBoundingClientRect(),value=row.querySelector('strong').getBoundingClientRect();
+                return name.right<=value.left && Math.abs(name.top-value.top)<4 && row.scrollWidth<=row.clientWidth;
+            })'''),('pie legend name beside value',width)
+            assert page.locator('.share-content').evaluate('''node=>{
+                const ring=node.querySelector('.share-ring').getBoundingClientRect(),legend=node.querySelector('#summaryShareLegend').getBoundingClientRect();
+                return ring.right<=legend.left || ring.bottom<=legend.top;
+            }'''),('legend beside doughnut',width)
+            assert page.evaluate("Chart.getChart('summaryShareCanvas').options.plugins.visibleSharePercent===false")
+            page.locator('#revenueOverview').screenshot(path=str(screens / f'revenue-overview-{width}.png'))
+            page.locator('#revenueShare').screenshot(path=str(screens / f'revenue-legend-{width}.png'))
+            assert page.locator('.views-tree-tile').evaluate_all('''tiles=>tiles.every(tile=>{
+                const label=tile.querySelector('span'),value=tile.querySelector('strong');
+                return parseFloat(getComputedStyle(label).fontSize)>=16&&parseFloat(getComputedStyle(value).fontSize)>=16&&tile.scrollHeight<=tile.clientHeight&&tile.scrollWidth<=tile.clientWidth&&label.getBoundingClientRect().bottom<=value.getBoundingClientRect().top;
+            })'''),('treemap text fit',width)
             for metric in ['total', 'ad', 'other', 'views', 'impressions']:
                 assert page.locator('#' + metric).evaluate('(el)=>el.hidden || el.scrollWidth<=el.clientWidth'), (width, metric)
+                assert page.locator('#' + metric).evaluate('(el)=>el.previousElementSibling.getBoundingClientRect().bottom<=el.getBoundingClientRect().top'), ('label above value',width,metric)
+            assert page.locator('.metrics article').evaluate_all('''cards=>cards.every(card=>{
+                const values=[...card.querySelectorAll('strong')].filter(n=>n.getClientRects().length);
+                const changes=card.querySelector('.metric-changes');
+                return !changes.getClientRects().length||values.every(n=>changes.getBoundingClientRect().bottom<=n.getBoundingClientRect().top);
+            })'''),('comparison above values',width)
+            assert page.locator('.metric-change:not([hidden])').evaluate_all('nodes=>nodes.every(n=>parseFloat(getComputedStyle(n).fontSize)>=15)'),('readable comparison',width)
+            page.locator('.metrics').screenshot(path=str(screens / f'metric-cards-{width}.png'))
             page.screenshot(path=str(screens / f'summary-{width}.png'), full_page=True)
         page.locator('#rangeTitle').click()
         page.locator('#chooseCalendarYear').click()

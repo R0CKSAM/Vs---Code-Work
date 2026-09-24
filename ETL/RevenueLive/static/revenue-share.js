@@ -1,6 +1,27 @@
 'use strict';
 window.RevenueShare=(()=>{
-  const colors=['#f6c992','#fa6980','#acc0d3','#d396a6','#09a1a1','#5484a4'];
+  let redrawTree=()=>{};
+  window.addEventListener('resize',()=>requestAnimationFrame(()=>redrawTree()));
+  const colors=['#f8cf96','#f990ad','#a8c7ec','#c9b1e5','#8dd4bf','#91b9cd'];
+  const channelIcon=name=>/music|9xm|tashan|jhakaas|jalwa/i.test(name)?'music-2':/kids/i.test(name)?'smile':/bhojpuri|bollywood/i.test(name)?'clapperboard':'tv-minimal';
+  const sparks=new Map();
+  function sparkFill(context,color){
+    const {ctx,chartArea}=context.chart;if(!chartArea)return color+'26';
+    const fill=ctx.createLinearGradient(0,chartArea.top,0,chartArea.bottom);
+    fill.addColorStop(0,color+'50');fill.addColorStop(1,color+'00');return fill;
+  }
+  const sparkKeys=[['total',['ad','other'],'#19a994'],['ad',['ad','other'],'#db668e'],['views',['views'],'#508ff0'],['impressions',['impressions'],'#d59636']];
+  for(const [id] of sparkKeys){const frame=document.createElement('div'),canvas=document.createElement('canvas');frame.className='metric-spark';canvas.id='metricSpark-'+id;canvas.setAttribute('aria-hidden','true');frame.append(canvas);document.getElementById(id).closest('article').append(frame);}
+  function renderSparks(rows){
+    for(const chart of sparks.values())chart.destroy();sparks.clear();
+    const grouped=new Map();for(const row of rows){if(!grouped.has(row.day))grouped.set(row.day,{ad:0,other:0,views:0,impressions:0});const day=grouped.get(row.day);for(const key of ['ad','other','views','impressions'])day[key]+=row[key];}
+    const dates=[...grouped.keys()].sort(),labels=[];
+    if(dates.length){const date=new Date(dates[0]+'T00:00:00Z');while(date.toISOString().slice(0,10)<=dates.at(-1)){labels.push(date.toISOString().slice(0,10));date.setUTCDate(date.getUTCDate()+1);}}
+    for(const [id,keys,color] of sparkKeys){const canvas=document.getElementById('metricSpark-'+id);canvas.parentElement.hidden=dates.length<2;canvas.parentElement.title=dates.length>1?'Daily trend: '+dates[0]+' to '+dates.at(-1):'';if(dates.length<2)continue;
+      const series=id==='ad'?keys.filter(key=>rows.some(row=>row[key]!==0)):[id];
+      sparks.set(id,new Chart(canvas,{type:'line',data:{labels,datasets:series.map((key,index)=>({data:labels.map(day=>{const value=grouped.get(day);return value?key==='total'?value.ad+value.other:value[key]:null;}),borderColor:index?'#a45c85':color,backgroundColor:context=>sparkFill(context,index?'#a45c85':color),borderWidth:1.5,pointRadius:labels.length===1?3:0,fill:true,cubicInterpolationMode:'monotone',spanGaps:false}))},options:{responsive:true,maintainAspectRatio:false,animation:false,events:[],plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false,beginAtZero:true}},layout:{padding:3}}}));
+    }
+  }
   const cash=value=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0,minimumFractionDigits:0}).format(value/100);
   const percent=(value,total)=>total>0?Math.round(value/total*100)+'%':'0%';
   const trigger=document.createElement('button');trigger.type='button';trigger.id='revenueShare';trigger.setAttribute('aria-expanded','false');trigger.setAttribute('aria-controls','revenueShareExpanded');trigger.setAttribute('aria-label','Revenue share: expand all channels');
@@ -19,7 +40,7 @@ window.RevenueShare=(()=>{
   views.prepend(treeButton);views.querySelector('h2').hidden=true;document.getElementById('viewsDistributionRows').hidden=true;
   const treeLegend=document.createElement('span');treeLegend.id='viewsTreeLegend';treeButton.append(treeLegend);
   const collapseViews=document.createElement('button');collapseViews.type='button';collapseViews.textContent='Collapse';collapseViews.hidden=true;treeButton.after(collapseViews);
-  function closeViews(){treeButton.hidden=false;collapseViews.hidden=true;views.querySelector('h2').hidden=true;document.getElementById('viewsDistributionRows').hidden=true;treeButton.setAttribute('aria-expanded','false');}
+  function closeViews(){treeButton.hidden=false;collapseViews.hidden=true;views.querySelector('h2').hidden=true;document.getElementById('viewsDistributionRows').hidden=true;treeButton.setAttribute('aria-expanded','false');redrawTree();}
   treeButton.addEventListener('click',()=>{treeButton.hidden=true;collapseViews.hidden=false;views.querySelector('h2').hidden=false;document.getElementById('viewsDistributionRows').hidden=false;treeButton.setAttribute('aria-expanded','true');collapseViews.focus({preventScroll:true});});
   collapseViews.addEventListener('click',()=>{closeViews();treeButton.focus();});
   for(const button of [collapseViews,modal.querySelector('button')]){button.classList.add('distribution-collapse');button.setAttribute('aria-label','Collapse distribution');button.title='Collapse distribution';button.innerHTML='<i data-lucide="minimize-2" aria-hidden="true"></i>';}
@@ -40,18 +61,20 @@ window.RevenueShare=(()=>{
     return el;
   }
   function render(rows){
+    renderSparks(rows);
     const metricSums=new Map();for(const r of rows){if(!metricSums.has(r.channel))metricSums.set(r.channel,{views:0,impressions:0,ad:0,other:0,total:0});for(const key of ['views','impressions','ad','other','total'])metricSums.get(r.channel)[key]+=r[key];}
     const keys=['views','impressions','ad','other','total'];
     // Independent column scales use unrounded values and all selected channels.
     const scales=keys.map(key=>{const values=[...metricSums.values()].map(value=>value[key]).sort((a,b)=>a-b),length=values.length;return {minimum:values[0]??0,maximum:values.at(-1)??0,middle:length?(length%2?values[Math.floor(length/2)]:(values[length/2-1]+values[length/2])/2):0};});
     function heatColor(n,{minimum,maximum,middle}){let low,high,f;if(minimum===maximum){low=high=n===0?[248,105,107]:[255,235,132];f=0;}else if(n<=minimum){low=high=[248,105,107];f=0;}else if(n>=maximum){low=high=[99,190,123];f=0;}else if(n<=middle&&middle>minimum){low=[248,105,107];high=[255,235,132];f=(n-minimum)/(middle-minimum);}else{low=[255,235,132];high=[99,190,123];f=(n-middle)/(maximum-middle);}return 'rgb('+low.map((value,i)=>(value+(high[i]-value)*f).toFixed(3)).join(',')+')';}
     metrics.querySelector('tbody').replaceChildren(...[...metricSums].sort((a,b)=>b[1].total-a[1].total||a[0].localeCompare(b[0])).map(([name,values])=>{const tr=document.createElement('tr'),label=document.createElement('th');label.scope='row';label.textContent=name;tr.append(label);keys.forEach((key,i)=>{const cell=document.createElement('td'),n=values[key];cell.dataset.label=['Views','Ad impressions','Ad revenue','Sponsorship / others','Total revenue'][i];cell.textContent=i<2?new Intl.NumberFormat('en-IN').format(n):cash(n);cell.style.backgroundColor=heatColor(n,scales[i]);cell.style.color='#202a30';cell.title=cell.dataset.label+': independent column scale; minimum red, median yellow, maximum green. Equal nonzero values yellow; all-zero values red.';tr.append(cell);});return tr;}));
-    sizeMetrics();
+    for(const [index,label] of [...metrics.querySelectorAll('tbody th')].entries()){const name=document.createElement('span'),badge=document.createElement('span'),glyph=document.createElement('i');name.textContent=label.textContent;badge.className='channel-glyph';badge.style.backgroundColor=colors[index%colors.length]+'55';glyph.dataset.lucide=channelIcon(name.textContent);glyph.setAttribute('aria-hidden','true');badge.append(glyph);label.replaceChildren(badge,name);}
+    window.lucide?.createIcons();sizeMetrics();
     metrics.querySelector('.metrics-empty').textContent=rows.length?'':'No channel data for this selection.';
     const days=new Map(),viewSums=new Map();
     for(const r of rows){if(!days.has(r.day))days.set(r.day,{ad:0,other:0});days.get(r.day).ad+=r.ad;days.get(r.day).other+=r.other;viewSums.set(r.channel,(viewSums.get(r.channel)||0)+r.views);}
     const sorted=[...days].sort(([a],[b])=>a.localeCompare(b));
-    const datasets=[['Ad revenue','ad','#09a1a1'],['Sponsorship / others','other','#fa6980']].filter(([,key])=>sorted.some(([,v])=>v[key]!==0)).map(([label,key,color])=>({label,data:sorted.map(([,v])=>v[key]/100),borderColor:color,backgroundColor:color+'14',borderWidth:2,fill:false,tension:0,pointRadius:sorted.length===1?5:2,pointHoverRadius:5}));
+    const datasets=[['Ad revenue','ad','#09aaa1'],['Sponsorship / others','other','#fa668c']].filter(([,key])=>sorted.some(([,v])=>v[key]!==0)).map(([label,key,color])=>({label,data:sorted.map(([,v])=>v[key]/100),borderColor:color,backgroundColor:color+'12',borderWidth:2,fill:true,tension:0,pointRadius:sorted.length===1?5:3,pointHoverRadius:5}));
     const first=document.getElementById('start').value||sorted[0]?.[0],last=document.getElementById('end').value||sorted.at(-1)?.[0];
     const span=first&&last?(Date.parse(last)-Date.parse(first))/86400000+1:0;
     const useBars=sorted.length===1||(span>0&&span<=7);
@@ -59,28 +82,32 @@ window.RevenueShare=(()=>{
     if(lineChart)lineChart.destroy();
     Chart.defaults.color='#514958';Chart.defaults.font.size=13;
     lineChart=new Chart(document.getElementById('dailyRevenueCanvas'),{type:useBars?'bar':'line',data:{labels:sorted.map(([day])=>day),datasets},options:{responsive:true,maintainAspectRatio:false,animation:matchMedia('(prefers-reduced-motion: reduce)').matches?false:{duration:250},interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom',labels:{color:'#d1d1dc',boxWidth:12}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+cash(ctx.raw*100)}}},scales:{x:{type:'category',offset:useBars,title:{display:true,text:'Date',color:'#bcbccc'},grid:{display:false,offset:useBars},ticks:{color:'#bcbccc',maxTicksLimit:6,maxRotation:0,callback:function(value){const day=this.getLabelForValue(value);return new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',timeZone:'UTC'}).format(new Date(day+'T00:00:00Z'));}}},y:{beginAtZero:true,title:{display:true,text:'Revenue (INR)',color:'#bcbccc'},grid:{color:'#ffffff0d'},ticks:{color:'#bcbccc'}}}}});
-    lineChart.stop();for(const axis of Object.values(lineChart.options.scales)){axis.ticks.color='#514958';axis.title.color='#514958';axis.grid.color='#e9e5ed';}lineChart.options.plugins.legend.labels.color='#514958';lineChart.update('none');
+    lineChart.stop();for(const axis of Object.values(lineChart.options.scales)){axis.ticks.color='#506889';axis.title.color='#506889';axis.grid.color='#edf2f8';}lineChart.options.plugins.legend.labels.color='#506889';lineChart.options.plugins.legend.labels.usePointStyle=true;lineChart.options.plugins.legend.labels.pointStyle='circle';lineChart.options.plugins.legend.labels.padding=20;lineChart.update('none');
     document.getElementById('dailyRevenueNote').textContent=!rows.length?'No data in this selection.':!datasets.length?'No revenue in this selection.':sorted.length===1?'One date available. Select a wider range to compare days.':'';
     document.getElementById('dailyRevenueCanvas').setAttribute('aria-label',useBars?'Daily ad and sponsorship revenue grouped bars':'Daily ad and sponsorship revenue lines');
     const viewEntries=[...viewSums].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])),viewTotal=viewEntries.reduce((sum,[,n])=>sum+n,0);
     const tree=document.getElementById('viewsTree');tree.replaceChildren();
     const positive=viewEntries;
-    const tileWeight=item=>Math.max(item[1],viewTotal*.035,1);
-    tree.style.height=Math.max(440,Math.ceil(positive.length/(tree.clientWidth<500?2:5))*150)+'px';
-    treeButton.title='Expand all channels. Small tiles have a minimum display area for readability; values show actual views.';
+    treeButton.title='Expand views distribution';
     treeLegend.replaceChildren(...viewEntries.map(([name,n],index)=>{const item=document.createElement('span');item.className='tree-legend-item';item.style.setProperty('--share-color',colors[index%colors.length]);const label=document.createElement('span');label.textContent=(index+1)+'. '+name;const value=document.createElement('strong');value.textContent=new Intl.NumberFormat('en-IN').format(n)+' views | '+percent(n,viewTotal);item.append(label,value);return item;}));
-    // Partition proportional areas; all exact names and values remain in the expanded view.
+    // Equal-sized tiles keep every channel readable; percentages convey its actual share.
     function tile(items,x,y,w,h){
       if(!items.length)return;
-      if(items.length===1){const [name,n]=items[0],el=document.createElement('span'),index=positive.indexOf(items[0]);el.className='views-tree-tile';el.style.cssText=`left:${x}%;top:${y}%;width:${w}%;height:${h}%;background:${colors[index%colors.length]}`;el.title=name+' | '+new Intl.NumberFormat('en-IN').format(n)+' views | '+percent(n,viewTotal);el.setAttribute('aria-label',el.title);const label=document.createElement('span');label.textContent=(index+1)+'. '+name;const value=document.createElement('strong');value.textContent=new Intl.NumberFormat('en-IN').format(n)+' views';el.append(label,value);tree.append(el);return;}
-      const sum=items.reduce((s,item)=>s+tileWeight(item),0);let part=0,i=0;while(i<items.length-1&&part<sum/2)part+=tileWeight(items[i++]);const f=part/sum;
-      if(w*Math.max(tree.clientWidth,300)>=h*tree.clientHeight){tile(items.slice(0,i),x,y,w*f,h);tile(items.slice(i),x+w*f,y,w*(1-f),h);}else{tile(items.slice(0,i),x,y,w,h*f);tile(items.slice(i),x,y+h*f,w,h*(1-f));}
+      if(items.length===1){const [name,n]=items[0],el=document.createElement('span'),index=positive.indexOf(items[0]);el.className='views-tree-tile';el.style.cssText=`left:${x}%;top:${y}%;width:${w}%;height:${h}%;background:${colors[index%colors.length]}`;el.title=name+' | '+new Intl.NumberFormat('en-IN').format(n)+' views | '+percent(n,viewTotal);el.setAttribute('aria-label',el.title);const label=document.createElement('span');label.textContent=(index+1)+'. '+name;const value=document.createElement('strong');value.textContent=new Intl.NumberFormat('en-IN').format(n)+' views';const badge=document.createElement('span'),glyph=document.createElement('i');badge.className='tile-channel-icon';glyph.dataset.lucide=channelIcon(name);glyph.setAttribute('aria-hidden','true');badge.append(glyph);const share=document.createElement('small');share.className='tile-share';share.textContent=percent(n,viewTotal)+' share';value.append(share);el.append(label,badge,value);tree.append(el);return;}
     }
-    tile(positive,0,0,100,100);treeButton.disabled=!positive.length;
+    redrawTree=()=>{
+      if(!tree.clientWidth)return;
+      tree.style.height='auto';tree.replaceChildren();
+      for(const item of positive)tile([item],0,0,100,100);
+      for(const [index,element] of [...tree.children].entries())element.style.setProperty('--channel-accent',colors[index%colors.length]);
+      window.lucide?.createIcons();
+    };
+    redrawTree();treeButton.disabled=!positive.length;
     document.getElementById('viewsDistributionRows').replaceChildren(...viewEntries.map(([name,n],i)=>{const el=document.createElement('div');el.className='full-share-row';el.style.setProperty('--share-color',colors[i%colors.length]);const label=document.createElement('span');label.className='share-channel';label.textContent=name;const value=document.createElement('strong');value.textContent=new Intl.NumberFormat('en-IN').format(n)+' views | '+percent(n,viewTotal);const track=document.createElement('span');track.className='distribution-track';const fill=document.createElement('span');fill.style.width=(viewTotal>0?n/viewTotal*100:0)+'%';track.append(fill);el.append(label,value,track);return el;}));
     document.getElementById('viewsDistributionEmpty').textContent=!viewEntries.length?'No views data in this selection.':viewTotal===0?'No views recorded.':'';
     const sums=new Map();for(const r of rows)sums.set(r.channel,(sums.get(r.channel)||0)+r.total);
     entries=[...sums].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));total=entries.reduce((sum,[,value])=>sum+value,0);
+    trigger.classList.toggle('few-channels',entries.length<=2);
     document.getElementById('fullShareRows').classList.toggle('many-channels',entries.length>8);
     document.getElementById('viewsDistributionRows').classList.toggle('many-channels',viewEntries.length>8);
     const valid=total>0&&entries.every(([,value])=>value>=0);
@@ -93,7 +120,7 @@ window.RevenueShare=(()=>{
     document.getElementById('shareMessage').textContent=!rows.length?'No revenue data in this selection.':!valid?'Share chart unavailable for zero or negative revenue.':'';
     trigger.disabled=!entries.length;
     if(chart)chart.destroy();
-    chart=new Chart(document.getElementById('summaryShareCanvas'),{type:'doughnut',data:{labels:shown.map(([name])=>name),datasets:[{data:valid?shown.map(([,value])=>value):[],backgroundColor:colors,borderWidth:0,hoverOffset:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'76%',events:[],animation:matchMedia('(prefers-reduced-motion: reduce)').matches?false:{duration:300},plugins:{legend:{display:false},tooltip:{enabled:false}}}});
+    chart=new Chart(document.getElementById('summaryShareCanvas'),{type:'doughnut',data:{labels:shown.map(([name])=>name),datasets:[{data:valid?shown.map(([,value])=>value):[],backgroundColor:colors,borderWidth:1,borderColor:'#fff',hoverOffset:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'66%',events:[],animation:false,plugins:{visibleSharePercent:false,legend:{display:false},tooltip:{enabled:false}}}});
     modal.querySelectorAll('.distribution-track').forEach(el=>el.hidden=!valid);
   }
   function clear(){collapse();closeViews();render([]);}
