@@ -1,5 +1,5 @@
 """
-catalog_base.py — shared types, helpers, parsers and output logic for all OTT scrapers.  (AUDITED)
+catalog_base.py — shared types, helpers, parsers and output logic for all OTT scrapers.  (AUDITED + EXTRAS)
 
 Used by:
     hotstar_catalog.py   (not part of this audit — file was not supplied)
@@ -18,6 +18,8 @@ Design rules applied in this version
   not "subscription required"; missing original language is None, not "first language".
 * Falsy-but-valid values (0, False) are kept — see first_present().
 * Nothing fails silently: parse errors are counted and reported.
+* (NEW) Nothing is silently dropped either: fields the explicit mappings miss are
+  preserved in `extra_json` via all_text_fields().
 """
 
 from __future__ import annotations
@@ -58,6 +60,7 @@ COMMON_COLUMNS = [
     "teams",
     # content meta
     "primary_genre", "genre_tags",
+    "category", "subcategory", "tags",     # NEW
     "languages", "original_language", "available_languages", "language_count",
     # access  (True / False / blank = unknown)
     "is_free", "subscription_required", "pay_per_view",
@@ -65,6 +68,8 @@ COMMON_COLUMNS = [
     "found_in",            # "<browsed page> > <rail>"
     "detail_url",
     "poster_url",
+    # catch-all — every remaining text field, flattened as JSON   # NEW
+    "extra_json",
     # scrape book-keeping
     "scraped_at",
 ]
@@ -191,6 +196,50 @@ def to_bool(v):
         if s in ("false", "0", "no", "n", "f"):
             return False
     return None
+
+
+# ── catch-all flattener  (NEW) ───────────────────────────────────────────────
+
+def all_text_fields(obj, max_depth: int = 4, max_keys: int = 80,
+                    max_str: int = 400) -> dict:
+    """Flatten every short scalar field in `obj` into {path: value}.
+
+    Catches anything the explicit mappings miss (category variants, mood, theme,
+    cast, awards, …) so nothing is silently dropped. Depth- and size-capped so a
+    single monster payload cannot bloat the CSV.
+    """
+    out: dict = {}
+
+    def walk(o, prefix, d):
+        if d > max_depth or len(out) >= max_keys:
+            return
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if len(out) >= max_keys:
+                    return
+                key = f"{prefix}.{k}" if prefix else str(k)
+                if isinstance(v, str):
+                    if v.strip() and len(v) <= max_str:
+                        out[key] = v.strip()
+                elif isinstance(v, bool):
+                    out[key] = v
+                elif isinstance(v, (int, float)):
+                    out[key] = v
+                elif isinstance(v, (dict, list)):
+                    walk(v, key, d + 1)
+        elif isinstance(o, list):
+            for i, v in enumerate(o[:8]):
+                if len(out) >= max_keys:
+                    return
+                key = f"{prefix}[{i}]"
+                if isinstance(v, str):
+                    if v.strip() and len(v) <= max_str:
+                        out[key] = v.strip()
+                elif isinstance(v, (dict, list)):
+                    walk(v, key, d + 1)
+
+    walk(obj, "", 0)
+    return out
 
 
 # ── duration ─────────────────────────────────────────────────────────────────
