@@ -1,0 +1,43 @@
+{
+  "id": "fc88ec0c2df34131bfaa5bbb1b63e9d9",
+  "template": "t17",
+  "player": "KWON WON THE 1st SET BY 6-1",
+  "country": "KWON WON THE 1st SET BY 6-1",
+  "config": {
+    "canvas_size": "HD  (1920x1080)",
+    "text": "KWON WON THE 1st SET BY 6-1",
+    "band_x_pct": 50.0,
+    "band_y_pct": 90,
+    "band_size_pct": 90,
+    "overlay_opacity_pct": 100,
+    "green_color": [
+      0,
+      92,
+      57
+    ],
+    "accent_color": [
+      20,
+      205,
+      70
+    ],
+    "text_color": [
+      255,
+      255,
+      255
+    ],
+    "background_color": [
+      0,
+      0,
+      0
+    ],
+    "text_styles": {},
+    "rows": [],
+    "template": "t17",
+    "image_brightness_pct": 100.0,
+    "image_vibrance_pct": 100.0,
+    "image_contrast_pct": 100.0,
+    "transparent_background": true,
+    "bar_color": null
+  },
+  "updated_at": "2026-09-19T06:16:06.966583+00:00"
+}

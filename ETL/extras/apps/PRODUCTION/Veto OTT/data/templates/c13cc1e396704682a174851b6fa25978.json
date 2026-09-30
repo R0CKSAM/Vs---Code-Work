@@ -1,0 +1,43 @@
+{
+  "id": "c13cc1e396704682a174851b6fa25978",
+  "template": "t17",
+  "player": "INDIA VS KOREA MATCH 3 HIGHLIGHTS",
+  "country": "INDIA VS KOREA MATCH 3 HIGHLIGHTS",
+  "config": {
+    "canvas_size": "HD  (1920x1080)",
+    "text": "INDIA VS KOREA MATCH 3 HIGHLIGHTS",
+    "band_x_pct": 50.0,
+    "band_y_pct": 90,
+    "band_size_pct": 90,
+    "overlay_opacity_pct": 100,
+    "green_color": [
+      0,
+      92,
+      57
+    ],
+    "accent_color": [
+      20,
+      205,
+      70
+    ],
+    "text_color": [
+      255,
+      255,
+      255
+    ],
+    "background_color": [
+      0,
+      0,
+      0
+    ],
+    "text_styles": {},
+    "rows": [],
+    "template": "t17",
+    "image_brightness_pct": 100.0,
+    "image_vibrance_pct": 100.0,
+    "image_contrast_pct": 100.0,
+    "transparent_background": true,
+    "bar_color": null
+  },
+  "updated_at": "2026-09-19T04:00:35.873257+00:00"
+}

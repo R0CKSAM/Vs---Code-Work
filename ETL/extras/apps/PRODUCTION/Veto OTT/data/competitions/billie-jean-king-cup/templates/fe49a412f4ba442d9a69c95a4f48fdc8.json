@@ -1,0 +1,109 @@
+{
+  "id": "fe49a412f4ba442d9a69c95a4f48fdc8",
+  "template": "t14",
+  "player": "Shuai  Zhang",
+  "country": "China, P.R.",
+  "config": {
+    "template": "t14",
+    "canvas_size": "HD  (1920x1080)",
+    "first_name": "Shuai",
+    "last_name": " Zhang",
+    "country": "China, P.R.",
+    "age": "37",
+    "singles_wl": "7/7",
+    "total_wl": "13/9",
+    "ties_played": "17",
+    "first_year_played": "2007",
+    "favourite_hand": "-",
+    "player_path": "244b43aee57742ea9d6d2f2143126646.png",
+    "player_size_pct": 100.0,
+    "player_offset_x_pct": 0.0,
+    "player_offset_y_pct": 0.0,
+    "band_x_pct": 50.0,
+    "band_y_pct": 74.0,
+    "band_scale_pct": 100.0,
+    "player_outline_px": 0,
+    "player_outline_color": [
+      246,
+      247,
+      252
+    ],
+    "transparent_background": true,
+    "overlay_opacity_pct": 100,
+    "background_color": [
+      3,
+      30,
+      77
+    ],
+    "accent_color": [
+      210,
+      255,
+      36
+    ],
+    "band_green": [
+      3,
+      30,
+      77
+    ],
+    "band_green_dark": [
+      3,
+      30,
+      77
+    ],
+    "accent_green": [
+      210,
+      255,
+      36
+    ],
+    "panel_white": [
+      246,
+      247,
+      252
+    ],
+    "stats_green": [
+      3,
+      30,
+      77
+    ],
+    "label_color": [
+      3,
+      30,
+      77
+    ],
+    "separator_color": [
+      104,
+      150,
+      232
+    ],
+    "name_text_color": [
+      246,
+      247,
+      252
+    ],
+    "country_text_color": [
+      3,
+      30,
+      77
+    ],
+    "bar_color": [
+      210,
+      255,
+      36
+    ],
+    "text_styles": {
+      "player_names": {
+        "case": "UPPERCASE"
+      },
+      "stat_labels": {
+        "case": "UPPERCASE"
+      }
+    },
+    "rows": [],
+    "competition_theme": "billie-jean-king-cup",
+    "theme_revision": 1,
+    "image_brightness_pct": 100.0,
+    "image_vibrance_pct": 100.0,
+    "image_contrast_pct": 100.0
+  },
+  "updated_at": "2026-09-21T11:19:41.737927+00:00"
+}

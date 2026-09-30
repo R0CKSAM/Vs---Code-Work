@@ -1,0 +1,109 @@
+{
+  "id": "d498f9d7760a497eb1cee6c08dbfe0e8",
+  "template": "t14",
+  "player": "Hanne Vandewinkel",
+  "country": "Belgium",
+  "config": {
+    "template": "t14",
+    "canvas_size": "HD  (1920x1080)",
+    "first_name": "Hanne",
+    "last_name": "Vandewinkel",
+    "country": "Belgium",
+    "age": "22",
+    "singles_wl": "5/3",
+    "total_wl": "5/4",
+    "ties_played": "6",
+    "first_year_played": "2024",
+    "favourite_hand": "Right (Both)",
+    "player_path": "bjk_34c596248606be5e76d05631a3eb9b79.png",
+    "player_size_pct": 100.0,
+    "player_offset_x_pct": 0.0,
+    "player_offset_y_pct": 0.0,
+    "band_x_pct": 50.0,
+    "band_y_pct": 74.0,
+    "band_scale_pct": 100.0,
+    "player_outline_px": 0,
+    "player_outline_color": [
+      246,
+      247,
+      252
+    ],
+    "transparent_background": true,
+    "overlay_opacity_pct": 100,
+    "background_color": [
+      3,
+      30,
+      77
+    ],
+    "accent_color": [
+      210,
+      255,
+      36
+    ],
+    "band_green": [
+      3,
+      30,
+      77
+    ],
+    "band_green_dark": [
+      3,
+      30,
+      77
+    ],
+    "accent_green": [
+      210,
+      255,
+      36
+    ],
+    "panel_white": [
+      246,
+      247,
+      252
+    ],
+    "stats_green": [
+      3,
+      30,
+      77
+    ],
+    "label_color": [
+      3,
+      30,
+      77
+    ],
+    "separator_color": [
+      104,
+      150,
+      232
+    ],
+    "name_text_color": [
+      246,
+      247,
+      252
+    ],
+    "country_text_color": [
+      3,
+      30,
+      77
+    ],
+    "bar_color": [
+      210,
+      255,
+      36
+    ],
+    "text_styles": {
+      "player_names": {
+        "case": "UPPERCASE"
+      },
+      "stat_labels": {
+        "case": "UPPERCASE"
+      }
+    },
+    "rows": [],
+    "competition_theme": "billie-jean-king-cup",
+    "theme_revision": 1,
+    "image_brightness_pct": 100.0,
+    "image_vibrance_pct": 100.0,
+    "image_contrast_pct": 100.0
+  },
+  "updated_at": "2026-09-21T11:59:23.052754+00:00"
+}

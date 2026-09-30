@@ -1,0 +1,43 @@
+{
+  "id": "521de1a5676e44369fa3225ba89295e7",
+  "template": "t17",
+  "player": "DAVIS CUP: KOREA QUALIFIES FOR ROUND OF 8",
+  "country": "DAVIS CUP: KOREA QUALIFIES FOR ROUND OF 8",
+  "config": {
+    "canvas_size": "HD  (1920x1080)",
+    "text": "DAVIS CUP: KOREA QUALIFIES FOR ROUND OF 8 ",
+    "band_x_pct": 50.0,
+    "band_y_pct": 90,
+    "band_size_pct": 90,
+    "overlay_opacity_pct": 100,
+    "green_color": [
+      0,
+      92,
+      57
+    ],
+    "accent_color": [
+      20,
+      205,
+      70
+    ],
+    "text_color": [
+      255,
+      255,
+      255
+    ],
+    "background_color": [
+      0,
+      0,
+      0
+    ],
+    "text_styles": {},
+    "rows": [],
+    "template": "t17",
+    "image_brightness_pct": 100.0,
+    "image_vibrance_pct": 100.0,
+    "image_contrast_pct": 100.0,
+    "transparent_background": true,
+    "bar_color": null
+  },
+  "updated_at": "2026-09-19T06:51:55.642110+00:00"
+}

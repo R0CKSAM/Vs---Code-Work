@@ -1,0 +1,43 @@
+{
+  "id": "f739100e45774f91bfcbc9e08875b785",
+  "template": "t17",
+  "player": "LIVE FROM OLYMPIC PARK, SEOUL, SOUTH KOREA",
+  "country": "LIVE FROM OLYMPIC PARK, SEOUL, SOUTH KOREA",
+  "config": {
+    "canvas_size": "HD  (1920x1080)",
+    "text": "LIVE FROM OLYMPIC PARK, SEOUL, SOUTH KOREA\n",
+    "band_x_pct": 50.0,
+    "band_y_pct": 90,
+    "band_size_pct": 90,
+    "overlay_opacity_pct": 100,
+    "green_color": [
+      0,
+      92,
+      57
+    ],
+    "accent_color": [
+      20,
+      205,
+      70
+    ],
+    "text_color": [
+      255,
+      255,
+      255
+    ],
+    "background_color": [
+      0,
+      0,
+      0
+    ],
+    "text_styles": {},
+    "rows": [],
+    "template": "t17",
+    "image_brightness_pct": 100.0,
+    "image_vibrance_pct": 100.0,
+    "image_contrast_pct": 100.0,
+    "transparent_background": true,
+    "bar_color": null
+  },
+  "updated_at": "2026-09-17T11:27:51.411103+00:00"
+}

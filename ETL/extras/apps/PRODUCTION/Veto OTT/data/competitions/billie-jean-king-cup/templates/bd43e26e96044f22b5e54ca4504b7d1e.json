@@ -1,0 +1,45 @@
+{
+  "id": "bd43e26e96044f22b5e54ca4504b7d1e",
+  "template": "t17",
+  "player": "LIVE FROM SHENZHEN,CHINA",
+  "country": "LIVE FROM SHENZHEN,CHINA",
+  "config": {
+    "canvas_size": "HD  (1920x1080)",
+    "text": "LIVE FROM SHENZHEN,CHINA",
+    "band_x_pct": 50.0,
+    "band_y_pct": 90,
+    "band_size_pct": 90,
+    "overlay_opacity_pct": 100,
+    "green_color": [
+      3,
+      30,
+      77
+    ],
+    "accent_color": [
+      210,
+      255,
+      36
+    ],
+    "text_color": [
+      246,
+      247,
+      252
+    ],
+    "background_color": [
+      3,
+      30,
+      77
+    ],
+    "text_styles": {},
+    "rows": [],
+    "template": "t17",
+    "competition_theme": "billie-jean-king-cup",
+    "theme_revision": 1.0,
+    "image_brightness_pct": 100.0,
+    "image_vibrance_pct": 100.0,
+    "image_contrast_pct": 100.0,
+    "transparent_background": true,
+    "bar_color": null
+  },
+  "updated_at": "2026-09-21T15:02:49.948225+00:00"
+}

@@ -1,0 +1,104 @@
+{
+  "id": "78c0235b80e64c05a95ff76e0f69af29",
+  "template": "t14",
+  "player": "Lucia Bronzetti",
+  "country": "Italy",
+  "config": {
+    "template": "t14",
+    "canvas_size": "HD  (1920x1080)",
+    "first_name": "Lucia",
+    "last_name": "Bronzetti",
+    "country": "Italy",
+    "age": "27",
+    "singles_wl": "2/1",
+    "total_wl": "3/3",
+    "ties_played": "6",
+    "first_year_played": "2022",
+    "favourite_hand": "Right (Double Handed Backhand)",
+    "player_path": "d690032698464d98beec22a3e53b175b.png",
+    "player_size_pct": 100.0,
+    "player_offset_x_pct": 0.0,
+    "player_offset_y_pct": 0.0,
+    "band_x_pct": 50.0,
+    "band_y_pct": 74.0,
+    "band_scale_pct": 100.0,
+    "transparent_background": true,
+    "overlay_opacity_pct": 100,
+    "background_color": [
+      3,
+      30,
+      77
+    ],
+    "accent_color": [
+      210,
+      255,
+      36
+    ],
+    "band_green": [
+      3,
+      30,
+      77
+    ],
+    "band_green_dark": [
+      3,
+      30,
+      77
+    ],
+    "accent_green": [
+      210,
+      255,
+      36
+    ],
+    "panel_white": [
+      246,
+      247,
+      252
+    ],
+    "stats_green": [
+      3,
+      30,
+      77
+    ],
+    "label_color": [
+      3,
+      30,
+      77
+    ],
+    "separator_color": [
+      104,
+      150,
+      232
+    ],
+    "name_text_color": [
+      246,
+      247,
+      252
+    ],
+    "country_text_color": [
+      3,
+      30,
+      77
+    ],
+    "bar_color": [
+      210,
+      255,
+      36
+    ],
+    "text_styles": {
+      "player_names": {
+        "case": "UPPERCASE"
+      },
+      "stat_labels": {
+        "case": "UPPERCASE"
+      }
+    },
+    "rows": [],
+    "competition_theme": "billie-jean-king-cup",
+    "theme_revision": 1,
+    "image_brightness_pct": 100.0,
+    "image_vibrance_pct": 100.0,
+    "image_contrast_pct": 100.0,
+    "player_outline_px": 0
+  },
+  "updated_at": "2026-09-21T10:36:57.279101+00:00"
+}

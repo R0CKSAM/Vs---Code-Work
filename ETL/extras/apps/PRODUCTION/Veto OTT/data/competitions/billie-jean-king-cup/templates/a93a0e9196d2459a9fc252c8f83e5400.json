@@ -1,0 +1,104 @@
+{
+  "id": "a93a0e9196d2459a9fc252c8f83e5400",
+  "template": "t14",
+  "player": "Sara Errani",
+  "country": "Italy",
+  "config": {
+    "template": "t14",
+    "canvas_size": "HD  (1920x1080)",
+    "first_name": "Sara",
+    "last_name": "Errani",
+    "country": "Italy",
+    "age": "39",
+    "singles_wl": "16/16",
+    "total_wl": "14/5",
+    "ties_played": "28",
+    "first_year_played": "2008",
+    "favourite_hand": "Right (Double Handed Backhand)",
+    "player_path": "8bd7b70420e74770b9758ef2e6218548.png",
+    "player_size_pct": 100.0,
+    "player_offset_x_pct": 0.0,
+    "player_offset_y_pct": 0.0,
+    "band_x_pct": 50.0,
+    "band_y_pct": 74.0,
+    "band_scale_pct": 100.0,
+    "transparent_background": true,
+    "overlay_opacity_pct": 100,
+    "background_color": [
+      3,
+      30,
+      77
+    ],
+    "accent_color": [
+      210,
+      255,
+      36
+    ],
+    "band_green": [
+      3,
+      30,
+      77
+    ],
+    "band_green_dark": [
+      3,
+      30,
+      77
+    ],
+    "accent_green": [
+      210,
+      255,
+      36
+    ],
+    "panel_white": [
+      246,
+      247,
+      252
+    ],
+    "stats_green": [
+      3,
+      30,
+      77
+    ],
+    "label_color": [
+      3,
+      30,
+      77
+    ],
+    "separator_color": [
+      104,
+      150,
+      232
+    ],
+    "name_text_color": [
+      246,
+      247,
+      252
+    ],
+    "country_text_color": [
+      3,
+      30,
+      77
+    ],
+    "bar_color": [
+      210,
+      255,
+      36
+    ],
+    "text_styles": {
+      "player_names": {
+        "case": "UPPERCASE"
+      },
+      "stat_labels": {
+        "case": "UPPERCASE"
+      }
+    },
+    "rows": [],
+    "competition_theme": "billie-jean-king-cup",
+    "theme_revision": 1,
+    "image_brightness_pct": 100.0,
+    "image_vibrance_pct": 100.0,
+    "image_contrast_pct": 100.0,
+    "player_outline_px": 0
+  },
+  "updated_at": "2026-09-21T10:41:28.466247+00:00"
+}

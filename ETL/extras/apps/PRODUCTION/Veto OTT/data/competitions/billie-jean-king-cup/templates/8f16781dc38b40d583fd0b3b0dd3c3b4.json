@@ -1,0 +1,109 @@
+{
+  "id": "8f16781dc38b40d583fd0b3b0dd3c3b4",
+  "template": "t14",
+  "player": "Anna Danilina",
+  "country": "Kazakhstan",
+  "config": {
+    "template": "t14",
+    "canvas_size": "HD  (1920x1080)",
+    "first_name": "Anna",
+    "last_name": "Danilina",
+    "country": "Kazakhstan",
+    "age": "31",
+    "singles_wl": "0/3",
+    "total_wl": "7/10",
+    "ties_played": "14",
+    "first_year_played": "2019",
+    "favourite_hand": "Right (Double Handed Backhand)",
+    "player_path": "bjk_15f5ac12ab58e18fd83432ecb3c53b0c.png",
+    "player_size_pct": 100.0,
+    "player_offset_x_pct": 0.0,
+    "player_offset_y_pct": 0.0,
+    "band_x_pct": 50.0,
+    "band_y_pct": 74.0,
+    "band_scale_pct": 100.0,
+    "player_outline_px": 0,
+    "player_outline_color": [
+      246,
+      247,
+      252
+    ],
+    "transparent_background": true,
+    "overlay_opacity_pct": 100,
+    "background_color": [
+      3,
+      30,
+      77
+    ],
+    "accent_color": [
+      210,
+      255,
+      36
+    ],
+    "band_green": [
+      3,
+      30,
+      77
+    ],
+    "band_green_dark": [
+      3,
+      30,
+      77
+    ],
+    "accent_green": [
+      210,
+      255,
+      36
+    ],
+    "panel_white": [
+      246,
+      247,
+      252
+    ],
+    "stats_green": [
+      3,
+      30,
+      77
+    ],
+    "label_color": [
+      3,
+      30,
+      77
+    ],
+    "separator_color": [
+      104,
+      150,
+      232
+    ],
+    "name_text_color": [
+      246,
+      247,
+      252
+    ],
+    "country_text_color": [
+      3,
+      30,
+      77
+    ],
+    "bar_color": [
+      210,
+      255,
+      36
+    ],
+    "text_styles": {
+      "player_names": {
+        "case": "UPPERCASE"
+      },
+      "stat_labels": {
+        "case": "UPPERCASE"
+      }
+    },
+    "rows": [],
+    "competition_theme": "billie-jean-king-cup",
+    "theme_revision": 1,
+    "image_brightness_pct": 100.0,
+    "image_vibrance_pct": 100.0,
+    "image_contrast_pct": 100.0
+  },
+  "updated_at": "2026-09-21T11:59:29.652619+00:00"
+}

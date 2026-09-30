@@ -1,0 +1,43 @@
+{
+  "id": "dff9671fcb1e4d68b8e3adb56b55e52b",
+  "template": "t17",
+  "player": "KOREA WON",
+  "country": "KOREA WON",
+  "config": {
+    "canvas_size": "HD  (1920x1080)",
+    "text": "QUALIFIER 2: KOREA WON MATCH 3",
+    "band_x_pct": 50.0,
+    "band_y_pct": 90,
+    "band_size_pct": 90,
+    "overlay_opacity_pct": 100,
+    "green_color": [
+      0,
+      92,
+      57
+    ],
+    "accent_color": [
+      20,
+      205,
+      70
+    ],
+    "text_color": [
+      255,
+      255,
+      255
+    ],
+    "background_color": [
+      0,
+      0,
+      0
+    ],
+    "text_styles": {},
+    "rows": [],
+    "template": "t17",
+    "image_brightness_pct": 100.0,
+    "image_vibrance_pct": 100.0,
+    "image_contrast_pct": 100.0,
+    "transparent_background": true,
+    "bar_color": null
+  },
+  "updated_at": "2026-09-19T04:34:07.273018+00:00"
+}
