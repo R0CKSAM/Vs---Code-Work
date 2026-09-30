@@ -149,6 +149,29 @@ tr:hover td{background:#f6f9ff}
 .metric-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:12px}
 .mini{border:1px solid #e2e8f0;border-radius:7px;padding:8px 10px;background:#fbfcfe}
 .mini b{display:block;font-size:10px;text-transform:uppercase;color:#64748b;margin-bottom:3px}.mini span{font-size:17px;font-weight:850;line-height:1.15;overflow-wrap:anywhere}
+.explore-controls{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.explore-field{display:flex;flex-direction:column;gap:5px;min-width:150px;flex:1 1 170px;color:#475569;font-size:11px;font-weight:800}
+.explore-field select{height:36px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:#172033;padding:0 10px;font:inherit;font-size:12px}
+.explore-filter{position:relative;min-width:150px;flex:1 1 170px;font-size:12px}
+.explore-filter summary{height:36px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 10px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:#173b5c;font-weight:800;cursor:pointer;list-style:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.explore-filter summary::-webkit-details-marker{display:none}
+.explore-filter summary::after{content:'v';font-size:12px;color:#64748b}
+.explore-filter[open] summary{border-color:#173b5c;border-radius:7px 7px 0 0}
+.explore-menu{position:absolute;z-index:30;top:35px;left:0;right:0;min-width:230px;border:1px solid #b8c7d8;border-radius:0 0 7px 7px;background:#fff;box-shadow:0 12px 25px rgba(15,23,42,.16);padding:8px}
+.explore-search{width:100%;height:32px;border:1px solid #cbd5e1;border-radius:5px;padding:5px 8px;font:inherit;font-size:12px}
+.explore-options{max-height:220px;overflow-y:auto;margin:6px 0}
+.explore-option{display:flex;align-items:center;gap:7px;padding:5px 4px;color:#24324a;font-weight:650;cursor:pointer;overflow-wrap:anywhere}
+.explore-option[hidden]{display:none}
+.explore-option:hover{background:#edf2f7}.explore-option input{accent-color:#173b5c;flex:0 0 auto}
+.explore-actions{display:flex;justify-content:space-between;border-top:1px solid #e2e8f0;padding-top:7px}
+.explore-actions button,.explore-export{border:1px solid #cbd5e1;border-radius:6px;background:#fff;color:#173b5c;font:inherit;font-size:11px;font-weight:800;padding:7px 10px;cursor:pointer}
+.explore-actions button:hover,.explore-export:hover{background:#edf2f7}
+.explore-controls .explore-export{height:36px}
+.explore-empty{padding:18px;color:#64748b;font-size:12px;font-weight:700;text-align:center}
+.explore-context{font-size:11px;color:#64748b;font-weight:700;margin:0 0 10px}
+.explore-chart{height:300px}
+#explore .grid-2{align-items:start}
+@media(max-width:680px){.explore-field,.explore-filter{flex-basis:calc(50% - 5px);min-width:0}.explore-menu{min-width:min(250px,90vw)}.explore-filter:nth-child(even) .explore-menu{left:auto;right:0}.explore-chart{height:250px}}
 .footer{font-size:11px;color:#94a3b8;text-align:center;padding:20px 0 4px}
 .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:50;display:none;align-items:center;justify-content:center;padding:22px}
 .modal-backdrop.open{display:flex}
@@ -212,8 +235,27 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
     </div>
     <div class="tabs" id="tabs"></div>
   </div>
+  <div class="section-title"><h2>Overall Summary</h2></div>
   <div class="cards" id="summaryCards"></div>
-  <section class="tab active" id="overview">
+  <section class="tab active" id="explore">
+    <div class="section-title"><h2>Watch Hours Explorer</h2><span class="count-chip" id="exploreRowCount"></span></div>
+    <div class="explore-controls">
+      <details class="explore-filter" id="exploreCountry"><summary>All countries</summary><div class="explore-menu"><input class="explore-search" type="search" placeholder="Search countries" aria-label="Search countries"><div class="explore-options"></div><div class="explore-actions"><button type="button" data-action="all">All</button><button type="button" data-action="clear">None</button></div></div></details>
+      <details class="explore-filter" id="exploreRegion"><summary>All regions</summary><div class="explore-menu"><input class="explore-search" type="search" placeholder="Search regions" aria-label="Search regions"><div class="explore-options"></div><div class="explore-actions"><button type="button" data-action="all">All</button><button type="button" data-action="clear">None</button></div></div></details>
+      <details class="explore-filter" id="exploreChannel"><summary>All channels</summary><div class="explore-menu"><input class="explore-search" type="search" placeholder="Search channels" aria-label="Search channels"><div class="explore-options"></div><div class="explore-actions"><button type="button" data-action="all">All</button><button type="button" data-action="clear">None</button></div></div></details>
+      <details class="explore-filter" id="exploreDevice"><summary>All devices</summary><div class="explore-menu"><input class="explore-search" type="search" placeholder="Search devices" aria-label="Search devices"><div class="explore-options"></div><div class="explore-actions"><button type="button" data-action="all">All</button><button type="button" data-action="clear">None</button></div></div></details>
+      <label class="explore-field">Measure<select id="exploreMeasure" onchange="renderExplore()"><option value="raw_watch_hours">Raw watch hours</option><option value="status_200_watch_hours">Status 200 watch hours</option></select></label>
+      <label class="explore-field">Breakdown<select id="exploreBreakdown" onchange="renderExplore()"><option value="channel">Channel</option><option value="region">Region</option><option value="country">Country</option><option value="device">Device</option></select></label>
+      <button type="button" class="explore-export" onclick="exportExploreCsv()">Download CSV</button>
+    </div>
+    <div class="explore-context" id="exploreContext"></div>
+    <div class="metric-strip" id="exploreMetrics"></div>
+    <div class="grid-2">
+      <div class="panel"><h2>Daily Watch Hours</h2><div class="chart-box explore-chart"><canvas id="exploreChart"></canvas></div></div>
+      <div class="panel"><h2>Selected Breakdown<span class="count-chip" id="exploreBreakdownCount"></span></h2><div class="table-wrap" id="exploreBreakdownTable"></div></div>
+    </div>
+  </section>
+  <section class="tab" id="overview">
     <div class="filter-bar local-filter">
       <span class="filter-title">Channel Trend / Ranking</span>
       <button class="filter-btn active" id="channelRankAllBtn" onclick="setChannelRankMode('all')">Show All Channels</button>
@@ -1766,6 +1808,167 @@ function aggregateRegionChannelDevice() {
   return getAgg('regionChannelDevice',()=>regionChannelDeviceRowsForDaily(viewDaily));
 }
 
+const EXPLORE_FACETS = {
+  country:{id:'exploreCountry',label:'countries'},
+  region:{id:'exploreRegion',label:'regions'},
+  channel:{id:'exploreChannel',label:'channels'},
+  device:{id:'exploreDevice',label:'devices'}
+};
+const exploreSelected={country:null,region:null,channel:null,device:null};
+let exploreOptions={country:[],region:[],channel:[],device:[]};
+let exploreRows=[];
+
+function exploreFacetValue(row,facet){
+  if(facet==='country')return row.country_code;
+  if(facet==='region')return trendRegionKey(row);
+  if(facet==='channel')return row.channel_name;
+  return row.device_type;
+}
+
+function exploreFacetLabel(row,facet){
+  if(facet==='country')return row.country_label||row.country_code||'Unknown / NA';
+  if(facet==='region')return trendRegionLabel(row);
+  if(facet==='channel')return row.channel_name;
+  return row.device_type;
+}
+
+function rebuildExploreOptions(){
+  exploreRows=regionChannelDeviceRowsForDaily(viewDaily);
+  Object.keys(EXPLORE_FACETS).forEach(facet=>{
+    const options=new Map();
+    exploreRows.forEach(row=>{
+      const key=String(exploreFacetValue(row,facet));
+      const item=options.get(key)||{key,label:exploreFacetLabel(row,facet),hours:0};
+      item.hours+=row.raw_watch_hours;
+      options.set(key,item);
+    });
+    exploreOptions[facet]=[...options.values()].sort((a,b)=>b.hours-a.hours||a.label.localeCompare(b.label));
+    if(exploreSelected[facet]!==null){
+      const wasNonempty=exploreSelected[facet].size>0;
+      const valid=new Set(options.keys());
+      exploreSelected[facet]=new Set([...exploreSelected[facet]].filter(key=>valid.has(key)));
+      if(wasNonempty&&!exploreSelected[facet].size)exploreSelected[facet]=null;
+    }
+    renderExploreFacet(facet);
+  });
+  renderExplore();
+}
+
+function renderExploreFacet(facet){
+  const node=document.getElementById(EXPLORE_FACETS[facet].id);
+  if(!node)return;
+  const selected=exploreSelected[facet];
+  const options=exploreOptions[facet];
+  const selectedLabel=selected?.size===1?options.find(item=>selected.has(item.key))?.label:null;
+  node.querySelector('summary').textContent=selected===null?`All ${EXPLORE_FACETS[facet].label}`:selectedLabel||`${selected.size} ${EXPLORE_FACETS[facet].label}`;
+  node.querySelector('.explore-options').innerHTML=options.length?options.map(item=>`<label class="explore-option"><input type="checkbox" value="${escapeHtml(item.key)}" ${selected?.has(item.key)?'checked':''}><span>${escapeHtml(item.label)}</span></label>`).join(''):'<div class="explore-empty">No options for this date range.</div>';
+  filterExploreOptions(facet);
+}
+
+function filterExploreOptions(facet){
+  const node=document.getElementById(EXPLORE_FACETS[facet].id);
+  const query=searchableSelectText(node.querySelector('.explore-search').value);
+  node.querySelectorAll('.explore-option').forEach(option=>{
+    option.hidden=!!query&&!searchableSelectText(option.textContent).includes(query);
+  });
+}
+
+function selectedExploreRows(){
+  return exploreRows.filter(row=>Object.keys(EXPLORE_FACETS).every(facet=>{
+    const chosen=exploreSelected[facet];
+    return chosen===null||chosen.has(String(exploreFacetValue(row,facet)));
+  }));
+}
+
+function exploreBreakdownRows(rows,facet,measure){
+  const groups=new Map();
+  rows.forEach(row=>{
+    const key=String(exploreFacetValue(row,facet));
+    const item=groups.get(key)||{name:exploreFacetLabel(row,facet),raw_watch_hours:0,status_200_watch_hours:0,raw_ts_rows:0};
+    item.raw_watch_hours+=row.raw_watch_hours;
+    item.status_200_watch_hours+=row.status_200_watch_hours;
+    item.raw_ts_rows+=row.raw_ts_rows;
+    groups.set(key,item);
+  });
+  const total=sum(rows,measure);
+  return [...groups.values()].map(item=>({...item,share_pct:percent(item[measure],total)}))
+    .sort((a,b)=>b[measure]-a[measure]||a.name.localeCompare(b.name));
+}
+
+function renderExplore(){
+  const rows=selectedExploreRows();
+  const measure=document.getElementById('exploreMeasure').value;
+  const facet=document.getElementById('exploreBreakdown').value;
+  const breakdown=exploreBreakdownRows(rows,facet,measure);
+  const daily=new Map(viewDaily.map(row=>[String(row.log_date),0]));
+  rows.forEach(row=>daily.set(String(row.log_date),(daily.get(String(row.log_date))||0)+Number(row[measure]||0)));
+  const totalRaw=sum(rows,'raw_watch_hours');
+  const total200=sum(rows,'status_200_watch_hours');
+  document.getElementById('exploreContext').textContent=`${sourceLabel(sourceFilter)} | ${viewDaily.length?fmtDateRange(viewDaily[0].log_date,viewDaily[viewDaily.length-1].log_date):'No dates'} | ${fmt(rows.length)} matching records`;
+  document.getElementById('exploreMetrics').innerHTML=[
+    mini('Raw Watch Hours',fmtH(totalRaw)),
+    mini('Status 200 Hours',fmtH(total200)),
+    mini('Raw .ts Chunks',fmt(sum(rows,'raw_ts_rows'))),
+    mini('Status 200 .ts Chunks',fmt(sum(rows,'status_200_ts_rows')))
+  ].join('');
+  setCount('exploreRowCount',rows,'records');
+  setCount('exploreBreakdownCount',breakdown,'groups');
+  document.getElementById('exploreBreakdownTable').innerHTML=table(breakdown.slice(0,50),[
+    {key:'name',label:EXPLORE_LABELS[facet]},
+    {key:'raw_watch_hours',label:'Raw Hours'},
+    {key:'status_200_watch_hours',label:'Status 200 Hours'},
+    {key:'share_pct',label:'Share'}
+  ],{raw_watch_hours:{fn:fmtH,num:true},status_200_watch_hours:{fn:fmtH,num:true},share_pct:{fn:fmtPct,num:true}});
+  const chart=makeLineChart('exploreChart',[...daily.keys()],[{
+    label:measure==='raw_watch_hours'?'Raw watch hours':'Status 200 watch hours',
+    data:[...daily.values()],borderColor:'#0f766e',backgroundColor:'rgba(15,118,110,.11)',
+    fill:true,tension:.25,pointRadius:daily.size===1?4:2,borderWidth:2
+  }]);
+  if(chart){chart.options.scales.y.ticks.callback=value=>fmt(value,0);chart.update('none');}
+}
+
+const EXPLORE_LABELS={country:'Country',region:'Region',channel:'Channel',device:'Device'};
+
+function exportExploreCsv(){
+  const rows=selectedExploreRows();
+  const columns=['log_date','source','country_label','state_region','channel_name','device_type','raw_watch_hours','status_200_watch_hours','raw_ts_rows','status_200_ts_rows'];
+  const quote=value=>`"${String(value??'').replace(/"/g,'""')}"`;
+  const csv=[columns.join(','),...rows.map(row=>columns.map(key=>quote(row[key])).join(','))].join('\r\n');
+  const url=URL.createObjectURL(new Blob(['\ufeff',csv],{type:'text/csv;charset=utf-8'}));
+  const link=document.createElement('a');
+  link.href=url;link.download=`watch_hours_${sourceFilter}_${viewDaily[0]?.log_date||'empty'}_${viewDaily[viewDaily.length-1]?.log_date||'empty'}.csv`;
+  document.body.appendChild(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+function initExploreFilters(){
+  Object.entries(EXPLORE_FACETS).forEach(([facet,{id}])=>{
+    const node=document.getElementById(id);
+    node.querySelector('.explore-search').addEventListener('input',()=>filterExploreOptions(facet));
+    node.querySelector('.explore-options').addEventListener('change',event=>{
+      if(!event.target.matches('input[type="checkbox"]'))return;
+      if(exploreSelected[facet]===null)exploreSelected[facet]=new Set();
+      if(event.target.checked)exploreSelected[facet].add(event.target.value);
+      else exploreSelected[facet].delete(event.target.value);
+      node.querySelector('summary').textContent=exploreSelected[facet].size===1?exploreOptions[facet].find(item=>exploreSelected[facet].has(item.key))?.label:`${exploreSelected[facet].size} ${EXPLORE_FACETS[facet].label}`;
+      renderExplore();
+    });
+    node.querySelector('.explore-actions').addEventListener('click',event=>{
+      const action=event.target.dataset.action;
+      if(!action)return;
+      exploreSelected[facet]=action==='all'?null:new Set();
+      renderExploreFacet(facet);
+      renderExplore();
+    });
+    node.addEventListener('toggle',()=>{
+      if(node.open)document.querySelectorAll('.explore-filter').forEach(other=>{if(other!==node)other.open=false;});
+    });
+  });
+  document.addEventListener('click',event=>{
+    if(!event.target.closest('.explore-filter'))document.querySelectorAll('.explore-filter[open]').forEach(node=>node.open=false);
+  });
+}
+
 function regionDrilldownData(stateName) {
   const rows=aggregateChannelGeo().filter(r=>r.country_code==='IN'&&r.state_region===stateName);
   const totalHours=sum(rows,'raw_watch_hours');
@@ -2255,6 +2458,7 @@ function applyDateView(updateInputs=true){
   renderTrendRegionOptions();
   renderTrendFocusOptions();
   renderCards(selectedSummary());
+  rebuildExploreOptions();
   renderCharts();
   queueRenderTables();
   updateChannelLimitText();
@@ -3714,11 +3918,11 @@ function renderTables(){
 
 // ── Tab init & header ─────────────────────────────────────────────────────────
 function initTabs(){
-  const tabs=[['overview','Overview'],['channels','Channel'],['regions','State / Region'],['mapping','Mapping QA'],['audience','Audience'],['devices','Devices & OS'],['reliability','Reliability'],['quality','Data Quality']];
+  const tabs=[['explore','Explore'],['overview','Overview'],['channels','Channel'],['regions','State / Region'],['mapping','Mapping QA'],['audience','Audience'],['devices','Devices & OS'],['reliability','Reliability'],['quality','Data Quality']];
   document.getElementById('tabs').innerHTML=tabs.map(([id,label],i)=>`<button class="tab-btn ${i===0?'active':''}" onclick="showTab('${id}',this)">${label}</button>`).join('');
 }
 function setActiveSection(id,btn){
-  const labels={overview:'Overview',channels:'Channel',regions:'State / Region',mapping:'Mapping QA',audience:'Audience',devices:'Devices & OS',reliability:'Reliability',quality:'Data Quality'};
+  const labels={overview:'Overview',explore:'Explore',channels:'Channel',regions:'State / Region',mapping:'Mapping QA',audience:'Audience',devices:'Devices & OS',reliability:'Reliability',quality:'Data Quality'};
   document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('active',el.id===id));
   document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
   const activeBtn=btn||[...document.querySelectorAll('.tab-btn')].find(el=>el.textContent===labels[id]);
@@ -3732,7 +3936,7 @@ function showTab(id,btn){
 function showTabById(id){showTab(id);}
 function initSectionObserver(){
   if(!('IntersectionObserver' in window))return;
-  const ids=['overview','channels','regions','mapping','audience','devices','reliability','quality'];
+  const ids=['explore','overview','channels','regions','mapping','audience','devices','reliability','quality'];
   const observer=new IntersectionObserver(entries=>{
     const visible=entries.filter(entry=>entry.isIntersecting).sort((a,b)=>a.boundingClientRect.top-b.boundingClientRect.top)[0];
     if(visible)setActiveSection(visible.target.id);
@@ -3963,6 +4167,7 @@ function initSearchableSelects(){
 }
 
 initTabs();
+initExploreFilters();
 rebuildSourceViews(sourceFilter);
 setActiveSource();
 renderHeader();
