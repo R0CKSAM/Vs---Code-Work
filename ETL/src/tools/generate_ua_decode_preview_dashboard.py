@@ -30,6 +30,7 @@ DEFAULT_MAP = ETL_ROOT / "config" / "device_decode" / "amazon_fire_tv_models.csv
 DEFAULT_API_CACHE = ETL_ROOT / "data" / "cache" / "device_decode" / "whatmyuseragent_all_distinct_ua_cache.parquet"
 DEFAULT_OUT = ETL_ROOT / "output" / "device_decode" / "ua_decode_dashboard_preview.html"
 DEFAULT_LOG = ETL_ROOT / "output" / "logs" / "ua_decode" / "decode_distinct_ua_all_20260618_125918.out.log"
+DEFAULT_MANIFEST = ETL_ROOT / "output" / "device_decode" / "ua_api_all_distinct_manifest.json"
 
 
 def read_api_cache_safely(path: Path, attempts: int = 4) -> pd.DataFrame:
@@ -47,6 +48,15 @@ def read_api_cache_safely(path: Path, attempts: int = 4) -> pd.DataFrame:
 
 
 def latest_api_progress(log_path: Path) -> tuple[int, int, str]:
+    if DEFAULT_MANIFEST.exists():
+        try:
+            manifest = json.loads(DEFAULT_MANIFEST.read_text(encoding="utf-8"))
+            stats = manifest["stats"]
+            return (int(stats["combined_api_cached_after"]),
+                    int(stats["valid_distinct_ua_rows"]),
+                    f"API cache snapshot: {manifest['generated_at_utc']}")
+        except (OSError, ValueError, KeyError, TypeError):
+            pass
     if not log_path.exists():
         return 0, 0, ""
     latest = (0, 0, "")
