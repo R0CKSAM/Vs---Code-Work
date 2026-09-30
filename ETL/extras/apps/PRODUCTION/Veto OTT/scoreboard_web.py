@@ -12,6 +12,7 @@ import hashlib
 import hmac
 import secrets
 import unicodedata
+import zipfile
 import json
 import os
 import re
@@ -21,6 +22,7 @@ import tempfile
 import threading
 import time
 import uuid
+from collections import OrderedDict
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -33,7 +35,12 @@ SESSION_TIMEOUT_SECONDS = 30
 CHROMA_COLORS = {
     'chroma-magenta': (255, 0, 255),
 }
-OVERLAY_TEMPLATES = frozenset(('t5', 't11', 't14', 't15', 't16', 't17'))
+OVERLAY_TEMPLATES = frozenset(('t5', 't11', 't14', 't15', 't16', 't17', 't18', 't19', 't20'))
+COMPETITIONS = {'davis-cup': 'Davis Cup', 'billie-jean-king-cup': 'Billie Jean King Cup'}
+
+
+def is_overlay(template, config):
+    return template in OVERLAY_TEMPLATES and (template != 't19' or config.get('background_mode','Transparent') == 'Transparent')
 
 
 class ProjectConflict(ValueError):
@@ -57,6 +64,12 @@ class ScoreboardWebRuntime:
         self.project_dir = self.upload_dir.parent / "projects"
         self.project_dir.mkdir(parents=True, exist_ok=True)
         self.lock = threading.RLock()
+        self._cache_lock = threading.RLock()
+        self._render_slots = threading.BoundedSemaphore(2)
+        self._frame_cache = OrderedDict()
+        self._frame_cache_bytes = 0
+        self._frame_cache_limit = 192 * 1024 * 1024
+        self._monitor_cache = None
         self.live_output = None
         self.live_preset = None
         self.live_output_name = None
@@ -79,11 +92,77 @@ class ScoreboardWebRuntime:
         self.media = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(self.media)
         self.credentials_path = self.upload_dir.parent / 'editor_credentials.json'
-        if not self.credentials_path.exists():
-            self._write_credentials('veto', 'veto@spark')
+        self._ensure_local_credentials(self.credentials_path,'editor')
         self.delete_credentials_path = self.upload_dir.parent / 'delete_credentials.json'
-        if not self.delete_credentials_path.exists():
-            self._write_credentials('veto', 'spark@veto', self.delete_credentials_path)
+        self._ensure_local_credentials(self.delete_credentials_path,'delete')
+        self._seed_competition_library()
+
+    def _ensure_local_credentials(self, path, role):
+        if path.exists():
+            return
+        # New installs receive unique passwords; existing operator logins never change.
+        bootstrap = self.upload_dir.parent/'first_run_credentials.json'
+        record = json.loads(bootstrap.read_text(encoding='utf-8')) if bootstrap.exists() else {}
+        if not isinstance(record,dict):
+            raise ValueError('Invalid local first-run credentials file.')
+        if role not in record:
+            record[role] = dict(username='veto',password=secrets.token_urlsafe(24))
+            temporary = bootstrap.with_name('.first-run-credentials-' + uuid.uuid4().hex + '.tmp')
+            try:
+                with temporary.open('w',encoding='utf-8') as stream:
+                    json.dump(record,stream,indent=2)
+                    stream.flush()
+                    os.fsync(stream.fileno())
+                os.replace(temporary,bootstrap)
+            finally:
+                temporary.unlink(missing_ok=True)
+        login = record[role]
+        self._write_credentials(login['username'],login['password'],path)
+
+    @staticmethod
+    def _competition(value='davis-cup'):
+        if not isinstance(value,str) or value not in COMPETITIONS:
+            raise ValueError('Unknown competition.')
+        return value
+
+    def _competition_library(self, competition='davis-cup'):
+        competition = self._competition(competition)
+        if competition == 'davis-cup':
+            return self.library_dir
+        return self.upload_dir.parent / 'competitions' / competition / 'templates'
+
+    def _portable_config(self, value):
+        if isinstance(value,dict):
+            return {key:self._portable_config(child) for key,child in value.items()}
+        if isinstance(value,list):
+            return [self._portable_config(child) for child in value]
+        if isinstance(value,str) and value.startswith(str(self.upload_dir) + os.sep):
+            return Path(value).name
+        return value
+
+    def _seed_competition_library(self):
+        # Competitions share layouts, not saved presets.
+        destination = self._competition_library('billie-jean-king-cup').parent
+        if destination.is_dir():
+            marker = destination/'seed.json'
+            if marker.is_file() and not (destination/'templates').exists():
+                seed = json.loads(marker.read_text(encoding='utf-8'))
+                # Git does not retain an empty templates directory on fresh installs.
+                if seed.get('source') == 'empty' and seed.get('templates') == 0:
+                    (destination/'templates').mkdir()
+            if not (destination/'seed.json').is_file() or not (destination/'templates').is_dir():
+                raise ValueError('Billie Jean King Cup library is incomplete; restore its backup before restarting.')
+            return
+        destination.parent.mkdir(parents=True,exist_ok=True)
+        staging = Path(tempfile.mkdtemp(prefix='.billie-cup-',dir=destination.parent))
+        templates = staging/'templates'
+        templates.mkdir()
+        now = datetime.now(timezone.utc).isoformat()
+        with (staging/'seed.json').open('x',encoding='utf-8') as stream:
+            json.dump(dict(source='empty',created_at=now,templates=0),stream)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(staging,destination)
 
     def _write_credentials(self, username, password, path=None):
         path = path or self.credentials_path
@@ -175,12 +254,13 @@ class ScoreboardWebRuntime:
             "No writable scoreboard upload folder was found. " + " | ".join(failures)
         )
 
-    def list_templates(self):
+    def list_templates(self, competition='davis-cup'):
         """Expose legacy presets read-only alongside the create-only flat library."""
         entries = []
+        library_dir = self._competition_library(competition)
         with self.lock:
             warnings = []
-            for path in self.project_dir.glob('*.json'):
+            for path in (self.project_dir.glob('*.json') if competition == 'davis-cup' else ()):
                 try:
                     document = self.open_project(path.stem)
                     project_entries = []
@@ -194,14 +274,14 @@ class ScoreboardWebRuntime:
                     entries.extend(project_entries)
                 except (OSError, ValueError, KeyError, TypeError, AttributeError, OverflowError):
                     warnings.append('Unreadable project: ' + path.name)
-            for path in self.library_dir.glob('*.json'):
+            for path in library_dir.glob('*.json'):
                 try:
                     item = json.loads(path.read_text(encoding='utf-8'))
                     if item['id'] != path.stem or not re.fullmatch(r'[a-f0-9]{32}',item['id']):
                         raise ValueError('Invalid template ID')
                     if not isinstance(item['player'],str) or not isinstance(item['country'],str):
                         raise ValueError('Invalid template metadata')
-                    item['config'] = self.normalized_config(item['template'], item['config'])
+                    item['config'] = self.normalized_config(item['template'], item['config'], competition)
                     entries.append(item)
                 except (OSError, ValueError, KeyError, TypeError, AttributeError, OverflowError):
                     warnings.append('Unreadable template: ' + path.name)
@@ -217,14 +297,16 @@ class ScoreboardWebRuntime:
 
     def update_template(self, payload, remote_address):
         """Update one preset, with credentials and optimistic conflict protection."""
+        competition = self._competition(payload.get('competition','davis-cup'))
+        library_dir = self._competition_library(competition)
         with self.lock:
             self._check_credentials(payload, remote_address)
-            item = next((entry for entry in self.list_templates() if entry['id'] == payload.get('id')), None)
+            item = next((entry for entry in self.list_templates(competition) if entry['id'] == payload.get('id')), None)
             if item is None:
                 raise ProjectConflict('Saved template no longer exists.')
             if payload.get('edit_revision') != item['edit_revision']:
                 raise ProjectConflict('Another operator changed this template. Your preview is retained; reopen the saved version before updating.')
-            config = self.normalized_config(item['template'], payload.get('config', {}))
+            config = self.normalized_config(item['template'], payload.get('config', {}), competition)
             if item['template'] == 't8' and not config.get('media_path'):
                 raise ValueError('Upload an image or video first.')
             def portable(value):
@@ -245,7 +327,7 @@ class ScoreboardWebRuntime:
                 document['presets'] = portable(presets)
                 document['revision'] = int(document.get('revision', 0)) + 1
             else:
-                path = self.library_dir / (item['id'] + '.json')
+                path = library_dir / (item['id'] + '.json')
                 document = json.loads(path.read_text(encoding='utf-8'))
                 document['config'] = portable(config)
             document['updated_at'] = datetime.now(timezone.utc).isoformat()
@@ -268,14 +350,16 @@ class ScoreboardWebRuntime:
                 temporary.unlink(missing_ok=True)
             self.library_revision = uuid.uuid4().hex
             self.library_changed.notify_all()
-            updated = next(entry for entry in self.list_templates() if entry['id'] == item['id'])
+            updated = next(entry for entry in self.list_templates(competition) if entry['id'] == item['id'])
             return {'saved':True, 'item':updated}
 
     def delete_template(self, payload, remote_address):
         """Archive one saved preset; never remove uploads or alter program output."""
+        competition = self._competition(payload.get('competition','davis-cup'))
+        library_dir = self._competition_library(competition)
         with self.lock:
             self._check_credentials(payload, remote_address, self.delete_credentials_path)
-            item = next((p for p in self.list_templates() if p['id'] == payload.get('id')), None)
+            item = next((p for p in self.list_templates(competition) if p['id'] == payload.get('id')), None)
             if item is None:
                 raise ProjectConflict('Saved template no longer exists.')
             if payload.get('edit_revision') != item['edit_revision']:
@@ -313,40 +397,43 @@ class ScoreboardWebRuntime:
                 finally:
                     temporary.unlink(missing_ok=True)
             else:
-                path = self.library_dir / (item['id'] + '.json')
-                archive = self.library_dir / 'deleted'
+                path = library_dir / (item['id'] + '.json')
+                archive = library_dir / 'deleted'
                 archive.mkdir(exist_ok=True)
                 os.replace(path, archive / (item['id'] + '-' + uuid.uuid4().hex + '.json'))
             self.library_revision = uuid.uuid4().hex
             self.library_changed.notify_all()
             return {'deleted': True, 'id': item['id']}
 
-    def library_snapshot(self):
+    def library_snapshot(self, competition='davis-cup'):
         with self.lock:
-            entries = self.list_templates()
+            entries = self.list_templates(competition)
             return {'templates':entries, 'revision':self.library_revision,
-                    'warnings':list(self.library_warnings)}
+                    'warnings':list(self.library_warnings), 'competition':competition}
 
-    def wait_for_library(self, revision, timeout=20):
+    def wait_for_library(self, revision, timeout=20, competition='davis-cup'):
+        competition = self._competition(competition)
         # Waiting releases the runtime lock: SDI controls remain independent.
         with self.library_changed:
             self.library_changed.wait_for(lambda:self.library_revision != revision, timeout=timeout)
-            return {'revision':self.library_revision}
+            return {'revision':self.library_revision, 'competition':competition}
 
     def save_template(self, payload, remote_address):
+        competition = self._competition(payload.get('competition','davis-cup'))
+        library_dir = self._competition_library(competition)
         template = payload.get('template')
-        config = self.normalized_config(template, payload.get('config', {}))
+        config = self.normalized_config(template, payload.get('config', {}), competition)
         player, country = (str(payload.get(field, '')).strip() for field in ('player','country'))
         if template == 't8':
             country = ''
             if not config.get('media_path'):
                 raise ValueError('Upload an image or video first.')
-        if template=='t13':
+        if template in ('t13','t23'):
             country=''
-        if not player or (not country and template not in ('t8','t13')) or max(len(player),len(country)) > 100:
+        if not player or (not country and template not in ('t8','t13','t23')) or max(len(player),len(country)) > 100:
             raise ValueError('Enter player name and country (at most 100 characters each).')
         with self.lock:
-            entries = self.list_templates()
+            entries = self.list_templates(competition)
             if self.library_warnings:
                 raise ValueError('Library needs host attention before saving: ' + '; '.join(self.library_warnings))
             for item in entries:
@@ -363,7 +450,7 @@ class ScoreboardWebRuntime:
                 return value
             item = dict(id=uuid.uuid4().hex, template=template, player=player, country=country,
                 config=portable(config), updated_at=datetime.now(timezone.utc).isoformat())
-            path = self.library_dir / (item['id'] + '.json')
+            path = library_dir / (item['id'] + '.json')
             temporary = path.with_suffix('.tmp')
             try:
                 with temporary.open('w',encoding='utf-8') as stream:
@@ -725,12 +812,17 @@ class ScoreboardWebRuntime:
         return {
             "shared_projects": False,
             "template_library": True,
+            "competitions": COMPETITIONS,
+            "default_competition": 'billie-jean-king-cup',
             "project_edit_locks": True,
             "template_presets": True,
             "template_names": dict(zip(
                 self.core.WEB_TEMPLATE_KEYS, self.core.WEB_TEMPLATE_NAMES
             )),
             "defaults": copy.deepcopy(self.core.DEFAULT_CONFIGS),
+            "competition_defaults": {'billie-jean-king-cup': {
+                key:self.core._competition_theme.apply(key,value,'billie-jean-king-cup')
+                for key,value in self.core.DEFAULT_CONFIGS.items()}},
             "text_targets": {
                 key: [{"key": role, "label": label} for role, label in targets]
                 for key, targets in self.core.TEXT_STYLE_TARGETS.items()
@@ -752,17 +844,28 @@ class ScoreboardWebRuntime:
                 "t8": list(self.core.T8_SIZES),
                 "t9": list(self.core.T9_SIZES),
                 "t14": list(self.core.T14_SIZES),
-                **{key:list(self.core.BROADCAST_SIZES) for key in ('t10','t11','t12','t13','t15','t16','t17')},
+                **{key:list(self.core.BROADCAST_SIZES) for key in ('t10','t11','t12','t13','t15','t16','t17','t18','t19','t20','t21','t22','t23','t24')},
             },
             "qualifier_countries": sorted(set(json.loads((self.app_dir / 'country_flags.json').read_text(encoding='utf-8-sig')).values()) | set(self.core.QUALIFIER_ALPHA3.values())),
+            "flag_countries": [
+                {"code":code,"name":name}
+                for code,name in sorted(
+                    json.loads((self.app_dir/'country_flags.json').read_text(encoding='utf-8-sig')).items(),
+                    key=lambda item:item[1].casefold(),
+                )
+            ],
             "custom_text_boxes": True,
             "program_monitor": True,
         }
 
-    def normalized_config(self, template: str, value: Any) -> Dict[str, Any]:
+    def normalized_config(self, template: str, value: Any, competition=None) -> Dict[str, Any]:
         if template not in self.core.WEB_TEMPLATE_KEYS:
             raise ValueError("Unknown scoreboard template.")
         config = self.core.normalise_project_configs({template: value})[template]
+        if competition is not None:
+            config = self.core._competition_theme.apply(template,config,self._competition(competition))
+        if template == 't6' and competition is not None:
+            config['stats_theme'] = self._competition(competition)
         # Browser clients choose a supported canvas, never an internal multiplier.
         config.pop('_render_scale', None)
         self._validate_image_paths(template, config)
@@ -787,6 +890,13 @@ class ScoreboardWebRuntime:
             "t15": ('band_path',),
             "t16": (),
             "t17": (),
+            "t18": (),
+            "t19": ('photo_a','photo_b','background_path'),
+            "t20": (),
+            "t21": ('background_path',),
+            "t22": ('background_path',),
+            "t23": (),
+            "t24": ('background_path',),
         }[template]
         for key in keys:
             config[key] = self._safe_uploaded_path(config.get(key, ""))
@@ -821,30 +931,107 @@ class ScoreboardWebRuntime:
         except (OSError, ValueError):
             return ""
 
+    def _frame_cache_key(self, template, config, output_mode, output_preset):
+        # Include file revisions so replacing an uploaded asset cannot reuse old pixels.
+        assets = []
+        def visit(value):
+            if isinstance(value, dict):
+                for item in value.values():
+                    visit(item)
+            elif isinstance(value, list):
+                for item in value:
+                    visit(item)
+            elif isinstance(value, str) and os.path.isabs(value):
+                try:
+                    stat = os.stat(value)
+                    assets.append((value, stat.st_mtime_ns, stat.st_size))
+                except OSError:
+                    assets.append((value, None, None))
+        visit(config)
+        visible_config = {k:v for k,v in config.items() if not k.startswith('_web_')}
+        if isinstance(visible_config.get('text_styles'),dict):
+            styles = {k:v for k,v in visible_config['text_styles'].items() if v}
+            if styles:
+                visible_config['text_styles'] = styles
+            else:
+                visible_config.pop('text_styles')
+        transform = (output_mode,output_preset) if output_mode in CHROMA_COLORS else None
+        value = json.dumps((template,visible_config,assets,transform),sort_keys=True,ensure_ascii=True)
+        return hashlib.sha256(value.encode('utf-8')).hexdigest()
+
+    def _trim_frame_cache(self):
+        while self._frame_cache and (len(self._frame_cache)>16 or self._frame_cache_bytes>self._frame_cache_limit):
+            _, entry = self._frame_cache.popitem(last=False)
+            self._frame_cache_bytes -= entry['bytes']
+
+    def _render_entry(self, template, config, output_mode='', output_preset='HD 1080i50'):
+        key = self._frame_cache_key(template,config,output_mode,output_preset)
+        with self._cache_lock:
+            entry = self._frame_cache.get(key)
+            if entry is not None:
+                self._frame_cache.move_to_end(key)
+                return key,entry
+        with self._render_slots:
+            with self._cache_lock:
+                entry = self._frame_cache.get(key)
+                if entry is not None:
+                    self._frame_cache.move_to_end(key)
+                    return key,entry
+            image = self.core.RENDERERS[template](config)
+            if output_mode in CHROMA_COLORS:
+                image = self.core.prepare_broadcast_frame(image,output_preset,preserve_alpha=True)
+                background = self._clear_frame(image.size,output_mode)
+                background.paste(image,(0,0),image.getchannel('A'))
+                image = background
+            entry = dict(image=image,packed={},bytes=image.width*image.height*len(image.getbands()))
+            with self._cache_lock:
+                previous = self._frame_cache.pop(key,None)
+                if previous:
+                    self._frame_cache_bytes -= previous['bytes']
+                self._frame_cache[key] = entry
+                self._frame_cache_bytes += entry['bytes']
+                self._trim_frame_cache()
+            return key,entry
+
+    def _packed_frame(self, key, entry, preset):
+        with self._cache_lock:
+            data = entry['packed'].get(preset)
+        if data is not None:
+            return data
+        frame = self.core.prepare_broadcast_frame(entry['image'],preset,preserve_alpha=True)
+        data = frame.tobytes('raw','BGRA')
+        with self._cache_lock:
+            existing = entry['packed'].get(preset)
+            if existing is not None:
+                return existing
+            entry['packed'][preset] = data
+            entry['bytes'] += len(data)
+            if self._frame_cache.get(key) is entry:
+                self._frame_cache_bytes += len(data)
+                self._trim_frame_cache()
+        return data
+
     def render(
         self, template: str, value: Any, update_live: bool = True, client_id: str = "",
         output_mode: str = '', output_preset: str = 'HD 1080i50',
     ):
         config = self.normalized_config(template, value)
         if output_mode == 'external-key':
-            if template in OVERLAY_TEMPLATES:
+            if is_overlay(template,config):
                 config['transparent_background'] = True
-        if output_mode in CHROMA_COLORS and template in OVERLAY_TEMPLATES:
+        if output_mode in CHROMA_COLORS and is_overlay(template,config):
             config['transparent_background'] = True
-        image = self.core.RENDERERS[template](config)
-        if output_mode in CHROMA_COLORS:
-            # Fit while alpha is intact so portrait/letterbox padding also keys out.
-            image = self.core.prepare_broadcast_frame(image, output_preset, preserve_alpha=True)
-            background = self._clear_frame(image.size, output_mode)
-            background.paste(image, (0, 0), image.getchannel('A'))
-            image = background
+        key,entry = self._render_entry(template,config,output_mode,output_preset)
+        image = entry['image']
+        # Preview and queue renders prepare the exact immutable bytes used by Push.
+        self._packed_frame(key,entry,output_preset)
         with self.lock:
             if (
                 update_live and self.live_output is not None
                 and self._clean_client_id(client_id) == self.live_owner_id
             ):
                 self.live_output.update(image)
-        return image, config
+        return image.copy(), config
 
     def upload(self, payload: Dict[str, Any]) -> Dict[str, str]:
         name = Path(str(payload.get("name", "image"))).name
@@ -917,9 +1104,9 @@ class ScoreboardWebRuntime:
             raise
 
     def _stop_media(self):
-        if self.media_playback is not None:
-            self.media_playback.stop()
-            self.media_playback = None
+        playback,self.media_playback = self.media_playback,None
+        if playback is not None:
+            playback.request_stop()
 
     def start_live(
         self, template: str, config: Any, preset: str, output_name: str,
@@ -971,7 +1158,7 @@ class ScoreboardWebRuntime:
                     self.live_output.update(image)
                     self.program_frame = image.copy()
                     self.program_name = dict(zip(self.core.WEB_TEMPLATE_KEYS,self.core.WEB_TEMPLATE_NAMES))[template]
-                    self.program_layout = 'overlay' if template in OVERLAY_TEMPLATES else 'full-picture'
+                    self.program_layout = 'overlay' if is_overlay(template,config) else 'full-picture'
                     self.on_air = self.program_revision = uuid.uuid4().hex
                 self.live_owner_id = requester["id"]
                 return self.live_status(requester["id"], remote_address)
@@ -996,7 +1183,7 @@ class ScoreboardWebRuntime:
             self.program_revision = uuid.uuid4().hex
             self.on_air = None if standby else self.program_revision
             self.program_name = '' if standby else dict(zip(self.core.WEB_TEMPLATE_KEYS,self.core.WEB_TEMPLATE_NAMES))[template]
-            self.program_layout = '' if standby else ('overlay' if template in OVERLAY_TEMPLATES else 'full-picture')
+            self.program_layout = '' if standby else ('overlay' if is_overlay(template,config) else 'full-picture')
             self.live_output = output
             self.live_clear_mode = clear_mode
             self.live_preset = preset
@@ -1005,6 +1192,7 @@ class ScoreboardWebRuntime:
         return self.live_status(requester["id"], remote_address)
 
     def show_live(self, template, config, client_id, remote_address, expected_revision=None, name=''):
+        started = time.perf_counter()
         with self.lock:
             requester = self.touch_session(client_id, remote_address)
             if not requester or requester['priority'] <= 0 or requester['id'] != self.live_owner_id:
@@ -1012,25 +1200,48 @@ class ScoreboardWebRuntime:
             if self.live_output is None:
                 raise ValueError('Start the live stream first.')
             self._check_program_revision(expected_revision)
-            image, config = self.render(template, config, update_live=False,
-                output_mode=getattr(self,'live_clear_mode','black'), output_preset=self.live_preset)
-            if template == 't8' and not config.get('media_path'):
-                raise ValueError('Upload media before showing it live.')
-            playback = None
-            if template == 't8' and config.get('media_kind') == 'video':
-                playback = self.media.VideoPlayback(self.core,self.live_output,config['media_path'],
-                    self.live_preset,bool(config.get('loop',True)),config=config)
+            output,preset = self.live_output,self.live_preset
+            mode = getattr(self,'live_clear_mode','black')
+            revision = self.program_revision
+        config = self.normalized_config(template,config)
+        if is_overlay(template,config) and (mode=='external-key' or mode in CHROMA_COLORS):
+            config['transparent_background'] = True
+        key,entry = self._render_entry(template,config,mode,preset)
+        image = entry['image']
+        packed = self._packed_frame(key,entry,preset)
+        if template == 't8' and not config.get('media_path'):
+            raise ValueError('Upload media before showing it live.')
+        playback = None
+        if template == 't8' and config.get('media_kind') == 'video':
+            playback = self.media.VideoPlayback(self.core,output,config['media_path'],
+                preset,bool(config.get('loop',True)),config=config)
+        with self.lock:
+            current_requester = self.sessions.get(requester['id'],{})
+            if (self.live_output is not output or self.program_revision != revision
+                    or self.live_owner_id != requester['id'] or current_requester.get('priority',0)<=0):
+                if playback:
+                    playback.request_stop()
+                raise ProjectConflict('On Air changed while preparing this graphic. Try again.')
             self._stop_media()
-            self.live_output.update(image)
-            self.program_frame = image.copy()
+            if hasattr(output,'update_prepared'):
+                output.update_prepared(packed)
+            else:
+                output.update(image)
+            self.program_frame = image
             self.media_playback = playback
-            if playback:
-                playback.start()
             self.on_air = uuid.uuid4().hex
             self.program_revision = self.on_air
             self.program_name = str(name).strip()[:100] or dict(zip(self.core.WEB_TEMPLATE_KEYS,self.core.WEB_TEMPLATE_NAMES))[template]
-            self.program_layout = 'overlay' if template in OVERLAY_TEMPLATES else 'full-picture'
-            return self.live_status(client_id, remote_address)
+            self.program_layout = 'overlay' if is_overlay(template,config) else 'full-picture'
+            if playback:
+                try:
+                    playback.start()
+                except Exception as exc:
+                    playback.error = 'Video playback could not start; the poster is held. ' + str(exc)
+                    playback.finished = True
+            result = self.live_status(client_id, remote_address)
+            result['push_prepare_ms'] = round((time.perf_counter()-started)*1000,2)
+            return result
 
     def _check_program_revision(self, expected):
         if expected is not None and expected != self.program_revision:
@@ -1065,11 +1276,24 @@ class ScoreboardWebRuntime:
     def program_preview(self):
         with self.lock:
             revision = self.program_revision
-            image = None
+            dynamic = bool(self.media_playback)
+            cache_key = (revision,dynamic,bool(self.media_playback and self.media_playback.finished))
+            now = time.monotonic()
+            cached = self._monitor_cache
+            if cached and cached[0] == cache_key and (not dynamic or now-cached[1]<0.1):
+                return cached[2],revision
+            image = self.program_frame if self.live_output is not None else None
+            preset = self.live_preset
+            preserve_alpha = getattr(self,'live_clear_mode','black') == 'external-key'
+            needs_preparation = image is not None
             if self.live_output is not None:
                 snapshot = getattr(self.live_output,'snapshot_frame',None)
-                image = snapshot() if snapshot else self.program_frame
-            image = image.copy() if image is not None else self.core.Image.new('RGB',(640,360),'black')
+                if snapshot:
+                    image = snapshot()
+                    needs_preparation = False
+        if needs_preparation:
+            image = self.core.prepare_broadcast_frame(image,preset,preserve_alpha=preserve_alpha)
+        image = image.copy() if image is not None else self.core.Image.new('RGB',(640,360),'black')
         image.thumbnail((640,360),self.core.Image.Resampling.BILINEAR)
         if image.mode == 'RGBA':
             background = self.core.Image.new('RGB',image.size,(48,48,48))
@@ -1082,7 +1306,11 @@ class ScoreboardWebRuntime:
             image = background
         data = io.BytesIO()
         image.save(data,'JPEG',quality=80)
-        return data.getvalue(),revision
+        encoded = data.getvalue()
+        with self.lock:
+            if revision == self.program_revision:
+                self._monitor_cache = (cache_key,now,encoded)
+        return encoded,revision
 
     def stop_live(
         self, client_id: Any = "", remote_address: str = "", force: bool = False, expected_revision=None,
@@ -1131,6 +1359,7 @@ class ScoreboardWebRuntime:
                 "on_air": self.on_air if self.live_output is not None else None,
                 "media_error": self.media_playback.error if self.media_playback else None,
                 "media_finished": self.media_playback.finished if self.media_playback else False,
+                "program_dynamic": bool(self.media_playback and not self.media_playback.finished),
                 "preset": self.live_preset,
                 "output": self.live_output_name,
                 "owner_id": self.live_owner_id,
@@ -1276,14 +1505,28 @@ def make_handler(runtime: ScoreboardWebRuntime):
                     self._send(200, runtime.web_file.read_bytes(), "text/html; charset=utf-8")
                 elif path == "/api/bootstrap":
                     self._json(200, runtime.bootstrap())
+                elif path == '/api/flag':
+                    value = query.get('code',[''])[0]
+                    code = runtime.core.qualifier_country_code(value)
+                    if not code:
+                        self._json(404, {'error':'Flag not found'})
+                        return
+                    try:
+                        with zipfile.ZipFile(runtime.app_dir/'country_flags.zip') as archive:
+                            data = archive.read(code+'.png')
+                    except (KeyError,OSError,zipfile.BadZipFile):
+                        self._json(404, {'error':'Flag not found'})
+                        return
+                    self._send(200,data,'image/png',headers={'Cache-Control':'public, max-age=86400'})
                 elif path == '/api/output/capabilities':
                     self._json(200, runtime.output_capabilities())
                 elif path == "/api/projects":
                     self._json(200, {"projects": runtime.list_projects()})
                 elif path == '/api/templates':
-                    self._json(200, runtime.library_snapshot())
+                    self._json(200, runtime.library_snapshot(query.get('competition',['davis-cup'])[0]))
                 elif path == '/api/templates/changes':
-                    self._json(200, runtime.wait_for_library(query.get('revision',[''])[0]))
+                    self._json(200, runtime.wait_for_library(query.get('revision',[''])[0],
+                        competition=query.get('competition',['davis-cup'])[0]))
                 elif path == "/api/projects/open":
                     self._json(200, runtime.open_project(query.get("id", [""])[0]))
                 elif path == "/api/live/status":
@@ -1319,6 +1562,9 @@ def make_handler(runtime: ScoreboardWebRuntime):
                     self._json(410, {'error':'Project editing has been retired. Use the template library.'})
                     return
                 payload = self._body()
+                if payload.get('template') in runtime.core.WEB_TEMPLATE_KEYS:
+                    payload['config'] = runtime.normalized_config(payload['template'],payload.get('config'),
+                        payload.get('competition','davis-cup'))
                 client_id = payload.get("client_id", "")
                 remote_address = self.client_address[0]
                 if path == '/api/templates/save':
@@ -1358,6 +1604,8 @@ def make_handler(runtime: ScoreboardWebRuntime):
                         payload.get("template", ""), payload.get("config"),
                         client_id=client_id,
                         update_live=False,
+                        output_mode='external-key',
+                        output_preset='HD 1080i50',
                     )
                     buffer = io.BytesIO()
                     image.save(buffer, "PNG")
@@ -1383,11 +1631,11 @@ def make_handler(runtime: ScoreboardWebRuntime):
                 elif path == "/api/live/start":
                     self._json(200, runtime.start_live(
                         payload.get("template", ""), payload.get("config"),
-                        payload.get("preset", ""), payload.get("output", ""),
+                        "HD 1080i50", "DeckLink output 1 (device 0)",
                         client_id, remote_address,
                         standby=True,
-                        clear_mode=payload.get('clear_mode','black'),
-                        keyer_confirmed=payload.get('keyer_confirmed',False),
+                        clear_mode="external-key",
+                        keyer_confirmed=True,
                     ))
                 elif path == '/api/live/show':
                     self._json(200, runtime.show_live(payload.get('template'), payload.get('config'), client_id, remote_address,
