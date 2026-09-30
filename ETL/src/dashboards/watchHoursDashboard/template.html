@@ -18,7 +18,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;ba
 .filter-bar{background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;box-shadow:0 1px 2px rgba(15,23,42,.05);min-width:0}
 .global-filter{border-top:3px solid var(--gold)}
 .local-filter{border-top:3px solid var(--teal);background:#fbfcfe;box-shadow:none}
-.date-filter{padding:11px 12px;gap:8px;overflow-x:auto;white-space:nowrap;flex-wrap:nowrap}
+.context-filter{margin-bottom:12px;min-width:0}
+.context-filter>summary{display:inline-flex;align-items:center;gap:8px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;color:var(--brand);padding:6px 10px;font-size:11px;font-weight:800;cursor:pointer;list-style:none}
+.context-filter>summary::-webkit-details-marker{display:none}
+.context-filter>summary::after{content:'v';color:#64748b}
+.context-filter[open]>summary{margin-bottom:8px}
+.context-filter>.filter-bar{margin-bottom:0}
+.panel .context-filter>.filter-bar{border:0;background:#f8fafc;box-shadow:none}
+#channelGeoPanel .filter-bar{border:0;background:transparent;box-shadow:none;padding:0}
+.date-filter{padding:8px 10px;gap:7px;overflow-x:auto;white-space:nowrap;flex-wrap:nowrap;align-items:center;scrollbar-width:thin}
+.global-filter .filter-btn{padding:5px 8px}
+.global-filter .filter-btn,.global-filter .filter-title,.global-filter .filter-sep{flex:none}
+.filter-scope{font-size:10px;font-weight:850;text-transform:uppercase;color:#64748b;flex:none}
+.date-picker{position:relative;flex:0 0 185px}
+.date-picker summary{display:flex;align-items:center;gap:6px;height:35px;padding:0 9px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;color:var(--brand);font-size:11px;font-weight:800;cursor:pointer;list-style:none;overflow:hidden}
+.date-picker summary::-webkit-details-marker{display:none}
+.date-picker summary::after{content:'v';margin-left:auto;font-size:11px;color:#64748b}
+.date-picker .filter-range{min-width:0;margin:0;width:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--brand);font-size:11px}
+.date-picker-menu{position:fixed;z-index:100;width:350px;max-width:calc(100vw - 16px);padding:12px;border:1px solid #b8c7d8;border-radius:7px;background:#fff;box-shadow:0 14px 30px rgba(15,23,42,.2);white-space:normal;overflow-y:auto}
+.date-picker-menu .date-picker-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.date-picker-menu .date-picker-row:last-child{margin-bottom:0}
+.date-picker-menu .filter-title{width:100%;margin:0}
+.date-picker-menu input[type="date"]{flex:1 1 125px;min-width:0;height:33px}
+.date-picker-menu .date-end-wrap{flex:1 1 155px}
+.date-picker-menu .date-end-wrap input{width:100%}
 .filter-title{font-size:11px;font-weight:850;text-transform:uppercase;color:#475569;letter-spacing:.04em;margin-right:4px}
 .filter-btn{border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:5px;padding:5px 10px;font-size:11px;font-weight:800;cursor:pointer;transition:all .2s}
 .filter-btn:hover{background:#edf2f7;color:var(--brand)}
@@ -149,15 +172,14 @@ tr:hover td{background:#f6f9ff}
 .metric-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:12px}
 .mini{border:1px solid #e2e8f0;border-radius:7px;padding:8px 10px;background:#fbfcfe}
 .mini b{display:block;font-size:10px;text-transform:uppercase;color:#64748b;margin-bottom:3px}.mini span{font-size:17px;font-weight:850;line-height:1.15;overflow-wrap:anywhere}
-.explore-controls{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-.explore-field{display:flex;flex-direction:column;gap:5px;min-width:150px;flex:1 1 170px;color:#475569;font-size:11px;font-weight:800}
-.explore-field select{height:36px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:#172033;padding:0 10px;font:inherit;font-size:12px}
-.explore-filter{position:relative;min-width:150px;flex:1 1 170px;font-size:12px}
-.explore-filter summary{height:36px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 10px;border:1px solid #cbd5e1;border-radius:7px;background:#fff;color:#173b5c;font-weight:800;cursor:pointer;list-style:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.explore-field{display:flex;flex-direction:column;gap:3px;min-width:120px;flex:0 0 120px;color:#475569;font-size:10px;font-weight:800}
+.explore-field select{width:100%;height:31px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;color:#172033;padding:0 7px;font:inherit;font-size:11px}
+.explore-filter{position:relative;min-width:122px;flex:0 0 122px;font-size:11px}
+.explore-filter summary{height:35px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 9px;border:1px solid #cbd5e1;border-radius:6px;background:#fff;color:#173b5c;font-weight:800;cursor:pointer;list-style:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .explore-filter summary::-webkit-details-marker{display:none}
 .explore-filter summary::after{content:'v';font-size:12px;color:#64748b}
 .explore-filter[open] summary{border-color:#173b5c;border-radius:7px 7px 0 0}
-.explore-menu{position:absolute;z-index:30;top:35px;left:0;right:0;min-width:230px;border:1px solid #b8c7d8;border-radius:0 0 7px 7px;background:#fff;box-shadow:0 12px 25px rgba(15,23,42,.16);padding:8px}
+.explore-menu{position:fixed;z-index:100;width:280px;max-width:calc(100vw - 16px);border:1px solid #b8c7d8;border-radius:7px;background:#fff;box-shadow:0 12px 25px rgba(15,23,42,.16);padding:8px;overflow-y:auto}
 .explore-search{width:100%;height:32px;border:1px solid #cbd5e1;border-radius:5px;padding:5px 8px;font:inherit;font-size:12px}
 .explore-options{max-height:220px;overflow-y:auto;margin:6px 0}
 .explore-option{display:flex;align-items:center;gap:7px;padding:5px 4px;color:#24324a;font-weight:650;cursor:pointer;overflow-wrap:anywhere}
@@ -166,12 +188,12 @@ tr:hover td{background:#f6f9ff}
 .explore-actions{display:flex;justify-content:space-between;border-top:1px solid #e2e8f0;padding-top:7px}
 .explore-actions button,.explore-export{border:1px solid #cbd5e1;border-radius:6px;background:#fff;color:#173b5c;font:inherit;font-size:11px;font-weight:800;padding:7px 10px;cursor:pointer}
 .explore-actions button:hover,.explore-export:hover{background:#edf2f7}
-.explore-controls .explore-export{height:36px}
+.global-filter .explore-export{height:35px;flex:none}
 .explore-empty{padding:18px;color:#64748b;font-size:12px;font-weight:700;text-align:center}
 .explore-context{font-size:11px;color:#64748b;font-weight:700;margin:0 0 10px}
 .explore-chart{height:300px}
 #explore .grid-2{align-items:start}
-@media(max-width:680px){.explore-field,.explore-filter{flex-basis:calc(50% - 5px);min-width:0}.explore-menu{min-width:min(250px,90vw)}.explore-filter:nth-child(even) .explore-menu{left:auto;right:0}.explore-chart{height:250px}}
+@media(max-width:680px){.explore-chart{height:250px}}
 .footer{font-size:11px;color:#94a3b8;text-align:center;padding:20px 0 4px}
 .modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:50;display:none;align-items:center;justify-content:center;padding:22px}
 .modal-backdrop.open{display:flex}
@@ -192,12 +214,13 @@ tr:hover td{background:#f6f9ff}
 @media(max-width:1180px){.card{flex-basis:calc((100% - 24px)/4)}.topbar .sub{max-width:100%;text-align:left}}
 @media(min-width:1900px){.wrap{max-width:1880px}.chart-box{height:clamp(300px,31vh,390px)}.chart-box.channel-trend{height:clamp(340px,38vh,480px)}.chart-box.tall{height:clamp(380px,44vh,540px)}.chart-box.channel-rank{height:clamp(560px,62vh,780px)}.chart-box.channel-rank-wide{height:clamp(720px,72vh,940px)}.table-wrap{max-height:620px}}
 @media(min-width:2200px){.wrap{max-width:2200px}.chart-box{height:clamp(330px,32vh,440px)}.chart-box.channel-trend{height:clamp(390px,40vh,540px)}.chart-box.tall{height:clamp(430px,46vh,610px)}.chart-box.channel-rank{height:clamp(640px,64vh,860px)}.chart-modal{width:min(1500px,94vw);height:min(900px,92vh)}}
-@media(max-width:900px){.wrap{padding:16px}.sticky-controls{margin:-8px 0 14px}.sticky-controls.is-fixed{padding:8px 14px;max-height:58vh;overflow:auto}.tab{scroll-margin-top:var(--sticky-offset,58vh)}.tabs{padding:7px}.tab-btn{padding:7px 10px;font-size:11px}.card{flex-basis:calc((100% - 16px)/3)}.grid-2,.grid-3,.grid-max-2,.grid-stack{grid-template-columns:1fr}.metric-strip,.modal-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.topbar .sub{text-align:left;max-width:100%}.filter-range{margin-left:0;width:100%}.date-filter{width:100%;overflow-x:visible;white-space:normal;flex-wrap:wrap}.chart-box{height:240px}.chart-box.concurrency{height:440px}.chart-box.channel-rank{height:520px}.chart-box.channel-rank-wide{height:640px}.chart-actions{gap:6px}.modal-chart-wrap.rank-modal-wrap{min-height:560px}}
+@media(max-width:900px){.wrap{padding:16px}.sticky-controls{margin:-8px 0 14px}.sticky-controls.is-fixed{padding:8px 14px;max-height:none;overflow:visible}.tab{scroll-margin-top:var(--sticky-offset,140px)}.tabs{padding:7px}.tab-btn{padding:7px 10px;font-size:11px}.card{flex-basis:calc((100% - 16px)/3)}.grid-2,.grid-3,.grid-max-2,.grid-stack{grid-template-columns:1fr}.metric-strip,.modal-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.topbar .sub{text-align:left;max-width:100%}.chart-box{height:240px}.chart-box.concurrency{height:440px}.chart-box.channel-rank{height:520px}.chart-box.channel-rank-wide{height:640px}.chart-actions{gap:6px}.modal-chart-wrap.rank-modal-wrap{min-height:560px}}
 @media(max-width:680px){.card{flex-basis:calc((100% - 8px)/2)}}
 @media print{.tabs,.tab-btn{display:none}.tab{display:block}body{background:#fff}.panel,.card,.note{box-shadow:none}.table-wrap{max-height:none;overflow:visible}}
 html,body{max-width:100%;overflow-x:hidden}
 .wrap,.topbar,.sticky-controls,.sticky-spacer,.filter-bar,.tabs,.panel,.card,.chart-box,.table-wrap,.modal-body,.modal-chart-wrap{max-width:100%;min-width:0}
-.date-filter,.tabs{overflow-x:visible!important;white-space:normal!important;flex-wrap:wrap!important}
+.global-filter,.tabs{overflow-x:auto!important;white-space:nowrap!important;flex-wrap:nowrap!important}
+.tab-btn{flex:none}
 .table-wrap{overflow-x:hidden!important;overflow-y:auto}
 table{min-width:0!important;max-width:100%;table-layout:fixed}
 th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
@@ -218,28 +241,18 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
       <button class="filter-btn active" id="sourceStream" onclick="setSourceFilter('stream')">STREAM</button>
       <button class="filter-btn" id="sourceFast" onclick="setSourceFilter('fast')">FAST</button>
       <span class="filter-sep"></span>
-      <span class="filter-title">Date Mode</span>
-      <button class="filter-btn" id="dateModeSingle" onclick="setDateFilterMode('single')">Single Date</button>
-      <button class="filter-btn active" id="dateModeRange" onclick="setDateFilterMode('range')">Date Range</button>
+      <details class="date-picker" id="dateFilter"><summary><span>Date</span><span class="filter-range" id="selectedRange"></span></summary>
+        <div class="date-picker-menu">
+          <div class="date-picker-row"><span class="filter-title">Mode</span><button class="filter-btn" id="dateModeSingle" onclick="setDateFilterMode('single')">Single Date</button><button class="filter-btn active" id="dateModeRange" onclick="setDateFilterMode('range')">Date Range</button></div>
+          <div class="date-picker-row"><span class="filter-title" id="dateFilterTitle">Date Range</span><button class="filter-btn" id="presetAll" onclick="setDatePreset('all')">ALL</button><button class="filter-btn" id="preset30" onclick="setDatePreset(30)">30D</button><button class="filter-btn active" id="preset7" onclick="setDatePreset(7)">7D</button><button class="filter-btn" id="presetYesterday" onclick="setDatePreset('yesterday')">Yesterday</button></div>
+          <div class="date-picker-row"><span class="filter-title">Custom dates</span>
+            <input type="date" id="dateStart" aria-label="Start date" onchange="handleCustomDate()"/>
+            <span id="dateEndWrap" class="date-end-wrap"><span class="to-label">to</span><input type="date" id="dateEnd" aria-label="End date" onchange="handleCustomDate()"/></span>
+          </div>
+        </div>
+      </details>
       <span class="filter-sep"></span>
-      <span class="filter-title" id="dateFilterTitle">Date Range</span>
-      <button class="filter-btn" id="presetAll" onclick="setDatePreset('all')">ALL</button>
-      <button class="filter-btn" id="preset30" onclick="setDatePreset(30)">30D</button>
-      <button class="filter-btn active" id="preset7" onclick="setDatePreset(7)">7D</button>
-      <button class="filter-btn" id="presetYesterday" onclick="setDatePreset('yesterday')">Yesterday</button>
-      <span class="filter-sep"></span>
-      <input type="date" id="dateStart" onchange="handleCustomDate()"/>
-      <span id="dateEndWrap" class="date-end-wrap"><span class="to-label">to</span>
-      <input type="date" id="dateEnd" onchange="handleCustomDate()"/></span>
-      <span class="filter-range" id="selectedRange"></span>
-    </div>
-    <div class="tabs" id="tabs"></div>
-  </div>
-  <div class="section-title"><h2>Overall Summary</h2></div>
-  <div class="cards" id="summaryCards"></div>
-  <section class="tab active" id="explore">
-    <div class="section-title"><h2>Watch Hours Explorer</h2><span class="count-chip" id="exploreRowCount"></span></div>
-    <div class="explore-controls">
+      <span class="filter-scope" title="These filters update Watch Hours Explorer only">Explore</span>
       <details class="explore-filter" id="exploreCountry"><summary>All countries</summary><div class="explore-menu"><input class="explore-search" type="search" placeholder="Search countries" aria-label="Search countries"><div class="explore-options"></div><div class="explore-actions"><button type="button" data-action="all">All</button><button type="button" data-action="clear">None</button></div></div></details>
       <details class="explore-filter" id="exploreRegion"><summary>All regions</summary><div class="explore-menu"><input class="explore-search" type="search" placeholder="Search regions" aria-label="Search regions"><div class="explore-options"></div><div class="explore-actions"><button type="button" data-action="all">All</button><button type="button" data-action="clear">None</button></div></div></details>
       <details class="explore-filter" id="exploreChannel"><summary>All channels</summary><div class="explore-menu"><input class="explore-search" type="search" placeholder="Search channels" aria-label="Search channels"><div class="explore-options"></div><div class="explore-actions"><button type="button" data-action="all">All</button><button type="button" data-action="clear">None</button></div></div></details>
@@ -248,6 +261,12 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
       <label class="explore-field">Breakdown<select id="exploreBreakdown" onchange="renderExplore()"><option value="channel">Channel</option><option value="region">Region</option><option value="country">Country</option><option value="device">Device</option></select></label>
       <button type="button" class="explore-export" onclick="exportExploreCsv()">Download CSV</button>
     </div>
+    <div class="tabs" id="tabs"></div>
+  </div>
+  <div class="section-title"><h2>Overall Summary</h2></div>
+  <div class="cards" id="summaryCards"></div>
+  <section class="tab active" id="explore">
+    <div class="section-title"><h2>Watch Hours Explorer</h2><span class="count-chip" id="exploreRowCount"></span></div>
     <div class="explore-context" id="exploreContext"></div>
     <div class="metric-strip" id="exploreMetrics"></div>
     <div class="grid-2">
@@ -256,6 +275,7 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
     </div>
   </section>
   <section class="tab" id="overview">
+    <details class="context-filter" id="trendOptions"><summary>Channel trend options</summary>
     <div class="filter-bar local-filter">
       <span class="filter-title">Channel Trend / Ranking</span>
       <button class="filter-btn active" id="channelRankAllBtn" onclick="setChannelRankMode('all')">Show All Channels</button>
@@ -284,12 +304,13 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
       <select class="channel-select" id="trendRegionState" onchange="setTrendRegionState(this.value)"></select>
       <span class="filter-range" id="channelLimitText"></span>
     </div>
+    </details>
     <div class="grid-2">
       <div class="panel"><h2>Daily Volume<span class="chart-actions"><span class="chart-sub">rows, .ts, .m3u8, errors</span><button class="expand-btn" onclick="openChartModal('dailyChart')">Expand</button></span></h2><div class="chart-box"><canvas id="dailyChart"></canvas></div></div>
       <div class="panel"><h2>Channel Trend<span class="chart-actions"><span class="chart-sub">watch hours by channel</span><button class="expand-btn" onclick="openChartModal('channelTrend')">Expand</button></span></h2><div class="chart-box channel-trend"><canvas id="channelTrend"></canvas></div></div>
     </div>
     <div class="usage-drop-stack">
-      <div class="panel"><h2>Usage Drop Analysis<span class="chart-actions"><span class="chart-sub" id="channelRowMoverRange">selected vs previous period</span><button class="expand-btn" onclick="openChartModal('channelRowMoverChart')">Expand</button></span></h2><div class="filter-bar usage-drop-filter"><span class="filter-title">Compare</span><button class="filter-btn active" id="usageDropAutoBtn" onclick="setUsageDropAuto()">Auto Previous</button><span class="filter-sep"></span><span class="filter-title">Before</span><input type="date" id="usageBeforeStart" onchange="handleUsageDropCustom()"/><span style="font-size:12px;color:#64748b;font-weight:700">to</span><input type="date" id="usageBeforeEnd" onchange="handleUsageDropCustom()"/><span class="filter-sep"></span><span class="filter-title">After</span><input type="date" id="usageAfterStart" onchange="handleUsageDropCustom()"/><span style="font-size:12px;color:#64748b;font-weight:700">to</span><input type="date" id="usageAfterEnd" onchange="handleUsageDropCustom()"/><span class="filter-sep"></span><span class="filter-title">Attribution Channel</span><select class="channel-select" id="usageDropChannelSelect" onchange="setUsageDropChannel(this.value)"></select></div><div class="metric-strip" id="usageDropMetrics"></div><div class="chart-box tall channel-rank channel-rank-wide" id="channelRowMoverChartWrap"><canvas id="channelRowMoverChart"></canvas></div></div>
+      <div class="panel"><h2>Usage Drop Analysis<span class="chart-actions"><span class="chart-sub" id="channelRowMoverRange">selected vs previous period</span><button class="expand-btn" onclick="openChartModal('channelRowMoverChart')">Expand</button></span></h2><details class="context-filter" id="usageDropOptions"><summary>Comparison options</summary><div class="filter-bar usage-drop-filter"><span class="filter-title">Compare</span><button class="filter-btn active" id="usageDropAutoBtn" onclick="setUsageDropAuto()">Auto Previous</button><span class="filter-sep"></span><span class="filter-title">Before</span><input type="date" id="usageBeforeStart" onchange="handleUsageDropCustom()"/><span style="font-size:12px;color:#64748b;font-weight:700">to</span><input type="date" id="usageBeforeEnd" onchange="handleUsageDropCustom()"/><span class="filter-sep"></span><span class="filter-title">After</span><input type="date" id="usageAfterStart" onchange="handleUsageDropCustom()"/><span style="font-size:12px;color:#64748b;font-weight:700">to</span><input type="date" id="usageAfterEnd" onchange="handleUsageDropCustom()"/><span class="filter-sep"></span><span class="filter-title">Attribution Channel</span><select class="channel-select" id="usageDropChannelSelect" onchange="setUsageDropChannel(this.value)"></select></div></details><div class="metric-strip" id="usageDropMetrics"></div><div class="chart-box tall channel-rank channel-rank-wide" id="channelRowMoverChartWrap"><canvas id="channelRowMoverChart"></canvas></div></div>
       <div class="panel"><h2>All Channel Usage Movement<span class="count-chip" id="channelRowMoverCount"></span></h2><div class="table-wrap" id="channelRowMoverTable"></div></div>
       <div class="panel"><h2><span id="usageDropDetailTitle">Selected Channel Drop Attribution</span></h2><div class="metric-strip" id="usageDropDetailMetrics"></div></div>
       <div class="panel"><h2>Country Level<span class="count-chip" id="usageDropCountryCount"></span></h2><div class="table-wrap" id="usageDropCountryTable"></div></div>
@@ -1942,6 +1963,33 @@ function exportExploreCsv(){
 }
 
 function initExploreFilters(){
+  const popovers=[document.getElementById('dateFilter'),...Object.values(EXPLORE_FACETS).map(({id})=>document.getElementById(id))];
+  const positionPopover=node=>{
+    if(!node.open)return;
+    const menu=node.querySelector('.date-picker-menu,.explore-menu');
+    const rect=node.querySelector('summary').getBoundingClientRect();
+    const width=menu.offsetWidth;
+    menu.style.left=`${Math.max(8,Math.min(rect.left,window.innerWidth-width-8))}px`;
+    const below=window.innerHeight-rect.bottom-8;
+    const above=rect.top-8;
+    if(below<220&&above>below){
+      menu.style.top='auto';
+      menu.style.bottom=`${window.innerHeight-rect.top+4}px`;
+      menu.style.maxHeight=`${Math.max(100,above)}px`;
+    }else{
+      menu.style.top=`${rect.bottom+4}px`;
+      menu.style.bottom='auto';
+      menu.style.maxHeight=`${Math.max(100,below)}px`;
+    }
+  };
+  popovers.forEach(node=>node.addEventListener('toggle',()=>{
+    if(!node.open)return;
+    popovers.forEach(other=>{if(other!==node)other.open=false;});
+    positionPopover(node);
+  }));
+  document.querySelector('.global-filter').addEventListener('scroll',()=>popovers.forEach(positionPopover),{passive:true});
+  window.addEventListener('scroll',()=>popovers.forEach(positionPopover),{passive:true});
+  window.addEventListener('resize',()=>popovers.forEach(positionPopover));
   Object.entries(EXPLORE_FACETS).forEach(([facet,{id}])=>{
     const node=document.getElementById(id);
     node.querySelector('.explore-search').addEventListener('input',()=>filterExploreOptions(facet));
@@ -1960,12 +2008,12 @@ function initExploreFilters(){
       renderExploreFacet(facet);
       renderExplore();
     });
-    node.addEventListener('toggle',()=>{
-      if(node.open)document.querySelectorAll('.explore-filter').forEach(other=>{if(other!==node)other.open=false;});
-    });
   });
   document.addEventListener('click',event=>{
-    if(!event.target.closest('.explore-filter'))document.querySelectorAll('.explore-filter[open]').forEach(node=>node.open=false);
+    if(!event.target.closest('.explore-filter,.date-picker'))popovers.forEach(node=>node.open=false);
+  });
+  document.addEventListener('keydown',event=>{
+    if(event.key==='Escape')popovers.forEach(node=>node.open=false);
   });
 }
 
@@ -2439,11 +2487,18 @@ function setConcurrencyMetric(value){concurrencyMetric=value||'unique_viewers';r
 function toggleConcurrencyCompare(){concurrencyCompare=!concurrencyCompare;renderCharts();queueRenderTables();if(modalChartSourceId==='concurrencyChart')renderModalChart();}
 
 // ── Date filter ───────────────────────────────────────────────────────────────
+function selectedDateLabel(){
+  if(!viewDaily.length)return 'No data';
+  const first=fmtDateOnly(viewDaily[0].log_date);
+  const last=fmtDateOnly(viewDaily[viewDaily.length-1].log_date);
+  return first===last?first:`${first} - ${last}`;
+}
+
 function syncDateInputs(){
   document.getElementById('dateStart').value=viewDaily.length?viewDaily[0].log_date:'';
   document.getElementById('dateEnd').value=viewDaily.length?viewDaily[viewDaily.length-1].log_date:'';
   if(dateFilterMode==='single'&&viewDaily.length)document.getElementById('dateEnd').value=viewDaily[0].log_date;
-  document.getElementById('selectedRange').textContent=viewDaily.length?`${sourceLabel(sourceFilter)} | ${fmtDateRange(viewDaily[0].log_date,viewDaily[viewDaily.length-1].log_date)} | ${viewDaily.length} days`:`${sourceLabel(sourceFilter)} | No data in selected range`;
+  document.getElementById('selectedRange').textContent=selectedDateLabel();
   syncDateModeControls();
 }
 
@@ -2451,7 +2506,7 @@ function applyDateView(updateInputs=true){
   invalidateAggCache();
   viewChannels=aggregateChannels(viewDaily);
   if(updateInputs)syncDateInputs();
-  else document.getElementById('selectedRange').textContent=viewDaily.length?`${sourceLabel(sourceFilter)} | ${fmtDateRange(viewDaily[0].log_date,viewDaily[viewDaily.length-1].log_date)} | ${viewDaily.length} days`:`${sourceLabel(sourceFilter)} | No data in selected range`;
+  else document.getElementById('selectedRange').textContent=selectedDateLabel();
   syncDateModeControls();
   renderHeader();
   renderTrendPlatformOptions();
@@ -2473,6 +2528,7 @@ function setDatePreset(mode){
   else viewDaily=ALL_DAILY.slice(-Number(mode));
   setActivePreset(mode==='all'?'presetAll':mode==='yesterday'?'presetYesterday':mode===30?'preset30':'preset7');
   applyDateView();
+  document.getElementById('dateFilter').open=false;
 }
 
 // Debounced custom date to prevent re-render on every keystroke
@@ -2481,8 +2537,9 @@ function handleCustomDate(){
   clearTimeout(_dateDebounce);
   _dateDebounce=setTimeout(()=>{
     setActivePreset(null);
-    const start=document.getElementById('dateStart').value||'0000-00-00';
-    const end=dateFilterMode==='single'?start:(document.getElementById('dateEnd').value||'9999-99-99');
+    let start=document.getElementById('dateStart').value||'0000-00-00';
+    let end=dateFilterMode==='single'?start:(document.getElementById('dateEnd').value||'9999-99-99');
+    if(start>end){[start,end]=[end,start];document.getElementById('dateStart').value=start;document.getElementById('dateEnd').value=end;}
     if(dateFilterMode==='single')document.getElementById('dateEnd').value=start;
     viewDaily=ALL_DAILY.filter(r=>String(r.log_date)>=start&&String(r.log_date)<=end);
     applyDateView(false);
