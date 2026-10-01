@@ -50,4 +50,3 @@ def initialize(db, audit_digest, verify_audit_chain, AUDIT_GENESIS):
     if not valid:
         raise RuntimeError(f'Audit chain verification failed at event {broken}.')
     db().commit()
-

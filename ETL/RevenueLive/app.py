@@ -27,6 +27,7 @@ from database import Database, INTEGRITY_ERRORS
 
 ROOT = Path(__file__).resolve().parent
 HEADERS = ['Date', 'Channel Name', 'Views', 'Ad Impressions', 'Ad Revenue', 'Sponsorship/Others', 'Total Revenue']
+LEGACY_HEADERS = ['Date', 'Channel Name', 'Views', 'Compaign/Ad Impression', 'Revenue', 'Sponsorship/Others', 'Total Ad Revenue']
 AUDIT_GENESIS = '0' * 64
 
 
@@ -82,7 +83,12 @@ def parse_upload(content, suffix):
         rows = list(itertools.islice(csv.reader(io.StringIO(content.decode('utf-8-sig'))), 20002))
     else:
         raise InvalidData('Upload an XLS, XLSX or UTF-8 CSV file.')
-    if not rows or [str(x or '').strip() for x in rows[0]] != HEADERS:
+    def normalized_headers(values):
+        return [' '.join(str(value or '').split()).casefold() for value in values]
+
+    # The legacy workbook uses "Revenue" for ads and "Total Ad Revenue" for
+    # the combined amount. Accept that complete schema, not ambiguous aliases.
+    if not rows or normalized_headers(rows[0]) not in (normalized_headers(HEADERS), normalized_headers(LEGACY_HEADERS)):
         raise InvalidData('Columns must match: ' + ', '.join(HEADERS))
     if len(rows) > 20001:
         raise InvalidData('Maximum 20,000 data rows per upload.')
