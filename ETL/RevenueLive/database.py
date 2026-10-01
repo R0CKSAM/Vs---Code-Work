@@ -113,7 +113,7 @@ class MySQLConnection:
 class Database:
     def __init__(self, settings):
         self.settings = settings
-        self.mysql = settings.db_url.get_backend_name() == 'mysql'
+        self.mysql = settings.db_url.get_backend_name() in {'mysql', 'mariadb'}
         self.engine = None
         if self.mysql:
             options = {'connect_timeout': 10}

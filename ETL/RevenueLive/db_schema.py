@@ -30,7 +30,7 @@ def flag(name, default='0'):
 
 # Case-insensitive, accent-sensitive names; migration rejects any new collisions.
 def identity_key(name, size):
-    return col(name, String(size, collation='utf8mb4_0900_as_ci'), nullable=False)
+    return col(name, String(size, collation='utf8mb4_unicode_ci'), nullable=False)
 
 
 table('users', identifier(), identity_key('username', 100), col('password', String(512), nullable=False),

@@ -16,7 +16,6 @@ import threading
 import time
 from contextlib import closing
 from decimal import Decimal, InvalidOperation
-from urllib.parse import urlsplit
 
 from flask import Flask, g, jsonify, request, send_from_directory, redirect
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -893,7 +892,7 @@ if __name__=='__main__':
         raise SystemExit(0)
     if settings.app_url and args.host not in {'127.0.0.1','localhost','::1'}:
         parser.error('HTTPS proxy mode requires a loopback backend listener.')
-    app=create_app(data) if settings.db_url.get_backend_name() == 'mysql' else bootstrap(data)
+    app=create_app() if settings.db_url.get_backend_name() in {'mysql','mariadb'} else bootstrap(data)
     from waitress import create_server
     options=dict(host=args.host,port=args.port,threads=4,clear_untrusted_proxy_headers=True)
     trusted_proxy=os.environ.get('REVENUE_TRUSTED_PROXY','').strip()

@@ -50,14 +50,16 @@ class Settings:
     @classmethod
     def from_env(cls, data_dir=None):
         load_environment()
+        local = data_dir is not None
         data = Path(data_dir or os.environ.get('DATA_DIR') or os.environ.get('REVENUE_DATA_DIR', ROOT / 'data')).resolve()
-        app_url = os.environ.get('APP_URL', os.environ.get('REVENUE_PUBLIC_URL', '')).strip()
+        app_url = (os.environ.get('REVENUE_PUBLIC_URL', '') if local else
+                   os.environ.get('APP_URL', os.environ.get('REVENUE_PUBLIC_URL', ''))).strip()
         if app_url:
             app_url = public_url(app_url)
-        production = os.environ.get('APP_ENV', 'development') == 'production'
+        production = not local and os.environ.get('APP_ENV', 'development') == 'production'
         if (production or os.environ.get('REVENUE_HTTPS') == '1') and not app_url:
             raise ValueError('APP_URL (or REVENUE_PUBLIC_URL) is required for production HTTPS deployments.')
-        mode = os.environ.get('PORTAL_MODE', 'single')
+        mode = 'single' if local else os.environ.get('PORTAL_MODE', 'single')
         if mode not in {'single', 'split'}:
             raise ValueError('PORTAL_MODE must be single or split.')
         admin = os.environ.get('ADMIN_URL', app_url + '/admin' if app_url else '/admin')
@@ -73,30 +75,32 @@ class Settings:
         elif mode == 'split':
             raise ValueError('Split portals require HTTPS public URLs.')
         expected = {urlsplit(x).hostname for x in (app_url, admin, user) if urlsplit(x).hostname}
-        hosts = tuple(x.strip() for x in os.environ.get('ALLOWED_HOSTS', ','.join(sorted(expected))).split(',') if x.strip())
+        host_setting = ','.join(sorted(expected)) if local else os.environ.get('ALLOWED_HOSTS', ','.join(sorted(expected)))
+        hosts = tuple(x.strip() for x in host_setting.split(',') if x.strip())
         if expected and not expected.issubset(set(hosts)):
             raise ValueError('ALLOWED_HOSTS must include every configured public hostname.')
         if any(not re.fullmatch(r'[A-Za-z0-9.-]+', host) or host.startswith('.') for host in hosts):
             raise ValueError('ALLOWED_HOSTS accepts exact hostnames only.')
-        secure = boolean('SESSION_COOKIE_SECURE', bool(app_url))
+        secure = bool(app_url) if local else boolean('SESSION_COOKIE_SECURE', bool(app_url))
         if app_url and not secure:
             raise ValueError('Public deployments require secure cookies.')
-        same = os.environ.get('SESSION_COOKIE_SAMESITE', 'Lax')
+        same = 'Strict' if local else os.environ.get('SESSION_COOKIE_SAMESITE', 'Lax')
         if same not in {'Strict', 'Lax'}:
             raise ValueError('SESSION_COOKIE_SAMESITE must be Strict or Lax.')
         default_cookie = 'revenuelive_session' if app_url else 'revenue_' + hashlib.sha256(str(data).encode()).hexdigest()[:12]
-        cookie = os.environ.get('SESSION_COOKIE_NAME', default_cookie)
+        cookie = default_cookie if local else os.environ.get('SESSION_COOKIE_NAME', default_cookie)
         if not re.fullmatch(r'[A-Za-z0-9_-]{1,80}', cookie):
             raise ValueError('Invalid SESSION_COOKIE_NAME.')
-        ttl = int(os.environ.get('SESSION_TTL_SECONDS', '28800'))
+        ttl = 28800 if local else int(os.environ.get('SESSION_TTL_SECONDS', '28800'))
         if not 300 <= ttl <= 86400:
             raise ValueError('SESSION_TTL_SECONDS must be between 300 and 86400.')
-        driver = os.environ.get('DB_DRIVER', 'sqlite')
+        # Passing data_dir is the explicit local/test SQLite API retained for compatibility.
+        driver = 'sqlite' if data_dir is not None else os.environ.get('DB_DRIVER', 'sqlite')
         if driver == 'sqlite':
             if production:
                 raise ValueError('Set DB_DRIVER=mysql+pymysql for production.')
             database = URL.create('sqlite', database=str(data / 'revenuelive.db'))
-        elif driver == 'mysql+pymysql':
+        elif driver in {'mysql+pymysql', 'mariadb+pymysql'}:
             required = ('DB_HOST', 'DB_DATABASE', 'DB_USERNAME', 'DB_PASSWORD')
             if any(not os.environ.get(key) for key in required):
                 raise ValueError('MySQL requires DB_HOST, DB_DATABASE, DB_USERNAME and DB_PASSWORD.')
@@ -104,8 +108,9 @@ class Settings:
                                   database=os.environ['DB_DATABASE'], username=os.environ['DB_USERNAME'],
                                   password=os.environ['DB_PASSWORD'], query={'charset': 'utf8mb4'})
         else:
-            raise ValueError('DB_DRIVER must be sqlite or mysql+pymysql.')
-        return cls(data, Path(os.environ.get('UPLOAD_DIR', data / 'uploads')).resolve(), app_url,
+            raise ValueError('DB_DRIVER must be sqlite, mysql+pymysql, or mariadb+pymysql.')
+        upload_dir = data / 'uploads' if local else Path(os.environ.get('UPLOAD_DIR', data / 'uploads'))
+        return cls(data, upload_dir.resolve(), app_url,
                    admin, user, mode, hosts, cookie, secure, same, ttl, database)
 
     def request_origin(self, host):

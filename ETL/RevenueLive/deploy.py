@@ -1,8 +1,10 @@
 """Explicit MySQL provisioning and read-only SQLite migration commands."""
 import argparse
 from contextlib import closing
+import datetime as dt
 import getpass
 import hashlib
+import json
 from pathlib import Path
 import shutil
 import sqlite3
@@ -109,6 +111,46 @@ def init_admin(database, username, password):
         connection.execute('INSERT INTO super_admin VALUES (1,?)', (uid,))
 
 
+def reset_super_admin(database, username, password):
+    """Assign ownership, reset its password, revoke sessions, and append audit."""
+    from app import AUDIT_GENESIS, audit_digest, verify_audit_chain
+    if not username or len(username) > 80 or not 12 <= len(password) <= 256:
+        raise ValueError('Use a username up to 80 characters and a password of 12 to 256 characters.')
+    database.check_schema()
+    with closing(database.connect()) as connection, connection:
+        connection.begin_write()
+        valid, _, _, broken = verify_audit_chain(connection)
+        if not valid:
+            raise RuntimeError(f'Audit chain verification failed at event {broken}.')
+        previous = connection.execute(
+            'SELECT u.username FROM super_admin s JOIN users u ON u.id=s.user_id WHERE s.singleton=1'
+        ).fetchone()
+        user = connection.execute('SELECT id FROM users WHERE username=?', (username,)).fetchone()
+        hashed = generate_password_hash(password)
+        if user:
+            uid = user['id']
+            connection.execute("UPDATE users SET password=?,role='admin',active=1,must_change=1 WHERE id=?",
+                               (hashed, uid))
+        else:
+            uid = connection.execute(
+                "INSERT INTO users(username,password,role,active,must_change) VALUES (?,?,'admin',1,1)",
+                (username, hashed)).lastrowid
+        connection.upsert('super_admin', {'singleton':1, 'user_id':uid})
+        connection.execute('DELETE FROM sessions WHERE user_id=?', (uid,))
+        last = connection.execute('SELECT id,entry_hash FROM audit ORDER BY id DESC LIMIT 1').fetchone()
+        event = dict(id=last['id']+1 if last else 1,
+                     created=dt.datetime.now(dt.timezone.utc).isoformat(), user_id=uid,
+                     actor='host-maintenance', action='super_admin_reset',
+                     detail=json.dumps({'username':username,
+                                        'previous_super_admin':previous['username'] if previous else None},
+                                       separators=(',',':')),
+                     prev_hash=last['entry_hash'] if last else AUDIT_GENESIS)
+        event['entry_hash'] = audit_digest(event)
+        connection.execute(
+            'INSERT INTO audit(id,created,user_id,action,detail,actor,prev_hash,entry_hash) '
+            'VALUES (:id,:created,:user_id,:action,:detail,:actor,:prev_hash,:entry_hash)', event)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='action', required=True)
@@ -116,6 +158,8 @@ def main():
     commands.add_parser('check')
     admin = commands.add_parser('init-admin')
     admin.add_argument('--username', default='admin')
+    recovery = commands.add_parser('super-admin', help='Set or recover the Super Admin account.')
+    recovery.add_argument('--username', required=True)
     migrate = commands.add_parser('import-sqlite')
     migrate.add_argument('--source', required=True)
     migrate.add_argument('--source-uploads', required=True)
@@ -123,7 +167,7 @@ def main():
     settings = Settings.from_env()
     database = Database(settings)
     if not database.mysql:
-        parser.error('These commands require DB_DRIVER=mysql+pymysql.')
+        parser.error('These commands require DB_DRIVER=mysql+pymysql or mariadb+pymysql.')
     try:
         if args.action == 'upgrade':
             upgrade(database)
@@ -132,6 +176,11 @@ def main():
             if password != getpass.getpass('Confirm password: '):
                 raise ValueError('Passwords do not match.')
             init_admin(database, args.username, password)
+        elif args.action == 'super-admin':
+            password = getpass.getpass('New Super Admin password: ')
+            if password != getpass.getpass('Confirm password: '):
+                raise ValueError('Passwords do not match.')
+            reset_super_admin(database, args.username, password)
         elif args.action == 'import-sqlite':
             import_sqlite(database, args.source, args.source_uploads)
         else:

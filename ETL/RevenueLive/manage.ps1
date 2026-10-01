@@ -12,12 +12,13 @@ if ($DataDir) { $env:DATA_DIR=[System.IO.Path]::GetFullPath($DataDir) }
 if ($PublicUrl) { $env:APP_URL=$PublicUrl.TrimEnd('/') }
 Push-Location $PSScriptRoot
 try {
-    $configuration=& $Python -c 'import json; from config import Settings; s=Settings.from_env(); print(json.dumps(dict(data=str(s.data_dir),url=s.app_url,mysql=s.db_url.get_backend_name()=="mysql")))'
+    $configuration=& $Python -c 'import json; from config import Settings; s=Settings.from_env(); print(json.dumps(dict(data=str(s.data_dir),url=s.app_url,backend=s.db_url.get_backend_name())))'
     if ($LASTEXITCODE -ne 0) { throw 'Invalid deployment configuration.' }
     $settings=$configuration | ConvertFrom-Json
 } finally { Pop-Location }
 $Data=$settings.data
 $PublicUrl=$settings.url
+$IsServerDatabase=$settings.backend -in @('mysql','mariadb')
 $Logs=Join-Path $Data 'logs'
 $HealthHeaders=@{}
 if ($PublicUrl) { $HealthHeaders['Host']=([Uri]$PublicUrl).Authority }
@@ -70,5 +71,5 @@ if ($Action -in @('Start','Restart')) {
     while (!(Get-Status) -and (Get-Date) -lt $deadline) { Start-Sleep -Milliseconds 500 }
     if (!(Get-Status)) { throw "Startup failed. Check $Logs" }
     Write-Host "RevenueLive backend ready: $Url"
-    if (!$settings.mysql) { Write-Host "Initial admin credentials: $Data\initial_admin.txt" }
+    if (!$IsServerDatabase) { Write-Host "Initial admin credentials: $Data\initial_admin.txt" }
 }
