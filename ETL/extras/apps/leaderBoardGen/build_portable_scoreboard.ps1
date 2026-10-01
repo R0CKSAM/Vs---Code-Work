@@ -1,6 +1,5 @@
 param(
     [string]$Destination = "",
-    [switch]$IncludeOfflineWheels,
     [switch]$IncludeFfmpeg,
     [switch]$IncludeUploads,
     [string]$DataSource = "",
@@ -8,8 +7,8 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$source = $PSScriptRoot
-$etlRoot = (Resolve-Path (Join-Path $source "..\..\..")).Path
+$source = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\PRODUCTION\Veto OTT')).Path
+$etlRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 if (-not $Destination) {
     $Destination = Join-Path $etlRoot "output\portable\VetoScoreboardMaker"
 }
@@ -21,17 +20,17 @@ if (-not ($destinationPath + "\").StartsWith($outputPrefix, [System.StringCompar
 }
 
 New-Item -ItemType Directory -Path $destinationPath -Force | Out-Null
-foreach ($directory in @("data\uploads", "data\projects", "logs", "wheels", "packages")) {
+foreach ($directory in @("data\uploads", "data\projects", "logs")) {
     New-Item -ItemType Directory -Path (Join-Path $destinationPath $directory) -Force | Out-Null
 }
 
-foreach ($file in @("scoreboard_app.py", "scoreboard_web.py", "scoreboard_media.py", "scoreboard_web.html", "players_stats_background.png", "qualifier_rounds_background.png", "head2head_background.png", "country_flags.zip", "country_flags.json", "QUALIFIER_ROUNDS.txt", "import_davis_players.py", "davis_cup_2026_round2.csv", "DAVIS_PLAYER_IMPORT.md", "publish_davis_presets.py", "prepare_korea_preview.py", "fill_davis_photos.py", "fill_qualifier_results.py", "davis_2026_round1_results.json", "scoreboard_match_templates.py", "scoreboard_output_probe.py", "match_stadium.png", "match_davis_logo.png")) {
+foreach ($file in @("scoreboard_app.py", "scoreboard_web.py", "scoreboard_media.py", "scoreboard_web.html", "scoreboard_competition_theme.py", "billie_background.png", "billie_players_stats_final.png", "player_list_background.png", "prediction_background_front.png", "qualifier_band.png", "semi_finals_background.png", "players_stats_background.png", "qualifier_rounds_background.png", "head2head_background.png", "country_flags.zip", "country_flags.json", "QUALIFIER_ROUNDS.txt", "import_davis_players.py", "davis_cup_2026_round2.csv", "DAVIS_PLAYER_IMPORT.md", "publish_davis_presets.py", "prepare_korea_preview.py", "fill_davis_photos.py", "fill_qualifier_results.py", "davis_2026_round1_results.json", "scoreboard_match_templates.py", "scoreboard_output_probe.py", "match_stadium.png", "match_davis_logo.png")) {
     Copy-Item -LiteralPath (Join-Path $source $file) -Destination (Join-Path $destinationPath $file) -Force
 }
-$support = Join-Path $source "portable_support"
+$support = $source
 foreach ($file in @(
     "requirements.txt", "scoreboard_settings.ps1", "setup_scoreboard.ps1",
-    "start_scoreboard.ps1", "stop_scoreboard.ps1", "enable_lan_access.ps1",
+    "start_scoreboard.ps1", "stop_scoreboard.ps1", "restart_scoreboard.ps1", "enable_lan_access.ps1",
     "apply_code_update.ps1", "README.txt"
 )) {
     Copy-Item -LiteralPath (Join-Path $support $file) -Destination (Join-Path $destinationPath $file) -Force
@@ -49,24 +48,15 @@ function New-PowerShellShortcut([string]$Name, [string]$Script, [string]$Descrip
 New-PowerShellShortcut "SETUP_AND_START.lnk" "setup_scoreboard.ps1" "Install and start Veto Scoreboard Maker"
 New-PowerShellShortcut "START_SCOREBOARD.lnk" "start_scoreboard.ps1" "Start Veto Scoreboard Maker"
 New-PowerShellShortcut "STOP_SCOREBOARD.lnk" "stop_scoreboard.ps1" "Stop Veto Scoreboard Maker"
+New-PowerShellShortcut "RESTART_SCOREBOARD.lnk" "restart_scoreboard.ps1" "Restart Veto Scoreboard Maker"
 New-PowerShellShortcut "APPLY_CODE_UPDATE.lnk" "apply_code_update.ps1" "Apply a verified Veto Scoreboard code update"
 New-PowerShellShortcut "ENABLE_LAN_ACCESS_RUN_AS_ADMIN.lnk" "enable_lan_access.ps1" "Enable LAN firewall access for Veto Scoreboard Maker"
 
 $python = (Resolve-Path (Join-Path $etlRoot "..\venv\Scripts\python.exe")).Path
-if ($IncludeOfflineWheels) {
-    $wheelDirectory = Join-Path $destinationPath "wheels"
-    Get-ChildItem -LiteralPath $wheelDirectory -File -ErrorAction SilentlyContinue | Remove-Item -Force
-    Write-Host "Downloading Windows dependency wheels for Python 3.14..." -ForegroundColor Cyan
-    & $python -m pip download --disable-pip-version-check --only-binary=:all: --platform win_amd64 --python-version 314 --implementation cp --dest $wheelDirectory --requirement (Join-Path $destinationPath "requirements.txt")
-    if ($LASTEXITCODE -ne 0) { throw "Could not download dependency wheels." }
-}
-
-$packageDirectory = Join-Path $destinationPath "packages"
-Get-ChildItem -LiteralPath $packageDirectory -File -ErrorAction SilentlyContinue | Remove-Item -Force
 
 if ($IncludeUploads) {
     if (-not $DataSource) { $DataSource = Join-Path $source "data" }
-    & $python (Join-Path $support "snapshot_scoreboard_data.py") $DataSource (Join-Path $destinationPath "data")
+    & $python (Join-Path $PSScriptRoot "portable_support\snapshot_scoreboard_data.py") $DataSource (Join-Path $destinationPath "data")
     if ($LASTEXITCODE -ne 0) { throw "Saved data snapshot failed verification. Do not distribute this folder." }
 }
 
@@ -82,9 +72,31 @@ if ($IncludeFfmpeg) {
 }
 
 if ($CreateZip) {
-    $zip = "$destinationPath.zip"
-    if (Test-Path -LiteralPath $zip) { Remove-Item -LiteralPath $zip -Force }
-    Compress-Archive -LiteralPath $destinationPath -DestinationPath $zip -CompressionLevel Optimal
+    $zip = [System.IO.Path]::GetFullPath("$destinationPath.zip")
+    if (-not $zip.StartsWith($outputPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "Portable ZIP must stay under $outputRoot"
+    }
+    if (Test-Path -LiteralPath $zip) { throw "Portable ZIP already exists: $zip" }
+    Add-Type -AssemblyName System.IO.Compression
+    $tempZip = Join-Path $outputRoot (".portable-" + [guid]::NewGuid().ToString("N") + ".zip")
+    $files = Get-ChildItem -LiteralPath $destinationPath -File -Recurse -Force
+    $zipStream = [System.IO.FileStream]::new($tempZip, [System.IO.FileMode]::CreateNew,
+        [System.IO.FileAccess]::Write, [System.IO.FileShare]::None)
+    try {
+        $archive = [System.IO.Compression.ZipArchive]::new($zipStream,
+            [System.IO.Compression.ZipArchiveMode]::Create, $true)
+        try {
+            foreach ($file in $files) {
+                $relative = $file.FullName.Substring($destinationPath.TrimEnd('\').Length + 1).Replace('\', '/')
+                $entry = $archive.CreateEntry($relative, [System.IO.Compression.CompressionLevel]::Optimal)
+                $input = [System.IO.FileStream]::new($file.FullName, [System.IO.FileMode]::Open,
+                    [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+                $output = $entry.Open()
+                try { $input.CopyTo($output) } finally { $output.Dispose(); $input.Dispose() }
+            }
+        } finally { $archive.Dispose() }
+    } finally { $zipStream.Dispose() }
+    Move-Item -LiteralPath $tempZip -Destination $zip -ErrorAction Stop
     Write-Host "Portable ZIP: $zip" -ForegroundColor Green
 }
 Write-Host "Portable folder: $destinationPath" -ForegroundColor Green

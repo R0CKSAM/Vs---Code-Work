@@ -1,26 +1,29 @@
-VETO SCOREBOARD MAKER - PORTABLE WINDOWS PACKAGE
+VETO SCOREBOARD MAKER - WINDOWS HOST
 ================================================
 
 FIRST USE
 1. Install 64-bit Python 3.14 from python.org. Keep pip and Tcl/Tk selected.
-2. Copy this whole VetoScoreboardMaker folder to the new Windows PC.
-3. Double-click SETUP_AND_START.lnk.
-4. Wait for setup to finish. The browser opens automatically.
+2. Copy this whole Veto OTT folder to the new Windows PC.
+3. Run .\setup_scoreboard.ps1 -NoStart in PowerShell.
+4. Run .\start_scoreboard.ps1. The browser opens automatically.
 
 NORMAL USE
 - START_SCOREBOARD.lnk starts the server and opens the editor.
 - STOP_SCOREBOARD.lnk stops the server.
+- RESTART_SCOREBOARD.lnk restarts the server.
 - Local editor: http://127.0.0.1:8080/scoreboard
 - Change the host, port, or allowed LAN networks in scoreboard_settings.ps1.
 
 CODE UPDATES
-1. On the development PC, run build_scoreboard_code_update.ps1.
-2. Copy only VetoScoreboardCodeUpdate.zip into this portable folder.
+1. On the development PC, run ..\..\leaderBoardGen\build_scoreboard_code_update.ps1.
+2. Copy VetoScoreboardCodeUpdate.zip into this portable folder. This ZIP
+   assumes the host already has current setup/start/stop/updater scripts.
+   For older hosts, use a full portable package while preserving data and settings.
 3. Double-click APPLY_CODE_UPDATE.lnk.
-4. The updater verifies all three runtime files, backs up the current code,
+4. The updater verifies the runtime files and artwork, backs up the current code,
    replaces it, and restarts the scoreboard.
-- Updates preserve scoreboard_settings.ps1, data/uploads, python_packages,
-  wheels, FFmpeg, logs, and every local project/export.
+- Updates preserve scoreboard_settings.ps1, data/uploads, FFmpeg, logs,
+  and every local project/export.
 
 LAN USE
 1. Right-click ENABLE_LAN_ACCESS_RUN_AS_ADMIN.lnk, choose Run as administrator,
@@ -29,11 +32,10 @@ LAN USE
 3. The default firewall setting allows private 192.168.x.x networks only.
 
 DEPENDENCIES
-- Python 3.14 is the only prerequisite installed on Windows.
-- Dependency wheels are bundled in wheels and FFmpeg is bundled in
-  tools/ffmpeg/bin, so setup needs no internet after Python is installed.
-- All scoreboard Python packages stay inside this folder's python_packages
-  directory; setup does not create a virtual environment or Windows service.
+- Setup installs requirements.txt with Python 3.14 pip --user and needs an
+  internet connection or configured pip package mirror.
+- No offline wheels or python_packages directory are needed. FFmpeg remains
+  in tools/ffmpeg/bin for video export.
 - DeckLink SDI output also requires Blackmagic Desktop Video. Install the driver
   supplied by Blackmagic Design on every PC that has the DeckLink card.
 
@@ -49,10 +51,10 @@ DATA
   PNG and MP4 exports still download to the operator's browser.
 - Move the complete data folder (projects AND uploads) to migrate saved work.
   A JSON download alone does not contain image files.
-- For code updates replace scoreboard_app.py, scoreboard_web.py and
-  scoreboard_web.html together, or use the code-update ZIP. Keep data intact.
+- Use the code-update ZIP for code and artwork updates. Keep data intact.
 - Build with -IncludeUploads to include current projects and images in a
   portable package. If SCOREBOARD_WEB_UPLOAD_DIR overrides uploads, projects
   are stored in a sibling projects folder; copy that data location manually.
 - Browser recovery drafts remain local; use Save project to share a version.
-- Shared operator names identify edits; they are not account authentication.
+- Operator tokens protect live ownership but are not internet-grade login.
+  Do not expose this HTTP service directly to the public internet.

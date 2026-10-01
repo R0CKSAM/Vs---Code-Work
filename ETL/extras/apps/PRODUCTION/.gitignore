@@ -1,17 +1,9 @@
-# Repository root is D:\; include the five user project folders only.
+# Track only the active app. notrequired is a local archive, not a deployable app.
 /*
 !/.gitignore
 !/.gitattributes
 !/README.md
-!/old/
-!/older/
-!/Veto/
-!/Veto Live/
 !/Veto OTT/
-
-# Veto holds crash diagnostics, not app source. Keep only its explanatory note.
-/Veto/*
-!/Veto/README.md
 
 # Installed dependencies and binaries are restored separately, not versioned.
 **/python_packages/

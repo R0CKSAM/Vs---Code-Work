@@ -177,8 +177,9 @@ let boot,configs={},template='t1',history=[],historyIndex=-1,renderTimer=null,re
 let competition='davis-cup',competitionSwitching=false,workspaceEpoch=0;
 const COMPETITION_STORAGE_KEY='vetoScoreboardCompetition';
 function workspaceKey(base,key=competition){return key==='davis-cup'?base:base+':'+key+':empty-v2'}
-const clientId=localStorage.getItem('vetoScoreboardClientId')||(crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random().toString(16).slice(2)}`);
+let clientId=localStorage.getItem('vetoScoreboardClientId')||(crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random().toString(16).slice(2)}`);
 localStorage.setItem('vetoScoreboardClientId',clientId);
+let operatorToken=localStorage.getItem('vetoScoreboardOperatorToken')||'';
 let latestLive={active:false},latestSessions={sessions:[],can_manage:false};
 const QUEUE_STORAGE_KEY='vetoScoreboardPreviewQueueV1';
 let queueItems=[null,null,null,null],selectedQueue=-1,queueUrls=['','','',''],queueRenderTokens=[0,0,0,0];
@@ -613,7 +614,7 @@ function bindEditor(){
  ['textFont','textVariant','textCase','textSize','textX','textY','textColorEnabled','textBoxEnabled','textBoxOpacity','textBoxPadding'].forEach(id=>$(id).onchange=updateText);$('textColor').oninput=()=>{$('textColorEnabled').checked=true;updateText()};$('textBoxColor').oninput=()=>{$('textBoxEnabled').checked=true;updateText()};$('resetTextStyle').onclick=()=>{const cfg=getConfig(),role=cfg._web_text_role||'all';delete cfg.text_styles[role];markChanged(true)};
 }
 function fileData(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(new Error('Could not read image'));r.readAsDataURL(file)})}
-async function apiJson(url,payload){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...payload,competition,client_id:clientId})});let value;try{value=await r.json()}catch{value={error:`HTTP ${r.status}`}}if(!r.ok)throw new Error(value.error||`HTTP ${r.status}`);return value}
+async function apiJson(url,payload){const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','X-Operator-Token':operatorToken},body:JSON.stringify({...payload,competition,client_id:clientId})});let value;try{value=await r.json()}catch{value={error:`HTTP ${r.status}`}}if(!r.ok)throw new Error(value.error||`HTTP ${r.status}`);return value}
 function request(){return {client_id:clientId,competition,template,config:getConfig(),update_live:false}}
 function scheduleRender(save=true){syncQueueSelection();const key=currentSnapshotKey();if(key===scheduledPreview){syncProjectLock();return}scheduledPreview=key;++renderToken;previewReady=false;updateQueueControls();$('stage').setAttribute('aria-busy','true');$('dimensions').textContent='Rendering...';syncProjectLock();syncMediaPreview();layoutTextBoxes();clearTimeout(renderTimer);renderTimer=setTimeout(renderNow,save?90:0)}
 async function renderNow(){
@@ -715,11 +716,11 @@ $('stage').ondragover=e=>{e.preventDefault();e.dataTransfer.dropEffect='copy'};
 $('stage').ondragleave=e=>{e.preventDefault();dropDepth=Math.max(0,dropDepth-1);if(!dropDepth)$('stage').classList.remove('drop-ready')};
 $('stage').ondrop=async e=>{e.preventDefault();dropDepth=0;$('stage').classList.remove('drop-ready');if(template==='t23')return;const file=e.dataTransfer.files[0];if(!file)return;try{await uploadImageFile(file,selectedUploadKey())}catch(error){setError(error.message)}};
 
-async function registerSession(){const name=$('operatorName').value.trim();localStorage.setItem('vetoScoreboardOperatorName',name);return apiJson('/api/session/register',{display_name:name})}
+async function registerSession(){const name=$('operatorName').value.trim();localStorage.setItem('vetoScoreboardOperatorName',name);const session=await apiJson('/api/session/register',{display_name:name});clientId=session.id;operatorToken=session.token;localStorage.setItem('vetoScoreboardClientId',clientId);localStorage.setItem('vetoScoreboardOperatorToken',operatorToken);return session}
 function priorityName(value){return value>=100?'Primary':value<=0?'Viewer':'Operator'}
 async function refreshUsers(){
  try{
-  const r=await fetch(`/api/sessions?client_id=${encodeURIComponent(clientId)}`),data=await r.json();
+  const r=await fetch(`/api/sessions?client_id=${encodeURIComponent(clientId)}`,{headers:{'X-Operator-Token':operatorToken}}),data=await r.json();
   if(!r.ok)throw new Error(data.error||`HTTP ${r.status}`);
   latestSessions=data;$('usersButton').textContent=`Users: ${data.sessions.length}`;
   $('usersAccess').textContent=data.can_manage?'Priority control available on this computer':'Priority control is managed from the host computer';
@@ -754,7 +755,7 @@ async function refreshProgram(){
  finally{programFetchBusy=false;if(programRefreshAgain){programRefreshAgain=false;void refreshProgram()}}
 }
 function applyLiveStatus(status){latestLive=status;liveStatusKnown=true;$('liveStatus').textContent=latestLive.active?(latestLive.on_air?'On Air':(latestLive.clear_mode==='external-key'?'Transparent / Output running':latestLive.clear_mode==='black'?'Black / Output running':latestLive.clear_mode==='chroma-magenta'?'Magenta / Output running':'Chroma clear / Output running')):'Output stopped';$('programState').textContent=$('liveStatus').textContent;$('programName').textContent=latestLive.on_air?(latestLive.program_name||'Live graphic'):(latestLive.clear_mode==='external-key'?'Transparent':latestLive.clear_mode==='chroma-magenta'?'Magenta':latestLive.clear_mode&&latestLive.clear_mode!=='black'?'Chroma clear - switcher composite not monitored':'Black');$('programDetails').textContent=latestLive.active?[latestLive.program_layout==='overlay'?'Overlay':latestLive.program_layout==='full-picture'?'Full picture':'',latestLive.clear_mode==='external-key'?boot.decklink_key_pairs[latestLive.output]:latestLive.output,latestLive.preset,latestLive.owner_name,latestLive.media_finished?'Last frame held':''].filter(Boolean).join(' | '):'';updateLiveButtons();if(latestLive.error||latestLive.media_error)setError(latestLive.error||latestLive.media_error)}
-async function refreshLive(){if(liveRefreshBusy||liveCommandBusy)return;liveRefreshBusy=true;const epoch=liveStatusEpoch;try{const r=await fetch('/api/live/status?client_id='+encodeURIComponent(clientId),{cache:'no-store',signal:AbortSignal.timeout(4000)});if(!r.ok)throw Error('Live status unavailable');const status=await r.json();if(epoch!==liveStatusEpoch)return;applyLiveStatus(status);void refreshProgram()}catch(error){if(epoch!==liveStatusEpoch)return;liveStatusKnown=false;$('liveStatus').textContent='Connection lost';$('programState').textContent='Status unknown';programUnavailable('Connection lost - output status unknown');setError(error.message)}finally{liveRefreshBusy=false}}
+async function refreshLive(){if(liveRefreshBusy||liveCommandBusy)return;liveRefreshBusy=true;const epoch=liveStatusEpoch;try{const r=await fetch('/api/live/status?client_id='+encodeURIComponent(clientId),{cache:'no-store',headers:{'X-Operator-Token':operatorToken},signal:AbortSignal.timeout(4000)});if(!r.ok)throw Error('Live status unavailable');const status=await r.json();if(epoch!==liveStatusEpoch)return;applyLiveStatus(status);void refreshProgram()}catch(error){if(epoch!==liveStatusEpoch)return;liveStatusKnown=false;$('liveStatus').textContent='Connection lost';$('programState').textContent='Status unknown';programUnavailable('Connection lost - output status unknown');setError(error.message)}finally{liveRefreshBusy=false}}
 async function init(){
  try{
   $('operatorName').value=localStorage.getItem('vetoScoreboardOperatorName')||`Operator ${clientId.slice(0,4).toUpperCase()}`;
@@ -768,7 +769,7 @@ async function init(){
   (boot.mp4_presets||boot.video_presets).forEach(v=>$('mp4Preset').insertAdjacentHTML('beforeend',option(v,v,v==='HD 1080i50')));
   Object.keys(boot.decklink_outputs).forEach(v=>$('liveDevice').insertAdjacentHTML('beforeend',option(v,v,false)));
   buildEditor();syncHistory();renderQueue();scheduleRender(false);await refreshLive();await refreshUsers();
-  setInterval(refreshLive,1500);setInterval(async()=>{try{await apiJson('/api/session/heartbeat',{});await refreshUsers()}catch{}},5000);
+  setInterval(refreshLive,1500);setInterval(async()=>{try{await apiJson('/api/session/heartbeat',{});await refreshUsers()}catch{try{await registerSession();await refreshUsers();await refreshLive()}catch{}}},5000);
  }catch(e){setError(e.message)}
 }
 $('template').onchange=()=>switchTemplate($('template').value);$('undo').onclick=()=>restore(historyIndex-1);$('redo').onclick=()=>restore(historyIndex+1);$('reset').onclick=()=>{if(presetSaving||!confirm('Reset this template draft?'))return;configs[template]=clone(competitionDefaults()[template]);commit();buildEditor();scheduleRender()};

@@ -1,25 +1,19 @@
-# Veto Broadcast Project Archive
+# Veto Scoreboard Production
 
-This repository mirrors the project folders on the broadcast PC's `D:\` drive.
-The active application remains **`D:\Veto OTT`**. Git's root is **`D:\`**; no
-application folders have been moved.
+`Veto OTT` is the active Davis Cup and Billie Jean King Cup application.
+`notrequired` holds old snapshots, source artwork, package caches and backups.
+It is a local archive excluded from Git, not a deployable app.
 
 ## Folders
 
 | Folder | Contents |
 | --- | --- |
 | `Veto OTT` | Active application, graphics assets and current saved data |
-| `Veto Live` | Older application source and its uploaded assets |
-| `old` | Earlier source snapshot |
-| `older` | Earlier source snapshot |
-| `Veto` | Note identifying the local diagnostics folder; crash reports excluded |
+| `notrequired` | Historical snapshots and unused local bundles |
 
-Current template JSON, competition libraries and uploaded media are included.
-Browser-local recovery drafts and queues are not files in this repository.
-Protected legacy projects are exported to `Veto OTT/project_exports` without
-their password records; their original local files are left untouched.
-Two saved presets containing credentials in their metadata are also excluded;
-their exact local paths are listed in `.gitignore`.
+Keep the complete `Veto OTT/data` folder when moving the app to another PC;
+saved templates and uploads both live there. Setup rewrites the machine-specific
+Python path. Stop verifies a stored PID before terminating any process.
 
 ## Deliberate Exclusions
 
@@ -29,9 +23,8 @@ their exact local paths are listed in `.gitignore`.
 - Logs, crash dumps, historical backups and temporary development/test folders.
 - Local shortcuts, process IDs and machine-specific Python paths.
 
-Do not use `git add -f` to bypass these protections. This is a project/data
-archive, not an exact drive image. Review new uploads and saved data for private
-content before each push, particularly when using a public GitHub repository.
+Do not use `git add -f` to bypass these protections. Review new uploads and
+saved data for private content before any push.
 
 ## Setup and Restore
 
@@ -39,45 +32,31 @@ Install 64-bit Python 3.14 with pip and Tcl/Tk. Install FFmpeg separately for vi
 playback/export, in PATH or at `Veto OTT/tools/ffmpeg/bin/ffmpeg.exe`. SDI requires
 compatible DeckLink hardware and the Blackmagic Desktop Video driver.
 
-On a new machine, restore sanitized legacy collections before first startup by
-placing `Veto OTT/project_exports/*.json` in `Veto OTT/data/projects`. Never
-overwrite existing projects or credential files on an operational installation.
-Then run from the repository root:
+On each Windows host, run from this folder:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Veto OTT\setup_scoreboard.ps1" -NoStart
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\Veto OTT\start_scoreboard.ps1"
 ```
 
-Setup installs Python dependencies from pip when offline wheels are absent.
+Setup uses `python -m pip install --user --upgrade -r requirements.txt` and
+verifies a headless render. No offline wheels or vendored packages are needed.
+Manual equivalent: `py -3.14 -m pip install --user -r ".\Veto OTT\requirements.txt"`.
 The dashboard is http://127.0.0.1:8080/scoreboard.
 
 New installations of **Veto OTT** generate unique passwords, recorded locally in
 `Veto OTT/data/first_run_credentials.json`. Store them privately, then remove that
 plaintext recovery file. It is excluded from Git. Existing logins do not change.
-The historical versions are retained as source archives, not recommended hosts.
+Historical versions remain under `notrequired` on this PC only.
 
 ## Future Updates
 
-Refresh the sanitized legacy exports after editing their original collections:
+Run `../leaderBoardGen/build_scoreboard_code_update.ps1` to package the active
+code and all required competition artwork. The code ZIP assumes a host already
+has the current setup/start/stop/updater scripts. For an older host, use the
+full portable package and preserve its existing data and settings.
+Do not restart or replace running code while SDI output is active.
 
-```powershell
-python ".\Veto OTT\export_projects.py"
-```
-
-Review and push changes from `D:\`:
-
-```powershell
-Set-Location D:\
-$git = 'C:\Program Files\Git\cmd\git.exe'
-& $git status --short
-& $git add -- .
-& $git diff --cached --stat
-& $git diff --cached
-& $git commit -m 'Describe the update'
-& $git push
-```
-
-Do not restart or replace running application code while SDI output is active.
-
-[GitHub push guide](https://docs.github.com/en/migrations/importing-source-code/using-the-command-line-to-import-source-code/adding-locally-hosted-code-to-github).
+The app uses HTTP and operator sessions, not internet-grade account security.
+Keep it on a trusted LAN or behind an authenticated HTTPS gateway/VPN. Do not
+expose port 8080 directly to the public internet.

@@ -630,7 +630,7 @@ class ScoreboardWebRuntime:
         active = payload.get("active_template", "t1")
         if active not in templates:
             raise ValueError("Unknown active template.")
-        session = self.touch_session(payload.get("client_id"), remote_address)
+        session = self.touch_session(payload.get("client_id"), remote_address, payload.get("_operator_token", ""))
         with self.lock:
             project_id = payload.get("id") or uuid.uuid4().hex
             path = self._project_path(project_id)
@@ -720,41 +720,37 @@ class ScoreboardWebRuntime:
             self.sessions.pop(client_id, None)
 
     def register_session(
-        self, client_id: Any, display_name: Any, remote_address: str,
+        self, client_id: Any, display_name: Any, remote_address: str, token: str = "",
     ) -> Dict[str, Any]:
         client_id = self._clean_client_id(client_id) or uuid.uuid4().hex
         now = time.monotonic()
         with self.lock:
-            existing = self.sessions.get(client_id, {})
+            existing = self.sessions.get(client_id)
+            if existing and not hmac.compare_digest(existing["token"], str(token or "")):
+                client_id = uuid.uuid4().hex
+                existing = None
             session = {
                 "id": client_id,
                 "name": self._clean_display_name(display_name, client_id),
                 "address": remote_address,
-                "priority": int(existing.get("priority", 50)),
+                "priority": int(existing["priority"] if existing else 50),
+                "token": existing["token"] if existing else secrets.token_urlsafe(32),
                 "last_seen": now,
             }
             self.sessions[client_id] = session
             self._purge_sessions_locked()
-            return self._public_session(session)
+            return {**self._public_session(session), "token": session["token"]}
 
-    def touch_session(self, client_id: Any, remote_address: str) -> Dict[str, Any] | None:
+    def touch_session(self, client_id: Any, remote_address: str, token: str = "") -> Dict[str, Any] | None:
         client_id = self._clean_client_id(client_id)
         if not client_id:
             return None
         with self.lock:
             session = self.sessions.get(client_id)
-            if session is None:
-                session = {
-                    "id": client_id,
-                    "name": self._clean_display_name("", client_id),
-                    "address": remote_address,
-                    "priority": 50,
-                    "last_seen": time.monotonic(),
-                }
-                self.sessions[client_id] = session
-            else:
-                session["address"] = remote_address
-                session["last_seen"] = time.monotonic()
+            if session is None or not hmac.compare_digest(session["token"], str(token or "")):
+                return None
+            session["address"] = remote_address
+            session["last_seen"] = time.monotonic()
             self._purge_sessions_locked()
             return self._public_session(session)
 
@@ -768,8 +764,8 @@ class ScoreboardWebRuntime:
             "age_seconds": max(0, int(time.monotonic() - session["last_seen"])),
         }
 
-    def session_status(self, client_id: Any, remote_address: str) -> Dict[str, Any]:
-        requester = self.touch_session(client_id, remote_address)
+    def session_status(self, client_id: Any, remote_address: str, token: str = "") -> Dict[str, Any]:
+        requester = self.touch_session(client_id, remote_address, token)
         with self.lock:
             sessions = sorted(
                 (self._public_session(session) for session in self.sessions.values()),
@@ -1012,7 +1008,7 @@ class ScoreboardWebRuntime:
         return data
 
     def render(
-        self, template: str, value: Any, update_live: bool = True, client_id: str = "",
+        self, template: str, value: Any, update_live: bool = False, client_id: str = "",
         output_mode: str = '', output_preset: str = 'HD 1080i50',
     ):
         config = self.normalized_config(template, value)
@@ -1111,7 +1107,7 @@ class ScoreboardWebRuntime:
     def start_live(
         self, template: str, config: Any, preset: str, output_name: str,
         client_id: Any, remote_address: str, standby: bool = False,
-        clear_mode: str = 'black', keyer_confirmed: bool = False,
+        clear_mode: str = 'black', keyer_confirmed: bool = False, token: str = "",
     ):
         if clear_mode not in ('black', 'external-key') and clear_mode not in CHROMA_COLORS:
             raise ValueError('Unsupported output keying mode. Key/fill requires verified hardware configuration.')
@@ -1130,7 +1126,7 @@ class ScoreboardWebRuntime:
             if output_name not in self.core.DECKLINK_KEY_PAIRS or preset != 'HD 1080i50':
                 raise ValueError('Fill/key requires paired device 0 or 1 in HD 1080i50.')
         device_number = self.core.DECKLINK_OUTPUTS[output_name]
-        requester = self.touch_session(client_id, remote_address)
+        requester = self.touch_session(client_id, remote_address, token)
         if requester is None:
             raise PermissionError("Register an operator name before starting live output.")
         if requester["priority"] <= 0:
@@ -1161,7 +1157,7 @@ class ScoreboardWebRuntime:
                     self.program_layout = 'overlay' if is_overlay(template,config) else 'full-picture'
                     self.on_air = self.program_revision = uuid.uuid4().hex
                 self.live_owner_id = requester["id"]
-                return self.live_status(requester["id"], remote_address)
+                return self.live_status(requester["id"], remote_address, token)
             previous = self.live_output
             if previous is not None:
                 self._stop_media()
@@ -1189,12 +1185,12 @@ class ScoreboardWebRuntime:
             self.live_preset = preset
             self.live_output_name = output_name
             self.live_owner_id = requester["id"]
-        return self.live_status(requester["id"], remote_address)
+        return self.live_status(requester["id"], remote_address, token)
 
-    def show_live(self, template, config, client_id, remote_address, expected_revision=None, name=''):
+    def show_live(self, template, config, client_id, remote_address, expected_revision=None, name='', token=''):
         started = time.perf_counter()
         with self.lock:
-            requester = self.touch_session(client_id, remote_address)
+            requester = self.touch_session(client_id, remote_address, token)
             if not requester or requester['priority'] <= 0 or requester['id'] != self.live_owner_id:
                 raise PermissionError('Only the live operator can show a template on this stream.')
             if self.live_output is None:
@@ -1239,7 +1235,7 @@ class ScoreboardWebRuntime:
                 except Exception as exc:
                     playback.error = 'Video playback could not start; the poster is held. ' + str(exc)
                     playback.finished = True
-            result = self.live_status(client_id, remote_address)
+            result = self.live_status(client_id, remote_address, token)
             result['push_prepare_ms'] = round((time.perf_counter()-started)*1000,2)
             return result
 
@@ -1254,9 +1250,9 @@ class ScoreboardWebRuntime:
         colors={'black':(0,0,0), **CHROMA_COLORS}
         return self.core.Image.new('RGB',size,colors[mode])
 
-    def clear_live(self, client_id, remote_address, expected_revision=None):
+    def clear_live(self, client_id, remote_address, expected_revision=None, token=''):
         with self.lock:
-            requester = self.touch_session(client_id,remote_address)
+            requester = self.touch_session(client_id,remote_address,token)
             if not requester or requester['priority'] <= 0 or requester['id'] != self.live_owner_id:
                 raise PermissionError('Only the live operator can clear On Air.')
             if self.live_output is None:
@@ -1271,7 +1267,7 @@ class ScoreboardWebRuntime:
             self.program_name = ''
             self.program_layout = ''
             self.program_revision = uuid.uuid4().hex
-            return self.live_status(client_id,remote_address)
+            return self.live_status(client_id,remote_address,token)
 
     def program_preview(self):
         with self.lock:
@@ -1314,6 +1310,7 @@ class ScoreboardWebRuntime:
 
     def stop_live(
         self, client_id: Any = "", remote_address: str = "", force: bool = False, expected_revision=None,
+        token: str = "",
     ):
         client_id = self._clean_client_id(client_id)
         with self.lock:
@@ -1321,7 +1318,7 @@ class ScoreboardWebRuntime:
                 self._check_program_revision(expected_revision)
             if (
                 self.live_output is not None and not force
-                and client_id != self.live_owner_id
+                and (client_id != self.live_owner_id or not self.touch_session(client_id, remote_address, token))
                 and not self._is_local_request(remote_address)
             ):
                 owner = self.sessions.get(self.live_owner_id, {})
@@ -1340,9 +1337,9 @@ class ScoreboardWebRuntime:
             self.program_revision = uuid.uuid4().hex
         if output is not None:
             output.stop()
-        return self.live_status(client_id, remote_address)
+        return self.live_status(client_id, remote_address, token)
 
-    def live_status(self, client_id: Any = "", remote_address: str = ""):
+    def live_status(self, client_id: Any = "", remote_address: str = "", token: str = ""):
         client_id = self._clean_client_id(client_id)
         with self.lock:
             error = self.live_output.poll_error() if self.live_output is not None else None
@@ -1351,6 +1348,8 @@ class ScoreboardWebRuntime:
             return {"active": False, "error": error}
         with self.lock:
             owner = self.sessions.get(self.live_owner_id)
+            requester = self.sessions.get(client_id)
+            authenticated = bool(requester and hmac.compare_digest(requester["token"], str(token or "")))
             return {
                 "active": self.live_output is not None,
                 "program_revision": self.program_revision,
@@ -1364,7 +1363,7 @@ class ScoreboardWebRuntime:
                 "output": self.live_output_name,
                 "owner_id": self.live_owner_id,
                 "owner_name": owner["name"] if owner else None,
-                "owned_by_requester": bool(client_id and client_id == self.live_owner_id),
+                "owned_by_requester": bool(authenticated and client_id == self.live_owner_id),
                 "clear_mode": getattr(self,'live_clear_mode','black'),
             }
 
@@ -1455,6 +1454,7 @@ def make_handler(runtime: ScoreboardWebRuntime):
             query = parse_qs(parsed.query)
             client_id = query.get("client_id", [""])[0]
             remote_address = self.client_address[0]
+            operator_token = self.headers.get('X-Operator-Token', '')
             try:
                 if path == '/api/media':
                     name = query.get('name',[''])[0]
@@ -1530,16 +1530,17 @@ def make_handler(runtime: ScoreboardWebRuntime):
                 elif path == "/api/projects/open":
                     self._json(200, runtime.open_project(query.get("id", [""])[0]))
                 elif path == "/api/live/status":
-                    self._json(200, runtime.live_status(client_id, remote_address))
+                    self._json(200, runtime.live_status(client_id, remote_address, operator_token))
                 elif path == '/api/live/preview':
                     data,revision = runtime.program_preview()
                     self._send(200,data,'image/jpeg',headers={'X-Program-Revision':revision})
                 elif path == "/api/sessions":
-                    self._json(200, runtime.session_status(client_id, remote_address))
+                    self._json(200, runtime.session_status(client_id, remote_address, operator_token))
                 elif path == "/healthz":
                     self._json(200, {
                         "ok": True,
                         "service": "scoreboard-web",
+                        "app_dir": str(runtime.app_dir),
                         "upload_storage": runtime.storage_status(),
                     })
                 else:
@@ -1562,11 +1563,16 @@ def make_handler(runtime: ScoreboardWebRuntime):
                     self._json(410, {'error':'Project editing has been retired. Use the template library.'})
                     return
                 payload = self._body()
+                operator_token = self.headers.get('X-Operator-Token', '')
+                payload['_operator_token'] = operator_token
                 if payload.get('template') in runtime.core.WEB_TEMPLATE_KEYS:
                     payload['config'] = runtime.normalized_config(payload['template'],payload.get('config'),
                         payload.get('competition','davis-cup'))
                 client_id = payload.get("client_id", "")
                 remote_address = self.client_address[0]
+                if path in {'/api/live/start', '/api/live/show', '/api/live/clear', '/api/live/stop'}:
+                    if runtime.touch_session(client_id, remote_address, operator_token) is None:
+                        raise PermissionError("Register an operator session before controlling live output.")
                 if path == '/api/templates/save':
                     self._json(200, runtime.save_template(payload, remote_address))
                 elif path == '/api/templates/update':
@@ -1583,11 +1589,16 @@ def make_handler(runtime: ScoreboardWebRuntime):
                     self._json(200, runtime.save_preset(payload, remote_address))
                 elif path == "/api/session/register":
                     self._json(200, runtime.register_session(
-                        client_id, payload.get("display_name", ""), remote_address,
+                        client_id, payload.get("display_name", ""), remote_address, operator_token,
                     ))
                 elif path == "/api/session/heartbeat":
-                    self._json(200, runtime.touch_session(client_id, remote_address))
+                    session = runtime.touch_session(client_id, remote_address, operator_token)
+                    if session is None:
+                        raise PermissionError("Operator session expired. Refresh the page to register again.")
+                    self._json(200, session)
                 elif path == "/api/session/priority":
+                    if runtime.touch_session(client_id, remote_address, operator_token) is None:
+                        raise PermissionError("Register an operator session first.")
                     self._json(200, runtime.set_session_priority(
                         payload.get("target_id", ""), payload.get("priority"), remote_address,
                     ))
@@ -1599,7 +1610,7 @@ def make_handler(runtime: ScoreboardWebRuntime):
                     image.save(buffer,'PNG')
                     self._send(200,buffer.getvalue(),'image/png')
                 elif path == "/api/render":
-                    runtime.touch_session(client_id, remote_address)
+                    runtime.touch_session(client_id, remote_address, operator_token)
                     image, _ = runtime.render(
                         payload.get("template", ""), payload.get("config"),
                         client_id=client_id,
@@ -1611,17 +1622,17 @@ def make_handler(runtime: ScoreboardWebRuntime):
                     image.save(buffer, "PNG")
                     self._send(200, buffer.getvalue(), "image/png")
                 elif path == "/api/upload":
-                    runtime.touch_session(client_id, remote_address)
+                    runtime.touch_session(client_id, remote_address, operator_token)
                     self._json(200, runtime.upload(payload))
                 elif path == "/api/export/png":
-                    runtime.touch_session(client_id, remote_address)
+                    runtime.touch_session(client_id, remote_address, operator_token)
                     template = payload.get("template", "")
-                    image, _ = runtime.render(template, payload.get("config"))
+                    image, _ = runtime.render(template, payload.get("config"), update_live=False)
                     buffer = io.BytesIO()
                     image.save(buffer, "PNG")
                     self._send(200, buffer.getvalue(), "image/png", f"scoreboard_{template}.png")
                 elif path == "/api/export/mp4":
-                    runtime.touch_session(client_id, remote_address)
+                    runtime.touch_session(client_id, remote_address, operator_token)
                     template = payload.get("template", "")
                     data = runtime.export_mp4(
                         template, payload.get("config"), payload.get("preset", "HD 1080i50"),
@@ -1636,14 +1647,15 @@ def make_handler(runtime: ScoreboardWebRuntime):
                         standby=True,
                         clear_mode="external-key",
                         keyer_confirmed=True,
+                        token=operator_token,
                     ))
                 elif path == '/api/live/show':
                     self._json(200, runtime.show_live(payload.get('template'), payload.get('config'), client_id, remote_address,
-                        payload.get('expected_revision'),payload.get('name','')))
+                        payload.get('expected_revision'),payload.get('name',''),operator_token))
                 elif path == '/api/live/clear':
-                    self._json(200,runtime.clear_live(client_id,remote_address,payload.get('expected_revision')))
+                    self._json(200,runtime.clear_live(client_id,remote_address,payload.get('expected_revision'),operator_token))
                 elif path == "/api/live/stop":
-                    self._json(200, runtime.stop_live(client_id, remote_address,expected_revision=payload.get('expected_revision')))
+                    self._json(200, runtime.stop_live(client_id, remote_address,expected_revision=payload.get('expected_revision'),token=operator_token))
                 else:
                     self._json(404, {"error": "Not found"})
             except ProjectConflict as exc:
