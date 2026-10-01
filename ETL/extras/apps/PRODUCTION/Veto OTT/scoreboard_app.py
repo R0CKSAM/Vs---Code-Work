@@ -3926,6 +3926,10 @@ _match_spec = _template_import.spec_from_file_location('scoreboard_match_templat
 _match_module = _template_import.module_from_spec(_match_spec)
 _match_spec.loader.exec_module(_match_module)
 _match_module.register(globals())
+_sport_spec = _template_import.spec_from_file_location('scoreboard_sport_templates', Path(__file__).with_name('scoreboard_sport_templates.py'))
+_sport_module = _template_import.module_from_spec(_sport_spec)
+_sport_spec.loader.exec_module(_sport_module)
+_sport_module.register(globals())
 
 
 for _broadcast_default in DEFAULT_CONFIGS.values():
@@ -4007,6 +4011,7 @@ def normalise_project_configs(saved: Any) -> Dict[str, Dict]:
         "t1":T1_SIZES,"t2":T2_SIZES,"t3":T3_SIZES,"t4":T4_SIZES,"t5":T5_SIZES,"t6":T6_SIZES,"t7":T7_SIZES,"t8":T8_SIZES,"t9":T9_SIZES,
     }
     size_options.update({key:BROADCAST_SIZES for key in ('t10','t11','t12','t13','t14','t15','t16','t17','t18','t19','t20','t21','t22','t23','t24')})
+    size_options.update({key:BROADCAST_SIZES for key in _sport_module.SPORT_TEMPLATE_KEYS})
     result: Dict[str, Dict] = {}
     for key, default in DEFAULT_CONFIGS.items():
         config = copy.deepcopy(default)
@@ -4014,6 +4019,30 @@ def normalise_project_configs(saved: Any) -> Dict[str, Dict]:
         if isinstance(candidate, dict):
             config.update(copy.deepcopy(candidate))
         config["template"] = key
+        if key in _sport_module.SPORT_TEMPLATE_KEYS:
+            config = {field:config.get(field,value) for field,value in default.items()}
+            config['competition_theme'] = 'cricket' if key == 'c1' else 'weightlifting'
+            config['transparent_background'] = True
+            config['overlay_opacity_pct'] = clamp_number(config['overlay_opacity_pct'],0,100,100)
+            if key == 'c1':
+                for field in ('match_title','batting_team','bowling_team','batter','bowler','chase_label'):
+                    config[field] = str(config[field]).strip()[:160]
+                for field,limit in (('runs',9999),('wickets',10)):
+                    config[field] = int(clamp_number(config[field],0,limit,default[field]))
+                config['overs'] = str(config['overs']).strip()
+                if not re.fullmatch(r'\d{1,3}\.[0-5]',config['overs']):
+                    raise ValueError('Overs must use cricket notation, such as 17.5 (balls 0-5).')
+            else:
+                for field in ('athlete_name','country','category'):
+                    config[field] = str(config[field]).strip()[:160]
+                for field,minimum,maximum in (('attempt_number',1,3),('target_kg',0,999),
+                                              ('photo_focus_x',0,100),('photo_focus_y',0,100)):
+                    config[field] = int(clamp_number(config[field],minimum,maximum,default[field]))
+                for field,choices in (('lift_type',('Snatch','Clean & Jerk')),
+                                      ('result',('Pending','Good lift','No lift')),
+                                      ('photo_fit',('cover','contain'))):
+                    if config[field] not in choices:
+                        config[field] = default[field]
         if key=='t24' and isinstance(candidate,dict):
             for side in ('a','b'):
                 field='player_'+side

@@ -35,8 +35,12 @@ SESSION_TIMEOUT_SECONDS = 30
 CHROMA_COLORS = {
     'chroma-magenta': (255, 0, 255),
 }
-OVERLAY_TEMPLATES = frozenset(('t5', 't11', 't14', 't15', 't16', 't17', 't18', 't19', 't20'))
-COMPETITIONS = {'davis-cup': 'Davis Cup', 'billie-jean-king-cup': 'Billie Jean King Cup'}
+OVERLAY_TEMPLATES = frozenset(('t5', 't11', 't14', 't15', 't16', 't17', 't18', 't19', 't20', 'c1', 'w1'))
+COMPETITIONS = {
+    'davis-cup': 'Davis Cup', 'billie-jean-king-cup': 'Billie Jean King Cup',
+    'cricket': 'Cricket', 'weightlifting': 'Weightlifting',
+}
+SPORT_TEMPLATES = {'cricket': ('c1',), 'weightlifting': ('w1',)}
 
 
 def is_overlay(template, config):
@@ -131,6 +135,12 @@ class ScoreboardWebRuntime:
             return self.library_dir
         return self.upload_dir.parent / 'competitions' / competition / 'templates'
 
+    def _competition_templates(self, competition):
+        competition = self._competition(competition)
+        if competition in SPORT_TEMPLATES:
+            return SPORT_TEMPLATES[competition]
+        return tuple(key for key in self.core.WEB_TEMPLATE_KEYS if key not in self.core.SPORT_TEMPLATE_KEYS)
+
     def _portable_config(self, value):
         if isinstance(value,dict):
             return {key:self._portable_config(child) for key,child in value.items()}
@@ -142,27 +152,28 @@ class ScoreboardWebRuntime:
 
     def _seed_competition_library(self):
         # Competitions share layouts, not saved presets.
-        destination = self._competition_library('billie-jean-king-cup').parent
-        if destination.is_dir():
+        for competition in COMPETITIONS:
+            if competition == 'davis-cup':
+                continue
+            destination = self._competition_library(competition).parent
+            destination.parent.mkdir(parents=True,exist_ok=True)
+            destination.mkdir(exist_ok=True)
             marker = destination/'seed.json'
-            if marker.is_file() and not (destination/'templates').exists():
+            templates = destination/'templates'
+            if not marker.is_file():
+                if any(destination.iterdir()):
+                    raise ValueError(COMPETITIONS[competition] + ' library is incomplete; restore its backup before restarting.')
+                with marker.open('x',encoding='utf-8') as stream:
+                    json.dump(dict(source='empty',created_at=datetime.now(timezone.utc).isoformat(),templates=0),stream)
+                    stream.flush()
+                    os.fsync(stream.fileno())
+            if not templates.exists():
                 seed = json.loads(marker.read_text(encoding='utf-8'))
                 # Git does not retain an empty templates directory on fresh installs.
                 if seed.get('source') == 'empty' and seed.get('templates') == 0:
-                    (destination/'templates').mkdir()
-            if not (destination/'seed.json').is_file() or not (destination/'templates').is_dir():
-                raise ValueError('Billie Jean King Cup library is incomplete; restore its backup before restarting.')
-            return
-        destination.parent.mkdir(parents=True,exist_ok=True)
-        staging = Path(tempfile.mkdtemp(prefix='.billie-cup-',dir=destination.parent))
-        templates = staging/'templates'
-        templates.mkdir()
-        now = datetime.now(timezone.utc).isoformat()
-        with (staging/'seed.json').open('x',encoding='utf-8') as stream:
-            json.dump(dict(source='empty',created_at=now,templates=0),stream)
-            stream.flush()
-            os.fsync(stream.fileno())
-        os.replace(staging,destination)
+                    templates.mkdir()
+            if not templates.is_dir():
+                raise ValueError(COMPETITIONS[competition] + ' library is incomplete; restore its backup before restarting.')
 
     def _write_credentials(self, username, password, path=None):
         path = path or self.credentials_path
@@ -265,6 +276,8 @@ class ScoreboardWebRuntime:
                     document = self.open_project(path.stem)
                     project_entries = []
                     for template, presets in document['presets'].items():
+                        if template not in self._competition_templates(competition):
+                            continue
                         for preset in presets:
                             config = preset['config']
                             player = str(preset.get('player') or config.get('player_name') or preset.get('name') or document['name'])
@@ -428,10 +441,10 @@ class ScoreboardWebRuntime:
             country = ''
             if not config.get('media_path'):
                 raise ValueError('Upload an image or video first.')
-        if template in ('t13','t23'):
+        if template in ('t13','t23','c1','w1'):
             country=''
-        if not player or (not country and template not in ('t8','t13','t23')) or max(len(player),len(country)) > 100:
-            raise ValueError('Enter player name and country (at most 100 characters each).')
+        if not player or (not country and template not in ('t8','t13','t23','c1','w1')) or max(len(player),len(country)) > 100:
+            raise ValueError('Enter a preset name (and country for player graphics), at most 100 characters each.')
         with self.lock:
             entries = self.list_templates(competition)
             if self.library_warnings:
@@ -809,6 +822,9 @@ class ScoreboardWebRuntime:
             "shared_projects": False,
             "template_library": True,
             "competitions": COMPETITIONS,
+            "competition_templates": {
+                key:list(self._competition_templates(key)) for key in COMPETITIONS
+            },
             "default_competition": 'billie-jean-king-cup',
             "project_edit_locks": True,
             "template_presets": True,
@@ -816,9 +832,15 @@ class ScoreboardWebRuntime:
                 self.core.WEB_TEMPLATE_KEYS, self.core.WEB_TEMPLATE_NAMES
             )),
             "defaults": copy.deepcopy(self.core.DEFAULT_CONFIGS),
-            "competition_defaults": {'billie-jean-king-cup': {
-                key:self.core._competition_theme.apply(key,value,'billie-jean-king-cup')
-                for key,value in self.core.DEFAULT_CONFIGS.items()}},
+            "competition_defaults": {
+                'davis-cup': {key:copy.deepcopy(self.core.DEFAULT_CONFIGS[key])
+                              for key in self._competition_templates('davis-cup')},
+                'billie-jean-king-cup': {
+                    key:self.core._competition_theme.apply(key,self.core.DEFAULT_CONFIGS[key],'billie-jean-king-cup')
+                    for key in self._competition_templates('billie-jean-king-cup')},
+                **{sport:{key:copy.deepcopy(self.core.DEFAULT_CONFIGS[key]) for key in keys}
+                   for sport,keys in SPORT_TEMPLATES.items()},
+            },
             "text_targets": {
                 key: [{"key": role, "label": label} for role, label in targets]
                 for key, targets in self.core.TEXT_STYLE_TARGETS.items()
@@ -841,6 +863,7 @@ class ScoreboardWebRuntime:
                 "t9": list(self.core.T9_SIZES),
                 "t14": list(self.core.T14_SIZES),
                 **{key:list(self.core.BROADCAST_SIZES) for key in ('t10','t11','t12','t13','t15','t16','t17','t18','t19','t20','t21','t22','t23','t24')},
+                **{key:list(self.core.BROADCAST_SIZES) for key in self.core.SPORT_TEMPLATE_KEYS},
             },
             "qualifier_countries": sorted(set(json.loads((self.app_dir / 'country_flags.json').read_text(encoding='utf-8-sig')).values()) | set(self.core.QUALIFIER_ALPHA3.values())),
             "flag_countries": [
@@ -857,8 +880,10 @@ class ScoreboardWebRuntime:
     def normalized_config(self, template: str, value: Any, competition=None) -> Dict[str, Any]:
         if template not in self.core.WEB_TEMPLATE_KEYS:
             raise ValueError("Unknown scoreboard template.")
+        if competition is not None and template not in self._competition_templates(competition):
+            raise ValueError('This graphic is not available in the selected category.')
         config = self.core.normalise_project_configs({template: value})[template]
-        if competition is not None:
+        if competition is not None and competition not in SPORT_TEMPLATES:
             config = self.core._competition_theme.apply(template,config,self._competition(competition))
         if template == 't6' and competition is not None:
             config['stats_theme'] = self._competition(competition)
@@ -893,6 +918,8 @@ class ScoreboardWebRuntime:
             "t22": ('background_path',),
             "t23": (),
             "t24": ('background_path',),
+            "c1": ('batting_logo_path','bowling_logo_path'),
+            "w1": ('photo_path','country_logo_path'),
         }[template]
         for key in keys:
             config[key] = self._safe_uploaded_path(config.get(key, ""))
