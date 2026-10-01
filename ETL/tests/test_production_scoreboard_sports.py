@@ -1,9 +1,12 @@
-"""Smoke checks for the first cricket and weightlifting live overlays."""
+"""Smoke checks for the cricket and weightlifting live overlays."""
 
 import importlib.util
+import base64
+import io
 import tempfile
 import unittest
 from pathlib import Path
+from PIL import Image
 
 
 APP = Path(__file__).resolve().parents[1] / 'extras' / 'apps' / 'PRODUCTION' / 'Veto OTT'
@@ -28,10 +31,10 @@ class SportOverlayTests(unittest.TestCase):
 
     def test_categories_keep_tennis_layouts_out(self):
         bootstrap = self.runtime.bootstrap()
-        self.assertEqual(bootstrap['competition_templates']['cricket'], ['c1'])
-        self.assertEqual(bootstrap['competition_templates']['weightlifting'], ['w1'])
-        self.assertNotIn('c1', bootstrap['competition_templates']['davis-cup'])
-        self.assertNotIn('w1', bootstrap['competition_templates']['billie-jean-king-cup'])
+        self.assertEqual(bootstrap['competition_templates']['cricket'], ['c1', 'c2'])
+        self.assertEqual(bootstrap['competition_templates']['weightlifting'], ['w1', 'w2'])
+        self.assertFalse(set(core.SPORT_TEMPLATE_KEYS) & set(bootstrap['competition_templates']['davis-cup']))
+        self.assertFalse(set(core.SPORT_TEMPLATE_KEYS) & set(bootstrap['competition_templates']['billie-jean-king-cup']))
         with self.assertRaisesRegex(ValueError, 'not available'):
             self.runtime.normalized_config('t1', {}, 'cricket')
         with self.assertRaisesRegex(ValueError, 'not available'):
@@ -44,7 +47,8 @@ class SportOverlayTests(unittest.TestCase):
             self.runtime.normalized_config('c1', {'overs':'19.6'}, 'cricket')
 
     def test_both_overlays_fit_broadcast_canvas_without_uploaded_images(self):
-        for sport, key in [('cricket','c1'), ('weightlifting','w1')]:
+        for sport, key in [('cricket','c1'), ('cricket','c2'),
+                           ('weightlifting','w1'), ('weightlifting','w2')]:
             with self.subTest(sport=sport):
                 config = self.runtime.normalized_config(key, {}, sport)
                 image = core.RENDERERS[key](config)
@@ -57,9 +61,41 @@ class SportOverlayTests(unittest.TestCase):
                 self.assertLessEqual(bottom, 1032)
 
     def test_unfittable_name_fails_preview_instead_of_overflowing(self):
-        config = self.runtime.normalized_config('w1', {'athlete_name':'Very Long Athlete Name '*12}, 'weightlifting')
-        with self.assertRaisesRegex(ValueError, 'too long'):
-            core.RENDERERS['w1'](config)
+        for sport, key, field in [('cricket','c2','player_name'),
+                                  ('weightlifting','w1','athlete_name'),
+                                  ('weightlifting','w2','athlete_name')]:
+            with self.subTest(key=key):
+                config = self.runtime.normalized_config(key, {field:'Very Long Athlete Name '*12}, sport)
+                with self.assertRaisesRegex(ValueError, 'too long'):
+                    core.RENDERERS[key](config)
+
+    def test_result_total_is_derived_and_zero_means_unreported(self):
+        config = self.runtime.normalized_config('w2',
+            {'snatch_kg':100, 'clean_jerk_kg':120, 'total_kg':999}, 'weightlifting')
+        self.assertNotIn('total_kg', config)
+        self.assertEqual(config['snatch_kg'] + config['clean_jerk_kg'], 220)
+        self.assertEqual(config['placement'], '')
+        empty = self.runtime.normalized_config('w2', {'snatch_kg':0}, 'weightlifting')
+        self.assertEqual(empty['clean_jerk_kg'], 0)
+
+    def test_uploaded_portrait_and_logo_render_inside_both_new_graphics(self):
+        temp_base = APP.parents[3] / 'output' / 'temp'
+        with tempfile.TemporaryDirectory(dir=temp_base) as folder:
+            uploads = Path(folder) / 'uploads'
+            runtime = web.ScoreboardWebRuntime(core, uploads)
+            source = Image.new('RGB', (300, 300), (220, 35, 45))
+            buffer = io.BytesIO()
+            source.save(buffer, 'PNG')
+            data = 'data:image/png;base64,' + base64.b64encode(buffer.getvalue()).decode('ascii')
+            path = runtime.upload({'name':'test.png','data':data})['path']
+            for sport, key, logo_field, logo_y in [('cricket','c2','team_logo_path',940),
+                                                   ('weightlifting','w2','country_logo_path',910)]:
+                with self.subTest(key=key):
+                    config = runtime.normalized_config(key,
+                        {'photo_path':path, logo_field:path}, sport)
+                    image = core.RENDERERS[key](config)
+                    self.assertEqual(image.getpixel((180, 875))[:3], (220, 35, 45))
+                    self.assertEqual(image.getpixel((350, logo_y))[:3], (220, 35, 45))
 
     def test_saved_sport_presets_remain_separate_after_restart(self):
         temp_base = APP.parents[3] / 'output' / 'temp'
@@ -69,11 +105,15 @@ class SportOverlayTests(unittest.TestCase):
             runtime = web.ScoreboardWebRuntime(core, uploads)
             runtime.save_template(dict(competition='cricket', template='c1',
                                        player='Opening match', country='', config={}), '127.0.0.1')
+            runtime.save_template(dict(competition='cricket', template='c2',
+                                       player='Player A', country='', config={}), '127.0.0.1')
             runtime.save_template(dict(competition='weightlifting', template='w1',
                                        player='Athlete A', country='', config={}), '127.0.0.1')
+            runtime.save_template(dict(competition='weightlifting', template='w2',
+                                       player='Athlete result', country='', config={}), '127.0.0.1')
             reopened = web.ScoreboardWebRuntime(core, uploads)
-            self.assertEqual([item['template'] for item in reopened.list_templates('cricket')], ['c1'])
-            self.assertEqual([item['template'] for item in reopened.list_templates('weightlifting')], ['w1'])
+            self.assertEqual({item['template'] for item in reopened.list_templates('cricket')}, {'c1','c2'})
+            self.assertEqual({item['template'] for item in reopened.list_templates('weightlifting')}, {'w1','w2'})
             self.assertFalse(reopened.list_templates('davis-cup'))
 
 

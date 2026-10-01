@@ -1,13 +1,15 @@
 import io
 import json
+import os
 import sqlite3
 import tempfile
 import unittest
 from contextlib import closing
 from pathlib import Path
+from unittest.mock import patch
 
 from werkzeug.security import generate_password_hash
-from app import HEADERS, InvalidData, create_app, parse_upload
+from app import HEADERS, InvalidData, backup_database, bootstrap, create_app, parse_upload
 
 
 def csv_file(channel='Alpha', revenue='1.23', total='1.23', day='2026-09-21'):
@@ -168,6 +170,61 @@ class RevenueTest(unittest.TestCase):
             with self.assertRaises(InvalidData):
                 parse_upload(content,'.csv')
 
+    def test_large_csv_rejected_before_all_rows_are_loaded(self):
+        content=(','.join(HEADERS)+'\n'+'2026-09-21,Alpha,1,1,1,0,1\n'*20001).encode()
+        with self.assertRaisesRegex(InvalidData, '20,000'):
+            parse_upload(content,'.csv')
+
+    def test_https_origin_cookie_and_configuration(self):
+        with patch.dict(os.environ, {'REVENUE_HTTPS':'1','REVENUE_PUBLIC_URL':'https://revenue.example.com'}):
+            secure=create_app(self.path/'secure')
+            with closing(sqlite3.connect(self.path/'secure/revenuelive.db')) as db,db:
+                db.execute("INSERT INTO users(username,password,role) VALUES (?,?,'admin')",
+                           ('admin',generate_password_hash('safe-test-password')))
+            client=secure.test_client()
+            bad=client.post('/api/login',json={'username':'admin','password':'safe-test-password'},
+                            headers={'Origin':'https://wrong.example.com'})
+            self.assertEqual(bad.status_code,403)
+            good=client.post('/api/login',json={'username':'admin','password':'safe-test-password'},
+                             headers={'Origin':'https://revenue.example.com'})
+            self.assertEqual(good.status_code,200)
+            self.assertIn('Secure',good.headers['Set-Cookie'])
+            self.assertIn('max-age=',good.headers['Strict-Transport-Security'])
+            mail=self.path/'secure'/'mail.json'
+            mail.write_text(json.dumps({'public_url':'https://other.example.com','host':'smtp.example.com','from':'sender@example.com'}))
+            request_headers={'Origin':'https://revenue.example.com'}
+            reset=client.post('/api/account/request',json={'email':'nobody@example.com'},headers=request_headers)
+            self.assertEqual(reset.status_code,400)
+            self.assertIn('must match',reset.json['error'])
+            mail.write_text(json.dumps({'public_url':'https://revenue.example.com','host':'smtp.example.com',
+                                        'from':'sender@example.com','password':'do-not-store-here'}))
+            reset=client.post('/api/account/request',json={'email':'nobody@example.com'},headers=request_headers)
+            self.assertEqual(reset.status_code,400)
+            self.assertIn('SMTP password',reset.json['error'])
+        with patch.dict(os.environ, {'REVENUE_HTTPS':'1','REVENUE_PUBLIC_URL':''}):
+            with self.assertRaisesRegex(ValueError, 'REVENUE_PUBLIC_URL'):
+                create_app(self.path/'invalid')
+
+    def test_fresh_install_has_no_sample_channels_or_demo_flag(self):
+        fresh=self.path/'fresh'
+        bootstrap(fresh)
+        with closing(sqlite3.connect(fresh/'revenuelive.db')) as db:
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM channels').fetchone()[0],0)
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM super_admin').fetchone()[0],1)
+        client=create_app(fresh).test_client()
+        password=(fresh/'initial_admin.txt').read_text(encoding='utf-8').split('Temporary password: ',1)[1].splitlines()[0]
+        self.assertEqual(client.post('/api/login',json={'username':'admin','password':password}).status_code,200)
+        self.assertNotIn('demo',client.get('/api/me').json)
+
+    def test_compiled_backup_command_has_complete_marker(self):
+        with tempfile.TemporaryDirectory() as backup_dir:
+            target=backup_database(self.path,backup_dir)
+            self.assertTrue((target/'revenuelive.db').is_file())
+            self.assertTrue((target/'uploads').is_dir())
+            self.assertTrue((target/'BACKUP_COMPLETE').is_file())
+        with self.assertRaisesRegex(ValueError, 'outside'):
+            backup_database(self.path,self.path/'uploads'/'nested-backups')
+
     def test_admin_user_create_and_self_lock(self):
         self.login()
         body={'username':'new','role':'viewer','password':'new-safe-password','channels':[1],'active':True}
@@ -200,7 +257,7 @@ class RevenueTest(unittest.TestCase):
 
     def test_month_filter_matrix_and_export(self):
         import csv
-        from demo_data import generate_rows
+        from notneeded.demo_data import generate_rows
         from urllib.parse import urlencode
         generated=generate_rows([(1,'Alpha'),(2,'Beta')])
         with closing(sqlite3.connect(self.path/'revenuelive.db')) as db,db:

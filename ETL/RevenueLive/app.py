@@ -5,15 +5,18 @@ import datetime as dt
 import functools
 import hashlib
 import io
+import itertools
 import json
 import os
 from pathlib import Path
 import secrets
+import shutil
 import sqlite3
 import threading
 import time
 from contextlib import closing
 from decimal import Decimal, InvalidOperation
+from urllib.parse import urlsplit
 
 from flask import Flask, g, jsonify, request, send_from_directory
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -22,6 +25,25 @@ from insight_presets import INSIGHT_PRESETS
 
 ROOT = Path(__file__).resolve().parent
 HEADERS = ['Date', 'Channel Name', 'Views', 'Ad Impressions', 'Ad Revenue', 'Sponsorship/Others', 'Total Revenue']
+
+
+def configured_public_origin():
+    public_url = os.environ.get('REVENUE_PUBLIC_URL', '').strip()
+    if not public_url:
+        if os.environ.get('REVENUE_HTTPS') == '1':
+            raise ValueError('REVENUE_PUBLIC_URL is required when REVENUE_HTTPS=1.')
+        return ''
+    url = urlsplit(public_url)
+    if (url.scheme != 'https' or not url.hostname or url.username or url.password
+            or url.path not in ('', '/') or url.query or url.fragment):
+        raise ValueError('REVENUE_PUBLIC_URL must be a single HTTPS origin without a path.')
+    try:
+        url.port
+    except ValueError as exc:
+        raise ValueError('REVENUE_PUBLIC_URL has an invalid port.') from exc
+    if os.environ.get('REVENUE_HTTPS') != '1':
+        raise ValueError('Set REVENUE_HTTPS=1 with REVENUE_PUBLIC_URL.')
+    return f'{url.scheme}://{url.netloc}'
 
 
 class InvalidData(ValueError):
@@ -33,6 +55,8 @@ def parse_upload(content, suffix):
         import xlrd
         book = xlrd.open_workbook(file_contents=content)
         sheet = book.sheet_by_index(0)
+        if sheet.nrows > 20001:
+            raise InvalidData('Maximum 20,000 data rows per upload.')
         rows = []
         for i in range(sheet.nrows):
             row = sheet.row_values(i)
@@ -47,11 +71,11 @@ def parse_upload(content, suffix):
                 raise InvalidData('Workbook expands beyond the 100 MB limit.')
         book = load_workbook(io.BytesIO(content), read_only=True, data_only=True)
         try:
-            rows = list(book.worksheets[0].iter_rows(values_only=True))
+            rows = list(itertools.islice(book.worksheets[0].iter_rows(values_only=True), 20002))
         finally:
             book.close()
     elif suffix == '.csv':
-        rows = list(csv.reader(io.StringIO(content.decode('utf-8-sig'))))
+        rows = list(itertools.islice(csv.reader(io.StringIO(content.decode('utf-8-sig'))), 20002))
     else:
         raise InvalidData('Upload an XLS, XLSX or UTF-8 CSV file.')
     if not rows or [str(x or '').strip() for x in rows[0]] != HEADERS:
@@ -100,6 +124,7 @@ def parse_upload(content, suffix):
 
 
 def create_app(data_dir=None):
+    public_origin = configured_public_origin()
     app = Flask(__name__, static_folder='static')
     data = Path(data_dir or os.environ.get('REVENUE_DATA_DIR', ROOT / 'data'))
     data.mkdir(parents=True, exist_ok=True)
@@ -175,7 +200,7 @@ def create_app(data_dir=None):
         if request.method in {'POST','PUT','DELETE'}:
             # Reject cross-site writes even on login, where no session exists yet.
             origin = request.headers.get('Origin')
-            if origin and origin != request.host_url.rstrip('/'):
+            if origin and origin != (public_origin or request.host_url.rstrip('/')):
                 return jsonify(error='Cross-origin requests are not allowed.'), 403
             if request.path not in {'/api/login','/api/account/request','/api/account/complete'} and (not session or not secrets.compare_digest(request.headers.get('X-CSRF-Token',''),session['csrf'])):
                 return jsonify(error='Session expired. Sign in again.'), 403
@@ -186,6 +211,8 @@ def create_app(data_dir=None):
         response.headers['X-Frame-Options']='DENY'
         response.headers['Referrer-Policy']='same-origin'
         response.headers['Content-Security-Policy']="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+        if public_origin:
+            response.headers['Strict-Transport-Security']='max-age=31536000'
         if request.path.startswith('/api/') or request.path=='/' or request.path.startswith('/static/'):
             response.headers['Cache-Control']='no-store'
         return response
@@ -226,13 +253,13 @@ def create_app(data_dir=None):
         db().execute('INSERT INTO sessions VALUES (?,?,?,?)',(hashlib.sha256(raw.encode()).hexdigest(),user['id'],csrf,time.time()+8*3600))
         db().commit()
         response=jsonify(ok=True)
-        response.set_cookie(cookie_name,raw,httponly=True,samesite='Strict',secure=os.environ.get('REVENUE_HTTPS')=='1',max_age=8*3600)
+        response.set_cookie(cookie_name,raw,httponly=True,samesite='Strict',secure=bool(public_origin),max_age=8*3600)
         return response
 
     @app.get('/api/me')
     @require()
     def me():
-        return jsonify(user=g.user,csrf=g.session['csrf'],channels=[dict(c) for c in permitted()],demo=(data/'DEMO_DATA.json').exists())
+        return jsonify(user=g.user,csrf=g.session['csrf'],channels=[dict(c) for c in permitted()])
 
     @app.post('/api/logout')
     @require()
@@ -350,8 +377,7 @@ def create_app(data_dir=None):
                 channel="'"+channel
             writer.writerow([r['day'],channel,r['views'],r['impressions'],*[f'{r[k]/100:.2f}' for k in ('ad','other','total')]])
         response=app.response_class('\ufeff'+buffer.getvalue(),mimetype='text/csv')
-        filename='DEMO_revenue.csv' if (data/'DEMO_DATA.json').exists() else 'revenue.csv'
-        response.headers['Content-Disposition']=f'attachment; filename={filename}'
+        response.headers['Content-Disposition']='attachment; filename=revenue.csv'
         return response
 
     def resolve_rows(rows):
@@ -553,28 +579,49 @@ def bootstrap(data):
     with closing(sqlite3.connect(data/'revenuelive.db')) as con, con:
         if not con.execute('SELECT 1 FROM users LIMIT 1').fetchone():
             password=secrets.token_urlsafe(18)
-            con.execute("INSERT INTO users(username,password,role,must_change) VALUES (?,?,'admin',1)",('admin',generate_password_hash(password)))
+            uid=con.execute("INSERT INTO users(username,password,role,must_change) VALUES (?,?,'admin',1)",('admin',generate_password_hash(password))).lastrowid
+            con.execute('INSERT INTO super_admin VALUES (1,?)',(uid,))
             (data/'initial_admin.txt').write_text('Username: admin\nTemporary password: '+password+'\nChange at first login. Keep this file private and delete after changing.\n',encoding='utf-8')
-        sample=ROOT/'Upload File.xls'
-        if sample.exists() and not con.execute('SELECT 1 FROM channels LIMIT 1').fetchone():
-            for row in parse_upload(sample.read_bytes(),'.xls'):
-                con.execute('INSERT OR IGNORE INTO channels(name) VALUES (?)',(row['channel'],))
     return app
+
+
+def backup_database(data, backup_root=None):
+    data = Path(data).resolve()
+    if not (data / 'revenuelive.db').is_file():
+        raise FileNotFoundError('No RevenueLive database found to back up.')
+    backup_root = Path(backup_root or os.environ.get('REVENUE_BACKUP_DIR', data.parent / 'RevenueLive-backups')).resolve()
+    if backup_root == data or backup_root.is_relative_to(data):
+        raise ValueError('Keep backups outside the RevenueLive data directory.')
+    target = backup_root / dt.datetime.now(dt.timezone.utc).strftime('%Y%m%d_%H%M%S_%f')
+    target.mkdir(parents=True)
+    with closing(sqlite3.connect(data / 'revenuelive.db')) as source, closing(sqlite3.connect(target / 'revenuelive.db')) as dest:
+        source.backup(dest)
+    shutil.copytree(data / 'uploads', target / 'uploads')
+    (target / 'BACKUP_COMPLETE').write_text('SQLite and uploads copied successfully.\n', encoding='ascii')
+    return target
 
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser()
     parser.add_argument('--host',default='127.0.0.1')
     parser.add_argument('--port',type=int,default=8820)
-    parser.add_argument('--demo',action='store_true')
+    parser.add_argument('--backup',action='store_true',help='Back up the real database and uploads, then exit.')
     args=parser.parse_args()
-    data=ROOT/'demo_data' if args.demo else Path(os.environ.get('REVENUE_DATA_DIR',ROOT/'data'))
+    data=Path(os.environ.get('REVENUE_DATA_DIR',ROOT/'data'))
+    if args.backup:
+        print('Backup:', backup_database(data), flush=True)
+        raise SystemExit(0)
+    if os.environ.get('REVENUE_HTTPS')=='1' and args.host not in {'127.0.0.1','localhost','::1'}:
+        parser.error('HTTPS proxy mode requires a loopback backend listener.')
     app=bootstrap(data)
-    if args.demo:
-        from demo_data import seed_demo
-        seed_demo(data)
     from waitress import create_server
-    server=create_server(app,host=args.host,port=args.port,threads=4)
+    options=dict(host=args.host,port=args.port,threads=4,clear_untrusted_proxy_headers=True)
+    trusted_proxy=os.environ.get('REVENUE_TRUSTED_PROXY','').strip()
+    if trusted_proxy:
+        if os.environ.get('REVENUE_HTTPS')!='1':
+            parser.error('Trusted proxy headers require HTTPS proxy mode.')
+        options.update(trusted_proxy=trusted_proxy,trusted_proxy_headers={'x-forwarded-for'})
+    server=create_server(app,**options)
     stop=data/f'stop_{args.port}'
     stop.unlink(missing_ok=True)
     def monitor():

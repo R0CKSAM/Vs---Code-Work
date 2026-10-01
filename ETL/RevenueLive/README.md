@@ -6,17 +6,16 @@ Independent INR revenue reporting. Python 3.11+ on Windows. No ETL services are 
 
 From this folder, run `powershell -ExecutionPolicy Bypass -File .\setup.ps1`, then
 `powershell -ExecutionPolicy Bypass -File .\manage.ps1 -Action Start`.
-The default port is **8820**. Start binds all network interfaces. Use
-`-ListenAddress 127.0.0.1` for local-only operation.
+The default port is **8820** and Start binds only `127.0.0.1`.
 Actions: `Start`, `Stop`, `Restart`, `Status`, `Backup`.
 
-First launch creates an **admin** account with a random password in
+First launch creates a **Super Admin** account with a random password in
 `data/initial_admin.txt`. Change it on first login, then delete that credential
 file. It is not served over HTTP. Each newly created user's temporary password
 must also be changed at first login.
 
-The provided sample registers 28 channel names on first launch, but does not
-silently publish revenue. Sign in and upload `Upload File.xls` to preview and publish it.
+A fresh install starts with no channels or revenue. Add channel names in Users &
+access, then upload the actual reporting file to preview and publish it.
 
 ## Access
 
@@ -26,28 +25,25 @@ filtered on the server. Unknown/unassigned channels reject the entire upload.
 No assignments means no revenue access. Admin assignments are unrestricted.
 Channel and role changes are checked on every API request. Open online clients check for changes every two seconds and on focus, clear stale data, and refresh their permitted scope. Background browsers may throttle this check. Disabling an account or resetting its password revokes its sessions.
 
-Create accounts on the same instance where users will sign in (real: 8820; demo: 8822). New users sign in with their temporary password, then set and confirm their own password before accessing reports. Account assignment controls support Select all, Select shown (matching search), and Clear (including hidden choices).
+Create accounts on the instance where users will sign in. New users sign in with their temporary password, then set and confirm their own password before accessing reports. Account assignment controls support Select all, Select shown (matching search), and Clear (including hidden choices).
 
-Run `check_accounts.py` with the workspace Python for isolated two-browser account lifecycle checks; it never changes production users.
+Development-only browser checks are archived under `notneeded/` and are not part of the source handoff.
 
 ## Email invitations (optional)
 
 In Add user, choose Invite by email and enter the exact recipient email, role, and channels. Only explicitly created accounts can receive setup/reset links. Recipients can use Gmail or company email. Links expire after 30 minutes, are single-use, and are stored only as hashes. Completing a reset revokes all account sessions. Existing local accounts continue to work; they are not silently converted to email accounts.
 
-Host configuration: create `data/mail.json` (or `demo_data/mail.json` for demo) using `mail.example.json` as the schema. These data directories are ignored by Git. Configure a verified HTTPS public URL and a provider-approved STARTTLS SMTP sender. Restrict file access to the host account. Microsoft tenants may require an IT-approved relay rather than SMTP password authentication. No public tunnel or mail account is created automatically. Do not use the insecure standalone MFA demo as an authentication gateway.
+Host configuration: create `<DataDir>/mail.json` using `mail.example.json` as the schema. Configure a verified HTTPS public URL and a provider-approved STARTTLS SMTP sender. Set `REVENUE_SMTP_PASSWORD` in the service environment when SMTP authentication is needed; in HTTPS production mode, a password in mail.json is rejected. Restrict file access to the host account. Microsoft tenants may require an IT-approved relay rather than SMTP password authentication. No public tunnel or mail account is created automatically.
 
 Without mail configuration invitations are rejected before creating an account. If SMTP fails after account creation, the saved account remains pending; after fixing delivery request a new link using Forgot password. Reset requests return the same response for unknown and known emails; delivery failures are logged without email/token contents. Reset requests are limited to one per minute per source IP. Reverse proxies need a separately reviewed trusted-proxy configuration.
 
 This invitation implementation is not MFA. Authenticator enrollment/recovery and account expiry remain a separate rollout; do not advertise mandatory MFA until those are enabled and tested.
 
-Phone access: `http://<host-LAN-IP>:8820`. Company routing and a narrow Windows
-firewall rule for approved subnets are required; this app does not modify them.
-An IT administrator can run `allow_lan.ps1` once to allow port 8820 from
-`192.168.50.0/24` on Domain/Private networks. Other approved subnets can be supplied
-with `-Subnets`; do not open the port to all addresses.
-HTTP is for trusted-network testing only. Before operational use, put this service
-behind your approved HTTPS reverse proxy, set `REVENUE_HTTPS=1`, and restrict direct
-backend access. No automatic Internet exposure is configured. Sessions expire
+For production source deployment, create an access-restricted data directory
+outside this code folder and run `manage.ps1 -Action Start -DataDir
+'D:\RevenueLiveData' -PublicUrl 'https://your-domain.example'`. Put an approved
+HTTPS reverse proxy in front of the loopback backend. No automatic Internet
+exposure is configured. Sessions expire
 after eight hours; passwords are hashed and writes require CSRF tokens.
 
 ## Uploads and persistence
@@ -67,18 +63,18 @@ To restore a backup, stop RevenueLive and replace its database and uploads direc
 from a backup, preserving a copy of the current data first. Never copy only a live
 SQLite database file; use the Backup action.
 
-Copy this folder to another PC, including `data`, but exclude `.venv`, `.tools`,
-logs and Python caches. Run setup on the new PC. Keep credentials and backups private.
+For the production team, run `build_source_handoff.ps1` and provide only its
+timestamped output folder. Never hand over this entire working folder: it contains
+data, logs, build caches, and archived material. Follow `SOURCE-HANDOFF.md`.
+Transfer production data separately through an approved encrypted channel.
 Do not run two hosts against the same SQLite file on a network share.
 
-## Analytics and demo workspace
+For a source-free server handoff, use `build_handoff.ps1` and follow
+`PRODUCTION-HANDOFF.md`. The compiled release does not include data or source;
+browser JavaScript remains visible to browsers. The production data and backup
+volumes still need host-managed encryption and access controls.
 
-`manage.ps1 -Action Start -Demo` starts a separate service on **8822** with a
-separate `demo_data` database. Its randomly generated admin password is in
-`demo_data/initial_admin.txt`. It seeds 31 synthetic days (August 2026) for the
-sample's 28 channels. The banner and exported filename explicitly mark demo data.
-No synthetic data is inserted into the real database on port 8820.
-Use `-Demo` with Status, Stop or Restart to manage only this instance.
+## Analytics
 
 Filters support one/multiple/all assigned channels, explicit empty selection,
 single dates and custom ranges. Latest 7/30 days and Latest month are anchored to

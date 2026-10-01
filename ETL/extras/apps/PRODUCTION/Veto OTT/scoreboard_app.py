@@ -4021,7 +4021,7 @@ def normalise_project_configs(saved: Any) -> Dict[str, Dict]:
         config["template"] = key
         if key in _sport_module.SPORT_TEMPLATE_KEYS:
             config = {field:config.get(field,value) for field,value in default.items()}
-            config['competition_theme'] = 'cricket' if key == 'c1' else 'weightlifting'
+            config['competition_theme'] = 'cricket' if key.startswith('c') else 'weightlifting'
             config['transparent_background'] = True
             config['overlay_opacity_pct'] = clamp_number(config['overlay_opacity_pct'],0,100,100)
             if key == 'c1':
@@ -4032,7 +4032,15 @@ def normalise_project_configs(saved: Any) -> Dict[str, Dict]:
                 config['overs'] = str(config['overs']).strip()
                 if not re.fullmatch(r'\d{1,3}\.[0-5]',config['overs']):
                     raise ValueError('Overs must use cricket notation, such as 17.5 (balls 0-5).')
-            else:
+            elif key == 'c2':
+                for field in ('player_name','team','role','stat_1_label','stat_1_value',
+                              'stat_2_label','stat_2_value'):
+                    config[field] = str(config[field]).strip()[:160]
+                for field in ('photo_focus_x','photo_focus_y'):
+                    config[field] = int(clamp_number(config[field],0,100,default[field]))
+                if config['photo_fit'] not in ('cover','contain'):
+                    config['photo_fit'] = default['photo_fit']
+            elif key == 'w1':
                 for field in ('athlete_name','country','category'):
                     config[field] = str(config[field]).strip()[:160]
                 for field,minimum,maximum in (('attempt_number',1,3),('target_kg',0,999),
@@ -4043,6 +4051,14 @@ def normalise_project_configs(saved: Any) -> Dict[str, Dict]:
                                       ('photo_fit',('cover','contain'))):
                     if config[field] not in choices:
                         config[field] = default[field]
+            else:
+                for field in ('athlete_name','country','category','placement'):
+                    config[field] = str(config[field]).strip()[:160]
+                for field,maximum in (('snatch_kg',999),('clean_jerk_kg',999),
+                                      ('photo_focus_x',100),('photo_focus_y',100)):
+                    config[field] = int(clamp_number(config[field],0,maximum,default[field]))
+                if config['photo_fit'] not in ('cover','contain'):
+                    config['photo_fit'] = default['photo_fit']
         if key=='t24' and isinstance(candidate,dict):
             for side in ('a','b'):
                 field='player_'+side

@@ -179,7 +179,7 @@ function identity(value){
   me=value;csrf=value.csrf;$('login').hidden=true;$('shell').hidden=false;
   signedInName.textContent=value.user.username;
   $('identity').textContent=value.user.username+' | '+(value.user.super_admin?'Super Admin':value.user.role);
-  $('uploadNav').hidden=value.user.role==='viewer';$('adminNav').hidden=value.user.role!=='admin';$('demoBanner').hidden=!value.demo;
+  $('uploadNav').hidden=value.user.role==='viewer';$('adminNav').hidden=value.user.role!=='admin';
 }
 function overview(){document.querySelectorAll('.view').forEach(v=>v.hidden=v.id!=='dashboard');document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view==='dashboard'));}
 function passwordPrompt(){

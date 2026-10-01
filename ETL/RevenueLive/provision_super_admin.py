@@ -2,6 +2,7 @@
 import argparse
 from contextlib import closing
 import datetime as dt
+import os
 from pathlib import Path
 import secrets
 import sqlite3
@@ -39,6 +40,5 @@ def provision(data, username):
 if __name__=='__main__':
     parser=argparse.ArgumentParser()
     parser.add_argument('--username',required=True)
-    parser.add_argument('--demo',action='store_true')
     args=parser.parse_args()
-    provision(Path(__file__).resolve().parent/('demo_data' if args.demo else 'data'),args.username)
+    provision(Path(os.environ.get('REVENUE_DATA_DIR',Path(__file__).resolve().parent/'data')),args.username)

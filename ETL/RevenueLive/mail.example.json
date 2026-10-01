@@ -3,6 +3,5 @@
   "host": "smtp.your-email-provider.example",
   "port": 587,
   "from": "revenue@your-company.example",
-  "username": "revenue@your-company.example",
-  "password": "CONFIGURE_LOCALLY_NOT_IN_GIT"
+  "username": "revenue@your-company.example"
 }

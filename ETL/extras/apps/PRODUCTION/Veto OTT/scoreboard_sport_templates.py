@@ -7,8 +7,9 @@ from types import SimpleNamespace
 from PIL import Image, ImageDraw, ImageOps
 
 
-SPORT_TEMPLATE_KEYS = ('c1', 'w1')
-SPORT_TEMPLATE_NAMES = ('Cricket score strip', 'Athlete attempt')
+SPORT_TEMPLATE_KEYS = ('c1', 'c2', 'w1', 'w2')
+SPORT_TEMPLATE_NAMES = ('Cricket score strip', 'Cricket player lower-third',
+                        'Athlete attempt', 'Weightlifting result')
 
 
 def register(namespace):
@@ -32,6 +33,31 @@ def register(namespace):
             lift_type='Snatch', attempt_number=1, target_kg=100,
             result='Pending', photo_path='', country_logo_path='',
             photo_fit='cover', photo_focus_x=50, photo_focus_y=50,
+            transparent_background=True, overlay_opacity_pct=100,
+            competition_theme='weightlifting', text_styles={}, rows=[],
+            accent_color=[250, 72, 130], background_color=[5, 22, 50],
+            bar_color=None, image_brightness_pct=100,
+            image_vibrance_pct=100, image_contrast_pct=100,
+        ),
+        'c2': dict(
+            template='c2', canvas_size='HD  (1920x1080)',
+            player_name='PLAYER NAME', team='IND', role='BATTER',
+            stat_1_label='RUNS', stat_1_value='0',
+            stat_2_label='STRIKE RATE', stat_2_value='0.0',
+            photo_path='', team_logo_path='', photo_fit='cover',
+            photo_focus_x=50, photo_focus_y=50,
+            transparent_background=True, overlay_opacity_pct=100,
+            competition_theme='cricket', text_styles={}, rows=[],
+            accent_color=[35, 193, 240], background_color=[4, 20, 46],
+            bar_color=None, image_brightness_pct=100,
+            image_vibrance_pct=100, image_contrast_pct=100,
+        ),
+        'w2': dict(
+            template='w2', canvas_size='HD  (1920x1080)',
+            athlete_name='ATHLETE NAME', country='IND', category='73 KG',
+            snatch_kg=0, clean_jerk_kg=0, placement='',
+            photo_path='', country_logo_path='', photo_fit='cover',
+            photo_focus_x=50, photo_focus_y=50,
             transparent_background=True, overlay_opacity_pct=100,
             competition_theme='weightlifting', text_styles={}, rows=[],
             accent_color=[250, 72, 130], background_color=[5, 22, 50],
@@ -157,7 +183,81 @@ def register(namespace):
              color=result_color, align='center', role='result')
         return finish(image, cfg)
 
-    for key, renderer in (('c1', cricket), ('w1', weightlifting)):
+    def cricket_player(cfg):
+        image = make_canvas(cfg)
+        draw = ImageDraw.Draw(image)
+        draw.rounded_rectangle((72, 792, 1848, 1020), radius=24, fill=(4, 20, 46, 245))
+        draw.rounded_rectangle((72, 792, 1848, 804), radius=6, fill=(35, 193, 240, 255))
+        source = c.load_photo(cfg['photo_path'])
+        has_photo = source is not None
+        if has_photo:
+            draw.rounded_rectangle((98, 816, 292, 998), radius=14, fill=(31, 57, 88, 255))
+            photo(image, cfg['photo_path'], (98, 816, 292, 998), fit=cfg['photo_fit'],
+                  focus=(cfg['photo_focus_x'], cfg['photo_focus_y']), source=source)
+        name_left = 322 if has_photo else 110
+        draw.line((1100, 828, 1100, 983), fill=(76, 113, 150, 180), width=2)
+        draw.line((1470, 828, 1470, 983), fill=(76, 113, 150, 180), width=2)
+        text(draw, cfg, cfg['player_name'], (name_left, 830, 1060, 902), 60, 27,
+             role='player_name')
+        if cfg['team_logo_path']:
+            photo(image, cfg['team_logo_path'], (name_left, 924, name_left + 62, 974))
+            team_left = name_left + 76
+        else:
+            team_left = name_left
+        text(draw, cfg, cfg['team'], (team_left, 922, 610, 971), 34, 20,
+             color=(117, 224, 253), role='team')
+        text(draw, cfg, cfg['role'], (635, 922, 1060, 971), 34, 20,
+             role='role')
+        for x0, x1, label, value in (
+            (1132, 1438, cfg['stat_1_label'], cfg['stat_1_value']),
+            (1502, 1817, cfg['stat_2_label'], cfg['stat_2_value']),
+        ):
+            text(draw, cfg, label.upper(), (x0, 830, x1, 870), 26, 18,
+                 color=(117, 224, 253), role='stat_label')
+            text(draw, cfg, value, (x0, 883, x1, 969), 68, 30, role='stat_value')
+        return finish(image, cfg)
+
+    def weightlifting_result(cfg):
+        image = make_canvas(cfg)
+        draw = ImageDraw.Draw(image)
+        draw.rounded_rectangle((72, 766, 1848, 1020), radius=24, fill=(5, 22, 50, 245))
+        draw.rounded_rectangle((72, 766, 1848, 779), radius=6, fill=(250, 72, 130, 255))
+        source = c.load_photo(cfg['photo_path'])
+        has_photo = source is not None
+        if has_photo:
+            draw.rounded_rectangle((98, 790, 285, 998), radius=14, fill=(31, 57, 88, 255))
+            photo(image, cfg['photo_path'], (98, 790, 285, 998), fit=cfg['photo_fit'],
+                  focus=(cfg['photo_focus_x'], cfg['photo_focus_y']), source=source)
+        name_left = 315 if has_photo else 108
+        text(draw, cfg, cfg['athlete_name'], (name_left, 800, 820, 869), 54, 26,
+             role='athlete_name')
+        if cfg['country_logo_path']:
+            photo(image, cfg['country_logo_path'], (name_left, 888, name_left + 62, 938))
+            country_left = name_left + 78
+        else:
+            country_left = name_left
+        text(draw, cfg, cfg['country'], (country_left, 887, 525, 940), 33, 20,
+             color=(129, 224, 251), role='country')
+        text(draw, cfg, cfg['category'], (name_left, 951, 820, 994), 30, 19,
+             role='category')
+        draw.line((851, 804, 851, 985), fill=(99, 127, 163), width=2)
+        total = cfg['snatch_kg'] + cfg['clean_jerk_kg'] if cfg['snatch_kg'] and cfg['clean_jerk_kg'] else None
+        for x0, x1, label, value, highlight in (
+            (884, 1140, 'SNATCH', cfg['snatch_kg'], False),
+            (1160, 1498, 'CLEAN & JERK', cfg['clean_jerk_kg'], False),
+            (1522, 1818, 'TOTAL', total, True),
+        ):
+            text(draw, cfg, label, (x0, 826, x1, 869), 26, 18,
+                 color=(129, 224, 251), role='lift_label')
+            display = f'{value} KG' if value else '--'
+            text(draw, cfg, display, (x0, 885, x1, 958), 48 if highlight else 43, 23,
+                 color=(255, 215, 133) if highlight else (255, 255, 255), role='lift_value')
+        text(draw, cfg, cfg['placement'].upper(), (1522, 964, 1818, 1002), 25, 18,
+             color=(255, 215, 133), role='placement')
+        return finish(image, cfg)
+
+    for key, renderer in (('c1', cricket), ('c2', cricket_player),
+                          ('w1', weightlifting), ('w2', weightlifting_result)):
         namespace['DEFAULT_CONFIGS'][key] = copy.deepcopy(defaults[key])
         namespace['RENDERERS'][key] = renderer
         namespace['TEXT_STYLE_TARGETS'][key] = [('all', 'All text')]

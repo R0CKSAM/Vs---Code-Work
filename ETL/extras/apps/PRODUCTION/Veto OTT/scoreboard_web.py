@@ -35,12 +35,12 @@ SESSION_TIMEOUT_SECONDS = 30
 CHROMA_COLORS = {
     'chroma-magenta': (255, 0, 255),
 }
-OVERLAY_TEMPLATES = frozenset(('t5', 't11', 't14', 't15', 't16', 't17', 't18', 't19', 't20', 'c1', 'w1'))
+OVERLAY_TEMPLATES = frozenset(('t5', 't11', 't14', 't15', 't16', 't17', 't18', 't19', 't20', 'c1', 'c2', 'w1', 'w2'))
 COMPETITIONS = {
     'davis-cup': 'Davis Cup', 'billie-jean-king-cup': 'Billie Jean King Cup',
     'cricket': 'Cricket', 'weightlifting': 'Weightlifting',
 }
-SPORT_TEMPLATES = {'cricket': ('c1',), 'weightlifting': ('w1',)}
+SPORT_TEMPLATES = {'cricket': ('c1', 'c2'), 'weightlifting': ('w1', 'w2')}
 
 
 def is_overlay(template, config):
@@ -441,9 +441,9 @@ class ScoreboardWebRuntime:
             country = ''
             if not config.get('media_path'):
                 raise ValueError('Upload an image or video first.')
-        if template in ('t13','t23','c1','w1'):
+        if template in ('t13','t23',*self.core.SPORT_TEMPLATE_KEYS):
             country=''
-        if not player or (not country and template not in ('t8','t13','t23','c1','w1')) or max(len(player),len(country)) > 100:
+        if not player or (not country and template not in ('t8','t13','t23',*self.core.SPORT_TEMPLATE_KEYS)) or max(len(player),len(country)) > 100:
             raise ValueError('Enter a preset name (and country for player graphics), at most 100 characters each.')
         with self.lock:
             entries = self.list_templates(competition)
@@ -919,7 +919,9 @@ class ScoreboardWebRuntime:
             "t23": (),
             "t24": ('background_path',),
             "c1": ('batting_logo_path','bowling_logo_path'),
+            "c2": ('photo_path','team_logo_path'),
             "w1": ('photo_path','country_logo_path'),
+            "w2": ('photo_path','country_logo_path'),
         }[template]
         for key in keys:
             config[key] = self._safe_uploaded_path(config.get(key, ""))

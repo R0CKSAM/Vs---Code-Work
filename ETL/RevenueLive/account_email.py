@@ -1,6 +1,7 @@
 """Single-use email verification/password setup for explicitly invited accounts."""
 import hashlib
 import json
+import os
 import re
 import secrets
 import smtplib
@@ -32,13 +33,23 @@ def install(app, db, data, invalid):
         try:
             config = json.loads((data / 'mail.json').read_text(encoding='utf-8'))
             url = urlsplit(config['public_url'])
-            if url.scheme != 'https' or not url.netloc or url.username or url.query or url.fragment:
+            if (url.scheme != 'https' or not url.hostname or url.username or url.password
+                    or url.path not in ('', '/') or url.query or url.fragment):
                 raise ValueError()
+            url.port
             if not config['host'] or not config['from']:
                 raise ValueError()
-            return config
         except (OSError, ValueError, KeyError):
             raise invalid('Email delivery is not configured. Ask the host administrator to configure mail.json with an HTTPS public URL.')
+        public_url = os.environ.get('REVENUE_PUBLIC_URL', '').rstrip('/')
+        if public_url and config['public_url'].rstrip('/') != public_url:
+            raise invalid('Mail public_url must match REVENUE_PUBLIC_URL.')
+        if os.environ.get('REVENUE_HTTPS') == '1' and config.get('password'):
+            raise invalid('Move the SMTP password from mail.json to REVENUE_SMTP_PASSWORD.')
+        config['password'] = os.environ.get('REVENUE_SMTP_PASSWORD', config.get('password', ''))
+        if config.get('username') and not config['password']:
+            raise invalid('Set REVENUE_SMTP_PASSWORD for authenticated email delivery.')
+        return config
 
     def issue(uid):
         config = settings()

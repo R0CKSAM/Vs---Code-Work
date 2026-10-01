@@ -40,7 +40,6 @@ tbody tr:hover{background:#ffffff06}
 #reportLoading{background:#26332e;color:#daf4e9;border-color:#527565}
 .wordmark,.wordmark span{color:#dce9e2}
 #notice{background:#26332e;color:#dce9e2}
-#demoBanner{background:#45391f;color:#f8d797}
 .badge{color:#eda5df}
 @media(max-width:1000px){.channel-analysis{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.metrics strong{font-size:22px}}
 @media(max-width:760px){.channel-analysis{grid-template-columns:minmax(0,1fr)}.workspace{padding:10px}.metrics{gap:8px}.metrics article{padding:14px 10px}.composition-ring{width:100%}#shell>header{padding:10px}}

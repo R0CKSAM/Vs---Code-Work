@@ -5,6 +5,7 @@ __pycache__/
 .env
 data/
 backups/
+RevenueLive-backups/
 logs/
 .test-data/
 .screenshots/
