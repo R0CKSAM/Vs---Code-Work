@@ -1282,7 +1282,15 @@
     el("asnModeButtons").querySelectorAll("button").forEach(function(button){button.addEventListener("click",function(){asnView.mode=button.dataset.asnMode;renderNetworks()})});
     el("weekdayBaselineButtons").querySelectorAll("button").forEach(function(button){button.addEventListener("click",function(){insightWeekdayCount=Number(button.dataset.weekdayCount)||3;renderInsights()})});
     expandableLists.forEach(function(item){el(item[1]).addEventListener("click",function(){const list=el(item[0]);list.dataset.expanded=list.dataset.expanded==="true"?"false":"true";capLeaderboardRows(item[0],item[1],item[2])})});
-    document.addEventListener("click",function(event){const details=el("channelDetails");if(details.open&&!details.contains(event.target))details.removeAttribute("open")});
+    document.addEventListener("click",function(event){
+      const path=event.composedPath();
+      document.querySelectorAll("#channelDetails,.geo-multi-picker details").forEach(function(details){
+        if(details.open&&!path.includes(details))details.open=false;
+      });
+    });
+    document.addEventListener("keydown",function(event){
+      if(event.key==="Escape")document.querySelectorAll("#channelDetails[open],.geo-multi-picker details[open]").forEach(function(details){details.open=false});
+    });
     let resizeTimer=null;
     window.addEventListener("resize",function(){clearTimeout(resizeTimer);resizeTimer=setTimeout(function(){expandableLists.forEach(function(item){capLeaderboardRows(item[0],item[1],item[2])});syncScrollUi()},120)});
     const topShell=document.querySelector(".top-shell");

@@ -1304,7 +1304,7 @@ by('requestSearch').addEventListener('input',()=>{clearTimeout(ledgerTimer);ledg
 by('davisPreset').addEventListener('click',selectDavisCup);
 by('davisViewToggle').addEventListener('click',()=>setDavisMode(!davisMode));
 by('universalExportExcel').addEventListener('click',exportUniversalExcel);
-document.addEventListener('click',event=>{if(!event.target.closest('.picker'))closePickers();});
+document.addEventListener('click',event=>{if(!event.composedPath().some(node=>node instanceof Element&&node.matches('.picker')))closePickers();});
 document.addEventListener('keydown',event=>{if(event.key==='Escape')closePickers();});
 renderDateAvailability();
 await refreshData();

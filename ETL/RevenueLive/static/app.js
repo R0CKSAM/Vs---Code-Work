@@ -315,7 +315,7 @@ bind('selectAllChannels','click',async()=>selectShown(true));
 $('channelOptions').addEventListener('change',e=>{if(e.target.checked)selectedChannels.add(e.target.value);else selectedChannels.delete(e.target.value);channelSummary();dirty();});
 bind('selectVisible','click',async()=>selectShown(true));
 bind('clearChannels','click',async()=>selectShown(false));
-document.addEventListener('click',e=>{if(!$('channelPicker').contains(e.target))$('channelPicker').open=false;});
+document.addEventListener('click',e=>{if(!e.composedPath().includes($('channelPicker')))$('channelPicker').open=false;});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$('channelPicker').open=false;});
 for(const id of ['start','end'])$(id).addEventListener('change',()=>{if($('datePreset').value==='single')$('end').value=$('start').value;else $('datePreset').value='custom';dirty();});
 $('datePreset').addEventListener('change',()=>{

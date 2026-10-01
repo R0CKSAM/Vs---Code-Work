@@ -21,22 +21,32 @@ def test_multiselect_filters():
         platform_inputs = page.locator('#platformOptions input')
         platform_inputs.nth(0).check()
         page.wait_for_function('selectedPlatforms.length === 1 && !document.body.classList.contains("rendering")', timeout=120000)
+        assert page.locator('#platformFilter').evaluate('(node) => node.open')
         platform_inputs.nth(1).check()
         page.wait_for_function('selectedPlatforms.length === 2 && !document.body.classList.contains("rendering")', timeout=120000)
+        assert page.locator('#platformFilter').evaluate('(node) => node.open')
         assert page.locator('#platformSummary').inner_text() == '2 platforms'
         assert page.evaluate('filteredRows().every(rowInPlatform)')
 
         page.locator('#channelFilter summary').click()
+        assert not page.locator('#platformFilter').evaluate('(node) => node.open')
         channel_inputs = page.locator('#channelOptions input')
         assert channel_inputs.count() >= 2
         channel_inputs.nth(0).check()
         page.wait_for_function('selectedChannels.length === 1 && !document.body.classList.contains("rendering")', timeout=120000)
+        assert page.locator('#channelFilter').evaluate('(node) => node.open')
         channel_inputs.nth(1).check()
         page.wait_for_function('selectedChannels.length === 2 && !document.body.classList.contains("rendering")', timeout=120000)
+        assert page.locator('#channelFilter').evaluate('(node) => node.open')
         assert page.locator('#channelSummary').inner_text() == '2 channels'
         assert page.evaluate('filteredRows().length > 0')
         assert page.evaluate('filteredRows().every(row => rowInPlatform(row) && rowInChannel(row))')
         assert page.evaluate('filteredSummary().every(row => rowInPlatform(row) && rowInChannel(row))')
+        page.locator('#title').click()
+        assert not page.locator('#channelFilter').evaluate('(node) => node.open')
+        page.locator('#channelFilter summary').click()
+        page.keyboard.press('Escape')
+        assert not page.locator('#channelFilter').evaluate('(node) => node.open')
         assert not errors, errors[:3]
         page.set_viewport_size({'width': 390, 'height': 844})
         assert page.locator('#channelFilter summary').is_visible()

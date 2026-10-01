@@ -2010,9 +2010,10 @@ document.getElementById('generatedMeta').textContent='Last updated '+formatDateT
 document.getElementById('fileMeta').textContent='Source parquet: '+(D.files?.minute||'');
 document.getElementById('chartModal').addEventListener('click',function(ev){if(ev.target===this)closeChartModal();});
 document.addEventListener('click',function(ev){
+  const path=ev.composedPath();
   ['platformFilter','channelFilter'].forEach(function(id){
     const el=document.getElementById(id);
-    if(el.open&&!el.contains(ev.target))el.open=false;
+    if(el.open&&!path.includes(el))el.open=false;
   });
 });
 document.addEventListener('keydown',function(ev){

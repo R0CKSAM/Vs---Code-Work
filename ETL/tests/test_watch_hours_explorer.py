@@ -61,6 +61,14 @@ def test_watch_hours_explorer():
         assert totals['chart'] == totals['dates']
 
         page.locator('#exploreChannel summary').click()
+        assert page.locator('#exploreChannel').evaluate('(node) => node.open')
+        page.locator('#exploreChannel .explore-option input').nth(0).click()
+        assert page.locator('#exploreChannel').evaluate('(node) => node.open')
+        page.locator('#exploreChannel .explore-option input').nth(1).click()
+        assert page.locator('#exploreChannel').evaluate('(node) => node.open')
+        page.locator('#exploreChannel .explore-option input').nth(0).click()
+        page.locator('#exploreChannel .explore-option input').nth(1).click()
+        assert page.locator('#exploreChannel').evaluate('(node) => node.open')
         assert page.evaluate('''() => {
             const rect = document.querySelector('#exploreChannel .explore-menu').getBoundingClientRect();
             return rect.width > 100 && rect.left >= 0 && rect.right <= innerWidth;
@@ -68,6 +76,8 @@ def test_watch_hours_explorer():
         page.locator('#exploreChannel .explore-search').fill('no such channel exists')
         assert page.evaluate('document.querySelectorAll("#exploreChannel .explore-option:not([hidden])").length') == 0
         page.locator('#exploreChannel .explore-search').fill('')
+        page.locator('#exploreContext').click()
+        assert not page.locator('#exploreChannel').evaluate('(node) => node.open')
 
         page.locator('#exploreBreakdown').select_option('region')
         assert page.evaluate('document.querySelector("#exploreBreakdownTable th").textContent') == 'Region'

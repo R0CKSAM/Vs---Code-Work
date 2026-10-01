@@ -721,8 +721,9 @@ function changeMultiPicker(kind,input){
   if(kind==="platform")setPlatformValues(values);else setChannelValues(values);
 }
 document.addEventListener("click",function(event){
-  if(!event.target.closest(".multi-picker"))closeMultiPickers("");
-  if(!event.target.closest(".date-multi-picker"))closeUniqueIpDatePickers("");
+  const path=event.composedPath();
+  if(!path.some(function(node){return node instanceof Element&&node.matches(".multi-picker")}))closeMultiPickers("");
+  if(!path.some(function(node){return node instanceof Element&&node.matches(".date-multi-picker")}))closeUniqueIpDatePickers("");
 });
 function platformOk(row){const selected=selectedFilterValues(state.platform);return !selected.length||selected.indexOf(String(row.platform_name||""))>=0}
 function channelOk(row){const selected=selectedFilterValues(state.channel);return !selected.length||selected.indexOf(String(row.channel_name||""))>=0}
@@ -2814,7 +2815,12 @@ function expandHtml(id,title){
   refreshModalChart();
 }
 function closeModal(){el("chartModal").classList.remove("open");modalSourceChartId="";modalSourceHtmlId="";el("modalControls").innerHTML="";if(el("modalChartValues")){el("modalChartValues").innerHTML="";el("modalChartValues").style.display="none"}el("modalHtml").innerHTML="";el("modalHtml").style.display="none";el("modalChartBox").style.display="block";if(modalChart){modalChart.destroy();modalChart=null}}
-document.addEventListener("keydown",function(e){if(e.key==="Escape")closeModal()});
+document.addEventListener("keydown",function(e){
+  if(e.key!=="Escape")return;
+  if(document.querySelector(".multi-picker-menu.open,.date-multi-menu.open")){
+    closeMultiPickers("");closeUniqueIpDatePickers("");
+  }else if(el("chartModal").classList.contains("open"))closeModal();
+});
 arrangePrioritySections();
 setupLazySections();
 setupFilters();
