@@ -18,11 +18,13 @@ from contextlib import closing
 from decimal import Decimal, InvalidOperation
 from urllib.parse import urlsplit
 
-from flask import Flask, g, jsonify, request, send_from_directory
+from flask import Flask, g, jsonify, request, send_from_directory, redirect
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import HTTPException
 from insight_presets import INSIGHT_PRESETS
+from config import Settings, load_environment
+from database import Database, INTEGRITY_ERRORS
 
 ROOT = Path(__file__).resolve().parent
 HEADERS = ['Date', 'Channel Name', 'Views', 'Ad Impressions', 'Ad Revenue', 'Sponsorship/Others', 'Total Revenue']
@@ -41,25 +43,6 @@ def verify_audit_chain(connection):
             return False,previous,count,row['id']
         previous=row['entry_hash'];count+=1
     return True,previous,count,None
-
-
-def configured_public_origin():
-    public_url = os.environ.get('REVENUE_PUBLIC_URL', '').strip()
-    if not public_url:
-        if os.environ.get('REVENUE_HTTPS') == '1':
-            raise ValueError('REVENUE_PUBLIC_URL is required when REVENUE_HTTPS=1.')
-        return ''
-    url = urlsplit(public_url)
-    if (url.scheme != 'https' or not url.hostname or url.username or url.password
-            or url.path not in ('', '/') or url.query or url.fragment):
-        raise ValueError('REVENUE_PUBLIC_URL must be a single HTTPS origin without a path.')
-    try:
-        url.port
-    except ValueError as exc:
-        raise ValueError('REVENUE_PUBLIC_URL has an invalid port.') from exc
-    if os.environ.get('REVENUE_HTTPS') != '1':
-        raise ValueError('Set REVENUE_HTTPS=1 with REVENUE_PUBLIC_URL.')
-    return f'{url.scheme}://{url.netloc}'
 
 
 class InvalidData(ValueError):
@@ -140,19 +123,22 @@ def parse_upload(content, suffix):
 
 
 def create_app(data_dir=None):
-    public_origin = configured_public_origin()
+    settings = Settings.from_env(data_dir)
+    public_origin = settings.app_url
     app = Flask(__name__, static_folder='static')
-    data = Path(data_dir or os.environ.get('REVENUE_DATA_DIR', ROOT / 'data'))
+    data = settings.data_dir
     data.mkdir(parents=True, exist_ok=True)
-    (data / 'uploads').mkdir(exist_ok=True)
-    app.config.update(DATA_DIR=data, MAX_CONTENT_LENGTH=10*1024*1024)
-    cookie_name='revenue_'+hashlib.sha256(str(data.resolve()).encode()).hexdigest()[:12]
+    uploads_dir = settings.upload_dir
+    uploads_dir.mkdir(parents=True, exist_ok=True)
+    app.config.update(DATA_DIR=data, UPLOAD_DIR=uploads_dir, SETTINGS=settings,
+                      MAX_CONTENT_LENGTH=10*1024*1024, TRUSTED_HOSTS=list(settings.hosts) or None)
+    cookie_name = settings.cookie_name
+    database = Database(settings)
+    app.extensions['database'] = database
 
     def db():
         if 'db' not in g:
-            g.db = sqlite3.connect(data / 'revenuelive.db', timeout=30)
-            g.db.row_factory = sqlite3.Row
-            g.db.execute('PRAGMA foreign_keys=ON')
+            g.db = database.connect()
         return g.db
 
     @app.teardown_appcontext
@@ -162,54 +148,16 @@ def create_app(data_dir=None):
             connection.close()
 
     with app.app_context():
-        db().executescript('''
-            PRAGMA journal_mode=WAL;
-            CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY, username TEXT UNIQUE COLLATE NOCASE, password TEXT NOT NULL, role TEXT NOT NULL CHECK(role IN ('admin','uploader','viewer')), active INTEGER NOT NULL DEFAULT 1, must_change INTEGER NOT NULL DEFAULT 0);
-            CREATE TABLE IF NOT EXISTS channels(id INTEGER PRIMARY KEY, name TEXT UNIQUE COLLATE NOCASE NOT NULL);
-            CREATE TABLE IF NOT EXISTS assignments(user_id INTEGER REFERENCES users(id), channel_id INTEGER REFERENCES channels(id), PRIMARY KEY(user_id,channel_id));
-            CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY, user_id INTEGER REFERENCES users(id), csrf TEXT NOT NULL, expires REAL NOT NULL);
-            CREATE TABLE IF NOT EXISTS attempts(ip TEXT PRIMARY KEY, failures INTEGER, expires REAL);
-            CREATE TABLE IF NOT EXISTS uploads(id TEXT PRIMARY KEY, user_id INTEGER REFERENCES users(id), filename TEXT, digest TEXT, created TEXT, state TEXT, rows_json TEXT, preview_json TEXT, archived INTEGER NOT NULL DEFAULT 0, file_deleted INTEGER NOT NULL DEFAULT 0);
-            CREATE TABLE IF NOT EXISTS records(day TEXT, channel_id INTEGER REFERENCES channels(id), views INTEGER, impressions INTEGER, ad INTEGER, other INTEGER, total INTEGER, upload_id TEXT, PRIMARY KEY(day,channel_id));
-            CREATE TABLE IF NOT EXISTS revisions(upload_id TEXT, day TEXT, channel_id INTEGER, previous TEXT);
-            CREATE INDEX IF NOT EXISTS idx_records_upload ON records(upload_id);
-            CREATE INDEX IF NOT EXISTS idx_revisions_upload ON revisions(upload_id);
-            CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY, created TEXT, user_id INTEGER, action TEXT, detail TEXT, actor TEXT, prev_hash TEXT, entry_hash TEXT);
-            CREATE TABLE IF NOT EXISTS super_admin(singleton INTEGER PRIMARY KEY CHECK(singleton=1), user_id INTEGER UNIQUE NOT NULL REFERENCES users(id));
-            CREATE TABLE IF NOT EXISTS archived_channels(channel_id INTEGER PRIMARY KEY REFERENCES channels(id));
-            CREATE TABLE IF NOT EXISTS hidden_dates(day TEXT PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), created TEXT NOT NULL);
-            CREATE TABLE IF NOT EXISTS graph_presets(id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), name TEXT NOT NULL COLLATE NOCASE, config TEXT NOT NULL, UNIQUE(user_id,name));
-        ''')
-        upload_columns={row['name'] for row in db().execute('PRAGMA table_info(uploads)')}
-        for column in ('archived','file_deleted'):
-            if column not in upload_columns:
-                db().execute(f'ALTER TABLE uploads ADD COLUMN {column} INTEGER NOT NULL DEFAULT 0')
-        audit_columns={row['name'] for row in db().execute('PRAGMA table_info(audit)')}
-        for column in ('actor','prev_hash','entry_hash'):
-            if column not in audit_columns:
-                db().execute(f'ALTER TABLE audit ADD COLUMN {column} TEXT')
-        legacy_audit=list(db().execute('SELECT * FROM audit ORDER BY id'))
-        if legacy_audit and all(not row['entry_hash'] for row in legacy_audit):
-            previous=AUDIT_GENESIS
-            for row in legacy_audit:
-                owner=db().execute('SELECT username FROM users WHERE id=?',(row['user_id'],)).fetchone()
-                actor=owner['username'] if owner else f"User #{row['user_id']}"
-                entry=dict(row);entry.update(actor=actor,prev_hash=previous)
-                current_hash=audit_digest(entry)
-                db().execute('UPDATE audit SET actor=?,prev_hash=?,entry_hash=? WHERE id=?',(actor,previous,current_hash,row['id']))
-                previous=current_hash
-        elif any(not row['entry_hash'] for row in legacy_audit):
-            raise RuntimeError('Audit chain is incomplete; do not start until investigated.')
-        db().executescript('''
-            CREATE TRIGGER IF NOT EXISTS audit_no_update BEFORE UPDATE ON audit BEGIN SELECT RAISE(ABORT,'Audit events cannot be edited'); END;
-            CREATE TRIGGER IF NOT EXISTS audit_no_delete BEFORE DELETE ON audit BEGIN SELECT RAISE(ABORT,'Audit events cannot be deleted'); END;
-        ''')
-        valid,_,_,broken=verify_audit_chain(db())
-        if not valid:
-            raise RuntimeError(f'Audit chain verification failed at event {broken}.')
-        db().commit()
-
+        if database.mysql:
+            database.check_schema()
+            valid, _, _, broken = verify_audit_chain(db())
+            if not valid:
+                raise RuntimeError(f'Audit chain verification failed at event {broken}.')
+        else:
+            from sqlite_legacy import initialize
+            initialize(db, audit_digest, verify_audit_chain, AUDIT_GENESIS)
     def log(action, detail='', user=None):
+        db().begin_write()
         user=user or g.user
         valid,_,_,broken=verify_audit_chain(db())
         if not valid:
@@ -223,8 +171,8 @@ def create_app(data_dir=None):
 
     def permitted():
         if g.user['role'] == 'admin':
-            return db().execute('SELECT * FROM channels WHERE id NOT IN (SELECT channel_id FROM archived_channels) ORDER BY name COLLATE NOCASE').fetchall()
-        return db().execute('SELECT c.* FROM channels c JOIN assignments a ON c.id=a.channel_id WHERE a.user_id=? AND c.id NOT IN (SELECT channel_id FROM archived_channels) ORDER BY c.name COLLATE NOCASE', (g.user['id'],)).fetchall()
+            return db().execute('SELECT * FROM channels WHERE id NOT IN (SELECT channel_id FROM archived_channels) ORDER BY LOWER(name)').fetchall()
+        return db().execute('SELECT c.* FROM channels c JOIN assignments a ON c.id=a.channel_id WHERE a.user_id=? AND c.id NOT IN (SELECT channel_id FROM archived_channels) ORDER BY LOWER(c.name)', (g.user['id'],)).fetchall()
 
     def require(*roles):
         def decorator(fn):
@@ -236,15 +184,22 @@ def create_app(data_dir=None):
                     return jsonify(error='Change your temporary password first.'), 403
                 if roles and g.user['role'] not in roles:
                     return jsonify(error='You do not have permission for this action.'), 403
+                if roles == ('admin',) and not settings.admin_host(request.host):
+                    return jsonify(error='Use the admin portal for this action.'), 403
                 return fn(*args, **kwargs)
             return wrapped
         return decorator
 
     @app.before_request
     def auth():
-        if not request.path.startswith('/api/'):
+        protected_page = request.path in {'/admin', '/user'}
+        if public_origin and not settings.request_origin(request.host):
+            return jsonify(error='Unknown application host.'), 400
+        if not request.path.startswith('/api/') and not protected_page:
             return
         g.user = None
+        if database.mysql and request.method in {'POST', 'PUT', 'PATCH', 'DELETE'}:
+            db().begin_write()
         raw = request.cookies.get(cookie_name, '')
         digest = hashlib.sha256(raw.encode()).hexdigest()
         session = db().execute('SELECT s.*,u.username,u.role,u.active,u.must_change FROM sessions s JOIN users u ON u.id=s.user_id WHERE token=? AND expires>? AND active=1', (digest,time.time())).fetchone()
@@ -252,10 +207,17 @@ def create_app(data_dir=None):
             g.user = dict(id=session['user_id'], username=session['username'], role=session['role'], must_change=session['must_change'])
             g.user['super_admin'] = bool(db().execute('SELECT 1 FROM super_admin WHERE user_id=?',(session['user_id'],)).fetchone())
             g.session = session
-        if request.method in {'POST','PUT','DELETE'}:
+            if settings.portal_mode == 'split' and (g.user['role'] == 'admin') != settings.admin_host(request.host):
+                return jsonify(error='Sign in through the correct portal.'), 403
+        if protected_page:
+            if not g.user:
+                return redirect('/login')
+            if request.path == '/admin' and (g.user['role'] != 'admin' or not settings.admin_host(request.host)):
+                return 'Admin access required.', 403
+        if request.method in {'POST','PUT','PATCH','DELETE'}:
             # Reject cross-site writes even on login, where no session exists yet.
             origin = request.headers.get('Origin')
-            if origin and origin != (public_origin or request.host_url.rstrip('/')):
+            if origin and origin != (settings.request_origin(request.host) or request.host_url.rstrip('/')):
                 return jsonify(error='Cross-origin requests are not allowed.'), 403
             if request.path not in {'/api/login','/api/account/request','/api/account/complete'} and (not session or not secrets.compare_digest(request.headers.get('X-CSRF-Token',''),session['csrf'])):
                 return jsonify(error='Session expired. Sign in again.'), 403
@@ -268,7 +230,7 @@ def create_app(data_dir=None):
         response.headers['Content-Security-Policy']="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
         if public_origin:
             response.headers['Strict-Transport-Security']='max-age=31536000'
-        if request.path.startswith('/api/') or request.path=='/' or request.path.startswith('/static/'):
+        if request.path.startswith('/api/') or request.path in {'/', '/login', '/admin', '/user'} or request.path.startswith('/static/'):
             response.headers['Cache-Control']='no-store'
         return response
 
@@ -287,6 +249,9 @@ def create_app(data_dir=None):
         return error
 
     @app.get('/')
+    @app.get('/login')
+    @app.get('/admin')
+    @app.get('/user')
     def index():
         return send_from_directory(ROOT / 'static','index.html')
 
@@ -305,30 +270,37 @@ def create_app(data_dir=None):
         password = str(value.get('password',''))
         if not user or len(password)>256 or not check_password_hash(user['password'], password):
             failures = attempt['failures']+1 if attempt and attempt['expires']>time.time() else 1
-            db().execute('INSERT OR REPLACE INTO attempts VALUES (?,?,?)',(ip,failures,time.time()+900))
+            db().upsert('attempts',dict(ip=ip,failures=failures,expires=time.time()+900))
             db().commit()
             return jsonify(error='Invalid username or password.'),401
         raw, csrf = secrets.token_urlsafe(32), secrets.token_urlsafe(32)
         db().execute('DELETE FROM attempts WHERE ip=?',(ip,))
         db().execute('DELETE FROM sessions WHERE expires<?',(time.time(),))
-        db().execute('INSERT INTO sessions VALUES (?,?,?,?)',(hashlib.sha256(raw.encode()).hexdigest(),user['id'],csrf,time.time()+8*3600))
+        if user['role'] == 'admin' and not settings.admin_host(request.host):
+            return jsonify(error='Sign in through the admin portal.'), 403
+        if settings.portal_mode == 'split' and settings.admin_host(request.host) and user['role'] != 'admin':
+            return jsonify(error='Sign in through the user portal.'), 403
+        db().execute('INSERT INTO sessions VALUES (?,?,?,?)',(hashlib.sha256(raw.encode()).hexdigest(),user['id'],csrf,time.time()+settings.session_ttl))
         log('user_signed_in',user=user)
         db().commit()
         response=jsonify(ok=True)
-        response.set_cookie(cookie_name,raw,httponly=True,samesite='Strict',secure=bool(public_origin),max_age=8*3600)
+        response.set_cookie(cookie_name,raw,httponly=True,samesite=settings.cookie_samesite,
+                            secure=settings.cookie_secure,max_age=settings.session_ttl)
         return response
 
     @app.get('/api/me')
     @require()
     def me():
-        return jsonify(user=g.user,csrf=g.session['csrf'],channels=[dict(c) for c in permitted()])
+        return jsonify(user=g.user,csrf=g.session['csrf'],channels=[dict(c) for c in permitted()],
+                       home='/admin' if g.user['role']=='admin' else '/user')
 
     @app.post('/api/logout')
     @require()
     def logout():
         db().execute('DELETE FROM sessions WHERE token=?',(g.session['token'],))
         log('user_signed_out');db().commit()
-        response=jsonify(ok=True);response.delete_cookie(cookie_name);return response
+        response=jsonify(ok=True);response.delete_cookie(cookie_name,secure=settings.cookie_secure,
+                                                        httponly=True,samesite=settings.cookie_samesite);return response
 
     @app.post('/api/password')
     @require()
@@ -371,7 +343,7 @@ def create_app(data_dir=None):
         visible="upload_id NOT IN (SELECT id FROM uploads WHERE archived=1 OR state!='committed' OR file_deleted=1)"
         if available_dates:
             return [r[0] for r in db().execute(f'SELECT DISTINCT day FROM records WHERE channel_id IN ({placeholders}) AND day NOT IN (SELECT day FROM hidden_dates) AND {visible} ORDER BY day',tuple(sorted(ids)))]
-        return [dict(r) for r in db().execute(f'SELECT r.*,c.name AS channel FROM records r JOIN channels c ON c.id=r.channel_id WHERE r.channel_id IN ({placeholders}) AND day>=? AND day<=? AND day NOT IN (SELECT day FROM hidden_dates) AND {visible} ORDER BY day DESC,c.name COLLATE NOCASE',(*sorted(ids),start,end))]
+        return [dict(r) for r in db().execute(f'SELECT r.*,c.name AS channel FROM records r JOIN channels c ON c.id=r.channel_id WHERE r.channel_id IN ({placeholders}) AND day>=? AND day<=? AND day NOT IN (SELECT day FROM hidden_dates) AND {visible} ORDER BY day DESC,LOWER(c.name)',(*sorted(ids),start,end))]
 
     @app.get('/api/admin/dates')
     @require('admin')
@@ -390,11 +362,11 @@ def create_app(data_dir=None):
         hidden=(request.get_json(silent=True) or {}).get('hidden')
         if type(hidden) is not bool:
             raise InvalidData('Choose whether this date is hidden.')
-        db().execute('BEGIN IMMEDIATE')
+        db().begin_write()
         if hidden:
             if not db().execute('SELECT 1 FROM records WHERE day=?',(day,)).fetchone():
                 raise InvalidData('No published records exist for this date.')
-            db().execute('INSERT OR IGNORE INTO hidden_dates(day,user_id,created) VALUES (?,?,?)',(day,g.user['id'],dt.datetime.now(dt.timezone.utc).isoformat()))
+            db().upsert('hidden_dates',dict(day=day,user_id=g.user['id'],created=dt.datetime.now(dt.timezone.utc).isoformat()),ignore=True)
         else:
             db().execute('DELETE FROM hidden_dates WHERE day=?',(day,))
         log('date_hidden' if hidden else 'date_restored',day)
@@ -462,7 +434,7 @@ def create_app(data_dir=None):
             db().execute('INSERT INTO graph_presets(user_id,name,config) VALUES (?,?,?)',(g.user['id'],name.strip(),json.dumps(clean)))
             log('graph_preset_saved',name.strip())
             db().commit()
-        except sqlite3.IntegrityError:
+        except INTEGRITY_ERRORS:
             return jsonify(error='A preset with that name already exists. Choose another name.'),409
         return jsonify(ok=True)
 
@@ -521,7 +493,7 @@ def create_app(data_dir=None):
             raise InvalidData('Unable to read workbook. Check its format and date cells.')
         rows=resolve_rows(rows)
         digest=hashlib.sha256(content).hexdigest()
-        db().execute('BEGIN IMMEDIATE')
+        db().begin_write()
         fingerprint=row_fingerprint(rows)
         for existing in db().execute("SELECT rows_json FROM uploads WHERE state='pending'"):
             if row_fingerprint(json.loads(existing['rows_json']))==fingerprint:
@@ -535,7 +507,7 @@ def create_app(data_dir=None):
             raise InvalidData('All rows already match published data. No changes to publish.')
         uid=secrets.token_hex(16)
         filename=secure_filename(incoming.filename) or 'upload'
-        source=data/'uploads'/f'{uid}_{filename}'
+        source=uploads_dir/f'{uid}_{filename}'
         try:
             source.write_bytes(content)
             db().execute('INSERT INTO uploads(id,user_id,filename,digest,created,state,rows_json,preview_json) VALUES (?,?,?,?,?,?,?,?)',(uid,g.user['id'],filename,digest,dt.datetime.now(dt.timezone.utc).isoformat(),'pending',json.dumps(rows),json.dumps(originals)))
@@ -550,7 +522,7 @@ def create_app(data_dir=None):
     @app.post('/api/uploads/<uid>/commit')
     @require('admin','uploader')
     def commit(uid):
-        db().execute('BEGIN IMMEDIATE')
+        db().begin_write()
         upload=db().execute("SELECT * FROM uploads WHERE id=? AND (user_id=? OR ?='admin')",(uid,g.user['id'],g.user['role'])).fetchone()
         if not upload or upload['state']!='pending':
             raise InvalidData('Upload is unavailable or already published.')
@@ -571,7 +543,7 @@ def create_app(data_dir=None):
             if old is not None and row_values(old)==row_values(row):
                 continue
             db().execute('INSERT INTO revisions VALUES (?,?,?,?)',(uid,row['day'],row['channel_id'],json.dumps(old)))
-            db().execute('INSERT OR REPLACE INTO records VALUES (?,?,?,?,?,?,?,?)',(row['day'],row['channel_id'],row['views'],row['impressions'],row['ad'],row['other'],row['total'],uid))
+            db().upsert('records',{key:row[key] for key in ('day','channel_id','views','impressions','ad','other','total')} | {'upload_id':uid})
             changed+=1
         if not changed:
             raise InvalidData('All rows already match published data. No changes to publish.')
@@ -618,12 +590,12 @@ def create_app(data_dir=None):
             return jsonify(error='Upload not found.'),404
         if upload['file_deleted'] or secure_filename(upload['filename'])!=upload['filename']:
             return jsonify(error='Source file is no longer available.'),404
-        return send_from_directory(data/'uploads',f"{uid}_{upload['filename']}",as_attachment=True,download_name=upload['filename'])
+        return send_from_directory(uploads_dir,f"{uid}_{upload['filename']}",as_attachment=True,download_name=upload['filename'])
 
     @app.post('/api/uploads/<uid>/reject')
     @require('admin','uploader')
     def reject_upload(uid):
-        db().execute('BEGIN IMMEDIATE')
+        db().begin_write()
         upload=db().execute('SELECT * FROM uploads WHERE id=?',(uid,)).fetchone()
         if not upload or (g.user['role']!='admin' and upload['user_id']!=g.user['id']):
             raise InvalidData('Upload is unavailable.')
@@ -652,7 +624,7 @@ def create_app(data_dir=None):
         db().commit();return jsonify(ok=True)
 
     def set_upload_archive(uid,archived):
-        db().execute('BEGIN IMMEDIATE')
+        db().begin_write()
         upload=db().execute('SELECT * FROM uploads WHERE id=?',(uid,)).fetchone()
         if not upload or upload['file_deleted'] or upload['state']=='deleted':
             raise InvalidData('This file has been deleted and cannot be restored.')
@@ -672,7 +644,7 @@ def create_app(data_dir=None):
                 previous=prior_live_record(json.loads(revision['previous']),*key)
                 if current and current['upload_id']!=uid and dict(current)!=previous:
                     raise InvalidData('Newer data exists for this file. Upload it again to review and confirm replacements.')
-                db().execute('INSERT OR REPLACE INTO records VALUES (?,?,?,?,?,?,?,?)',(*key,*row_values(row),uid))
+                db().upsert('records',dict(zip(('day','channel_id','views','impressions','ad','other','total','upload_id'),(*key,*row_values(row),uid))))
             db().execute("UPDATE uploads SET state='committed' WHERE id=?",(uid,))
         db().execute('UPDATE uploads SET archived=? WHERE id=?',(int(archived),uid))
         log('upload_archived' if archived else 'upload_unarchived',json.dumps(dict(id=uid,filename=upload['filename']),separators=(',',':')))
@@ -680,7 +652,7 @@ def create_app(data_dir=None):
     @app.post('/api/uploads/<uid>/delete')
     @require('admin')
     def delete_upload(uid):
-        db().execute('BEGIN IMMEDIATE')
+        db().begin_write()
         upload=db().execute('SELECT * FROM uploads WHERE id=?',(uid,)).fetchone()
         if not upload:
             raise InvalidData('File not found.')
@@ -688,7 +660,7 @@ def create_app(data_dir=None):
             return jsonify(ok=True)
         if secure_filename(upload['filename'])!=upload['filename']:
             raise InvalidData('Source filename is invalid.')
-        source=data/'uploads'/f"{uid}_{upload['filename']}"
+        source=uploads_dir/f"{uid}_{upload['filename']}"
         content=None
         try:
             if upload['state']=='committed':
@@ -711,7 +683,7 @@ def create_app(data_dir=None):
     @app.post('/api/uploads/<uid>/delete-file')
     @require('admin')
     def delete_upload_file(uid):
-        db().execute('BEGIN IMMEDIATE')
+        db().begin_write()
         upload=db().execute('SELECT * FROM uploads WHERE id=?',(uid,)).fetchone()
         if not upload or upload['state'] not in ('rejected','restored'):
             raise InvalidData('Reject or unpublish the file before deleting its source. Live data cannot be deleted here.')
@@ -720,7 +692,7 @@ def create_app(data_dir=None):
         if secure_filename(upload['filename'])!=upload['filename']:
             raise InvalidData('Source filename is invalid.')
         log('upload_source_deleted',json.dumps(dict(id=uid,filename=upload['filename']),separators=(',',':')))
-        (data/'uploads'/f"{uid}_{upload['filename']}").unlink(missing_ok=True)
+        (uploads_dir/f"{uid}_{upload['filename']}").unlink(missing_ok=True)
         db().execute('UPDATE uploads SET file_deleted=1 WHERE id=?',(uid,))
         db().commit();return jsonify(ok=True)
 
@@ -759,7 +731,7 @@ def create_app(data_dir=None):
     @app.post('/api/uploads/<uid>/restore')
     @require('admin')
     def restore(uid):
-        db().execute('BEGIN IMMEDIATE')
+        db().begin_write()
         upload=db().execute("SELECT * FROM uploads WHERE id=? AND state='committed'",(uid,)).fetchone()
         if not upload:
             raise InvalidData('Only a published upload can be rolled back.')
@@ -772,7 +744,7 @@ def create_app(data_dir=None):
         rows=[]
         for user in db().execute('SELECT id,username,role,active,must_change FROM users ORDER BY username'):
             rows.append({**dict(user),'super_admin':bool(db().execute('SELECT 1 FROM super_admin WHERE user_id=?',(user['id'],)).fetchone()),'channels':[r[0] for r in db().execute('SELECT channel_id FROM assignments WHERE user_id=?',(user['id'],))]})
-        return jsonify(users=rows,channels=[dict(c) for c in permitted()],archived=[dict(c) for c in db().execute('SELECT c.* FROM channels c JOIN archived_channels a ON a.channel_id=c.id ORDER BY c.name COLLATE NOCASE')])
+        return jsonify(users=rows,channels=[dict(c) for c in permitted()],archived=[dict(c) for c in db().execute('SELECT c.* FROM channels c JOIN archived_channels a ON a.channel_id=c.id ORDER BY LOWER(c.name)')])
 
     @app.post('/api/admin/channels/<int:cid>/archive')
     @require('admin')
@@ -780,11 +752,11 @@ def create_app(data_dir=None):
         archived=(request.get_json(silent=True) or {}).get('archived')
         if type(archived) is not bool:
             raise InvalidData('Specify archive or restore.')
-        db().execute('BEGIN IMMEDIATE')
+        db().begin_write()
         if not db().execute('SELECT 1 FROM channels WHERE id=?',(cid,)).fetchone():
             raise InvalidData('Channel not found.')
         if archived:
-            db().execute('INSERT OR IGNORE INTO archived_channels VALUES (?)',(cid,))
+            db().upsert('archived_channels',dict(channel_id=cid),ignore=True)
         else:
             db().execute('DELETE FROM archived_channels WHERE channel_id=?',(cid,))
         log('channel_archived' if archived else 'channel_restored',str(cid))
@@ -799,7 +771,7 @@ def create_app(data_dir=None):
             raise InvalidData('Enter a channel name, up to 120 characters.')
         try:
             db().execute('INSERT INTO channels(name) VALUES (?)',(name,))
-        except sqlite3.IntegrityError:
+        except INTEGRITY_ERRORS:
             raise InvalidData('Channel already exists.')
         log('channel_created',name);db().commit();return jsonify(ok=True)
 
@@ -837,7 +809,7 @@ def create_app(data_dir=None):
         if uid==g.user['id'] and (role!='admin' or not active):
             raise InvalidData('You cannot remove your own admin access.')
         try:
-            db().execute('BEGIN IMMEDIATE')
+            db().begin_write()
             owner=db().execute('SELECT user_id FROM super_admin WHERE singleton=1').fetchone()
             existing=db().execute('SELECT username,role,active FROM users WHERE id=?',(uid,)).fetchone() if uid else None
             if owner and uid==owner['user_id']:
@@ -855,7 +827,7 @@ def create_app(data_dir=None):
                 db().execute('UPDATE users SET username=?,role=?,active=? WHERE id=?',(username,role,active,uid))
                 if password:
                     db().execute('UPDATE users SET password=?,must_change=1 WHERE id=?',(generate_password_hash(password),uid))
-                if password or not active:
+                if password or not active or existing['role'] != role:
                     db().execute('DELETE FROM sessions WHERE user_id=? AND token<>?',(uid,g.session['token']))
                     db().execute('DELETE FROM email_tokens WHERE user_id=?',(uid,))
             else:
@@ -867,7 +839,7 @@ def create_app(data_dir=None):
                 db().execute('INSERT INTO email_accounts(user_id,email) VALUES (?,?)',(uid,username))
             log('user_saved',json.dumps(dict(id=uid,username=username,role=role,active=bool(active),channels=sorted(set(ids)),before=before,password_reset=bool(password and before),invited=invite),separators=(',',':')))
             db().commit()
-        except sqlite3.IntegrityError:
+        except INTEGRITY_ERRORS:
             raise InvalidData('Username already exists.')
         if invite:
             send_invitation(uid)
@@ -878,7 +850,8 @@ def create_app(data_dir=None):
 
 def bootstrap(data):
     app=create_app(data)
-    with closing(sqlite3.connect(data/'revenuelive.db')) as con, con:
+    with closing(app.extensions['database'].connect()) as con, con:
+        con.begin_write()
         if not con.execute('SELECT 1 FROM users LIMIT 1').fetchone():
             password=secrets.token_urlsafe(18)
             uid=con.execute("INSERT INTO users(username,password,role,must_change) VALUES (?,?,'admin',1)",('admin',generate_password_hash(password))).lastrowid
@@ -888,6 +861,9 @@ def bootstrap(data):
 
 
 def backup_database(data, backup_root=None):
+    settings = Settings.from_env(data)
+    if settings.db_url.get_backend_name() == 'mysql':
+        raise ValueError('Use MySQL backup tooling and back up UPLOAD_DIR; SQLite backup is unavailable in MySQL mode.')
     data = Path(data).resolve()
     if not (data / 'revenuelive.db').is_file():
         raise FileNotFoundError('No RevenueLive database found to back up.')
@@ -898,29 +874,31 @@ def backup_database(data, backup_root=None):
     target.mkdir(parents=True)
     with closing(sqlite3.connect(data / 'revenuelive.db')) as source, closing(sqlite3.connect(target / 'revenuelive.db')) as dest:
         source.backup(dest)
-    shutil.copytree(data / 'uploads', target / 'uploads')
+    shutil.copytree(settings.upload_dir, target / 'uploads')
     (target / 'BACKUP_COMPLETE').write_text('SQLite and uploads copied successfully.\n', encoding='ascii')
     return target
 
 
 if __name__=='__main__':
+    load_environment()
     parser=argparse.ArgumentParser()
     parser.add_argument('--host',default='127.0.0.1')
     parser.add_argument('--port',type=int,default=8820)
     parser.add_argument('--backup',action='store_true',help='Back up the real database and uploads, then exit.')
     args=parser.parse_args()
-    data=Path(os.environ.get('REVENUE_DATA_DIR',ROOT/'data'))
+    settings = Settings.from_env()
+    data = settings.data_dir
     if args.backup:
         print('Backup:', backup_database(data), flush=True)
         raise SystemExit(0)
-    if os.environ.get('REVENUE_HTTPS')=='1' and args.host not in {'127.0.0.1','localhost','::1'}:
+    if settings.app_url and args.host not in {'127.0.0.1','localhost','::1'}:
         parser.error('HTTPS proxy mode requires a loopback backend listener.')
-    app=bootstrap(data)
+    app=create_app(data) if settings.db_url.get_backend_name() == 'mysql' else bootstrap(data)
     from waitress import create_server
     options=dict(host=args.host,port=args.port,threads=4,clear_untrusted_proxy_headers=True)
     trusted_proxy=os.environ.get('REVENUE_TRUSTED_PROXY','').strip()
     if trusted_proxy:
-        if os.environ.get('REVENUE_HTTPS')!='1':
+        if not settings.app_url:
             parser.error('Trusted proxy headers require HTTPS proxy mode.')
         options.update(trusted_proxy=trusted_proxy,trusted_proxy_headers={'x-forwarded-for'})
     server=create_server(app,**options)

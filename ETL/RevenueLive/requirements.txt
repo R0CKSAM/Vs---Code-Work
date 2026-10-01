@@ -2,3 +2,7 @@ Flask>=3.1,<4
 waitress>=3,<4
 openpyxl>=3.1,<4
 xlrd==2.0.2
+SQLAlchemy>=2.0.36,<2.1
+PyMySQL>=1.1.1,<2
+alembic>=1.14,<2
+python-dotenv>=1.0,<2

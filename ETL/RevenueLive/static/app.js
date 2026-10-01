@@ -193,8 +193,9 @@ function clearSensitive(){
   window.RevenueShare?.clear();
   window.DIYGraphs?.clear();
 }
-function signOutView(message){clearSensitive();me=null;csrf='';selectedChannels.clear();$('shell').hidden=true;$('login').hidden=false;$('loginError').textContent=message;}
+function signOutView(message){clearSensitive();me=null;csrf='';selectedChannels.clear();$('shell').hidden=true;$('login').hidden=false;$('loginError').textContent=message;window.history.replaceState(null,'','/login'+location.hash);}
 function identity(value){
+  if(value.home)window.history.replaceState(null,'',value.home+location.search+location.hash);
   me=value;csrf=value.csrf;$('login').hidden=true;$('shell').hidden=false;
   signedInName.textContent=value.user.username;
   $('identity').textContent=value.user.username+' | '+(value.user.super_admin?'Super Admin':value.user.role);

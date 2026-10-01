@@ -15,7 +15,8 @@ from werkzeug.security import generate_password_hash
 
 
 def install(app, db, data, invalid, log):
-    with app.app_context():
+    if not app.extensions['database'].mysql:
+      with app.app_context():
         db().executescript('''
             CREATE TABLE IF NOT EXISTS email_accounts(user_id INTEGER PRIMARY KEY REFERENCES users(id), email TEXT UNIQUE COLLATE NOCASE NOT NULL, verified INTEGER NOT NULL DEFAULT 0);
             CREATE TABLE IF NOT EXISTS email_tokens(token TEXT PRIMARY KEY, user_id INTEGER REFERENCES users(id), expires REAL NOT NULL);
@@ -31,7 +32,13 @@ def install(app, db, data, invalid, log):
 
     def settings():
         try:
-            config = json.loads((data / 'mail.json').read_text(encoding='utf-8'))
+            if os.environ.get('SMTP_HOST'):
+                config = dict(host=os.environ['SMTP_HOST'], port=os.environ.get('SMTP_PORT', '587'),
+                              username=os.environ.get('SMTP_USERNAME', ''),
+                              **{'from':os.environ.get('SMTP_FROM', ''),
+                                 'public_url':app.config['SETTINGS'].app_url})
+            else:
+                config = json.loads((data / 'mail.json').read_text(encoding='utf-8'))
             url = urlsplit(config['public_url'])
             if (url.scheme != 'https' or not url.hostname or url.username or url.password
                     or url.path not in ('', '/') or url.query or url.fragment):
@@ -41,12 +48,12 @@ def install(app, db, data, invalid, log):
                 raise ValueError()
         except (OSError, ValueError, KeyError):
             raise invalid('Email delivery is not configured. Ask the host administrator to configure mail.json with an HTTPS public URL.')
-        public_url = os.environ.get('REVENUE_PUBLIC_URL', '').rstrip('/')
+        public_url = app.config['SETTINGS'].app_url
         if public_url and config['public_url'].rstrip('/') != public_url:
             raise invalid('Mail public_url must match REVENUE_PUBLIC_URL.')
-        if os.environ.get('REVENUE_HTTPS') == '1' and config.get('password'):
+        if public_url and config.get('password'):
             raise invalid('Move the SMTP password from mail.json to REVENUE_SMTP_PASSWORD.')
-        config['password'] = os.environ.get('REVENUE_SMTP_PASSWORD', config.get('password', ''))
+        config['password'] = os.environ.get('SMTP_PASSWORD', os.environ.get('REVENUE_SMTP_PASSWORD', config.get('password', '')))
         if config.get('username') and not config['password']:
             raise invalid('Set REVENUE_SMTP_PASSWORD for authenticated email delivery.')
         return config
@@ -82,13 +89,13 @@ def install(app, db, data, invalid, log):
         settings()
         email = address((request.get_json(silent=True) or {}).get('email',''))
         key = 'ip:'+str(request.remote_addr)
-        db().execute('BEGIN IMMEDIATE')
+        db().begin_write()
         now = time.time()
-        limit = db().execute('SELECT expires FROM email_limits WHERE key=?', (key,)).fetchone()
+        limit = db().execute('SELECT expires FROM email_limits WHERE `key`=?', (key,)).fetchone()
         if limit and limit['expires'] > now:
             db().rollback()
             return jsonify(error='Wait a minute before requesting another link.'),429
-        db().execute('INSERT OR REPLACE INTO email_limits VALUES (?,?)',(key,now+60))
+        db().upsert('email_limits',dict(key=key,expires=now+60))
         db().commit()
         user = db().execute('SELECT e.user_id FROM email_accounts e JOIN users u ON u.id=e.user_id WHERE e.email=? AND u.active=1', (email,)).fetchone()
         if user:
@@ -109,7 +116,7 @@ def install(app, db, data, invalid, log):
         if len(raw) > 100:
             raise invalid('Invalid or expired link.')
         digest = hashlib.sha256(raw.encode()).hexdigest()
-        db().execute('BEGIN IMMEDIATE')
+        db().begin_write()
         token = db().execute('SELECT t.user_id FROM email_tokens t JOIN users u ON u.id=t.user_id WHERE t.token=? AND t.expires>? AND u.active=1', (digest,time.time())).fetchone()
         if not token:
             raise invalid('Invalid or expired link. Request a new one.')

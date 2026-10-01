@@ -7,11 +7,23 @@ param(
 )
 $ErrorActionPreference='Stop'
 $Python=Join-Path $PSScriptRoot '.venv\Scripts\python.exe'
-$Data=if ($DataDir) { [System.IO.Path]::GetFullPath($DataDir) } else { Join-Path $PSScriptRoot 'data' }
-$Logs=if ($PublicUrl) { Join-Path $Data 'logs' } else { Join-Path $PSScriptRoot 'logs' }
+if (!(Test-Path $Python)) { throw 'Run setup.ps1 first.' }
+if ($DataDir) { $env:DATA_DIR=[System.IO.Path]::GetFullPath($DataDir) }
+if ($PublicUrl) { $env:APP_URL=$PublicUrl.TrimEnd('/') }
+Push-Location $PSScriptRoot
+try {
+    $configuration=& $Python -c 'import json; from config import Settings; s=Settings.from_env(); print(json.dumps(dict(data=str(s.data_dir),url=s.app_url,mysql=s.db_url.get_backend_name()=="mysql")))'
+    if ($LASTEXITCODE -ne 0) { throw 'Invalid deployment configuration.' }
+    $settings=$configuration | ConvertFrom-Json
+} finally { Pop-Location }
+$Data=$settings.data
+$PublicUrl=$settings.url
+$Logs=Join-Path $Data 'logs'
+$HealthHeaders=@{}
+if ($PublicUrl) { $HealthHeaders['Host']=([Uri]$PublicUrl).Authority }
 $Url="http://127.0.0.1:$Port"
 function Get-Status {
-    try { $s=Invoke-RestMethod "$Url/health" -TimeoutSec 2; if ($s.service -eq 'revenuelive') { return $true } } catch {}
+    try { $s=Invoke-RestMethod "$Url/health" -Headers $HealthHeaders -TimeoutSec 2; if ($s.service -eq 'revenuelive') { return $true } } catch {}
     return $false
 }
 if ($Action -eq 'Backup') {
@@ -58,5 +70,5 @@ if ($Action -in @('Start','Restart')) {
     while (!(Get-Status) -and (Get-Date) -lt $deadline) { Start-Sleep -Milliseconds 500 }
     if (!(Get-Status)) { throw "Startup failed. Check $Logs" }
     Write-Host "RevenueLive backend ready: $Url"
-    Write-Host "Initial admin credentials: $Data\initial_admin.txt"
+    if (!$settings.mysql) { Write-Host "Initial admin credentials: $Data\initial_admin.txt" }
 }

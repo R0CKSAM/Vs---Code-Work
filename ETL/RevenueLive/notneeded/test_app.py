@@ -390,6 +390,7 @@ class RevenueTest(unittest.TestCase):
     def test_https_origin_cookie_and_configuration(self):
         with patch.dict(os.environ, {'REVENUE_HTTPS':'1','REVENUE_PUBLIC_URL':'https://revenue.example.com'}):
             secure=create_app(self.path/'secure')
+            secure.config['SERVER_NAME']='revenue.example.com'
             with closing(sqlite3.connect(self.path/'secure/revenuelive.db')) as db,db:
                 db.execute("INSERT INTO users(username,password,role) VALUES (?,?,'admin')",
                            ('admin',generate_password_hash('safe-test-password')))
