@@ -1,86 +1,81 @@
-# RevenueLive production handoff
+# RevenueLive production deployment via Git
 
-## What is in the release
+## Repository boundary
 
-`RevenueLive.exe` and its companion DLLs contain the Python server, compiled with
-Nuitka standalone mode. `static/` contains only the browser assets used by the
-dashboard. The Lucide and flatpickr notices at the release root and the Chart.js
-notice in `static/` accompany the browser libraries. `start_release.ps1` controls
-the local backend. No database, uploads,
-passwords, mail configuration, demo dataset, test scripts, Python source, or
-build intermediates belong in the release folder. Compare its files against
-`SHA256SUMS.txt` before deployment, and send the manifest hash to the hosting
-team over a separate trusted channel. Prefer code signing for the executable.
-`BUILD-DEPENDENCIES.txt` records the builder
-packages so the owner can review versions and vulnerability advisories.
+Production receives reviewed source through Git, not a ZIP or compiled
+executable. Prefer a dedicated private RevenueLive repository containing only
+the application files. The current `Vs - Code Work` remote is a shared monorepo
+and still tracks `ETL/RevenueLive/notneeded/` plus unrelated projects. Granting
+access to that remote grants access to its other files and history. Do not give
+the hosting team that access without explicit approval. Removing a file from
+the current branch does not remove it from Git history.
 
-This is source reduction, not cryptographic secrecy. Browser JavaScript must
-be delivered to browsers and remains readable. Administrators of the host can
-inspect process memory, files, and traffic. Keep proprietary server logic on
-infrastructure you control if host operators must not be able to inspect it.
+The application currently uses SQLite (`revenuelive.db`). A Git checkout does
+not make it compatible with Microsoft SQL Server, PostgreSQL, or MySQL. Confirm
+the database engine before promising a server-database deployment.
 
-## Host preparation
+Source code and browser JavaScript are visible to anyone who can read the Git
+repository or host. Limit repository and server access accordingly.
 
-1. Use a supported Windows x64 host, a dedicated non-admin service identity,
-   and an access-restricted data directory outside the release folder. Put the
-   data directory **and backup destination** on encrypted storage (BitLocker or
-   an approved encrypted cloud volume). Back up the recovery key separately.
-2. Provide a valid HTTPS certificate and a reverse proxy on the same host. The
-   proxy must be the only public entry point; forward to `127.0.0.1:8820`.
-   Preserve the public `Host` and **overwrite**, do not append an untrusted
-   client-supplied `X-Forwarded-For`, with the real client IP. Do not expose the
-   backend HTTP port or trust proxy headers from the internet.
-3. Run `powershell -ExecutionPolicy Bypass -File .\start_release.ps1 -Action Start
+## Host setup
+
+1. Create a Windows service account without administrator rights. Give it
+   access to an encrypted data directory outside the Git checkout, for example
+   `D:\RevenueLiveData`, and a separate encrypted backup destination.
+2. Check out the approved private repository and a reviewed release commit.
+   From the application directory, run
+   `powershell -ExecutionPolicy Bypass -File .\setup.ps1` with supported
+   64-bit Python 3.11 or newer installed. The ignored `.venv/` is local to
+   the host; never commit it.
+3. Put a valid HTTPS reverse proxy in front of `127.0.0.1:8820`. Expose only
+   the proxy. Preserve the public Host header and overwrite untrusted
+   `X-Forwarded-For` with the real client IP.
+4. Start with
+   `powershell -ExecutionPolicy Bypass -File .\manage.ps1 -Action Start
    -DataDir 'D:\RevenueLiveData' -PublicUrl 'https://revenue.example.com'`.
-   Configure the same parameters in the approved Windows service/scheduler
-   mechanism for automatic restart after reboot. The command starts only the
-   loopback backend; it does **not** create a reverse proxy or open a firewall.
-4. The first run creates `initial_admin.txt` in the data directory. Sign in,
-   change the temporary password, then securely remove that file. Restrict
-   access to the data directory to the service identity and authorized admins.
-   A fresh compiled install starts without sample channels or revenue; add
-   channels through the admin UI or restore a protected backup.
-5. Check `-Action Status` and perform a real sign-in, upload preview, publish,
-   scoped viewer access, CSV export, and backup/restore drill on a staging copy
-   before accepting production traffic. Check that the compiled backend serves
-   `/`, `/static/app.js`, and `/api/me` with expected auth behavior. Run a
-   dependency vulnerability scan and review logs for errors before approval.
+   Register the same command with an approved service manager for reboot and
+   failure recovery. The script does not create a reverse proxy or firewall
+   rule.
+5. For a fresh installation, read `initial_admin.txt` inside the protected
+   data directory, sign in and change its password, then securely remove that
+   file. Fresh installs have no demo channels or revenue.
 
-`-Action Stop` and `-Action Restart` use the same `-DataDir`; Restart also needs
-`-PublicUrl`. Back up with `-Action Backup -DataDir 'D:\RevenueLiveData'
--BackupDir 'E:\RevenueLiveBackups'`. Only folders containing `BACKUP_COMPLETE`
-are finished backups. Protect that backup volume and schedule off-host copies.
+If the approved repository is the present monorepo, the application directory
+is `<checkout>\ETL\RevenueLive`. In a dedicated repository it can be the
+checkout root. In either case, keep data, uploads, mail secrets, backups,
+logs, and the Python environment out of Git.
 
-## Mail invitations
+## Git update procedure
 
-Mail is optional. Create `<DataDir>\mail.json` from the source repository's
-`mail.example.json`, with the correct verified HTTPS public URL, SMTP host,
-sender and optional username. In production, do not put the SMTP password in
-JSON. Supply `REVENUE_SMTP_PASSWORD` through the service manager's protected
-secret/environment facility. The setting must be present in the process that
-starts `RevenueLive.exe`. Do not put it in command-line arguments, release
-files, or logs. Test delivery in staging. The separate `MFA/` experiment is
-not included and does not protect this dashboard.
+1. In staging, test the target commit against a **copy** of production data.
+   Check sign-in, scoped report/export, preview and publish, overlapping-file
+   unpublish, date Hide/Restore, audit export, and backup/restore.
+2. On production, record the running commit with `git rev-parse HEAD` and
+   confirm `git status --porcelain` is empty. Do not edit application files
+   in the checkout.
+3. Back up before switching code. Set `REVENUE_BACKUP_DIR` to the protected
+   backup destination, then run
+   `powershell -ExecutionPolicy Bypass -File .\manage.ps1 -Action Backup
+   -DataDir 'D:\RevenueLiveData'`. Accept only a backup folder containing
+   `BACKUP_COMPLETE`; keep an off-host copy.
+4. During a maintenance window, stop the app with `manage.ps1 -Action Stop`
+   and the same `-DataDir`. Fetch the reviewed commit with `git fetch origin`,
+   then check out that exact commit with `git switch --detach <tested-commit>`.
+   Run `.\.venv\Scripts\python.exe -m pip install -r requirements.txt` if
+   dependencies changed. Restart with the Start command above.
+5. Check `/health`, sign-in, report totals, export, upload controls, audit
+   status, and server logs before reopening traffic. Roll back code to the
+   recorded commit only after assessing schema changes; restore the matching
+   database backup if the new version changed storage format.
 
-## Security limits
+## Mail and audit
 
-- HTTPS and disk encryption are host responsibilities. The app sets secure
-  session cookies and HSTS when configured with an HTTPS public origin.
-- The backend validates CSRF tokens, origin, roles, and channel assignments;
-  it is not a substitute for firewall rules, monitoring, patching, backups,
-  or an independent security review.
-- Compiling is not encryption. Do not distribute the original repository or
-  `.tools/` build directory to the hosting team if server-source visibility is
-  the concern. A host administrator can still reverse engineer a binary.
-- Any production data copied from an existing machine must be transferred
-  separately over an approved encrypted channel. Never copy a live SQLite file
-  alone; use the application's backup command and protect the resulting files.
+Mail is optional. Create `<DataDir>\mail.json` from `mail.example.json` with
+the exact HTTPS public origin. Supply `REVENUE_SMTP_PASSWORD` through the
+service manager's protected environment, never Git, JSON, or a command line.
+Test mail delivery in staging. This app does not include MFA.
 
-## Builder (owner machine only)
-
-From the source folder, run `powershell -ExecutionPolicy Bypass -File
-.\build_handoff.ps1`. It uses a standard CPython 3.14 installation (not the
-Microsoft Store build), installs Nuitka and runtime dependencies in an ignored
-`.tools/handoff-venv`, runs tests, compiles standalone with Visual Studio Build
-Tools, and emits a timestamped
-`.tools/handoff-release-*` folder. Do not ship `.tools/handoff-build-*`.
+The local audit hash chain is tamper-evident, not immutable to a host
+administrator. Export its full log and head hash regularly to an independently
+controlled append-only off-host store. Restrict and monitor access to the
+database and backup destination.

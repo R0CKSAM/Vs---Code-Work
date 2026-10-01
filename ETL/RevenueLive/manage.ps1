@@ -8,7 +8,7 @@ param(
 $ErrorActionPreference='Stop'
 $Python=Join-Path $PSScriptRoot '.venv\Scripts\python.exe'
 $Data=if ($DataDir) { [System.IO.Path]::GetFullPath($DataDir) } else { Join-Path $PSScriptRoot 'data' }
-$Logs=Join-Path $PSScriptRoot 'logs'
+$Logs=if ($PublicUrl) { Join-Path $Data 'logs' } else { Join-Path $PSScriptRoot 'logs' }
 $Url="http://127.0.0.1:$Port"
 function Get-Status {
     try { $s=Invoke-RestMethod "$Url/health" -TimeoutSec 2; if ($s.service -eq 'revenuelive') { return $true } } catch {}

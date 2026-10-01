@@ -1,0 +1,102 @@
+.summary-phase #uploads{--view-accent:#235bc0;--view-soft:#eef4ff;--view-strong:#214887}
+.summary-phase #uploads .upload-page-heading{padding-bottom:16px;margin-bottom:20px}
+.summary-phase #uploads h1{margin:4px 0 0;font-size:28px;line-height:1.2;font-weight:800}
+.summary-phase #uploads #uploadForm{display:flex;align-items:center;gap:16px;margin-bottom:24px;padding:16px;border:1px solid #d2deef;border-left:1px solid #d2deef;background:linear-gradient(115deg,#f6faff,#edf5ff);box-shadow:0 3px 10px #2547770b}
+.summary-phase #uploads .upload-form-icon,.summary-phase #uploads .upload-file-icon{display:grid;place-items:center;flex:none;border-radius:8px;color:#285cb2;background:#e2edff}
+.summary-phase #uploads .upload-form-icon{width:44px;height:44px}
+.summary-phase #uploads .upload-form-icon svg{width:24px;height:24px}
+.summary-phase #uploads #uploadForm label{max-width:none;flex:1;gap:7px;color:#163353;font-size:14px}
+.summary-phase #uploads #uploadForm input[type=file]{min-height:34px;padding:0;border:0;background:transparent;box-shadow:none;font-size:14px}
+.summary-phase #uploads input::file-selector-button{margin-right:12px;padding:8px 12px;border:1px solid #bdd0ea;border-radius:6px;background:#fff;color:#25496f;font:inherit;font-weight:700;cursor:pointer}
+.summary-phase #uploads #uploadForm small{color:#5c718e;font-size:12px;font-weight:500}
+.summary-phase #uploads :is(#uploadForm,#preview) button{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:700}
+.summary-phase #uploads :is(#uploadForm,#preview) button svg{width:17px;height:17px;flex:none}
+.summary-phase #uploads .upload-library-toolbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:0 0 14px;flex-wrap:wrap}
+.summary-phase #uploads .upload-tabs{display:flex;align-items:center;gap:4px;padding:4px;background:#e8eff8;border:1px solid #d2deee;border-radius:8px}
+.summary-phase #uploads .upload-tabs button{display:flex;align-items:center;gap:9px;min-height:36px;padding:7px 13px;border:1px solid transparent;background:transparent;color:#526c8c;box-shadow:none;font-size:13px;font-weight:700}
+.summary-phase #uploads .upload-tabs button[aria-pressed=true]{background:#fff;border-color:#ccdaed;color:#173f78;box-shadow:0 2px 5px #23436b12}
+.summary-phase #uploads .upload-tabs span{padding:2px 6px;min-width:22px;border-radius:5px;background:#dce6f4;color:#426080;font-size:11px;text-align:center}
+.summary-phase #uploads .upload-tabs button[aria-pressed=true] span{background:#e6efff;color:#2457a8}
+.summary-phase #uploads .upload-search{position:relative;width:280px;flex:none}
+.summary-phase #uploads .upload-search svg{position:absolute;left:12px;top:12px;width:17px;height:17px;color:#67809f;pointer-events:none}
+.summary-phase #uploads #uploadSearch{padding:9px 12px 9px 37px;min-height:40px;border-color:#c7d7ed;border-radius:8px;font-size:13px;box-shadow:none}
+.summary-phase #uploads .upload-library-table{border:1px solid #cddbec;background:#fff;box-shadow:0 4px 16px #24416c0b}
+.summary-phase #uploads .upload-library-table table{min-width:920px;table-layout:auto}
+.summary-phase #uploads .upload-library-table th{padding:12px 15px;background:#edf3fa;color:#456082;font-size:12px;font-weight:800;border-bottom:1px solid #cfdded}
+.summary-phase #uploads .upload-library-table th:first-child{width:31%}
+.summary-phase #uploads .upload-library-table th:nth-child(2){width:23%}
+.summary-phase #uploads .upload-library-table #history{min-width:0}
+.summary-phase #uploads .upload-library-table #history td{padding:16px 15px;vertical-align:middle;background:#fff;border-bottom:1px solid #e3ebf5;font-size:14px;white-space:normal}
+.summary-phase #uploads .upload-library-table #history tr:last-child td{border-bottom:0}
+.summary-phase #uploads .upload-library-table #history tr:hover td{background:#f7faff}
+.summary-phase #uploads .upload-library-table #history td:nth-child(4){min-width:175px}
+.summary-phase #uploads .upload-library-table #history td strong{font-size:14px;font-weight:750;color:#274367}
+.summary-phase #uploads .upload-library-table #history td small{margin-top:5px;color:#657b96;font-size:12px;font-weight:500;line-height:1.45;white-space:normal}
+.summary-phase #uploads .upload-file-cell{display:flex;gap:12px;align-items:center;min-width:0}
+.summary-phase #uploads .upload-file-cell>div{min-width:0}
+.summary-phase #uploads .upload-file-icon{width:38px;height:42px;background:#edf3ff;color:#4773b7}
+.summary-phase #uploads .upload-file-icon svg{width:22px;height:22px}
+.summary-phase #uploads .upload-file-name{display:inline-block;color:#173b6a;font-size:15px;font-weight:800;text-decoration:none;overflow-wrap:anywhere}
+.summary-phase #uploads .upload-file-name:hover{text-decoration:underline;text-underline-offset:3px}
+.summary-phase #uploads .status-pill{gap:6px;padding:4px 9px;font-size:12px;min-height:26px;border-radius:6px}
+.summary-phase #uploads .status-committed::before{content:'';width:6px;height:6px;border-radius:50%;background:#149361}
+.summary-phase #uploads .status-archived{color:#846328;background:#fff5df;border-color:#ead9af}
+.summary-phase #uploads .upload-actions{gap:8px;min-width:182px;flex-wrap:nowrap}
+.summary-phase #uploads .upload-actions button{gap:6px;min-height:34px;padding:7px 10px;font-size:12px;border-radius:6px;box-shadow:none}
+.summary-phase #uploads .upload-actions button svg{width:15px;height:15px;flex:none}
+.summary-phase #uploads .upload-actions .upload-visibility{background:#f2f6ff;color:#285592;border-color:#c1d2eb}
+.summary-phase #uploads .upload-actions .upload-danger{background:#fff;color:#a34154;border-color:#e5c8d1}
+.summary-phase #uploads .upload-actions .upload-danger:hover{background:#fff0f3;border-color:#d994a5}
+.summary-phase #uploads .upload-library-count{margin:10px 0 24px;color:#6a7f98;font-size:12px}
+.summary-phase #uploads #uploadLibraryError{padding:12px 15px;margin:0 0 14px;border:1px solid #e2c3cd;border-radius:8px;background:#fff3f6;color:#943b52;font-size:14px;line-height:1.5}
+.summary-phase #uploads .upload-library-table #history .upload-empty{padding:36px 15px;text-align:center;color:#6d829c}
+.summary-phase #uploads .upload-empty svg{display:block;width:30px;height:30px;margin:0 auto 10px;color:#829ab9}
+.summary-phase #uploads .upload-empty strong{display:block}
+.summary-phase #uploads .upload-secondary{border-top:1px solid #cad9eb}
+.summary-phase #uploads .upload-secondary>details{border-bottom:1px solid #cad9eb;background:transparent}
+.summary-phase #uploads .upload-secondary summary{display:flex;align-items:center;gap:10px;padding:17px 0;cursor:pointer;list-style:none;color:#26466d}
+.summary-phase #uploads .upload-secondary summary::-webkit-details-marker{display:none}
+.summary-phase #uploads .upload-secondary summary strong{font-size:15px;font-weight:800}
+.summary-phase #uploads .upload-secondary summary>svg{width:18px;height:18px;color:#6082b3}
+.summary-phase #uploads .upload-panel-chevron{margin-left:auto;transition:transform .15s}
+.summary-phase #uploads details[open] .upload-panel-chevron{transform:rotate(180deg)}
+.summary-phase #uploads .upload-panel-content{padding:0 0 18px;min-width:0}
+.summary-phase #uploads .upload-filter-actions{justify-content:flex-start;margin-bottom:12px}
+.summary-phase #uploads .upload-audit-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 12px}
+.summary-phase #uploads .upload-audit-toolbar #auditStatus{margin:0;background:transparent;border:0;padding:0;font-size:12px}
+.summary-phase #uploads #auditExport{gap:7px;box-shadow:none}
+.summary-phase #uploads #auditExport svg{width:15px;height:15px}
+.summary-phase #uploadDeleteDialog{width:430px;border:1px solid #d2ddeb;border-radius:8px;background:#fff;color:#274367;padding:24px;box-shadow:0 22px 70px #0a214745}
+.summary-phase #uploadDeleteDialog h2{margin:15px 0 10px;font-size:22px;color:#183c66}
+.summary-phase #uploadDeleteDialog .upload-delete-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:8px;color:#b3475e;background:#fff0f4}
+.summary-phase #uploadDeleteDialog .upload-delete-icon svg{width:23px;height:23px}
+.summary-phase #uploadDeleteDialog .upload-delete-name{font-size:15px;font-weight:800;overflow-wrap:anywhere}
+.summary-phase #uploadDeleteDialog .muted{font-size:14px;color:#687c93;line-height:1.6}
+.summary-phase #uploadDeleteDialog .actions{justify-content:flex-end;margin:22px 0 0;gap:9px}
+.summary-phase #uploadDeleteDialog button{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;min-height:39px}
+.summary-phase #uploadDeleteDialog button svg{width:16px;height:16px}
+.summary-phase #uploadDeleteDialog .upload-delete-confirm{background:#a93b53;border-color:#a93b53;color:#fff}
+.summary-phase #uploadDeleteDialog .upload-delete-confirm:hover{background:#8e2d42;color:#fff}
+@media(max-width:600px){
+  .summary-phase #uploads #uploadForm{gap:12px;padding:13px;flex-wrap:wrap}
+  .summary-phase #uploads #uploadForm label{flex:1 1 calc(100% - 60px)}
+  .summary-phase #uploads #uploadForm button{width:100%;min-height:40px}
+  .summary-phase #uploads .upload-library-toolbar{gap:12px}
+  .summary-phase #uploads .upload-tabs{width:100%;gap:2px}
+  .summary-phase #uploads .upload-tabs button{justify-content:center;flex:1;padding:7px 8px;gap:6px}
+  .summary-phase #uploads .upload-search{width:100%}
+  .summary-phase #uploads .upload-library-table table{min-width:0}
+  .summary-phase #uploads .upload-library-table #history tr{display:grid;grid-template-columns:1fr 1fr;gap:0;padding:5px 13px;background:#fff;margin-bottom:12px}
+  .summary-phase #uploads .upload-library-table #history td{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:9px 0;background:transparent!important;border:0;min-width:0;font-size:14px}
+  .summary-phase #uploads .upload-library-table #history td:first-child{grid-column:1/-1;padding-bottom:13px;border-bottom:1px solid #e3ebf5}
+  .summary-phase #uploads .upload-library-table #history td:first-child::before{content:none}
+  .summary-phase #uploads .upload-library-table #history td:nth-child(2){grid-column:1/-1}
+  .summary-phase #uploads .upload-library-table #history td:nth-child(4){min-width:0}
+  .summary-phase #uploads .upload-library-table #history td:nth-child(5){grid-column:1/-1;padding-top:12px;border-top:1px solid #e3ebf5}
+  .summary-phase #uploads .upload-library-table #history td:nth-child(5)::before{content:none}
+  .summary-phase #uploads .upload-library-table #history td[colspan]{grid-column:1/-1;align-items:center;padding:25px 0}
+  .summary-phase #uploads .upload-actions{width:100%;min-width:0;justify-content:flex-end}
+  .summary-phase #uploads .upload-file-name{font-size:15px}
+  .summary-phase #uploads .upload-library-table #history td small{font-size:12px}
+  .summary-phase #uploads .upload-audit-toolbar{align-items:flex-start}
+}

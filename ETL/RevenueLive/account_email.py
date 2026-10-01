@@ -14,7 +14,7 @@ from flask import jsonify, request
 from werkzeug.security import generate_password_hash
 
 
-def install(app, db, data, invalid):
+def install(app, db, data, invalid, log):
     with app.app_context():
         db().executescript('''
             CREATE TABLE IF NOT EXISTS email_accounts(user_id INTEGER PRIMARY KEY REFERENCES users(id), email TEXT UNIQUE COLLATE NOCASE NOT NULL, verified INTEGER NOT NULL DEFAULT 0);
@@ -118,6 +118,8 @@ def install(app, db, data, invalid):
         db().execute('UPDATE email_accounts SET verified=1 WHERE user_id=?',(uid,))
         db().execute('DELETE FROM email_tokens WHERE user_id=?',(uid,))
         db().execute('DELETE FROM sessions WHERE user_id=?',(uid,))
+        user=db().execute('SELECT id,username FROM users WHERE id=?',(uid,)).fetchone()
+        log('password_reset_completed',user=user)
         db().commit()
         return jsonify(ok=True)
 

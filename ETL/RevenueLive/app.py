@@ -21,10 +21,26 @@ from urllib.parse import urlsplit
 from flask import Flask, g, jsonify, request, send_from_directory
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
+from werkzeug.exceptions import HTTPException
 from insight_presets import INSIGHT_PRESETS
 
 ROOT = Path(__file__).resolve().parent
 HEADERS = ['Date', 'Channel Name', 'Views', 'Ad Impressions', 'Ad Revenue', 'Sponsorship/Others', 'Total Revenue']
+AUDIT_GENESIS = '0' * 64
+
+
+def audit_digest(row):
+    payload={key:row[key] for key in ('id','created','user_id','actor','action','detail','prev_hash')}
+    return hashlib.sha256(json.dumps(payload,sort_keys=True,separators=(',',':'),ensure_ascii=True).encode()).hexdigest()
+
+
+def verify_audit_chain(connection):
+    previous=AUDIT_GENESIS;count=0
+    for row in connection.execute('SELECT * FROM audit ORDER BY id'):
+        if row['prev_hash']!=previous or row['entry_hash']!=audit_digest(row):
+            return False,previous,count,row['id']
+        previous=row['entry_hash'];count+=1
+    return True,previous,count,None
 
 
 def configured_public_origin():
@@ -153,18 +169,57 @@ def create_app(data_dir=None):
             CREATE TABLE IF NOT EXISTS assignments(user_id INTEGER REFERENCES users(id), channel_id INTEGER REFERENCES channels(id), PRIMARY KEY(user_id,channel_id));
             CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY, user_id INTEGER REFERENCES users(id), csrf TEXT NOT NULL, expires REAL NOT NULL);
             CREATE TABLE IF NOT EXISTS attempts(ip TEXT PRIMARY KEY, failures INTEGER, expires REAL);
-            CREATE TABLE IF NOT EXISTS uploads(id TEXT PRIMARY KEY, user_id INTEGER REFERENCES users(id), filename TEXT, digest TEXT, created TEXT, state TEXT, rows_json TEXT, preview_json TEXT);
+            CREATE TABLE IF NOT EXISTS uploads(id TEXT PRIMARY KEY, user_id INTEGER REFERENCES users(id), filename TEXT, digest TEXT, created TEXT, state TEXT, rows_json TEXT, preview_json TEXT, archived INTEGER NOT NULL DEFAULT 0, file_deleted INTEGER NOT NULL DEFAULT 0);
             CREATE TABLE IF NOT EXISTS records(day TEXT, channel_id INTEGER REFERENCES channels(id), views INTEGER, impressions INTEGER, ad INTEGER, other INTEGER, total INTEGER, upload_id TEXT, PRIMARY KEY(day,channel_id));
             CREATE TABLE IF NOT EXISTS revisions(upload_id TEXT, day TEXT, channel_id INTEGER, previous TEXT);
-            CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY, created TEXT, user_id INTEGER, action TEXT, detail TEXT);
+            CREATE INDEX IF NOT EXISTS idx_records_upload ON records(upload_id);
+            CREATE INDEX IF NOT EXISTS idx_revisions_upload ON revisions(upload_id);
+            CREATE TABLE IF NOT EXISTS audit(id INTEGER PRIMARY KEY, created TEXT, user_id INTEGER, action TEXT, detail TEXT, actor TEXT, prev_hash TEXT, entry_hash TEXT);
             CREATE TABLE IF NOT EXISTS super_admin(singleton INTEGER PRIMARY KEY CHECK(singleton=1), user_id INTEGER UNIQUE NOT NULL REFERENCES users(id));
             CREATE TABLE IF NOT EXISTS archived_channels(channel_id INTEGER PRIMARY KEY REFERENCES channels(id));
+            CREATE TABLE IF NOT EXISTS hidden_dates(day TEXT PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), created TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS graph_presets(id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), name TEXT NOT NULL COLLATE NOCASE, config TEXT NOT NULL, UNIQUE(user_id,name));
         ''')
+        upload_columns={row['name'] for row in db().execute('PRAGMA table_info(uploads)')}
+        for column in ('archived','file_deleted'):
+            if column not in upload_columns:
+                db().execute(f'ALTER TABLE uploads ADD COLUMN {column} INTEGER NOT NULL DEFAULT 0')
+        audit_columns={row['name'] for row in db().execute('PRAGMA table_info(audit)')}
+        for column in ('actor','prev_hash','entry_hash'):
+            if column not in audit_columns:
+                db().execute(f'ALTER TABLE audit ADD COLUMN {column} TEXT')
+        legacy_audit=list(db().execute('SELECT * FROM audit ORDER BY id'))
+        if legacy_audit and all(not row['entry_hash'] for row in legacy_audit):
+            previous=AUDIT_GENESIS
+            for row in legacy_audit:
+                owner=db().execute('SELECT username FROM users WHERE id=?',(row['user_id'],)).fetchone()
+                actor=owner['username'] if owner else f"User #{row['user_id']}"
+                entry=dict(row);entry.update(actor=actor,prev_hash=previous)
+                current_hash=audit_digest(entry)
+                db().execute('UPDATE audit SET actor=?,prev_hash=?,entry_hash=? WHERE id=?',(actor,previous,current_hash,row['id']))
+                previous=current_hash
+        elif any(not row['entry_hash'] for row in legacy_audit):
+            raise RuntimeError('Audit chain is incomplete; do not start until investigated.')
+        db().executescript('''
+            CREATE TRIGGER IF NOT EXISTS audit_no_update BEFORE UPDATE ON audit BEGIN SELECT RAISE(ABORT,'Audit events cannot be edited'); END;
+            CREATE TRIGGER IF NOT EXISTS audit_no_delete BEFORE DELETE ON audit BEGIN SELECT RAISE(ABORT,'Audit events cannot be deleted'); END;
+        ''')
+        valid,_,_,broken=verify_audit_chain(db())
+        if not valid:
+            raise RuntimeError(f'Audit chain verification failed at event {broken}.')
         db().commit()
 
-    def log(action, detail=''):
-        db().execute('INSERT INTO audit(created,user_id,action,detail) VALUES (?,?,?,?)', (dt.datetime.now(dt.timezone.utc).isoformat(), g.user['id'], action, detail))
+    def log(action, detail='', user=None):
+        user=user or g.user
+        valid,_,_,broken=verify_audit_chain(db())
+        if not valid:
+            raise RuntimeError(f'Audit chain verification failed at event {broken}.')
+        last=db().execute('SELECT id,entry_hash FROM audit ORDER BY id DESC LIMIT 1').fetchone()
+        event=dict(id=last['id']+1 if last else 1,created=dt.datetime.now(dt.timezone.utc).isoformat(),
+                   user_id=user['id'],actor=user['username'],action=action,detail=str(detail),
+                   prev_hash=last['entry_hash'] if last else AUDIT_GENESIS)
+        event['entry_hash']=audit_digest(event)
+        db().execute('INSERT INTO audit(id,created,user_id,action,detail,actor,prev_hash,entry_hash) VALUES (:id,:created,:user_id,:action,:detail,:actor,:prev_hash,:entry_hash)',event)
 
     def permitted():
         if g.user['role'] == 'admin':
@@ -225,13 +280,19 @@ def create_app(data_dir=None):
     def invalid(error):
         return jsonify(error=str(error)),400
 
+    @app.errorhandler(HTTPException)
+    def http_error(error):
+        if request.path.startswith('/api/'):
+            return jsonify(error='This server needs an application update.' if error.code==404 else error.description),error.code
+        return error
+
     @app.get('/')
     def index():
         return send_from_directory(ROOT / 'static','index.html')
 
     @app.get('/health')
     def health():
-        return jsonify(service='revenuelive', status='ok')
+        return jsonify(service='revenuelive', status='ok', uploads_version=2)
 
     @app.post('/api/login')
     def login():
@@ -251,6 +312,7 @@ def create_app(data_dir=None):
         db().execute('DELETE FROM attempts WHERE ip=?',(ip,))
         db().execute('DELETE FROM sessions WHERE expires<?',(time.time(),))
         db().execute('INSERT INTO sessions VALUES (?,?,?,?)',(hashlib.sha256(raw.encode()).hexdigest(),user['id'],csrf,time.time()+8*3600))
+        log('user_signed_in',user=user)
         db().commit()
         response=jsonify(ok=True)
         response.set_cookie(cookie_name,raw,httponly=True,samesite='Strict',secure=bool(public_origin),max_age=8*3600)
@@ -264,7 +326,8 @@ def create_app(data_dir=None):
     @app.post('/api/logout')
     @require()
     def logout():
-        db().execute('DELETE FROM sessions WHERE token=?',(g.session['token'],));db().commit()
+        db().execute('DELETE FROM sessions WHERE token=?',(g.session['token'],))
+        log('user_signed_out');db().commit()
         response=jsonify(ok=True);response.delete_cookie(cookie_name);return response
 
     @app.post('/api/password')
@@ -305,9 +368,53 @@ def create_app(data_dir=None):
         if start>end:
             start,end=end,start
         placeholders=','.join('?' for _ in ids) or 'NULL'
+        visible="upload_id NOT IN (SELECT id FROM uploads WHERE archived=1 OR state!='committed' OR file_deleted=1)"
         if available_dates:
-            return [r[0] for r in db().execute(f'SELECT DISTINCT day FROM records WHERE channel_id IN ({placeholders}) ORDER BY day',tuple(sorted(ids)))]
-        return [dict(r) for r in db().execute(f'SELECT r.*,c.name AS channel FROM records r JOIN channels c ON c.id=r.channel_id WHERE r.channel_id IN ({placeholders}) AND day>=? AND day<=? ORDER BY day DESC,c.name COLLATE NOCASE',(*sorted(ids),start,end))]
+            return [r[0] for r in db().execute(f'SELECT DISTINCT day FROM records WHERE channel_id IN ({placeholders}) AND day NOT IN (SELECT day FROM hidden_dates) AND {visible} ORDER BY day',tuple(sorted(ids)))]
+        return [dict(r) for r in db().execute(f'SELECT r.*,c.name AS channel FROM records r JOIN channels c ON c.id=r.channel_id WHERE r.channel_id IN ({placeholders}) AND day>=? AND day<=? AND day NOT IN (SELECT day FROM hidden_dates) AND {visible} ORDER BY day DESC,c.name COLLATE NOCASE',(*sorted(ids),start,end))]
+
+    @app.get('/api/admin/dates')
+    @require('admin')
+    def reporting_dates():
+        counts={r['day']:r['channels'] for r in db().execute('SELECT day,COUNT(*) AS channels FROM records GROUP BY day')}
+        hidden={r['day'] for r in db().execute('SELECT day FROM hidden_dates')}
+        return jsonify(rows=[dict(day=day,channels=counts.get(day,0),hidden=day in hidden) for day in sorted(counts.keys()|hidden,reverse=True)])
+
+    @app.post('/api/admin/dates/<day>/visibility')
+    @require('admin')
+    def set_date_visibility(day):
+        try:
+            dt.date.fromisoformat(day)
+        except ValueError:
+            raise InvalidData('Use a YYYY-MM-DD date.')
+        hidden=(request.get_json(silent=True) or {}).get('hidden')
+        if type(hidden) is not bool:
+            raise InvalidData('Choose whether this date is hidden.')
+        db().execute('BEGIN IMMEDIATE')
+        if hidden:
+            if not db().execute('SELECT 1 FROM records WHERE day=?',(day,)).fetchone():
+                raise InvalidData('No published records exist for this date.')
+            db().execute('INSERT OR IGNORE INTO hidden_dates(day,user_id,created) VALUES (?,?,?)',(day,g.user['id'],dt.datetime.now(dt.timezone.utc).isoformat()))
+        else:
+            db().execute('DELETE FROM hidden_dates WHERE day=?',(day,))
+        log('date_hidden' if hidden else 'date_restored',day)
+        db().commit();return jsonify(ok=True)
+
+    @app.get('/api/admin/audit')
+    @require('admin')
+    def audit_history():
+        valid,previous,count,broken=verify_audit_chain(db())
+        events=[dict(r) for r in db().execute('SELECT id,created,user_id,actor,action,detail,prev_hash,entry_hash FROM audit ORDER BY id DESC LIMIT 100')]
+        return jsonify(events=events,valid=valid,count=count,head=previous,broken_event=broken)
+
+    @app.get('/api/admin/audit/export')
+    @require('admin')
+    def export_audit():
+        events=[dict(r) for r in db().execute('SELECT id,created,user_id,actor,action,detail,prev_hash,entry_hash FROM audit ORDER BY id')]
+        valid,head,_,broken=verify_audit_chain(db())
+        response=jsonify(events=events,head=head,valid=valid,broken_event=broken)
+        response.headers['Content-Disposition']='attachment; filename=revenue-audit-chain.json'
+        return response
 
     @app.get('/api/report')
     @require()
@@ -353,6 +460,7 @@ def create_app(data_dir=None):
             clean['channels']=sorted(set(channels))
         try:
             db().execute('INSERT INTO graph_presets(user_id,name,config) VALUES (?,?,?)',(g.user['id'],name.strip(),json.dumps(clean)))
+            log('graph_preset_saved',name.strip())
             db().commit()
         except sqlite3.IntegrityError:
             return jsonify(error='A preset with that name already exists. Choose another name.'),409
@@ -362,9 +470,10 @@ def create_app(data_dir=None):
     @require()
     def delete_graph_preset(pid):
         result=db().execute('DELETE FROM graph_presets WHERE id=? AND user_id=?',(pid,g.user['id']))
-        db().commit()
         if not result.rowcount:
             return jsonify(error='Preset not found.'),404
+        log('graph_preset_deleted',str(pid))
+        db().commit()
         return jsonify(ok=True)
 
     @app.get('/api/export')
@@ -391,6 +500,12 @@ def create_app(data_dir=None):
             resolved.append({**row,'channel_id':cid})
         return resolved
 
+    def row_values(row):
+        return tuple(row[key] for key in ('views','impressions','ad','other','total'))
+
+    def row_fingerprint(rows):
+        return hashlib.sha256(json.dumps(sorted((r['day'],r['channel_id'],*row_values(r)) for r in rows),separators=(',',':')).encode()).digest()
+
     @app.post('/api/uploads/preview')
     @require('admin','uploader')
     def preview():
@@ -406,46 +521,240 @@ def create_app(data_dir=None):
             raise InvalidData('Unable to read workbook. Check its format and date cells.')
         rows=resolve_rows(rows)
         digest=hashlib.sha256(content).hexdigest()
-        if db().execute("SELECT 1 FROM uploads WHERE digest=? AND state='committed'",(digest,)).fetchone():
-            raise InvalidData('This exact file has already been published.')
+        db().execute('BEGIN IMMEDIATE')
+        fingerprint=row_fingerprint(rows)
+        for existing in db().execute("SELECT rows_json FROM uploads WHERE state='pending'"):
+            if row_fingerprint(json.loads(existing['rows_json']))==fingerprint:
+                raise InvalidData('The same data is already awaiting publication. Publish or discard that preview first.')
         originals=[]
         for row in rows:
             old=db().execute('SELECT * FROM records WHERE day=? AND channel_id=?',(row['day'],row['channel_id'])).fetchone()
             originals.append(dict(old) if old else None)
+        unchanged=sum(old is not None and row_values(old)==row_values(row) for row,old in zip(rows,originals))
+        if unchanged==len(rows):
+            raise InvalidData('All rows already match published data. No changes to publish.')
         uid=secrets.token_hex(16)
         filename=secure_filename(incoming.filename) or 'upload'
-        (data/'uploads'/f'{uid}_{filename}').write_bytes(content)
-        db().execute('INSERT INTO uploads VALUES (?,?,?,?,?,?,?,?)',(uid,g.user['id'],filename,digest,dt.datetime.now(dt.timezone.utc).isoformat(),'pending',json.dumps(rows),json.dumps(originals)))
-        db().commit()
-        return jsonify(id=uid,rows=rows,duplicates=sum(x is not None for x in originals))
+        source=data/'uploads'/f'{uid}_{filename}'
+        try:
+            source.write_bytes(content)
+            db().execute('INSERT INTO uploads(id,user_id,filename,digest,created,state,rows_json,preview_json) VALUES (?,?,?,?,?,?,?,?)',(uid,g.user['id'],filename,digest,dt.datetime.now(dt.timezone.utc).isoformat(),'pending',json.dumps(rows),json.dumps(originals)))
+            log('upload_submitted',json.dumps(dict(id=uid,filename=filename,sha256=digest,rows=len(rows)),separators=(',',':')))
+            db().commit()
+        except Exception:
+            db().rollback()
+            source.unlink(missing_ok=True)
+            raise
+        return jsonify(id=uid,rows=rows,duplicates=sum(old is not None and row_values(old)!=row_values(row) for row,old in zip(rows,originals)),unchanged=unchanged)
 
     @app.post('/api/uploads/<uid>/commit')
     @require('admin','uploader')
     def commit(uid):
         db().execute('BEGIN IMMEDIATE')
-        upload=db().execute('SELECT * FROM uploads WHERE id=? AND user_id=?',(uid,g.user['id'])).fetchone()
+        upload=db().execute("SELECT * FROM uploads WHERE id=? AND (user_id=? OR ?='admin')",(uid,g.user['id'],g.user['role'])).fetchone()
         if not upload or upload['state']!='pending':
             raise InvalidData('Upload is unavailable or already published.')
+        publish_preview(upload,(request.get_json(silent=True) or {}).get('replace') is True)
+        db().commit();return jsonify(ok=True)
+
+    def publish_preview(upload,replace):
+        uid=upload['id']
         rows=resolve_rows(json.loads(upload['rows_json']))
         original=json.loads(upload['preview_json'])
-        if any(x is not None for x in original) and not (request.get_json(silent=True) or {}).get('replace') is True:
+        if any(old is not None and row_values(old)!=row_values(row) for row,old in zip(rows,original)) and not replace:
             raise InvalidData('Confirm replacement of existing date/channel records.')
+        changed=0
         for row,old in zip(rows,original):
             current=db().execute('SELECT * FROM records WHERE day=? AND channel_id=?',(row['day'],row['channel_id'])).fetchone()
             if (dict(current) if current else None)!=old:
                 raise InvalidData('Data changed after preview. Upload again to review the latest version.')
+            if old is not None and row_values(old)==row_values(row):
+                continue
             db().execute('INSERT INTO revisions VALUES (?,?,?,?)',(uid,row['day'],row['channel_id'],json.dumps(old)))
             db().execute('INSERT OR REPLACE INTO records VALUES (?,?,?,?,?,?,?,?)',(row['day'],row['channel_id'],row['views'],row['impressions'],row['ad'],row['other'],row['total'],uid))
-        db().execute("UPDATE uploads SET state='committed' WHERE id=?",(uid,))
-        log('upload_published',uid);db().commit();return jsonify(ok=True)
+            changed+=1
+        if not changed:
+            raise InvalidData('All rows already match published data. No changes to publish.')
+        db().execute("UPDATE uploads SET state='committed',archived=0 WHERE id=?",(uid,))
+        log('upload_published',json.dumps(dict(id=uid,filename=upload['filename'],changed=changed),separators=(',',':')))
 
     @app.get('/api/uploads')
     @require('admin','uploader')
     def uploads():
-        where='' if g.user['role']=='admin' else ' WHERE u.user_id=?'
-        args=() if not where else (g.user['id'],)
-        rows=db().execute('SELECT u.id,u.filename,u.created,u.state,v.username FROM uploads u JOIN users v ON v.id=u.user_id'+where+' ORDER BY u.created DESC LIMIT 100',args).fetchall()
-        return jsonify(rows=[dict(r) for r in rows])
+        show_archived=request.args.get('show_archived')=='1'
+        conditions=["u.state!='deleted'"]
+        if not show_archived:
+            conditions.append('u.archived=0')
+        args=[]
+        if g.user['role']!='admin':
+            conditions.append('u.user_id=?');args.append(g.user['id'])
+        where=' WHERE '+' AND '.join(conditions) if conditions else ''
+        rows=db().execute('''SELECT u.id,u.filename,u.created,u.state,u.archived,u.file_deleted,u.rows_json,u.preview_json,v.username,
+            (SELECT COUNT(*) FROM revisions WHERE upload_id=u.id) AS changed_rows,
+            (SELECT COUNT(*) FROM records WHERE upload_id=u.id) AS live_rows,
+            (SELECT COUNT(*) FROM records r WHERE r.upload_id=u.id AND r.day NOT IN (SELECT day FROM hidden_dates)
+                AND r.channel_id NOT IN (SELECT channel_id FROM archived_channels)
+                AND u.archived=0 AND u.state='committed' AND u.file_deleted=0) AS visible_rows
+            FROM uploads u JOIN users v ON v.id=u.user_id'''+where+' ORDER BY u.created DESC LIMIT 100',args).fetchall()
+        result=[]
+        for row in rows:
+            item={key:row[key] for key in row.keys() if key not in ('rows_json','preview_json')}
+            original=json.loads(row['preview_json'])
+            incoming=json.loads(row['rows_json'])
+            item['total_rows']=len(incoming)
+            days=sorted({r['day'] for r in incoming})
+            item['start']=days[0] if days else None
+            item['end']=days[-1] if days else None
+            item['channel_count']=len({r['channel_id'] for r in incoming})
+            item['replacements']=sum(old is not None and row_values(old)!=row_values(new) for old,new in zip(original,incoming)) if row['state'] in ('pending','rejected') else 0
+            result.append(item)
+        return jsonify(rows=result,uploads_version=2)
+
+    @app.get('/api/uploads/<uid>/file')
+    @require('admin','uploader')
+    def upload_file(uid):
+        upload=db().execute('SELECT * FROM uploads WHERE id=?',(uid,)).fetchone()
+        if not upload or (g.user['role']!='admin' and upload['user_id']!=g.user['id']):
+            return jsonify(error='Upload not found.'),404
+        if upload['file_deleted'] or secure_filename(upload['filename'])!=upload['filename']:
+            return jsonify(error='Source file is no longer available.'),404
+        return send_from_directory(data/'uploads',f"{uid}_{upload['filename']}",as_attachment=True,download_name=upload['filename'])
+
+    @app.post('/api/uploads/<uid>/reject')
+    @require('admin','uploader')
+    def reject_upload(uid):
+        db().execute('BEGIN IMMEDIATE')
+        upload=db().execute('SELECT * FROM uploads WHERE id=?',(uid,)).fetchone()
+        if not upload or (g.user['role']!='admin' and upload['user_id']!=g.user['id']):
+            raise InvalidData('Upload is unavailable.')
+        if upload['state']=='pending':
+            db().execute("UPDATE uploads SET state='rejected' WHERE id=?",(uid,))
+            log('upload_rejected',json.dumps(dict(id=uid,filename=upload['filename']),separators=(',',':')))
+        elif upload['state']=='committed' and g.user['role']=='admin':
+            unpublish_upload(uid)
+        else:
+            raise InvalidData('Only pending files can be rejected; only an admin can unpublish live data.')
+        db().commit();return jsonify(ok=True)
+
+    @app.post('/api/uploads/<uid>/archive')
+    @require('admin')
+    def archive_upload(uid):
+        archived=(request.get_json(silent=True) or {}).get('archived')
+        if type(archived) is not bool:
+            raise InvalidData('Choose whether to archive or unarchive this file.')
+        set_upload_archive(uid,archived)
+        db().commit();return jsonify(ok=True)
+
+    @app.post('/api/uploads/<uid>/unarchive')
+    @require('admin')
+    def unarchive_upload(uid):
+        set_upload_archive(uid,False)
+        db().commit();return jsonify(ok=True)
+
+    def set_upload_archive(uid,archived):
+        db().execute('BEGIN IMMEDIATE')
+        upload=db().execute('SELECT * FROM uploads WHERE id=?',(uid,)).fetchone()
+        if not upload or upload['file_deleted'] or upload['state']=='deleted':
+            raise InvalidData('This file has been deleted and cannot be restored.')
+        if not archived and upload['state'] in ('pending','rejected'):
+            publish_preview(upload,(request.get_json(silent=True) or {}).get('replace') is True)
+        elif not archived and upload['state']=='restored':
+            rows={(r['day'],r['channel_id']):r for r in resolve_rows(json.loads(upload['rows_json']))}
+            revisions=list(db().execute('SELECT * FROM revisions WHERE upload_id=?',(uid,)))
+            if not revisions:
+                raise InvalidData('This older file has no restorable records. Upload it again to review its data.')
+            for revision in revisions:
+                key=(revision['day'],revision['channel_id'])
+                row=rows.get(key)
+                if not row:
+                    raise InvalidData('The stored file is incomplete. Upload it again.')
+                current=db().execute('SELECT * FROM records WHERE day=? AND channel_id=?',key).fetchone()
+                previous=prior_live_record(json.loads(revision['previous']),*key)
+                if current and current['upload_id']!=uid and dict(current)!=previous:
+                    raise InvalidData('Newer data exists for this file. Upload it again to review and confirm replacements.')
+                db().execute('INSERT OR REPLACE INTO records VALUES (?,?,?,?,?,?,?,?)',(*key,*row_values(row),uid))
+            db().execute("UPDATE uploads SET state='committed' WHERE id=?",(uid,))
+        db().execute('UPDATE uploads SET archived=? WHERE id=?',(int(archived),uid))
+        log('upload_archived' if archived else 'upload_unarchived',json.dumps(dict(id=uid,filename=upload['filename']),separators=(',',':')))
+
+    @app.post('/api/uploads/<uid>/delete')
+    @require('admin')
+    def delete_upload(uid):
+        db().execute('BEGIN IMMEDIATE')
+        upload=db().execute('SELECT * FROM uploads WHERE id=?',(uid,)).fetchone()
+        if not upload:
+            raise InvalidData('File not found.')
+        if upload['state']=='deleted':
+            return jsonify(ok=True)
+        if secure_filename(upload['filename'])!=upload['filename']:
+            raise InvalidData('Source filename is invalid.')
+        source=data/'uploads'/f"{uid}_{upload['filename']}"
+        content=None
+        try:
+            if upload['state']=='committed':
+                unpublish_upload(uid)
+            log('upload_deleted',json.dumps(dict(id=uid,filename=upload['filename']),separators=(',',':')))
+            if source.exists():
+                content=source.read_bytes()
+                source.unlink()
+            db().execute("UPDATE uploads SET state='deleted',archived=1,file_deleted=1 WHERE id=?",(uid,))
+            db().commit()
+        except Exception as error:
+            db().rollback()
+            if content is not None and not source.exists():
+                source.write_bytes(content)
+            if isinstance(error,OSError):
+                raise InvalidData('The file could not be deleted. Check file access and try again.') from error
+            raise
+        return jsonify(ok=True)
+
+    @app.post('/api/uploads/<uid>/delete-file')
+    @require('admin')
+    def delete_upload_file(uid):
+        db().execute('BEGIN IMMEDIATE')
+        upload=db().execute('SELECT * FROM uploads WHERE id=?',(uid,)).fetchone()
+        if not upload or upload['state'] not in ('rejected','restored'):
+            raise InvalidData('Reject or unpublish the file before deleting its source. Live data cannot be deleted here.')
+        if upload['file_deleted']:
+            return jsonify(ok=True)
+        if secure_filename(upload['filename'])!=upload['filename']:
+            raise InvalidData('Source filename is invalid.')
+        log('upload_source_deleted',json.dumps(dict(id=uid,filename=upload['filename']),separators=(',',':')))
+        (data/'uploads'/f"{uid}_{upload['filename']}").unlink(missing_ok=True)
+        db().execute('UPDATE uploads SET file_deleted=1 WHERE id=?',(uid,))
+        db().commit();return jsonify(ok=True)
+
+    def prior_live_record(previous,day,channel_id):
+        visited=set()
+        while previous:
+            source=previous['upload_id']
+            if source in visited:
+                raise RuntimeError('Upload revision cycle detected.')
+            visited.add(source)
+            upload=db().execute('SELECT state,file_deleted FROM uploads WHERE id=?',(source,)).fetchone()
+            if not upload or (upload['state']=='committed' and not upload['file_deleted']):
+                return previous
+            revision=db().execute('SELECT previous FROM revisions WHERE upload_id=? AND day=? AND channel_id=?',(source,day,channel_id)).fetchone()
+            if not revision:
+                raise RuntimeError('Upload revision history is incomplete.')
+            previous=json.loads(revision['previous'])
+        return None
+
+    def unpublish_upload(uid):
+        upload=db().execute('SELECT filename FROM uploads WHERE id=?',(uid,)).fetchone()
+        revisions=db().execute('SELECT * FROM revisions WHERE upload_id=?',(uid,)).fetchall()
+        restored=0
+        for revision in revisions:
+            current=db().execute('SELECT upload_id FROM records WHERE day=? AND channel_id=?',(revision['day'],revision['channel_id'])).fetchone()
+            if not current or current['upload_id']!=uid:
+                continue
+            previous=prior_live_record(json.loads(revision['previous']),revision['day'],revision['channel_id'])
+            db().execute('DELETE FROM records WHERE day=? AND channel_id=?',(revision['day'],revision['channel_id']))
+            if previous:
+                db().execute('INSERT INTO records VALUES (?,?,?,?,?,?,?,?)',tuple(previous[key] for key in ('day','channel_id','views','impressions','ad','other','total','upload_id')))
+            restored+=1
+        db().execute("UPDATE uploads SET state='restored' WHERE id=?",(uid,))
+        log('upload_unpublished',json.dumps(dict(id=uid,filename=upload['filename'] if upload else '',affected=restored),separators=(',',':')))
 
     @app.post('/api/uploads/<uid>/restore')
     @require('admin')
@@ -454,18 +763,8 @@ def create_app(data_dir=None):
         upload=db().execute("SELECT * FROM uploads WHERE id=? AND state='committed'",(uid,)).fetchone()
         if not upload:
             raise InvalidData('Only a published upload can be rolled back.')
-        revisions=db().execute('SELECT * FROM revisions WHERE upload_id=?',(uid,)).fetchall()
-        for rev in revisions:
-            current=db().execute('SELECT upload_id FROM records WHERE day=? AND channel_id=?',(rev['day'],rev['channel_id'])).fetchone()
-            if not current or current[0]!=uid:
-                raise InvalidData('A newer upload changed these records. Roll back the newer upload first.')
-        for rev in revisions:
-            old=json.loads(rev['previous'])
-            db().execute('DELETE FROM records WHERE day=? AND channel_id=?',(rev['day'],rev['channel_id']))
-            if old:
-                db().execute('INSERT INTO records VALUES (?,?,?,?,?,?,?,?)',tuple(old[k] for k in ('day','channel_id','views','impressions','ad','other','total','upload_id')))
-        db().execute("UPDATE uploads SET state='restored' WHERE id=?",(uid,))
-        log('upload_rolled_back',uid);db().commit();return jsonify(ok=True)
+        unpublish_upload(uid)
+        db().commit();return jsonify(ok=True)
 
     @app.get('/api/admin/users')
     @require('admin')
@@ -505,7 +804,7 @@ def create_app(data_dir=None):
         log('channel_created',name);db().commit();return jsonify(ok=True)
 
     from account_email import install
-    email_address, mail_settings, send_invitation = install(app, db, data, InvalidData)
+    email_address, mail_settings, send_invitation = install(app, db, data, InvalidData, log)
 
     @app.post('/api/admin/users')
     @require('admin')
@@ -540,7 +839,7 @@ def create_app(data_dir=None):
         try:
             db().execute('BEGIN IMMEDIATE')
             owner=db().execute('SELECT user_id FROM super_admin WHERE singleton=1').fetchone()
-            existing=db().execute('SELECT role FROM users WHERE id=?',(uid,)).fetchone() if uid else None
+            existing=db().execute('SELECT username,role,active FROM users WHERE id=?',(uid,)).fetchone() if uid else None
             if owner and uid==owner['user_id']:
                 raise InvalidData('The Super Admin account is protected. Use Change password for your own password.')
             if not owner or owner['user_id']!=g.user['id']:
@@ -549,6 +848,7 @@ def create_app(data_dir=None):
             if uid:
                 if not db().execute('SELECT 1 FROM users WHERE id=?',(uid,)).fetchone():
                     raise InvalidData('User not found.')
+                before={**dict(existing),'channels':[row[0] for row in db().execute('SELECT channel_id FROM assignments WHERE user_id=? ORDER BY channel_id',(uid,))]}
                 email_account=db().execute('SELECT email FROM email_accounts WHERE user_id=?',(uid,)).fetchone()
                 if email_account and username.casefold()!=email_account['email'].casefold():
                     raise InvalidData('Email login cannot be renamed. Disable this account and invite the new email separately.')
@@ -559,12 +859,14 @@ def create_app(data_dir=None):
                     db().execute('DELETE FROM sessions WHERE user_id=? AND token<>?',(uid,g.session['token']))
                     db().execute('DELETE FROM email_tokens WHERE user_id=?',(uid,))
             else:
+                before=None
                 uid=db().execute('INSERT INTO users(username,password,role,active,must_change) VALUES (?,?,?,?,1)',(username,generate_password_hash(password),role,active)).lastrowid
             db().execute('DELETE FROM assignments WHERE user_id=?',(uid,))
             db().executemany('INSERT INTO assignments VALUES (?,?)',[(uid,c) for c in set(ids)])
             if invite:
                 db().execute('INSERT INTO email_accounts(user_id,email) VALUES (?,?)',(uid,username))
-            log('user_saved',str(uid));db().commit()
+            log('user_saved',json.dumps(dict(id=uid,username=username,role=role,active=bool(active),channels=sorted(set(ids)),before=before,password_reset=bool(password and before),invited=invite),separators=(',',':')))
+            db().commit()
         except sqlite3.IntegrityError:
             raise InvalidData('Username already exists.')
         if invite:

@@ -46,7 +46,7 @@ try {
     New-Item -ItemType Directory -Path $assetDir -Force | Out-Null
     $assets=@('index.html','style.css','analytics.css','app.js','analytics.js','quick-insights.js',
         'chart.umd.min.js','channel-comparison.js','revenue-share.js','diy-graphs.js',
-        'dark.css','light.css','flatpickr.min.css','flatpickr.min.js','lucide.min.js',
+        'dark.css','light.css','uploads.css','flatpickr.min.css','flatpickr.min.js','lucide.min.js',
         'insight-growth-arrow.svg','Chart.js.LICENSE.md')
     foreach ($name in $assets) {
         Copy-Item -LiteralPath (Join-Path $root "static\$name") -Destination $assetDir

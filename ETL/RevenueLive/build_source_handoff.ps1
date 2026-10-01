@@ -15,7 +15,7 @@ $static=Join-Path $release 'static'
 New-Item -ItemType Directory -Path $static -Force | Out-Null
 $assets=@('index.html','style.css','analytics.css','app.js','analytics.js',
     'quick-insights.js','chart.umd.min.js','channel-comparison.js',
-    'revenue-share.js','diy-graphs.js','dark.css','light.css',
+    'revenue-share.js','diy-graphs.js','dark.css','light.css','uploads.css',
     'flatpickr.min.css','flatpickr.min.js','lucide.min.js',
     'insight-growth-arrow.svg','Chart.js.LICENSE.md')
 foreach ($name in $assets) {

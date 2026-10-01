@@ -9,7 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from werkzeug.security import generate_password_hash
-from app import HEADERS, InvalidData, backup_database, bootstrap, create_app, parse_upload
+from app import HEADERS, InvalidData, backup_database, bootstrap, create_app, parse_upload, verify_audit_chain
 
 
 def csv_file(channel='Alpha', revenue='1.23', total='1.23', day='2026-09-21'):
@@ -140,10 +140,222 @@ class RevenueTest(unittest.TestCase):
         path=f"/api/uploads/{replacement['id']}/commit"
         self.assertEqual(self.post(path).status_code,400)
         self.assertEqual(self.post(path,{'replace':True}).status_code,200)
-        self.assertEqual(self.post(f'/api/uploads/{uid}/restore').status_code,400)
+        self.assertEqual(self.post(f'/api/uploads/{uid}/restore').status_code,200)
+        self.assertEqual(self.client.get('/api/report?start=2026-09-21').json['rows'][0]['total'],250)
         self.assertEqual(self.post(f"/api/uploads/{replacement['id']}/restore").status_code,200)
         rows=self.client.get('/api/report?start=2026-09-21').json['rows']
-        self.assertEqual(rows[0]['total'],123)
+        self.assertEqual(rows,[])
+
+    def test_unpublishing_latest_restores_previous_accepted_file(self):
+        self.login()
+        first=self.preview().json['id']
+        self.assertEqual(self.post(f'/api/uploads/{first}/commit').status_code,200)
+        second=self.preview(csv_file(revenue='2.50',total='2.50')).json['id']
+        self.assertEqual(self.post(f'/api/uploads/{second}/commit',{'replace':True}).status_code,200)
+        self.assertEqual(self.post(f'/api/uploads/{second}/reject').status_code,200)
+        self.assertEqual(self.client.get('/api/report?start=2026-09-21').json['rows'][0]['total'],123)
+
+    def test_unpublishing_replacements_out_of_order_skips_unpublished_ancestors(self):
+        self.login()
+        files=[]
+        for amount in ('1.23','2.50','3.75'):
+            uid=self.preview(csv_file(revenue=amount,total=amount)).json['id']
+            self.assertEqual(self.post(f'/api/uploads/{uid}/commit',{'replace':True}).status_code,200)
+            files.append(uid)
+        self.assertEqual(self.post(f'/api/uploads/{files[1]}/reject').status_code,200)
+        self.assertEqual(self.client.get('/api/report?start=2026-09-21').json['rows'][0]['total'],375)
+        self.assertEqual(self.post(f'/api/uploads/{files[2]}/reject').status_code,200)
+        self.assertEqual(self.client.get('/api/report?start=2026-09-21').json['rows'][0]['total'],123)
+        self.assertEqual(self.post(f'/api/uploads/{files[0]}/reject').status_code,200)
+        self.assertEqual(self.client.get('/api/report?start=2026-09-21').json['rows'],[])
+
+    def test_admin_accepts_another_uploaders_file_and_controls_dates(self):
+        self.login('upload')
+        uid=self.preview().json['id']
+        self.assertEqual(self.post('/api/admin/dates/2026-09-21/visibility',{'hidden':True}).status_code,403)
+        self.login()
+        self.assertEqual(self.post(f'/api/uploads/{uid}/commit').status_code,200)
+        self.assertEqual(self.client.get('/api/report?start=2026-09-21').json['totals']['total'],123)
+        self.assertEqual(self.post('/api/admin/dates/2026-09-21/visibility',{'hidden':True}).status_code,200)
+        self.assertEqual(self.client.get('/api/report?start=2026-09-21').json['rows'],[])
+        self.assertNotIn('2026-09-21',self.client.get('/api/report').json['available_dates'])
+        self.assertNotIn('2026-09-21',self.client.get('/api/export').text)
+        dates=self.client.get('/api/admin/dates').json['rows']
+        self.assertTrue(next(row for row in dates if row['day']=='2026-09-21')['hidden'])
+        upload=self.client.get('/api/uploads').json['rows'][0]
+        self.assertEqual((upload['live_rows'],upload['visible_rows']),(1,0))
+        self.login('view')
+        self.assertEqual(self.client.get('/api/report?start=2026-09-21').json['rows'],[])
+        self.login()
+        replacement=self.preview(csv_file(revenue='2.50',total='2.50')).json['id']
+        self.assertEqual(self.post(f'/api/uploads/{replacement}/commit',{'replace':True}).status_code,200)
+        self.assertEqual(self.client.get('/api/report?start=2026-09-21').json['rows'],[])
+        self.assertEqual(self.post('/api/admin/dates/2026-09-21/visibility',{'hidden':False}).status_code,200)
+        self.assertEqual(self.client.get('/api/report?start=2026-09-21').json['totals']['total'],250)
+
+    def test_audit_chain_is_append_only_and_detects_tampering(self):
+        self.login()
+        uid=self.preview().json['id']
+        self.assertEqual(self.post(f'/api/uploads/{uid}/commit').status_code,200)
+        audit=self.client.get('/api/admin/audit').json
+        self.assertTrue(audit['valid'])
+        self.assertIn('upload_published',[row['action'] for row in audit['events']])
+        self.assertEqual(self.client.get('/api/admin/audit/export').status_code,200)
+        self.assertEqual(self.post(f'/api/uploads/{uid}/reject').status_code,200)
+        source=next((self.path/'uploads').glob(f'{uid}_*'))
+        with closing(sqlite3.connect(self.path/'revenuelive.db')) as db, db:
+            with self.assertRaises(sqlite3.IntegrityError):
+                db.execute("UPDATE audit SET detail='changed' WHERE id=1")
+            db.execute('DROP TRIGGER audit_no_update')
+            db.execute("UPDATE audit SET detail='changed' WHERE id=1")
+        self.assertFalse(self.client.get('/api/admin/audit').json['valid'])
+        with self.assertRaises(RuntimeError):
+            self.post(f'/api/uploads/{uid}/delete-file')
+        self.assertTrue(source.exists())
+        with self.assertRaises(RuntimeError):
+            create_app(self.path)
+
+    def test_legacy_audit_is_migrated_once_and_locked(self):
+        legacy=self.path/'legacy-audit'
+        legacy.mkdir()
+        with closing(sqlite3.connect(legacy/'revenuelive.db')) as db, db:
+            db.execute('CREATE TABLE users(id INTEGER PRIMARY KEY,username TEXT)')
+            db.execute("INSERT INTO users VALUES (1,'original-admin')")
+            db.execute('CREATE TABLE audit(id INTEGER PRIMARY KEY,created TEXT,user_id INTEGER,action TEXT,detail TEXT)')
+            db.execute("INSERT INTO audit VALUES (1,'2026-09-01T00:00:00+00:00',1,'channel_created','Alpha')")
+        create_app(legacy)
+        create_app(legacy)
+        with closing(sqlite3.connect(legacy/'revenuelive.db')) as db:
+            db.row_factory=sqlite3.Row
+            self.assertEqual(db.execute('SELECT actor FROM audit').fetchone()['actor'],'original-admin')
+            self.assertTrue(verify_audit_chain(db)[0])
+            with self.assertRaises(sqlite3.IntegrityError):
+                db.execute("DELETE FROM audit WHERE id=1")
+
+    def test_pending_duplicate_content_and_discard(self):
+        self.login('upload')
+        first=self.preview().json['id']
+        self.assertEqual(self.preview().status_code,400)
+        self.assertIn('awaiting publication',self.preview(b'\xef\xbb\xbf'+csv_file()).json['error'])
+        self.assertEqual(self.post(f'/api/uploads/{first}/reject').status_code,200)
+        self.assertEqual(self.post(f'/api/uploads/{first}/commit').status_code,400)
+        self.assertEqual(self.preview().status_code,200)
+
+    def test_upload_history_admin_controls(self):
+        self.login('upload')
+        first=self.preview().json['id']
+        self.assertEqual(self.post(f'/api/uploads/{first}/archive',{'archived':True}).status_code,403)
+        self.assertEqual(self.post(f'/api/uploads/{first}/delete-file').status_code,403)
+        response=self.client.get(f'/api/uploads/{first}/file')
+        self.assertEqual(response.status_code,200)
+        response.close()
+        self.login('admin')
+        self.assertEqual(self.post(f'/api/uploads/{first}/archive',{'archived':True}).status_code,200)
+        self.assertEqual(self.client.get('/api/uploads').json['rows'],[])
+        self.assertEqual(self.post(f'/api/uploads/{first}/unarchive').status_code,200)
+        self.assertEqual(self.client.get('/api/report?start=2026-09-21').json['totals']['total'],123)
+        self.assertEqual(self.post(f'/api/uploads/{first}/archive',{'archived':True}).status_code,200)
+        self.assertEqual(self.client.get('/api/uploads').json['rows'],[])
+        row=self.client.get('/api/uploads?show_archived=1').json['rows'][0]
+        self.assertEqual((row['state'],row['archived'],row['file_deleted']),('committed',1,0))
+        self.assertEqual(row['visible_rows'],0)
+        self.assertEqual(self.post(f'/api/uploads/{first}/archive',{'archived':False}).status_code,200)
+        self.assertEqual(self.post(f'/api/uploads/{first}/delete').status_code,200)
+        self.assertEqual(self.client.get(f'/api/uploads/{first}/file').status_code,404)
+        self.assertEqual(self.post(f'/api/uploads/{first}/unarchive').status_code,400)
+        self.assertEqual(self.client.get('/api/uploads?show_archived=1').json['rows'],[])
+        self.assertEqual(self.client.get('/api/report?start=2026-09-21').json['rows'],[])
+        self.assertIn('upload_deleted',[r['action'] for r in self.client.get('/api/admin/audit').json['events']])
+
+    def test_archive_hides_data_for_every_reader_and_preserves_versions(self):
+        self.login()
+        uid=self.preview().json['id']
+        self.assertEqual(self.post(f'/api/uploads/{uid}/commit').status_code,200)
+        self.assertEqual(self.post(f'/api/uploads/{uid}/archive',{'archived':True}).status_code,200)
+        self.assertNotIn('2026-09-21',self.client.get('/api/export').text)
+        self.login('view')
+        data=self.client.get('/api/report?start=2026-09-21').json
+        self.assertEqual(data['rows'],[])
+        self.assertNotIn('2026-09-21',data['available_dates'])
+        self.assertEqual(self.post(f'/api/uploads/{uid}/unarchive').status_code,403)
+        self.login()
+        self.assertEqual(self.post(f'/api/uploads/{uid}/unarchive').status_code,200)
+        self.assertEqual(self.client.get('/api/report?start=2026-09-21').json['totals']['total'],123)
+        row=self.client.get('/api/uploads').json['rows'][0]
+        self.assertEqual((row['changed_rows'],row['total_rows'],row['visible_rows']),(1,1,1))
+        self.assertEqual((row['start'],row['end'],row['channel_count']),('2026-09-21','2026-09-21',1))
+
+    def test_deleting_newer_file_never_reveals_archived_older_data(self):
+        self.login()
+        first=self.preview().json['id']
+        self.post(f'/api/uploads/{first}/commit')
+        second=self.preview(csv_file(revenue='2.50',total='2.50')).json['id']
+        self.post(f'/api/uploads/{second}/commit',{'replace':True})
+        self.post(f'/api/uploads/{first}/archive',{'archived':True})
+        self.assertEqual(self.client.get('/api/report?start=2026-09-21').json['totals']['total'],250)
+        self.assertEqual(self.post(f'/api/uploads/{second}/delete').status_code,200)
+        self.assertEqual(self.client.get('/api/report?start=2026-09-21').json['rows'],[])
+        self.assertEqual(self.post(f'/api/uploads/{first}/unarchive').status_code,200)
+        self.assertEqual(self.client.get('/api/report?start=2026-09-21').json['totals']['total'],123)
+
+    def test_legacy_unpublished_file_can_be_unarchived_without_overwriting_newer_data(self):
+        self.login()
+        first=self.preview().json['id']
+        self.post(f'/api/uploads/{first}/commit')
+        self.post(f'/api/uploads/{first}/restore')
+        self.assertEqual(self.post(f'/api/uploads/{first}/unarchive').status_code,200)
+        self.assertEqual(self.client.get('/api/report?start=2026-09-21').json['totals']['total'],123)
+        self.post(f'/api/uploads/{first}/restore')
+        second=self.preview(csv_file(revenue='2.50',total='2.50')).json['id']
+        self.post(f'/api/uploads/{second}/commit')
+        self.assertEqual(self.post(f'/api/uploads/{first}/unarchive').status_code,400)
+        self.assertEqual(self.client.get('/api/report?start=2026-09-21').json['totals']['total'],250)
+
+    def test_delete_file_access_failure_rolls_back_data_and_audit(self):
+        self.login()
+        uid=self.preview().json['id']
+        self.post(f'/api/uploads/{uid}/commit')
+        count=self.client.get('/api/admin/audit').json['count']
+        with patch.object(Path,'unlink',side_effect=PermissionError('File is locked')):
+            self.assertEqual(self.post(f'/api/uploads/{uid}/delete').status_code,400)
+        self.assertEqual(self.client.get('/api/report?start=2026-09-21').json['totals']['total'],123)
+        self.assertEqual(self.client.get('/api/admin/audit').json['count'],count)
+        self.assertTrue(next((self.path/'uploads').glob(f'{uid}_*')).exists())
+
+    def test_unknown_api_returns_json_instead_of_html(self):
+        response=self.client.get('/api/missing-endpoint')
+        self.assertEqual(response.status_code,404)
+        self.assertIsNotNone(response.json)
+        self.assertIn('error',response.json)
+
+    def test_existing_upload_table_migrates_without_losing_history(self):
+        legacy=self.path/'legacy'
+        legacy.mkdir()
+        with closing(sqlite3.connect(legacy/'revenuelive.db')) as db, db:
+            db.execute('CREATE TABLE uploads(id TEXT PRIMARY KEY,user_id INTEGER,filename TEXT,digest TEXT,created TEXT,state TEXT,rows_json TEXT,preview_json TEXT)')
+            db.execute("INSERT INTO uploads VALUES ('old',1,'old.csv','hash','2026-09-01','restored','[]','[]')")
+        create_app(legacy)
+        with closing(sqlite3.connect(legacy/'revenuelive.db')) as db:
+            self.assertEqual(db.execute("SELECT archived,file_deleted FROM uploads WHERE id='old'").fetchone(),(0,0))
+
+    def test_published_file_cannot_be_deleted_and_unchanged_rows_not_rewritten(self):
+        self.login()
+        content=csv_file()+b'2026-09-20,Alpha,1,2,1.00,0,1.00\n'
+        preview=self.preview(content).json
+        self.assertEqual((preview['unchanged'],preview['duplicates']),(1,0))
+        uid=preview['id']
+        self.assertEqual(self.post(f'/api/uploads/{uid}/commit').status_code,200)
+        row=self.client.get('/api/uploads').json['rows'][0]
+        self.assertEqual((row['changed_rows'],row['live_rows']),(1,1))
+        self.assertEqual(self.post(f'/api/uploads/{uid}/archive',{'archived':True}).status_code,200)
+        self.assertEqual(self.post(f'/api/uploads/{uid}/delete-file').status_code,400)
+        response=self.client.get(f'/api/uploads/{uid}/file')
+        self.assertEqual(response.status_code,200)
+        response.close()
+        self.assertEqual(self.post(f'/api/uploads/{uid}/restore').status_code,200)
+        self.assertEqual(self.post(f'/api/uploads/{uid}/delete-file').status_code,200)
+        rows=self.client.get('/api/report?start=2026-09-20&end=2026-09-20').json['rows']
+        self.assertEqual(next(r for r in rows if r['channel']=='Alpha')['total'],100)
 
     def test_stale_preview(self):
         self.login()
@@ -313,6 +525,10 @@ class RevenueTest(unittest.TestCase):
         self.assertEqual(outsider.post('/api/account/complete',json={'token':token,'password':'new-guest-password'}).status_code,200)
         self.assertEqual(guest.get('/api/me').status_code,401)
         self.assertEqual(outsider.post('/api/account/request',json={'email':'missing@gmail.com'}).status_code,429)
+        events=self.client.get('/api/admin/audit').json['events']
+        self.assertEqual(len([event for event in events if event['action']=='password_reset_completed' and event['actor']=='guest@gmail.com']),2)
+        saved=next(event for event in events if event['action']=='user_saved')
+        self.assertEqual(json.loads(saved['detail'])['channels'],[1])
 
     def test_invitation_requires_delivery_and_origin(self):
         self.login()

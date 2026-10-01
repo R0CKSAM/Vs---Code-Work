@@ -56,23 +56,45 @@ blank metrics are rejected. Negative adjustments are not supported in this versi
 
 Revenue is stored as integer paise. Date/channel is unique. Preview is required;
 replacement requires confirmation. A change after preview aborts publication.
-Original files are retained under `data/uploads`; SQLite WAL transactions provide
-all-or-nothing publication. Admins can roll back an upload if no newer upload has
-changed its rows. Backups include the database and source uploads; run regularly.
+Identical pending data (even in a different file format) and uploads that make no
+change to live data are rejected. Unchanged rows in a mixed file are not republished.
+Uploaders can publish their own validated files; admins can accept any pending
+file. Rejecting a pending file keeps its data off the dashboard. Admins can
+unpublish an accepted file at any time. If a newer accepted file replaced its
+rows, the newer values remain; when that newer file is unpublished, the last
+still-accepted values are restored. Rejected and unpublished files cannot be
+accepted again; re-upload the corrected file. Admins can hide or restore an
+entire reporting date across channels without deleting its source records.
+Hidden dates are excluded from reports, charts, exports, and available-date
+filters. Archiving a legacy history entry only hides it from the default list.
+Admins can delete the physical source of a rejected or unpublished file, but
+the upload metadata, row snapshots, backups, and activity history remain.
+Original files otherwise remain under `data/uploads`; SQLite WAL transactions
+provide all-or-nothing publication.
+
+State-changing actions and successful sign-ins/outs are recorded with actor,
+timestamp and a SHA-256 hash chain. The app checks the chain on startup, blocks
+normal SQL UPDATE/DELETE on audit rows, and exposes an admin download of the
+full chain. This is **tamper-evident, not immutable**: a host/database administrator
+can rewrite the database and recompute hashes. Export the head hash and audit
+file regularly to an independently controlled, append-only off-host store if
+you need evidence against host-level tampering. Legacy audit rows are chained
+at first upgrade using the usernames then present in the database.
+
+Backups include the database and retained source uploads; run regularly.
 To restore a backup, stop RevenueLive and replace its database and uploads directory
 from a backup, preserving a copy of the current data first. Never copy only a live
 SQLite database file; use the Backup action.
 
-For the production team, run `build_source_handoff.ps1` and provide only its
-timestamped output folder. Never hand over this entire working folder: it contains
-data, logs, build caches, and archived material. Follow `SOURCE-HANDOFF.md`.
-Transfer production data separately through an approved encrypted channel.
-Do not run two hosts against the same SQLite file on a network share.
-
-For a source-free server handoff, use `build_handoff.ps1` and follow
-`PRODUCTION-HANDOFF.md`. The compiled release does not include data or source;
-browser JavaScript remains visible to browsers. The production data and backup
-volumes still need host-managed encryption and access controls.
+Production source is delivered by a reviewed Git commit, not a ZIP. Follow
+`PRODUCTION-HANDOFF.md` for repository boundaries, protected data, backups,
+and safe updates. The current shared monorepo includes unrelated projects and
+tracked archived material; prefer a dedicated private RevenueLive repository.
+Transfer existing production data separately through an approved encrypted
+channel. Do not run two hosts against the same SQLite file on a network share.
+If the hosting team requires Microsoft SQL Server, PostgreSQL, or MySQL,
+confirm that engine first: this version still uses SQLite and needs a database
+adapter and migration before connecting to a server database.
 
 ## Analytics
 

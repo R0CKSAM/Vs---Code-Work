@@ -1,6 +1,7 @@
 'use strict';
 const themeStyle=document.createElement('link');themeStyle.rel='stylesheet';themeStyle.href='/static/dark.css';document.head.append(themeStyle);
 const lightStyle=document.createElement('link');lightStyle.rel='stylesheet';lightStyle.href='/static/light.css';document.head.append(lightStyle);
+const uploadsStyle=document.createElement('link');uploadsStyle.rel='stylesheet';uploadsStyle.href='/static/uploads.css';document.head.append(uploadsStyle);
 const $=id=>document.getElementById(id);
 const rankingScroll=document.createElement('div');rankingScroll.className='ranking-scroll';
 $('rankFrame').before(rankingScroll);rankingScroll.append($('rankFrame'));
@@ -13,7 +14,7 @@ $('revenueHeader').append($('export'));
 function positionChannelMenu(){
   if(!$('channelPicker').open)return;
   const rect=$('channelPicker').getBoundingClientRect(),menu=$('channelPicker').querySelector('.channel-menu');
-  const width=Math.min(rect.width,innerWidth-24);
+  const width=Math.min(Math.max(rect.width,312),innerWidth-24);
   menu.style.width=width+'px';menu.style.left=Math.max(12,Math.min(rect.left,innerWidth-width-12))+'px';
   menu.style.top=Math.min(rect.bottom+5,innerHeight-100)+'px';menu.style.maxHeight=Math.max(80,innerHeight-rect.bottom-17)+'px';
 }
@@ -89,6 +90,13 @@ const calendarScript=document.createElement('script');calendarScript.src='/stati
 rangePicker.addEventListener('toggle',()=>{if(rangePicker.open){$('channelPicker').open=false;syncCalendar();}});
 rangePicker.append(rangePanel);$('filters').prepend(rangePicker);$('revenueHeader').append($('export'));
 function icon(name,className=''){const tile=document.createElement('span');tile.className=className;tile.setAttribute('aria-hidden','true');const glyph=document.createElement('i');glyph.dataset.lucide=name;tile.append(glyph);return tile;}
+const drawerHeading=document.createElement('div');drawerHeading.className='drawer-heading';
+const drawerTitle=document.createElement('strong');drawerTitle.textContent='Menu';
+closeMenu.replaceChildren(icon('x'));closeMenu.title='Close menu';closeMenu.setAttribute('aria-label','Close menu');
+drawerHeading.append(drawerTitle,closeMenu);menuPanel.prepend(drawerHeading);
+for(const [view,glyph] of Object.entries({dashboard:'layout-dashboard',insightsView:'sparkles',tabular:'table',diyGraphs:'chart-no-axes-combined',uploads:'upload',admin:'users-round'})){
+  menuPanel.querySelector(`[data-view="${view}"]`)?.prepend(icon(glyph,'menu-icon'));
+}
 menuTitle.prepend(icon('chart-no-axes-combined','brand-icon'));
 const headerArtwork=document.createElement('span');headerArtwork.className='header-wave-art';headerArtwork.setAttribute('aria-hidden','true');document.querySelector('#shell>header').prepend(headerArtwork);
 rangeTitle.prepend(icon('calendar-days'));
@@ -153,7 +161,14 @@ async function api(path,options={}){
   const headers={'X-CSRF-Token':csrf,...options.headers};
   if(options.body && !(options.body instanceof FormData)){headers['Content-Type']='application/json';options.body=JSON.stringify(options.body);}
   const response=await fetch(path,{...options,headers});
-  const data=await response.json();
+  let data;
+  try{
+    if(!response.headers.get('Content-Type')?.includes('application/json'))throw new Error();
+    data=await response.json();
+  }catch{
+    const error=new Error(response.status===404?'The application server needs an update. Restart RevenueLive and refresh this page.':'The server could not complete this request. Refresh the page or check the application server.');
+    error.status=response.status;throw error;
+  }
   if(epoch!==accessEpoch){const error=new Error('Access changed; stale response discarded.');error.stale=true;throw error;}
   if(!response.ok){if(response.status===401&&me)signOutView('Session ended. Sign in again.');const error=new Error(data.error||'Request failed.');error.status=response.status;throw error;}
   return data;
@@ -167,7 +182,11 @@ function clearSensitive(){
   calendarDates=[];if(calendar){calendar.clear(false);calendar.set('enable',[]);}revenueLabel.textContent='Total Revenue';
   accessEpoch++;requestNumber++;reportRows=[];users=[];adminChannels=[];pending=null;appliedQuery='';latestDay='';pageIndex=0;
   for(const dialog of document.querySelectorAll('dialog[open]'))dialog.close();
-  for(const id of ['records','history','users','channelDirectory','previewRows','assignments','channelOptions'])$(id).replaceChildren();
+  for(const id of ['records','history','users','channelDirectory','previewRows','assignments','channelOptions','reportingDates','auditEvents'])$(id).replaceChildren();
+  uploadRows=[];reportingDateRows=[];pendingDelete=null;
+  $('uploadLibraryError').hidden=true;$('uploadLibraryCount').textContent='';$('auditStatus').textContent='';
+  for(const id of ['uploadAllCount','uploadLiveCount','uploadArchivedCount'])$(id).textContent='0';
+  for(const id of ['uploadDatesPanel','uploadAuditPanel'])$(id).open=false;
   for(const id of ['channelCount','total','ad','other','views','impressions','rowCount','period','pageInfo','appliedScope'])$(id).textContent='-';
   $('preview').hidden=true;$('export').disabled=true;$('userForm').reset();$('passwordForm').reset();$('uploadForm').reset();
   if(window.RevenueCharts)RevenueCharts.render([]);
@@ -282,7 +301,9 @@ async function loadReport(){
   const appliedIds=new Set(new URLSearchParams(requested).getAll('channel'));const appliedChannels=me.channels.filter(channel=>appliedIds.has(String(channel.id)));
   revenueLabel.textContent='TOTAL REVENUE ('+(appliedChannels.length===1?appliedChannels[0].name:appliedChannels.length+' Channels')+')';
   syncCalendar();
-  rangeText.textContent=$('start').value&&$('end').value?new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date($('start').value+'T00:00:00Z'))+' - '+new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date($('end').value+'T00:00:00Z')):'Latest week';
+  const labelDate=value=>new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(value+'T00:00:00Z'));
+  rangeText.textContent=$('start').value&&$('end').value?labelDate($('start').value)+($('start').value===$('end').value?'':' - '+labelDate($('end').value)):'Latest week';
+  rangeTitle.title=rangeText.textContent;
   $('views').textContent=number(data.totals.views);$('impressions').textContent=number(data.totals.impressions);
   $('channelCount').textContent=number(new Set(data.rows.map(row=>row.channel)).size);
   requestAnimationFrame(fitMetricValues);
@@ -339,26 +360,122 @@ for(const button of document.querySelectorAll('[data-view]'))button.addEventList
   try{document.querySelectorAll('.view').forEach(v=>v.hidden=v.id!==button.dataset.view);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b===button));$('notice').hidden=true;if(button.dataset.view==='uploads')await history();if(button.dataset.view==='admin')await loadUsers();if(['dashboard','insightsView'].includes(button.dataset.view))await refresh();if(button.dataset.view==='diyGraphs'){await window.DIYGraphs?.load();}}catch(e){notify(e.message);}
 });
 bind('uploadForm','submit',async()=>{
+  if(pending)throw new Error('Publish or cancel the current preview first.');
   pending=await api('/api/uploads/preview',{method:'POST',body:new FormData($('uploadForm'))});
   $('preview').hidden=false;$('replace').checked=false;$('replaceLabel').hidden=pending.duplicates===0;
-  $('previewCount').textContent=number(pending.rows.length)+' rows | '+pending.duplicates+' replacements';
+  $('previewCount').textContent=number(pending.rows.length)+' rows | '+pending.duplicates+' replacements'+(pending.unchanged?' | '+pending.unchanged+' unchanged':'');
   $('previewRows').innerHTML=pending.rows.slice(0,200).map(r=>`<tr><td>${esc(r.day)}</td><td>${esc(r.channel)}</td><td class="number">${number(r.views)}</td><td class="number">${money(r.total)}</td></tr>`).join('');
   if(pending.rows.length>200)notify('Preview shows the first 200 rows. All '+pending.rows.length+' rows were validated.');
+  await history();
 });
-bind('cancelUpload','click',async()=>{pending=null;$('preview').hidden=true;$('uploadForm').reset();});
+bind('cancelUpload','click',async()=>{if(pending)await api('/api/uploads/'+pending.id+'/reject',{method:'POST'});pending=null;$('preview').hidden=true;$('uploadForm').reset();await history();});
 bind('publish','click',async()=>{
   if(!pending)return;if(pending.duplicates&&!$('replace').checked)throw new Error('Confirm replacement before publishing.');
   if(!confirm('Publish '+pending.rows.length+' revenue records'+(pending.duplicates?' and replace '+pending.duplicates+' existing records':'')+'?'))return;
   await api('/api/uploads/'+pending.id+'/commit',{method:'POST',body:{replace:$('replace').checked}});
   pending=null;$('preview').hidden=true;$('uploadForm').reset();notify('Data published.');await history();
 });
-const history=async()=>{const data=await api('/api/uploads');$('history').innerHTML=data.rows.map(r=>`<tr><td>${esc(new Date(r.created).toLocaleString('en-IN'))}</td><td>${esc(r.filename)}</td><td>${esc(r.username)}</td><td><span class="badge">${esc(r.state)}</span></td><td>${me.user.role==='admin'&&r.state==='committed'?`<button data-restore="${esc(r.id)}">Roll back</button>`:''}</td></tr>`).join('');};
-$('history').addEventListener('click',async e=>{const button=e.target.closest('[data-restore]');if(!button||!confirm('Restore the previous data for this upload?'))return;button.disabled=true;try{await api('/api/uploads/'+button.dataset.restore+'/restore',{method:'POST'});await history();notify('Previous data restored.');}catch(error){notify(error.message);}finally{button.disabled=false;}});
+let uploadRows=[],uploadFilter='all',pendingDelete=null;
+const isUploadArchived=row=>!!row.archived||row.state!=='committed';
+const uploadNumber=value=>Number.isFinite(value)?number(value):'-';
+const uploadDate=day=>day?new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(day+'T00:00:00Z')):'-';
+const auditDetail=event=>{
+  try{
+    const detail=JSON.parse(event.detail);
+    if(detail && typeof detail==='object' && detail.username)return `${detail.username} | ${detail.role} | ${detail.active?'active':'disabled'}`;
+    if(!detail || typeof detail!=='object' || !detail.filename)return event.detail;
+    const count=Number.isInteger(detail.rows)?`${number(detail.rows)} rows`:Number.isInteger(detail.changed)?`${number(detail.changed)} changed rows`:Number.isInteger(detail.affected)?`${number(detail.affected)} live rows affected`:'';
+    return [detail.filename,count,`#${String(detail.id||'').slice(0,8)}`].filter(Boolean).join(' | ');
+  }catch{return event.detail;}
+};
+let reportingDateRows=[];
+const renderReportingDates=()=>{
+  const search=$('dateSearch').value;
+  const rows=search?reportingDateRows.filter(row=>row.day===search):$('showAllDates').checked?reportingDateRows:reportingDateRows.slice(0,30);
+  $('reportingDates').innerHTML=rows.map(row=>`<tr><td data-label="Date"><strong>${esc(row.day)}</strong></td><td data-label="Channels">${number(row.channels)}</td><td data-label="Status"><span class="status-pill status-${row.hidden?'restored':'committed'}">${row.hidden?'Hidden':'Live'}</span></td><td data-label="Action"><button type="button" data-date="${esc(row.day)}" data-hidden="${row.hidden?'false':'true'}">${row.hidden?'Restore':'Hide'}</button></td></tr>`).join('')||'<tr><td colspan="4">No reporting dates found.</td></tr>';
+};
+const loadUploadAdmin=async()=>{
+  const tasks=[];
+  if($('uploadDatesPanel').open)tasks.push((async()=>{
+    try{const dates=await api('/api/admin/dates');reportingDateRows=dates.rows;renderReportingDates();}
+    catch(error){if(!error.stale)$('reportingDates').innerHTML=`<tr><td colspan="4">${esc(error.message)}</td></tr>`;}
+  })());
+  if($('uploadAuditPanel').open)tasks.push((async()=>{
+    try{
+      const audit=await api('/api/admin/audit');
+      $('auditStatus').classList.toggle('audit-invalid',!audit.valid);
+      $('auditStatus').textContent=(audit.valid?'History verified':'History verification failed')+' | '+number(audit.count)+' events';
+      $('auditStatus').title='Audit head: '+audit.head;
+      $('auditEvents').innerHTML=audit.events.map(event=>`<tr><td data-label="When">${esc(new Date(event.created).toLocaleString('en-IN'))}</td><td data-label="User"><strong>${esc(event.actor)}</strong></td><td data-label="Action">${esc(event.action.replaceAll('_',' '))}</td><td data-label="Detail" title="${esc(event.detail)}">${esc(auditDetail(event))}</td></tr>`).join('')||'<tr><td colspan="4">No activity yet.</td></tr>';
+    }catch(error){if(!error.stale){$('auditStatus').textContent=error.message;$('auditStatus').classList.add('audit-invalid');$('auditEvents').replaceChildren();}}
+  })());
+  await Promise.allSettled(tasks);
+};
+const renderUploadRows=()=>{
+  const admin=me?.user.role==='admin',search=$('uploadSearch').value.trim().toLowerCase();
+  const counts={all:uploadRows.length,live:uploadRows.filter(row=>!isUploadArchived(row)).length,archived:uploadRows.filter(isUploadArchived).length};
+  for(const [key,id] of Object.entries({all:'uploadAllCount',live:'uploadLiveCount',archived:'uploadArchivedCount'}))$(id).textContent=number(counts[key]);
+  document.querySelectorAll('[data-upload-filter]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.uploadFilter===uploadFilter)));
+  const rows=uploadRows.filter(row=>(uploadFilter==='all'||(uploadFilter==='archived')===isUploadArchived(row))&&(!search||`${row.filename} ${row.username}`.toLowerCase().includes(search)));
+  $('history').innerHTML=rows.map(row=>{
+    const archived=isUploadArchived(row),status=archived?'Archived':row.live_rows===0?'Replaced':row.visible_rows===0?'Hidden':'Live';
+    const note=archived?'Not shown on dashboard':row.live_rows===0?'A newer file contains these records':row.visible_rows===0?'Date or channel is hidden':`${uploadNumber(row.visible_rows)} records on dashboard`;
+    const action=archived?'unarchive':'archive',label=archived?'Unarchive':'Archive';
+    const buttons=admin||row.state==='pending'?`<button type="button" class="upload-visibility" data-upload-action="${action}" data-id="${esc(row.id)}" title="${archived?'Show this file data on the dashboard':'Hide this file data from the dashboard'}"><i data-lucide="${archived?'archive-restore':'archive'}" aria-hidden="true"></i>${label}</button>`:'';
+    const deletion=admin?`<button type="button" class="upload-danger" data-upload-action="delete" data-id="${esc(row.id)}" title="Delete uploaded file"><i data-lucide="trash-2" aria-hidden="true"></i>Delete</button>`:'';
+    return `<tr><td data-label="File"><div class="upload-file-cell"><span class="upload-file-icon" aria-hidden="true"><i data-lucide="file-spreadsheet"></i></span><div><a class="upload-file-name" href="/api/uploads/${esc(row.id)}/file" title="Download ${esc(row.filename)}">${esc(row.filename)}</a><small>${esc(row.username)} &middot; ${esc(new Date(row.created).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}))}</small></div></div></td><td data-label="Period"><div><strong>${uploadDate(row.start)}${row.end&&row.end!==row.start?` &ndash; ${uploadDate(row.end)}`:''}</strong><small>${uploadNumber(row.channel_count)} channels</small></div></td><td data-label="Records" class="number"><strong>${uploadNumber(row.total_rows)}</strong></td><td data-label="Dashboard"><div><span class="status-pill status-${archived?'archived':status==='Live'?'committed':'unknown'}">${status}</span><small>${note}</small></div></td><td data-label="Actions"><div class="upload-actions">${buttons}${deletion}</div></td></tr>`;
+  }).join('')||`<tr><td colspan="5" class="upload-empty"><i data-lucide="folder-open" aria-hidden="true"></i><strong>${search?'No matching files':'No '+(uploadFilter==='all'?'uploaded':uploadFilter)+' files'}</strong></td></tr>`;
+  $('uploadLibraryCount').textContent=number(rows.length)+' '+(rows.length===1?'file':'files')+(search?' matching search':'');
+  window.lucide?.createIcons();
+};
+const history=async()=>{
+  $('uploadAdminControls').hidden=me.user.role!=='admin';$('uploadLibraryError').hidden=true;
+  try{
+    const data=await api('/api/uploads?show_archived=1');
+    if(data.uploads_version!==2)throw new Error('Uploads needs the updated application server. Restart RevenueLive and refresh this page.');
+    uploadRows=data.rows.filter(row=>!row.file_deleted);renderUploadRows();
+    if(me.user.role==='admin')await loadUploadAdmin();
+  }catch(error){if(!error.stale&&me){uploadRows=[];renderUploadRows();$('uploadLibraryError').textContent=error.message;$('uploadLibraryError').hidden=false;}}
+};
+$('uploadSearch').addEventListener('input',renderUploadRows);
+document.querySelectorAll('[data-upload-filter]').forEach(button=>button.addEventListener('click',()=>{uploadFilter=button.dataset.uploadFilter;renderUploadRows();}));
+for(const id of ['uploadDatesPanel','uploadAuditPanel'])$(id).addEventListener('toggle',()=>{if($(id).open&&me?.user.role==='admin')void loadUploadAdmin();});
+$('dateSearch').addEventListener('change',renderReportingDates);
+$('showAllDates').addEventListener('change',renderReportingDates);
+$('reportingDates').addEventListener('click',async e=>{
+  const button=e.target.closest('[data-date]');if(!button)return;
+  const hidden=button.dataset.hidden==='true',day=button.dataset.date;
+  if(!confirm((hidden?'Hide':'Restore')+' '+day+' for all dashboard users and channels?'))return;
+  button.disabled=true;
+  try{await api('/api/admin/dates/'+day+'/visibility',{method:'POST',body:{hidden}});await history();notify(hidden?'Date hidden from reports.':'Date restored in reports.');}
+  catch(error){notify(error.message);}finally{button.disabled=false;}
+});
+$('history').addEventListener('click',async e=>{
+  const button=e.target.closest('[data-upload-action]');if(!button)return;
+  const action=button.dataset.uploadAction,id=button.dataset.id,row=uploadRows.find(item=>item.id===id);if(!row)return;
+  if(action==='delete'){pendingDelete=id;$('uploadDeleteName').textContent=row.filename;$('uploadDeleteDialog').querySelector('.form-error').textContent='';$('uploadDeleteDialog').showModal();return;}
+  if(action==='unarchive'&&['pending','rejected'].includes(row.state)&&row.replacements>0&&!confirm(`Publish ${row.filename} and replace ${row.replacements} existing date/channel records?`))return;
+  button.disabled=true;
+  try{
+    const endpoint=me.user.role!=='admin'?'commit':action;
+    await api('/api/uploads/'+id+'/'+endpoint,{method:'POST',body:action==='archive'?{archived:true}:{replace:row.replacements>0}});
+    if(pending?.id===id){pending=null;$('preview').hidden=true;$('uploadForm').reset();}
+    await history();notify(action==='archive'?row.filename+' archived. Its data is hidden.':row.filename+' unarchived.');
+  }
+  catch(error){notify(error.message);}finally{button.disabled=false;}
+});
+bind('uploadDeleteCancel','click',async()=>{$('uploadDeleteDialog').close();pendingDelete=null;});
+bind('uploadDeleteForm','submit',async()=>{
+  if(!pendingDelete)return;
+  const id=pendingDelete;await api('/api/uploads/'+id+'/delete',{method:'POST'});
+  if(pending?.id===id){pending=null;$('preview').hidden=true;$('uploadForm').reset();}
+  $('uploadDeleteDialog').close();pendingDelete=null;await history();notify('File deleted.');
+});
 async function loadUsers(){
   const data=await api('/api/admin/users');users=data.users;adminChannels=data.channels;
   const active=new Set(adminChannels.map(c=>c.id));
   const scope=u=>{const count=u.channels.filter(id=>active.has(id)).length;return u.role==='admin'?'All channels':count===0?'No channels':count===active.size?'All assigned channels ('+count+')':count+' of '+active.size+' channels';};
-  $('users').innerHTML=users.map(u=>`<tr><td>${esc(u.username)}</td><td>${u.super_admin?'Super Admin':esc(u.role)}</td><td>${scope(u)}</td><td>${!u.active?'Disabled':u.must_change?'Password setup pending':'Enabled'}</td><td>${u.super_admin||(!me.user.super_admin&&u.role==='admin')?'Protected':`<button data-user="${u.id}">Edit</button>`}</td></tr>`).join('');
+  $('users').innerHTML=users.map(u=>`<tr><td><strong>${esc(u.username)}</strong></td><td><span class="role-pill role-${u.super_admin?'super':['admin','uploader','viewer'].includes(u.role)?u.role:'unknown'}">${u.super_admin?'Super Admin':esc(u.role)}</span></td><td>${scope(u)}</td><td><span class="status-pill status-${!u.active?'disabled':u.must_change?'pending':'enabled'}">${!u.active?'Disabled':u.must_change?'Password setup pending':'Enabled'}</span></td><td>${u.super_admin||(!me.user.super_admin&&u.role==='admin')?'Protected':`<button data-user="${u.id}">Edit</button>`}</td></tr>`).join('');
   $('userForm').elements.role.querySelector('option[value="admin"]').disabled=!me.user.super_admin;
   $('channelDirectory').innerHTML=[...data.channels.map(c=>({...c,archived:false})),...(data.archived||[]).map(c=>({...c,archived:true}))].map(c=>`<div><span>${esc(c.name)}${c.archived?' (archived)':''}</span> <button type="button" data-channel="${c.id}" data-archived="${!c.archived}">${c.archived?'Restore':'Remove'}</button></div>`).join('');
 }
