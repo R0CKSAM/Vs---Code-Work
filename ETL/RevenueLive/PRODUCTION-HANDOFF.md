@@ -27,7 +27,7 @@ repository or host. Limit repository and server access accordingly.
    `SELECT`, `INSERT`, `UPDATE`, and `DELETE` access.
 2. Create a Windows service account without administrator rights. Give it
    access to an encrypted data directory outside the Git checkout, for example
-   `D:\RevenueLiveData`, a private upload directory, and a separate encrypted
+   `D:\RevenueLiveData`, and a separate encrypted
    backup destination.
 3. Check out the approved private repository and a reviewed release commit.
    From the application directory, run
@@ -42,8 +42,8 @@ repository or host. Limit repository and server access accordingly.
    run `.\.venv\Scripts\python.exe deploy.py init-admin` and enter the password
    at its hidden prompt. To migrate an existing SQLite installation, back it up,
    leave the target database empty except for the migration schema, then run:
-   `.\.venv\Scripts\python.exe deploy.py import-sqlite --source <db-file>
-   --source-uploads <uploads-directory>`.
+   `.\.venv\Scripts\python.exe deploy.py import-sqlite --source <db-file>`.
+   Upload rows and filenames migrate from SQL; original files are not copied.
 6. Put a valid HTTPS reverse proxy in front of `127.0.0.1:8820`. Expose only
    the proxy. Preserve the public Host header and overwrite untrusted
    `X-Forwarded-For` with the real client IP.
@@ -92,7 +92,8 @@ logs, and the Python environment out of Git.
    Run `.\.venv\Scripts\python.exe -m pip install -r requirements.txt`, then
    `deploy.py upgrade`. Restart with the Start command above. Database migrations
    are forward-only; restoring an older release requires its matching database
-   dump and upload directory.
+   dump (and legacy upload directory only when reverting to an older version
+   that still requires original files).
 5. Check `/health`, sign-in, report totals, export, upload controls, audit
    status, and server logs before reopening traffic. Roll back code to the
    recorded commit only after assessing schema changes; restore the matching

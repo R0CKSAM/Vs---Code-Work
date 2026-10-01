@@ -10,14 +10,14 @@ import json
 import os
 from pathlib import Path
 import secrets
-import shutil
+import logging
 import sqlite3
 import threading
 import time
 from contextlib import closing
 from decimal import Decimal, InvalidOperation
 
-from flask import Flask, g, jsonify, request, send_from_directory, redirect
+from flask import Flask, Request, g, jsonify, request, send_from_directory, redirect
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import HTTPException
@@ -46,6 +46,12 @@ def verify_audit_chain(connection):
 
 class InvalidData(ValueError):
     pass
+
+
+class MemoryUploadRequest(Request):
+    def _get_file_stream(self, total_content_length, content_type, filename=None, content_length=None):
+        # Request size is bounded by MAX_CONTENT_LENGTH; avoid multipart disk spooling.
+        return io.BytesIO()
 
 
 def parse_upload(content, suffix):
@@ -125,10 +131,10 @@ def create_app(data_dir=None):
     settings = Settings.from_env(data_dir)
     public_origin = settings.app_url
     app = Flask(__name__, static_folder='static')
+    app.request_class = MemoryUploadRequest
     data = settings.data_dir
     data.mkdir(parents=True, exist_ok=True)
     uploads_dir = settings.upload_dir
-    uploads_dir.mkdir(parents=True, exist_ok=True)
     app.config.update(DATA_DIR=data, UPLOAD_DIR=uploads_dir, SETTINGS=settings,
                       MAX_CONTENT_LENGTH=10*1024*1024, TRUSTED_HOSTS=list(settings.hosts) or None)
     cookie_name = settings.cookie_name
@@ -506,15 +512,12 @@ def create_app(data_dir=None):
             raise InvalidData('All rows already match published data. No changes to publish.')
         uid=secrets.token_hex(16)
         filename=secure_filename(incoming.filename) or 'upload'
-        source=uploads_dir/f'{uid}_{filename}'
         try:
-            source.write_bytes(content)
             db().execute('INSERT INTO uploads(id,user_id,filename,digest,created,state,rows_json,preview_json) VALUES (?,?,?,?,?,?,?,?)',(uid,g.user['id'],filename,digest,dt.datetime.now(dt.timezone.utc).isoformat(),'pending',json.dumps(rows),json.dumps(originals)))
             log('upload_submitted',json.dumps(dict(id=uid,filename=filename,sha256=digest,rows=len(rows)),separators=(',',':')))
             db().commit()
         except Exception:
             db().rollback()
-            source.unlink(missing_ok=True)
             raise
         return jsonify(id=uid,rows=rows,duplicates=sum(old is not None and row_values(old)!=row_values(row) for row,old in zip(rows,originals)),unchanged=unchanged)
 
@@ -587,9 +590,20 @@ def create_app(data_dir=None):
         upload=db().execute('SELECT * FROM uploads WHERE id=?',(uid,)).fetchone()
         if not upload or (g.user['role']!='admin' and upload['user_id']!=g.user['id']):
             return jsonify(error='Upload not found.'),404
-        if upload['file_deleted'] or secure_filename(upload['filename'])!=upload['filename']:
-            return jsonify(error='Source file is no longer available.'),404
-        return send_from_directory(uploads_dir,f"{uid}_{upload['filename']}",as_attachment=True,download_name=upload['filename'])
+        if upload['file_deleted'] or upload['state']=='deleted':
+            return jsonify(error='Upload data is no longer available for download.'),404
+        buffer=io.StringIO();writer=csv.writer(buffer);writer.writerow(HEADERS)
+        for row in json.loads(upload['rows_json']):
+            channel=row['channel']
+            if channel.startswith(('=','+','-','@')):
+                channel="'"+channel
+            writer.writerow([row['day'],channel,row['views'],row['impressions'],
+                             *[format(Decimal(row[key])/100,'.2f') for key in ('ad','other','total')]])
+        filename=Path(secure_filename(upload['filename']) or 'upload').stem+'.csv'
+        response=app.response_class('\ufeff'+buffer.getvalue(),mimetype='text/csv')
+        response.headers['Content-Disposition']=f'attachment; filename="{filename}"'
+        response.headers['Cache-Control']='no-store'
+        return response
 
     @app.post('/api/uploads/<uid>/reject')
     @require('admin','uploader')
@@ -657,25 +671,14 @@ def create_app(data_dir=None):
             raise InvalidData('File not found.')
         if upload['state']=='deleted':
             return jsonify(ok=True)
-        if secure_filename(upload['filename'])!=upload['filename']:
-            raise InvalidData('Source filename is invalid.')
-        source=uploads_dir/f"{uid}_{upload['filename']}"
-        content=None
         try:
             if upload['state']=='committed':
                 unpublish_upload(uid)
             log('upload_deleted',json.dumps(dict(id=uid,filename=upload['filename']),separators=(',',':')))
-            if source.exists():
-                content=source.read_bytes()
-                source.unlink()
             db().execute("UPDATE uploads SET state='deleted',archived=1,file_deleted=1 WHERE id=?",(uid,))
             db().commit()
-        except Exception as error:
+        except Exception:
             db().rollback()
-            if content is not None and not source.exists():
-                source.write_bytes(content)
-            if isinstance(error,OSError):
-                raise InvalidData('The file could not be deleted. Check file access and try again.') from error
             raise
         return jsonify(ok=True)
 
@@ -688,10 +691,7 @@ def create_app(data_dir=None):
             raise InvalidData('Reject or unpublish the file before deleting its source. Live data cannot be deleted here.')
         if upload['file_deleted']:
             return jsonify(ok=True)
-        if secure_filename(upload['filename'])!=upload['filename']:
-            raise InvalidData('Source filename is invalid.')
         log('upload_source_deleted',json.dumps(dict(id=uid,filename=upload['filename']),separators=(',',':')))
-        (uploads_dir/f"{uid}_{upload['filename']}").unlink(missing_ok=True)
         db().execute('UPDATE uploads SET file_deleted=1 WHERE id=?',(uid,))
         db().commit();return jsonify(ok=True)
 
@@ -873,8 +873,7 @@ def backup_database(data, backup_root=None):
     target.mkdir(parents=True)
     with closing(sqlite3.connect(data / 'revenuelive.db')) as source, closing(sqlite3.connect(target / 'revenuelive.db')) as dest:
         source.backup(dest)
-    shutil.copytree(settings.upload_dir, target / 'uploads')
-    (target / 'BACKUP_COMPLETE').write_text('SQLite and uploads copied successfully.\n', encoding='ascii')
+    (target / 'BACKUP_COMPLETE').write_text('SQLite database copied successfully. Upload rows are stored in the database.\n', encoding='ascii')
     return target
 
 
@@ -887,6 +886,8 @@ if __name__=='__main__':
     args=parser.parse_args()
     settings = Settings.from_env()
     data = settings.data_dir
+    from runtime_logging import configure_logging
+    configure_logging(data)
     if args.backup:
         print('Backup:', backup_database(data), flush=True)
         raise SystemExit(0)
@@ -909,5 +910,5 @@ if __name__=='__main__':
         server.close()
         os._exit(0)
     threading.Thread(target=monitor,daemon=True).start()
-    print(f'RevenueLive: http://{args.host}:{args.port}',flush=True)
+    logging.getLogger(__name__).info('RevenueLive listening on %s:%s',args.host,args.port)
     server.run()

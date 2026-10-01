@@ -1,4 +1,4 @@
-"""Take a consistent database backup and preserve retained uploads."""
+"""Take an explicit database backup, including upload rows and audit history."""
 import datetime as dt
 import os
 from pathlib import Path
@@ -31,8 +31,7 @@ else:
         with (target/'database.sql').open('wb') as output:
             subprocess.run(command,stdout=output,stderr=subprocess.PIPE,env=environment,
                            check=True,timeout=1800)
-        shutil.copytree(settings.upload_dir,target/'uploads')
-        (target/'BACKUP_COMPLETE').write_text('Database dump and uploads copied successfully.\n',encoding='ascii')
+        (target/'BACKUP_COMPLETE').write_text('Database dump completed. Upload rows are included in the database.\n',encoding='ascii')
     except Exception:
         (target/'BACKUP_FAILED').write_text('Backup did not complete. Do not restore this folder.\n',encoding='ascii')
         raise

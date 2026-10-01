@@ -53,7 +53,7 @@ Without mail configuration invitations are rejected before creating an account. 
 
 This invitation implementation is not MFA. Authenticator enrollment/recovery and account expiry remain a separate rollout; do not advertise mandatory MFA until those are enabled and tested.
 
-For production source deployment, configure `DATA_DIR`, `UPLOAD_DIR`, `APP_URL`,
+For production source deployment, configure `DATA_DIR`, `APP_URL`,
 and database credentials in `.env`, then run `manage.ps1 -Action Start`. Put an approved
 HTTPS reverse proxy in front of the loopback backend. No automatic Internet
 exposure is configured. Sessions expire
@@ -73,16 +73,20 @@ Identical pending data (even in a different file format) and uploads that make n
 change to live data are rejected. Unchanged rows in a mixed file are not republished.
 Uploaders can publish their own validated files; admins can manage every file.
 Archive removes a file's owned data from dashboard queries while retaining its
-source, revisions, and audit history. Unarchive makes safe retained data visible
+database snapshot, revisions, and audit history. Unarchive makes safe retained data visible
 again; a conflicting newer publication must be reviewed instead of overwritten.
-Delete removes the retained source and that file's live ownership, restoring the
-last valid predecessor where applicable. Metadata and audit events remain.
+Delete removes that file's live ownership and download access, restoring the
+last valid predecessor where applicable. Database snapshots, metadata and audit events remain
+for revision history; Delete does not erase history or reclaim all database space.
 Admins can hide or restore an entire reporting date across channels without
 deleting its source records.
 Hidden dates are excluded from reports, charts, exports, and available-date
 filters. Archived files are clearly separated in the upload library.
-Original files remain under the configured `UPLOAD_DIR`; MySQL/MariaDB row locks
-and transactions provide all-or-nothing publication.
+Original CSV/Excel files are not retained. Filenames, hashes, validated rows,
+preview snapshots and history live in SQL. Downloads regenerate CSV from the
+upload's database snapshot, preserving values but not original Excel formatting.
+`UPLOAD_DIR` is a legacy compatibility setting and is no longer used to store files.
+MySQL/MariaDB row locks and transactions provide all-or-nothing publication.
 
 State-changing actions and successful sign-ins/outs are recorded with actor,
 timestamp and a SHA-256 hash chain. The app checks the chain on startup, blocks
@@ -93,10 +97,20 @@ file regularly to an independently controlled, append-only off-host store if
 you need evidence against host-level tampering. Legacy audit rows are chained
 at first upgrade using the usernames then present in the database.
 
-Backups include a consistent SQL dump and retained source uploads; run regularly.
-Set `MYSQLDUMP_PATH` if the tool is not on `PATH`. Restore the matching SQL dump
-and uploads together after preserving the current state. Accept only backups
+Backups include a consistent SQL dump containing upload rows; run regularly.
+Set `MYSQLDUMP_PATH` if the tool is not on `PATH`. Restore the SQL dump
+after preserving the current state. Accept only backups
 containing `BACKUP_COMPLETE`.
+
+Technical logs remain on disk under `LOG_DIR` (default `DATA_DIR/logs`). Each
+process uses one rotating `revenuelive.log`, with five retained copies of 5 MiB
+by default (approximately 30 MiB total). Configure `LOG_MAX_BYTES` and
+`LOG_BACKUP_COUNT` as needed. Use one application process per log directory.
+Old timestamped logs, original uploads and existing backups are not automatically
+deleted. Explicit backups require separate retention and off-host storage.
+The MySQL server also requires disk capacity; this change removes duplicate
+upload files, not the database's storage requirement. HTTP server/proxy buffers
+may use temporary disk files during requests; they are not an upload archive.
 
 Production source is delivered by a reviewed Git commit, not a ZIP. Follow
 `PRODUCTION-HANDOFF.md` for repository boundaries, protected data, backups,

@@ -64,9 +64,8 @@ if ($Action -in @('Start','Restart')) {
     }
     $env:REVENUE_DATA_DIR=$Data
     New-Item -ItemType Directory -Path $Logs -Force | Out-Null
-    $stamp=Get-Date -Format 'yyyyMMdd_HHmmss'
     $arguments='"{0}" --host {1} --port {2}' -f (Join-Path $PSScriptRoot 'app.py'),$ListenAddress,$Port
-    Start-Process $Python -ArgumentList $arguments -WorkingDirectory $PSScriptRoot -WindowStyle Hidden -RedirectStandardOutput (Join-Path $Logs "$stamp.out.log") -RedirectStandardError (Join-Path $Logs "$stamp.err.log") | Out-Null
+    Start-Process $Python -ArgumentList $arguments -WorkingDirectory $PSScriptRoot -WindowStyle Hidden | Out-Null
     $deadline=(Get-Date).AddSeconds(30)
     while (!(Get-Status) -and (Get-Date) -lt $deadline) { Start-Sleep -Milliseconds 500 }
     if (!(Get-Status)) { throw "Startup failed. Check $Logs" }
