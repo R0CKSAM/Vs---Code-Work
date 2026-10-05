@@ -6,3 +6,4 @@ SQLAlchemy==2.0.54
 PyMySQL==1.2.3
 alembic==1.20.0
 python-dotenv==1.2.4
+Pillow==12.3.0

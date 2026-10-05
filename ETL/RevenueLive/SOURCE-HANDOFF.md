@@ -18,6 +18,20 @@ CSV from the stored rows. Backups are explicit SQL dumps. Technical logs use
 bounded rotation; see `.env.example`. Existing legacy files require a separate
 cleanup and are not removed by installing this version.
 
+## Channel names and logos
+
+Admins can edit names and add/replace logos from Users & access > Channel
+directory. Renames keep channel IDs, assignments and revenue records unchanged;
+previous names remain aliases for future uploads. Original upload snapshots and
+audit history retain their original text. Logos accept still PNG/JPG/WebP images
+up to 2 MB and 4 megapixels, are resized to at most 512 x 512, and stored as
+normalized PNG data in SQL. Restore default logo returns to the bundled logo
+or initials. Renaming preserves the original bundled-logo association.
+
+For this release, install `requirements.txt` (including Pillow), run
+`python deploy.py upgrade`, then restart the service. Migration
+`0002_channel_branding` adds two tables; it does not rewrite revenue records.
+
 Copy `.env.example` to an ignored `.env` on each host and change configuration
 there. Never commit `.env`, database credentials, SMTP credentials, runtime
 data, uploads, backups, logs, `.venv/`, `.tools/`, or archived development

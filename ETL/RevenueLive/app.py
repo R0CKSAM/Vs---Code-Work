@@ -1,5 +1,6 @@
 """RevenueLive: channel-scoped revenue reporting and audited spreadsheet imports."""
 import argparse
+import base64
 import csv
 import datetime as dt
 import functools
@@ -30,6 +31,18 @@ ROOT = Path(__file__).resolve().parent
 HEADERS = ['Date', 'Channel Name', 'Views', 'Ad Impressions', 'Ad Revenue', 'Sponsorship/Others', 'Total Revenue']
 LEGACY_HEADERS = ['Date', 'Channel Name', 'Views', 'Compaign/Ad Impression', 'Revenue', 'Sponsorship/Others', 'Total Ad Revenue']
 AUDIT_GENESIS = '0' * 64
+AUDIT_CATEGORIES = {
+    'access': ('Login / Logout', ('user_signed_in', 'user_signed_out')),
+    'passwords': ('Passwords', ('password_changed', 'password_reset_completed', 'password_reset_by_admin', 'super_admin_reset')),
+    'uploads': ('Uploads', ('upload_submitted', 'upload_channels_resolved', 'upload_totals_accepted', 'upload_entries_consolidated')),
+    'live': ('Live / Unlive', ('upload_published', 'upload_unpublished', 'date_hidden', 'date_restored')),
+    'archive': ('Archive / Restore', ('upload_archived', 'upload_unarchived', 'upload_rejected', 'channel_archived', 'channel_restored')),
+    'delete': ('Deleted', ('upload_deleted', 'upload_source_deleted', 'graph_preset_deleted')),
+    'users': ('Users', ('user_saved',)),
+    'channels': ('Channels', ('channel_created', 'channel_created_from_upload', 'channel_updated')),
+    'other': ('Other', ()),
+}
+AUDIT_ACTION_CATEGORIES = {action: key for key, (_, actions) in AUDIT_CATEGORIES.items() for action in actions}
 
 
 def audit_digest(row):
@@ -166,6 +179,7 @@ def parse_upload(content, suffix, *, allow_total_warnings=False):
         result.append(dict(day=date.isoformat(), channel=channel, views=values[0], impressions=values[1], ad=values[2], other=values[3], total=values[4]))
         if allow_total_warnings:
             result[-1]['source_row'] = number
+            result[-1]['source_revenue'] = [str(value.normalize()) for value in source_revenue]
             if warning:
                 result[-1]['warning'] = warning
             if blocking_error:
@@ -221,6 +235,19 @@ def create_app(data_dir=None):
                    prev_hash=last['entry_hash'] if last else AUDIT_GENESIS)
         event['entry_hash']=audit_digest(event)
         db().execute('INSERT INTO audit(id,created,user_id,action,detail,actor,prev_hash,entry_hash) VALUES (:id,:created,:user_id,:action,:detail,:actor,:prev_hash,:entry_hash)',event)
+
+    def channel_catalog(rows):
+        branding={row['channel_id']:row for row in db().execute('SELECT channel_id,fallback_name,logo_version FROM channel_branding')}
+        result=[]
+        for row in rows:
+            channel=dict(row)
+            brand=branding.get(channel['id'])
+            if brand:
+                channel['logo_name']=brand['fallback_name']
+                if brand['logo_version']:
+                    channel['logo_url']=f"/api/channels/{channel['id']}/logo?v={brand['logo_version']}"
+            result.append(channel)
+        return result
 
     def permitted():
         if g.user['role'] == 'admin':
@@ -294,6 +321,7 @@ def create_app(data_dir=None):
     @app.errorhandler(InvalidData)
     def invalid(error):
         if isinstance(error, UploadChannelError):
+            db().rollback()
             return jsonify(error=str(error),code='upload_channel_issues',channel_issues=error.issues,
                            channel_options=[dict(channel) for channel in permitted()]),400
         return jsonify(error=str(error)),400
@@ -347,7 +375,7 @@ def create_app(data_dir=None):
     @app.get('/api/me')
     @require()
     def me():
-        return jsonify(user=g.user,csrf=g.session['csrf'],channels=[dict(c) for c in permitted()],
+        return jsonify(user=g.user,csrf=g.session['csrf'],channels=channel_catalog(permitted()),
                        home='/admin' if g.user['role']=='admin' else '/user')
 
     @app.post('/api/logout')
@@ -431,9 +459,36 @@ def create_app(data_dir=None):
     @app.get('/api/admin/audit')
     @require('admin')
     def audit_history():
+        category=request.args.get('category','all')
+        if category!='all' and category not in AUDIT_CATEGORIES:
+            raise InvalidData('Unknown activity category.')
+        try:
+            page=int(request.args.get('page','1'))
+            if page<1:
+                raise ValueError
+        except ValueError:
+            raise InvalidData('Activity page must be a positive integer.')
         valid,previous,count,broken=verify_audit_chain(db())
-        events=[dict(r) for r in db().execute('SELECT id,created,user_id,actor,action,detail,prev_hash,entry_hash FROM audit ORDER BY id DESC LIMIT 100')]
-        return jsonify(events=events,valid=valid,count=count,head=previous,broken_event=broken)
+        counts=dict.fromkeys(AUDIT_CATEGORIES,0)
+        for row in db().execute('SELECT action,COUNT(*) AS total FROM audit GROUP BY action'):
+            counts[AUDIT_ACTION_CATEGORIES.get(row['action'],'other')]+=row['total']
+        total=sum(counts.values()) if category=='all' else counts[category]
+        page_size=50
+        pages=max(1,(total+page_size-1)//page_size)
+        page=min(page,pages)
+        where='';params=[]
+        if category!='all':
+            params=list(AUDIT_ACTION_CATEGORIES) if category=='other' else list(AUDIT_CATEGORIES[category][1])
+            where=' WHERE action '+('NOT IN' if category=='other' else 'IN')+' ('+','.join('?' for _ in params)+')'
+        events=[dict(r) for r in db().execute(
+            'SELECT id,created,user_id,actor,action,detail,prev_hash,entry_hash FROM audit'+where+' ORDER BY id DESC LIMIT ? OFFSET ?',
+            (*params,page_size,(page-1)*page_size))]
+        for event in events:
+            event['category']=AUDIT_ACTION_CATEGORIES.get(event['action'],'other')
+        categories=[dict(id='all',label='All activity',count=sum(counts.values()))]
+        categories.extend(dict(id=key,label=value[0],count=counts[key]) for key,value in AUDIT_CATEGORIES.items())
+        return jsonify(events=events,valid=valid,count=count,head=previous,broken_event=broken,
+                       categories=categories,category=category,page=page,pages=pages,page_size=page_size,total=total)
 
     @app.get('/api/admin/audit/export')
     @require('admin')
@@ -524,6 +579,10 @@ def create_app(data_dir=None):
         for channel in db().execute('SELECT * FROM channels'):
             names.setdefault(channel_key(channel['name']),[]).append(channel)
             by_id[channel['id']]=channel
+        for alias in db().execute('SELECT name,channel_id FROM channel_aliases'):
+            matches=names.setdefault(channel_key(alias['name']),[])
+            if not any(channel['id']==alias['channel_id'] for channel in matches):
+                matches.append(by_id[alias['channel_id']])
         resolved=[];issues={}
         for index,row in enumerate(rows,2):
             key=channel_key(row['channel'])
@@ -546,13 +605,11 @@ def create_app(data_dir=None):
             resolved.append({**row,'channel_id':channel['id'],'channel':channel['name']})
         if issues:
             raise UploadChannelError(list(issues.values()))
-        seen={}
         for index,row in enumerate(resolved,2):
-            key=(row['day'],row['channel_id'])
-            if key in seen:
-                row['blocking_error']=f'Duplicate date/channel; first appears at Excel row {seen[key]}. Correct the file before publishing.'
-            else:
-                seen[key]=row.get('source_row',index)
+            row.setdefault('source_row',index)
+            row.pop('blocking_error',None)
+            row.pop('entry_kind',None)
+            row.pop('entry_group',None)
         return resolved
 
     def apply_channel_resolutions(rows,actions):
@@ -563,8 +620,19 @@ def create_app(data_dir=None):
         registered={}
         for channel in db().execute('SELECT * FROM channels'):
             registered.setdefault(channel_key(channel['name']),[]).append(channel)
-        decisions={}
+        for alias in db().execute('SELECT name,channel_id FROM channel_aliases'):
+            registered.setdefault(channel_key(alias['name']),[]).append(dict(id=alias['channel_id']))
+        action_sources=set()
         for action in actions:
+            if not isinstance(action,dict) or not isinstance(action.get('source'),str):
+                raise InvalidData('Invalid channel resolution.')
+            source=channel_key(action['source'])
+            if source not in sources or source in action_sources:
+                raise InvalidData('Choose one resolution for each channel in this file.')
+            action_sources.add(source)
+        decisions={}
+        # Resolve creations first so references do not depend on spreadsheet order.
+        for action in sorted(actions,key=lambda item:item.get('action')!='create'):
             if not isinstance(action,dict) or not isinstance(action.get('source'),str):
                 raise InvalidData('Invalid channel resolution.')
             source=channel_key(action['source'])
@@ -597,6 +665,12 @@ def create_app(data_dir=None):
                 if type(cid) is not int or cid not in allowed:
                     raise InvalidData('Select an active channel assigned to your account.')
                 channel=allowed[cid]
+            elif kind=='map_new':
+                target=action.get('target_source')
+                decision=decisions.get(channel_key(target)) if isinstance(target,str) else None
+                if not decision or decision['action']!='create':
+                    raise InvalidData('The selected new channel must be added in this review. Select its Add new channel action first.')
+                channel=allowed[decision['channel_id']]
             else:
                 raise InvalidData('Choose Add new channel or an existing assigned channel.')
             decisions[source]=dict(action=kind,source=normalize_channel_name(action['source']),
@@ -609,8 +683,28 @@ def create_app(data_dir=None):
     def row_values(row):
         return tuple(row[key] for key in ('views','impressions','ad','other','total'))
 
+    def entry_identity(row):
+        return (channel_key(row.get('source_channel',row['channel'])),*row_values(row),
+                tuple(row.get('source_revenue',[])),str(row.get('warning',{}).get('supplied_total','')))
+
+    def preview_payload(upload,rows,original):
+        return dict(id=upload['id'],state=upload['state'],rows=rows,
+                    warning_count=sum(bool(row.get('warning')) for row in rows),
+                    duplicates=sum(old is not None and row_values(old)!=row_values(row) for row,old in zip(rows,original)),
+                    unchanged=sum(old is not None and row_values(old)==row_values(row) for row,old in zip(rows,original)))
+
     def row_fingerprint(rows):
-        return hashlib.sha256(json.dumps(sorted((r['day'],r['channel_id'],*row_values(r)) for r in rows),separators=(',',':')).encode()).digest()
+        groups={};seen=set()
+        for row in rows:
+            key=(row['day'],row['channel_id'])
+            identity=(key,entry_identity(row))
+            if identity in seen:
+                continue
+            seen.add(identity)
+            values=groups.setdefault(key,[0]*5)
+            for index,value in enumerate(row_values(row)):
+                values[index]+=value
+        return hashlib.sha256(json.dumps(sorted((*key,*values) for key,values in groups.items()),separators=(',',':')).encode()).digest()
 
     @app.post('/api/uploads/preview')
     @require('admin','uploader')
@@ -642,6 +736,7 @@ def create_app(data_dir=None):
         for row in rows:
             old=db().execute('SELECT * FROM records WHERE day=? AND channel_id=?',(row['day'],row['channel_id'])).fetchone()
             originals.append(dict(old) if old else None)
+        rows,originals,prepared_changes=prepare_daily_rows(rows,originals)
         unchanged=sum(old is not None and row_values(old)==row_values(row) for row,old in zip(rows,originals))
         if unchanged==len(rows):
             raise InvalidData('All rows already match published data. No changes to publish.')
@@ -652,12 +747,15 @@ def create_app(data_dir=None):
             log('upload_submitted',json.dumps(dict(id=uid,filename=filename,sha256=digest,rows=len(rows)),separators=(',',':')))
             if decisions:
                 log('upload_channels_resolved',json.dumps(dict(id=uid,filename=filename,decisions=decisions),separators=(',',':')))
+            if prepared_changes:
+                log('upload_entries_consolidated',json.dumps(dict(id=uid,filename=filename,
+                    policy='exact_copies_skipped_distinct_entries_summed',groups=prepared_changes),separators=(',',':')))
             db().commit()
         except Exception:
             db().rollback()
             raise
         return jsonify(id=uid,state='pending',rows=rows,channel_resolutions=decisions,
-                       channels=[dict(channel) for channel in permitted()],
+                       channels=channel_catalog(permitted()),
                        warning_count=sum(bool(row.get('warning')) for row in rows),duplicates=sum(old is not None and row_values(old)!=row_values(row) for row,old in zip(rows,originals)),unchanged=unchanged)
 
     @app.get('/api/uploads/<uid>/preview')
@@ -668,10 +766,84 @@ def create_app(data_dir=None):
             return jsonify(error='Preview is unavailable.'),404
         rows=resolve_rows(json.loads(upload['rows_json']))
         original=json.loads(upload['preview_json'])
-        return jsonify(id=uid,state=upload['state'],rows=rows,
-                       warning_count=sum(bool(row.get('warning')) for row in rows),
-                       duplicates=sum(old is not None and row_values(old)!=row_values(row) for row,old in zip(rows,original)),
-                       unchanged=sum(old is not None and row_values(old)==row_values(row) for row,old in zip(rows,original)))
+        rows,original,_=prepare_daily_rows(rows,original)
+        return jsonify(preview_payload(upload,rows,original))
+
+    def prepare_daily_rows(rows,originals,combine=True,skip=True,check_current=False):
+        if len(rows)!=len(originals):
+            raise InvalidData('The stored preview is incomplete. Upload the file again.')
+        groups={}
+        for row,old in zip(rows,originals):
+            groups.setdefault((row['day'],row['channel_id']),[]).append((row,old))
+        result=[];snapshots=[];changes=[]
+        for key,entries in groups.items():
+            old=entries[0][1]
+            if any(previous!=old for _,previous in entries):
+                raise InvalidData('The stored preview is inconsistent. Upload the file again.')
+            if check_current:
+                current=db().execute('SELECT * FROM records WHERE day=? AND channel_id=?',key).fetchone()
+                if (dict(current) if current else None)!=old:
+                    raise InvalidData('Data changed after preview. Upload again to review the latest version.')
+            if len(entries)==1:
+                result.append(entries[0][0]);snapshots.append(old);continue
+            kept=[];excluded=[];seen=set()
+            for row,_ in entries:
+                identity=entry_identity(row)
+                if identity in seen:
+                    if not skip:
+                        raise InvalidData('Exact duplicate copies exist. Confirm Skip exact duplicate copies before continuing.')
+                    excluded.append(row['source_row'])
+                else:
+                    kept.append(row);seen.add(identity)
+            if len(kept)>1 and not combine:
+                raise InvalidData('Different entries share a channel/date. Confirm Combine separate entries before continuing.')
+            merged={**kept[0]}
+            for field in ('views','impressions','ad','other','total'):
+                merged[field]=sum(row[field] for row in kept)
+                if merged[field]>9223372036854775807:
+                    raise InvalidData('Combined values exceed database limits. Split the data before uploading.')
+            for field in ('blocking_error','entry_kind','entry_group','source_revenue','warning'):
+                merged.pop(field,None)
+            merged['source_entries']=[{field:value for field,value in row.items() if field not in ('blocking_error','entry_kind','entry_group')} for row,_ in entries]
+            merged['excluded_source_rows']=excluded
+            merged['combined_entries']=len(kept)
+            warnings=[row['warning'] for row in kept if row.get('warning')]
+            if warnings:
+                supplied=sum(Decimal(row['warning']['supplied_total']) if row.get('warning') else Decimal(row['total'])/100 for row in kept)
+                merged['warning']=dict(code='total_mismatch',source_row=merged['source_row'],
+                    supplied_total=str(supplied),rounded_supplied_total=sum(row['warning']['rounded_supplied_total'] if row.get('warning') else row['total'] for row in kept),
+                    calculated_total=merged['total'],source_warnings=warnings)
+            result.append(merged);snapshots.append(old)
+            changes.append(dict(day=key[0],channel_id=key[1],source_rows=[row['source_row'] for row,_ in entries],
+                                excluded_source_rows=excluded,combined_entries=len(kept),result=dict(zip(('views','impressions','ad','other','total'),row_values(merged)))))
+        return result,snapshots,changes
+
+    @app.post('/api/uploads/<uid>/consolidate')
+    @require('admin','uploader')
+    def consolidate_upload(uid):
+        body=request.get_json(silent=True) or {}
+        if not isinstance(body,dict):
+            raise InvalidData('Invalid repeated-entry choices.')
+        combine=body.get('combine_entries') is True
+        skip=body.get('skip_exact_duplicates') is True
+        if not combine and not skip:
+            raise InvalidData('Choose Combine separate entries or Skip exact duplicate copies.')
+        db().begin_write()
+        upload=db().execute('SELECT * FROM uploads WHERE id=?',(uid,)).fetchone()
+        if not upload or upload['state'] not in ('pending','rejected') or upload['file_deleted'] or (g.user['role']!='admin' and upload['user_id']!=g.user['id']):
+            raise InvalidData('This preview is unavailable for changes.')
+        rows=resolve_rows(json.loads(upload['rows_json']))
+        originals=json.loads(upload['preview_json'])
+        result,snapshots,changes=prepare_daily_rows(rows,originals,combine,skip,check_current=True)
+        if changes:
+            save_prepared_rows(upload,result,snapshots,changes)
+        db().commit()
+        return jsonify(preview_payload(upload,result,snapshots))
+
+    def save_prepared_rows(upload,rows,originals,changes):
+        db().execute('UPDATE uploads SET rows_json=?,preview_json=? WHERE id=?',(json.dumps(rows),json.dumps(originals),upload['id']))
+        log('upload_entries_consolidated',json.dumps(dict(id=upload['id'],filename=upload['filename'],
+            policy='exact_copies_skipped_distinct_entries_summed',groups=changes),separators=(',',':')))
 
     @app.post('/api/uploads/<uid>/commit')
     @require('admin','uploader')
@@ -687,9 +859,8 @@ def create_app(data_dir=None):
         uid=upload['id']
         rows=resolve_rows(json.loads(upload['rows_json']))
         original=json.loads(upload['preview_json'])
+        rows,original,prepared_changes=prepare_daily_rows(rows,original)
         warnings=[row['warning'] for row in rows if row.get('warning')]
-        if any(row.get('blocking_error') for row in rows):
-            raise InvalidData('This preview contains duplicate date/channel rows. Correct the file and upload it again before publishing.')
         if warnings and (request.get_json(silent=True) or {}).get('accept_total_mismatches') is not True:
             raise InvalidData('Review the highlighted total mismatches and accept calculated totals before publishing.')
         if any(old is not None and row_values(old)!=row_values(row) for row,old in zip(rows,original)) and not replace:
@@ -706,6 +877,8 @@ def create_app(data_dir=None):
             changed+=1
         if not changed:
             raise InvalidData('All rows already match published data. No changes to publish.')
+        if prepared_changes:
+            save_prepared_rows(upload,rows,original,prepared_changes)
         db().execute("UPDATE uploads SET state='committed',archived=0 WHERE id=?",(uid,))
         if warnings:
             log('upload_totals_accepted',json.dumps(dict(id=uid,filename=upload['filename'],
@@ -905,7 +1078,7 @@ def create_app(data_dir=None):
         rows=[]
         for user in db().execute('SELECT id,username,role,active,must_change FROM users ORDER BY username'):
             rows.append({**dict(user),'super_admin':bool(db().execute('SELECT 1 FROM super_admin WHERE user_id=?',(user['id'],)).fetchone()),'channels':[r[0] for r in db().execute('SELECT channel_id FROM assignments WHERE user_id=?',(user['id'],))]})
-        return jsonify(users=rows,channels=[dict(c) for c in permitted()],archived=[dict(c) for c in db().execute('SELECT c.* FROM channels c JOIN archived_channels a ON a.channel_id=c.id ORDER BY LOWER(c.name)')])
+        return jsonify(users=rows,channels=channel_catalog(permitted()),archived=channel_catalog(db().execute('SELECT c.* FROM channels c JOIN archived_channels a ON a.channel_id=c.id ORDER BY LOWER(c.name)')))
 
     @app.post('/api/admin/channels/<int:cid>/archive')
     @require('admin')
@@ -933,11 +1106,70 @@ def create_app(data_dir=None):
         db().begin_write()
         if any(channel_key(row['name'])==channel_key(name) for row in db().execute('SELECT name FROM channels')):
             raise InvalidData('Channel already exists, including case or spacing variants. Restore or assign the existing channel instead.')
+        if any(channel_key(row['name'])==channel_key(name) for row in db().execute('SELECT name FROM channel_aliases')):
+            raise InvalidData('This name belongs to an existing channel as a previous name.')
         try:
             db().execute('INSERT INTO channels(name) VALUES (?)',(name,))
         except INTEGRITY_ERRORS:
             raise InvalidData('Channel already exists.')
         log('channel_created',name);db().commit();return jsonify(ok=True)
+
+    @app.post('/api/admin/channels/<int:cid>')
+    @require('admin')
+    def update_channel(cid):
+        from channel_images import MAX_LOGO_BYTES, normalize_logo
+        name=normalize_channel_name(request.form.get('name',''))
+        if not name or len(name)>120:
+            raise InvalidData('Enter a channel name, up to 120 characters.')
+        incoming=request.files.get('logo')
+        reset=request.form.get('reset_logo','false')
+        if reset not in ('true','false') or (reset=='true' and incoming and incoming.filename):
+            raise InvalidData('Choose a replacement logo or restore the default, not both.')
+        image=None
+        if incoming and incoming.filename:
+            try:
+                image=normalize_logo(incoming.read(MAX_LOGO_BYTES+1))
+            except ValueError as error:
+                raise InvalidData(str(error))
+        db().begin_write()
+        channel=db().execute('SELECT * FROM channels WHERE id=?',(cid,)).fetchone()
+        if not channel:
+            return jsonify(error='Channel not found.'),404
+        for other in db().execute('SELECT id,name FROM channels'):
+            if other['id']!=cid and channel_key(other['name'])==channel_key(name):
+                raise InvalidData('That name is already used by another channel.')
+        for alias in db().execute('SELECT name,channel_id FROM channel_aliases'):
+            if alias['channel_id']!=cid and channel_key(alias['name'])==channel_key(name):
+                raise InvalidData('That name belongs to another channel as a previous name.')
+        current=db().execute('SELECT * FROM channel_branding WHERE channel_id=?',(cid,)).fetchone()
+        branding=dict(current) if current else dict(channel_id=cid,fallback_name=channel['name'],logo_base64='',logo_version='')
+        previous_version=branding['logo_version']
+        if image is not None:
+            branding.update(logo_base64=base64.b64encode(image).decode('ascii'),logo_version=hashlib.sha256(image).hexdigest())
+        elif reset=='true':
+            branding.update(logo_base64='',logo_version='')
+        if channel['name']!=name:
+            db().upsert('channel_aliases',dict(name=channel_key(channel['name']),channel_id=cid),ignore=True)
+            try:
+                db().execute('UPDATE channels SET name=? WHERE id=?',(name,cid))
+            except INTEGRITY_ERRORS:
+                raise InvalidData('That name is already used by another channel.')
+        db().upsert('channel_branding',branding)
+        if channel['name']!=name or previous_version!=branding['logo_version']:
+            log('channel_updated',json.dumps(dict(id=cid,previous_name=channel['name'],name=name,
+                previous_logo=previous_version,logo=branding['logo_version']),separators=(',',':')))
+        db().commit()
+        return jsonify(ok=True,channel=channel_catalog([dict(id=cid,name=name)])[0])
+
+    @app.get('/api/channels/<int:cid>/logo')
+    @require()
+    def channel_logo(cid):
+        if g.user['role']!='admin' and cid not in {c['id'] for c in permitted()}:
+            return jsonify(error='Channel not found.'),404
+        branding=db().execute('SELECT logo_base64 FROM channel_branding WHERE channel_id=?',(cid,)).fetchone()
+        if not branding or not branding['logo_base64']:
+            return jsonify(error='Logo not found.'),404
+        return app.response_class(base64.b64decode(branding['logo_base64']),mimetype='image/png')
 
     from account_email import install
     email_address, mail_settings, send_invitation = install(app, db, data, InvalidData, log)
@@ -1002,6 +1234,8 @@ def create_app(data_dir=None):
             if invite:
                 db().execute('INSERT INTO email_accounts(user_id,email) VALUES (?,?)',(uid,username))
             log('user_saved',json.dumps(dict(id=uid,username=username,role=role,active=bool(active),channels=sorted(set(ids)),before=before,password_reset=bool(password and before),invited=invite),separators=(',',':')))
+            if password and before:
+                log('password_reset_by_admin',json.dumps(dict(id=uid,username=username),separators=(',',':')))
             db().commit()
         except INTEGRITY_ERRORS:
             raise InvalidData('Username already exists.')

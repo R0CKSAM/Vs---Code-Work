@@ -49,8 +49,14 @@ followed by confirmation and revalidation. Creation, assignment and mapping are
 audited and committed together with the successful preview; failed previews
 roll back all changes. Cancelling a successful preview leaves explicitly created
 channels registered. Mapping applies to this upload only, not a permanent alias.
-The preview lists applied mappings and flags duplicate date/channel rows caused
-by mapping. All channels must resolve before a preview is saved, and assignments
+New channels selected in the current review immediately appear as destinations
+for other file names. They are created once, even when several names map to them;
+references are resolved independently of spreadsheet order. Removing a pending
+creation clears its dependent dropdown choices. Search is available for file
+channel names, destination channels, and preview channel/date/Excel-row values.
+Searching does not discard hidden selections or skip unresolved rows.
+The preview lists applied mappings and flags repeated date/channel rows caused
+by mapping for automatic daily totals. All channels must resolve before a preview is saved, and assignments
 are checked again when publishing.
 Channel and role changes are checked on every API request. Open online clients check for changes every two seconds and on focus, clear stale data, and refresh their permitted scope. Background browsers may throttle this check. Disabling an account or resetting its password revokes its sessions.
 
@@ -97,8 +103,18 @@ totals. Users must explicitly accept calculated totals before publishing such
 an upload; acceptance is checked on the server and recorded in the audit chain.
 The file total is retained in the SQL upload snapshot; published totals use the
 rounded ad revenue plus rounded sponsorship. Other validation errors still block
-upload. Duplicate date/channel rows appear as blocking errors in the preview;
-they cannot be accepted and require a corrected file. Preview pagination and
+upload. The server automatically keeps one copy of exact duplicate rows
+and sums different entries sharing a channel/date into daily totals. A summary
+shows skipped copies and combined daily records, without extra combine/skip
+checkboxes, buttons, or a separate browser request. New uploads, old saved previews
+and publication all use the same daily-total preparation. Different views or impressions are not duplicates even
+when revenue is zero. Different original
+channel names mapped to the same destination are kept as separate activities,
+even if their numbers match. Original rows, skipped row numbers and combined
+totals remain in the SQL preview snapshot and the action is audited. Publication
+still requires any total-mismatch and existing-record replacement confirmations.
+Combining does not refresh stale database snapshots or bypass channel permissions.
+Preview pagination and
 the Issues only filter cover all rows, and
 pending/rejected files can reopen their warnings from the upload library.
 Maximum
@@ -161,6 +177,17 @@ Transfer existing production data separately through an approved encrypted
 channel. The same source supports `mysql+pymysql` for MySQL Community and
 `mariadb+pymysql` for MariaDB. Microsoft SQL Server and PostgreSQL are not
 supported by this release.
+
+## Activity History
+
+Admins can filter Uploads > Activity history by login/logout, passwords, uploads,
+live/unlive, archive/restore, deletion, users, channels, or other events. Counts
+cover the complete history; each page shows up to 50 events, newest first.
+Download history still exports the entire audit chain, irrespective of the filter.
+Categories do not modify historical audit records. Older admin password resets
+remain under Users (marked Password reset); new resets also emit a dedicated
+password activity event. No password values are recorded. Role permissions are
+unchanged by these filters.
 
 ## Analytics
 

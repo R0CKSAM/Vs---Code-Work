@@ -37,6 +37,10 @@ table('users', identifier(), identity_key('username', 100), col('password', Stri
       col('role', String(16), nullable=False), flag('active', '1'), flag('must_change'),
       UniqueConstraint('username'), CheckConstraint("role IN ('admin','uploader','viewer')"))
 table('channels', identifier(), identity_key('name', 120), UniqueConstraint('name'))
+table('channel_aliases', col('name', String(240), primary_key=True), ref('channel_id', 'channels.id'))
+table('channel_branding', ref('channel_id', 'channels.id', True),
+      col('fallback_name', String(120), nullable=False), col('logo_base64', LONGTEXT, nullable=False),
+      col('logo_version', String(64), nullable=False))
 table('assignments', ref('user_id', primary=True), ref('channel_id', 'channels.id', True))
 table('sessions', col('token', String(64), primary_key=True), ref('user_id'),
       col('csrf', String(64), nullable=False), col('expires', Float(53), nullable=False))

@@ -54,6 +54,9 @@ def import_sqlite(database, source_file, source_uploads=None):
                 if table.name != 'write_lock' and target.execute(select(func.count()).select_from(table)).scalar():
                     raise ValueError('Import requires an empty migrated database, before creating the admin account.')
             for table in tables:
+                if table.name in {'channel_aliases','channel_branding'} and not source.execute(
+                    'SELECT 1 FROM sqlite_master WHERE type=? AND name=?',('table',table.name)).fetchone():
+                    continue
                 cursor = source.execute(f'SELECT * FROM "{table.name}"')
                 if set(column[0] for column in cursor.description) != set(table.c.keys()):
                     raise ValueError(f'Source schema for {table.name} is outdated; upgrade a SQLite copy first.')
@@ -114,6 +117,7 @@ def reset_super_admin(database, username, password):
                 (username, hashed)).lastrowid
         connection.upsert('super_admin', {'singleton':1, 'user_id':uid})
         connection.execute('DELETE FROM sessions WHERE user_id=?', (uid,))
+        connection.execute('DELETE FROM email_tokens WHERE user_id=?', (uid,))
         last = connection.execute('SELECT id,entry_hash FROM audit ORDER BY id DESC LIMIT 1').fetchone()
         event = dict(id=last['id']+1 if last else 1,
                      created=dt.datetime.now(dt.timezone.utc).isoformat(), user_id=uid,

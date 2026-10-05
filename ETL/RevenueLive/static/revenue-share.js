@@ -53,16 +53,23 @@ window.RevenueShare=(()=>{
   }};
   const channelIcon=name=>/music|9xm|tashan|jhakaas|jalwa/i.test(name)?'music-2':/kids/i.test(name)?'smile':/bhojpuri|bollywood/i.test(name)?'clapperboard':'tv-minimal';
   let channelLogos={};
-  function brandLogo(target,name){
+  let channelBrands=new Map();
+  function setChannels(channels){
+    channelBrands=new Map(channels.map(channel=>[channel.name.trim().toLowerCase(),channel]));
+    document.querySelectorAll('.channel-brand').forEach(target=>brandLogo(target,target.dataset.channelName));
+  }
+  function brandLogo(target,name,override){
     target.dataset.channelName=name;target.classList.add('channel-brand');
     const initials=name.trim().split(/\s+/).slice(0,2).map(word=>word[0]).join('').toUpperCase();
     target.textContent=initials;target.setAttribute('aria-hidden','true');
-    const asset=channelLogos[name.trim().toLowerCase()];
+    const channel=override||channelBrands.get(name.trim().toLowerCase());
+    const asset=channelLogos[(channel?.logo_name||name).trim().toLowerCase()];
     target.style.backgroundColor=asset?.background||'#fff';
-    if(!asset||! /^[a-z0-9]+\.png$/.test(asset.file))return;
+    const custom=channel?.logo_url&&/^\/api\/channels\/\d+\/logo\?v=[a-f0-9]{64}$/.test(channel.logo_url)?channel.logo_url:null;
+    if(!custom&&(!asset||! /^[a-z0-9]+\.png$/.test(asset.file)))return;
     const image=document.createElement('img');image.alt='';image.width=44;image.height=32;
     image.onerror=()=>{target.style.backgroundColor='#fff';target.replaceChildren(document.createTextNode(initials));};
-    image.src='/static/channel-logos/'+asset.file;target.replaceChildren(image);
+    image.src=custom||'/static/channel-logos/'+asset.file;target.replaceChildren(image);
   }
   fetch('/static/channel-logos/manifest.json').then(response=>{if(!response.ok)throw new Error('Logo manifest unavailable');return response.json();}).then(manifest=>{
     channelLogos=manifest;
@@ -272,6 +279,6 @@ window.RevenueShare=(()=>{
     chart=new Chart(document.getElementById('summaryShareCanvas'),{type:'doughnut',plugins:[raisedRing],data:{labels:shown.map(([name])=>name),datasets:[{data:valid?shown.map(([,value])=>value):[],backgroundColor:colors,borderWidth:1,borderColor:'#fff',hoverOffset:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'66%',layout:{padding:{top:2,right:2,bottom:10,left:2}},events:[],animation:false,plugins:{visibleSharePercent:false,legend:{display:false},tooltip:{enabled:false}}}});
     modal.querySelectorAll('.distribution-track').forEach(el=>el.hidden=!valid);
   }
-  function clear(){selectedMetric='total';collapse();render([]);}
-  return{render,clear,compare};
+  function clear(){channelBrands.clear();selectedMetric='total';collapse();render([]);}
+  return{render,clear,compare,setChannels,brandLogo};
 })();
