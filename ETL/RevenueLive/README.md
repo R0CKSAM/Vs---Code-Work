@@ -191,6 +191,17 @@ unchanged by these filters.
 
 ## Analytics
 
+The overview timeline has Auto, Daily, Weekly and Monthly intervals. Auto uses
+daily totals for up to 31 days, calendar-week totals for 32-120 days, and calendar-
+month totals for longer selections. Weeks start on Monday. Revenue uses stacked
+bars for grouped periods; views and impressions use lines. Partial edge periods
+are marked, and periods without records remain missing rather than zero.
+Click a grouped period or choose it from Open period to view its daily breakdown;
+Full range restores the overview. This drill-down changes only the timeline,
+not the selected filters, KPI totals or doughnut. Controls also work in the
+expanded view. Tooltip amounts remain exact; axes use K/L/Cr abbreviations.
+Run `node tests/test_timeline.cjs` to verify aggregation and boundary cases.
+
 Filters support one/multiple/all assigned channels, explicit empty selection,
 single dates and custom ranges. Latest 7/30 days and Latest month are anchored to
 the latest available data date, not to the wall clock. Apply commits the selection;

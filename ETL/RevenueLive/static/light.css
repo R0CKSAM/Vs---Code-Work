@@ -488,6 +488,17 @@ body.summary-phase:has(#shell:not([hidden])){background:linear-gradient(180deg,t
 .timeline-dialog-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .timeline-dialog-heading h2{margin:0;font-size:22px;font-weight:800}
 #timelineDetailDialog .daily-revenue-canvas{min-height:160px;height:auto;flex:1}
+.timeline-content{display:flex;flex-direction:column;gap:10px;flex:1;min-width:0;min-height:0}
+.timeline-controls{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;min-width:0}
+.timeline-intervals{display:inline-flex;flex:none;gap:2px;padding:3px;border:1px solid #cbdcf0;background:#edf4fe;border-radius:8px}
+.timeline-intervals button{border:0;background:transparent;box-shadow:none;color:#345270;font-size:12px;font-weight:700;height:30px;min-height:30px;padding:4px 10px;border-radius:5px}
+.timeline-intervals button[aria-pressed="true"]{background:#1269d5;color:white;box-shadow:0 2px 5px #1269d530}
+#timelinePeriod{width:auto;max-width:100%;min-width:0;margin-left:auto;height:36px;font-size:12px;color:#244462;border:1px solid #cbdcf0;background:#f7fbff}
+#timelineBack{display:inline-flex;align-items:center;gap:6px;height:36px;min-height:36px;font-size:12px;white-space:nowrap}
+#timelineBack svg{width:16px;height:16px}
+#timelineScope{flex-basis:100%;color:#345270;font-size:12px;font-weight:700;overflow-wrap:anywhere}
+#dailyRevenueNote{margin:0;color:#526b85;font-size:12px;line-height:1.5}
+@media(max-width:600px){.timeline-intervals button{padding:4px 8px}#timelinePeriod{margin-left:0;flex:1}.timeline-controls{gap:8px}.timeline-content .daily-revenue-canvas{min-height:260px}.trend-header{gap:8px}}
 @media(max-width:600px){#timelineDetailDialog{width:calc(100vw - 16px);padding:12px}.timeline-dialog-heading h2{font-size:18px}}
 .summary-phase #dashboard>#channelComparison{display:block!important;margin-top:20px;padding:16px 0;color:#203a59;min-width:0}
 #channelComparison h2{font-size:20px;font-weight:800;margin:0 0 14px;background:#edf5ff;padding:6px 8px;border-radius:4px;width:fit-content}

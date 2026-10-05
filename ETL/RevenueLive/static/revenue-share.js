@@ -2,6 +2,8 @@
 window.RevenueShare=(()=>{
   let redrawTree=()=>{};
   let selectedMetric='total',currentRows=[];
+  let timelineMode='auto',drillRange=null;
+  const hiddenTimelineSeries=new Set();
   const metricNames={total:'Revenue',views:'Views',impressions:'Ad impressions'};
   const metricValue=value=>selectedMetric==='total'?cash(value):new Intl.NumberFormat('en-IN').format(value);
   let channelChanges=new Map();
@@ -114,12 +116,26 @@ window.RevenueShare=(()=>{
   timelineDialog.innerHTML='<div class="timeline-dialog-heading"><h2 id="timelineDetailTitle"></h2><button type="button" aria-label="Close expanded timeline" title="Close"><i data-lucide="x" aria-hidden="true"></i></button></div>';
   document.body.append(timelineDialog);
   const timelineFrame=trend.querySelector('.daily-revenue-canvas');
+  const timelineContent=document.createElement('div');timelineContent.className='timeline-content';
+  const timelineControls=document.createElement('div');timelineControls.className='timeline-controls';
+  const intervalSelector=document.createElement('div');intervalSelector.className='timeline-intervals';intervalSelector.setAttribute('role','group');intervalSelector.setAttribute('aria-label','Timeline interval');
+  for(const [value,label] of [['auto','Auto'],['day','Daily'],['week','Weekly'],['month','Monthly']]){
+    const button=document.createElement('button');button.type='button';button.textContent=label;button.dataset.timelineInterval=value;
+    button.addEventListener('click',()=>{timelineMode=value;drillRange=null;renderTimeline();});intervalSelector.append(button);
+  }
+  const periodPicker=document.createElement('select');periodPicker.id='timelinePeriod';periodPicker.setAttribute('aria-label','Open period daily breakdown');
+  periodPicker.addEventListener('change',()=>{if(periodPicker.value!=='')drillInto(Number(periodPicker.value));});
+  const backTimeline=document.createElement('button');backTimeline.type='button';backTimeline.id='timelineBack';backTimeline.innerHTML='<i data-lucide="arrow-left" aria-hidden="true"></i>Full range';backTimeline.title='Back to the full selected range';
+  backTimeline.addEventListener('click',()=>{drillRange=null;renderTimeline();periodPicker.focus();});
+  const timelineScope=document.createElement('span');timelineScope.id='timelineScope';timelineScope.setAttribute('role','status');
+  timelineControls.append(intervalSelector,periodPicker,backTimeline,timelineScope);
+  timelineContent.append(timelineControls,timelineFrame,document.getElementById('dailyRevenueNote'));trend.append(timelineContent);
   expandTimeline.addEventListener('click',()=>{
     document.getElementById('timelineDetailTitle').textContent=metricNames[selectedMetric]+' over time';
-    timelineDialog.append(timelineFrame);timelineDialog.showModal();lineChart?.resize();
+    timelineDialog.append(timelineContent);timelineDialog.showModal();lineChart?.resize();
   });
   timelineDialog.querySelector('button').addEventListener('click',()=>timelineDialog.close());
-  timelineDialog.addEventListener('close',()=>{trend.insertBefore(timelineFrame,document.getElementById('dailyRevenueNote'));lineChart?.resize();expandTimeline.focus({preventScroll:true});});
+  timelineDialog.addEventListener('close',()=>{trend.append(timelineContent);lineChart?.resize();expandTimeline.focus({preventScroll:true});});
   const views=document.createElement('section');views.id='viewsDistribution';views.innerHTML='<p id="viewsDistributionEmpty"></p>';overview.after(views);
   const metrics=document.createElement('section');metrics.id='channelMetrics';metrics.innerHTML='<h2>Channel metrics</h2><div class="metrics-table-scroll"><table><thead><tr><th scope="col">Channel</th><th scope="col">Views</th><th scope="col">Ad impressions</th><th scope="col">Ad revenue</th><th scope="col">Sponsorship / others</th><th scope="col">Total revenue</th></tr></thead><tbody></tbody></table></div><p class="metrics-empty"></p>';views.before(metrics);
   const metricsToggle=document.createElement('button');metricsToggle.type='button';metricsToggle.className='metrics-toggle';metricsToggle.setAttribute('aria-expanded','false');metricsToggle.setAttribute('aria-controls','channelMetricsBody');metricsToggle.title='Expand channel metrics';metricsToggle.innerHTML='<span>Channel metrics</span><i data-lucide="maximize-2" aria-hidden="true"></i>';metrics.querySelector('h2').replaceWith(metricsToggle);metrics.querySelector('tbody').id='channelMetricsBody';let metricsExpanded=false;
@@ -165,6 +181,72 @@ window.RevenueShare=(()=>{
     channelDialog.showModal();
   }
   let lineChart=null;
+  let timelineBuckets=[];
+  const timelineDate=(day,options={day:'2-digit',month:'short',year:'numeric'})=>new Intl.DateTimeFormat('en-GB',{...options,timeZone:'UTC'}).format(new Date(day+'T00:00:00Z'));
+  const compactNumber=value=>{
+    const absolute=Math.abs(value),unit=absolute>=1e7?[1e7,'Cr']:absolute>=1e5?[1e5,'L']:absolute>=1e3?[1e3,'K']:[1,''];
+    return new Intl.NumberFormat('en-IN',{maximumFractionDigits:unit[0]===1?0:1}).format(value/unit[0])+unit[1];
+  };
+  function drillInto(index){
+    const bucket=timelineBuckets[index];if(!bucket||bucket.missing||bucket.start===bucket.end)return;
+    drillRange={start:bucket.start,end:bucket.end};renderTimeline();backTimeline.focus({preventScroll:true});
+  }
+  function renderTimeline(){
+    const isRevenue=selectedMetric==='total',metricName=metricNames[selectedMetric];
+    const model=window.RevenueTimelineData.aggregate(currentRows,{
+      start:drillRange?.start||document.getElementById('start').value,
+      end:drillRange?.end||document.getElementById('end').value,
+      mode:drillRange?'day':timelineMode,
+      channelCount:document.querySelectorAll('#channelOptions input:checked').length
+    });
+    const {interval,buckets}=model;timelineBuckets=buckets;
+    const intervalName={day:'Daily',week:'Weekly',month:'Monthly'}[interval];
+    intervalSelector.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.timelineInterval===timelineMode)));
+    backTimeline.hidden=!drillRange;periodPicker.hidden=!!drillRange||interval==='day'||!buckets.length;
+    const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent='Open period...';
+    periodPicker.replaceChildren(placeholder,...buckets.map((bucket,index)=>{
+      const option=document.createElement('option');option.value=index;
+      option.textContent=interval==='month'?timelineDate(bucket.periodStart,{month:'short',year:'numeric'}):timelineDate(bucket.start)+' - '+timelineDate(bucket.end);
+      if(bucket.partial)option.textContent+=' (partial)';if(bucket.missing)option.textContent+=' (no data)';option.disabled=bucket.missing;return option;
+    }));
+    timelineScope.textContent=drillRange?'Daily breakdown: '+timelineDate(model.start)+' - '+timelineDate(model.end):intervalName+' totals'+(timelineMode==='auto'?' (Auto)':'');
+    document.getElementById('timelineDetailTitle').textContent=metricName+' over time';
+    const bars=isRevenue&&(interval!=='day'||buckets.length<=7)||buckets.length===1;
+    const stacked=bars&&isRevenue;
+    const series=isRevenue?[['Ad revenue','ad','#09aaa1'],['Sponsorship / others','other','#fa668c']]:[[metricName,selectedMetric,selectedMetric==='views'?'#3689ef':'#d68a28']];
+    const datasets=series.map(([label,key,color])=>({label,metricKey:key,
+      data:buckets.map(bucket=>bucket.missing?null:bucket.values[key]/(isRevenue?100:1)),
+      hidden:hiddenTimelineSeries.has(key),borderColor:color,backgroundColor:bars?color:color+'16',
+      borderWidth:bars?0:2,fill:!bars,tension:0,spanGaps:false,
+      pointRadius:buckets.length>45?0:2,pointHoverRadius:5,pointHitRadius:8,
+      borderRadius:4,maxBarThickness:56,borderSkipped:false
+    }));
+    if(lineChart)lineChart.destroy();
+    lineChart=new Chart(document.getElementById('dailyRevenueCanvas'),{type:bars?'bar':'line',data:{labels:buckets.map(bucket=>bucket.start),datasets},options:{
+      responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},
+      onClick:(event,_,chart)=>{if(interval==='day')return;const hit=chart.getElementsAtEventForMode(event,'nearest',{intersect:true},true)[0];if(hit)setTimeout(()=>{if(lineChart===chart)drillInto(hit.index);},0);},
+      plugins:{legend:{position:'bottom',labels:{color:'#506889',usePointStyle:true,pointStyle:'circle',boxWidth:10,padding:16},
+        onClick:(_,item,chartLegend)=>{const chart=chartLegend.chart,key=chart.data.datasets[item.datasetIndex].metricKey,visible=chart.isDatasetVisible(item.datasetIndex);if(visible)hiddenTimelineSeries.add(key);else hiddenTimelineSeries.delete(key);chart.setDatasetVisibility(item.datasetIndex,!visible);chart.update();}},
+        tooltip:{callbacks:{
+          title:items=>{const bucket=buckets[items[0]?.dataIndex];return bucket?timelineDate(bucket.start)+(bucket.end!==bucket.start?' - '+timelineDate(bucket.end):'')+(bucket.partial?' (partial period)':''):'';},
+          label:ctx=>ctx.dataset.label+': '+(ctx.raw===null?'No data':isRevenue?cash(ctx.raw*100):new Intl.NumberFormat('en-IN').format(ctx.raw)),
+          footer:items=>{const bucket=buckets[items[0]?.dataIndex];if(!bucket)return '';const notes=[];
+            if(bucket.incomplete)notes.push(bucket.reportedRecords+' of '+bucket.expectedRecords+' channel-day records reported');
+            if(interval!=='day'&&bucket.daily.length){const value=day=>isRevenue?day.ad+day.other:day[selectedMetric];const peak=bucket.daily.reduce((best,day)=>value(day)>value(best)?day:best);notes.push('Highest recorded day: '+timelineDate(peak.day)+' | '+(isRevenue?cash(value(peak)):new Intl.NumberFormat('en-IN').format(value(peak))));}
+            return notes;}
+        }}},
+      scales:{x:{stacked,offset:bars,grid:{display:false},ticks:{color:'#506889',maxTicksLimit:8,maxRotation:0,font:{size:12},callback:function(value){const bucket=buckets[value];return bucket?(interval==='month'?timelineDate(bucket.periodStart,{month:'short',year:'2-digit'}):timelineDate(bucket.start,{day:'2-digit',month:'short'}))+(bucket.partial?' *':''):'';}}},
+        y:{stacked,beginAtZero:true,title:{display:true,text:isRevenue?'Revenue (INR)':metricName,color:'#506889'},grid:{color:'#e6edf5'},ticks:{color:'#506889',maxTicksLimit:7,precision:0,callback:value=>(isRevenue?'\u20b9':'')+compactNumber(value)}}}
+    }});
+    const notes=[];
+    if(!currentRows.length)notes.push('No data in this selection.');
+    else{
+      if(buckets.some(bucket=>bucket.partial))notes.push('* Partial period within the selected dates.');
+      if(buckets.some(bucket=>bucket.incomplete))notes.push('Totals include reported data only; missing records are not zero.');
+    }
+    document.getElementById('dailyRevenueNote').textContent=notes.join(' ');
+    document.getElementById('dailyRevenueCanvas').setAttribute('aria-label',intervalName+' '+metricName.toLowerCase()+' '+(bars?'bars':'line chart')+(drillRange?' for '+model.start+' to '+model.end:''));
+  }
   let chart=null,entries=[],total=0;
   function collapse(){modal.hidden=true;trigger.hidden=false;trigger.setAttribute('aria-expanded','false');}
   modal.querySelector('button').addEventListener('click',()=>{collapse();trigger.focus();});
@@ -181,6 +263,7 @@ window.RevenueShare=(()=>{
   function render(rows){
     if(timelineDialog.open)timelineDialog.close();
     if(channelDialog.open)channelDialog.close();
+    if(rows!==currentRows)drillRange=null;
     currentRows=rows;
     window.ChannelComparison.render(rows);
     const metricName=metricNames[selectedMetric],isRevenue=selectedMetric==='total';
@@ -217,27 +300,9 @@ window.RevenueShare=(()=>{
     window.lucide?.createIcons();sizeMetrics();
     metrics.querySelectorAll('tbody th').forEach(label=>brandLogo(label.querySelector('.channel-glyph'),label.lastElementChild.textContent));
     metrics.querySelector('.metrics-empty').textContent=rows.length?'':'No channel data for this selection.';
-    const days=new Map(),viewSums=new Map();
-    for(const r of rows){if(!days.has(r.day))days.set(r.day,{ad:0,other:0,views:0,impressions:0});for(const key of ['ad','other','views','impressions'])days.get(r.day)[key]+=r[key];viewSums.set(r.channel,(viewSums.get(r.channel)||0)+r.views);}
-    const sorted=[...days].sort(([a],[b])=>a.localeCompare(b));
-    const series=isRevenue?[['Ad revenue','ad','#09aaa1'],['Sponsorship / others','other','#fa668c']]:[[metricName,selectedMetric,selectedMetric==='views'?'#3689ef':'#d68a28']];
-    const datasets=series.filter(([,key])=>!isRevenue||sorted.some(([,v])=>v[key]!==0)).map(([label,key,color])=>({label,data:sorted.map(([,v])=>v[key]/(isRevenue?100:1)),borderColor:color,backgroundColor:color+'12',borderWidth:2,fill:true,tension:0,pointRadius:sorted.length===1?5:3,pointHoverRadius:5}));
-    const first=document.getElementById('start').value||sorted[0]?.[0],last=document.getElementById('end').value||sorted.at(-1)?.[0];
-    const span=first&&last?(Date.parse(last)-Date.parse(first))/86400000+1:0;
-    const useBars=sorted.length===1||(span>0&&span<=7);
-    if(useBars)for(const dataset of datasets){dataset.type='bar';dataset.backgroundColor=dataset.borderColor;dataset.borderWidth=0;dataset.borderRadius=6;dataset.borderSkipped=false;dataset.maxBarThickness=48;dataset.categoryPercentage=.7;dataset.barPercentage=.85;}
-    if(lineChart)lineChart.destroy();
-    Chart.defaults.color='#514958';Chart.defaults.font.size=13;
-    lineChart=new Chart(document.getElementById('dailyRevenueCanvas'),{type:useBars?'bar':'line',data:{labels:sorted.map(([day])=>day),datasets},options:{responsive:true,maintainAspectRatio:false,animation:matchMedia('(prefers-reduced-motion: reduce)').matches?false:{duration:250},interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom',labels:{color:'#d1d1dc',boxWidth:12}},tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': '+cash(ctx.raw*100)}}},scales:{x:{type:'category',offset:useBars,title:{display:true,text:'Date',color:'#bcbccc'},grid:{display:false,offset:useBars},ticks:{color:'#bcbccc',maxTicksLimit:6,maxRotation:0,callback:function(value){const day=this.getLabelForValue(value);return new Intl.DateTimeFormat('en-GB',{day:'2-digit',month:'short',timeZone:'UTC'}).format(new Date(day+'T00:00:00Z'));}}},y:{beginAtZero:true,title:{display:true,text:'Revenue (INR)',color:'#bcbccc'},grid:{color:'#ffffff0d'},ticks:{color:'#bcbccc'}}}}});
-    lineChart.stop();for(const axis of Object.values(lineChart.options.scales)){axis.ticks.color='#506889';axis.title.color='#506889';axis.grid.color='#edf2f8';}lineChart.options.plugins.legend.labels.color='#506889';lineChart.options.plugins.legend.labels.usePointStyle=true;lineChart.options.plugins.legend.labels.pointStyle='circle';lineChart.options.plugins.legend.labels.padding=20;lineChart.update('none');
-    lineChart.options.scales.x.ticks.maxTicksLimit=10;
-    lineChart.options.scales.y.ticks.maxTicksLimit=12;
-    lineChart.options.scales.y.title.text= isRevenue?'Revenue (INR)':metricName;
-    lineChart.options.scales.y.ticks.precision=0;
-    lineChart.options.plugins.tooltip.callbacks.label=ctx=>ctx.dataset.label+': '+metricValue(ctx.raw*(isRevenue?100:1));
-    lineChart.update('none');
-    document.getElementById('dailyRevenueNote').textContent=!rows.length?'No data in this selection.':!datasets.length?'No '+metricName.toLowerCase()+' in this selection.':sorted.length===1?'One date available. Select a wider range to compare days.':'';
-    document.getElementById('dailyRevenueCanvas').setAttribute('aria-label','Daily '+metricName.toLowerCase()+(useBars?' bars':' lines'));
+    const viewSums=new Map();
+    for(const r of rows)viewSums.set(r.channel,(viewSums.get(r.channel)||0)+r.views);
+    renderTimeline();
     const viewEntries=[...viewSums].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0])),viewTotal=viewEntries.reduce((sum,[,n])=>sum+n,0);
     const tree=document.getElementById('viewsTree');tree.replaceChildren();
     const positive=viewEntries;
@@ -279,6 +344,6 @@ window.RevenueShare=(()=>{
     chart=new Chart(document.getElementById('summaryShareCanvas'),{type:'doughnut',plugins:[raisedRing],data:{labels:shown.map(([name])=>name),datasets:[{data:valid?shown.map(([,value])=>value):[],backgroundColor:colors,borderWidth:1,borderColor:'#fff',hoverOffset:0}]},options:{responsive:true,maintainAspectRatio:false,cutout:'66%',layout:{padding:{top:2,right:2,bottom:10,left:2}},events:[],animation:false,plugins:{visibleSharePercent:false,legend:{display:false},tooltip:{enabled:false}}}});
     modal.querySelectorAll('.distribution-track').forEach(el=>el.hidden=!valid);
   }
-  function clear(){channelBrands.clear();selectedMetric='total';collapse();render([]);}
+  function clear(){channelBrands.clear();selectedMetric='total';timelineMode='auto';drillRange=null;hiddenTimelineSeries.clear();collapse();render([]);}
   return{render,clear,compare,setChannels,brandLogo};
 })();
