@@ -47,6 +47,143 @@ class DatabaseUploadTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200, response.json)
         return response.json['id']
 
+    def test_new_user_requires_recovery_email_and_keeps_username(self):
+        body=dict(username='new-viewer',role='viewer',password='temporary-password',channels=[])
+        for email in [None,'','bad-address']:
+            value=dict(body)
+            if email is not None:
+                value['email']=email
+            self.assertEqual(self.client.post('/api/admin/users',headers=self.headers,json=value).status_code,400)
+        body['email']='  VIEWER@Example.com  '
+        response=self.client.post('/api/admin/users',headers=self.headers,json=body)
+        self.assertEqual(response.status_code,200,response.json)
+        data=self.client.get('/api/admin/users').json
+        self.assertFalse(data['email_enabled'])
+        user=next(row for row in data['users'] if row['username']=='new-viewer')
+        self.assertEqual(user['email'],'viewer@example.com')
+        self.assertFalse(user['email_verified'])
+        self.assertTrue(user['must_change'])
+        client=self.app.test_client()
+        self.assertEqual(client.post('/api/login',json={'username':'new-viewer','password':body['password']}).status_code,200)
+
+    def test_email_duplicate_rolls_back_user_edit(self):
+        with closing(sqlite3.connect(self.db_file)) as db,db:
+            db.execute("INSERT INTO email_accounts VALUES (1,'owner@example.com',1)")
+        response=self.client.post('/api/admin/users',headers=self.headers,json=dict(
+            id=2,username='renamed',email='OWNER@example.com',role='viewer',channels=[]))
+        self.assertEqual(response.status_code,400,response.json)
+        with closing(sqlite3.connect(self.db_file)) as db:
+            self.assertEqual(db.execute('SELECT username,role FROM users WHERE id=2').fetchone(),('uploader','uploader'))
+            self.assertEqual(db.execute('SELECT email FROM email_accounts WHERE user_id=1').fetchone()[0],'owner@example.com')
+
+    def test_admin_email_edit_revokes_tokens_and_preserves_legacy_login(self):
+        with closing(sqlite3.connect(self.db_file)) as db,db:
+            db.execute("INSERT INTO email_accounts VALUES (2,'old@example.com',1)")
+            db.execute("INSERT INTO email_tokens VALUES ('old-token',2,9999999999)")
+        response=self.client.post('/api/admin/users',headers=self.headers,json=dict(
+            id=2,username='uploader',email='new@example.com',role='uploader',channels=[]))
+        self.assertEqual(response.status_code,200,response.json)
+        with closing(sqlite3.connect(self.db_file)) as db:
+            self.assertEqual(db.execute('SELECT email,verified FROM email_accounts WHERE user_id=2').fetchone(),('new@example.com',0))
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM email_tokens WHERE user_id=2').fetchone()[0],0)
+        events=self.client.get('/api/admin/audit?category=passwords').json
+        self.assertTrue(events['valid'])
+        self.assertEqual(events['events'][0]['action'],'recovery_email_changed')
+
+    def test_recovery_edit_requires_current_password_and_handles_owner(self):
+        with closing(sqlite3.connect(self.db_file)) as db,db:
+            db.execute('INSERT INTO super_admin VALUES (1,1)')
+        body=dict(current='wrong',password='new-synthetic-password',email='owner@example.com')
+        self.assertEqual(self.client.post('/api/password',headers=self.headers,json=body).status_code,400)
+        self.assertEqual(self.client.get('/api/me').json['recovery_email'],'')
+        body['current']='synthetic-password'
+        response=self.client.post('/api/password',headers=self.headers,json=body)
+        self.assertEqual(response.status_code,200,response.json)
+        self.assertEqual(self.client.get('/api/me').json['recovery_email'],'owner@example.com')
+
+    def test_recovery_permission_csrf_and_email_removal(self):
+        body=dict(id=2,username='uploader',email='uploader@example.com',role='uploader',channels=[])
+        self.assertEqual(self.client.post('/api/admin/users',json=body).status_code,403)
+        self.assertEqual(self.client.post('/api/admin/users',headers=self.headers,json=body).status_code,200)
+        body['email']=''
+        self.assertEqual(self.client.post('/api/admin/users',headers=self.headers,json=body).status_code,400)
+        self.uploader_login()
+        self.assertEqual(self.client.post('/api/admin/users',headers=self.headers,json=body).status_code,403)
+
+    def test_email_invite_and_single_use_reset_end_to_end(self):
+        from dataclasses import replace
+        from urllib.parse import urlsplit
+        import re
+        config=replace(self.app.config['SETTINGS'],app_url='https://reports.example.com')
+        env={'SMTP_HOST':'smtp.example.com','SMTP_FROM':'reports@example.com','SMTP_USERNAME':'reports','SMTP_PASSWORD':'synthetic-smtp-secret'}
+        with patch.dict(os.environ,env),patch.dict(self.app.config,{'SETTINGS':config}),patch('account_email.smtplib.SMTP') as smtp:
+            response=self.client.post('/api/admin/users',headers=self.headers,json=dict(
+                username='invited-viewer',email='invite@example.com',invite=True,role='viewer',channels=[]))
+            self.assertEqual(response.status_code,200,response.json)
+            self.assertTrue(response.json['invitation_sent'])
+            message=smtp.return_value.__enter__.return_value.send_message.call_args.args[0]
+            content=message.get_content()
+            self.assertEqual(message['To'],'invite@example.com')
+            self.assertIn('Username: invited-viewer',content)
+            token=urlsplit(re.search(r'https://\S+',content).group()).fragment.split('=',1)[1]
+            response=self.client.post('/api/account/complete',json=dict(token=token,password='new-viewer-password'))
+            self.assertEqual(response.status_code,200,response.json)
+            self.assertEqual(self.client.post('/api/account/complete',json=dict(token=token,password='another-password')).status_code,400)
+            client=self.app.test_client()
+            self.assertEqual(client.post('/api/login',json=dict(username='invited-viewer',password='new-viewer-password')).status_code,200)
+            self.assertFalse(client.get('/api/me').json['user']['must_change'])
+            response=client.post('/api/account/request',json=dict(email='INVITE@example.com'))
+            self.assertEqual(response.status_code,200,response.json)
+            message=smtp.return_value.__enter__.return_value.send_message.call_args.args[0]
+            token=urlsplit(re.search(r'https://\S+',message.get_content()).group()).fragment.split('=',1)[1]
+            self.assertEqual(self.client.post('/api/account/complete',json=dict(token=token,password='reset-viewer-password')).status_code,200)
+            self.assertEqual(client.get('/api/me').status_code,401)
+
+    def test_invitation_failure_reports_saved_account_and_missing_config_blocks(self):
+        from dataclasses import replace
+        body=dict(username='invite-failed',email='failed@example.com',invite=True,role='viewer',channels=[])
+        self.assertEqual(self.client.post('/api/admin/users',headers=self.headers,json=body).status_code,400)
+        config=replace(self.app.config['SETTINGS'],app_url='https://reports.example.com')
+        with patch.dict(os.environ,{'SMTP_HOST':'smtp.example.com','SMTP_FROM':'reports@example.com'}),patch.dict(self.app.config,{'SETTINGS':config}),patch('account_email.smtplib.SMTP',side_effect=OSError('synthetic failure')):
+            response=self.client.post('/api/admin/users',headers=self.headers,json=body)
+        self.assertEqual(response.status_code,200,response.json)
+        self.assertFalse(response.json['invitation_sent'])
+        self.assertIn('User saved',response.json['warning'])
+        with closing(sqlite3.connect(self.db_file)) as db:
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM users WHERE username='invite-failed'").fetchone()[0],1)
+            self.assertEqual(db.execute('SELECT COUNT(*) FROM email_tokens').fetchone()[0],0)
+
+    def test_expired_reset_link_does_not_change_password(self):
+        import hashlib
+        with closing(sqlite3.connect(self.db_file)) as db,db:
+            previous=db.execute('SELECT password FROM users WHERE id=2').fetchone()[0]
+            db.execute('INSERT INTO email_tokens VALUES (?,?,?)',(hashlib.sha256(b'expired-token').hexdigest(),2,1))
+        response=self.client.post('/api/account/complete',json=dict(token='expired-token',password='replacement-password'))
+        self.assertEqual(response.status_code,400,response.json)
+        with closing(sqlite3.connect(self.db_file)) as db:
+            self.assertEqual(db.execute('SELECT password FROM users WHERE id=2').fetchone()[0],previous)
+
+    def test_reset_unknown_email_has_generic_response_and_rate_limit(self):
+        from dataclasses import replace
+        config=replace(self.app.config['SETTINGS'],app_url='https://reports.example.com')
+        with patch.dict(os.environ,{'SMTP_HOST':'smtp.example.com','SMTP_FROM':'reports@example.com'}),patch.dict(self.app.config,{'SETTINGS':config}),patch('account_email.smtplib.SMTP') as smtp:
+            response=self.client.post('/api/account/request',json=dict(email='unknown@example.com'))
+            self.assertEqual(response.status_code,200,response.json)
+            self.assertEqual(response.json['message'],'If this email has access, a password link will arrive shortly.')
+            smtp.assert_not_called()
+            self.assertEqual(self.client.post('/api/account/request',json=dict(email='unknown@example.com')).status_code,429)
+
+    def test_recovery_email_does_not_bypass_admin_or_owner_protection(self):
+        with closing(sqlite3.connect(self.db_file)) as db,db:
+            db.execute('INSERT INTO super_admin VALUES (1,1)')
+        body=dict(id=1,username='admin',email='owner@example.com',role='admin',channels=[])
+        self.assertEqual(self.client.post('/api/admin/users',headers=self.headers,json=body).status_code,400)
+        with closing(sqlite3.connect(self.db_file)) as db,db:
+            db.execute("UPDATE users SET role='admin' WHERE id=2")
+        self.uploader_login()
+        self.assertEqual(self.client.post('/api/admin/users',headers=self.headers,json=dict(
+            username='another-admin',email='newadmin@example.com',role='admin',password='temporary-password',channels=[])).status_code,403)
+
     def test_audit_categories_cover_old_events_and_paginate(self):
         actions=['user_signed_out']*105+['password_changed','upload_submitted','upload_published',
                  'upload_archived','upload_deleted','user_saved','channel_created','future_action']

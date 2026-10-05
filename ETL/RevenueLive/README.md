@@ -213,3 +213,23 @@ share, stacked ad/sponsorship revenue and views-vs-revenue scatter. Share groups
 channels after the top six as Other; Top 10 ranking can switch to All selected.
 Weekly buckets begin Monday and include only records inside the applied date range.
 The local Chart.js 4.4.1 bundle is MIT licensed; its license is in `static`.
+
+### User Accounts and Recovery Email
+
+New users require a username and a unique recovery email. Login still uses the
+username; the email is used for invitations and Forgot password. Admins can add
+or update recovery email in Edit user, subject to existing role protections.
+Existing username-only accounts keep working and show Recovery email missing.
+Users, including Super Admin, can register/update their own recovery email when
+changing their password, with their current password required. First-login
+password setup also collects this email. Email changes invalidate old reset
+links and are recorded in password activity history. Addresses are marked
+verified only after a successful emailed-token password setup/reset.
+
+Temporary-password creation works without email delivery; first login requires
+a password change. Invitations require SMTP and an HTTPS APP_URL, and the UI
+disables invitations when that configuration is missing. Configuration presence
+does not prove SMTP connectivity: an invitation delivery failure leaves the
+account saved and reports delivery failure explicitly. Configure SMTP_HOST,
+SMTP_PORT (STARTTLS, usually 587), SMTP_FROM, SMTP_USERNAME and SMTP_PASSWORD,
+then restart. No real email was sent by automated tests.

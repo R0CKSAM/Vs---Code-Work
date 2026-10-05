@@ -212,6 +212,7 @@ function identity(value){
 function overview(){document.querySelectorAll('.view').forEach(v=>v.hidden=v.id!=='dashboard');document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view==='dashboard'));}
 function passwordPrompt(){
   const first=!!me.user.must_change;
+  $('passwordForm').elements.email.value=me.recovery_email||'';
   $('passwordTitle').textContent=first?'Set your own password':'Change password';
   $('currentPasswordLabel').textContent=first?'Temporary password':'Current password';
   $('passwordCancel').hidden=first;$('passwordDialog').querySelector('.form-error').textContent='';
@@ -692,11 +693,12 @@ bind('uploadDeleteForm','submit',async()=>{
   if(pending?.id===id){pending=null;$('preview').hidden=true;$('uploadForm').reset();}
   $('uploadDeleteDialog').close();pendingDelete=null;await history();notify('File deleted.');
 });
+let accountEmailEnabled=false;
 async function loadUsers(){
-  const data=await api('/api/admin/users');users=data.users;adminChannels=data.channels;
+  const data=await api('/api/admin/users');users=data.users;adminChannels=data.channels;accountEmailEnabled=!!data.email_enabled;
   const active=new Set(adminChannels.map(c=>c.id));
   const scope=u=>{const count=u.channels.filter(id=>active.has(id)).length;return u.role==='admin'?'All channels':count===0?'No channels':count===active.size?'All assigned channels ('+count+')':count+' of '+active.size+' channels';};
-  $('users').innerHTML=users.map(u=>`<tr><td><strong>${esc(u.username)}</strong></td><td><span class="role-pill role-${u.super_admin?'super':['admin','uploader','viewer'].includes(u.role)?u.role:'unknown'}">${u.super_admin?'Super Admin':esc(u.role)}</span></td><td>${scope(u)}</td><td><span class="status-pill status-${!u.active?'disabled':u.must_change?'pending':'enabled'}">${!u.active?'Disabled':u.must_change?'Password setup pending':'Enabled'}</span></td><td>${u.super_admin||(!me.user.super_admin&&u.role==='admin')?'Protected':`<button data-user="${u.id}">Edit</button>`}</td></tr>`).join('');
+  $('users').innerHTML=users.map(u=>`<tr><td><strong>${esc(u.username)}</strong><small class="user-recovery-email">${u.email?esc(u.email):'Recovery email missing'}</small></td><td><span class="role-pill role-${u.super_admin?'super':['admin','uploader','viewer'].includes(u.role)?u.role:'unknown'}">${u.super_admin?'Super Admin':esc(u.role)}</span></td><td>${scope(u)}</td><td><span class="status-pill status-${!u.active?'disabled':u.must_change?'pending':'enabled'}">${!u.active?'Disabled':u.must_change?'Password setup pending':'Enabled'}</span></td><td>${u.super_admin||(!me.user.super_admin&&u.role==='admin')?'Protected':`<button data-user="${u.id}">Edit</button>`}</td></tr>`).join('');
   $('userForm').elements.role.querySelector('option[value="admin"]').disabled=!me.user.super_admin;
   directoryChannels=[...data.channels.map(c=>({...c,archived:false})),...(data.archived||[]).map(c=>({...c,archived:true}))];
   renderChannelDirectory();
@@ -753,7 +755,7 @@ function assignmentSummary(){
   $('assignmentCount').textContent=selected+' selected | '+shown+' shown | '+labels.length+' total';
 }
 function assignmentRole(){const admin=$('userForm').elements.role.value==='admin';$('assignmentFieldset').dataset.admin=String(admin);$('adminAccessNote').hidden=!admin;}
-function editUser(user){const form=$('userForm');form.reset();form.elements.id.value=user?.id||'';form.elements.username.value=user?.username||'';form.elements.role.value=user?.role||'viewer';form.elements.active.checked=user?!!user.active:true;form.elements.password.required=!user;form.elements.password.type='password';$('temporaryPasswordLabel').textContent=user?'Reset password (optional, 12+ characters)':'Temporary password (12+ characters)';$('userTitle').textContent=user?'Edit user':'Add user';$('userDialog').querySelector('.form-error').textContent='';$('assignmentSearch').value='';$('assignments').innerHTML=adminChannels.map(c=>`<label class="check"><input type="checkbox" value="${c.id}" ${user?.channels.includes(c.id)?'checked':''}>${esc(c.name)}</label>`).join('');assignmentSummary();assignmentRole();$('userDialog').showModal();}
+function editUser(user){const form=$('userForm');form.reset();form.elements.id.value=user?.id||'';form.elements.username.value=user?.username||'';form.elements.email.value=user?.email||'';form.elements.role.value=user?.role||'viewer';form.elements.active.checked=user?!!user.active:true;form.elements.password.required=!user;form.elements.password.type='password';$('temporaryPasswordLabel').textContent=user?'Reset password (optional, 12+ characters)':'Temporary password (12+ characters)';$('userTitle').textContent=user?'Edit user':'Add user';$('userDialog').querySelector('.form-error').textContent='';$('assignmentSearch').value='';$('assignments').innerHTML=adminChannels.map(c=>`<label class="check"><input type="checkbox" value="${c.id}" ${user?.channels.includes(c.id)?'checked':''}>${esc(c.name)}</label>`).join('');assignmentSummary();assignmentRole();inviteMode();$('userDialog').showModal();}
 bind('addUser','click',async()=>editUser());
 $('users').addEventListener('click',e=>{const button=e.target.closest('[data-user]');if(button)editUser(users.find(u=>u.id===Number(button.dataset.user)));});
 bind('userCancel','click',async()=>$('userDialog').close());
@@ -762,12 +764,17 @@ $('assignments').addEventListener('change',assignmentSummary);
 $('userForm').elements.role.addEventListener('change',assignmentRole);
 $('showTemporary').addEventListener('change',()=>{$('userForm').elements.password.type=$('showTemporary').checked?'text':'password';});
 for(const [id,mode] of [['assignAll','all'],['assignShown','shown'],['assignClear','clear']])bind(id,'click',async()=>{for(const label of $('assignments').children)if(mode!=='shown'||!label.hidden)label.querySelector('input').checked=mode!=='clear';assignmentSummary();});
-bind('userForm','submit',async()=>{const form=$('userForm');const body={invite:$('inviteEmail').checked,id:form.elements.id.value?Number(form.elements.id.value):null,username:form.elements.username.value,role:form.elements.role.value,password:form.elements.password.value,active:form.elements.active.checked,channels:form.elements.role.value==='admin'?[]:[...$('assignments').querySelectorAll('input:checked')].map(c=>Number(c.value))};await api('/api/admin/users',{method:'POST',body});$('userDialog').close();form.reset();await loadUsers();notify(body.invite?'Invitation sent. User will set their own password.':body.id?'User access saved. Open clients update automatically.':'User created: '+body.username.trim()+'. Sign-in address: '+location.origin+'/');});
+bind('userForm','submit',async()=>{const form=$('userForm');const body={invite:$('inviteEmail').checked,id:form.elements.id.value?Number(form.elements.id.value):null,username:form.elements.username.value,email:form.elements.email.value,role:form.elements.role.value,password:$('inviteEmail').checked?'':form.elements.password.value,active:form.elements.active.checked,channels:form.elements.role.value==='admin'?[]:[...$('assignments').querySelectorAll('input:checked')].map(c=>Number(c.value))};const result=await api('/api/admin/users',{method:'POST',body});$('userDialog').close();form.reset();await loadUsers();notify(result.warning|| (body.invite?'Invitation sent. User will set their own password.':body.id?'User access saved. Open clients update automatically.':'User created: '+body.username.trim()+'. Sign-in address: '+location.origin+'/'));});
 bind('channelForm','submit',async()=>{await api('/api/admin/channels',{method:'POST',body:Object.fromEntries(new FormData($('channelForm')))});$('channelForm').reset();await loadUsers();notify('Channel added.');});
 const inviteLabel=document.createElement('label');inviteLabel.className='check';
 inviteLabel.innerHTML='<input type="checkbox" id="inviteEmail">Invite by email';
-$('userForm').elements.username.closest('label').after(inviteLabel);
-function inviteMode(){const form=$('userForm'),editing=!!form.elements.id.value;inviteLabel.hidden=editing;if(editing)$('inviteEmail').checked=false;const enabled=$('inviteEmail').checked;form.elements.password.required=!editing&&!enabled;form.elements.password.closest('label').hidden=enabled;form.elements.username.type=enabled?'email':'text';$('showTemporary').closest('label').hidden=enabled;}
+const recoveryLabel=document.createElement('label');
+recoveryLabel.innerHTML='Recovery email<input name="email" type="email" required maxlength="80" autocomplete="off">';
+const ownRecoveryLabel=recoveryLabel.cloneNode(true);
+$('passwordForm').elements.confirm.closest('label').after(ownRecoveryLabel);
+const deliveryStatus=document.createElement('p');deliveryStatus.className='muted';deliveryStatus.setAttribute('role','status');
+$('userForm').elements.username.closest('label').after(recoveryLabel,inviteLabel,deliveryStatus);
+function inviteMode(){const form=$('userForm'),editing=!!form.elements.id.value;inviteLabel.hidden=editing;$('inviteEmail').disabled=!accountEmailEnabled;if(editing||!accountEmailEnabled)$('inviteEmail').checked=false;const enabled=$('inviteEmail').checked;form.elements.password.required=!editing&&!enabled;form.elements.password.closest('label').hidden=enabled;form.elements.username.type='text';$('showTemporary').closest('label').hidden=enabled;deliveryStatus.hidden=accountEmailEnabled;deliveryStatus.textContent='Email delivery not configured. Administrator password reset is available.';}
 $('inviteEmail').addEventListener('change',inviteMode);
 new MutationObserver(inviteMode).observe($('userDialog'),{attributes:true,attributeFilter:['open']});
 const resetDialog=document.createElement('dialog');resetDialog.id='accountDialog';
@@ -779,7 +786,7 @@ if(accountToken)window.history.replaceState(null,'',location.pathname+location.s
 function openAccount(){const form=$('accountForm');form.reset();$('accountTitle').textContent=accountToken?'Set your password':'Forgot password';$('accountEmailLabel').hidden=!!accountToken;$('accountPasswordLabel').hidden=!accountToken;$('accountConfirmLabel').hidden=!accountToken;form.elements.email.required=!accountToken;form.elements.password.required=!!accountToken;form.elements.confirm.required=!!accountToken;resetDialog.querySelector('.form-error').textContent='';resetDialog.showModal();}
 forgot.addEventListener('click',()=>{accountToken='';openAccount();});
 bind('accountCancel','click',async()=>{accountToken='';resetDialog.close();});
-bind('accountForm','submit',async()=>{const form=$('accountForm');if(accountToken&&form.elements.password.value!==form.elements.confirm.value)throw new Error('Passwords do not match.');const result=await api(accountToken?'/api/account/complete':'/api/account/request',{method:'POST',body:accountToken?{token:accountToken,password:form.elements.password.value}:{email:form.elements.email.value}});const completed=!!accountToken;accountToken='';resetDialog.close();if(completed)signOutView('Password saved. Sign in with your email and new password.');else if(me)notify(result.message);else $('loginError').textContent=result.message;});
+bind('accountForm','submit',async()=>{const form=$('accountForm');if(accountToken&&form.elements.password.value!==form.elements.confirm.value)throw new Error('Passwords do not match.');const result=await api(accountToken?'/api/account/complete':'/api/account/request',{method:'POST',body:accountToken?{token:accountToken,password:form.elements.password.value}:{email:form.elements.email.value}});const completed=!!accountToken;accountToken='';resetDialog.close();if(completed)signOutView('Password saved. Sign in with your username and new password.');else if(me)notify(result.message);else $('loginError').textContent=result.message;});
 session().catch(()=>{$('login').hidden=false;$('shell').hidden=true;}).finally(()=>{if(accountToken)openAccount();});
 setInterval(syncAccess,2000);
 window.addEventListener('focus',syncAccess);

@@ -33,7 +33,7 @@ LEGACY_HEADERS = ['Date', 'Channel Name', 'Views', 'Compaign/Ad Impression', 'Re
 AUDIT_GENESIS = '0' * 64
 AUDIT_CATEGORIES = {
     'access': ('Login / Logout', ('user_signed_in', 'user_signed_out')),
-    'passwords': ('Passwords', ('password_changed', 'password_reset_completed', 'password_reset_by_admin', 'super_admin_reset')),
+    'passwords': ('Passwords', ('password_changed', 'password_reset_completed', 'password_reset_by_admin', 'super_admin_reset', 'recovery_email_changed')),
     'uploads': ('Uploads', ('upload_submitted', 'upload_channels_resolved', 'upload_totals_accepted', 'upload_entries_consolidated')),
     'live': ('Live / Unlive', ('upload_published', 'upload_unpublished', 'date_hidden', 'date_restored')),
     'archive': ('Archive / Restore', ('upload_archived', 'upload_unarchived', 'upload_rejected', 'channel_archived', 'channel_restored')),
@@ -375,7 +375,9 @@ def create_app(data_dir=None):
     @app.get('/api/me')
     @require()
     def me():
+        recovery=db().execute('SELECT email FROM email_accounts WHERE user_id=?',(g.user['id'],)).fetchone()
         return jsonify(user=g.user,csrf=g.session['csrf'],channels=channel_catalog(permitted()),
+                       recovery_email=recovery['email'] if recovery else '',
                        home='/admin' if g.user['role']=='admin' else '/user')
 
     @app.post('/api/logout')
@@ -396,6 +398,9 @@ def create_app(data_dir=None):
         current=db().execute('SELECT password FROM users WHERE id=?',(g.user['id'],)).fetchone()[0]
         if not check_password_hash(current,str(body.get('current',''))):
             raise InvalidData('Current password is incorrect.')
+        db().begin_write()
+        if 'email' in body:
+            save_recovery_email(g.user['id'],email_address(body['email']))
         db().execute('UPDATE users SET password=?,must_change=0 WHERE id=?',(generate_password_hash(value),g.user['id']))
         db().execute('DELETE FROM email_tokens WHERE user_id=?',(g.user['id'],))
         db().execute('DELETE FROM sessions WHERE user_id=? AND token<>?',(g.user['id'],g.session['token']))
@@ -1076,9 +1081,14 @@ def create_app(data_dir=None):
     @require('admin')
     def users():
         rows=[]
-        for user in db().execute('SELECT id,username,role,active,must_change FROM users ORDER BY username'):
+        for user in db().execute('SELECT u.id,u.username,u.role,u.active,u.must_change,e.email,e.verified AS email_verified FROM users u LEFT JOIN email_accounts e ON e.user_id=u.id ORDER BY u.username'):
             rows.append({**dict(user),'super_admin':bool(db().execute('SELECT 1 FROM super_admin WHERE user_id=?',(user['id'],)).fetchone()),'channels':[r[0] for r in db().execute('SELECT channel_id FROM assignments WHERE user_id=?',(user['id'],))]})
-        return jsonify(users=rows,channels=channel_catalog(permitted()),archived=channel_catalog(db().execute('SELECT c.* FROM channels c JOIN archived_channels a ON a.channel_id=c.id ORDER BY LOWER(c.name)')))
+        try:
+            mail_settings()
+            email_enabled=True
+        except InvalidData:
+            email_enabled=False
+        return jsonify(users=rows,email_enabled=email_enabled,channels=channel_catalog(permitted()),archived=channel_catalog(db().execute('SELECT c.* FROM channels c JOIN archived_channels a ON a.channel_id=c.id ORDER BY LOWER(c.name)')))
 
     @app.post('/api/admin/channels/<int:cid>/archive')
     @require('admin')
@@ -1174,6 +1184,22 @@ def create_app(data_dir=None):
     from account_email import install
     email_address, mail_settings, send_invitation = install(app, db, data, InvalidData, log)
 
+    def save_recovery_email(uid, email):
+        current=db().execute('SELECT email FROM email_accounts WHERE user_id=?',(uid,)).fetchone()
+        if current and current['email']==email:
+            return
+        if db().execute('SELECT 1 FROM email_accounts WHERE LOWER(email)=? AND user_id<>?',(email,uid)).fetchone():
+            raise InvalidData('That recovery email is already assigned to another account.')
+        try:
+            if current:
+                db().execute('UPDATE email_accounts SET email=?,verified=0 WHERE user_id=?',(email,uid))
+            else:
+                db().execute('INSERT INTO email_accounts(user_id,email,verified) VALUES (?,?,0)',(uid,email))
+        except INTEGRITY_ERRORS:
+            raise InvalidData('That recovery email is already assigned to another account.')
+        db().execute('DELETE FROM email_tokens WHERE user_id=?',(uid,))
+        log('recovery_email_changed',json.dumps(dict(id=uid,before=current['email'] if current else None,email=email),separators=(',',':')))
+
     @app.post('/api/admin/users')
     @require('admin')
     def save_user():
@@ -1183,10 +1209,15 @@ def create_app(data_dir=None):
         password=str(body.get('password',''))
         uid=body.get('id')
         invite = body.get('invite') is True
+        email = email_address(body['email']) if 'email' in body else None
+        if not uid and email is None:
+            if invite:
+                email = email_address(username)
+            else:
+                raise InvalidData('Enter a recovery email address for the new user.')
         if invite:
             if uid:
                 raise InvalidData('Invitations are for new accounts. Existing email users can use Forgot password.')
-            username = email_address(username)
             mail_settings()
             password = secrets.token_urlsafe(48)
         if uid is not None and (type(uid)!=int or uid<=0):
@@ -1218,8 +1249,7 @@ def create_app(data_dir=None):
                     raise InvalidData('User not found.')
                 before={**dict(existing),'channels':[row[0] for row in db().execute('SELECT channel_id FROM assignments WHERE user_id=? ORDER BY channel_id',(uid,))]}
                 email_account=db().execute('SELECT email FROM email_accounts WHERE user_id=?',(uid,)).fetchone()
-                if email_account and username.casefold()!=email_account['email'].casefold():
-                    raise InvalidData('Email login cannot be renamed. Disable this account and invite the new email separately.')
+                before['email']=email_account['email'] if email_account else None
                 db().execute('UPDATE users SET username=?,role=?,active=? WHERE id=?',(username,role,active,uid))
                 if password:
                     db().execute('UPDATE users SET password=?,must_change=1 WHERE id=?',(generate_password_hash(password),uid))
@@ -1231,16 +1261,20 @@ def create_app(data_dir=None):
                 uid=db().execute('INSERT INTO users(username,password,role,active,must_change) VALUES (?,?,?,?,1)',(username,generate_password_hash(password),role,active)).lastrowid
             db().execute('DELETE FROM assignments WHERE user_id=?',(uid,))
             db().executemany('INSERT INTO assignments VALUES (?,?)',[(uid,c) for c in set(ids)])
-            if invite:
-                db().execute('INSERT INTO email_accounts(user_id,email) VALUES (?,?)',(uid,username))
-            log('user_saved',json.dumps(dict(id=uid,username=username,role=role,active=bool(active),channels=sorted(set(ids)),before=before,password_reset=bool(password and before),invited=invite),separators=(',',':')))
+            if email is not None:
+                save_recovery_email(uid,email)
+            log('user_saved',json.dumps(dict(id=uid,username=username,email=email if email is not None else before.get('email'),role=role,active=bool(active),channels=sorted(set(ids)),before=before,password_reset=bool(password and before),invited=invite),separators=(',',':')))
             if password and before:
                 log('password_reset_by_admin',json.dumps(dict(id=uid,username=username),separators=(',',':')))
             db().commit()
         except INTEGRITY_ERRORS:
-            raise InvalidData('Username already exists.')
+            raise InvalidData('Username or recovery email already exists.')
         if invite:
-            send_invitation(uid)
+            try:
+                send_invitation(uid)
+            except InvalidData:
+                return jsonify(ok=True,invitation_sent=False,warning='User saved, but invitation delivery failed. Fix email delivery, then use Forgot password for the registered email.')
+            return jsonify(ok=True,invitation_sent=True)
         return jsonify(ok=True)
 
     return app

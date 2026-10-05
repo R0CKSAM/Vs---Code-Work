@@ -841,3 +841,5 @@ td:nth-child(5) .channel-value-track>span{background:#a881db}
   .summary-phase #uploads #auditEvents td:nth-child(n+3){grid-column:1/-1}
   .summary-phase #uploads #auditEvents td[colspan]::before{content:none}
 }
+/* Keep account recovery addresses readable without widening the user table. */
+.user-recovery-email{display:block;max-width:280px;margin-top:4px;white-space:normal;overflow-wrap:anywhere;font-size:12px;color:#435b78}

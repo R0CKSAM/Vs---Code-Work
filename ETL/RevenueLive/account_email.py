@@ -47,7 +47,7 @@ def install(app, db, data, invalid, log):
             if not config['host'] or not config['from']:
                 raise ValueError()
         except (OSError, ValueError, KeyError):
-            raise invalid('Email delivery is not configured. Ask the host administrator to configure mail.json with an HTTPS public URL.')
+            raise invalid('Password-reset email is unavailable. Ask the host administrator to configure SMTP and an HTTPS APP_URL, or ask your administrator to reset your password.')
         public_url = app.config['SETTINGS'].app_url
         if public_url and config['public_url'].rstrip('/') != public_url:
             raise invalid('Mail public_url must match REVENUE_PUBLIC_URL.')
@@ -60,7 +60,7 @@ def install(app, db, data, invalid, log):
 
     def issue(uid):
         config = settings()
-        user = db().execute('SELECT e.email FROM email_accounts e JOIN users u ON u.id=e.user_id WHERE u.id=? AND u.active=1', (uid,)).fetchone()
+        user = db().execute('SELECT e.email,u.username FROM email_accounts e JOIN users u ON u.id=e.user_id WHERE u.id=? AND u.active=1', (uid,)).fetchone()
         if not user:
             raise invalid('No active email account found.')
         raw = secrets.token_urlsafe(32)
@@ -72,7 +72,7 @@ def install(app, db, data, invalid, log):
         message['Subject'] = 'RevenueLive: set your password'
         message['From'] = config['from']
         message['To'] = user['email']
-        message.set_content('Set your RevenueLive password using this single-use link (expires in 30 minutes):\n\n'+config['public_url'].rstrip('/')+'/#account-token='+raw+'\n\nIf you did not request this, ignore this email. Never share this link.')
+        message.set_content('Username: '+user['username']+'\n\nSet your RevenueLive password using this single-use link (expires in 30 minutes):\n\n'+config['public_url'].rstrip('/')+'/#account-token='+raw+'\n\nSign in with the username above and your new password. If you did not request this, ignore this email. Never share this link.')
         try:
             with smtplib.SMTP(config['host'], int(config.get('port',587)), timeout=15) as smtp:
                 smtp.starttls(context=ssl.create_default_context())
