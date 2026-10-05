@@ -34,6 +34,24 @@ Admins manage all channels and users. Uploaders may publish only assigned
 channels; viewers may read only assigned channels. Reports and CSV exports are
 filtered on the server. Unknown/unassigned channels reject the entire upload.
 No assignments means no revenue access. Admin assignments are unrestricted.
+Channel matching ignores case, repeated whitespace and Unicode presentation
+variants (NFKC); punctuation and accents are not guessed. New channel creation
+uses the same normalization to prevent case/spacing duplicates. Existing
+normalization collisions block upload for admin review instead of picking a
+channel automatically. Upload errors list the file's affected channel names and
+Excel rows, distinguishing unregistered, unassigned, archived and conflicting
+names. During upload, admins and uploaders can explicitly create genuinely new
+channels or map file names to active channels available to them. New channels
+created by an uploader are assigned only to that uploader. This permission does
+not allow taking access to existing unassigned or archived channels. The UI
+offers an editable new-channel name and a dropdown of permitted channels,
+followed by confirmation and revalidation. Creation, assignment and mapping are
+audited and committed together with the successful preview; failed previews
+roll back all changes. Cancelling a successful preview leaves explicitly created
+channels registered. Mapping applies to this upload only, not a permanent alias.
+The preview lists applied mappings and flags duplicate date/channel rows caused
+by mapping. All channels must resolve before a preview is saved, and assignments
+are checked again when publishing.
 Channel and role changes are checked on every API request. Open online clients check for changes every two seconds and on focus, clear stale data, and refresh their permitted scope. Background browsers may throttle this check. Disabling an account or resetting its password revokes its sessions.
 
 Create accounts on the instance where users will sign in. New users sign in with their temporary password, then set and confirm their own password before accessing reports. Account assignment controls support Select all, Select shown (matching search), and Clear (including hidden choices).
@@ -68,11 +86,29 @@ The complete legacy header set is also accepted:
 In that format, Revenue means ad revenue and Total Ad Revenue must equal
 Revenue plus Sponsorship/Others. Header case and whitespace are normalized;
 mixed or reordered schemas are rejected. Exports use the standard headers.
-Use Excel dates or ISO `YYYY-MM-DD`; INR has at most two decimal places. Maximum
+Use Excel dates or ISO `YYYY-MM-DD`. Revenue imports round each amount to the
+nearest whole rupee (half up: 4.50 becomes 5); counts must already be integers.
+The supplied total must agree with either the rounded source sum or the sum of
+rounded components. Stored totals are calculated from rounded ad revenue plus
+rounded sponsorship so component totals remain additive. The preview shows
+these normalized whole-rupee values. Inconsistent source totals appear as
+highlighted warnings with Excel row numbers, supplied totals and calculated
+totals. Users must explicitly accept calculated totals before publishing such
+an upload; acceptance is checked on the server and recorded in the audit chain.
+The file total is retained in the SQL upload snapshot; published totals use the
+rounded ad revenue plus rounded sponsorship. Other validation errors still block
+upload. Duplicate date/channel rows appear as blocking errors in the preview;
+they cannot be accepted and require a corrected file. Preview pagination and
+the Issues only filter cover all rows, and
+pending/rejected files can reopen their warnings from the upload library.
+Maximum
 10 MB / 20,000 rows. Formula cells must have saved cached values. Zero is valid;
 blank metrics are rejected. Negative adjustments are not supported in this version.
 
-Revenue is stored as integer paise. Date/channel is unique. Preview is required;
+Revenue uses the existing integer-paise database/API scale for compatibility;
+new imports are multiples of 100 paise. Historical records are not rewritten.
+CSV exports omit decimal places for whole rupees and preserve historical fractions.
+Date/channel is unique. Preview is required;
 replacement requires confirmation. A change after preview aborts publication.
 Identical pending data (even in a different file format) and uploads that make no
 change to live data are rejected. Unchanged rows in a mixed file are not republished.

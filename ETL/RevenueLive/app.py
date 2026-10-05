@@ -14,8 +14,9 @@ import logging
 import sqlite3
 import threading
 import time
+import unicodedata
 from contextlib import closing
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
 from flask import Flask, Request, g, jsonify, request, send_from_directory, redirect
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -49,13 +50,32 @@ class InvalidData(ValueError):
     pass
 
 
+class UploadChannelError(InvalidData):
+    def __init__(self, issues):
+        super().__init__(f'{len(issues)} channel(s) need attention. Review the channel issues below before uploading again.')
+        self.issues = issues
+
+
+def normalize_channel_name(value):
+    return ' '.join(unicodedata.normalize('NFKC', str(value or '')).split())
+
+
+def channel_key(value):
+    return normalize_channel_name(value).casefold()
+
+
 class MemoryUploadRequest(Request):
     def _get_file_stream(self, total_content_length, content_type, filename=None, content_length=None):
         # Request size is bounded by MAX_CONTENT_LENGTH; avoid multipart disk spooling.
         return io.BytesIO()
 
 
-def parse_upload(content, suffix):
+def export_revenue(paise):
+    # New uploads use whole rupees; preserve precision of historical records.
+    return str(paise // 100) if paise % 100 == 0 else format(Decimal(paise) / 100, '.2f')
+
+
+def parse_upload(content, suffix, *, allow_total_warnings=False):
     if suffix == '.xls':
         import xlrd
         book = xlrd.open_workbook(file_contents=content)
@@ -92,7 +112,7 @@ def parse_upload(content, suffix):
         raise InvalidData('Columns must match: ' + ', '.join(HEADERS))
     if len(rows) > 20001:
         raise InvalidData('Maximum 20,000 data rows per upload.')
-    result, seen = [], set()
+    result, seen = [], {}
     for number, row in enumerate(rows[1:], 2):
         if all(x is None or str(x).strip() == '' for x in row):
             continue
@@ -106,28 +126,50 @@ def parse_upload(content, suffix):
                 date = dt.date.fromisoformat(str(date).strip())
             except ValueError:
                 raise InvalidData(f'Row {number}: use an Excel date or YYYY-MM-DD.')
-        channel = str(row[1] or '').strip()
+        channel = normalize_channel_name(row[1])
         if not channel or len(channel) > 120:
             raise InvalidData(f'Row {number}: invalid channel name.')
-        key = (date.isoformat(), channel.casefold())
+        key = (date.isoformat(), channel_key(channel))
+        blocking_error = None
         if key in seen:
-            raise InvalidData(f'Row {number}: duplicate date/channel inside the file.')
-        seen.add(key)
+            if not allow_total_warnings:
+                raise InvalidData(f'Row {number}: duplicate date/channel inside the file.')
+            blocking_error = f'Duplicate date/channel; first appears at Excel row {seen[key]}. Correct the file before publishing.'
+        else:
+            seen[key] = number
         values = []
+        source_revenue = []
         for index, value in enumerate(row[2:], 2):
             try:
                 numeric = Decimal(str(value).strip())
                 if not numeric.is_finite() or numeric < 0 or numeric > Decimal('1000000000000'):
                     raise ValueError()
-                scaled = numeric * (100 if index >= 4 else 1)
-                if scaled != scaled.to_integral_value():
+                scaled = numeric.quantize(Decimal('1'), rounding=ROUND_HALF_UP) * 100 if index >= 4 else numeric
+                if index < 4 and scaled != scaled.to_integral_value():
                     raise ValueError()
                 values.append(int(scaled))
+                if index >= 4:
+                    source_revenue.append(numeric)
             except (InvalidOperation, ValueError):
-                raise InvalidData(f'Row {number}: {HEADERS[index]} must be non-negative; counts are integers and INR allows two decimals.')
-        if values[2] + values[3] != values[4]:
-            raise InvalidData(f'Row {number}: total revenue must equal ad revenue plus sponsorship/others.')
+                raise InvalidData(f'Row {number}: {HEADERS[index]} must be non-negative; counts must be integers and revenue is rounded to whole rupees.')
+        rounded_sum = int((source_revenue[0] + source_revenue[1]).quantize(Decimal('1'), rounding=ROUND_HALF_UP)) * 100
+        warning = None
+        if values[2] + values[3] != values[4] and rounded_sum != values[4]:
+            if not allow_total_warnings:
+                raise InvalidData(f'Row {number}: total revenue must equal ad revenue plus sponsorship/others after whole-rupee rounding.')
+            warning = dict(code='total_mismatch', source_row=number,
+                           supplied_total=str(source_revenue[2]), rounded_supplied_total=values[4],
+                           calculated_total=values[2] + values[3])
+        # Rounding a sum can differ from summing rounded components by one rupee.
+        # Keep the dashboard's component totals additive after normalization.
+        values[4] = values[2] + values[3]
         result.append(dict(day=date.isoformat(), channel=channel, views=values[0], impressions=values[1], ad=values[2], other=values[3], total=values[4]))
+        if allow_total_warnings:
+            result[-1]['source_row'] = number
+            if warning:
+                result[-1]['warning'] = warning
+            if blocking_error:
+                result[-1]['blocking_error'] = blocking_error
     if not result:
         raise InvalidData('No data rows found.')
     return result
@@ -251,6 +293,9 @@ def create_app(data_dir=None):
 
     @app.errorhandler(InvalidData)
     def invalid(error):
+        if isinstance(error, UploadChannelError):
+            return jsonify(error=str(error),code='upload_channel_issues',channel_issues=error.issues,
+                           channel_options=[dict(channel) for channel in permitted()]),400
         return jsonify(error=str(error)),400
 
     @app.errorhandler(HTTPException)
@@ -467,21 +512,99 @@ def create_app(data_dir=None):
             channel=r['channel']
             if channel.startswith(('=','+','-','@')):
                 channel="'"+channel
-            writer.writerow([r['day'],channel,r['views'],r['impressions'],*[f'{r[k]/100:.2f}' for k in ('ad','other','total')]])
+            writer.writerow([r['day'],channel,r['views'],r['impressions'],*[export_revenue(r[k]) for k in ('ad','other','total')]])
         response=app.response_class('\ufeff'+buffer.getvalue(),mimetype='text/csv')
         response.headers['Content-Disposition']='attachment; filename=revenue.csv'
         return response
 
     def resolve_rows(rows):
         allowed={c['id'] for c in permitted()}
-        names={c['name'].casefold():c['id'] for c in db().execute('SELECT * FROM channels')}
-        resolved=[]
-        for row in rows:
-            cid=names.get(row['channel'].casefold())
-            if cid is None or cid not in allowed:
-                raise InvalidData('File contains unknown or unassigned channels. Ask the admin to register/assign all channels before uploading.')
-            resolved.append({**row,'channel_id':cid})
+        archived={c['channel_id'] for c in db().execute('SELECT channel_id FROM archived_channels')}
+        names={};by_id={}
+        for channel in db().execute('SELECT * FROM channels'):
+            names.setdefault(channel_key(channel['name']),[]).append(channel)
+            by_id[channel['id']]=channel
+        resolved=[];issues={}
+        for index,row in enumerate(rows,2):
+            key=channel_key(row['channel'])
+            matches=([by_id[row['channel_id']]] if row.get('channel_resolution') and row.get('channel_id') in by_id
+                     else names.get(key,[]))
+            status=None
+            if not matches:
+                status='unknown'
+            elif len(matches)>1:
+                status='ambiguous'
+            elif matches[0]['id'] in archived:
+                status='archived'
+            elif matches[0]['id'] not in allowed:
+                status='unassigned'
+            if status:
+                issue=issues.setdefault((key,status),dict(channel=normalize_channel_name(row['channel']),status=status,rows=[]))
+                issue['rows'].append(row.get('source_row',index))
+                continue
+            channel=matches[0]
+            resolved.append({**row,'channel_id':channel['id'],'channel':channel['name']})
+        if issues:
+            raise UploadChannelError(list(issues.values()))
+        seen={}
+        for index,row in enumerate(resolved,2):
+            key=(row['day'],row['channel_id'])
+            if key in seen:
+                row['blocking_error']=f'Duplicate date/channel; first appears at Excel row {seen[key]}. Correct the file before publishing.'
+            else:
+                seen[key]=row.get('source_row',index)
         return resolved
+
+    def apply_channel_resolutions(rows,actions):
+        if not isinstance(actions,list) or len(actions)>len(rows):
+            raise InvalidData('Invalid channel resolutions.')
+        sources={channel_key(row['channel']) for row in rows}
+        allowed={channel['id']:channel for channel in permitted()}
+        registered={}
+        for channel in db().execute('SELECT * FROM channels'):
+            registered.setdefault(channel_key(channel['name']),[]).append(channel)
+        decisions={}
+        for action in actions:
+            if not isinstance(action,dict) or not isinstance(action.get('source'),str):
+                raise InvalidData('Invalid channel resolution.')
+            source=channel_key(action['source'])
+            if source not in sources or source in decisions:
+                raise InvalidData('Choose one resolution for each channel in this file.')
+            kind=action.get('action')
+            if kind=='create':
+                if g.user['role'] not in ('admin','uploader'):
+                    raise InvalidData('Only admins and uploaders can add channels during upload.')
+                if registered.get(source):
+                    raise InvalidData('This channel already exists. Select an assigned channel instead of creating a duplicate.')
+                name=normalize_channel_name(action.get('name',action['source']))
+                if not name or len(name)>120:
+                    raise InvalidData('New channel names must be between 1 and 120 characters.')
+                if registered.get(channel_key(name)):
+                    raise InvalidData('The proposed channel name already exists. Select it from the dropdown instead.')
+                try:
+                    cid=db().execute('INSERT INTO channels(name) VALUES (?)',(name,)).lastrowid
+                except INTEGRITY_ERRORS:
+                    raise InvalidData('This channel name already exists. Select an existing channel instead.')
+                channel=dict(id=cid,name=name)
+                if g.user['role']=='uploader':
+                    db().execute('INSERT INTO assignments VALUES (?,?)',(g.user['id'],cid))
+                registered[channel_key(name)]=[channel]
+                allowed[cid]=channel
+                log('channel_created_from_upload',json.dumps(dict(id=cid,name=name,
+                    assigned_user=g.user['id'] if g.user['role']=='uploader' else None),separators=(',',':')))
+            elif kind=='map':
+                cid=action.get('channel_id')
+                if type(cid) is not int or cid not in allowed:
+                    raise InvalidData('Select an active channel assigned to your account.')
+                channel=allowed[cid]
+            else:
+                raise InvalidData('Choose Add new channel or an existing assigned channel.')
+            decisions[source]=dict(action=kind,source=normalize_channel_name(action['source']),
+                                   channel_id=channel['id'],channel=channel['name'])
+        return [{**row,'source_channel':row['channel'],'channel':decisions[channel_key(row['channel'])]['channel'],
+                 'channel_id':decisions[channel_key(row['channel'])]['channel_id'],
+                 'channel_resolution':decisions[channel_key(row['channel'])]}
+                if channel_key(row['channel']) in decisions else row for row in rows],list(decisions.values())
 
     def row_values(row):
         return tuple(row[key] for key in ('views','impressions','ad','other','total'))
@@ -497,11 +620,17 @@ def create_app(data_dir=None):
             raise InvalidData('Choose a file.')
         content=incoming.read()
         try:
-            rows=parse_upload(content,Path(incoming.filename).suffix.lower())
+            rows=parse_upload(content,Path(incoming.filename).suffix.lower(),allow_total_warnings=True)
         except InvalidData:
             raise
         except Exception:
             raise InvalidData('Unable to read workbook. Check its format and date cells.')
+        try:
+            actions=json.loads(request.form.get('channel_actions','[]'))
+        except (ValueError,TypeError):
+            raise InvalidData('Invalid channel resolutions.')
+        db().begin_write()
+        rows,decisions=apply_channel_resolutions(rows,actions)
         rows=resolve_rows(rows)
         digest=hashlib.sha256(content).hexdigest()
         db().begin_write()
@@ -521,11 +650,28 @@ def create_app(data_dir=None):
         try:
             db().execute('INSERT INTO uploads(id,user_id,filename,digest,created,state,rows_json,preview_json) VALUES (?,?,?,?,?,?,?,?)',(uid,g.user['id'],filename,digest,dt.datetime.now(dt.timezone.utc).isoformat(),'pending',json.dumps(rows),json.dumps(originals)))
             log('upload_submitted',json.dumps(dict(id=uid,filename=filename,sha256=digest,rows=len(rows)),separators=(',',':')))
+            if decisions:
+                log('upload_channels_resolved',json.dumps(dict(id=uid,filename=filename,decisions=decisions),separators=(',',':')))
             db().commit()
         except Exception:
             db().rollback()
             raise
-        return jsonify(id=uid,rows=rows,duplicates=sum(old is not None and row_values(old)!=row_values(row) for row,old in zip(rows,originals)),unchanged=unchanged)
+        return jsonify(id=uid,state='pending',rows=rows,channel_resolutions=decisions,
+                       channels=[dict(channel) for channel in permitted()],
+                       warning_count=sum(bool(row.get('warning')) for row in rows),duplicates=sum(old is not None and row_values(old)!=row_values(row) for row,old in zip(rows,originals)),unchanged=unchanged)
+
+    @app.get('/api/uploads/<uid>/preview')
+    @require('admin','uploader')
+    def saved_preview(uid):
+        upload=db().execute('SELECT * FROM uploads WHERE id=?',(uid,)).fetchone()
+        if not upload or upload['state'] not in ('pending','rejected') or upload['file_deleted'] or (g.user['role']!='admin' and upload['user_id']!=g.user['id']):
+            return jsonify(error='Preview is unavailable.'),404
+        rows=resolve_rows(json.loads(upload['rows_json']))
+        original=json.loads(upload['preview_json'])
+        return jsonify(id=uid,state=upload['state'],rows=rows,
+                       warning_count=sum(bool(row.get('warning')) for row in rows),
+                       duplicates=sum(old is not None and row_values(old)!=row_values(row) for row,old in zip(rows,original)),
+                       unchanged=sum(old is not None and row_values(old)==row_values(row) for row,old in zip(rows,original)))
 
     @app.post('/api/uploads/<uid>/commit')
     @require('admin','uploader')
@@ -541,6 +687,11 @@ def create_app(data_dir=None):
         uid=upload['id']
         rows=resolve_rows(json.loads(upload['rows_json']))
         original=json.loads(upload['preview_json'])
+        warnings=[row['warning'] for row in rows if row.get('warning')]
+        if any(row.get('blocking_error') for row in rows):
+            raise InvalidData('This preview contains duplicate date/channel rows. Correct the file and upload it again before publishing.')
+        if warnings and (request.get_json(silent=True) or {}).get('accept_total_mismatches') is not True:
+            raise InvalidData('Review the highlighted total mismatches and accept calculated totals before publishing.')
         if any(old is not None and row_values(old)!=row_values(row) for row,old in zip(rows,original)) and not replace:
             raise InvalidData('Confirm replacement of existing date/channel records.')
         changed=0
@@ -556,6 +707,9 @@ def create_app(data_dir=None):
         if not changed:
             raise InvalidData('All rows already match published data. No changes to publish.')
         db().execute("UPDATE uploads SET state='committed',archived=0 WHERE id=?",(uid,))
+        if warnings:
+            log('upload_totals_accepted',json.dumps(dict(id=uid,filename=upload['filename'],
+                policy='rounded_ad_plus_sponsorship',warnings=warnings),separators=(',',':')))
         log('upload_published',json.dumps(dict(id=uid,filename=upload['filename'],changed=changed),separators=(',',':')))
 
     @app.get('/api/uploads')
@@ -581,6 +735,8 @@ def create_app(data_dir=None):
             item={key:row[key] for key in row.keys() if key not in ('rows_json','preview_json')}
             original=json.loads(row['preview_json'])
             incoming=json.loads(row['rows_json'])
+            item['warning_count']=sum(bool(record.get('warning')) for record in incoming)
+            item['blocking_count']=sum(bool(record.get('blocking_error')) for record in incoming)
             item['total_rows']=len(incoming)
             days=sorted({r['day'] for r in incoming})
             item['start']=days[0] if days else None
@@ -604,7 +760,7 @@ def create_app(data_dir=None):
             if channel.startswith(('=','+','-','@')):
                 channel="'"+channel
             writer.writerow([row['day'],channel,row['views'],row['impressions'],
-                             *[format(Decimal(row[key])/100,'.2f') for key in ('ad','other','total')]])
+                             *[export_revenue(row[key]) for key in ('ad','other','total')]])
         filename=Path(secure_filename(upload['filename']) or 'upload').stem+'.csv'
         response=app.response_class('\ufeff'+buffer.getvalue(),mimetype='text/csv')
         response.headers['Content-Disposition']=f'attachment; filename="{filename}"'
@@ -771,9 +927,12 @@ def create_app(data_dir=None):
     @app.post('/api/admin/channels')
     @require('admin')
     def channels():
-        name=str((request.get_json() or {}).get('name','')).strip()
+        name=normalize_channel_name((request.get_json() or {}).get('name',''))
         if not name or len(name)>120:
             raise InvalidData('Enter a channel name, up to 120 characters.')
+        db().begin_write()
+        if any(channel_key(row['name'])==channel_key(name) for row in db().execute('SELECT name FROM channels')):
+            raise InvalidData('Channel already exists, including case or spacing variants. Restore or assign the existing channel instead.')
         try:
             db().execute('INSERT INTO channels(name) VALUES (?)',(name,))
         except INTEGRITY_ERRORS:

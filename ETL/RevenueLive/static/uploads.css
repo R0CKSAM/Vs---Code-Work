@@ -100,3 +100,35 @@
   .summary-phase #uploads .upload-library-table #history td small{font-size:12px}
   .summary-phase #uploads .upload-audit-toolbar{align-items:flex-start}
 }
+.summary-phase #uploads .preview-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:12px 0}
+.summary-phase #uploads .preview-toolbar .actions{display:flex;gap:6px;margin:0}
+.summary-phase #uploads .preview-toolbar button{width:36px;height:36px;padding:6px}
+.summary-phase #uploads .preview-warning{padding:12px;border-left:4px solid #b26a00;background:#fff3d8;color:#613b00;font-weight:700}
+.summary-phase #uploads .preview-table{overflow:auto;max-height:520px}
+.summary-phase #uploads .preview-table table{min-width:1100px}
+.summary-phase #uploads .preview-table th{position:sticky;top:0;z-index:1;background:#e8f0f8}
+.summary-phase #uploads #previewRows .preview-mismatch td{background:#fff3d8;color:#4b320b;border-bottom:1px solid #e6c689}
+.summary-phase #uploads #previewRows .preview-mismatch td:first-child{border-left:4px solid #b26a00;font-weight:800}
+.summary-phase #uploads #previewRows small{display:block;white-space:normal;margin-top:4px}
+.summary-phase #uploads .preview-accept{margin:14px 0;padding:12px;background:#fff3d8;color:#613b00;font-weight:700;align-items:flex-start}
+.summary-phase #uploads #previewRows .preview-blocked td{background:#fff0f1;color:#821d2c;border-bottom:1px solid #e8a9b2}
+.summary-phase #uploads #previewRows .preview-blocked td:first-child{border-left:4px solid #b82943;font-weight:800}
+.summary-phase #uploads .upload-channel-issues{margin:20px 0;padding:16px 0;border-top:2px solid #b82943;scroll-margin-top:100px}
+.summary-phase #uploads .upload-channel-issues h2{font-size:18px;font-weight:800}
+.summary-phase #uploads .upload-channel-issues table{min-width:700px;table-layout:fixed}
+.summary-phase #uploads .upload-channel-issues th:last-child{width:36%}
+.summary-phase #uploads .upload-channel-issues td{vertical-align:top;white-space:normal;overflow-wrap:anywhere;background:#fff6f7;color:#59252d}
+.summary-phase #uploads .channel-issue-status{font-weight:700}
+.summary-phase #uploads .upload-channel-issues details span{display:block;max-height:160px;overflow:auto;margin-top:8px}
+@media(max-width:640px){
+  .summary-phase #uploads .upload-channel-issues table{min-width:0;width:100%}
+  .summary-phase #uploads .upload-channel-issues thead{display:none}
+  .summary-phase #uploads .upload-channel-issues tbody,.summary-phase #uploads .upload-channel-issues tr,.summary-phase #uploads .upload-channel-issues td{display:block;width:auto}
+  .summary-phase #uploads .upload-channel-issues tr{border-bottom:2px solid #cddbec;padding:8px 0}
+  .summary-phase #uploads .upload-channel-issues td{border:0;padding:6px 12px}
+  .summary-phase #uploads .upload-channel-issues td::before{content:attr(data-label);display:block;font-size:12px;font-weight:600;margin-bottom:3px;color:#53667a}
+}
+.summary-phase #uploads .upload-channel-issues select,.summary-phase #uploads .upload-channel-issues input{width:100%;max-width:100%;min-width:0;margin-bottom:8px}
+.summary-phase #uploads .upload-channel-issues small{display:block;font-size:12px;line-height:1.5}
+.summary-phase #uploads .upload-channel-issues .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.summary-phase #uploads .preview-channel-changes{padding:12px;margin-bottom:12px;background:#e9f6f1;color:#175641;border-left:4px solid #18805b;overflow-wrap:anywhere}

@@ -170,11 +170,13 @@ async function api(path,options={}){
     error.status=response.status;throw error;
   }
   if(epoch!==accessEpoch){const error=new Error('Access changed; stale response discarded.');error.stale=true;throw error;}
-  if(!response.ok){if(response.status===401&&me)signOutView('Session ended. Sign in again.');const error=new Error(data.error||'Request failed.');error.status=response.status;throw error;}
+  if(!response.ok){if(response.status===401&&me)signOutView('Session ended. Sign in again.');const error=new Error(data.error||'Request failed.');error.status=response.status;if(Array.isArray(data.channel_issues)){error.channelIssues=data.channel_issues;error.channelOptions=data.channel_options;}throw error;}
   return data;
 }
-function bind(id,event,fn){$(id).addEventListener(event,async e=>{e.preventDefault();const button=e.submitter||((e.target.tagName==='BUTTON')?e.target:null);if(button)button.disabled=true;try{await fn(e);}catch(error){if(!error.stale){const dialog=e.target.closest('dialog');if(dialog?.open&&dialog.querySelector('.form-error'))dialog.querySelector('.form-error').textContent=error.message;else if(me)notify(error.message);else $('loginError').textContent=error.message;}}finally{if(button)button.disabled=false;}});}
+function bind(id,event,fn){$(id).addEventListener(event,async e=>{e.preventDefault();const button=e.submitter||((e.target.tagName==='BUTTON')?e.target:null);if(button)button.disabled=true;try{await fn(e);}catch(error){if(!error.stale){if(error.channelIssues)showUploadChannelIssues(error.channelIssues,error.channelOptions);const dialog=e.target.closest('dialog');if(dialog?.open&&dialog.querySelector('.form-error'))dialog.querySelector('.form-error').textContent=error.message;else if(me)notify(error.message);else $('loginError').textContent=error.message;}}finally{if(button)button.disabled=false;}});}
 function clearSensitive(){
+  channelResolutionDraft.clear();uploadChannelIssues=[];
+  $('uploadChannelIssues').hidden=true;$('uploadChannelIssueRows').replaceChildren();
   window.QuickInsights?.clear();
   document.querySelectorAll('.metric-change').forEach(badge=>{badge.hidden=true;badge.textContent='';badge.removeAttribute('title');});
   loadingTicket++;setLoading(false);
@@ -217,10 +219,11 @@ async function session(){
   $('passwordCancel').hidden=false;await refresh();
 }
 async function syncAccess(){
-  if(!me||checkingAccess)return;
+  if(!me||checkingAccess||uploadReviewBusy)return;
   checkingAccess=true;
   try{
     const value=await api('/api/me');
+    if(uploadReviewBusy)return;
     if(!me||accessSignature(value)===accessSignature(me))return;
     const params=new URLSearchParams(appliedQuery),oldIds=new Set(params.getAll('channel'));
     const wasAll=me.channels.length===0||(!!appliedQuery&&me.channels.every(c=>oldIds.has(String(c.id)))&&oldIds.size===me.channels.length);
@@ -360,20 +363,116 @@ bind('passwordForm','submit',async()=>{const body=Object.fromEntries(new FormDat
 for(const button of document.querySelectorAll('[data-view]'))button.addEventListener('click',async()=>{
   try{document.querySelectorAll('.view').forEach(v=>v.hidden=v.id!==button.dataset.view);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b===button));$('notice').hidden=true;if(button.dataset.view==='uploads')await history();if(button.dataset.view==='admin')await loadUsers();if(['dashboard','insightsView'].includes(button.dataset.view))await refresh();if(button.dataset.view==='diyGraphs'){await window.DIYGraphs?.load();}}catch(e){notify(e.message);}
 });
-bind('uploadForm','submit',async()=>{
-  if(pending)throw new Error('Publish or cancel the current preview first.');
-  pending=await api('/api/uploads/preview',{method:'POST',body:new FormData($('uploadForm'))});
-  $('preview').hidden=false;$('replace').checked=false;$('replaceLabel').hidden=pending.duplicates===0;
-  $('previewCount').textContent=number(pending.rows.length)+' rows | '+pending.duplicates+' replacements'+(pending.unchanged?' | '+pending.unchanged+' unchanged':'');
-  $('previewRows').innerHTML=pending.rows.slice(0,200).map(r=>`<tr><td>${esc(r.day)}</td><td>${esc(r.channel)}</td><td class="number">${number(r.views)}</td><td class="number">${money(r.total)}</td></tr>`).join('');
-  if(pending.rows.length>200)notify('Preview shows the first 200 rows. All '+pending.rows.length+' rows were validated.');
-  await history();
+let uploadChannelIssues=[];
+let uploadReviewBusy=false;
+const channelResolutionDraft=new Map();
+function showUploadChannelIssues(issues,options=me?.channels||[]){
+  uploadChannelIssues=issues;
+  $('channelResolutionError').textContent='';
+  const descriptions={
+    unknown:['Not registered','Add a new channel or match an existing channel.'],
+    unassigned:['Not assigned to you','If the file name is incorrect, select your assigned channel. Access to this existing channel still requires an admin.'],
+    archived:['Archived','Select an active channel if the file name is incorrect, or ask an admin to restore this channel.'],
+    ambiguous:['Conflicting channel names','Select the intended channel explicitly.']
+  };
+  $('uploadChannelIssueCount').textContent=`${number(issues.length)} channels to resolve`;
+  const choices=options.map(channel=>`<option value="map:${Number(channel.id)}">${esc(channel.name)}</option>`).join('');
+  $('uploadChannelIssueRows').innerHTML=issues.map((issue,index)=>{
+    const [label,action]=descriptions[issue.status]||['Needs review','Ask an admin to review this channel.'];
+    const rows=Array.isArray(issue.rows)?issue.rows:[];
+    const locations=rows.length>10?`<details><summary>${number(rows.length)} rows</summary><span>${esc(rows.join(', '))}</span></details>`:esc(rows.join(', '));
+    return `<tr><td data-label="Channel in file"><strong>${esc(issue.channel)}</strong></td><td data-label="Status"><span class="channel-issue-status">${label}</span></td><td data-label="Excel rows">${locations}</td><td data-label="Resolve channel"><select data-channel-resolution="${index}" aria-label="Resolve ${esc(issue.channel)}"><option value="">Choose an action</option><option value="keep">No change; keep unresolved</option>${issue.status==='unknown'?'<option value="create">Yes, add new channel</option>':''}<optgroup label="Existing channels available to you">${choices}</optgroup></select><input data-new-channel-name="${index}" aria-label="New channel name for ${esc(issue.channel)}" maxlength="120" value="${esc(issue.channel)}" hidden><small>${action}</small></td></tr>`;
+  }).join('');
+  for(const [index,issue] of issues.entries()){
+    const saved=channelResolutionDraft.get(issue.channel),select=$('uploadChannelIssueRows').querySelector(`[data-channel-resolution="${index}"]`);
+    if(saved){select.value=saved.action==='create'?'create':`map:${saved.channel_id}`;$('uploadChannelIssueRows').querySelector(`[data-new-channel-name="${index}"]`).value=saved.name||issue.channel;}
+    $('uploadChannelIssueRows').querySelector(`[data-new-channel-name="${index}"]`).hidden=select.value!=='create';
+  }
+  $('applyChannelResolutions').disabled=!$('uploadForm').querySelector('input[type=file]').files.length;
+  $('uploadChannelIssues').hidden=false;
+  $('uploadChannelIssues').scrollIntoView({behavior:'smooth',block:'start'});
+}
+$('uploadChannelIssueRows').addEventListener('change',event=>{
+  const select=event.target.closest('[data-channel-resolution]');if(!select)return;
+  $('uploadChannelIssueRows').querySelector(`[data-new-channel-name="${select.dataset.channelResolution}"]`).hidden=select.value!=='create';
 });
-bind('cancelUpload','click',async()=>{if(pending)await api('/api/uploads/'+pending.id+'/reject',{method:'POST'});pending=null;$('preview').hidden=true;$('uploadForm').reset();await history();});
+$('uploadForm').querySelector('input[type=file]').addEventListener('change',()=>{channelResolutionDraft.clear();uploadChannelIssues=[];$('uploadChannelIssues').hidden=true;});
+bind('cancelChannelResolutions','click',()=>{channelResolutionDraft.clear();uploadChannelIssues=[];$('uploadChannelIssues').hidden=true;$('uploadForm').reset();});
+bind('applyChannelResolutions','click',async()=>{
+  $('channelResolutionError').textContent='';
+  for(const [index,issue] of uploadChannelIssues.entries()){
+    const choice=$('uploadChannelIssueRows').querySelector(`[data-channel-resolution="${index}"]`).value;
+    if(!choice||choice==='keep'){$('channelResolutionError').textContent='Resolve every listed channel, or cancel and revise the file.';return;}
+    const action=choice==='create'?{source:issue.channel,action:'create',name:$('uploadChannelIssueRows').querySelector(`[data-new-channel-name="${index}"]`).value.trim()}:{source:issue.channel,action:'map',channel_id:Number(choice.slice(4))};
+    if(action.action==='create'&&!action.name){$('channelResolutionError').textContent='Enter a name for each new channel.';return;}
+    channelResolutionDraft.set(issue.channel,action);
+  }
+  const actions=[...channelResolutionDraft.values()],count=actions.filter(action=>action.action==='create').length;
+  if(!confirm(`Apply ${actions.length} channel resolutions${count?` and create ${count} new channels`:''}? New channels remain registered even if this preview is cancelled. Revenue is published only after review.`))return;
+  try{await reviewUpload();}catch(error){if(error.channelIssues)showUploadChannelIssues(error.channelIssues,error.channelOptions);$('channelResolutionError').textContent=error.message;}
+});
+let previewPage=0;
+const previewPageSize=100;
+function renderUploadPreview(){
+  if(!pending)return;
+  const warnings=pending.rows.filter(row=>row.warning||row.blocking_error);
+  const rows=$('previewOnlyWarnings').checked?warnings:pending.rows;
+  const pages=Math.max(1,Math.ceil(rows.length/previewPageSize));
+  previewPage=Math.max(0,Math.min(previewPage,pages-1));
+  const start=previewPage*previewPageSize;
+  $('previewRows').innerHTML=rows.slice(start,start+previewPageSize).map((r,index)=>`<tr class="${r.blocking_error?'preview-blocked':r.warning?'preview-mismatch':''}"><td>${number(r.source_row??start+index+2)}</td><td>${esc(r.day)}</td><td>${esc(r.channel)}</td><td class="number">${number(r.views)}</td><td class="number">${number(r.impressions)}</td><td class="number">${money(r.ad)}</td><td class="number">${money(r.other)}</td><td class="number"><strong>${money(r.total)}</strong></td><td>${r.blocking_error?`<strong>Cannot publish</strong><small>${esc(r.blocking_error)}</small>`:''}${r.warning?`<strong>Total mismatch</strong><small>File total (INR): ${esc(r.warning.supplied_total)}</small><small>Rounded file total: ${money(r.warning.rounded_supplied_total)}</small><small>Calculated total: ${money(r.total)}</small>`:r.blocking_error?'':'Valid'}</td></tr>`).join('');
+  $('previewPageStatus').textContent=rows.length?`${number(start+1)}-${number(Math.min(start+previewPageSize,rows.length))} of ${number(rows.length)} rows`:'No matching rows';
+  $('previewPrevious').disabled=previewPage===0;
+  $('previewNext').disabled=previewPage>=pages-1;
+}
+function openUploadPreview(value){
+  $('uploadChannelIssues').hidden=true;$('uploadChannelIssueRows').replaceChildren();
+  pending=value;previewPage=0;
+  const changes=pending.channel_resolutions||pending.rows.filter(row=>row.channel_resolution).map(row=>row.channel_resolution);
+  const uniqueChanges=[...new Map(changes.map(change=>[change.source,change])).values()];
+  $('previewChannelChanges').hidden=!uniqueChanges.length;
+  $('previewChannelChanges').innerHTML=uniqueChanges.map(change=>`<div><strong>${change.action==='create'?'Added':'Matched'}:</strong> ${esc(change.source)} &rarr; ${esc(change.channel)}</div>`).join('');
+  const count=pending.rows.filter(row=>row.warning).length;
+  const blocked=pending.rows.filter(row=>row.blocking_error).length;
+  $('preview').hidden=false;$('replace').checked=false;$('replaceLabel').hidden=pending.duplicates===0;
+  $('acceptTotals').checked=false;$('acceptTotalsLabel').hidden=count===0;
+  $('previewOnlyWarnings').checked=count+blocked>0;$('previewOnlyWarningsLabel').hidden=count+blocked===0;
+  $('previewWarning').hidden=count+blocked===0;
+  $('previewWarning').textContent=`${number(count)} total mismatches. Acceptance publishes calculated totals instead of the file totals.`+(blocked?` ${number(blocked)} duplicate rows must be corrected in the file before publishing.`:'');
+  $('publish').disabled=blocked>0;
+  $('previewCount').textContent=number(pending.rows.length)+' rows | '+pending.duplicates+' replacements'+(count?' | '+count+' total mismatches':'')+(pending.unchanged?' | '+pending.unchanged+' unchanged':'');
+  renderUploadPreview();
+}
+$('previewOnlyWarnings').addEventListener('change',()=>{previewPage=0;renderUploadPreview();});
+$('previewPrevious').addEventListener('click',()=>{previewPage--;renderUploadPreview();});
+$('previewNext').addEventListener('click',()=>{previewPage++;renderUploadPreview();});
+async function reviewUpload(){
+  if(uploadReviewBusy)throw new Error('Upload review is already in progress.');
+  if(pending)throw new Error('Publish or cancel the current preview first.');
+  uploadReviewBusy=true;
+  try{
+    $('notice').hidden=true;$('channelResolutionError').textContent='';
+    const body=new FormData($('uploadForm'));body.set('channel_actions',JSON.stringify([...channelResolutionDraft.values()]));
+    const result=await api('/api/uploads/preview',{method:'POST',body});
+    if(me&&result.channels){
+      const allSelected=me.channels.every(channel=>selectedChannels.has(String(channel.id)));
+      me.channels=result.channels;
+      selectedChannels=new Set(result.channels.filter(channel=>allSelected||selectedChannels.has(String(channel.id))).map(channel=>String(channel.id)));
+      renderChannelOptions();
+    }
+    openUploadPreview(result);channelResolutionDraft.clear();
+    await history();
+  }finally{uploadReviewBusy=false;}
+}
+bind('uploadForm','submit',reviewUpload);
+bind('cancelUpload','click',async()=>{if(pending?.state==='pending')await api('/api/uploads/'+pending.id+'/reject',{method:'POST'});pending=null;$('preview').hidden=true;$('uploadForm').reset();await history();});
 bind('publish','click',async()=>{
   if(!pending)return;if(pending.duplicates&&!$('replace').checked)throw new Error('Confirm replacement before publishing.');
-  if(!confirm('Publish '+pending.rows.length+' revenue records'+(pending.duplicates?' and replace '+pending.duplicates+' existing records':'')+'?'))return;
-  await api('/api/uploads/'+pending.id+'/commit',{method:'POST',body:{replace:$('replace').checked}});
+  if(pending.rows.some(row=>row.blocking_error))throw new Error('Correct duplicate rows in the file and upload it again.');
+  const warnings=pending.rows.filter(row=>row.warning).length;
+  if(warnings&&!$('acceptTotals').checked)throw new Error('Accept the highlighted total mismatches before publishing calculated totals.');
+  if(!confirm('Publish '+pending.rows.length+' revenue records'+(warnings?' using calculated totals for '+warnings+' highlighted mismatches':'')+(pending.duplicates?' and replace '+pending.duplicates+' existing records':'')+'?'))return;
+  await api('/api/uploads/'+pending.id+'/'+(pending.state==='rejected'?'unarchive':'commit'),{method:'POST',body:{replace:$('replace').checked,accept_total_mismatches:$('acceptTotals').checked}});
   pending=null;$('preview').hidden=true;$('uploadForm').reset();notify('Data published.');await history();
 });
 let uploadRows=[],uploadFilter='all',pendingDelete=null;
@@ -455,6 +554,13 @@ $('history').addEventListener('click',async e=>{
   const button=e.target.closest('[data-upload-action]');if(!button)return;
   const action=button.dataset.uploadAction,id=button.dataset.id,row=uploadRows.find(item=>item.id===id);if(!row)return;
   if(action==='delete'){pendingDelete=id;$('uploadDeleteName').textContent=row.filename;$('uploadDeleteDialog').querySelector('.form-error').textContent='';$('uploadDeleteDialog').showModal();return;}
+  if(action==='unarchive'&&['pending','rejected'].includes(row.state)&&(row.warning_count>0||row.blocking_count>0)){
+    if(pending&&pending.id!==id){notify('Publish or cancel the current preview first.');return;}
+    button.disabled=true;
+    try{openUploadPreview(await api('/api/uploads/'+id+'/preview'));$('preview').scrollIntoView({behavior:'smooth',block:'start'});}
+    catch(error){if(error.channelIssues)showUploadChannelIssues(error.channelIssues,error.channelOptions);notify(error.message);}finally{button.disabled=false;}
+    return;
+  }
   if(action==='unarchive'&&['pending','rejected'].includes(row.state)&&row.replacements>0&&!confirm(`Publish ${row.filename} and replace ${row.replacements} existing date/channel records?`))return;
   button.disabled=true;
   try{
