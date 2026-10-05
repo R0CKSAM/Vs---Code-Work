@@ -177,3 +177,11 @@ ETL/extras/apps/PRODUCTION.zip
 # Generated audience reports; keep helper scripts visible to Git.
 ETL/output/audience_ops/*.html
 ETL/output/audience_ops/*.csv
+
+# Local publishing clones, installed export dependencies, and repair scratch data.
+# Already tracked files remain tracked; new scratch artifacts must not be staged.
+ETL/output/temp/
+# Generated schema and presentation handoff bundles stay on this workstation.
+ETL/output/exports/revenuelive_schema.zip
+ETL/output/exports/revenuelive_schema_20261005/
+ETL/output/exports/scoreboard_templates_20261005/

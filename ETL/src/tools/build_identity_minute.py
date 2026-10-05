@@ -125,7 +125,9 @@ def build_identity_minute_table(
             platform_name,
             candidate_id,
             channel_name,
-            any_value(reqHost ORDER BY reqHost) AS reqHost,
+            -- reqHost is non-null: MIN selects the same host without retaining
+            -- and sorting every request in this high-volume aggregation.
+            MIN(reqHost) AS reqHost,
             COUNT(DISTINCT reqHost)::BIGINT AS distinct_hosts,
             COUNT(*) FILTER (WHERE is_ts)::BIGINT AS raw_ts_rows,
             COUNT(*) FILTER (WHERE is_ts AND statusCode = '200')::BIGINT AS status_200_ts_rows,
@@ -181,7 +183,7 @@ def main() -> None:
     parser.add_argument("--source", choices=["fast", "stream"], required=True)
     parser.add_argument("--start", default=None, help="IST lake date start, YYYY-MM-DD.")
     parser.add_argument("--end", default=None, help="IST lake date end, YYYY-MM-DD.")
-    parser.add_argument("--threads", type=int, default=6)
+    parser.add_argument("--threads", type=int, default=2)
     parser.add_argument("--memory-limit", default="16GB")
     parser.add_argument(
         "--temp-dir",

@@ -2397,6 +2397,10 @@ def main() -> None:
                     retry_on_memory=True,
                 )
 
+            # Multiple exact DISTINCT states multiply memory use with parallel workers.
+            identity_minute_memory = args.concurrency_memory
+            if (_parse_memory_limit_gb(identity_minute_memory) or 0) > 8:
+                identity_minute_memory = "8GB"
             identity_minute_fast_cmd = [
                 python,
                 str(identity_minute_script),
@@ -2407,9 +2411,9 @@ def main() -> None:
                 "--source",
                 "fast",
                 "--threads",
-                str(max(1, int(args.concurrency_threads))),
+                str(max(1, min(2, int(args.concurrency_threads)))),
                 "--memory-limit",
-                args.concurrency_memory,
+                identity_minute_memory,
             ]
             # Identity DISTINCT aggregation can hang while closing a DuckDB
             # connection backed by an SMB temp directory after output is written.
