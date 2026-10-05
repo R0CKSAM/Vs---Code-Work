@@ -85,6 +85,8 @@ ETL/tools/nginx/conf/live_dashboard.htpasswd
 # Local test/browser artifacts use both hyphenated and underscored names.
 ETL/output/pytest*/
 ETL/output/test-tmp/
+# Authenticated RevenueLive review browser: cookies, sessions and locked caches.
+ETL/output/temp/revenuelive-live-review-browser/
 
 # ASRUN demo output is regenerated locally and can be too large for GitHub.
 ETL/asrun_demo/output/*.html

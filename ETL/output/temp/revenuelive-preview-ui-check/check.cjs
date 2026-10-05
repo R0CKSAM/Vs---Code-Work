@@ -36,6 +36,31 @@ const preview={id:'synthetic-upload',state:'pending',duplicates:0,unchanged:0,ro
         openUploadPreview(preview);
       },preview);
       assert.equal(await page.locator('#previewRows tr').count(),2);
+      const repeated=[5000,9697,10708,9697].map((impressions,i)=>({
+        source_row:1855+i,channel_id:1,channel:'MP Govt Activity',day:'2026-07-19',views:0,impressions,ad:0,other:0,total:0,
+        entry_group:4,entry_kind:i===3?'exact':'multiple',blocking_error:i===3?'Exact duplicate of Excel row 1856.':'Multiple entries for this channel/date.'
+      }));
+      let consolidationBody=null;
+      const consolidated={...repeated[0],impressions:25405,source_entries:repeated,excluded_source_rows:[1858],combined_entries:3};
+      delete consolidated.blocking_error;delete consolidated.entry_kind;delete consolidated.entry_group;
+      await page.route('http://preview.test/api/uploads/synthetic-upload/consolidate',route=>{
+        consolidationBody=route.request().postDataJSON();
+        return route.fulfill({json:{id:'synthetic-upload',state:'pending',rows:[consolidated],duplicates:0,unchanged:0}});
+      });
+      await page.evaluate(async rows=>prepareUploadPreview({id:'synthetic-upload',state:'pending',rows,duplicates:0}),repeated);
+      assert.equal(await page.locator('#combineEntries,#skipExactEntries,#resolveEntries').count(),0);
+      assert.match(await page.locator('#entrySummary').innerText(),/1 exact duplicate copy skipped/);
+      assert.match(await page.locator('#entrySummary').innerText(),/Different entries included/);
+      assert.deepEqual(consolidationBody,{combine_entries:true,skip_exact_duplicates:true});
+      assert(await page.locator('#publish').isEnabled());
+      assert.match(await page.locator('#previewRows').innerText(),/25,405/);
+      await page.locator('#previewRows details summary').click();
+      assert.match(await page.locator('#previewRows details').innerText(),/1,858 - skipped/);
+      assert.match(await page.locator('#previewRows details').innerText(),/10,708/);
+      await page.locator('#preview').scrollIntoViewIfNeeded();
+      await page.screenshot({path:path.join(__dirname,`consolidation-${viewport.width}.png`),fullPage:true});
+      assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Consolidation overflow');
+      await page.evaluate(preview=>openUploadPreview(preview),preview);
       assert.match(await page.locator('#previewRows').innerText(),/318/);
       assert.match(await page.locator('#previewRows').innerText(),/1,378/);
       await page.locator('#preview').scrollIntoViewIfNeeded();
@@ -107,8 +132,77 @@ const preview={id:'synthetic-upload',state:'pending',duplicates:0,unchanged:0,ro
       await page.evaluate(()=>syncAccess());
       assert(await page.locator('#preview').isVisible(),'Self-assignment must not discard the preview');
       assert.equal(await page.evaluate(()=>me.channels.length),2);
+      await page.evaluate(()=>{
+        me=null;pending=null;channelResolutionDraft.clear();document.getElementById('preview').hidden=true;
+        showUploadChannelIssues([
+          {channel:'Government July campaign',status:'unknown',rows:[2]},
+          {channel:'Government August campaign',status:'unknown',rows:[3]},
+          {channel:'Government main feed',status:'unknown',rows:[4]}
+        ],[{id:1,name:'Example'},{id:7,name:'Other destination'}]);
+      });
+      await page.locator('[data-channel-resolution="2"]').selectOption('create');
+      await page.locator('[data-new-channel-name="2"]').fill('Government Activities');
+      assert.equal(await page.locator('[data-channel-resolution="0"] option[value="new:2"]').textContent(),'Government Activities');
+      await page.locator('[data-channel-target-search="0"]').fill('government');
+      assert.equal(await page.locator('[data-channel-resolution="0"] option[value="map:7"]').count(),0);
+      await page.locator('[data-channel-resolution="0"]').selectOption('new:2');
+      await page.locator('[data-channel-resolution="1"]').selectOption('new:2');
+      await page.locator('[data-new-channel-name="2"]').fill('Government Campaigns');
+      assert.equal(await page.locator('[data-channel-resolution="0"]').inputValue(),'new:2');
+      assert.equal(await page.locator('[data-channel-resolution="0"] option[value="new:2"]').textContent(),'Government Campaigns');
+      await page.locator('#channelIssueSearch').fill('August');
+      assert.equal(await page.locator('#uploadChannelIssueRows tr:visible').count(),1);
+      assert.equal(await page.locator('[data-channel-resolution="1"]').inputValue(),'new:2');
+      await page.locator('#channelIssueSearch').fill('no matches');
+      assert(await page.locator('#channelIssueEmpty').isVisible());
+      await page.locator('#channelIssueSearch').fill('');
+      await page.locator('[data-channel-resolution="2"]').selectOption('keep');
+      assert.equal(await page.locator('[data-channel-resolution="0"]').inputValue(),'');
+      assert.equal(await page.locator('[data-channel-resolution="1"]').inputValue(),'');
+      await page.locator('[data-channel-resolution="2"]').selectOption('create');
+      await page.locator('[data-channel-resolution="0"]').selectOption('new:2');
+      await page.locator('[data-channel-resolution="1"]').selectOption('new:2');
+      await page.screenshot({path:path.join(__dirname,`channel-reuse-${viewport.width}.png`),fullPage:true});
+      assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Reuse UI overflow');
+      await page.locator('#applyChannelResolutions').click();
+      await page.locator('#previewChannelChanges').waitFor({state:'visible'});
+      assert.equal(resolutionRequests[0].action,'map_new');
+      assert.equal(resolutionRequests[0].target_source,'Government main feed');
+      assert.equal(resolutionRequests[2].action,'create');
+      await page.evaluate(preview=>openUploadPreview(preview),preview);
+      await page.locator('#previewSearch').fill('2026-09-01 318');
+      assert.equal(await page.locator('#previewRows tr').count(),1);
+      await page.locator('#previewSearch').fill('nothing matches');
+      assert.equal(await page.locator('#previewRows tr').count(),0);
+      assert.match(await page.locator('#previewPageStatus').innerText(),/No matching/);
+      await page.locator('#previewSearch').fill('');
+      assert.equal(await page.locator('#previewRows tr').count(),2);
+      await page.evaluate(()=>{
+        pending=null;
+        $('preview').hidden=true;
+        me={user:{id:2,username:'synthetic-uploader',role:'admin',must_change:0},channels:[]};
+        const base={filename:'Fixture.csv',username:'tester',created:'2026-10-05T00:00:00Z',start:'2026-09-01',end:'2026-09-01',channel_count:1,total_rows:1,live_rows:1,visible_rows:1};
+        uploadRows=[{...base,id:'review-fixture',state:'pending',warning_count:0,blocking_count:0},
+          {...base,id:'live-fixture',state:'committed'},
+          {...base,id:'archived-fixture',state:'committed',archived:1},
+          {...base,id:'restored-fixture',state:'restored'}];
+        uploadFilter='all';renderUploadRows();
+      });
+      assert.equal(await page.locator('#uploadAllCount').innerText(),'4');
+      assert.equal(await page.locator('#uploadLiveCount').innerText(),'1');
+      assert.equal(await page.locator('#uploadArchivedCount').innerText(),'2');
+      assert.match(await page.locator('#history tr').first().innerText(),/Pending review/);
+      await page.route('http://preview.test/api/uploads/review-fixture/preview',route=>route.fulfill({json:{...preview,id:'review-fixture',rows:[rows[0]]}}));
+      const commitsBeforeReview=commits.length;
+      await page.locator('[data-upload-action="review"]').click();
+      assert(await page.locator('#preview').isVisible());
+      assert.equal(commits.length,commitsBeforeReview,'Review must not publish even without warnings');
+      await page.locator('[data-upload-filter="live"]').click();
+      assert.equal(await page.locator('#history tr').count(),1);
+      await page.locator('[data-upload-filter="archived"]').click();
+      assert.equal(await page.locator('#history tr').count(),2);
       assert.deepEqual(errors,[]);
-      console.log(`Preview ${viewport.width}px: warning acceptance, channel create/map, confirmation and access sync PASS`);
+      console.log(`Preview ${viewport.width}px: warnings, channel reuse, searches, dependency changes and access sync PASS`);
       await page.close();
     }
   }finally{await browser.close();}
