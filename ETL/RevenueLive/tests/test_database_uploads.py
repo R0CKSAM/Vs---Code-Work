@@ -40,6 +40,57 @@ class DatabaseUploadTest(unittest.TestCase):
         self.client.post('/api/login', json={'username':'admin', 'password':'synthetic-password'})
         self.headers = {'X-CSRF-Token':self.client.get('/api/me').json['csrf']}
 
+    def test_regular_admin_disables_legacy_users_and_revokes_access(self):
+        with closing(sqlite3.connect(self.db_file)) as db, db:
+            hashed=generate_password_hash('synthetic-password')
+            db.execute("INSERT INTO users(id,username,password,role,must_change) VALUES (3,'owner',?,'admin',0)",(hashed,))
+            db.execute('INSERT INTO super_admin VALUES (1,3)')
+            db.execute("INSERT INTO users(id,username,password,role,must_change) VALUES (4,'viewer',?,'viewer',0)",(hashed,))
+        for uid,name,role in [(2,'uploader','uploader'),(4,'viewer','viewer')]:
+            target=self.app.test_client()
+            self.assertEqual(target.post('/api/login',json=dict(username=name,password='synthetic-password')).status_code,200)
+            body=dict(id=uid,username=name,role=role,email='',active=False,channels=[])
+            response=self.client.post('/api/admin/users',json=body,headers=self.headers)
+            self.assertEqual(response.status_code,200,response.json)
+            self.assertEqual(target.get('/api/me').status_code,401)
+            self.assertEqual(target.get('/api/report').status_code,401)
+            self.assertEqual(target.post('/api/login',json=dict(username=name,password='synthetic-password')).status_code,401)
+            self.assertEqual(self.client.post('/api/admin/users',json={**body,'active':True},headers=self.headers).status_code,400)
+            with closing(sqlite3.connect(self.db_file)) as db:
+                self.assertEqual(db.execute('SELECT active FROM users WHERE id=?',(uid,)).fetchone()[0],0)
+                self.assertEqual(db.execute('SELECT COUNT(*) FROM sessions WHERE user_id=?',(uid,)).fetchone()[0],0)
+                event=json.loads(db.execute("SELECT detail FROM audit WHERE action='user_saved' ORDER BY id DESC LIMIT 1").fetchone()[0])
+                self.assertFalse(event['active'])
+                self.assertEqual(event['id'],uid)
+        for uid,name in [(1,'admin'),(3,'owner')]:
+            response=self.client.post('/api/admin/users',json=dict(id=uid,username=name,role='admin',email='',active=False,channels=[]),headers=self.headers)
+            self.assertEqual(response.status_code,400,response.json)
+
+    def test_reenable_and_temporary_password_require_valid_account_details(self):
+        body=dict(id=2,username='uploader',role='uploader',active=False,channels=[])
+        self.assertEqual(self.client.post('/api/admin/users',json=body,headers=self.headers).status_code,200)
+        self.assertEqual(self.client.post('/api/admin/users',json={**body,'active':True},headers=self.headers).status_code,400)
+        for value in ('false',0,None):
+            response=self.client.post('/api/admin/users',json={**body,'active':value},headers=self.headers)
+            self.assertEqual(response.status_code,400,response.json)
+        response=self.client.post('/api/admin/users',json={**body,'active':True,'email':'uploader@example.com','password':'12345678'},headers=self.headers)
+        self.assertEqual(response.status_code,200,response.json)
+        target=self.app.test_client()
+        self.assertEqual(target.post('/api/login',json=dict(username='uploader@example.com',password='synthetic-password')).status_code,401)
+        self.assertEqual(target.post('/api/login',json=dict(username='uploader@example.com',password='12345678')).status_code,200)
+        self.assertTrue(target.get('/api/me').json['user']['must_change'])
+        self.assertEqual(target.get('/api/report').status_code,403)
+        with closing(sqlite3.connect(self.db_file)) as db:
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM audit WHERE action='password_reset_by_admin'").fetchone()[0],1)
+
+    def test_disabling_with_blank_email_preserves_registered_address(self):
+        with closing(sqlite3.connect(self.db_file)) as db, db:
+            db.execute("INSERT INTO email_accounts VALUES (2,'uploader@example.com',0)")
+        response=self.client.post('/api/admin/users',json=dict(id=2,username='uploader',role='uploader',email='',active=False,channels=[]),headers=self.headers)
+        self.assertEqual(response.status_code,200,response.json)
+        with closing(sqlite3.connect(self.db_file)) as db:
+            self.assertEqual(db.execute('SELECT email FROM email_accounts WHERE user_id=2').fetchone()[0],'uploader@example.com')
+
     def test_company_profile_and_protected_super_admin(self):
         with closing(sqlite3.connect(self.db_file)) as db, db:
             db.execute('INSERT OR REPLACE INTO super_admin VALUES (1,1)')

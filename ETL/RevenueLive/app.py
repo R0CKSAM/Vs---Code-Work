@@ -1219,8 +1219,12 @@ def create_app(data_dir=None):
         role=body.get('role')
         password=str(body.get('password',''))
         uid=body.get('id')
+        if 'active' in body and type(body['active']) is not bool:
+            raise InvalidData('Account enabled must be true or false.')
         invite = body.get('invite') is True
-        email = email_address(body['email']) if 'email' in body else None
+        # Disabling a legacy account must not depend on filling its missing email.
+        disabling_without_email = uid is not None and body.get('active') is False and not str(body.get('email','')).strip()
+        email = email_address(body['email']) if 'email' in body and not disabling_without_email else None
         if not uid and email is None:
             if invite:
                 email = email_address(username)
@@ -1262,6 +1266,8 @@ def create_app(data_dir=None):
                 before={**dict(existing),'channels':[row[0] for row in db().execute('SELECT channel_id FROM assignments WHERE user_id=? ORDER BY channel_id',(uid,))]}
                 email_account=db().execute('SELECT email FROM email_accounts WHERE user_id=?',(uid,)).fetchone()
                 before['email']=email_account['email'] if email_account else None
+                if active and not existing['active'] and not (email or before['email']):
+                    raise InvalidData('Add an email address before enabling this account.')
                 profile=db().execute('SELECT company_name FROM user_profiles WHERE user_id=?',(uid,)).fetchone()
                 before['company_name']=profile['company_name'] if profile else ''
                 db().execute('UPDATE users SET username=?,role=?,active=? WHERE id=?',(username,role,active,uid))
