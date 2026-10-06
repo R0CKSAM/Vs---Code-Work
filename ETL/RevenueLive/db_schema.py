@@ -63,6 +63,7 @@ table('hidden_dates', col('day', String(10), primary_key=True), ref('user_id'), 
 table('graph_presets', identifier(), ref('user_id'), identity_key('name', 100),
       col('config', LONGTEXT, nullable=False), UniqueConstraint('user_id', 'name'))
 table('email_accounts', ref('user_id', primary=True), identity_key('email', 100), flag('verified'), UniqueConstraint('email'))
+table('user_profiles', ref('user_id', primary=True), col('company_name', String(120), nullable=False))
 table('email_tokens', col('token', String(64), primary_key=True), ref('user_id'), col('expires', Float(53), nullable=False))
 table('email_limits', col('key', String(160), primary_key=True), col('expires', Float(53), nullable=False))
 table('write_lock', col('id', Integer, primary_key=True, autoincrement=False))

@@ -5,6 +5,7 @@ import datetime as dt
 import getpass
 import hashlib
 import json
+import re
 from pathlib import Path
 import sqlite3
 
@@ -91,11 +92,15 @@ def init_admin(database, username, password):
         connection.execute('INSERT INTO super_admin VALUES (1,?)', (uid,))
 
 
-def reset_super_admin(database, username, password):
+def reset_super_admin(database, username, password, email=None):
     """Assign ownership, reset its password, revoke sessions, and append audit."""
     from app import AUDIT_GENESIS, audit_digest, verify_audit_chain
     if not username or len(username) > 80 or not 8 <= len(password) <= 256:
         raise ValueError('Use a username up to 80 characters and a password of 8 to 256 characters.')
+    if email is not None:
+        email = email.strip().lower()
+        if len(email) > 80 or not re.fullmatch(r'[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+', email):
+            raise ValueError('Enter a valid email address (maximum 80 characters).')
     database.check_schema()
     with closing(database.connect()) as connection, connection:
         connection.begin_write()
@@ -106,6 +111,12 @@ def reset_super_admin(database, username, password):
             'SELECT u.username FROM super_admin s JOIN users u ON u.id=s.user_id WHERE s.singleton=1'
         ).fetchone()
         user = connection.execute('SELECT id FROM users WHERE username=?', (username,)).fetchone()
+        if email is not None:
+            owner = connection.execute('SELECT user_id FROM email_accounts WHERE LOWER(email)=?', (email,)).fetchone()
+            conflict = connection.execute('SELECT id FROM users WHERE LOWER(username)=?', (email,)).fetchone()
+            uid = user['id'] if user else None
+            if (owner and owner['user_id'] != uid) or (conflict and conflict['id'] != uid):
+                raise ValueError('This email belongs to another account; no changes were made.')
         hashed = generate_password_hash(password)
         if user:
             uid = user['id']
@@ -116,6 +127,8 @@ def reset_super_admin(database, username, password):
                 "INSERT INTO users(username,password,role,active,must_change) VALUES (?,?,'admin',1,1)",
                 (username, hashed)).lastrowid
         connection.upsert('super_admin', {'singleton':1, 'user_id':uid})
+        if email is not None:
+            connection.upsert('email_accounts', {'user_id':uid, 'email':email, 'verified':0})
         connection.execute('DELETE FROM sessions WHERE user_id=?', (uid,))
         connection.execute('DELETE FROM email_tokens WHERE user_id=?', (uid,))
         last = connection.execute('SELECT id,entry_hash FROM audit ORDER BY id DESC LIMIT 1').fetchone()
@@ -123,7 +136,8 @@ def reset_super_admin(database, username, password):
                      created=dt.datetime.now(dt.timezone.utc).isoformat(), user_id=uid,
                      actor='host-maintenance', action='super_admin_reset',
                      detail=json.dumps({'username':username,
-                                        'previous_super_admin':previous['username'] if previous else None},
+                                        'previous_super_admin':previous['username'] if previous else None,
+                                        'email_updated':email is not None},
                                        separators=(',',':')),
                      prev_hash=last['entry_hash'] if last else AUDIT_GENESIS)
         event['entry_hash'] = audit_digest(event)
@@ -141,6 +155,7 @@ def main():
     admin.add_argument('--username', default='admin')
     recovery = commands.add_parser('super-admin', help='Set or recover the Super Admin account.')
     recovery.add_argument('--username', required=True)
+    recovery.add_argument('--email', help='Register the recovery account email without SMTP.')
     migrate = commands.add_parser('import-sqlite')
     migrate.add_argument('--source', required=True)
     migrate.add_argument('--source-uploads', help='Deprecated; upload rows are migrated from the database.')
@@ -161,7 +176,7 @@ def main():
             password = getpass.getpass('New Super Admin password: ')
             if password != getpass.getpass('Confirm password: '):
                 raise ValueError('Passwords do not match.')
-            reset_super_admin(database, args.username, password)
+            reset_super_admin(database, args.username, password, args.email)
         elif args.action == 'import-sqlite':
             import_sqlite(database, args.source, args.source_uploads)
         else:

@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError as SQLIntegrityError
 from db_schema import metadata
 
 INTEGRITY_ERRORS = (sqlite3.IntegrityError, SQLIntegrityError)
-SCHEMA_REVISION = '0002_channel_branding'
+SCHEMA_REVISION = '0003_user_profiles'
 
 
 def upsert_statement(dialect, name, values, ignore=False):

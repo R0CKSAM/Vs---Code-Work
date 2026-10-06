@@ -18,6 +18,25 @@ CSV from the stored rows. Backups are explicit SQL dumps. Technical logs use
 bounded rotation; see `.env.example`. Existing legacy files require a separate
 cleanup and are not removed by installing this version.
 
+## Company profiles
+
+Run `python deploy.py upgrade` before restarting this version. Migration
+`0003_user_profiles` adds SQL-backed company names without modifying revenue data.
+In Users & access, Add/Edit user includes Company Name, Username and Email.
+Company Name appears above Username in the header; Email appears in the menu.
+An empty Company Name preserves the existing username-only header.
+Super Admin can edit their own profile but cannot change their protected role,
+disable themselves or reset their password through this form. Use Change password.
+Existing passwords are never displayed. Admins can edit ordinary users, disable
+their accounts, or set temporary passwords that require a change at next login.
+Only Super Admin can manage other admin accounts. Profile and password changes
+are recorded in the activity history.
+
+For host-level recovery without SMTP, run
+`python deploy.py super-admin --username <existing-username> --email <email>`.
+Enter the new password at the hidden prompt. This assigns Super Admin ownership
+to that username and revokes its sessions; use the intended owner account.
+
 ## Channel names and logos
 
 Admins can edit names and add/replace logos from Users & access > Channel

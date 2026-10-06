@@ -38,7 +38,7 @@ AUDIT_CATEGORIES = {
     'live': ('Live / Unlive', ('upload_published', 'upload_unpublished', 'date_hidden', 'date_restored')),
     'archive': ('Archive / Restore', ('upload_archived', 'upload_unarchived', 'upload_rejected', 'channel_archived', 'channel_restored')),
     'delete': ('Deleted', ('upload_deleted', 'upload_source_deleted', 'graph_preset_deleted')),
-    'users': ('Users', ('user_saved',)),
+    'users': ('Users', ('user_saved', 'user_profile_saved')),
     'channels': ('Channels', ('channel_created', 'channel_created_from_upload', 'channel_updated')),
     'other': ('Other', ()),
 }
@@ -381,8 +381,10 @@ def create_app(data_dir=None):
     @app.get('/api/me')
     @require()
     def me():
+        profile=db().execute('SELECT company_name FROM user_profiles WHERE user_id=?',(g.user['id'],)).fetchone()
         recovery=db().execute('SELECT email FROM email_accounts WHERE user_id=?',(g.user['id'],)).fetchone()
         return jsonify(user=g.user,csrf=g.session['csrf'],channels=channel_catalog(permitted()),
+                       company_name=profile['company_name'] if profile else '',
                        recovery_email=recovery['email'] if recovery else '',
                        home='/admin' if g.user['role']=='admin' else '/user')
 
@@ -1087,7 +1089,7 @@ def create_app(data_dir=None):
     @require('admin')
     def users():
         rows=[]
-        for user in db().execute('SELECT u.id,u.username,u.role,u.active,u.must_change,e.email,e.verified AS email_verified FROM users u LEFT JOIN email_accounts e ON e.user_id=u.id ORDER BY u.username'):
+        for user in db().execute('SELECT u.id,u.username,u.role,u.active,u.must_change,e.email,e.verified AS email_verified,p.company_name FROM users u LEFT JOIN email_accounts e ON e.user_id=u.id LEFT JOIN user_profiles p ON p.user_id=u.id ORDER BY u.username'):
             rows.append({**dict(user),'super_admin':bool(db().execute('SELECT 1 FROM super_admin WHERE user_id=?',(user['id'],)).fetchone()),'channels':[r[0] for r in db().execute('SELECT channel_id FROM assignments WHERE user_id=?',(user['id'],))]})
         try:
             mail_settings()
@@ -1195,14 +1197,14 @@ def create_app(data_dir=None):
         if current and current['email']==email:
             return
         if db().execute('SELECT 1 FROM email_accounts WHERE LOWER(email)=? AND user_id<>?',(email,uid)).fetchone():
-            raise InvalidData('That recovery email is already assigned to another account.')
+            raise InvalidData('That email is already assigned to another account.')
         try:
             if current:
                 db().execute('UPDATE email_accounts SET email=?,verified=0 WHERE user_id=?',(email,uid))
             else:
                 db().execute('INSERT INTO email_accounts(user_id,email,verified) VALUES (?,?,0)',(uid,email))
         except INTEGRITY_ERRORS:
-            raise InvalidData('That recovery email is already assigned to another account.')
+            raise InvalidData('That email is already assigned to another account.')
         db().execute('DELETE FROM email_tokens WHERE user_id=?',(uid,))
         log('recovery_email_changed',json.dumps(dict(id=uid,before=current['email'] if current else None,email=email),separators=(',',':')))
 
@@ -1211,6 +1213,9 @@ def create_app(data_dir=None):
     def save_user():
         body=request.get_json() or {}
         username=str(body.get('username','')).strip()
+        company_name=str(body.get('company_name','')).strip()
+        if len(company_name)>120 or any(ord(c)<32 for c in company_name):
+            raise InvalidData('Company Name must be at most 120 characters without control characters.')
         role=body.get('role')
         password=str(body.get('password',''))
         uid=body.get('id')
@@ -1220,7 +1225,7 @@ def create_app(data_dir=None):
             if invite:
                 email = email_address(username)
             else:
-                raise InvalidData('Enter a recovery email address for the new user.')
+                raise InvalidData('Enter an email address for the new user.')
         if invite:
             if uid:
                 raise InvalidData('Invitations are for new accounts. Existing email users can use Forgot password.')
@@ -1246,7 +1251,8 @@ def create_app(data_dir=None):
             owner=db().execute('SELECT user_id FROM super_admin WHERE singleton=1').fetchone()
             existing=db().execute('SELECT username,role,active FROM users WHERE id=?',(uid,)).fetchone() if uid else None
             if owner and uid==owner['user_id']:
-                raise InvalidData('The Super Admin account is protected. Use Change password for your own password.')
+                if uid!=g.user['id'] or role!='admin' or not active or password or ids:
+                    raise InvalidData('Super Admin role and access are protected. Use Change password for your own password.')
             if not owner or owner['user_id']!=g.user['id']:
                 if role=='admin' or (existing and existing['role']=='admin'):
                     return jsonify(error='Only the Super Admin can create or modify admin accounts.'),403
@@ -1256,6 +1262,8 @@ def create_app(data_dir=None):
                 before={**dict(existing),'channels':[row[0] for row in db().execute('SELECT channel_id FROM assignments WHERE user_id=? ORDER BY channel_id',(uid,))]}
                 email_account=db().execute('SELECT email FROM email_accounts WHERE user_id=?',(uid,)).fetchone()
                 before['email']=email_account['email'] if email_account else None
+                profile=db().execute('SELECT company_name FROM user_profiles WHERE user_id=?',(uid,)).fetchone()
+                before['company_name']=profile['company_name'] if profile else ''
                 db().execute('UPDATE users SET username=?,role=?,active=? WHERE id=?',(username,role,active,uid))
                 if password:
                     db().execute('UPDATE users SET password=?,must_change=1 WHERE id=?',(generate_password_hash(password),uid))
@@ -1269,12 +1277,15 @@ def create_app(data_dir=None):
             db().executemany('INSERT INTO assignments VALUES (?,?)',[(uid,c) for c in set(ids)])
             if email is not None:
                 save_recovery_email(uid,email)
+            if 'company_name' in body:
+                db().upsert('user_profiles',dict(user_id=uid,company_name=company_name))
+                log('user_profile_saved',json.dumps(dict(id=uid,company_name=company_name,previous=before.get('company_name','') if before else ''),separators=(',',':')))
             log('user_saved',json.dumps(dict(id=uid,username=username,email=email if email is not None else before.get('email'),role=role,active=bool(active),channels=sorted(set(ids)),before=before,password_reset=bool(password and before),invited=invite),separators=(',',':')))
             if password and before:
                 log('password_reset_by_admin',json.dumps(dict(id=uid,username=username),separators=(',',':')))
             db().commit()
         except INTEGRITY_ERRORS:
-            raise InvalidData('Username or recovery email already exists.')
+            raise InvalidData('Username or email already exists.')
         if invite:
             try:
                 send_invitation(uid)

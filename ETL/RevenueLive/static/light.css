@@ -213,8 +213,9 @@ body:has(#login:not([hidden]))::after{background:linear-gradient(74deg,transpare
 #login .login-emblem{width:58px;height:58px;border-radius:16px;margin:0 auto 20px}
 #login .login-emblem svg{width:32px;height:32px}
 #login .login-logo{display:block;width:220px;max-width:85%;height:auto;object-fit:contain;margin:0 auto 32px}
-#login .login-panel{position:relative;isolation:isolate;border:2px solid #f77918;background:linear-gradient(140deg,#fff6ee 0%,#fff 24%,#fff 65%,#edf3ff 100%);box-shadow:0 16px 40px -12px #04152f55;transition:box-shadow .25s,border-color .25s}
-#login .login-panel::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;background:linear-gradient(125deg,#ffffffa0,transparent 38%)}
+#login .login-panel{position:relative;isolation:isolate;border:2px solid #f77918b8;background:linear-gradient(140deg,#fffaf2eb 0%,#ffffffe0 28%,#f5f8ffd1 70%,#e4edffbf 100%);-webkit-backdrop-filter:blur(24px) saturate(135%);backdrop-filter:blur(24px) saturate(135%);box-shadow:0 16px 40px -12px #04152f55,inset 0 1px 0 #fffffff0,inset 1px 0 0 #ffffff80;transition:box-shadow .25s,border-color .25s}
+#login .login-panel::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;background:linear-gradient(125deg,#ffffff70,transparent 35%,transparent 65%,#ffffff18);box-shadow:inset 0 -1px 0 #ffffff70}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){#login .login-panel{background:linear-gradient(140deg,#fffaf5,#f0f5ff)}}
 #login .login-panel.login-failed{border-color:#df849a;box-shadow:0 3px 0 #dcaabb,0 20px 55px #10295655,0 0 0 3px #ffe2e950}
 #login .login-panel.login-success{border-color:#57b79c;box-shadow:0 3px 0 #8fcbbb,0 20px 55px #10295655,0 0 0 3px #c5f5e550}
 #loginForm[aria-busy="true"] button.primary{opacity:1;cursor:progress}
@@ -225,7 +226,7 @@ body:has(#login:not([hidden]))::after{background:linear-gradient(74deg,transpare
 #loginForm{gap:19px}
 #loginForm label{color:#203858;font-family:"Segoe UI",Arial,sans-serif;font-size:16px;font-weight:600;line-height:1.4;letter-spacing:0;gap:9px}
 #loginForm label[for="loginUsername"],#loginForm label[for="loginPassword"]{color:#b84c0a}
-#loginForm input{height:50px;border-radius:10px;border-color:#bdcce0;background:#fff;color:#142d50;box-shadow:inset 0 2px 3px #162e5105}
+#loginForm input{height:50px;border-radius:10px;border-color:#b4c5de;background:#fffffff2;color:#142d50;box-shadow:inset 0 2px 3px #162e5105}
 #loginForm input:focus{outline:3px solid #f7791829;outline-offset:1px;border-color:#d96715}
 #loginForm .login-password-field{display:block;position:relative}
 #loginForm .login-password-field input{padding-right:52px}
@@ -233,8 +234,12 @@ body:has(#login:not([hidden]))::after{background:linear-gradient(74deg,transpare
 #loginForm #toggleLoginPassword:hover{background:#fff1e6;color:#a94b0d}
 #toggleLoginPassword svg{width:20px;height:20px}
 #loginForm button.primary{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:4px;height:50px;border-radius:10px;background:linear-gradient(110deg,#05244f,#073b95);border:1px solid #173f79;box-shadow:0 5px 14px #05244f30,inset 0 1px 0 #ffffff35,inset 0 -2px 0 #f77918;color:#fff}
-#loginForm button.primary:hover,#loginForm button.primary:focus-visible{background:linear-gradient(110deg,#07356d,#0648b0);border-color:#19529b;color:#ffb16a}
-#loginForm button.primary svg{width:19px;height:19px;color:#ffad64}
+#loginForm button.primary{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease,color .2s ease}
+#loginForm button.primary:not(:disabled):hover{background:linear-gradient(110deg,#0b3060,#124893);border-color:#f79b52;color:#ffe2c5;transform:translateY(-1px);box-shadow:0 7px 16px #05244f35,inset 0 1px 0 #ffffff45,inset 0 -2px 0 #ff9c4a}
+#loginForm button.primary:focus-visible{outline:3px solid #b84c0a;outline-offset:3px}
+#loginForm button.primary:not(:disabled):active{transform:translateY(0);box-shadow:0 2px 6px #05244f25,inset 0 1px 3px #04152f40}
+#loginForm[aria-busy="true"] button.primary{transform:none;pointer-events:none}
+@media(prefers-reduced-motion:reduce){#loginForm button.primary{transition:none}#loginForm button.primary:not(:disabled):hover{transform:none}}
 #loginForm .forgot-password{color:#3155a4;border-radius:8px;font-size:14px;min-height:40px;padding:8px 12px}
 #login .login-footer{margin:24px 0 0;text-align:center;color:#e6edff;font-size:12px;line-height:1.5}
 @media(max-width:480px){#login{padding:28px 16px 20px}#login .login-brand{margin-bottom:24px;gap:10px}#login .login-brand strong{font-size:25px}#login .login-brand div>span{font-size:12px}#login .login-panel{padding:26px 22px 18px}#login h1{font-size:28px}}
@@ -333,6 +338,13 @@ body.summary-phase{background:#fff;color:#17243a}
 body.summary-phase:has(#shell:not([hidden])){background:linear-gradient(180deg,transparent 0,transparent 72px,#edf5ff70 210px,#f3f7ffdc 420px,#f5f8fff2 760px),linear-gradient(100deg,#041a3b 0%,#104b96 42%,#303b91 72%,#4b2788 100%);background-attachment:fixed;background-repeat:no-repeat;background-color:#f3f6fd}
 .summary-phase #shell>header{background:linear-gradient(110deg,#06152f 0%,#103773 38%,#155bb3 72%,#083557 100%);border-bottom:1px solid #81c7ff80;box-shadow:inset 0 1px 0 #ffffff12,0 5px 18px #06152f40}
 .summary-phase #signedInName{color:#fff;font-weight:800}
+.summary-phase #signedInName{display:flex;flex-direction:column;min-width:0;max-width:360px;white-space:normal;overflow-wrap:anywhere;text-transform:none;line-height:1.2}
+.summary-phase #signedInName strong{font-size:22px}
+.summary-phase #signedInName small{font-size:13px;font-weight:500;color:#e1ebff;margin-top:3px}
+.summary-phase #signedInName small[hidden]{display:none}
+.user-company{display:block;font-size:13px;margin-top:4px}
+#identity{overflow-wrap:anywhere}
+@media(max-width:600px){.summary-phase #signedInName{max-width:190px}.summary-phase #signedInName strong{font-size:18px}}
 .summary-phase #accountMenu>summary:hover{background:#ffffff12}
 .summary-phase .brand-icon{background:linear-gradient(145deg,#187bd1,#124a92);box-shadow:inset 0 1px 0 #a6ddff70,0 2px 8px #020e2540;color:#fff;border-radius:8px}
 .summary-phase #accountMenu>summary:focus-visible{outline-color:#c4e9ff}

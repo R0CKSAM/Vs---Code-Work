@@ -46,6 +46,9 @@ let filterTimer;
 let initialWeek=true;
 let resetDateBounds=false;
 const signedInName=document.createElement('span');signedInName.id='signedInName';
+const companyLabel=document.createElement('label');companyLabel.textContent='Company Name';
+const companyInput=document.createElement('input');companyInput.name='company_name';companyInput.maxLength=120;companyInput.autocomplete='organization';companyLabel.append(companyInput);
+$('userForm').elements.username.closest('label').before(companyLabel);
 document.querySelector('.metrics').innerHTML='<article><span>Total revenue</span><strong id="total">-</strong></article><article class="revenue-split"><div id="adMetric"><span>Ad revenue</span><strong id="ad">-</strong></div><div id="sponsorMetric"><span>Sponsorship / others</span><strong id="other">-</strong></div></article><article><span>Views</span><strong id="views">-</strong></article><article><span>Ad impressions</span><strong id="impressions">-</strong></article><span id="channelCount" hidden></span>';
 document.querySelector('#trendChart').closest('.chart-block').querySelector('h3').textContent='Total revenue';
 document.querySelectorAll('.metrics small:not(#impressions)').forEach(el=>el.remove());
@@ -206,8 +209,10 @@ function identity(value){
   me=value;csrf=value.csrf;$('login').hidden=true;$('shell').hidden=false;
   if(loginEntering){loginEntering=false;void loginMotion($('shell'),[{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'translateY(0)'}],380);}
   window.RevenueShare?.setChannels(value.channels);
-  signedInName.textContent=value.user.username;
-  $('identity').textContent=value.user.username+' | '+(value.user.super_admin?'Super Admin':value.user.role);
+  const company=document.createElement('strong');company.textContent=value.company_name||value.user.username;
+  const username=document.createElement('small');username.textContent=value.user.username;username.hidden=!value.company_name;
+  signedInName.replaceChildren(company,username);
+  $('identity').textContent=(value.recovery_email||value.user.username)+' | '+(value.user.super_admin?'Super Admin':value.user.role);
   $('uploadNav').hidden=value.user.role==='viewer';$('adminNav').hidden=value.user.role!=='admin';
 }
 function overview(){document.querySelectorAll('.view').forEach(v=>v.hidden=v.id!=='dashboard');document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view==='dashboard'));}
@@ -219,7 +224,7 @@ function passwordPrompt(){
   $('passwordCancel').hidden=first;$('passwordDialog').querySelector('.form-error').textContent='';
   if(!$('passwordDialog').open)$('passwordDialog').showModal();
 }
-function accessSignature(value){return JSON.stringify([value.user.id,value.user.username,value.user.role,value.user.super_admin,value.user.must_change,value.channels]);}
+function accessSignature(value){return JSON.stringify([value.user.id,value.user.username,value.user.role,value.user.super_admin,value.user.must_change,value.company_name,value.recovery_email,value.channels]);}
 async function session(){
   const value=await api('/api/me');clearSensitive();identity(value);overview();
   selectedChannels=new Set(value.channels.map(c=>String(c.id)));renderChannelOptions();
@@ -346,10 +351,10 @@ bind('loginForm','submit',async()=>{
   form.dataset.submitting='true';form.setAttribute('aria-busy','true');
   const original=button.innerHTML,values=Object.fromEntries(new FormData(form));
   panel.classList.remove('login-failed','login-success');$('loginError').textContent='';
-  button.textContent='Signing In...';
+  button.textContent='Logging In...';
   try{
     await api('/api/login',{method:'POST',body:values});
-    panel.classList.add('login-success');button.textContent='Signed In';
+    panel.classList.add('login-success');button.textContent='Logged In';
     await loginMotion(panel,[{transform:'scale(1)'},{transform:'scale(1.015)',offset:.5},{transform:'scale(1)'}],280);
     form.reset();loginEntering=true;await session();
   }catch(error){
@@ -371,7 +376,7 @@ bind('reset','click',async()=>{initialWeek=false;resetDateBounds=true;HTMLFormEl
 bind('export','click',async()=>{window.location.href='/api/export?'+appliedQuery;});
 $('channelSearch').addEventListener('input',filterChannelOptions);
 const selectAllChannels=document.createElement('button');
-selectAllChannels.type='button';selectAllChannels.id='selectAllChannels';selectAllChannels.textContent='Select all';
+selectAllChannels.type='button';selectAllChannels.id='selectAllChannels';selectAllChannels.textContent='Select All';
 $('selectVisible').before(selectAllChannels);
 function selectShown(checked){for(const label of $('channelOptions').children)if(!label.hidden){const input=label.querySelector('input');input.checked=checked;if(checked)selectedChannels.add(input.value);else selectedChannels.delete(input.value);}channelSummary();dirty();}
 $('selectVisible').hidden=true;$('clearChannels').textContent='Clear';
@@ -731,7 +736,7 @@ async function loadUsers(){
   const data=await api('/api/admin/users');users=data.users;adminChannels=data.channels;accountEmailEnabled=!!data.email_enabled;
   const active=new Set(adminChannels.map(c=>c.id));
   const scope=u=>{const count=u.channels.filter(id=>active.has(id)).length;return u.role==='admin'?'All channels':count===0?'No channels':count===active.size?'All assigned channels ('+count+')':count+' of '+active.size+' channels';};
-  $('users').innerHTML=users.map(u=>`<tr><td><strong>${esc(u.username)}</strong><small class="user-recovery-email">${u.email?esc(u.email):'Recovery email missing'}</small></td><td><span class="role-pill role-${u.super_admin?'super':['admin','uploader','viewer'].includes(u.role)?u.role:'unknown'}">${u.super_admin?'Super Admin':esc(u.role)}</span></td><td>${scope(u)}</td><td><span class="status-pill status-${!u.active?'disabled':u.must_change?'pending':'enabled'}">${!u.active?'Disabled':u.must_change?'Password setup pending':'Enabled'}</span></td><td>${u.super_admin||(!me.user.super_admin&&u.role==='admin')?'Protected':`<button data-user="${u.id}">Edit</button>`}</td></tr>`).join('');
+  $('users').innerHTML=users.map(u=>`<tr><td>${u.company_name?esc(u.company_name):'Not set'}</td><td><strong>${esc(u.username)}</strong><small class="user-recovery-email">${u.email?esc(u.email):'Email not set'}</small></td><td><span class="role-pill role-${u.super_admin?'super':['admin','uploader','viewer'].includes(u.role)?u.role:'unknown'}">${u.super_admin?'Super Admin':esc(u.role)}</span></td><td>${scope(u)}</td><td><span class="status-pill status-${!u.active?'disabled':u.must_change?'pending':'enabled'}">${!u.active?'Disabled':u.must_change?'Password setup pending':'Enabled'}</span></td><td>${(u.super_admin&&u.id!==me.user.id)||(!me.user.super_admin&&u.role==='admin')?'Protected':`<button data-user="${u.id}">Edit</button>`}</td></tr>`).join('');
   $('userForm').elements.role.querySelector('option[value="admin"]').disabled=!me.user.super_admin;
   directoryChannels=[...data.channels.map(c=>({...c,archived:false})),...(data.archived||[]).map(c=>({...c,archived:true}))];
   renderChannelDirectory();
@@ -788,7 +793,7 @@ function assignmentSummary(){
   $('assignmentCount').textContent=selected+' selected | '+shown+' shown | '+labels.length+' total';
 }
 function assignmentRole(){const admin=$('userForm').elements.role.value==='admin';$('assignmentFieldset').dataset.admin=String(admin);$('adminAccessNote').hidden=!admin;}
-function editUser(user){const form=$('userForm');form.reset();form.elements.id.value=user?.id||'';form.elements.username.value=user?.username||'';form.elements.email.value=user?.email||'';form.elements.role.value=user?.role||'viewer';form.elements.active.checked=user?!!user.active:true;form.elements.password.required=!user;form.elements.password.type='password';$('temporaryPasswordLabel').textContent=user?'Reset password (optional, 8+ characters)':'Temporary password (8+ characters)';$('userTitle').textContent=user?'Edit user':'Add user';$('userDialog').querySelector('.form-error').textContent='';$('assignmentSearch').value='';$('assignments').innerHTML=adminChannels.map(c=>`<label class="check"><input type="checkbox" value="${c.id}" ${user?.channels.includes(c.id)?'checked':''}>${esc(c.name)}</label>`).join('');assignmentSummary();assignmentRole();inviteMode();$('userDialog').showModal();}
+function editUser(user){const form=$('userForm');form.reset();form.elements.id.value=user?.id||'';form.elements.username.value=user?.username||'';form.elements.company_name.value=user?.company_name||'';form.elements.email.value=user?.email||'';form.elements.role.value=user?.role||'viewer';form.elements.active.checked=user?!!user.active:true;form.elements.password.required=!user;form.elements.password.type='password';$('temporaryPasswordLabel').textContent=user?'Reset password (optional, 8+ characters)':'Temporary password (8+ characters)';$('userTitle').textContent=user?'Edit user':'Add user';$('userDialog').querySelector('.form-error').textContent='';$('assignmentSearch').value='';$('assignments').innerHTML=adminChannels.map(c=>`<label class="check"><input type="checkbox" value="${c.id}" ${user?.channels.includes(c.id)?'checked':''}>${esc(c.name)}</label>`).join('');assignmentSummary();assignmentRole();inviteMode();for(const name of ['role','active','password'])form.elements[name].disabled=!!user?.super_admin;$('showTemporary').closest('label').hidden=!!user?.super_admin;form.elements.password.closest('label').hidden=!!user?.super_admin;$('userDialog').showModal();}
 bind('addUser','click',async()=>editUser());
 $('users').addEventListener('click',e=>{const button=e.target.closest('[data-user]');if(button)editUser(users.find(u=>u.id===Number(button.dataset.user)));});
 bind('userCancel','click',async()=>$('userDialog').close());
@@ -796,18 +801,18 @@ $('assignmentSearch').addEventListener('input',()=>{const search=$('assignmentSe
 $('assignments').addEventListener('change',assignmentSummary);
 $('userForm').elements.role.addEventListener('change',assignmentRole);
 $('showTemporary').addEventListener('change',()=>{$('userForm').elements.password.type=$('showTemporary').checked?'text':'password';});
-for(const [id,mode] of [['assignAll','all'],['assignShown','shown'],['assignClear','clear']])bind(id,'click',async()=>{for(const label of $('assignments').children)if(mode!=='shown'||!label.hidden)label.querySelector('input').checked=mode!=='clear';assignmentSummary();});
-bind('userForm','submit',async()=>{const form=$('userForm');const body={invite:$('inviteEmail').checked,id:form.elements.id.value?Number(form.elements.id.value):null,username:form.elements.username.value,email:form.elements.email.value,role:form.elements.role.value,password:$('inviteEmail').checked?'':form.elements.password.value,active:form.elements.active.checked,channels:form.elements.role.value==='admin'?[]:[...$('assignments').querySelectorAll('input:checked')].map(c=>Number(c.value))};const result=await api('/api/admin/users',{method:'POST',body});$('userDialog').close();form.reset();await loadUsers();notify(result.warning|| (body.invite?'Invitation sent. User will set their own password.':body.id?'User access saved. Open clients update automatically.':'User created: '+body.username.trim()+'. Sign-in address: '+location.origin+'/'));});
+for(const [id,checked] of [['assignAll',true],['assignClear',false]])bind(id,'click',async()=>{for(const label of $('assignments').children)if(!label.hidden)label.querySelector('input').checked=checked;assignmentSummary();});
+bind('userForm','submit',async()=>{const form=$('userForm');const body={invite:$('inviteEmail').checked,id:form.elements.id.value?Number(form.elements.id.value):null,username:form.elements.username.value,company_name:form.elements.company_name.value,email:form.elements.email.value,role:form.elements.role.value,password:$('inviteEmail').checked?'':form.elements.password.value,active:form.elements.active.checked,channels:form.elements.role.value==='admin'?[]:[...$('assignments').querySelectorAll('input:checked')].map(c=>Number(c.value))};const result=await api('/api/admin/users',{method:'POST',body});$('userDialog').close();form.reset();await loadUsers();identity(await api('/api/me'));notify(result.warning|| (body.invite?'Invitation sent. User will set their own password.':body.id?'User access saved. Open clients update automatically.':'User created: '+body.username.trim()+'. Sign-in address: '+location.origin+'/'));});
 bind('channelForm','submit',async()=>{await api('/api/admin/channels',{method:'POST',body:Object.fromEntries(new FormData($('channelForm')))});$('channelForm').reset();await loadUsers();notify('Channel added.');});
 const inviteLabel=document.createElement('label');inviteLabel.className='check';
 inviteLabel.innerHTML='<input type="checkbox" id="inviteEmail">Invite by email';
 const recoveryLabel=document.createElement('label');
-recoveryLabel.innerHTML='Recovery email<input name="email" type="email" required maxlength="80" autocomplete="off">';
+recoveryLabel.innerHTML='Email<input name="email" type="email" required maxlength="80" autocomplete="off">';
 const ownRecoveryLabel=recoveryLabel.cloneNode(true);
 $('passwordForm').elements.confirm.closest('label').after(ownRecoveryLabel);
 const deliveryStatus=document.createElement('p');deliveryStatus.className='muted';deliveryStatus.setAttribute('role','status');
 $('userForm').elements.username.closest('label').after(recoveryLabel,inviteLabel,deliveryStatus);
-function inviteMode(){const form=$('userForm'),editing=!!form.elements.id.value;inviteLabel.hidden=editing;$('inviteEmail').disabled=!accountEmailEnabled;if(editing||!accountEmailEnabled)$('inviteEmail').checked=false;const enabled=$('inviteEmail').checked;form.elements.password.required=!editing&&!enabled;form.elements.password.closest('label').hidden=enabled;form.elements.username.type='text';$('showTemporary').closest('label').hidden=enabled;deliveryStatus.hidden=accountEmailEnabled;deliveryStatus.textContent='Email delivery not configured. Administrator password reset is available.';}
+function inviteMode(){const form=$('userForm'),editing=!!form.elements.id.value;inviteLabel.hidden=editing;$('inviteEmail').disabled=!accountEmailEnabled;if(editing||!accountEmailEnabled)$('inviteEmail').checked=false;const enabled=$('inviteEmail').checked,protectedProfile=editing&&form.elements.password.disabled;form.elements.password.required=!editing&&!enabled;form.elements.password.closest('label').hidden=enabled||protectedProfile;form.elements.username.type='text';$('showTemporary').closest('label').hidden=enabled||protectedProfile;deliveryStatus.hidden=accountEmailEnabled;deliveryStatus.textContent='Email delivery not configured. Administrator password reset is available.';}
 $('inviteEmail').addEventListener('change',inviteMode);
 new MutationObserver(inviteMode).observe($('userDialog'),{attributes:true,attributeFilter:['open']});
 const resetDialog=document.createElement('dialog');resetDialog.id='accountDialog';

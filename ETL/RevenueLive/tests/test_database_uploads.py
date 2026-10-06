@@ -40,6 +40,22 @@ class DatabaseUploadTest(unittest.TestCase):
         self.client.post('/api/login', json={'username':'admin', 'password':'synthetic-password'})
         self.headers = {'X-CSRF-Token':self.client.get('/api/me').json['csrf']}
 
+    def test_company_profile_and_protected_super_admin(self):
+        with closing(sqlite3.connect(self.db_file)) as db, db:
+            db.execute('INSERT OR REPLACE INTO super_admin VALUES (1,1)')
+        body=dict(id=1,username='admin',role='admin',active=True,channels=[],email='admin@example.com',company_name='Veto Streaming')
+        response=self.client.post('/api/admin/users',json=body,headers=self.headers)
+        self.assertEqual(response.status_code,200,response.json)
+        self.assertEqual(self.client.get('/api/me').json['company_name'],'Veto Streaming')
+        users=self.client.get('/api/admin/users').json['users']
+        self.assertEqual(next(u for u in users if u['id']==1)['company_name'],'Veto Streaming')
+        for changes in ({'role':'viewer'},{'active':False},{'password':'12345678'},{'channels':[1]},{'company_name':'x'*121}):
+            response=self.client.post('/api/admin/users',json={**body,**changes},headers=self.headers)
+            self.assertEqual(response.status_code,400,response.json)
+        self.assertEqual(self.client.get('/api/me').json['company_name'],'Veto Streaming')
+        response=self.client.post('/api/admin/users',json=dict(username='newviewer',email='viewer@example.com',password='12345678',role='viewer',channels=[],company_name='Example Ltd'),headers=self.headers)
+        self.assertEqual(response.status_code,200,response.json)
+
     def test_login_with_username_or_registered_email_without_smtp(self):
         with closing(sqlite3.connect(self.db_file)) as db, db:
             db.execute("INSERT INTO email_accounts VALUES (2,'uploader@example.com',0)")
@@ -240,10 +256,11 @@ class DatabaseUploadTest(unittest.TestCase):
         with closing(sqlite3.connect(self.db_file)) as db,db:
             db.execute('INSERT INTO super_admin VALUES (1,1)')
         body=dict(id=1,username='admin',email='owner@example.com',role='admin',channels=[])
-        self.assertEqual(self.client.post('/api/admin/users',headers=self.headers,json=body).status_code,400)
+        self.assertEqual(self.client.post('/api/admin/users',headers=self.headers,json=body).status_code,200)
         with closing(sqlite3.connect(self.db_file)) as db,db:
             db.execute("UPDATE users SET role='admin' WHERE id=2")
         self.uploader_login()
+        self.assertEqual(self.client.post('/api/admin/users',headers=self.headers,json=body).status_code,400)
         self.assertEqual(self.client.post('/api/admin/users',headers=self.headers,json=dict(
             username='another-admin',email='newadmin@example.com',role='admin',password='temporary-password',channels=[])).status_code,403)
 
