@@ -110,8 +110,8 @@ def install(app, db, data, invalid, log):
     def complete():
         body = request.get_json(silent=True) or {}
         password = str(body.get('password',''))
-        if not 12 <= len(password) <= 256:
-            raise invalid('Password must be 12 to 256 characters.')
+        if not 8 <= len(password) <= 256:
+            raise invalid('Password must be 8 to 256 characters.')
         raw = str(body.get('token',''))
         if len(raw) > 100:
             raise invalid('Invalid or expired link.')

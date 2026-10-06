@@ -194,6 +194,50 @@ dialog label,dialog legend{color:#30525c}
 #loginForm button:focus-visible{outline:2px solid #5484a4;outline-offset:3px}
 #loginError{margin:0;padding:12px 14px;border:1px solid #edbdc4;border-radius:6px;background:#fff2f4;color:#a72e3c;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
 #loginError:empty{display:none}
+/* Authentication styling is isolated from the signed-in dashboard. */
+body:has(#login:not([hidden])){min-height:100dvh;background:linear-gradient(135deg,#07182d,#142e56 48%,#241a48);background-attachment:fixed;isolation:isolate}
+body:has(#login:not([hidden]))::before,body:has(#login:not([hidden]))::after{content:"";position:fixed;inset:-30%;pointer-events:none;z-index:0;will-change:transform;filter:blur(36px)}
+body:has(#login:not([hidden]))::before{background:linear-gradient(116deg,transparent 19%,#1bc5ad12 26%,#49e0bb8c 31%,#26c4d85c 35%,transparent 42%,transparent 51%,#4879ec8a 58%,#8767d77a 63%,transparent 71%);animation:login-aurora-flow 18s ease-in-out infinite alternate;opacity:.8}
+body:has(#login:not([hidden]))::after{background:linear-gradient(74deg,transparent 30%,#177dbe33 38%,#73efd55c 42%,transparent 48%,transparent 60%,#9775e36b 67%,#3865c54d 72%,transparent 79%);animation:login-aurora-drift 24s ease-in-out infinite alternate;opacity:.65}
+@keyframes login-aurora-flow{from{transform:translate3d(-5%,-4%,0) skewX(-12deg) rotate(-8deg)}to{transform:translate3d(6%,5%,0) skewX(13deg) rotate(8deg)}}
+@keyframes login-aurora-drift{from{transform:translate3d(6%,-3%,0) skewY(9deg) rotate(6deg)}to{transform:translate3d(-6%,4%,0) skewY(-8deg) rotate(-5deg)}}
+@media(prefers-reduced-motion:reduce){body:has(#login:not([hidden]))::before,body:has(#login:not([hidden]))::after{animation:none;will-change:auto}}
+#login{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:none;min-height:100dvh;margin:0;padding:32px 20px;color:#172d50;font-family:Arial,Helvetica,sans-serif}
+#login .login-brand{display:flex;align-items:center;gap:14px;margin:0 0 28px;color:#fff}
+#login .login-brand strong{display:block;font-size:28px;font-weight:800;line-height:1.2}
+#login .login-brand div>span{display:block;margin-top:4px;font-size:13px;color:#e2eaff}
+#login .login-mark,#login .login-emblem{display:grid;place-items:center;flex-shrink:0;background:linear-gradient(145deg,#3d99ff,#2546c4);border:1px solid #ffffff55;box-shadow:inset 0 1px 1px #ffffff65,0 8px 20px #05193530;color:#fff}
+#login .login-mark{width:50px;height:50px;border-radius:12px}
+#login .login-mark svg{width:29px;height:29px}
+#login .login-panel{width:100%;max-width:440px;padding:32px 36px 22px;border:1px solid #fff;border-radius:20px;background:linear-gradient(150deg,#fff 45%,#f0f5ff);box-shadow:0 24px 70px #061d5140,inset 0 1px 0 #fff}
+#login .login-emblem{width:58px;height:58px;border-radius:16px;margin:0 auto 20px}
+#login .login-emblem svg{width:32px;height:32px}
+#login .login-logo{display:block;width:220px;max-width:85%;height:auto;object-fit:contain;margin:0 auto 32px}
+#login .login-panel{position:relative;isolation:isolate;border:2px solid #f77918;background:linear-gradient(140deg,#fff6ee 0%,#fff 24%,#fff 65%,#edf3ff 100%);box-shadow:0 16px 40px -12px #04152f55;transition:box-shadow .25s,border-color .25s}
+#login .login-panel::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;background:linear-gradient(125deg,#ffffffa0,transparent 38%)}
+#login .login-panel.login-failed{border-color:#df849a;box-shadow:0 3px 0 #dcaabb,0 20px 55px #10295655,0 0 0 3px #ffe2e950}
+#login .login-panel.login-success{border-color:#57b79c;box-shadow:0 3px 0 #8fcbbb,0 20px 55px #10295655,0 0 0 3px #c5f5e550}
+#loginForm[aria-busy="true"] button.primary{opacity:1;cursor:progress}
+#login .login-success button.primary{background:linear-gradient(110deg,#18725d,#206878);border-color:#247e69}
+@media(prefers-reduced-motion:reduce){#login .login-panel{transition:none}}
+#login h1{text-align:center;font-size:26px;line-height:1.2;font-weight:700;color:#172d50;margin:0 0 32px}
+#login .login-subtitle{text-align:center;margin:0 0 28px;color:#536781;font-size:15px;line-height:1.5}
+#loginForm{gap:19px}
+#loginForm label{color:#203858;font-family:"Segoe UI",Arial,sans-serif;font-size:16px;font-weight:600;line-height:1.4;letter-spacing:0;gap:9px}
+#loginForm label[for="loginUsername"],#loginForm label[for="loginPassword"]{color:#b84c0a}
+#loginForm input{height:50px;border-radius:10px;border-color:#bdcce0;background:#fff;color:#142d50;box-shadow:inset 0 2px 3px #162e5105}
+#loginForm input:focus{outline:3px solid #f7791829;outline-offset:1px;border-color:#d96715}
+#loginForm .login-password-field{display:block;position:relative}
+#loginForm .login-password-field input{padding-right:52px}
+#loginForm #toggleLoginPassword{position:absolute;right:4px;top:4px;display:grid;place-items:center;width:42px;height:42px;min-height:42px;padding:0;border:0;border-radius:8px;background:transparent;color:#536781;box-shadow:none;transform:none}
+#loginForm #toggleLoginPassword:hover{background:#fff1e6;color:#a94b0d}
+#toggleLoginPassword svg{width:20px;height:20px}
+#loginForm button.primary{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:4px;height:50px;border-radius:10px;background:linear-gradient(110deg,#05244f,#073b95);border:1px solid #173f79;box-shadow:0 5px 14px #05244f30,inset 0 1px 0 #ffffff35,inset 0 -2px 0 #f77918;color:#fff}
+#loginForm button.primary:hover,#loginForm button.primary:focus-visible{background:linear-gradient(110deg,#07356d,#0648b0);border-color:#19529b;color:#ffb16a}
+#loginForm button.primary svg{width:19px;height:19px;color:#ffad64}
+#loginForm .forgot-password{color:#3155a4;border-radius:8px;font-size:14px;min-height:40px;padding:8px 12px}
+#login .login-footer{margin:24px 0 0;text-align:center;color:#e6edff;font-size:12px;line-height:1.5}
+@media(max-width:480px){#login{padding:28px 16px 20px}#login .login-brand{margin-bottom:24px;gap:10px}#login .login-brand strong{font-size:25px}#login .login-brand div>span{font-size:12px}#login .login-panel{padding:26px 22px 18px}#login h1{font-size:28px}}
 .diy-controls input,.diy-controls select,.diy-presets input,.diy-presets select{width:100%;min-width:0;box-sizing:border-box}
 #diyChannels{position:relative;min-width:180px}
 #diyChannels summary{padding:10px 14px;border:1px solid #acc0d3;border-radius:6px;cursor:pointer;background:#edf5f7}

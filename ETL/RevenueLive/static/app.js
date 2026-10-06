@@ -204,6 +204,7 @@ function signOutView(message){clearSensitive();me=null;csrf='';selectedChannels.
 function identity(value){
   if(value.home)window.history.replaceState(null,'',value.home+location.search+location.hash);
   me=value;csrf=value.csrf;$('login').hidden=true;$('shell').hidden=false;
+  if(loginEntering){loginEntering=false;void loginMotion($('shell'),[{opacity:0,transform:'translateY(12px)'},{opacity:1,transform:'translateY(0)'}],380);}
   window.RevenueShare?.setChannels(value.channels);
   signedInName.textContent=value.user.username;
   $('identity').textContent=value.user.username+' | '+(value.user.super_admin?'Super Admin':value.user.role);
@@ -328,10 +329,42 @@ async function loadReport(){
   window.QuickInsights?.render(data,requested);
   void updateMetricChanges(data,requested,sequence);
 }
-bind('loginForm','submit',async()=>{
-  const values=Object.fromEntries(new FormData($('loginForm')));
-  try{await api('/api/login',{method:'POST',body:values});$('loginError').textContent='';$('loginForm').reset();await session();}catch(error){if(!error.stale){if(me)notify(error.message);else $('loginError').textContent=error.message;}}
+$('toggleLoginPassword').addEventListener('click',()=>{
+  const input=$('loginPassword'),button=$('toggleLoginPassword'),show=input.type==='password';
+  input.type=show?'text':'password';button.setAttribute('aria-pressed',String(show));
+  button.setAttribute('aria-label',show?'Hide password':'Show password');button.title=show?'Hide password':'Show password';
+  button.replaceChildren(icon(show?'eye-off':'eye'));window.lucide?.createIcons();
 });
+let loginEntering=false;
+async function loginMotion(element,frames,duration){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches||!element.animate)return;
+  await element.animate(frames,{duration,easing:'ease-out'}).finished.catch(()=>{});
+}
+bind('loginForm','submit',async()=>{
+  const form=$('loginForm'),panel=form.closest('.login-panel'),button=form.querySelector('[type="submit"]');
+  if(form.dataset.submitting)return;
+  form.dataset.submitting='true';form.setAttribute('aria-busy','true');
+  const original=button.innerHTML,values=Object.fromEntries(new FormData(form));
+  panel.classList.remove('login-failed','login-success');$('loginError').textContent='';
+  button.textContent='Signing In...';
+  try{
+    await api('/api/login',{method:'POST',body:values});
+    panel.classList.add('login-success');button.textContent='Signed In';
+    await loginMotion(panel,[{transform:'scale(1)'},{transform:'scale(1.015)',offset:.5},{transform:'scale(1)'}],280);
+    form.reset();loginEntering=true;await session();
+  }catch(error){
+    loginEntering=false;panel.classList.remove('login-success');
+    if(!error.stale){
+      if(me)notify(error.message);
+      else{
+        $('loginError').textContent=error.message;panel.classList.add('login-failed');
+        await loginMotion(panel,[{transform:'translateX(0)'},{transform:'translateX(-7px)'},{transform:'translateX(6px)'},{transform:'translateX(-4px)'},{transform:'translateX(0)'}],320);
+        $('loginPassword').focus();
+      }
+    }
+  }finally{delete form.dataset.submitting;form.removeAttribute('aria-busy');button.innerHTML=original;panel.classList.remove('login-success');}
+});
+$('loginForm').addEventListener('input',()=>{$('loginForm').closest('.login-panel').classList.remove('login-failed');});
 bind('logout','click',async()=>{await api('/api/logout',{method:'POST'});location.reload();});
 bind('filters','submit',refresh);
 bind('reset','click',async()=>{initialWeek=false;resetDateBounds=true;HTMLFormElement.prototype.reset.call($('filters'));$('channelSearch').value='';$('end').disabled=false;selectedChannels=new Set(me.channels.map(c=>String(c.id)));renderChannelOptions();await refresh();});
@@ -755,7 +788,7 @@ function assignmentSummary(){
   $('assignmentCount').textContent=selected+' selected | '+shown+' shown | '+labels.length+' total';
 }
 function assignmentRole(){const admin=$('userForm').elements.role.value==='admin';$('assignmentFieldset').dataset.admin=String(admin);$('adminAccessNote').hidden=!admin;}
-function editUser(user){const form=$('userForm');form.reset();form.elements.id.value=user?.id||'';form.elements.username.value=user?.username||'';form.elements.email.value=user?.email||'';form.elements.role.value=user?.role||'viewer';form.elements.active.checked=user?!!user.active:true;form.elements.password.required=!user;form.elements.password.type='password';$('temporaryPasswordLabel').textContent=user?'Reset password (optional, 12+ characters)':'Temporary password (12+ characters)';$('userTitle').textContent=user?'Edit user':'Add user';$('userDialog').querySelector('.form-error').textContent='';$('assignmentSearch').value='';$('assignments').innerHTML=adminChannels.map(c=>`<label class="check"><input type="checkbox" value="${c.id}" ${user?.channels.includes(c.id)?'checked':''}>${esc(c.name)}</label>`).join('');assignmentSummary();assignmentRole();inviteMode();$('userDialog').showModal();}
+function editUser(user){const form=$('userForm');form.reset();form.elements.id.value=user?.id||'';form.elements.username.value=user?.username||'';form.elements.email.value=user?.email||'';form.elements.role.value=user?.role||'viewer';form.elements.active.checked=user?!!user.active:true;form.elements.password.required=!user;form.elements.password.type='password';$('temporaryPasswordLabel').textContent=user?'Reset password (optional, 8+ characters)':'Temporary password (8+ characters)';$('userTitle').textContent=user?'Edit user':'Add user';$('userDialog').querySelector('.form-error').textContent='';$('assignmentSearch').value='';$('assignments').innerHTML=adminChannels.map(c=>`<label class="check"><input type="checkbox" value="${c.id}" ${user?.channels.includes(c.id)?'checked':''}>${esc(c.name)}</label>`).join('');assignmentSummary();assignmentRole();inviteMode();$('userDialog').showModal();}
 bind('addUser','click',async()=>editUser());
 $('users').addEventListener('click',e=>{const button=e.target.closest('[data-user]');if(button)editUser(users.find(u=>u.id===Number(button.dataset.user)));});
 bind('userCancel','click',async()=>$('userDialog').close());
@@ -778,13 +811,11 @@ function inviteMode(){const form=$('userForm'),editing=!!form.elements.id.value;
 $('inviteEmail').addEventListener('change',inviteMode);
 new MutationObserver(inviteMode).observe($('userDialog'),{attributes:true,attributeFilter:['open']});
 const resetDialog=document.createElement('dialog');resetDialog.id='accountDialog';
-resetDialog.innerHTML='<form id="accountForm"><h2 id="accountTitle">Forgot password</h2><label id="accountEmailLabel">Email<input name="email" type="email" required autocomplete="email"></label><label id="accountPasswordLabel" hidden>New password<input name="password" type="password" minlength="12" maxlength="256" autocomplete="new-password"></label><label id="accountConfirmLabel" hidden>Confirm password<input name="confirm" type="password" autocomplete="new-password"></label><p class="form-error" role="alert"></p><div class="actions"><button class="primary">Continue</button><button type="button" id="accountCancel">Cancel</button></div></form>';
+resetDialog.innerHTML='<form id="accountForm"><h2 id="accountTitle">Forgot password</h2><label id="accountEmailLabel">Email<input name="email" type="email" required autocomplete="email"></label><label id="accountPasswordLabel" hidden>New password<input name="password" type="password" minlength="8" maxlength="256" autocomplete="new-password"></label><label id="accountConfirmLabel" hidden>Confirm password<input name="confirm" type="password" autocomplete="new-password"></label><p class="form-error" role="alert"></p><div class="actions"><button class="primary">Continue</button><button type="button" id="accountCancel">Cancel</button></div></form>';
 document.body.append(resetDialog);
-const forgot=document.createElement('button');forgot.type='button';forgot.className='forgot-password';forgot.textContent='Forgot password';$('loginForm').append(forgot);
 let accountToken=new URLSearchParams(location.hash.slice(1)).get('account-token')||'';
 if(accountToken)window.history.replaceState(null,'',location.pathname+location.search);
 function openAccount(){const form=$('accountForm');form.reset();$('accountTitle').textContent=accountToken?'Set your password':'Forgot password';$('accountEmailLabel').hidden=!!accountToken;$('accountPasswordLabel').hidden=!accountToken;$('accountConfirmLabel').hidden=!accountToken;form.elements.email.required=!accountToken;form.elements.password.required=!!accountToken;form.elements.confirm.required=!!accountToken;resetDialog.querySelector('.form-error').textContent='';resetDialog.showModal();}
-forgot.addEventListener('click',()=>{accountToken='';openAccount();});
 bind('accountCancel','click',async()=>{accountToken='';resetDialog.close();});
 bind('accountForm','submit',async()=>{const form=$('accountForm');if(accountToken&&form.elements.password.value!==form.elements.confirm.value)throw new Error('Passwords do not match.');const result=await api(accountToken?'/api/account/complete':'/api/account/request',{method:'POST',body:accountToken?{token:accountToken,password:form.elements.password.value}:{email:form.elements.email.value}});const completed=!!accountToken;accountToken='';resetDialog.close();if(completed)signOutView('Password saved. Sign in with your username and new password.');else if(me)notify(result.message);else $('loginError').textContent=result.message;});
 session().catch(()=>{$('login').hidden=false;$('shell').hidden=true;}).finally(()=>{if(accountToken)openAccount();});

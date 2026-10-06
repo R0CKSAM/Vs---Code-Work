@@ -350,13 +350,19 @@ def create_app(data_dir=None):
         attempt = db().execute('SELECT * FROM attempts WHERE ip=?',(ip,)).fetchone()
         if attempt and attempt['expires']>time.time() and attempt['failures']>=10:
             return jsonify(error='Too many attempts. Try again in 15 minutes.'),429
-        user = db().execute('SELECT * FROM users WHERE username=? AND active=1',(str(value.get('username','')).strip()[:100],)).fetchone()
+        identifier = str(value.get('username','')).strip()
+        candidates = db().execute('''SELECT u.* FROM users u
+            LEFT JOIN email_accounts e ON e.user_id=u.id
+            WHERE u.active=1 AND (u.username=? OR LOWER(e.email)=?) LIMIT 2''',
+            (identifier, identifier.lower())).fetchall() if 0 < len(identifier) <= 100 else []
+        # A username may equal another account's email; never guess the identity.
+        user = candidates[0] if len(candidates) == 1 else None
         password = str(value.get('password',''))
         if not user or len(password)>256 or not check_password_hash(user['password'], password):
             failures = attempt['failures']+1 if attempt and attempt['expires']>time.time() else 1
             db().upsert('attempts',dict(ip=ip,failures=failures,expires=time.time()+900))
             db().commit()
-            return jsonify(error='Invalid username or password.'),401
+            return jsonify(error='Invalid username/email or password.'),401
         raw, csrf = secrets.token_urlsafe(32), secrets.token_urlsafe(32)
         db().execute('DELETE FROM attempts WHERE ip=?',(ip,))
         db().execute('DELETE FROM sessions WHERE expires<?',(time.time(),))
@@ -393,8 +399,8 @@ def create_app(data_dir=None):
     def password():
         body=request.get_json() or {}
         value=str(body.get('password',''))
-        if not 12<=len(value)<=256:
-            raise InvalidData('Password must be 12 to 256 characters.')
+        if not 8<=len(value)<=256:
+            raise InvalidData('Password must be 8 to 256 characters.')
         current=db().execute('SELECT password FROM users WHERE id=?',(g.user['id'],)).fetchone()[0]
         if not check_password_hash(current,str(body.get('current',''))):
             raise InvalidData('Current password is incorrect.')
@@ -1224,8 +1230,8 @@ def create_app(data_dir=None):
             raise InvalidData('Invalid user ID.')
         if role not in {'admin','uploader','viewer'} or not username or len(username)>80:
             raise InvalidData('Enter a username and valid role.')
-        if (not uid or password) and not 12<=len(password)<=256:
-            raise InvalidData('Temporary password must be 12 to 256 characters.')
+        if (not uid or password) and not 8<=len(password)<=256:
+            raise InvalidData('Temporary password must be 8 to 256 characters.')
         ids=body.get('channels',[])
         if not isinstance(ids,list) or any(type(x)!=int for x in ids):
             raise InvalidData('Invalid channel assignments.')

@@ -79,8 +79,8 @@ def import_sqlite(database, source_file, source_uploads=None):
 
 
 def init_admin(database, username, password):
-    if not username or len(username) > 80 or not 12 <= len(password) <= 256:
-        raise ValueError('Use a username up to 80 characters and a password of 12 to 256 characters.')
+    if not username or len(username) > 80 or not 8 <= len(password) <= 256:
+        raise ValueError('Use a username up to 80 characters and a password of 8 to 256 characters.')
     database.check_schema()
     with closing(database.connect()) as connection, connection:
         connection.begin_write()
@@ -94,8 +94,8 @@ def init_admin(database, username, password):
 def reset_super_admin(database, username, password):
     """Assign ownership, reset its password, revoke sessions, and append audit."""
     from app import AUDIT_GENESIS, audit_digest, verify_audit_chain
-    if not username or len(username) > 80 or not 12 <= len(password) <= 256:
-        raise ValueError('Use a username up to 80 characters and a password of 12 to 256 characters.')
+    if not username or len(username) > 80 or not 8 <= len(password) <= 256:
+        raise ValueError('Use a username up to 80 characters and a password of 8 to 256 characters.')
     database.check_schema()
     with closing(database.connect()) as connection, connection:
         connection.begin_write()

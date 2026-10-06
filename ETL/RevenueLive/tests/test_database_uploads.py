@@ -40,6 +40,69 @@ class DatabaseUploadTest(unittest.TestCase):
         self.client.post('/api/login', json={'username':'admin', 'password':'synthetic-password'})
         self.headers = {'X-CSRF-Token':self.client.get('/api/me').json['csrf']}
 
+    def test_login_with_username_or_registered_email_without_smtp(self):
+        with closing(sqlite3.connect(self.db_file)) as db, db:
+            db.execute("INSERT INTO email_accounts VALUES (2,'uploader@example.com',0)")
+        for identifier in ('uploader', 'uploader@example.com', '  UPLOADER@EXAMPLE.COM  '):
+            client = self.app.test_client()
+            response = client.post('/api/login', json=dict(username=identifier, password='synthetic-password'))
+            self.assertEqual(response.status_code, 200, response.json)
+            self.assertEqual(client.get('/api/me').json['user']['id'], 2)
+
+    def test_email_login_rejects_wrong_password_inactive_and_ambiguous_accounts(self):
+        with closing(sqlite3.connect(self.db_file)) as db, db:
+            db.execute("INSERT INTO email_accounts VALUES (2,'uploader@example.com',0)")
+        client = self.app.test_client()
+        credentials = dict(username='uploader@example.com', password='wrong-password')
+        self.assertEqual(client.post('/api/login', json=credentials).status_code, 401)
+        credentials['password'] = 'synthetic-password'
+        with closing(sqlite3.connect(self.db_file)) as db, db:
+            db.execute('UPDATE users SET active=0 WHERE id=2')
+        self.assertEqual(client.post('/api/login', json=credentials).status_code, 401)
+        with closing(sqlite3.connect(self.db_file)) as db, db:
+            db.execute('UPDATE users SET active=1 WHERE id=2')
+            db.execute("UPDATE users SET username='uploader@example.com' WHERE id=1")
+        self.assertEqual(client.post('/api/login', json=credentials).status_code, 401)
+        self.assertEqual(client.get('/api/me').status_code, 401)
+
+    def test_email_equal_to_own_username_is_not_ambiguous(self):
+        with closing(sqlite3.connect(self.db_file)) as db, db:
+            db.execute("INSERT INTO email_accounts VALUES (2,'uploader@example.com',0)")
+            db.execute("UPDATE users SET username='uploader@example.com' WHERE id=2")
+        response = self.app.test_client().post('/api/login', json=dict(username='uploader@example.com', password='synthetic-password'))
+        self.assertEqual(response.status_code, 200, response.json)
+
+    def test_numeric_eight_character_user_password(self):
+        body = dict(username='numeric-viewer', email='numeric@example.com', role='viewer',
+                    password='1234567', channels=[])
+        self.assertEqual(self.client.post('/api/admin/users', headers=self.headers, json=body).status_code, 400)
+        body['password'] = '12345678'
+        response = self.client.post('/api/admin/users', headers=self.headers, json=body)
+        self.assertEqual(response.status_code, 200, response.json)
+        client = self.app.test_client()
+        self.assertEqual(client.post('/api/login', json=dict(username=body['username'], password='87654321')).status_code, 401)
+        self.assertEqual(client.post('/api/login', json=dict(username=body['username'], password=body['password'])).status_code, 200)
+
+    def test_numeric_eight_character_password_change(self):
+        body = dict(current='synthetic-password', password='1234567')
+        self.assertEqual(self.client.post('/api/password', headers=self.headers, json=body).status_code, 400)
+        body['password'] = '12345678'
+        response = self.client.post('/api/password', headers=self.headers, json=body)
+        self.assertEqual(response.status_code, 200, response.json)
+        self.assertEqual(self.app.test_client().post('/api/login', json=dict(username='admin', password='12345678')).status_code, 200)
+
+    def test_numeric_eight_character_email_reset(self):
+        import hashlib
+        with closing(sqlite3.connect(self.db_file)) as db, db:
+            db.execute('INSERT INTO email_tokens VALUES (?,?,?)',
+                       (hashlib.sha256(b'eight-character-reset').hexdigest(), 2, 9999999999))
+        body = dict(token='eight-character-reset', password='1234567')
+        self.assertEqual(self.client.post('/api/account/complete', json=body).status_code, 400)
+        body['password'] = '12345678'
+        response = self.client.post('/api/account/complete', json=body)
+        self.assertEqual(response.status_code, 200, response.json)
+        self.assertEqual(self.app.test_client().post('/api/login', json=dict(username='uploader', password='12345678')).status_code, 200)
+
     def preview(self, value='1.23', padding=''):
         content = (','.join(HEADERS) + f'\n2026-09-01,Example,100,20,{value},0,{value}\n' + padding).encode()
         response = self.client.post('/api/uploads/preview', headers=self.headers,
