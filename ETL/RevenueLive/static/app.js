@@ -72,6 +72,8 @@ menuPanel.querySelector('.currency')?.remove();
 headerRow.remove();
 document.body.classList.add('summary-phase');
 const rangePicker=document.createElement('details');rangePicker.id='rangePicker';
+const revenueFinalization=document.createElement('p');revenueFinalization.id='revenueFinalization';document.querySelector('#dashboard .metrics').after(revenueFinalization);
+const paramsMonth=(selected,fallback)=>selected||fallback||'';
 const rangeTitle=document.createElement('summary');rangeTitle.id='rangeTitle';rangeTitle.textContent='Latest week';rangePicker.append(rangeTitle);
 const rangeText=document.createElement('span');rangeText.textContent='Latest week';rangeTitle.replaceChildren(rangeText);
 const rangePanel=document.createElement('div');rangePanel.className='range-panel';rangePanel.append($('start').closest('label'),$('end').closest('label'));
@@ -86,10 +88,16 @@ function updateCalendarNav(){if(!calendar)return;navButtons[1].textContent=calen
 navButtons[0].onclick=()=>{calendar.changeMonth(-1);updateCalendarNav();};navButtons[3].onclick=()=>{calendar.changeMonth(1);updateCalendarNav();};
 function calendarOptions(years){if(!calendar)return;const values=years?[...new Set(calendarDates.map(day=>Number(day.slice(0,4))))]:Array.from({length:12},(_,i)=>i);calendarChoices.replaceChildren(...values.map(value=>{const button=document.createElement('button');button.type='button';button.textContent=years?String(value):calendar.l10n.months.shorthand[value];button.disabled=!years&&!calendarDates.some(day=>day.startsWith(calendar.currentYear+'-'+String(value+1).padStart(2,'0')));button.onclick=()=>{calendar.jumpToDate(new Date(years?value:calendar.currentYear,years?calendar.currentMonth:value,1));updateCalendarNav();};return button;}));calendarChoices.hidden=false;}
 navButtons[1].onclick=()=>calendarOptions(false);navButtons[2].onclick=()=>calendarOptions(true);
-const calendarStatus=document.createElement('p');calendarStatus.className='calendar-status sr-only';calendarStatus.setAttribute('role','status');rangePanel.append(calendarStatus);
-let rangeStart=null;
-function autoRange(dates,_,instance){if(!rangeStart){rangeStart=instance.latestSelectedDateObj||dates[0];if(rangeStart)instance.setDate([rangeStart],false);calendarStatus.textContent='Select the end date. Select the same date again for a single day.';return;}const end=dates.find(day=>day.getTime()!==rangeStart.getTime())||rangeStart;const days=[rangeStart,end].map(day=>instance.formatDate(day,'Y-m-d')).sort();$('start').value=days[0];$('end').value=days[1];$('datePreset').value='custom';rangeStart=null;rangePicker.open=false;dirty();}
-function syncCalendar(){if(!calendar)return;rangeStart=null;calendar.set('monthSelectorType','static');calendar.set('enable',calendarDates);calendar.setDate([$('start').value,$('end').value].filter(Boolean),false);if($('end').value)calendar.jumpToDate($('end').value);updateCalendarNav();calendarStatus.textContent=calendarDates.length?'Select start and end dates.':'No dates available for the selected channels.';}
+const calendarStatus=document.createElement('p');calendarStatus.className='calendar-status';calendarStatus.setAttribute('role','status');rangePanel.append(calendarStatus);
+let rangeStart=null,pendingRange=null;
+const dateActions=document.createElement('div');dateActions.className='calendar-actions';
+dateActions.innerHTML='<button type="button" id="allDateRange">All Range</button><button type="button" id="cancelDateRange">Cancel</button><button type="button" id="applyDateRange" class="primary" disabled>Apply Range</button>';rangePanel.append(dateActions);
+function stageRange(days){pendingRange=days;rangeStart=null;calendar?.setDate(days,false);$('applyDateRange').disabled=!days?.length;calendarStatus.textContent=days?days.join(' to '):'Select start and end dates.';}
+dateActions.querySelector('#allDateRange').onclick=()=>{if(calendarDates.length)stageRange([calendarDates[0],calendarDates.at(-1)]);};
+dateActions.querySelector('#cancelDateRange').onclick=()=>{rangePicker.open=false;syncCalendar();};
+dateActions.querySelector('#applyDateRange').onclick=()=>{if(!pendingRange)return;[$('start').value,$('end').value]=pendingRange;$('datePreset').value='custom';rangePicker.open=false;pendingRange=null;dirty();};
+function autoRange(dates,_,instance){if(!rangeStart){pendingRange=null;$('applyDateRange').disabled=true;rangeStart=instance.latestSelectedDateObj||dates[0];if(rangeStart)instance.setDate([rangeStart],false);calendarStatus.textContent='Select the end date, then Apply Range.';return;}const end=dates.find(day=>day.getTime()!==rangeStart.getTime())||rangeStart;stageRange([rangeStart,end].map(day=>instance.formatDate(day,'Y-m-d')).sort());}
+function syncCalendar(){if(!calendar)return;rangeStart=null;pendingRange=null;$('applyDateRange').disabled=true;$('allDateRange').disabled=!calendarDates.length;calendar.set('monthSelectorType','static');calendar.set('enable',calendarDates);calendar.setDate([$('start').value,$('end').value].filter(Boolean),false);if($('end').value)calendar.jumpToDate($('end').value);updateCalendarNav();calendarStatus.textContent=calendarDates.length?'Select start and end dates.':'No dates available for the selected channels.';}
 const calendarStyle=document.createElement('link');calendarStyle.rel='stylesheet';calendarStyle.href='/static/flatpickr.min.css';document.head.insertBefore(calendarStyle,themeStyle);
 const calendarScript=document.createElement('script');calendarScript.src='/static/flatpickr.min.js';calendarScript.onload=()=>{calendar=flatpickr(calendarInput,{inline:true,mode:'multiple',dateFormat:'Y-m-d',disableMobile:true,enable:[],onChange:autoRange});syncCalendar();};document.head.append(calendarScript);
 rangePicker.addEventListener('toggle',()=>{if(rangePicker.open){$('channelPicker').open=false;syncCalendar();}});
@@ -126,7 +134,8 @@ async function updateMetricChanges(data,requested,sequence){
       const change=before===0?0:(now-before)/Math.abs(before)*100;
       const kind=Math.abs(change)<1?'steady':change>0?'up':'down';
       const label=(change>0?'+':'')+(Math.abs(change)<1&&change!==0?change.toFixed(1):Math.round(change))+'%';
-      badge.textContent=label;
+      const changeValue=document.createElement('span');changeValue.className='metric-change-value';changeValue.textContent=label;badge.replaceChildren(changeValue);
+      const comparisonPeriod=document.createElement('small');comparisonPeriod.className='metric-comparison-period';comparisonPeriod.textContent='vs previous '+span+' '+(span===1?'day':'days');badge.append(comparisonPeriod);
       badge.className='metric-change '+kind;badge.hidden=false;
       badge.title='Compared with '+start+' to '+end+' for the same selected channels. Changes below 1% are amber.';
     }
@@ -154,7 +163,7 @@ menuPanel.querySelectorAll('[data-view]').forEach(button=>button.addEventListene
 const loading=document.createElement('div');loading.id='reportLoading';loading.hidden=true;loading.setAttribute('role','status');loading.innerHTML='<span class="loading-spinner" aria-hidden="true"></span><span>Updating data...</span>';document.body.append(loading);
 let loadingTicket=0;
 function setLoading(value){loading.hidden=!value;$('dashboard').setAttribute('aria-busy',String(value));}
-const money=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0,minimumFractionDigits:0}).format(n/100);
+const money=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:1,minimumFractionDigits:1}).format(n/100);
 const number=n=>new Intl.NumberFormat('en-IN').format(n);
 function fitMetricValues(){document.querySelectorAll('.metrics strong').forEach(value=>{value.style.fontSize='';let size=parseFloat(getComputedStyle(value).fontSize);while(value.scrollWidth>value.clientWidth&&size>18){size--;value.style.fontSize=size+'px';}});}
 window.addEventListener('resize',()=>requestAnimationFrame(fitMetricValues));
@@ -328,6 +337,9 @@ async function loadReport(){
   window.RevenueShare?.render(data.rows);
   $('rowCount').textContent=number(data.rows.length)+' records';$('empty').hidden=data.rows.length>0;
   $('period').textContent=data.rows.length?[...new Set(data.rows.map(r=>r.day))].sort().filter((v,i,a)=>i===0||i===a.length-1).join(' to '):'No data';
+  const monthLabel=day=>new Intl.DateTimeFormat('en-GB',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(day+'T00:00:00Z'));
+  const firstMonth=paramsMonth($('start').value,data.rows[0]?.day),lastMonth=paramsMonth($('end').value,data.rows.at(-1)?.day);
+  revenueFinalization.textContent=(firstMonth&&lastMonth?'Reporting period: '+monthLabel(firstMonth)+' to '+monthLabel(lastMonth)+'. ':'')+'Final revenue figures shall be consolidated and finalized by the 15th of the succeeding month.';
   const params=new URLSearchParams(requested);$('appliedScope').textContent=scope+' | '+(params.get('start')||'Beginning')+' to '+(params.get('end')||'Latest');
   $('filterState').textContent=query()===requested?'Updated':'Updating...';$('export').disabled=false;
   $('updated').textContent='Updated '+new Date().toLocaleTimeString('en-IN');
@@ -731,12 +743,23 @@ bind('uploadDeleteForm','submit',async()=>{
   if(pending?.id===id){pending=null;$('preview').hidden=true;$('uploadForm').reset();}
   $('uploadDeleteDialog').close();pendingDelete=null;await history();notify('File deleted.');
 });
-let accountEmailEnabled=false;
-async function loadUsers(){
-  const data=await api('/api/admin/users');users=data.users;adminChannels=data.channels;accountEmailEnabled=!!data.email_enabled;
+let accountEmailEnabled=false,userStatusFilter='active';
+const userStatusTabs=document.createElement('div');userStatusTabs.className='user-status-tabs';userStatusTabs.setAttribute('role','group');userStatusTabs.setAttribute('aria-label','User status');
+for(const [key,label] of [['active','Active'],['inactive','Inactive'],['all','All']]){const button=document.createElement('button');button.type='button';button.dataset.userStatus=key;button.textContent=label;button.onclick=()=>{userStatusFilter=key;renderUserRows();};userStatusTabs.append(button);}
+$('admin').querySelector('.table-wrap').before(userStatusTabs);
+function renderUserRows(){
   const active=new Set(adminChannels.map(c=>c.id));
   const scope=u=>{const count=u.channels.filter(id=>active.has(id)).length;return u.role==='admin'?'All channels':count===0?'No channels':count===active.size?'All assigned channels ('+count+')':count+' of '+active.size+' channels';};
-  $('users').innerHTML=users.map(u=>`<tr><td>${u.company_name?esc(u.company_name):'Not set'}</td><td><strong>${esc(u.username)}</strong><small class="user-recovery-email">${u.email?esc(u.email):'Email not set'}</small></td><td><span class="role-pill role-${u.super_admin?'super':['admin','uploader','viewer'].includes(u.role)?u.role:'unknown'}">${u.super_admin?'Super Admin':esc(u.role)}</span></td><td>${scope(u)}</td><td><span class="status-pill status-${!u.active?'disabled':u.must_change?'pending':'enabled'}">${!u.active?'Disabled':u.must_change?'Password setup pending':'Enabled'}</span></td><td>${(u.super_admin&&u.id!==me.user.id)||(!me.user.super_admin&&u.role==='admin')?'Protected':`<button data-user="${u.id}">Edit</button>`}</td></tr>`).join('');
+  const privilege=u=>u.super_admin?3:({viewer:0,uploader:1,admin:2})[u.role]??4;
+  const compareText=(a,b)=>String(a||'').localeCompare(String(b||''),'en',{sensitivity:'base',numeric:true});
+  const filtered=users.filter(u=>userStatusFilter==='all'||!!u.active===(userStatusFilter==='active')).sort((a,b)=>Number(!!b.active)-Number(!!a.active)||privilege(a)-privilege(b)||compareText(a.company_name,b.company_name)||compareText(a.username,b.username)||a.id-b.id);
+  for(const button of userStatusTabs.children){const key=button.dataset.userStatus;button.setAttribute('aria-pressed',String(key===userStatusFilter));button.textContent=({active:'Active',inactive:'Inactive',all:'All'})[key]+' ('+users.filter(u=>key==='all'||!!u.active===(key==='active')).length+')';}
+$('users').innerHTML=filtered.map(u=>`<tr><td>${u.company_name?esc(u.company_name):'Not set'}</td><td><strong>${esc(u.username)}</strong><small class="user-recovery-email">${u.email?esc(u.email):'Email not set'}</small></td><td><span class="role-pill role-${u.super_admin?'super':['admin','uploader','viewer'].includes(u.role)?u.role:'unknown'}">${u.super_admin?'Super Admin':esc(u.role)}</span></td><td>${scope(u)}</td><td><span class="status-pill status-${!u.active?'disabled':u.must_change?'pending':'enabled'}">${!u.active?'Disabled':u.must_change?'Password setup pending':'Enabled'}</span></td><td>${(u.super_admin&&u.id!==me.user.id)||(!me.user.super_admin&&u.role==='admin')?'Protected':`<button data-user="${u.id}">Edit</button>`}</td></tr>`).join('')||'<tr><td colspan="6">No users in this category.</td></tr>';
+}
+
+async function loadUsers(){
+  const data=await api('/api/admin/users');users=data.users;adminChannels=data.channels;accountEmailEnabled=!!data.email_enabled;
+  renderUserRows();
   $('userForm').elements.role.querySelector('option[value="admin"]').disabled=!me.user.super_admin;
   directoryChannels=[...data.channels.map(c=>({...c,archived:false})),...(data.archived||[]).map(c=>({...c,archived:true}))];
   renderChannelDirectory();

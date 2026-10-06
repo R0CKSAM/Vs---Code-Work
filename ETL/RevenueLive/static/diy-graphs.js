@@ -61,7 +61,7 @@ window.DIYGraphs=(()=>{
   const list=document.createElement('div');list.className='diy-share-list';breakdown.append(expand,list);frame.after(share);share.append(frame,breakdown);
   let expanded=false;
   expand.onclick=()=>{expanded=!expanded;render();};
-  const format=(value,key)=>new Intl.NumberFormat('en-IN',{maximumFractionDigits:0,...(monetary(key)?{style:'currency',currency:'INR'}:{})}).format(value/(monetary(key)?100:1));
+  const format=(value,key)=>new Intl.NumberFormat('en-IN',{maximumFractionDigits:monetary(key)?1:0,minimumFractionDigits:monetary(key)?1:0,...(monetary(key)?{style:'currency',currency:'INR'}:{})}).format(value/(monetary(key)?100:1));
   function renderShare(items,c){
     const ranked=[...items].sort((a,b)=>b[1][c.first]-a[1][c.first]);
     const total=ranked.reduce((sum,[,v])=>sum+v[c.first],0),negative=ranked.some(([,v])=>v[c.first]<0);
@@ -112,7 +112,7 @@ window.DIYGraphs=(()=>{
     const axis=key=>({beginAtZero:true,title:{display:true,text:names[key]+(monetary(key)?' (INR)':'')},grid:{color:'#e6edf1'}});
     const scales=c.type==='pie'?{}:{x:{offset:c.type!=='line',ticks:{autoSkip:true,maxTicksLimit:8,maxRotation:30}},y:axis(c.first)};
     if(separate)scales.right={...axis(c.second),position:'right',grid:{drawOnChartArea:false}};
-    chart=new Chart(el('diyCanvas'),{type:c.type==='line'?'line':'bar',data:{labels:plotted.map(([name])=>name),datasets},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},scales,plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:ctx=>{const key=keys[ctx.datasetIndex]||c.first;return names[key]+': '+new Intl.NumberFormat('en-IN',{maximumFractionDigits:0,...(monetary(key)?{style:'currency',currency:'INR'}:{})}).format(ctx.raw);}}}}}});
+    chart=new Chart(el('diyCanvas'),{type:c.type==='line'?'line':'bar',data:{labels:plotted.map(([name])=>name),datasets},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},scales,plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:ctx=>{const key=keys[ctx.datasetIndex]||c.first;return names[key]+': '+new Intl.NumberFormat('en-IN',{maximumFractionDigits:monetary(key)?1:0,minimumFractionDigits:monetary(key)?1:0,...(monetary(key)?{style:'currency',currency:'INR'}:{})}).format(ctx.raw);}}}}}});
   }
   async function load(){const ticket=++generation;el('diyStatus').textContent='Loading...';const previous=selected(),initialized=el('diyChannelOptions').children.length>0;const response=await api('/api/graph-presets');const data=await api('/api/report');if(ticket!==generation)return;allRows=data.rows;presets=response.rows;insightPresets=response.examples||[];el('diyChannelOptions').replaceChildren();for(const channel of me.channels){const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.value=channel.id;input.checked=!initialized||previous.includes(channel.id);label.append(input,document.createTextNode(channel.name));el('diyChannelOptions').append(label);}el('diySearch').oninput();presetOptions();el('diyDelete').disabled=true;applyFilters();}
   for(const id of ['diyType','diyGroup','diyFirst','diySecond'])el(id).addEventListener('change',()=>render());

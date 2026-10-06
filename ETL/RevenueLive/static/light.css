@@ -343,6 +343,24 @@ body.summary-phase:has(#shell:not([hidden])){background:linear-gradient(180deg,t
 .summary-phase #signedInName small{font-size:13px;font-weight:500;color:#e1ebff;margin-top:3px}
 .summary-phase #signedInName small[hidden]{display:none}
 .user-company{display:block;font-size:13px;margin-top:4px}
+.calendar-actions{display:flex;gap:8px;justify-content:space-between;padding:12px 0 0}
+.calendar-actions button{min-height:36px;font-size:13px;padding:6px 10px}
+.calendar-status{font-size:13px;color:#243d60;white-space:normal;margin:8px 0}
+#revenueFinalization{color:#15345a;background:#eef6fff2;border:1px solid #b9d2ed;border-radius:8px;padding:10px 14px;font-size:13px;line-height:1.5;margin:12px 0}
+.timeline-content #revenueFinalization{display:block;margin:10px 0 0;background:transparent;border:0;border-top:1px solid #c9d9ec;border-radius:0;padding:10px 0 0;color:#344f70}
+.summary-phase .metrics .metric-changes .metric-change{white-space:normal;text-align:right}
+.summary-phase .metrics .metric-comparison-period{display:block;max-width:130px;white-space:normal;font-size:11px;font-weight:500;line-height:1.35;margin-top:2px}
+.summary-phase #rangePicker .calendar-actions button{background:#edf4ff;color:#174879;border:1px solid #b8cdeb;font-weight:700}
+.summary-phase #rangePicker .calendar-actions button.primary{background:#155bb3;color:#fff;border-color:#155bb3}
+.summary-phase #rangePicker .calendar-actions button:not(:disabled):hover{background:#dceaff;color:#103d75}
+.summary-phase #rangePicker .calendar-actions button:disabled{opacity:.5;cursor:not-allowed}
+.summary-phase #channelMetrics h2{display:inline-block;margin:0 0 10px;padding:4px 8px;border-radius:6px;background:#edf5fff2;color:#12345b;font-size:18px;font-weight:800;line-height:24px}
+#channelMetrics .metrics-others{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:8px;min-height:40px;border:1px solid #afc8e7;border-radius:8px;color:#12345b;background:#edf5ff;font-weight:700}
+#channelMetrics .metrics-others[hidden]{display:none}
+#channelMetrics .metrics-others svg{width:18px;height:18px}
+.user-status-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.user-status-tabs button{min-height:38px;padding:8px 16px;border-radius:8px;border:1px solid #b6cce6;background:#f6faff;color:#234064}
+.user-status-tabs button[aria-pressed="true"]{background:#124a8d;color:#fff;border-color:#124a8d}
 #identity{overflow-wrap:anywhere}
 @media(max-width:600px){.summary-phase #signedInName{max-width:190px}.summary-phase #signedInName strong{font-size:18px}}
 .summary-phase #accountMenu>summary:hover{background:#ffffff12}
@@ -899,3 +917,16 @@ td:nth-child(5) .channel-value-track>span{background:#a881db}
 }
 /* Keep account recovery addresses readable without widening the user table. */
 .user-recovery-email{display:block;max-width:280px;margin-top:4px;white-space:normal;overflow-wrap:anywhere;font-size:12px;color:#435b78}
+
+/* Keep the change badge distinct from its comparison-period caption. */
+.summary-phase .metrics .metric-value-row>.metric-changes{max-width:44%;align-self:center}
+.summary-phase .metrics .metric-changes .metric-change{display:flex;flex-direction:column;align-items:flex-end;gap:5px;padding:0;background:transparent;border:0;border-radius:0;white-space:normal;box-shadow:none}
+.summary-phase .metrics .metric-changes .metric-change[hidden]{display:none}
+.summary-phase .metrics .metric-changes .metric-change:is(.up,.down,.steady,.neutral){background:transparent;box-shadow:none}
+.summary-phase .metrics .metric-change::before,.summary-phase .metrics .metric-change.up::before,.summary-phase .metrics .metric-change.down::before{content:none}
+.summary-phase .metrics .metric-change-value{display:inline-flex;align-items:center;justify-content:center;min-width:48px;min-height:26px;padding:3px 9px;border:1px solid #dfc998;border-radius:6px;background:#fff4db;color:#795014;font-size:13px;font-weight:750;line-height:18px;font-variant-numeric:tabular-nums}
+.summary-phase .metrics .up .metric-change-value{background:#e6f5ed;color:#126441;border-color:#b9dfcb}
+.summary-phase .metrics .down .metric-change-value{background:#fff0f3;color:#a52e4b;border-color:#edc4cf}
+.summary-phase .metrics .metric-comparison-period{max-width:112px;margin:0;color:#526580;font-size:11px;font-weight:500;line-height:1.35;text-align:right;white-space:normal}
+.summary-phase .metrics article:first-child .metric-comparison-period{color:#edf4ff}
+.summary-phase .metrics article:first-child .metric-change-value{box-shadow:0 2px 5px #071b3a14}

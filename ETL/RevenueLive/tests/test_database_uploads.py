@@ -344,11 +344,11 @@ class DatabaseUploadTest(unittest.TestCase):
         response = self.client.get(f'/api/uploads/{uid}/file')
         self.assertEqual(response.status_code, 200)
         rows = list(csv.reader(io.StringIO(response.data.decode('utf-8-sig'))))
-        self.assertEqual(rows, [HEADERS, ['2026-09-01','Example','100','20','1','0','1']])
+        self.assertEqual(rows, [HEADERS, ['2026-09-01','Example','100','20','1.2','0','1.2']])
         with closing(sqlite3.connect(self.db_file)) as db:
             name, data = db.execute('SELECT filename,rows_json FROM uploads WHERE id=?', (uid,)).fetchone()
             self.assertEqual(name, 'example.csv')
-            self.assertEqual(json.loads(data)[0]['ad'], 100)
+            self.assertEqual(json.loads(data)[0]['ad'], 120)
         self.assertFalse(self.app.config['UPLOAD_DIR'].exists())
 
     def test_channel_rename_preserves_pending_upload_and_old_name(self):
@@ -429,7 +429,7 @@ class DatabaseUploadTest(unittest.TestCase):
         self.assertEqual(self.client.get(f'/api/uploads/{second}/file').status_code, 200)
         self.action(second, 'unarchive')
         self.action(second, 'delete')
-        self.assertEqual(self.client.get('/api/report').json['totals']['total'], 100)
+        self.assertEqual(self.client.get('/api/report').json['totals']['total'], 120)
         self.assertEqual(self.client.get(f'/api/uploads/{second}/file').status_code, 404)
         with closing(self.app.extensions['database'].connect()) as db:
             self.assertTrue(verify_audit_chain(db)[0])
@@ -659,7 +659,7 @@ class DatabaseUploadTest(unittest.TestCase):
         self.assertEqual(preview['warning_count'], 2)
         self.assertEqual(preview['rows'][0]['warning']['source_row'], 2)
         self.assertEqual(preview['rows'][0]['warning']['supplied_total'], '1705')
-        self.assertEqual(preview['rows'][0]['total'], 170400)
+        self.assertEqual(preview['rows'][0]['total'], 170360)
         self.assertEqual(self.client.get('/api/report').json['rows'], [])
         for acceptance in (None, False, 'true', 1):
             response = self.client.post(f'/api/uploads/{uid}/commit', headers=self.headers,
@@ -667,7 +667,7 @@ class DatabaseUploadTest(unittest.TestCase):
             self.assertEqual(response.status_code, 400)
         self.assertEqual(self.client.get('/api/report').json['rows'], [])
         self.action(uid, 'commit', {'accept_total_mismatches':True})
-        self.assertEqual(self.client.get('/api/report').json['totals']['total'], 305200)
+        self.assertEqual(self.client.get('/api/report').json['totals']['total'], 305180)
         with closing(self.app.extensions['database'].connect()) as db:
             event = db.execute("SELECT detail FROM audit WHERE action='upload_totals_accepted'").fetchone()
             self.assertEqual(len(json.loads(event['detail'])['warnings']), 2)
@@ -689,7 +689,7 @@ class DatabaseUploadTest(unittest.TestCase):
         other.post('/api/login', json={'username':'uploader', 'password':'synthetic-password'})
         self.assertEqual(other.get(f'/api/uploads/{uid}/preview').status_code, 404)
         self.action(uid, 'unarchive', {'accept_total_mismatches':True})
-        self.assertEqual(self.client.get('/api/report').json['totals']['total'], 305200)
+        self.assertEqual(self.client.get('/api/report').json['totals']['total'], 305180)
 
     def test_warning_acceptance_does_not_override_replacement_check(self):
         first = self.preview()
@@ -699,7 +699,7 @@ class DatabaseUploadTest(unittest.TestCase):
         response = self.client.post('/api/uploads/' + preview['id'] + '/commit', headers=self.headers,
                                     json={'accept_total_mismatches':True})
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(self.client.get('/api/report').json['totals']['total'], 100)
+        self.assertEqual(self.client.get('/api/report').json['totals']['total'], 120)
         self.action(preview['id'], 'commit', {'accept_total_mismatches':True, 'replace':True})
 
     def test_warning_acceptance_does_not_override_stale_preview(self):
@@ -896,7 +896,7 @@ class DatabaseUploadTest(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         download = self.client.get('/api/uploads/' + response.json['id'] + '/file')
         self.assertIn('report.csv', download.headers['Content-Disposition'])
-        self.assertIn('0,0,0', download.text)
+        self.assertIn('0.1,0.2,0.3', download.text)
 
     def test_backup_needs_no_original_upload_directory(self):
         self.preview()

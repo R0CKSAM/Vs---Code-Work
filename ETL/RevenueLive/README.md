@@ -93,11 +93,13 @@ In that format, Revenue means ad revenue and Total Ad Revenue must equal
 Revenue plus Sponsorship/Others. Header case and whitespace are normalized;
 mixed or reordered schemas are rejected. Exports use the standard headers.
 Use Excel dates or ISO `YYYY-MM-DD`. Revenue imports round each amount to the
-nearest whole rupee (half up: 4.50 becomes 5); counts must already be integers.
+nearest tenth of a rupee (half up: 4.55 becomes 4.6); counts must already be integers.
 The supplied total must agree with either the rounded source sum or the sum of
 rounded components. Stored totals are calculated from rounded ad revenue plus
 rounded sponsorship so component totals remain additive. The preview shows
-these normalized whole-rupee values. Inconsistent source totals appear as
+these normalized one-decimal values. Previously stored data is not re-rounded.
+Previously discarded fractions require re-uploading the original file.
+Inconsistent source totals appear as
 highlighted warnings with Excel row numbers, supplied totals and calculated
 totals. Users must explicitly accept calculated totals before publishing such
 an upload; acceptance is checked on the server and recorded in the audit chain.

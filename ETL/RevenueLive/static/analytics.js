@@ -48,7 +48,7 @@ window.RevenueCharts=(()=>{
     chart.getDatasetMeta(0).data.forEach((arc,i)=>{const percent=values[i]/total*100;if(percent<7||arc.outerRadius-arc.innerRadius<22)return;const point=arc.tooltipPosition();const label=percent.toFixed(1)+'%';ctx.lineWidth=3;ctx.strokeStyle='#17352d';ctx.strokeText(label,point.x,point.y);ctx.fillStyle='#fff';ctx.fillText(label,point.x,point.y);});ctx.restore();
   }});
   const fmt=n=>new Intl.NumberFormat('en-IN').format(n);
-  const rupee=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:2}).format(n);
+  const rupee=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',minimumFractionDigits:1,maximumFractionDigits:1}).format(n);
   const short=n=>new Intl.NumberFormat('en-IN',{notation:'compact',maximumFractionDigits:1}).format(n);
   function shareDetails(id,channels,key){
     const ranked=[...channels].sort((a,b)=>b[1][key]-a[1][key]),sum=ranked.reduce((n,[,v])=>n+v[key],0);

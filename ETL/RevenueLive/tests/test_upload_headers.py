@@ -20,7 +20,7 @@ class HeaderTest(unittest.TestCase):
     def test_csv_formats_have_identical_meaning(self):
         expected = parse_upload(self.csv_upload(HEADERS), '.csv')
         self.assertEqual(parse_upload(self.csv_upload(LEGACY_HEADERS), '.csv'), expected)
-        self.assertEqual(expected[0]['total'], 300)
+        self.assertEqual(expected[0]['total'], 330)
 
     def test_excel_legacy_headers(self):
         from openpyxl import Workbook
@@ -30,12 +30,12 @@ class HeaderTest(unittest.TestCase):
         stream = io.BytesIO()
         book.save(stream)
         book.close()
-        self.assertEqual(parse_upload(stream.getvalue(), '.xlsx')[0]['ad'], 100)
+        self.assertEqual(parse_upload(stream.getvalue(), '.xlsx')[0]['ad'], 130)
 
-    def test_whole_rupee_rounding(self):
-        for ad, other, total, expected in [('4.91','3921','3926',500),
-                                            ('4.50','0','5',500),
-                                            ('4.49','0','4',400),
+    def test_one_decimal_rounding(self):
+        for ad, other, total, expected in [('4.91','3921','3925.9',490),
+                                            ('4.55','0','4.6',460),
+                                            ('4.54','0','4.5',450),
                                             ('4.0000000001','0','4',400)]:
             content = ','.join(HEADERS) + f'\n2026-09-01,Example,1,1,{ad},{other},{total}\n'
             with self.subTest(ad=ad):
@@ -56,8 +56,10 @@ class HeaderTest(unittest.TestCase):
         self.assertEqual(export_revenue(491), '4.91')
 
     def test_total_is_sum_of_rounded_components(self):
-        for ad, other, total, expected in [('95.4','194.2','289.6',28900),
-                                            ('44.5','172.5','217',21800)]:
+        for ad, other, total, expected in [('95.4','194.2','289.6',28960),
+                                            ('44.5','172.5','217',21700),
+                                            ('1.25','2.25','3.5',360),
+                                            ('0.04','0.04','0.08',0)]:
             content = ','.join(HEADERS) + f'\n2026-09-01,Example,1,1,{ad},{other},{total}\n'
             with self.subTest(ad=ad):
                 row = parse_upload(content.encode(), '.csv')[0]

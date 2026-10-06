@@ -84,8 +84,8 @@ class MemoryUploadRequest(Request):
 
 
 def export_revenue(paise):
-    # New uploads use whole rupees; preserve precision of historical records.
-    return str(paise // 100) if paise % 100 == 0 else format(Decimal(paise) / 100, '.2f')
+    # Preserve stored paise, including historical values with two decimals.
+    return str(paise // 100) if paise % 100 == 0 else format(Decimal(paise) / 100, '.1f' if paise % 10 == 0 else '.2f')
 
 
 def parse_upload(content, suffix, *, allow_total_warnings=False):
@@ -157,23 +157,23 @@ def parse_upload(content, suffix, *, allow_total_warnings=False):
                 numeric = Decimal(str(value).strip())
                 if not numeric.is_finite() or numeric < 0 or numeric > Decimal('1000000000000'):
                     raise ValueError()
-                scaled = numeric.quantize(Decimal('1'), rounding=ROUND_HALF_UP) * 100 if index >= 4 else numeric
+                scaled = numeric.quantize(Decimal('0.1'), rounding=ROUND_HALF_UP) * 100 if index >= 4 else numeric
                 if index < 4 and scaled != scaled.to_integral_value():
                     raise ValueError()
                 values.append(int(scaled))
                 if index >= 4:
                     source_revenue.append(numeric)
             except (InvalidOperation, ValueError):
-                raise InvalidData(f'Row {number}: {HEADERS[index]} must be non-negative; counts must be integers and revenue is rounded to whole rupees.')
-        rounded_sum = int((source_revenue[0] + source_revenue[1]).quantize(Decimal('1'), rounding=ROUND_HALF_UP)) * 100
+                raise InvalidData(f'Row {number}: {HEADERS[index]} must be non-negative; counts must be integers and revenue is rounded to one decimal place.')
+        rounded_sum = int((source_revenue[0] + source_revenue[1]).quantize(Decimal('0.1'), rounding=ROUND_HALF_UP) * 100)
         warning = None
         if values[2] + values[3] != values[4] and rounded_sum != values[4]:
             if not allow_total_warnings:
-                raise InvalidData(f'Row {number}: total revenue must equal ad revenue plus sponsorship/others after whole-rupee rounding.')
+                raise InvalidData(f'Row {number}: total revenue must equal ad revenue plus sponsorship/others after one-decimal rounding.')
             warning = dict(code='total_mismatch', source_row=number,
                            supplied_total=str(source_revenue[2]), rounded_supplied_total=values[4],
                            calculated_total=values[2] + values[3])
-        # Rounding a sum can differ from summing rounded components by one rupee.
+        # Rounding a sum can differ from summing rounded components by 0.1 rupee.
         # Keep the dashboard's component totals additive after normalization.
         values[4] = values[2] + values[3]
         result.append(dict(day=date.isoformat(), channel=channel, views=values[0], impressions=values[1], ad=values[2], other=values[3], total=values[4]))

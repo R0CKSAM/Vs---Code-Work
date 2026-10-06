@@ -18,6 +18,7 @@ window.RevenueShare=(()=>{
   }
   function compare(current,previous,complete){
     channelChanges.clear();
+    metricsExpanded=false;
     if(complete){
       const sums=rows=>{const map=new Map();for(const r of rows){if(!map.has(r.channel))map.set(r.channel,{total:0,views:0});for(const key of ['total','views'])map.get(r.channel)[key]+=r[key];}return map;};
       const before=sums(previous.rows);
@@ -95,7 +96,7 @@ window.RevenueShare=(()=>{
       sparks.set(id,new Chart(canvas,{type:'line',data:{labels,datasets:series.map((key,index)=>({data:labels.map(day=>{const value=grouped.get(day);return value?key==='total'?value.ad+value.other:value[key]:null;}),borderColor:index?'#a45c85':color,backgroundColor:context=>sparkFill(context,index?'#a45c85':color),borderWidth:1.5,pointRadius:labels.length===1?3:0,fill:true,cubicInterpolationMode:'monotone',spanGaps:false}))},options:{responsive:true,maintainAspectRatio:false,animation:false,events:[],plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false,beginAtZero:true}},layout:{padding:3}}}));
     }
   }
-  const cash=value=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0,minimumFractionDigits:0}).format(value/100);
+  const cash=value=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:1,minimumFractionDigits:1}).format(value/100);
   const percent=(value,total)=>total>0?Math.round(value/total*100)+'%':'0%';
   const trigger=document.createElement('button');trigger.type='button';trigger.id='revenueShare';trigger.setAttribute('aria-expanded','false');trigger.setAttribute('aria-controls','revenueShareExpanded');trigger.setAttribute('aria-label','Revenue share: expand all channels');
   trigger.innerHTML='<span class="share-title">Revenue share <span aria-hidden="true">&#8599;</span></span><span class="share-content"><span class="share-ring"><canvas id="summaryShareCanvas" aria-hidden="true"></canvas><span class="share-centre"><strong id="shareSum"></strong><span>Total revenue</span></span></span><span id="summaryShareLegend"></span></span><span id="shareMessage"></span>';
@@ -129,7 +130,7 @@ window.RevenueShare=(()=>{
   backTimeline.addEventListener('click',()=>{drillRange=null;renderTimeline();periodPicker.focus();});
   const timelineScope=document.createElement('span');timelineScope.id='timelineScope';timelineScope.setAttribute('role','status');
   timelineControls.append(intervalSelector,periodPicker,backTimeline,timelineScope);
-  timelineContent.append(timelineControls,timelineFrame,document.getElementById('dailyRevenueNote'));trend.append(timelineContent);
+  timelineContent.append(timelineControls,timelineFrame,document.getElementById('dailyRevenueNote'),document.getElementById('revenueFinalization'));trend.append(timelineContent);
   expandTimeline.addEventListener('click',()=>{
     document.getElementById('timelineDetailTitle').textContent=metricNames[selectedMetric]+' over time';
     timelineDialog.append(timelineContent);timelineDialog.showModal();lineChart?.resize();
@@ -138,8 +139,8 @@ window.RevenueShare=(()=>{
   timelineDialog.addEventListener('close',()=>{trend.append(timelineContent);lineChart?.resize();expandTimeline.focus({preventScroll:true});});
   const views=document.createElement('section');views.id='viewsDistribution';views.innerHTML='<p id="viewsDistributionEmpty"></p>';overview.after(views);
   const metrics=document.createElement('section');metrics.id='channelMetrics';metrics.innerHTML='<h2>Channel metrics</h2><div class="metrics-table-scroll"><table><thead><tr><th scope="col">Channel</th><th scope="col">Views</th><th scope="col">Ad impressions</th><th scope="col">Ad revenue</th><th scope="col">Sponsorship / others</th><th scope="col">Total revenue</th></tr></thead><tbody></tbody></table></div><p class="metrics-empty"></p>';views.before(metrics);
-  const metricsToggle=document.createElement('button');metricsToggle.type='button';metricsToggle.className='metrics-toggle';metricsToggle.setAttribute('aria-expanded','false');metricsToggle.setAttribute('aria-controls','channelMetricsBody');metricsToggle.title='Expand channel metrics';metricsToggle.innerHTML='<span>Channel metrics</span><i data-lucide="maximize-2" aria-hidden="true"></i>';metrics.querySelector('h2').replaceWith(metricsToggle);metrics.querySelector('tbody').id='channelMetricsBody';let metricsExpanded=false;
-  function sizeMetrics(){metrics.querySelectorAll('tbody tr').forEach((row,i)=>row.hidden=!metricsExpanded&&i>=5);metricsToggle.setAttribute('aria-expanded',String(metricsExpanded));const action=metricsExpanded?'Collapse':'Expand';metricsToggle.title=action+' channel metrics';metricsToggle.setAttribute('aria-label',action+' channel metrics');metricsToggle.querySelector('span').textContent='Channel metrics';const oldIcon=metricsToggle.querySelector('svg,i');const nextIcon=document.createElement('i');nextIcon.dataset.lucide=metricsExpanded?'minimize-2':'maximize-2';nextIcon.setAttribute('aria-hidden','true');oldIcon.replaceWith(nextIcon);window.lucide?.createIcons();}
+  const metricsToggle=document.createElement('button');metricsToggle.type='button';metricsToggle.className='metrics-others';metricsToggle.setAttribute('aria-expanded','false');metricsToggle.setAttribute('aria-controls','channelMetricsBody');metrics.querySelector('.metrics-table-scroll').after(metricsToggle);metrics.querySelector('tbody').id='channelMetricsBody';let metricsExpanded=false;
+  function sizeMetrics(){const rows=[...metrics.querySelectorAll('tbody tr')],remaining=Math.max(0,rows.length-5);rows.forEach((row,i)=>row.hidden=!metricsExpanded&&i>=5);metricsToggle.hidden=!remaining;metricsToggle.setAttribute('aria-expanded',String(metricsExpanded));metricsToggle.replaceChildren();const text=document.createElement('span');text.textContent=metricsExpanded?'Show Top 5':'Others ('+remaining+')';const glyph=document.createElement('i');glyph.dataset.lucide=metricsExpanded?'chevron-up':'chevron-down';glyph.setAttribute('aria-hidden','true');metricsToggle.append(text,glyph);window.lucide?.createIcons();}
   metricsToggle.addEventListener('click',()=>{metricsExpanded=!metricsExpanded;sizeMetrics();});
   const treeButton=document.createElement('div');treeButton.id='viewsTreeButton';treeButton.innerHTML='<h2 class="share-title">Views distribution</h2><span id="viewsTree"></span>';
   views.prepend(treeButton);
@@ -235,14 +236,13 @@ window.RevenueShare=(()=>{
             if(interval!=='day'&&bucket.daily.length){const value=day=>isRevenue?day.ad+day.other:day[selectedMetric];const peak=bucket.daily.reduce((best,day)=>value(day)>value(best)?day:best);notes.push('Highest recorded day: '+timelineDate(peak.day)+' | '+(isRevenue?cash(value(peak)):new Intl.NumberFormat('en-IN').format(value(peak))));}
             return notes;}
         }}},
-      scales:{x:{stacked,offset:bars,grid:{display:false},ticks:{color:'#506889',maxTicksLimit:8,maxRotation:0,font:{size:12},callback:function(value){const bucket=buckets[value];return bucket?(interval==='month'?timelineDate(bucket.periodStart,{month:'short',year:'2-digit'}):timelineDate(bucket.start,{day:'2-digit',month:'short'}))+(bucket.partial?' *':''):'';}}},
+      scales:{x:{stacked,offset:bars,grid:{display:false},ticks:{color:'#506889',maxTicksLimit:8,maxRotation:0,font:{size:12},callback:function(value){const bucket=buckets[value];return bucket?(interval==='month'?timelineDate(bucket.periodStart,{month:'short',year:'2-digit'}):timelineDate(bucket.start,{day:'2-digit',month:'short'})):'';}}},
         y:{stacked,beginAtZero:true,title:{display:true,text:isRevenue?'Revenue (INR)':metricName,color:'#506889'},grid:{color:'#e6edf5'},ticks:{color:'#506889',maxTicksLimit:7,precision:0,callback:value=>(isRevenue?'\u20b9':'')+compactNumber(value)}}}
     }});
     const notes=[];
     if(!currentRows.length)notes.push('No data in this selection.');
     else{
-      if(buckets.some(bucket=>bucket.partial))notes.push('* Partial period within the selected dates.');
-      if(buckets.some(bucket=>bucket.incomplete))notes.push('Totals include reported data only; missing records are not zero.');
+      if(buckets.some(bucket=>bucket.partial))notes.push('Partial period within the selected dates.');
     }
     document.getElementById('dailyRevenueNote').textContent=notes.join(' ');
     document.getElementById('dailyRevenueCanvas').setAttribute('aria-label',intervalName+' '+metricName.toLowerCase()+' '+(bars?'bars':'line chart')+(drillRange?' for '+model.start+' to '+model.end:''));
@@ -274,9 +274,10 @@ window.RevenueShare=(()=>{
     document.getElementById('revenueShareTitle').textContent=metricName+' by channel';
     trigger.querySelector('.share-centre>span').textContent='Total '+metricName.toLowerCase();
     channelChanges.clear();
+    metricsExpanded=false;
     renderSparks(rows);
     let insight=document.getElementById('performanceInsight');
-    if(!insight){insight=document.createElement('section');insight.id='performanceInsight';const title=document.createElement('h2');title.textContent='Performance Insight';const glyph=document.createElement('i');glyph.dataset.lucide='sparkles';glyph.setAttribute('aria-hidden','true');title.prepend(glyph);insight.append(title,document.createElement('p'));document.querySelector('#dashboard .metrics').after(insight);}
+    if(!insight){insight=document.createElement('section');insight.id='performanceInsight';const title=document.createElement('h2');title.textContent='AI Insights';const glyph=document.createElement('i');glyph.dataset.lucide='sparkles';glyph.setAttribute('aria-hidden','true');title.prepend(glyph);insight.append(title,document.createElement('p'));document.querySelector('#dashboard .metrics').after(insight);}
     insight.hidden=!rows.length;
     if(!insight.querySelector('.insight-growth-art')){const artwork=document.createElement('span');artwork.className='insight-growth-art';artwork.setAttribute('aria-hidden','true');const bars=document.createElement('span');bars.className='insight-growth-bars';for(const height of [10,15,20,29,39,48]){const bar=document.createElement('i');bar.style.height=height+'px';bars.append(bar);}const arrow=document.createElement('img');arrow.src='/static/insight-growth-arrow.svg';arrow.alt='';arrow.className='insight-growth-arrow';artwork.append(bars,arrow);insight.append(artwork);}
     const metricSums=new Map();for(const r of rows){if(!metricSums.has(r.channel))metricSums.set(r.channel,{views:0,impressions:0,ad:0,other:0,total:0});for(const key of ['views','impressions','ad','other','total'])metricSums.get(r.channel)[key]+=r[key];}

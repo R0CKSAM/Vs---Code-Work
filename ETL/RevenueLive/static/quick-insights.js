@@ -1,8 +1,8 @@
 'use strict';
 window.QuickInsights=(()=>{
   const metrics={total:'Total revenue',ad:'Ad revenue',other:'Sponsorship / others',views:'Views',impressions:'Ad impressions'};
-  const cash=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(n/100);
-  const rate=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',minimumFractionDigits:2,maximumFractionDigits:2}).format(n/100);
+  const cash=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',minimumFractionDigits:1,maximumFractionDigits:1}).format(n/100);
+  const rate=n=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',minimumFractionDigits:1,maximumFractionDigits:1}).format(n/100);
   const number=n=>new Intl.NumberFormat('en-IN',{maximumFractionDigits:0}).format(n);
   const pct=n=>Math.abs(n)<0.1&&n!==0?(n<0?'>-0.1':'<0.1'):n.toFixed(1);
   const total=rows=>rows.reduce((sum,row)=>{for(const key of Object.keys(metrics))sum[key]+=row[key];return sum;},{total:0,ad:0,other:0,views:0,impressions:0});
