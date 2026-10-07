@@ -369,7 +369,10 @@ body.summary-phase:has(#shell:not([hidden])){background:linear-gradient(180deg,t
 .summary-phase #rangePicker>summary,.summary-phase .revenue-header #channelPicker>summary,.summary-phase #revenueHeader #export{background:#fff;border-color:#d5e2f0;color:#324a6b;box-shadow:0 3px 10px #416d8808}
 .summary-phase .metrics article{background:linear-gradient(145deg,#fff,#fcfdff);border-color:#1a375a14;border-radius:8px;box-shadow:0 1px 2px #172b4d05,0 7px 24px #172b4d0b;overflow:hidden;gap:4px;padding:12px 14px 40px;min-height:158px;transition:none}
 .summary-phase .metrics article:has(.metric-spark[hidden]){min-height:116px;padding-bottom:12px}
-.summary-phase .metrics .metric-topline .metric-heading{font-size:15px;line-height:16px;font-weight:800;color:#102956;min-width:0;overflow-wrap:anywhere}
+.summary-phase .metrics .metric-topline .metric-heading{font-family:"Segoe UI Variable Display","Segoe UI",Arial,sans-serif;font-size:17px;line-height:18px;font-weight:800;color:#102956;min-width:0;overflow-wrap:anywhere;text-transform:uppercase}
+.summary-phase .metrics .revenue-split .metric-topline .metric-heading{color:#4c3085}
+.summary-phase .metrics article:nth-child(3) .metric-topline .metric-heading{color:#1e3a8a}
+.summary-phase .metrics article:nth-child(4) .metric-topline .metric-heading{color:#85400b}
 .summary-phase .metrics .metric-value-row{display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:8px;width:100%;min-width:0}
 .summary-phase .metrics .metric-value-row>strong{min-width:0;flex:1;text-align:left}
 .summary-phase .metrics .metric-value-row>.metric-changes{flex:none;justify-content:flex-end;margin:0}
@@ -383,7 +386,14 @@ body.summary-phase:has(#shell:not([hidden])){background:linear-gradient(180deg,t
 .summary-phase .metrics .revenue-split #sponsorMetric{margin-top:5px}
 .summary-phase .metrics article> :not(.metric-spark){position:relative;z-index:1}
 .summary-phase .metrics article>span:not(.metric-icon),.summary-phase .metrics .revenue-split div>span{font-size:12px;line-height:1.35;font-weight:600}
-.summary-phase .metrics #adMetric>span,.summary-phase .metrics #sponsorMetric>span{font-size:14px;line-height:16px;font-weight:700;color:#344f70}
+.summary-phase .metrics #adMetric>span,.summary-phase .metrics #sponsorMetric>span{font-family:"Segoe UI Variable Display","Segoe UI",Arial,sans-serif;font-size:15px;line-height:18px;font-weight:700;color:#4c3085;text-transform:uppercase;max-width:100%;width:fit-content;overflow-wrap:anywhere}
+@supports (background-clip:text){
+  .summary-phase .metrics #adMetric>span{background:linear-gradient(100deg,#493082,#7650b2);background-clip:text;-webkit-background-clip:text;color:transparent}
+  .summary-phase .metrics #sponsorMetric>span{background:linear-gradient(100deg,#683291,#4f46a0);background-clip:text;-webkit-background-clip:text;color:transparent}
+}
+@media(forced-colors:active){
+  .summary-phase .metrics #adMetric>span,.summary-phase .metrics #sponsorMetric>span{background:none;color:CanvasText}
+}
 .summary-phase .metrics .revenue-split{gap:4px}
 .summary-phase .metrics .revenue-split>div:not(.metric-topline){gap:2px;width:100%}
 .summary-phase .metrics .metric-topline>.metric-changes{justify-content:flex-start;gap:8px;margin:0;flex-wrap:nowrap;align-items:center}
@@ -399,11 +409,13 @@ body.summary-phase:has(#shell:not([hidden])){background:linear-gradient(180deg,t
 .summary-phase .metrics strong,.summary-phase .metrics #total{color:#0a2343}
 .summary-phase .metrics article:nth-child(2) strong{color:#6342a6}
 .summary-phase .metrics article:nth-child(3) strong{color:#0a2343}
+.summary-phase .metrics #views{color:#1d4ed8}
 .summary-phase .metric-icon{border-radius:50%;width:40px;height:40px}
 .summary-phase .metrics article:nth-child(1){--tile:#e0f5f0;--accent:#079c88}
 .summary-phase .metrics article:nth-child(2){--tile:#eee8fa;--accent:#7050b0}
-.summary-phase .metrics article:nth-child(3){--tile:#e5efff;--accent:#2979ed}
-.summary-phase .metrics article:nth-child(4){--tile:#fff2de;--accent:#a66614}
+.summary-phase .metrics article:nth-child(3){--tile:#e5efff;--accent:#3b82f6}
+.summary-phase .metrics article:nth-child(4){--tile:#ffead5;--accent:#bd570b}
+.summary-phase .metrics #impressions{color:#b45309}
 .metric-spark{height:36px;width:100%;min-width:0;margin:0;position:absolute;right:0;bottom:0;pointer-events:none;opacity:.95}
 .metric-spark[hidden]{display:none}
 .metric-spark canvas{display:block;width:100%!important;height:36px!important}
@@ -513,8 +525,8 @@ body.summary-phase:has(#shell:not([hidden])){background:linear-gradient(180deg,t
 .summary-phase .metrics .metric-changes .metric-change.up{background:#e3f3e9;color:#17643c}
 .summary-phase .metrics .metric-changes .metric-change.down{background:#fce8ec;color:#a72e3c}
 .summary-phase .metrics article:nth-child(2){background:linear-gradient(130deg,#fff,#f2edfb)}
-.summary-phase .metrics article:nth-child(3){background:linear-gradient(130deg,#fff,#edf6ff)}
-.summary-phase .metrics article:nth-child(4){background:linear-gradient(130deg,#fff,#fff5e6)}
+.summary-phase .metrics article:nth-child(3){background:linear-gradient(130deg,#fff,#eff6ff)}
+.summary-phase .metrics article:nth-child(4){background:linear-gradient(130deg,#fffdfb,#fff0df)}
 .summary-phase .metrics article:first-child .metric-icon{background:#ffffff24;color:#fff}
 /* Static, clipped trails stay behind the real metrics and sparklines. */
 .summary-phase .metrics article{isolation:isolate;--trail-color:#527db51a}

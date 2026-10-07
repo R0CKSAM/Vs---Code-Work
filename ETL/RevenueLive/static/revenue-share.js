@@ -84,7 +84,7 @@ window.RevenueShare=(()=>{
     const fill=ctx.createLinearGradient(0,chartArea.top,0,chartArea.bottom);
     fill.addColorStop(0,color+'50');fill.addColorStop(1,color+'00');return fill;
   }
-  const sparkKeys=[['total',['ad','other'],'#19a994'],['ad',['ad','other'],'#8a69c7'],['views',['views'],'#508ff0'],['impressions',['impressions'],'#d59636']];
+  const sparkKeys=[['total',['ad','other'],'#19a994'],['ad',['ad','other'],'#8a69c7'],['views',['views'],'#3b82f6'],['impressions',['impressions'],'#ec831d']];
   for(const [id] of sparkKeys){const frame=document.createElement('div'),canvas=document.createElement('canvas');frame.className='metric-spark';canvas.id='metricSpark-'+id;canvas.setAttribute('aria-hidden','true');frame.append(canvas);document.getElementById(id).closest('article').append(frame);}
   function renderSparks(rows){
     for(const chart of sparks.values())chart.destroy();sparks.clear();
