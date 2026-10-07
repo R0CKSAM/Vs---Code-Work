@@ -86,6 +86,39 @@ class ChannelMergeTest(unittest.TestCase):
         self.seed()
         response=self.client.post('/api/admin/channel-merges',headers=self.headers,json=dict(source=2,target=1,token='old',confirm_sum=True))
         self.assertEqual(response.status_code,400)
+
+    def test_multiple_sources_and_individual_undo(self):
+        self.seed()
+        with closing(sqlite3.connect(self.db_file)) as db, db:
+            db.execute("INSERT INTO channels VALUES (3,'Another spelling')")
+            db.execute("INSERT INTO records VALUES ('2026-10-01',3,40,50,10,0,10,'c')")
+        body=dict(sources=[3,2,2],target=1)
+        plan=self.client.post('/api/admin/channel-merges/preview',headers=self.headers,json=body).json
+        self.assertEqual(plan['sources'],[2,3])
+        self.assertEqual(len(plan['source_channels']),2)
+        response=self.client.post('/api/admin/channel-merges',headers=self.headers,json={**body,'token':plan['token'],'confirm_sum':True})
+        self.assertEqual(response.status_code,200,response.json)
+        self.assertEqual(self.client.get('/api/report?channel=1').json['totals']['views'],75)
+        self.assertEqual(self.client.delete('/api/admin/channel-merges/3',headers=self.headers).status_code,200)
+        self.assertEqual(self.client.get('/api/report?channel=1').json['totals']['views'],35)
+
+    def test_duplicate_between_sources_blocks_whole_merge(self):
+        self.seed()
+        with closing(sqlite3.connect(self.db_file)) as db, db:
+            db.execute("INSERT INTO channels VALUES (3,'Another spelling')")
+            db.execute("INSERT INTO records VALUES ('2026-10-01',3,25,30,0,0,0,'c')")
+        body=dict(sources=[2,3],target=1)
+        plan=self.client.post('/api/admin/channel-merges/preview',headers=self.headers,json=body).json
+        self.assertEqual(plan['exact_match_dates'],['2026-10-01'])
+        response=self.client.post('/api/admin/channel-merges',headers=self.headers,json={**body,'token':plan['token'],'confirm_sum':True})
+        self.assertEqual(response.status_code,400)
+        self.assertEqual(self.client.get('/api/admin/channel-merges').json['rows'],[])
+
+    def test_invalid_source_sets(self):
+        self.seed()
+        for sources in ([],[True],[1,2],[2,999],'2'):
+            response=self.client.post('/api/admin/channel-merges/preview',headers=self.headers,json=dict(sources=sources,target=1))
+            self.assertEqual(response.status_code,400,(sources,response.json))
         self.assertEqual(self.merge().status_code,200)
         response=self.client.post('/api/admin/channel-merges/preview',headers=self.headers,json=dict(source=1,target=2))
         self.assertEqual(response.status_code,400)

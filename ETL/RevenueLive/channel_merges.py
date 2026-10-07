@@ -36,29 +36,47 @@ def aggregate(rows, channels, mapping):
 
 
 def install(app, db, require, log, InvalidData):
-    def preview(source, target):
-        if type(source) is not int or type(target) is not int or source == target:
-            raise InvalidData('Choose two different channels.')
-        active = {row['id']: row['name'] for row in db().execute(
-            'SELECT * FROM channels WHERE id NOT IN (SELECT channel_id FROM archived_channels)')}
-        if source not in active or target not in active:
-            raise InvalidData('Both channels must be active.')
+    def preview(sources, target):
+        if type(sources) is int:
+            sources = [sources]
+        if (not isinstance(sources, list) or not sources
+                or any(type(cid) is not int for cid in sources) or type(target) is not int):
+            raise InvalidData('Choose source channels and one main channel.')
+        sources = sorted(set(sources))
+        if target in sources:
+            raise InvalidData('The main channel cannot also be a source.')
+        names = {row['id']: row['name'] for row in db().execute('SELECT * FROM channels')}
+        archived = {row['channel_id'] for row in db().execute('SELECT channel_id FROM archived_channels')}
+        if any(cid not in names or cid in archived for cid in [*sources, target]):
+            raise InvalidData('All selected channels must be active.')
         links = [dict(row) for row in db().execute('SELECT source_id,target_id FROM channel_merges ORDER BY source_id')]
-        if any(row['source_id'] in (source, target) or row['target_id'] == source for row in links):
-            raise InvalidData('Undo existing merges for this source first. A destination cannot itself be merged.')
-        members = {source, target} | {row['source_id'] for row in links if row['target_id'] == target}
+        if any(row['source_id'] in [*sources, target] or row['target_id'] in sources for row in links):
+            raise InvalidData('Undo existing merges for these sources first. A destination cannot itself be merged.')
+        existing = {row['source_id'] for row in links if row['target_id'] == target}
+        members = set(sources) | {target} | existing
         marks = ','.join('?' for _ in members)
         rows = [dict(row) for row in db().execute(
             f'SELECT * FROM records WHERE channel_id IN ({marks}) ORDER BY day,channel_id', tuple(sorted(members)))]
-        source_rows = [row for row in rows if row['channel_id'] == source]
-        destination_rows = [row for row in rows if row['channel_id'] != source]
-        overlaps = sorted({row['day'] for row in source_rows} & {row['day'] for row in destination_rows})
-        signatures = {(row['day'], *(row[m] for m in METRICS)) for row in destination_rows}
-        exact = sorted({row['day'] for row in source_rows
-                        if (row['day'], *(row[m] for m in METRICS)) in signatures})
-        token = hashlib.sha256(json.dumps([source, target, active[source], active[target], links, rows], sort_keys=True).encode()).hexdigest()
-        return dict(source=source, target=target, source_name=active[source], target_name=active[target],
-                    source_records=len(source_rows), destination_records=len(destination_rows),
+        source_rows = [row for row in rows if row['channel_id'] in sources]
+        destination_rows = [row for row in rows if row['channel_id'] not in sources]
+        days, signatures = {}, {}
+        for row in rows:
+            days.setdefault(row['day'], set()).add(row['channel_id'])
+            signature = (row['day'], *(row[m] for m in METRICS))
+            signatures.setdefault(signature, set()).add(row['channel_id'])
+        overlaps = sorted(day for day, ids in days.items() if len(ids) > 1 and ids.intersection(sources))
+        exact = sorted({signature[0] for signature, ids in signatures.items()
+                        if len(ids) > 1 and ids.intersection(sources)})
+        token = hashlib.sha256(json.dumps(
+            [sources, target, {cid: names[cid] for cid in sorted(members)}, links, rows],
+            sort_keys=True).encode()).hexdigest()
+        return dict(source=sources[0] if len(sources) == 1 else None, sources=sources, target=target,
+                    source_name=names[sources[0]] if len(sources) == 1 else None,
+                    source_channels=[dict(id=cid, name=names[cid],
+                        records=sum(row['channel_id'] == cid for row in source_rows)) for cid in sources],
+                    existing_channels=[dict(id=cid, name=names[cid]) for cid in sorted(existing)],
+                    target_name=names[target], source_records=len(source_rows),
+                    destination_records=len(destination_rows),
                     upload_count=len({row['upload_id'] for row in rows if row['upload_id']}),
                     overlap_dates=overlaps, exact_match_dates=exact, token=token,
                     rows=[{k: row[k] for k in ('day', 'channel_id', *METRICS)} for row in rows])
@@ -74,21 +92,22 @@ def install(app, db, require, log, InvalidData):
     @require('admin')
     def review():
         body = request.get_json(silent=True) or {}
-        return jsonify(preview(body.get('source'), body.get('target')))
+        return jsonify(preview(body.get('sources', body.get('source')), body.get('target')))
 
     @app.post('/api/admin/channel-merges')
     @require('admin')
     def merge():
         body = request.get_json(silent=True) or {}
         db().begin_write()
-        plan = preview(body.get('source'), body.get('target'))
+        plan = preview(body.get('sources', body.get('source')), body.get('target'))
         if body.get('token') != plan['token']:
             raise InvalidData('Data changed. Preview the merge again.')
         if plan['exact_match_dates']:
             raise InvalidData('Exact matching records need correction through upload review before merging. Nothing was changed.')
         if body.get('confirm_sum') is not True:
             raise InvalidData('Confirm that the entries are separate activities and should be added together.')
-        db().execute('INSERT INTO channel_merges(source_id,target_id) VALUES (?,?)', (plan['source'], plan['target']))
+        for source in plan['sources']:
+            db().execute('INSERT INTO channel_merges(source_id,target_id) VALUES (?,?)', (source, plan['target']))
         log('channel_merged', json.dumps({k: v for k, v in plan.items() if k != 'rows'}, sort_keys=True))
         db().commit()
         return jsonify(ok=True)
