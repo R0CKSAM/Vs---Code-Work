@@ -113,7 +113,7 @@ window.QuickInsights=(()=>{
     for(const item of filtered)if(important.length<4&&!important.includes(item))important.push(item);
     return important.sort((a,b)=>b.priority-a.priority||(b.impact||0)-(a.impact||0)||a.id.localeCompare(b.id));
   }
-  let section,list,scope,note,insights=[],stripInsight=null,lastStripId=null;
+  let insights=[],stripInsight=null,lastStripId=null;
   function paintStrip(){
     const strip=document.getElementById('performanceInsight');if(!strip)return;
     strip.hidden=!stripInsight;
@@ -131,36 +131,10 @@ window.QuickInsights=(()=>{
     if(stripInsight)lastStripId=stripInsight.id;
     paintStrip();
   }
-  function mount(){if(section)return;
-    section=document.createElement('section');section.id='quickInsights';section.setAttribute('aria-labelledby','quickInsightsTitle');
-    section.innerHTML='<div class="insights-heading"><div><h2 id="quickInsightsTitle">Quick Insights</h2><p id="insightScope"></p></div></div><p id="insightNote" role="status"></p><div id="insightList"></div>';
-    document.getElementById('insightsView').append(section);
-    list=section.querySelector('#insightList');scope=section.querySelector('#insightScope');note=section.querySelector('#insightNote');
-  }
-  function paint(){
-    list.replaceChildren();
-    const node=(tag,className,text)=>{const element=document.createElement(tag);element.className=className;if(text!==undefined)element.textContent=text;return element;};
-    for(const item of curate(insights)){const kpi=item.kpi,article=node('article','insight-item kpi-'+kpi.tone);article.dataset.insight=item.id;article.dataset.priority=item.priority;
-      const heading=node('div','kpi-heading'),icon=node('span','kpi-icon'),glyph=node('i','');glyph.dataset.lucide=kpi.icon;glyph.setAttribute('aria-hidden','true');icon.append(glyph);heading.append(icon,node('h3','',kpi.title));
-      article.append(heading,node('strong','insight-value',kpi.value),node('span','insight-value-label',kpi.context));
-      if(kpi.channel)article.append(node('p','kpi-channel',kpi.channel));
-      if(kpi.badge){const change=node('div','kpi-change');change.append(node('strong','kpi-badge',kpi.badge),node('span','',kpi.badgeLabel));article.append(change);}
-      if(kpi.pairs){const comparison=node('div','kpi-comparison'),maximum=Math.max(...kpi.pairs.map(row=>Math.abs(row.value)));
-        for(const [i,row] of kpi.pairs.entries()){const line=node('div','kpi-pair'+(i?' baseline':'')),track=node('div','kpi-track'),fill=node('span','');track.setAttribute('aria-hidden','true');if(row.value>=0)fill.style.width=(maximum?row.value/maximum*100:0)+'%';track.append(fill);line.append(node('span','',row.name),track,node('strong','',row.text));comparison.append(line);}article.append(comparison);
-      }else if(kpi.series){const chart=node('div','kpi-daily'),maximum=Math.max(...kpi.series.map(row=>row.value));chart.setAttribute('role','img');chart.setAttribute('aria-label',kpi.series.map(row=>row.name+': '+cash(row.value)).join('; '));for(const row of kpi.series){const bar=node('span',row.value===maximum?'peak':'');bar.style.height=(maximum?row.value/maximum*100:0)+'%';bar.title=row.name+': '+cash(row.value);chart.append(bar);}article.append(chart);const dates=node('div','kpi-dates');dates.append(node('span','',kpi.series[0].name),node('span','',kpi.series.at(-1).name));article.append(dates);
-      }else if(Number.isFinite(item.visual.bar)){const track=node('div','insight-bar'),fill=node('span','');track.setAttribute('aria-hidden','true');fill.style.width=Math.max(0,Math.min(100,item.visual.bar))+'%';track.append(fill);article.append(track);}
-      article.append(node('p','insight-evidence',item.evidence),node('p','insight-action',item.action));list.append(article);}
-    window.lucide?.createIcons();
-  }
   function render(data,requested,previous=null,status='pending'){
-    mount();
-    const params=new URLSearchParams(requested),count=params.getAll('channel').filter(id=>id!=='none').length;
-    const channelNames=[...new Set(data.rows.map(row=>row.channel))];
-    const first=params.get('start'),last=params.get('end'),date=value=>new Date(value+'T00:00:00Z').toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'});
-    scope.textContent=(first&&last?(first===last?date(first):date(first)+' - '+date(last)):'All available dates')+' | '+count+' selected channel'+(count===1?'':'s')+(count>0&&count<=2&&channelNames.length?' | '+channelNames.join(' + '):'');
-    insights=build(data,requested,previous,status);note.textContent=!data.rows.length?'No data for this selection.':status==='pending'?'Comparing with the preceding period...':'';section.removeAttribute('aria-busy');paint();
+    insights=build(data,requested,previous,status);
     selectStrip(status);
   }
-  function clear(message=''){insights=[];stripInsight=null;paintStrip();if(!section)return;scope.textContent='';note.textContent=message;list.replaceChildren();}
+  function clear(){insights=[];stripInsight=null;paintStrip();}
   return {build,curate,render,clear,paintStrip};
 })();

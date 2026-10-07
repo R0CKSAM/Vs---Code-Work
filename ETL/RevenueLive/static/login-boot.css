@@ -1,0 +1,15 @@
+html.app-loading{background:#081a33}
+html.app-loading body{background:#081a33!important;min-height:100dvh;margin:0}
+html.app-loading body::before,html.app-loading body::after{visibility:hidden}
+html.app-loading #login,html.app-loading #shell{visibility:hidden!important;pointer-events:none}
+#login .login-logo{width:220px;max-width:85%;height:auto;aspect-ratio:1920/714;object-fit:contain}
+#appLoading{display:none}
+html.app-loading #appLoading{position:fixed;inset:0;z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#081a33;color:#e5edfa;font:500 14px/1.5 'Segoe UI',sans-serif;text-align:center;padding:24px}
+#appLoading a{color:#ffbc84;text-underline-offset:4px}
+#appLoading a[hidden]{display:none}
+.boot-spinner{width:24px;height:24px;box-sizing:border-box;border:2px solid #45617e;border-top-color:#ff963c;border-radius:50%;animation:boot-spin .9s linear infinite}
+#appLoading[data-error] .boot-spinner{display:none}
+html.app-revealed #login:not([hidden]) .login-panel{animation:login-reveal .45s ease-out}
+@keyframes boot-spin{to{transform:rotate(360deg)}}
+@keyframes login-reveal{from{opacity:0;transform:translateY(12px) scale(.985)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.boot-spinner,html.app-revealed #login:not([hidden]) .login-panel{animation:none}}

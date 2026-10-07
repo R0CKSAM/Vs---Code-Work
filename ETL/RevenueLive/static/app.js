@@ -1,7 +1,6 @@
 'use strict';
-const themeStyle=document.createElement('link');themeStyle.rel='stylesheet';themeStyle.href='/static/dark.css';document.head.append(themeStyle);
-const lightStyle=document.createElement('link');lightStyle.rel='stylesheet';lightStyle.href='/static/light.css';document.head.append(lightStyle);
-const uploadsStyle=document.createElement('link');uploadsStyle.rel='stylesheet';uploadsStyle.href='/static/uploads.css';document.head.append(uploadsStyle);
+const themeStyle=document.getElementById('darkTheme');
+const lightStyle=document.getElementById('lightTheme');
 const $=id=>document.getElementById(id);
 const rankingScroll=document.createElement('div');rankingScroll.className='ranking-scroll';
 $('rankFrame').before(rankingScroll);rankingScroll.append($('rankFrame'));
@@ -30,13 +29,8 @@ $('dashboard').after(tabular);
 const tableNav=document.createElement('button');tableNav.dataset.view='tabular';tableNav.textContent='Tabular data';
 document.querySelector('[data-view="dashboard"]').textContent='Dashboard';
 document.querySelector('[data-view="dashboard"]').after(tableNav);
-const diyView=document.createElement('section');diyView.id='diyGraphs';diyView.className='view';diyView.hidden=true;tabular.after(diyView);
-const diyNav=document.createElement('button');diyNav.dataset.view='diyGraphs';diyNav.textContent='DIY - Graphs';tableNav.after(diyNav);
-const insightsView=document.createElement('section');insightsView.id='insightsView';insightsView.className='view';insightsView.hidden=true;diyView.after(insightsView);
-const insightsNav=document.createElement('button');insightsNav.dataset.view='insightsView';insightsNav.textContent='Quick Insights';document.querySelector('[data-view="dashboard"]').after(insightsNav);
-const updateFilterVisibility=()=>{$('revenueHeader').hidden=$('dashboard').hidden&&tabular.hidden&&insightsView.hidden;};
-for(const view of [$('dashboard'),tabular,diyView,insightsView])new MutationObserver(updateFilterVisibility).observe(view,{attributes:true,attributeFilter:['hidden']});
-const diyScript=document.createElement('script');diyScript.src='/static/diy-graphs.js';document.head.append(diyScript);
+const updateFilterVisibility=()=>{$('revenueHeader').hidden=$('dashboard').hidden&&tabular.hidden;};
+for(const view of [$('dashboard'),tabular])new MutationObserver(updateFilterVisibility).observe(view,{attributes:true,attributeFilter:['hidden']});
 let me=null,csrf='',pending=null,users=[],adminChannels=[];
 let directoryChannels=[],channelEditBusy=false;
 const channelDirectorySearch=document.createElement('input');channelDirectorySearch.type='search';channelDirectorySearch.id='channelDirectorySearch';channelDirectorySearch.placeholder='Search channels';channelDirectorySearch.setAttribute('aria-label','Search channel directory');$('channelDirectory').before(channelDirectorySearch);
@@ -107,7 +101,7 @@ const drawerHeading=document.createElement('div');drawerHeading.className='drawe
 const drawerTitle=document.createElement('strong');drawerTitle.textContent='Menu';
 closeMenu.replaceChildren(icon('x'));closeMenu.title='Close menu';closeMenu.setAttribute('aria-label','Close menu');
 drawerHeading.append(drawerTitle,closeMenu);menuPanel.prepend(drawerHeading);
-for(const [view,glyph] of Object.entries({dashboard:'layout-dashboard',insightsView:'sparkles',tabular:'table',diyGraphs:'chart-no-axes-combined',uploads:'upload',admin:'users-round'})){
+for(const [view,glyph] of Object.entries({dashboard:'layout-dashboard',tabular:'table',uploads:'upload',admin:'users-round'})){
   menuPanel.querySelector(`[data-view="${view}"]`)?.prepend(icon(glyph,'menu-icon'));
 }
 menuTitle.prepend(icon('chart-no-axes-combined','brand-icon'));
@@ -210,7 +204,6 @@ function clearSensitive(){
   $('preview').hidden=true;$('export').disabled=true;$('userForm').reset();$('passwordForm').reset();$('uploadForm').reset();
   if(window.RevenueCharts)RevenueCharts.render([]);
   window.RevenueShare?.clear();
-  window.DIYGraphs?.clear();
 }
 function signOutView(message){clearSensitive();me=null;csrf='';selectedChannels.clear();$('shell').hidden=true;$('login').hidden=false;$('loginError').textContent=message;window.history.replaceState(null,'','/login'+location.hash);}
 function identity(value){
@@ -418,7 +411,7 @@ bind('passwordCancel','click',async()=>{$('passwordDialog').close();});
 $('passwordDialog').addEventListener('cancel',e=>{if(me?.user.must_change)e.preventDefault();});
 bind('passwordForm','submit',async()=>{const body=Object.fromEntries(new FormData($('passwordForm')));if(body.password!==body.confirm)throw new Error('The new passwords do not match.');await api('/api/password',{method:'POST',body});$('passwordDialog').close();$('passwordForm').reset();await session();notify('Password updated.');});
 for(const button of document.querySelectorAll('[data-view]'))button.addEventListener('click',async()=>{
-  try{document.querySelectorAll('.view').forEach(v=>v.hidden=v.id!==button.dataset.view);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b===button));$('notice').hidden=true;if(button.dataset.view==='uploads')await history();if(button.dataset.view==='admin')await loadUsers();if(['dashboard','insightsView'].includes(button.dataset.view))await refresh();if(button.dataset.view==='diyGraphs'){await window.DIYGraphs?.load();}}catch(e){notify(e.message);}
+  try{document.querySelectorAll('.view').forEach(v=>v.hidden=v.id!==button.dataset.view);document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b===button));$('notice').hidden=true;if(button.dataset.view==='uploads')await history();if(button.dataset.view==='admin')await loadUsers();if(button.dataset.view==='dashboard')await refresh();}catch(e){notify(e.message);}
 });
 let uploadChannelIssues=[];
 let uploadChannelOptions=[];
@@ -847,7 +840,7 @@ if(accountToken)window.history.replaceState(null,'',location.pathname+location.s
 function openAccount(){const form=$('accountForm');form.reset();$('accountTitle').textContent=accountToken?'Set your password':'Forgot password';$('accountEmailLabel').hidden=!!accountToken;$('accountPasswordLabel').hidden=!accountToken;$('accountConfirmLabel').hidden=!accountToken;form.elements.email.required=!accountToken;form.elements.password.required=!!accountToken;form.elements.confirm.required=!!accountToken;resetDialog.querySelector('.form-error').textContent='';resetDialog.showModal();}
 bind('accountCancel','click',async()=>{accountToken='';resetDialog.close();});
 bind('accountForm','submit',async()=>{const form=$('accountForm');if(accountToken&&form.elements.password.value!==form.elements.confirm.value)throw new Error('Passwords do not match.');const result=await api(accountToken?'/api/account/complete':'/api/account/request',{method:'POST',body:accountToken?{token:accountToken,password:form.elements.password.value}:{email:form.elements.email.value}});const completed=!!accountToken;accountToken='';resetDialog.close();if(completed)signOutView('Password saved. Sign in with your username and new password.');else if(me)notify(result.message);else $('loginError').textContent=result.message;});
-session().catch(()=>{$('login').hidden=false;$('shell').hidden=true;}).finally(()=>{if(accountToken)openAccount();});
+session().catch(()=>{$('login').hidden=false;$('shell').hidden=true;}).finally(()=>{if(accountToken)openAccount();window.dispatchEvent(new Event('revenuelive:ready'));});
 setInterval(syncAccess,2000);
 window.addEventListener('focus',syncAccess);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncAccess();});
