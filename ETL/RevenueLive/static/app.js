@@ -91,7 +91,21 @@ const rangeTitle=document.createElement('summary');rangeTitle.id='rangeTitle';ra
 const rangeText=document.createElement('span');rangeText.textContent='Latest week';rangeTitle.replaceChildren(rangeText);
 const rangePanel=document.createElement('div');rangePanel.className='range-panel';rangePanel.append($('start').closest('label'),$('end').closest('label'));
 rangePanel.querySelectorAll('label').forEach(label=>label.hidden=true);
-let calendar=null,calendarDates=[];
+let calendar=null,calendarDates=[],calendarCoverage={},availableDatesOnly=false;
+function calendarLimit(){
+  const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const day=new Date(today+'T00:00:00Z');
+  if(!availableDatesOnly||!['admin','uploader'].includes(me?.user?.role))day.setUTCDate(day.getUTCDate()-1);
+  return day.toISOString().slice(0,10);
+}
+function colorCalendarDay(_,__,instance,element){
+  if(!availableDatesOnly||!['admin','uploader'].includes(me?.user?.role))return;
+  const day=instance.formatDate(element.dateObj,'Y-m-d');if(day>calendarLimit())return;
+  const coverage=calendarCoverage[day],status=coverage?.expected>0&&coverage.complete===coverage.expected?'complete':coverage?.present>0?'partial':'missing';
+  element.classList.add('coverage-'+status);
+  element.title=status==='complete'?'Data for all selected channels':status==='partial'?'Data for some selected channels':'No data for selected channels';
+  element.setAttribute('aria-label',element.getAttribute('aria-label')+'. '+element.title);
+}
 const calendarInput=document.createElement('input');calendarInput.id='calendarInput';calendarInput.type='text';calendarInput.setAttribute('aria-label','Choose date or range');
 const calendarHost=document.createElement('div');calendarHost.className='calendar-host';rangePanel.prepend(calendarHost);calendarHost.append(calendarInput);
 const calendarNav=document.createElement('div');calendarNav.className='calendar-nav';calendarNav.innerHTML='<button type="button" aria-label="Previous month" title="Previous month">&#8249;</button><button type="button" id="chooseCalendarMonth"></button><button type="button" id="chooseCalendarYear"></button><button type="button" aria-label="Next month" title="Next month">&#8250;</button>';
@@ -99,20 +113,43 @@ const calendarChoices=document.createElement('div');calendarChoices.className='c
 const navButtons=calendarNav.querySelectorAll('button');
 function updateCalendarNav(){if(!calendar)return;navButtons[1].textContent=calendar.l10n.months.longhand[calendar.currentMonth];navButtons[2].textContent=String(calendar.currentYear);calendarChoices.hidden=true;}
 navButtons[0].onclick=()=>{calendar.changeMonth(-1);updateCalendarNav();};navButtons[3].onclick=()=>{calendar.changeMonth(1);updateCalendarNav();};
-function calendarOptions(years){if(!calendar)return;const values=years?[...new Set(calendarDates.map(day=>Number(day.slice(0,4))))]:Array.from({length:12},(_,i)=>i);calendarChoices.replaceChildren(...values.map(value=>{const button=document.createElement('button');button.type='button';button.textContent=years?String(value):calendar.l10n.months.shorthand[value];button.disabled=!years&&!calendarDates.some(day=>day.startsWith(calendar.currentYear+'-'+String(value+1).padStart(2,'0')));button.onclick=()=>{calendar.jumpToDate(new Date(years?value:calendar.currentYear,years?calendar.currentMonth:value,1));updateCalendarNav();};return button;}));calendarChoices.hidden=false;}
+function calendarOptions(years){
+  if(!calendar)return;
+  const limit=calendarLimit(),lastYear=Number(limit.slice(0,4));
+  const values=years?[...new Set([...Array.from({length:21},(_,i)=>calendar.currentYear-10+i),lastYear,...calendarDates.map(day=>Number(day.slice(0,4)))])].filter(year=>year<=lastYear).sort((a,b)=>a-b):Array.from({length:12},(_,i)=>i);
+  calendarChoices.replaceChildren(...values.map(value=>{
+    const button=document.createElement('button');button.type='button';button.textContent=years?String(value):calendar.l10n.months.shorthand[value];
+    button.disabled=!years&&(calendar.currentYear+'-'+String(value+1).padStart(2,'0')+'-01')>limit;
+    button.onclick=()=>{calendar.jumpToDate(new Date(years?value:calendar.currentYear,years?calendar.currentMonth:value,1));updateCalendarNav();};
+    return button;
+  }));calendarChoices.hidden=false;
+}
 navButtons[1].onclick=()=>calendarOptions(false);navButtons[2].onclick=()=>calendarOptions(true);
 const calendarStatus=document.createElement('p');calendarStatus.className='calendar-status';calendarStatus.setAttribute('role','status');rangePanel.append(calendarStatus);
+const calendarMode=document.createElement('button');calendarMode.type='button';calendarMode.id='availableDataDates';calendarMode.textContent='Available data dates';calendarMode.setAttribute('aria-pressed','false');calendarMode.hidden=true;rangePanel.prepend(calendarMode);
+calendarMode.onclick=()=>{if(!['admin','uploader'].includes(me?.user?.role))return;availableDatesOnly=!availableDatesOnly;syncCalendar();};
+const coverageLegend=document.createElement('div');coverageLegend.className='calendar-coverage-legend';coverageLegend.hidden=true;coverageLegend.innerHTML='<span class="coverage-complete">All channels</span><span class="coverage-partial">Some channels</span><span class="coverage-missing">No data</span>';calendarMode.after(coverageLegend);
 let rangeStart=null,pendingRange=null;
 const dateActions=document.createElement('div');dateActions.className='calendar-actions';
 dateActions.innerHTML='<button type="button" id="allDateRange">All Range</button><button type="button" id="cancelDateRange">Cancel</button><button type="button" id="applyDateRange" class="primary" disabled>Apply Range</button>';rangePanel.append(dateActions);
-function stageRange(days){pendingRange=days;rangeStart=null;calendar?.setDate(days,false);$('applyDateRange').disabled=!days?.length;calendarStatus.textContent=days?days.join(' to '):'Select start and end dates.';}
-dateActions.querySelector('#allDateRange').onclick=()=>{if(calendarDates.length)stageRange([calendarDates[0],calendarDates.at(-1)]);};
+function stageRange(days){pendingRange=days?.every(day=>day<=calendarLimit())?days:null;rangeStart=null;calendar?.setDate(pendingRange||[],false);$('applyDateRange').disabled=!pendingRange?.length;calendarStatus.textContent=pendingRange?pendingRange.join(' to '):'Choose dates on or before '+calendarLimit()+'.';}
+dateActions.querySelector('#allDateRange').onclick=()=>{const dates=calendarDates.filter(day=>day<=calendarLimit());if(dates.length)stageRange([dates[0],dates.at(-1)]);};
 dateActions.querySelector('#cancelDateRange').onclick=()=>{rangePicker.open=false;syncCalendar();};
 dateActions.querySelector('#applyDateRange').onclick=()=>{if(!pendingRange)return;[$('start').value,$('end').value]=pendingRange;$('datePreset').value='custom';rangePicker.open=false;pendingRange=null;dirty();};
 function autoRange(dates,_,instance){if(!rangeStart){pendingRange=null;$('applyDateRange').disabled=true;rangeStart=instance.latestSelectedDateObj||dates[0];if(rangeStart)instance.setDate([rangeStart],false);calendarStatus.textContent='Select the end date, then Apply Range.';return;}const end=dates.find(day=>day.getTime()!==rangeStart.getTime())||rangeStart;stageRange([rangeStart,end].map(day=>instance.formatDate(day,'Y-m-d')).sort());}
-function syncCalendar(){if(!calendar)return;rangeStart=null;pendingRange=null;$('applyDateRange').disabled=true;$('allDateRange').disabled=!calendarDates.length;calendar.set('monthSelectorType','static');calendar.set('enable',calendarDates);calendar.setDate([$('start').value,$('end').value].filter(Boolean),false);if($('end').value)calendar.jumpToDate($('end').value);updateCalendarNav();calendarStatus.textContent=calendarDates.length?'Select start and end dates.':'No dates available for the selected channels.';}
+function syncCalendar(){
+  const canInspect=['admin','uploader'].includes(me?.user?.role);
+  calendarMode.hidden=!canInspect;if(!canInspect)availableDatesOnly=false;
+  calendarMode.setAttribute('aria-pressed',String(availableDatesOnly));
+  coverageLegend.hidden=!availableDatesOnly;
+  if(!calendar)return;rangeStart=null;pendingRange=null;$('applyDateRange').disabled=true;$('allDateRange').disabled=!calendarDates.length;
+  calendar.set('monthSelectorType','static');calendar.set('enable',[()=>true]);calendar.set('maxDate',calendarLimit());
+  calendar.setDate([$('start').value,$('end').value].filter(Boolean),false);
+  if($('end').value)calendar.jumpToDate($('end').value);updateCalendarNav();
+  calendarStatus.textContent=availableDatesOnly?(calendarDates.length?'Available data dates for selected channels.':'No data dates for selected channels.'):'Select start and end dates, then Apply Range.';
+}
 const calendarStyle=document.createElement('link');calendarStyle.rel='stylesheet';calendarStyle.href='/static/flatpickr.min.css';document.head.insertBefore(calendarStyle,themeStyle);
-const calendarScript=document.createElement('script');calendarScript.src='/static/flatpickr.min.js';calendarScript.onload=()=>{calendar=flatpickr(calendarInput,{inline:true,mode:'multiple',dateFormat:'Y-m-d',disableMobile:true,enable:[],onChange:autoRange});syncCalendar();};document.head.append(calendarScript);
+const calendarScript=document.createElement('script');calendarScript.src='/static/flatpickr.min.js';calendarScript.onload=()=>{calendar=flatpickr(calendarInput,{inline:true,mode:'multiple',dateFormat:'Y-m-d',disableMobile:true,maxDate:calendarLimit(),onDayCreate:colorCalendarDay,onChange:autoRange});syncCalendar();};document.head.append(calendarScript);
 rangePicker.addEventListener('toggle',()=>{if(rangePicker.open){$('channelPicker').open=false;syncCalendar();}});
 rangePicker.append(rangePanel);$('filters').prepend(rangePicker);$('revenueHeader').append($('export'));
 boundedPicker(rangePicker,rangePanel);
@@ -209,7 +246,7 @@ function clearSensitive(){
   document.querySelectorAll('.metric-change').forEach(badge=>{badge.hidden=true;badge.textContent='';badge.removeAttribute('title');});
   loadingTicket++;setLoading(false);
   clearTimeout(filterTimer);availableDates.replaceChildren();dateCoverage.textContent='';
-  calendarDates=[];if(calendar){calendar.clear(false);calendar.set('enable',[]);}revenueLabel.textContent='Total Revenue';
+  calendarDates=[];calendarCoverage={};availableDatesOnly=false;calendarMode.hidden=true;if(calendar){calendar.clear(false);calendar.set('enable',[()=>true]);}revenueLabel.textContent='Total Revenue';
   accessEpoch++;requestNumber++;reportRows=[];users=[];adminChannels=[];pending=null;appliedQuery='';latestDay='';
   directoryChannels=[];$('channelEditForm').reset();$('channelLogoPreview').replaceChildren();
   window.ChannelMerges?.clear();
@@ -287,6 +324,7 @@ function normalizeDateInputs(from,to){if(from.value&&to.value&&from.value>to.val
 function dirty(){
   window.QuickInsights?.clear('Updating insights...');
   normalizeDateInputs($('start'),$('end'));
+  for(const id of ['start','end'])if($(id).value>calendarLimit())$(id).value=calendarLimit();
   clearTimeout(filterTimer);requestNumber++;$('export').disabled=true;
   $('filterState').textContent='Updating...';
   filterTimer=setTimeout(()=>{if(!me)return;refresh().catch(error=>{if(!error.stale)notify(error.message);});},300);
@@ -304,8 +342,8 @@ async function loadReport(){
   let data;try{data=await api('/api/report?'+requested);}catch(error){if(error.stale)return;if(sequence===requestNumber){$('filterState').textContent='Could not apply filters';$('export').disabled=!appliedQuery;window.QuickInsights?.clear('Insights unavailable. Could not load the selected data.');}throw error;}
   if(sequence!==requestNumber)return;
   appliedQuery=requested;reportRows=data.rows;
-  const dates=data.available_dates||[];
-  calendarDates=dates;
+  calendarDates=data.available_dates||[];calendarCoverage=data.date_coverage||{};
+  const dates=calendarDates.filter(day=>day<=calendarLimit());
   if(resetDateBounds){
     resetDateBounds=false;
     if(dates.length){$('start').value=dates[0];$('end').value=dates.at(-1);return loadReport();}
@@ -315,18 +353,8 @@ async function loadReport(){
     $('start').value=dates.find(day=>day>=first.toISOString().slice(0,10))||last;$('end').value=last;return loadReport();
   }
   initialWeek=false;
-  if(dates.length){
-    let adjusted=false;
-    for(const id of ['start','end']){
-      const value=$(id).value;
-      if(value&&!dates.includes(value)){
-        $(id).value=dates.reduce((best,day)=>Math.abs(Date.parse(day)-Date.parse(value))<Math.abs(Date.parse(best)-Date.parse(value))?day:best,dates[0]);adjusted=true;
-      }
-    }
-    if(adjusted){notify('Date adjusted to the nearest available data date for the selected channels.');return loadReport();}
-  }
   availableDates.replaceChildren(...dates.map(day=>{const option=document.createElement('option');option.value=day;return option;}));
-  for(const id of ['start','end']){if(dates.length){$(id).min=dates[0];$(id).max=dates[dates.length-1];}else{$(id).removeAttribute('min');$(id).removeAttribute('max');}}
+  for(const id of ['start','end']){$(id).removeAttribute('min');$(id).removeAttribute('max');}
   latestDay=dates.at(-1)||'';
   dateCoverage.textContent=dates.length?'Available data: '+dates[0]+' to '+dates.at(-1)+' ('+dates.length+' days)':'No data for selected channels';
   if(data.rows.length)latestDay=data.rows.reduce((last,r)=>r.day>last?r.day:last,latestDay);

@@ -84,7 +84,7 @@ window.RevenueShare=(()=>{
     const fill=ctx.createLinearGradient(0,chartArea.top,0,chartArea.bottom);
     fill.addColorStop(0,color+'50');fill.addColorStop(1,color+'00');return fill;
   }
-  const sparkKeys=[['total',['ad','other'],'#19a994'],['ad',['ad','other'],'#db668e'],['views',['views'],'#508ff0'],['impressions',['impressions'],'#d59636']];
+  const sparkKeys=[['total',['ad','other'],'#19a994'],['ad',['ad','other'],'#8a69c7'],['views',['views'],'#508ff0'],['impressions',['impressions'],'#d59636']];
   for(const [id] of sparkKeys){const frame=document.createElement('div'),canvas=document.createElement('canvas');frame.className='metric-spark';canvas.id='metricSpark-'+id;canvas.setAttribute('aria-hidden','true');frame.append(canvas);document.getElementById(id).closest('article').append(frame);}
   function renderSparks(rows){
     for(const chart of sparks.values())chart.destroy();sparks.clear();
@@ -93,7 +93,7 @@ window.RevenueShare=(()=>{
     if(dates.length){const date=new Date(dates[0]+'T00:00:00Z');while(date.toISOString().slice(0,10)<=dates.at(-1)){labels.push(date.toISOString().slice(0,10));date.setUTCDate(date.getUTCDate()+1);}}
     for(const [id,keys,color] of sparkKeys){const canvas=document.getElementById('metricSpark-'+id);canvas.parentElement.hidden=dates.length<2;canvas.parentElement.title=dates.length>1?'Daily trend: '+dates[0]+' to '+dates.at(-1):'';if(dates.length<2)continue;
       const series=id==='ad'?keys.filter(key=>rows.some(row=>row[key]!==0)):[id];
-      sparks.set(id,new Chart(canvas,{type:'line',data:{labels,datasets:series.map((key,index)=>({data:labels.map(day=>{const value=grouped.get(day);return value?key==='total'?value.ad+value.other:value[key]:null;}),borderColor:index?'#a45c85':color,backgroundColor:context=>sparkFill(context,index?'#a45c85':color),borderWidth:1.5,pointRadius:labels.length===1?3:0,fill:true,cubicInterpolationMode:'monotone',spanGaps:false}))},options:{responsive:true,maintainAspectRatio:false,animation:false,events:[],plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false,beginAtZero:true}},layout:{padding:3}}}));
+      sparks.set(id,new Chart(canvas,{type:'line',data:{labels,datasets:series.map((key,index)=>({data:labels.map(day=>{const value=grouped.get(day);return value?key==='total'?value.ad+value.other:value[key]:null;}),borderColor:index?'#6550a3':color,backgroundColor:context=>sparkFill(context,index?'#6550a3':color),borderWidth:1.5,pointRadius:labels.length===1?3:0,fill:true,cubicInterpolationMode:'monotone',spanGaps:false}))},options:{responsive:true,maintainAspectRatio:false,animation:false,events:[],plugins:{legend:{display:false},tooltip:{enabled:false}},scales:{x:{display:false},y:{display:false,beginAtZero:true}},layout:{padding:3}}}));
     }
   }
   const cash=value=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:1,minimumFractionDigits:1}).format(value/100);

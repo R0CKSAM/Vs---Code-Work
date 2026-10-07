@@ -2,12 +2,36 @@
 from contextlib import closing
 import sqlite3
 import unittest
+import datetime as dt
 import test_database_uploads
 
 
 class ChannelMergeTest(unittest.TestCase):
     setUp = test_database_uploads.DatabaseUploadTest.setUp
     uploader_login = test_database_uploads.DatabaseUploadTest.uploader_login
+    def test_calendar_coverage_and_future_cutoff(self):
+        self.seed()
+        today=dt.datetime.now(dt.timezone(dt.timedelta(hours=5,minutes=30))).date()
+        tomorrow=today+dt.timedelta(days=1)
+        with closing(sqlite3.connect(self.db_file)) as db, db:
+            for day in (today,tomorrow):
+                db.execute('INSERT INTO records VALUES (?,1,1,2,100,0,100,?)',(day.isoformat(),'calendar'))
+        report=self.client.get('/api/report').json
+        self.assertNotIn(tomorrow.isoformat(),report['available_dates'])
+        self.assertFalse(any(row['day']==tomorrow.isoformat() for row in report['rows']))
+        self.assertEqual(report['date_coverage'][today.isoformat()],dict(complete=1,present=1,expected=2))
+        self.assertEqual(self.merge().status_code,200)
+        coverage=self.client.get('/api/report?channel=1').json['date_coverage']
+        self.assertEqual(coverage[today.isoformat()],dict(complete=0,present=1,expected=1))
+        self.assertEqual(coverage['2026-10-01'],dict(complete=1,present=1,expected=1))
+        self.uploader_login()
+        with closing(sqlite3.connect(self.db_file)) as db, db:
+            db.execute('INSERT OR IGNORE INTO assignments VALUES (2,1)')
+            db.execute("UPDATE users SET role='viewer' WHERE id=2")
+        report=self.client.get('/api/report').json
+        self.assertEqual(report['date_coverage'],{})
+        self.assertNotIn(today.isoformat(),report['available_dates'])
+        self.assertFalse(any(row['day']>=today.isoformat() for row in report['rows']))
     def seed(self, exact=False):
         with closing(sqlite3.connect(self.db_file)) as db, db:
             db.execute("INSERT INTO channels VALUES (2,'Example spelling')")

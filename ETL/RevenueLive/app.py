@@ -437,10 +437,21 @@ def create_app(data_dir=None):
         start,end=request.args.get('start',''),request.args.get('end','9999-12-31') or '9999-12-31'
         if start>end:
             start,end=end,start
+        today=dt.datetime.now(dt.timezone(dt.timedelta(hours=5,minutes=30))).date()
+        cutoff=(today-dt.timedelta(days=1) if g.user['role']=='viewer' else today).isoformat()
+        end=min(end,cutoff)
         placeholders=','.join('?' for _ in ids) or 'NULL'
         visible="upload_id NOT IN (SELECT id FROM uploads WHERE archived=1 OR state!='committed' OR file_deleted=1)"
         if available_dates:
-            return [r[0] for r in db().execute(f'SELECT DISTINCT day FROM records WHERE channel_id IN ({placeholders}) AND day NOT IN (SELECT day FROM hidden_dates) AND {visible} ORDER BY day',tuple(sorted(ids)))]
+            by_day={}
+            for r in db().execute(f'SELECT DISTINCT day,channel_id FROM records WHERE channel_id IN ({placeholders}) AND day<=? AND day NOT IN (SELECT day FROM hidden_dates) AND {visible} ORDER BY day',(*sorted(ids),cutoff)):
+                by_day.setdefault(r['day'],set()).add(r['channel_id'])
+            groups={}
+            for cid in ids:
+                groups.setdefault(mapping[cid],set()).add(cid)
+            coverage={day:dict(complete=sum(members<=present for members in groups.values()),
+                present=sum(bool(members & present) for members in groups.values()),expected=len(groups)) for day,present in by_day.items()}
+            return dict(dates=list(by_day),coverage=coverage if g.user['role'] in ('admin','uploader') else {})
         rows=[dict(r) for r in db().execute(f'SELECT r.*,c.name AS channel FROM records r JOIN channels c ON c.id=r.channel_id WHERE r.channel_id IN ({placeholders}) AND day>=? AND day<=? AND day NOT IN (SELECT day FROM hidden_dates) AND {visible} ORDER BY day DESC,LOWER(c.name)',(*sorted(ids),start,end))]
         return aggregate_channel_rows(rows,channels,mapping)
 
@@ -519,7 +530,8 @@ def create_app(data_dir=None):
     def report():
         rows=report_rows()
         totals={key:sum(r[key] for r in rows) for key in ('views','impressions','ad','other','total')}
-        return jsonify(rows=rows,totals=totals,currency='INR',money_unit='paise',available_dates=report_rows(available_dates=True))
+        availability=report_rows(available_dates=True)
+        return jsonify(rows=rows,totals=totals,currency='INR',money_unit='paise',available_dates=availability['dates'],date_coverage=availability['coverage'])
 
     @app.get('/api/export')
     @require()

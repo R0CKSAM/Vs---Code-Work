@@ -397,11 +397,11 @@ body.summary-phase:has(#shell:not([hidden])){background:linear-gradient(180deg,t
 .summary-phase .metrics .metric-changes .metric-change.up{color:#16845d}
 .summary-phase .metrics .metric-changes .metric-change.down{color:#ba395c}
 .summary-phase .metrics strong,.summary-phase .metrics #total{color:#0a2343}
-.summary-phase .metrics article:nth-child(2) strong{color:#ac3159}
+.summary-phase .metrics article:nth-child(2) strong{color:#6342a6}
 .summary-phase .metrics article:nth-child(3) strong{color:#0a2343}
 .summary-phase .metric-icon{border-radius:50%;width:40px;height:40px}
 .summary-phase .metrics article:nth-child(1){--tile:#e0f5f0;--accent:#079c88}
-.summary-phase .metrics article:nth-child(2){--tile:#fff0f5;--accent:#973c65}
+.summary-phase .metrics article:nth-child(2){--tile:#eee8fa;--accent:#7050b0}
 .summary-phase .metrics article:nth-child(3){--tile:#e5efff;--accent:#2979ed}
 .summary-phase .metrics article:nth-child(4){--tile:#fff2de;--accent:#a66614}
 .metric-spark{height:36px;width:100%;min-width:0;margin:0;position:absolute;right:0;bottom:0;pointer-events:none;opacity:.95}
@@ -512,20 +512,20 @@ body.summary-phase:has(#shell:not([hidden])){background:linear-gradient(180deg,t
 .summary-phase .metrics .metric-changes .metric-change{padding:3px 6px;border-radius:5px;background:#fff1ce}
 .summary-phase .metrics .metric-changes .metric-change.up{background:#e3f3e9;color:#17643c}
 .summary-phase .metrics .metric-changes .metric-change.down{background:#fce8ec;color:#a72e3c}
-.summary-phase .metrics article:nth-child(2){background:linear-gradient(130deg,#fff,#fff0f6)}
+.summary-phase .metrics article:nth-child(2){background:linear-gradient(130deg,#fff,#f2edfb)}
 .summary-phase .metrics article:nth-child(3){background:linear-gradient(130deg,#fff,#edf6ff)}
 .summary-phase .metrics article:nth-child(4){background:linear-gradient(130deg,#fff,#fff5e6)}
 .summary-phase .metrics article:first-child .metric-icon{background:#ffffff24;color:#fff}
 /* Static, clipped trails stay behind the real metrics and sparklines. */
 .summary-phase .metrics article{isolation:isolate;--trail-color:#527db51a}
 .summary-phase .metrics article:first-child{--trail-color:#a8dcff38}
-.summary-phase .metrics article:nth-child(2){--trail-color:#ba6b991a}
+.summary-phase .metrics article:nth-child(2){--trail-color:#8769bd1a}
 .summary-phase .metrics article:nth-child(4){--trail-color:#be8e471a}
 .summary-phase .metrics article::before{content:"";position:absolute;right:-45px;bottom:26px;width:180px;height:110px;border-radius:50%;border-top:1px solid var(--trail-color);box-shadow:0 -9px 0 -8px var(--trail-color),0 -19px 0 -18px var(--trail-color);transform:rotate(-32deg);pointer-events:none;z-index:-1}
 .summary-phase .metrics article::after{content:"";position:absolute;top:0;right:0;width:38%;height:70px;background:linear-gradient(132deg,transparent 40%,var(--trail-color) 40.5%,transparent 42%,transparent 58%,var(--trail-color) 58.5%,transparent 60%);pointer-events:none;z-index:-1}
 .summary-phase .metrics article:first-child::after{background:linear-gradient(90deg,transparent,#a8dcff24,transparent);height:1px;top:16px;width:35%}
 .summary-phase .metrics article:nth-child(2)::before{display:none}
-.summary-phase .metrics article:nth-child(2)::after{top:auto;bottom:43px;right:12px;width:30%;height:34px;background:repeating-linear-gradient(180deg,transparent 0 10px,#ba6b991a 10px 11px);mask-image:linear-gradient(90deg,transparent,#000)}
+.summary-phase .metrics article:nth-child(2)::after{top:auto;bottom:43px;right:12px;width:30%;height:34px;background:repeating-linear-gradient(180deg,transparent 0 10px,#8769bd1a 10px 11px);mask-image:linear-gradient(90deg,transparent,#000)}
 .summary-phase .metrics article:nth-child(3)::before{display:none}
 .summary-phase .metrics article:nth-child(3)::after{top:12px;right:12px;width:30%;height:48px;background:linear-gradient(#527db51a 1px,transparent 1px),linear-gradient(90deg,#527db51a 1px,transparent 1px);background-size:14px 14px;mask-image:linear-gradient(135deg,transparent,#000)}
 .summary-phase .metrics article:nth-child(4)::before{display:none}
@@ -894,13 +894,22 @@ td:nth-child(5) .channel-value-track>span{background:#a881db}
 .summary-phase #rangePicker .flatpickr-current-month .cur-month,
 .summary-phase #rangePicker .flatpickr-current-month input.cur-year{background:transparent;color:#102e55;font-weight:800}
 .summary-phase #rangePicker .flatpickr-months :is(.flatpickr-prev-month,.flatpickr-next-month){color:#174879;fill:#174879}
-.summary-phase #rangePicker .flatpickr-day{background:#e1f3ef;color:#135e54;border:1px solid #fff;font-weight:700}
-.summary-phase #rangePicker .flatpickr-day:not(.flatpickr-disabled):hover{background:#c6e6df;color:#104b44;border-color:#8fcbbb}
+.summary-phase #rangePicker .flatpickr-day{background:transparent;color:#17385d;border:1px solid transparent;font-weight:600}
+.summary-phase #rangePicker .flatpickr-day:not(.flatpickr-disabled):hover{background:#e8f0ff;color:#174879;border-color:#b8cdeb}
+.summary-phase #rangePicker #availableDataDates{width:100%;margin-bottom:10px;min-height:36px;font-size:13px;background:#edf4ff;color:#174879;border:1px solid #b8cdeb;box-shadow:none}
+.summary-phase #rangePicker #availableDataDates[aria-pressed=true]{background:#155bb3;color:#fff;border-color:#155bb3}
+.summary-phase #rangePicker .calendar-choices{max-height:220px;overflow:auto;overscroll-behavior:contain}
 .summary-phase #rangePicker .flatpickr-day.flatpickr-disabled,
 .summary-phase #rangePicker .flatpickr-day.flatpickr-disabled:hover{background:#f3f6fa;color:#8492a2;border-color:#fff}
 .summary-phase #rangePicker .flatpickr-day.selected,
 .summary-phase #rangePicker .flatpickr-day.selected:hover{background:#155bb3;color:#fff;border-color:#155bb3}
 .summary-phase #rangePicker .flatpickr-day.today:not(.selected){border-color:#155bb3}
+.calendar-coverage-legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;font-size:11px}
+.calendar-coverage-legend span{padding:4px 6px;border-radius:4px}
+.summary-phase #rangePicker .coverage-complete{background:#dff3e8;color:#165e3d}
+.summary-phase #rangePicker .coverage-partial{background:#fff0c2;color:#785407}
+.summary-phase #rangePicker .coverage-missing{background:#fbe5e8;color:#962d40}
+.summary-phase #rangePicker .flatpickr-day.selected{background:#155bb3;color:#fff;border-color:#155bb3}
 .summary-phase #rangePicker .calendar-choices{background:#fff;border:1px solid #d7e3f1;border-radius:8px;padding:8px}
 @media(max-width:650px){
   .summary-phase #rangePicker .range-panel{width:min(336px,calc(100vw - 24px));max-width:calc(100vw - 24px);left:0;right:auto}
