@@ -38,7 +38,7 @@ AUDIT_CATEGORIES = {
     'archive': ('Archive / Restore', ('upload_archived', 'upload_unarchived', 'upload_rejected', 'channel_archived', 'channel_restored')),
     'delete': ('Deleted', ('upload_deleted', 'upload_source_deleted', 'graph_preset_deleted')),
     'users': ('Users', ('user_saved', 'user_profile_saved')),
-    'channels': ('Channels', ('channel_created', 'channel_created_from_upload', 'channel_updated')),
+    'channels': ('Channels', ('channel_created', 'channel_created_from_upload', 'channel_updated', 'channel_merged', 'channel_merge_undone')),
     'other': ('Other', ()),
 }
 AUDIT_ACTION_CATEGORIES = {action: key for key, (_, actions) in AUDIT_CATEGORIES.items() for action in actions}
@@ -382,7 +382,8 @@ def create_app(data_dir=None):
     def me():
         profile=db().execute('SELECT company_name FROM user_profiles WHERE user_id=?',(g.user['id'],)).fetchone()
         recovery=db().execute('SELECT email FROM email_accounts WHERE user_id=?',(g.user['id'],)).fetchone()
-        return jsonify(user=g.user,csrf=g.session['csrf'],channels=channel_catalog(permitted()),
+        channels,mapping=reporting_scope(db(),permitted())
+        return jsonify(user=g.user,csrf=g.session['csrf'],channels=channel_catalog([channels[cid] for cid in sorted(set(mapping.values()))]),
                        company_name=profile['company_name'] if profile else '',
                        recovery_email=recovery['email'] if recovery else '',
                        home='/admin' if g.user['role']=='admin' else '/user')
@@ -414,7 +415,8 @@ def create_app(data_dir=None):
         log('password_changed');db().commit();return jsonify(ok=True)
 
     def report_rows(available_dates=False):
-        ids={c['id'] for c in permitted()}
+        channels,mapping=reporting_scope(db(),permitted())
+        ids=set(channels)
         selected=[v for v in request.args.getlist('channel') if v]
         if selected == ['none']:
             ids=set()
@@ -425,7 +427,7 @@ def create_app(data_dir=None):
                 raise InvalidData('Invalid channel.')
             if not chosen <= ids:
                 raise InvalidData('Channel is not assigned to your account.')
-            ids=chosen
+            ids={cid for cid in ids if mapping[cid] in chosen or cid in chosen}
         for key in ('start','end'):
             if request.args.get(key):
                 try:
@@ -439,7 +441,8 @@ def create_app(data_dir=None):
         visible="upload_id NOT IN (SELECT id FROM uploads WHERE archived=1 OR state!='committed' OR file_deleted=1)"
         if available_dates:
             return [r[0] for r in db().execute(f'SELECT DISTINCT day FROM records WHERE channel_id IN ({placeholders}) AND day NOT IN (SELECT day FROM hidden_dates) AND {visible} ORDER BY day',tuple(sorted(ids)))]
-        return [dict(r) for r in db().execute(f'SELECT r.*,c.name AS channel FROM records r JOIN channels c ON c.id=r.channel_id WHERE r.channel_id IN ({placeholders}) AND day>=? AND day<=? AND day NOT IN (SELECT day FROM hidden_dates) AND {visible} ORDER BY day DESC,LOWER(c.name)',(*sorted(ids),start,end))]
+        rows=[dict(r) for r in db().execute(f'SELECT r.*,c.name AS channel FROM records r JOIN channels c ON c.id=r.channel_id WHERE r.channel_id IN ({placeholders}) AND day>=? AND day<=? AND day NOT IN (SELECT day FROM hidden_dates) AND {visible} ORDER BY day DESC,LOWER(c.name)',(*sorted(ids),start,end))]
+        return aggregate_channel_rows(rows,channels,mapping)
 
     @app.get('/api/admin/dates')
     @require('admin')
@@ -1135,6 +1138,8 @@ def create_app(data_dir=None):
             return jsonify(error='Logo not found.'),404
         return app.response_class(base64.b64decode(branding['logo_base64']),mimetype='image/png')
 
+    from channel_merges import reporting_scope, aggregate as aggregate_channel_rows, install as install_channel_merges
+    install_channel_merges(app,db,require,log,InvalidData)
     from account_email import install
     email_address, mail_settings, send_invitation = install(app, db, data, InvalidData, log)
 

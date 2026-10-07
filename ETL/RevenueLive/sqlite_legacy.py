@@ -11,6 +11,7 @@ def initialize(db, audit_digest, verify_audit_chain, AUDIT_GENESIS):
         CREATE TABLE IF NOT EXISTS channel_aliases(name TEXT PRIMARY KEY, channel_id INTEGER NOT NULL REFERENCES channels(id));
         CREATE TABLE IF NOT EXISTS channel_branding(channel_id INTEGER PRIMARY KEY REFERENCES channels(id), fallback_name TEXT NOT NULL, logo_base64 TEXT NOT NULL, logo_version TEXT NOT NULL);
         CREATE TABLE IF NOT EXISTS user_profiles(user_id INTEGER PRIMARY KEY REFERENCES users(id), company_name TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS channel_merges(source_id INTEGER PRIMARY KEY REFERENCES channels(id), target_id INTEGER NOT NULL REFERENCES channels(id), CHECK(source_id <> target_id));
         CREATE TABLE IF NOT EXISTS assignments(user_id INTEGER REFERENCES users(id), channel_id INTEGER REFERENCES channels(id), PRIMARY KEY(user_id,channel_id));
         CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY, user_id INTEGER REFERENCES users(id), csrf TEXT NOT NULL, expires REAL NOT NULL);
         CREATE TABLE IF NOT EXISTS attempts(ip TEXT PRIMARY KEY, failures INTEGER, expires REAL);

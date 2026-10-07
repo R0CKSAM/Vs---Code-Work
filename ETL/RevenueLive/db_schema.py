@@ -37,6 +37,8 @@ table('users', identifier(), identity_key('username', 100), col('password', Stri
       col('role', String(16), nullable=False), flag('active', '1'), flag('must_change'),
       UniqueConstraint('username'), CheckConstraint("role IN ('admin','uploader','viewer')"))
 table('channels', identifier(), identity_key('name', 120), UniqueConstraint('name'))
+table('channel_merges', ref('source_id', 'channels.id', True), ref('target_id', 'channels.id'),
+      CheckConstraint('source_id <> target_id'))
 table('channel_aliases', col('name', String(240), primary_key=True), ref('channel_id', 'channels.id'))
 table('channel_branding', ref('channel_id', 'channels.id', True),
       col('fallback_name', String(120), nullable=False), col('logo_base64', LONGTEXT, nullable=False),

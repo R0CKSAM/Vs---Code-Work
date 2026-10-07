@@ -290,6 +290,21 @@ def dedupe_bucketed(
     raise RuntimeError("No bucketed parquet compression fallback succeeded.")
 
 
+def dedupe_bucketed_adaptive(con, input_glob, tmp_output_file, buckets):
+    """Keep the fast first attempt; bound memory retries to this stage only."""
+    buckets = max(2, buckets)
+    for attempt in range(3):
+        try:
+            return dedupe_bucketed(con, input_glob, tmp_output_file, buckets)
+        except Exception as exc:
+            if not is_memory_error(exc) or attempt == 2:
+                raise
+            tmp_output_file.unlink(missing_ok=True)
+            buckets = max(32, buckets * 2)
+            con.execute(f'SET threads={min(2, max(1, THREADS))}')
+            print(f'[dedupe] memory pressure: retry {attempt + 1}/2 with {buckets} buckets and at most 2 threads.', flush=True)
+
+
 def dedupe_to_parquet(
     con: duckdb.DuckDBPyConnection,
     folder: Path,
@@ -307,7 +322,7 @@ def dedupe_to_parquet(
             f"[dedupe] using bucketed mode: rows={input_rows:,}, "
             f"buckets={max(2, DEDUPE_BUCKETS)}"
         )
-        return dedupe_bucketed(con, input_glob, tmp_output_file, DEDUPE_BUCKETS)
+        return dedupe_bucketed_adaptive(con, input_glob, tmp_output_file, DEDUPE_BUCKETS)
 
     try:
         print(f"[dedupe] using single-pass mode: rows={input_rows:,}")
@@ -317,7 +332,7 @@ def dedupe_to_parquet(
             tmp_output_file.unlink(missing_ok=True)
             print(f"[warn] single-pass dedupe hit memory error: {exc}")
             print("[dedupe] retrying with bucketed mode.")
-            return dedupe_bucketed(con, input_glob, tmp_output_file, DEDUPE_BUCKETS)
+            return dedupe_bucketed_adaptive(con, input_glob, tmp_output_file, DEDUPE_BUCKETS)
         raise
 
 

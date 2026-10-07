@@ -55,7 +55,7 @@ def import_sqlite(database, source_file, source_uploads=None):
                 if table.name != 'write_lock' and target.execute(select(func.count()).select_from(table)).scalar():
                     raise ValueError('Import requires an empty migrated database, before creating the admin account.')
             for table in tables:
-                if table.name in {'channel_aliases','channel_branding'} and not source.execute(
+                if table.name in {'channel_aliases','channel_branding','channel_merges'} and not source.execute(
                     'SELECT 1 FROM sqlite_master WHERE type=? AND name=?',('table',table.name)).fetchone():
                     continue
                 cursor = source.execute(f'SELECT * FROM "{table.name}"')

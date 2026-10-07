@@ -216,16 +216,31 @@ channels after the top six as Other; Top 10 ranking can switch to All selected.
 Weekly buckets begin Monday and include only records inside the applied date range.
 The local Chart.js 4.4.1 bundle is MIT licensed; its license is in `static`.
 
-### User Accounts and Recovery Email
+### Channel Reporting Merges
 
-New users require a username and a unique recovery email. Login still uses the
-username; the email is used for invitations and Forgot password. Admins can add
-or update recovery email in Edit user, subject to existing role protections.
-Existing username-only accounts keep working and show Recovery email missing.
-Users, including Super Admin, can register/update their own recovery email when
-changing their password, with their current password required. First-login
-password setup also collects this email. Email changes invalidate old reset
-links and are recorded in password activity history. Addresses are marked
+Admins can preview and confirm a reporting merge in Users & channel access,
+under Channel merges. Source records, uploads, aliases and assignments stay
+unchanged. Both existing spellings continue to resolve to their original channel
+IDs on upload; reports combine them under the main name only for users authorized
+for every member. Partial-access users retain separate, restricted reporting.
+This deliberately does not redirect uploads to a different security scope.
+
+Overlapping dates are added only after explicit confirmation. Exact matching
+metrics block merging pending upload correction. Undo restores separate reports;
+merge and undo actions are audited. Chains and cycles are rejected. Archived
+channels remain excluded. New uploads continue using normal per-channel rules:
+a merge is not automatic duplicate detection across separate source uploads.
+
+Before restarting this release, run `python deploy.py upgrade` to install
+`0004_channel_merges`. No existing records or assignments are migrated or deleted.
+
+### User Accounts and Email
+
+New users require a username and a unique Email. The login form uses Email;
+legacy username authentication remains supported by the backend. Only authorized
+administrators can update Email in Edit user, subject to role protections.
+The password-change form and API do not allow self-service Email edits.
+Email changes invalidate old reset links and are audited. Addresses are marked
 verified only after a successful emailed-token password setup/reset.
 
 Temporary-password creation works without email delivery; first login requires

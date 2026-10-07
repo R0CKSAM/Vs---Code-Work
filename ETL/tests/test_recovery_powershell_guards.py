@@ -18,6 +18,21 @@ TEST_TEMP_ROOT = Path(tempfile.gettempdir()) / "veto_etl_tests"
 
 
 class RecoveryPowerShellGuardsTest(unittest.TestCase):
+    def test_cleanup_recovery_runs_even_without_etl_backlog(self) -> None:
+        source = RECOVERY_SCRIPT.read_text(encoding='utf-8')
+        branch = source.index('if ($cursor -gt $TargetThroughDate)')
+        finish = source.index('exit 0', branch)
+        self.assertIn('Resume-PendingCleanup', source[branch:finish])
+        self.assertIn("Save-RecoveryState -State $state -Status 'cleanup_recovery'", source)
+
+    def test_live_start_allows_slow_recovery_and_captures_output(self) -> None:
+        source = LIVE_MANAGER_SCRIPT.read_text(encoding='utf-8')
+        self.assertIn('[int]$TimeoutSeconds = 300', source)
+        self.assertIn('-RedirectStandardError', source)
+        self.assertIn('-RedirectStandardOutput', source)
+        health = source[source.index('function Test-LiveMonitor'):source.index('function Wait-LiveMonitor')]
+        self.assertNotIn('netstat', health)
+
     def test_fresh_validation_timestamp_does_not_dereference_nullable_value(self) -> None:
         source = RECOVERY_SCRIPT.read_text(encoding="utf-8")
         self.assertNotIn("$NotBefore.Value.ToUniversalTime()", source)

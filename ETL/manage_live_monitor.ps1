@@ -3,7 +3,7 @@ param(
     [ValidateSet("Start", "Stop", "Restart", "Status")]
     [string]$Action = "Status",
     [ValidateRange(10, 300)]
-    [int]$TimeoutSeconds = 90
+    [int]$TimeoutSeconds = 300
 )
 
 if ($args.Count -gt 0) {
@@ -35,10 +35,8 @@ function Test-LiveMonitor {
         $response = Invoke-WebRequest -UseBasicParsing -Uri $HealthUri -TimeoutSec 2
         return $response.StatusCode -in @(200, 503)
     } catch {
-        # A degraded /healthz response can throw in Windows PowerShell. The port
-        # check below distinguishes it from a stopped service.
-        $listener = netstat -ano | Select-String -Pattern '^\s*TCP\s+127\.0\.0\.1:8790\s+.*LISTENING\s+\d+\s*$'
-        return $null -ne $listener
+        # A real degraded HTTP response is alive; an unresponsive listener is not.
+        return $_.Exception.Response -and [int]$_.Exception.Response.StatusCode -eq 503
     }
 }
 
@@ -126,9 +124,13 @@ function Start-LiveMonitor {
         Remove-Item -LiteralPath $StopRequest -Force
     }
     $quotedLauncher = '"' + $Launcher + '"'
+    New-Item -ItemType Directory -Path $StateDir -Force | Out-Null
+    $stamp = Get-Date -Format 'yyyyMMdd_HHmmss_fff'
     Start-Process -FilePath "powershell.exe" `
         -ArgumentList "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File $quotedLauncher" `
-        -WorkingDirectory $EtlRoot -WindowStyle Hidden
+        -WorkingDirectory $EtlRoot -WindowStyle Hidden `
+        -RedirectStandardOutput (Join-Path $StateDir "launcher_$stamp.out.log") `
+        -RedirectStandardError (Join-Path $StateDir "launcher_$stamp.err.log")
     if (-not (Wait-LiveMonitor -Running $true)) {
         throw "Live monitor did not become available within $TimeoutSeconds seconds."
     }

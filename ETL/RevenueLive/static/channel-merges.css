@@ -1,0 +1,17 @@
+.channel-merge-panel{margin-top:24px;border-top:1px solid #c9d9ec;padding-top:20px}
+#mergeDialog{width:min(1000px,94vw);max-height:90vh;border:1px solid #c9d9ec;border-radius:8px;padding:24px;color:#102e50;background:#f8fbff}
+#mergeDialog form{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;min-width:0}
+#mergeDialog form>*{min-width:0;overflow-wrap:anywhere}
+#mergeDialog input:not([type=checkbox]){width:100%;min-width:0;box-sizing:border-box}
+.merge-pickers{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.merge-pickers label{min-width:0}
+.merge-pickers select{width:100%;max-width:100%;min-width:0}
+.merge-records{max-height:300px;overflow:auto;border:1px solid #c9d9ec;border-radius:6px}
+.merge-records table{min-width:750px;width:100%}
+.merge-records th,.merge-records td{padding:8px;text-align:right}
+.merge-records th{color:#173753;background:#e8f1fb}
+.merge-records th:nth-child(-n+2),.merge-records td:nth-child(-n+2){text-align:left}
+.merge-link{display:flex;gap:16px;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #c9d9ec}
+.merge-link span{min-width:0;overflow-wrap:anywhere}
+#mergeWarning{font-weight:700}
+@media(max-width:600px){.merge-pickers{grid-template-columns:1fr}#mergeDialog{padding:16px}.merge-link{align-items:flex-start;flex-direction:column}}

@@ -292,6 +292,19 @@ def main() -> None:
     raw_root = Path(args.raw_root).expanduser().resolve()
     validation_path = Path(args.validation_report).expanduser().resolve()
     audit_dir = Path(args.audit_dir).expanduser().resolve()
+    audit_dir.mkdir(parents=True, exist_ok=True)
+    # The process holds this handle until exit, including on interrupted cleanup.
+    cleanup_lock = (audit_dir / 'cleanup.lock').open('a+b')
+    cleanup_lock.seek(0)
+    if os.name == 'nt':
+        import msvcrt
+        try:
+            msvcrt.locking(cleanup_lock.fileno(), msvcrt.LK_NBLCK, 1)
+        except OSError as exc:
+            raise SystemExit('Another cleanup is already running; retry after it finishes.') from exc
+    else:
+        import fcntl
+        fcntl.flock(cleanup_lock.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
     etl3_state_path = Path(args.etl3_state).expanduser().resolve() if args.etl3_state else None
     ensure_within(lake_root, base_root)
     for root in lake_roots:
@@ -379,6 +392,12 @@ def main() -> None:
     try:
         for group in groups:
             root = Path(group["root"])
+            manifest['status'] = 'running'
+            manifest['current_group'] = str(root)
+            manifest['deleted_count'] = deleted_count
+            manifest['deleted_bytes'] = deleted_bytes
+            write_json_atomic(manifest_path, manifest)
+            print(f"Cleaning {group['source']} {group['category']}: {group['file_count']:,} files", flush=True)
             if group["delete_strategy"] == "files":
                 for raw_path in group.get("files", []):
                     path = Path(raw_path)

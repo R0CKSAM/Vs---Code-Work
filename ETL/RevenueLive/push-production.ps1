@@ -17,7 +17,7 @@ function Invoke-Git {
 # Explicit runtime allowlist: never copy the workspace, credentials or user data.
 $files = @(
     '.env.example', '.gitignore', 'account_email.py', 'app.py', 'backup.py',
-    'channel_images.py', 'config.py', 'database.py', 'db_schema.py', 'deploy.py',
+    'channel_images.py', 'channel_merges.py', 'config.py', 'database.py', 'db_schema.py', 'deploy.py',
     'runtime_logging.py', 'sqlite_legacy.py',
     'requirements.txt', 'manage.ps1', 'setup.ps1',
     'flatpickr.LICENSE.txt', 'Lucide.LICENSE.txt'

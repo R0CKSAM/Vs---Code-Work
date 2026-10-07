@@ -54,6 +54,10 @@ while ($true) {
     } finally {
         Pop-Location
     }
+    if ($exitCode -eq 3) {
+        "$(Get-Date -Format o) Another collector owns the lock; stopping this redundant launcher." | Add-Content -LiteralPath $log
+        exit 0
+    }
     "$(Get-Date -Format o) YT4 exited with code $exitCode; restarting in $RestartDelaySeconds seconds" | Add-Content -LiteralPath $log
     Start-Sleep -Seconds $RestartDelaySeconds
 }

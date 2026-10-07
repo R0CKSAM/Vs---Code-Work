@@ -185,6 +185,7 @@ function clearSensitive(){
   calendarDates=[];if(calendar){calendar.clear(false);calendar.set('enable',[]);}revenueLabel.textContent='Total Revenue';
   accessEpoch++;requestNumber++;reportRows=[];users=[];adminChannels=[];pending=null;appliedQuery='';latestDay='';
   directoryChannels=[];$('channelEditForm').reset();$('channelLogoPreview').replaceChildren();
+  window.ChannelMerges?.clear();
   for(const dialog of document.querySelectorAll('dialog[open]'))dialog.close();
   for(const id of ['history','users','channelDirectory','previewRows','assignments','channelOptions','reportingDates','auditEvents'])$(id).replaceChildren();
   uploadRows=[];reportingDateRows=[];pendingDelete=null;
@@ -739,6 +740,7 @@ async function loadUsers(){
   $('userForm').elements.role.querySelector('option[value="admin"]').disabled=!me.user.super_admin;
   directoryChannels=[...data.channels.map(c=>({...c,archived:false})),...(data.archived||[]).map(c=>({...c,archived:true}))];
   renderChannelDirectory();
+  await window.ChannelMerges?.load();
 }
 function renderChannelDirectory(){
   const search=$('channelDirectorySearch').value.trim().toLowerCase();

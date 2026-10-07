@@ -186,6 +186,18 @@ function Save-RecoveryState {
     Write-JsonAtomic -Path $RecoveryStatePath -Payload $State
 }
 
+function Resume-PendingCleanup {
+    if ($DryRun) { return }
+    Save-RecoveryState -State $state -Status 'cleanup_recovery'
+    $python = Join-Path (Split-Path $WorkspaceRoot -Parent) 'venv\Scripts\python.exe'
+    $helper = Join-Path $WorkspaceRoot 'src\tools\resume_pending_cleanups.py'
+    & $python -u $helper --etl-root $WorkspaceRoot --archive-lake 'Z:\Veto Logs Backup\DO NOT DELETE' --execute
+    if ($LASTEXITCODE -ne 0) { throw 'ETL data is validated, but interrupted cleanup recovery failed. See cleanup audit logs.' }
+    $state['cleanup_checked_at_ist'] = (Get-Date).ToString('o')
+    $state['current_attempt_id'] = $null
+    Save-RecoveryState -State $state -Status 'maintenance_complete'
+}
+
 function Save-DailyCheckpoint {
     param(
         [Parameter(Mandatory = $true)][datetime]$Date,
@@ -307,6 +319,7 @@ try {
     }
 
     if ($cursor -gt $TargetThroughDate) {
+        Resume-PendingCleanup
         Write-Host "[$(Get-Date -Format o)] No ETL backlog. Latest completed date is already current."
         if (-not $DryRun) {
             $state["last_successful_date"] = if ($lastSuccessful) { $lastSuccessful.ToString("yyyy-MM-dd") } else { $null }
@@ -437,6 +450,7 @@ try {
         Write-Host "[$(Get-Date -Format o)] ETL checkpoint committed for $iso."
     }
 
+    Resume-PendingCleanup
     $remaining = [Math]::Max(0, [int]($TargetThroughDate - $dates[$dates.Count - 1]).TotalDays)
     $state["current_date"] = $null
     $state["backlog_days_remaining"] = $remaining
