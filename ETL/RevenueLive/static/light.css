@@ -847,22 +847,37 @@ td:nth-child(5) .channel-value-track>span{background:#a881db}
 }
 
 /* Keep the header controls on a shared baseline and the navigation drawer above them. */
-.summary-phase #shell>header{align-items:center;flex-wrap:nowrap;gap:12px;min-height:72px}
+.summary-phase #shell>header{display:grid;grid-template-columns:148px minmax(0,1fr) minmax(0,240px);align-items:center;gap:20px;min-height:72px}
+.summary-phase .header-brand{grid-column:1;grid-row:1;display:flex;align-items:center;width:148px;height:55px;flex:none}
+.summary-phase .header-brand img{display:block;width:100%;height:100%;object-fit:contain}
+.summary-phase .header-brand:focus-visible{outline:2px solid #c4e9ff;outline-offset:4px;border-radius:6px}
+.summary-phase #shell>header>#revenueHeader{grid-column:2;grid-row:1}
+.summary-phase #shell>header>#accountMenu{grid-column:3;grid-row:1;justify-self:end;max-width:100%}
+.summary-phase #accountMenu>summary{justify-content:flex-end;padding:8px;text-align:right}
+.summary-phase #accountMenu .account-chevron{display:flex;flex:none;color:#dce9ff}
+.summary-phase #accountMenu .account-chevron svg{width:16px;height:16px}
+.summary-phase #accountMenu #signedInName{max-width:100%;flex-shrink:1}
+.summary-phase #accountMenu #signedInName strong{font-size:18px;line-height:1.25}
 .summary-phase #accountMenu{flex:0 0 auto;min-width:0}
 .summary-phase #shell>header>#accountMenu[open]{z-index:5}
 .summary-phase #accountMenu>summary{display:flex;align-items:center;gap:12px;min-height:44px;line-height:1.2}
 .summary-phase #accountMenu .brand-icon{width:44px;height:44px}
 .summary-phase #revenueHeader{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex:1 1 auto;min-width:0}
 .summary-phase #filters{display:flex;align-items:center;flex:0 1 auto;flex-wrap:nowrap;gap:10px;min-width:0}
-.summary-phase #filters>#rangePicker,.summary-phase #filters>.channel-field{flex:1 1 300px;width:300px;max-width:300px;min-width:0}
+.summary-phase #filters>#rangePicker{flex:0 1 250px;width:250px;max-width:250px;min-width:0}
+.summary-phase #filters>.channel-field{flex:0 1 180px;width:180px;max-width:180px;min-width:0}
 .summary-phase #filters>.channel-field{display:flex;align-items:center}
 .summary-phase .revenue-header #channelPicker{width:100%;max-width:100%;min-width:0}
 .summary-phase #rangePicker>summary,.summary-phase .revenue-header #channelPicker>summary,
-.summary-phase #revenueHeader #export{height:44px;min-height:44px;max-height:44px;box-sizing:border-box;align-items:center;margin:0}
+.summary-phase #revenueHeader #export{height:36px;min-height:36px;max-height:36px;box-sizing:border-box;align-items:center;margin:0}
 .summary-phase #rangePicker>summary,.summary-phase .revenue-header #channelPicker>summary{overflow:hidden;white-space:nowrap}
+.summary-phase #rangePicker>summary,.summary-phase .revenue-header #channelPicker>summary{padding:7px 10px;font-size:13px;gap:8px}
+.summary-phase #rangePicker>summary svg,.summary-phase #revenueHeader #export svg{width:18px;height:18px;flex:none}
 .summary-phase #rangePicker>summary>span:not(:first-child){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.summary-phase #revenueHeader #export{width:44px;min-width:44px;flex:none;display:grid;place-items:center;padding:10px}
-.summary-phase #accountMenu .account-panel{background:linear-gradient(155deg,#fff 18%,#eef5ff);border-right:1px solid #cadcf2;box-shadow:16px 0 48px #081d3f40;padding:18px;z-index:60}
+.summary-phase #revenueHeader #export{width:36px;min-width:36px;flex:none;display:grid;place-items:center;padding:8px}
+.summary-phase #accountMenu .account-panel{left:auto;right:0;background:linear-gradient(155deg,#fff 18%,#eef5ff);border-right:0;border-left:1px solid #cadcf2;box-shadow:-16px 0 48px #081d3f40;padding:18px;z-index:60;animation:account-drawer-right .24s ease-out}
+@keyframes account-drawer-right{from{transform:translateX(100%);opacity:.3}to{transform:translateX(0);opacity:1}}
+@media(prefers-reduced-motion:reduce){.summary-phase #accountMenu .account-panel{animation:none}}
 .summary-phase #accountMenu .drawer-heading{display:flex;align-items:center;justify-content:space-between;min-height:48px;gap:12px;padding:0 0 14px;border-bottom:1px solid #d6e3f1;color:#102b4e}
 .summary-phase #accountMenu .drawer-heading strong{font-size:20px;font-weight:800}
 .summary-phase #accountMenu .drawer-close{display:grid;place-items:center;width:36px;height:36px;min-height:36px;flex:none;margin:0;padding:7px;border:1px solid #c7d7e9;border-radius:8px;background:#fff;color:#173c6e}
@@ -883,6 +898,20 @@ td:nth-child(5) .channel-value-track>span{background:#a881db}
   .summary-phase #filters{flex:1 1 auto;gap:6px}
   .summary-phase #filters>#rangePicker{flex:1.2 1 0;width:0;max-width:none}
   .summary-phase #filters>.channel-field{flex:1 1 0;width:0;max-width:none}
+}
+
+@media(max-width:1050px){
+  .summary-phase #shell>header{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 16px;padding-top:10px;padding-bottom:10px}
+  .summary-phase #shell>header>#accountMenu{grid-column:2;grid-row:1}
+  .summary-phase #shell>header>#revenueHeader{grid-column:1/-1;grid-row:2;width:100%}
+  .summary-phase #revenueHeader #filters{flex:1}
+  .summary-phase #filters>#rangePicker,.summary-phase #filters>.channel-field{max-width:none}
+}
+@media(max-width:600px){
+  .summary-phase .header-brand{width:112px;height:42px}
+  .summary-phase #accountMenu #signedInName strong{font-size:16px}
+  .summary-phase #accountMenu #signedInName small{font-size:12px}
+  .summary-phase #accountMenu>summary{gap:6px;padding:4px}
 }
 
 /* Match the date and channel popovers to the light header controls. */

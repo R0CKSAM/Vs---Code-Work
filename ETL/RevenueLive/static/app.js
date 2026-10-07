@@ -161,7 +161,10 @@ drawerHeading.append(drawerTitle,closeMenu);menuPanel.prepend(drawerHeading);
 for(const [view,glyph] of Object.entries({dashboard:'layout-dashboard',uploads:'upload',admin:'users-round'})){
   menuPanel.querySelector(`[data-view="${view}"]`)?.prepend(icon(glyph,'menu-icon'));
 }
-menuTitle.prepend(icon('chart-no-axes-combined','brand-icon'));
+const headerBrand=document.createElement('a');headerBrand.className='header-brand';headerBrand.href='/';headerBrand.setAttribute('aria-label','VETO dashboard');
+const headerLogo=document.createElement('img');headerLogo.src='/static/veto-logo.png';headerLogo.alt='VETO';headerLogo.width=1920;headerLogo.height=714;
+headerBrand.append(headerLogo);topHeader.prepend(headerBrand);topHeader.append(accountMenu);
+menuTitle.append(icon('chevron-down','account-chevron'));
 const headerArtwork=document.createElement('span');headerArtwork.className='header-wave-art';headerArtwork.setAttribute('aria-hidden','true');document.querySelector('#shell>header').prepend(headerArtwork);
 rangeTitle.prepend(icon('calendar-days'));
 $('export').replaceChildren(icon('download'));$('export').title='Download CSV';$('export').setAttribute('aria-label','Download CSV');
