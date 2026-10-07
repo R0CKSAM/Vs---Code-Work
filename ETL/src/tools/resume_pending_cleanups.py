@@ -65,6 +65,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--etl-root', required=True)
     parser.add_argument('--archive-lake')
+    parser.add_argument('--archive-through', help='Latest completed ETL date; keep later spillover partitions hot.')
     parser.add_argument('--execute', action='store_true')
     args = parser.parse_args()
     root = Path(args.etl_root).resolve(strict=True)
@@ -102,6 +103,19 @@ def main():
         if args.execute:
             command.append('--execute')
         subprocess.run(command, check=True)
+    if args.archive_through:
+        through = datetime.strptime(args.archive_through, '%Y-%m-%d').date()
+        if through >= today or not args.archive_lake:
+            raise RuntimeError('Archive recovery requires a completed past date and an archive root.')
+        archive_command = [sys.executable, '-u', str(Path(__file__).with_name('archive_lake_partitions.py')),
+                           '--source-root', str(base / 'lake'), '--archive-root', args.archive_lake,
+                           '--through', through.isoformat(), '--sources', 'fast,stream',
+                           '--quarantine-root', str(Path(args.archive_lake) / 'delete temp' / 'lake_conflicts'),
+                           '--audit-dir', str(root / 'output' / 'lake_archive')]
+        # This process owns PipelineRunLock for the entire validated maintenance run.
+        subprocess.run(archive_command, check=True)
+        if args.execute:
+            subprocess.run([*archive_command, '--execute'], check=True)
     if args.execute:
         reconcile_cleanup_run(root, audit)
     pipeline_lock.release()

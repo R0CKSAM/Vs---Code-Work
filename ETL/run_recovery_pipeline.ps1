@@ -191,9 +191,12 @@ function Resume-PendingCleanup {
     Save-RecoveryState -State $state -Status 'cleanup_recovery'
     $python = Join-Path (Split-Path $WorkspaceRoot -Parent) 'venv\Scripts\python.exe'
     $helper = Join-Path $WorkspaceRoot 'src\tools\resume_pending_cleanups.py'
-    & $python -u $helper --etl-root $WorkspaceRoot --archive-lake 'Z:\Veto Logs Backup\DO NOT DELETE' --execute
-    if ($LASTEXITCODE -ne 0) { throw 'ETL data is validated, but interrupted cleanup recovery failed. See cleanup audit logs.' }
+    $maintenanceArgs = @('-u', $helper, '--etl-root', $WorkspaceRoot, '--archive-lake', 'Z:\Veto Logs Backup\DO NOT DELETE', '--execute')
+    if ($state['last_successful_date']) { $maintenanceArgs += @('--archive-through', $state['last_successful_date']) }
+    & $python @maintenanceArgs
+    if ($LASTEXITCODE -ne 0) { throw 'ETL processing is validated, but cleanup/archive maintenance failed. See audit logs; local data is retained until verified transfer.' }
     $state['cleanup_checked_at_ist'] = (Get-Date).ToString('o')
+    $state['archive_checked_through'] = $state['last_successful_date']
     $state['current_attempt_id'] = $null
     Save-RecoveryState -State $state -Status 'maintenance_complete'
 }

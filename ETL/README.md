@@ -268,3 +268,21 @@ python run.py dashboards -- --overview-html ".\output\overview\overview_dashboar
 - `VG_DASH_OVERVIEW_BASE`
 - `VG_DASH_COMPLETED_THROUGH` (optional validated completed-day cutoff, `YYYY-MM-DD`)
 
+## Daily Recovery Completion
+
+Processing, disposable-input cleanup, and archive transfer are separate phases.
+`run_recovery_pipeline.ps1` checks unfinished cleanup even with no ETL backlog,
+then verifies archive transfers through the last successful date. Later spillover
+partitions stay in the local lake. A failed archive keeps maintenance failed;
+`recovery_backlog.json` records `archive_checked_through` only after success.
+The pipeline's processing status alone is not proof of delivery to the archive.
+
+Archive copies use Parquet metadata and SHA-256 checks before local removal.
+Interrupted `.archiving` files are retried. Cleanup revalidates retained lake row
+counts and uses a process lock. Recent interrupted cleanup manifests are retried
+for seven days; older incidents require an explicit reviewed recovery.
+
+The live-monitor startup wait is five minutes, with launcher output captured in
+`output/live_monitor`. The YouTube collector uses its scheduled login task and
+one-minute crash retries; do not also enable its legacy Startup shortcut.
+

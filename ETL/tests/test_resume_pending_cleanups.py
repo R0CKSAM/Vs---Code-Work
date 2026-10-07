@@ -4,12 +4,35 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src' / 'tools'))
+import resume_pending_cleanups as recovery
 from resume_pending_cleanups import pending_manifests, reconcile_cleanup_run
 
 
 class PendingCleanupTests(unittest.TestCase):
+    def test_archive_runs_even_when_cleanup_already_finished(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder)
+            args=['recovery','--etl-root',folder,'--archive-lake',str(root/'archive'),
+                  '--archive-through','2020-01-01','--execute']
+            with patch.object(sys,'argv',args), patch.object(recovery.subprocess,'run') as run:
+                recovery.main()
+            self.assertEqual(run.call_count,2)
+            self.assertIn('archive_lake_partitions.py',run.call_args_list[0].args[0][2])
+            self.assertNotIn('--execute',run.call_args_list[0].args[0])
+            self.assertIn('--execute',run.call_args_list[1].args[0])
+
+    def test_archive_failure_prevents_completion_reconciliation(self):
+        with tempfile.TemporaryDirectory() as folder:
+            args=['recovery','--etl-root',folder,'--archive-lake',str(Path(folder)/'archive'),
+                  '--archive-through','2020-01-01','--execute']
+            with patch.object(sys,'argv',args), patch.object(recovery.subprocess,'run',side_effect=RuntimeError('network unavailable')), patch.object(recovery,'reconcile_cleanup_run') as finish:
+                with self.assertRaises(RuntimeError):
+                    recovery.main()
+                finish.assert_not_called()
+
     def test_reconcile_requires_completed_final_cleanup_evidence(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
