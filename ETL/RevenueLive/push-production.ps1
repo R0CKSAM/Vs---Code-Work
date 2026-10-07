@@ -18,7 +18,7 @@ function Invoke-Git {
 $files = @(
     '.env.example', '.gitignore', 'account_email.py', 'app.py', 'backup.py',
     'channel_images.py', 'config.py', 'database.py', 'db_schema.py', 'deploy.py',
-    'insight_presets.py', 'runtime_logging.py', 'sqlite_legacy.py',
+    'runtime_logging.py', 'sqlite_legacy.py',
     'requirements.txt', 'manage.ps1', 'setup.ps1',
     'flatpickr.LICENSE.txt', 'Lucide.LICENSE.txt'
 )
@@ -60,7 +60,10 @@ foreach ($file in $files) {
     $null = New-Item -ItemType Directory -Force -Path (Split-Path -Parent $destination)
     Copy-Item -LiteralPath (Join-Path $source $file) -Destination $destination
 }
-# Keep the publication-specific handoff documents intact. Never delete files automatically.
+# Explicitly retired runtime files; keep publication-specific handoff documents intact.
+foreach ($retired in @('static/diy-graphs.js', 'insight_presets.py')) {
+    Invoke-Git @('rm', '--ignore-unmatch', '--', $retired)
+}
 Invoke-Git @('diff', '--check')
 Invoke-Git (@('add', '--') + $files)
 $changes = Invoke-Git @('diff', '--cached', '--name-only')

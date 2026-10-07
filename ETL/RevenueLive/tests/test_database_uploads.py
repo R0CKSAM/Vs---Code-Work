@@ -40,6 +40,10 @@ class DatabaseUploadTest(unittest.TestCase):
         self.client.post('/api/login', json={'username':'admin', 'password':'synthetic-password'})
         self.headers = {'X-CSRF-Token':self.client.get('/api/me').json['csrf']}
 
+    def test_retired_graph_preset_routes_are_not_registered(self):
+        rules = [rule.rule for rule in self.app.url_map.iter_rules()]
+        self.assertFalse(any('/api/graph-presets' in rule for rule in rules))
+
     def test_regular_admin_disables_legacy_users_and_revokes_access(self):
         with closing(sqlite3.connect(self.db_file)) as db, db:
             hashed=generate_password_hash('synthetic-password')
@@ -220,16 +224,28 @@ class DatabaseUploadTest(unittest.TestCase):
         self.assertTrue(events['valid'])
         self.assertEqual(events['events'][0]['action'],'recovery_email_changed')
 
-    def test_recovery_edit_requires_current_password_and_handles_owner(self):
+    def test_password_change_cannot_change_email_even_for_owner(self):
         with closing(sqlite3.connect(self.db_file)) as db,db:
             db.execute('INSERT INTO super_admin VALUES (1,1)')
         body=dict(current='wrong',password='new-synthetic-password',email='owner@example.com')
-        self.assertEqual(self.client.post('/api/password',headers=self.headers,json=body).status_code,400)
+        self.assertEqual(self.client.post('/api/password',headers=self.headers,json=body).status_code,403)
         self.assertEqual(self.client.get('/api/me').json['recovery_email'],'')
         body['current']='synthetic-password'
         response=self.client.post('/api/password',headers=self.headers,json=body)
+        self.assertEqual(response.status_code,403,response.json)
+        self.assertEqual(self.client.get('/api/me').json['recovery_email'],'')
+        del body['email']
+        response=self.client.post('/api/password',headers=self.headers,json=body)
         self.assertEqual(response.status_code,200,response.json)
-        self.assertEqual(self.client.get('/api/me').json['recovery_email'],'owner@example.com')
+        self.assertEqual(self.client.get('/api/me').json['recovery_email'],'')
+
+    def test_uploader_cannot_change_own_email_via_password_endpoint(self):
+        self.uploader_login()
+        response=self.client.post('/api/password',headers=self.headers,json={
+            'current':'synthetic-password','password':'new-synthetic-password',
+            'email':'changed@example.com'})
+        self.assertEqual(response.status_code,403,response.json)
+        self.assertEqual(self.client.get('/api/me').json['recovery_email'],'')
 
     def test_recovery_permission_csrf_and_email_removal(self):
         body=dict(id=2,username='uploader',email='uploader@example.com',role='uploader',channels=[])

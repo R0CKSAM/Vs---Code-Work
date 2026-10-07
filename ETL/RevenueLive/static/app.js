@@ -21,20 +21,13 @@ $('channelPicker').addEventListener('toggle',positionChannelMenu);
 $('channelPicker').addEventListener('toggle',()=>{if($('channelPicker').open)rangePicker.open=false;});
 window.addEventListener('resize',positionChannelMenu);
 document.addEventListener('scroll',positionChannelMenu,true);
-const tabular=document.createElement('section');tabular.id='tabular';tabular.className='view';tabular.hidden=true;
-const tableHeading=$('rowCount').closest('.section-title');
-const tableWrap=$('records').closest('.table-wrap');
-tabular.append(tableHeading,tableWrap,$('empty'),document.querySelector('.pagination'));
-$('dashboard').after(tabular);
-const tableNav=document.createElement('button');tableNav.dataset.view='tabular';tableNav.textContent='Tabular data';
 document.querySelector('[data-view="dashboard"]').textContent='Dashboard';
-document.querySelector('[data-view="dashboard"]').after(tableNav);
-const updateFilterVisibility=()=>{$('revenueHeader').hidden=$('dashboard').hidden&&tabular.hidden;};
-for(const view of [$('dashboard'),tabular])new MutationObserver(updateFilterVisibility).observe(view,{attributes:true,attributeFilter:['hidden']});
+const updateFilterVisibility=()=>{$('revenueHeader').hidden=$('dashboard').hidden;};
+for(const view of [$('dashboard')])new MutationObserver(updateFilterVisibility).observe(view,{attributes:true,attributeFilter:['hidden']});
 let me=null,csrf='',pending=null,users=[],adminChannels=[];
 let directoryChannels=[],channelEditBusy=false;
 const channelDirectorySearch=document.createElement('input');channelDirectorySearch.type='search';channelDirectorySearch.id='channelDirectorySearch';channelDirectorySearch.placeholder='Search channels';channelDirectorySearch.setAttribute('aria-label','Search channel directory');$('channelDirectory').before(channelDirectorySearch);
-let selectedChannels=new Set(),reportRows=[],appliedQuery='',pageIndex=0,latestDay='',requestNumber=0;
+let selectedChannels=new Set(),reportRows=[],appliedQuery='',latestDay='',requestNumber=0;
 let accessEpoch=0,checkingAccess=false;
 let filterTimer;
 let initialWeek=true;
@@ -101,7 +94,7 @@ const drawerHeading=document.createElement('div');drawerHeading.className='drawe
 const drawerTitle=document.createElement('strong');drawerTitle.textContent='Menu';
 closeMenu.replaceChildren(icon('x'));closeMenu.title='Close menu';closeMenu.setAttribute('aria-label','Close menu');
 drawerHeading.append(drawerTitle,closeMenu);menuPanel.prepend(drawerHeading);
-for(const [view,glyph] of Object.entries({dashboard:'layout-dashboard',tabular:'table',uploads:'upload',admin:'users-round'})){
+for(const [view,glyph] of Object.entries({dashboard:'layout-dashboard',uploads:'upload',admin:'users-round'})){
   menuPanel.querySelector(`[data-view="${view}"]`)?.prepend(icon(glyph,'menu-icon'));
 }
 menuTitle.prepend(icon('chart-no-axes-combined','brand-icon'));
@@ -190,17 +183,17 @@ function clearSensitive(){
   loadingTicket++;setLoading(false);
   clearTimeout(filterTimer);availableDates.replaceChildren();dateCoverage.textContent='';
   calendarDates=[];if(calendar){calendar.clear(false);calendar.set('enable',[]);}revenueLabel.textContent='Total Revenue';
-  accessEpoch++;requestNumber++;reportRows=[];users=[];adminChannels=[];pending=null;appliedQuery='';latestDay='';pageIndex=0;
+  accessEpoch++;requestNumber++;reportRows=[];users=[];adminChannels=[];pending=null;appliedQuery='';latestDay='';
   directoryChannels=[];$('channelEditForm').reset();$('channelLogoPreview').replaceChildren();
   for(const dialog of document.querySelectorAll('dialog[open]'))dialog.close();
-  for(const id of ['records','history','users','channelDirectory','previewRows','assignments','channelOptions','reportingDates','auditEvents'])$(id).replaceChildren();
+  for(const id of ['history','users','channelDirectory','previewRows','assignments','channelOptions','reportingDates','auditEvents'])$(id).replaceChildren();
   uploadRows=[];reportingDateRows=[];pendingDelete=null;
   $('uploadLibraryError').hidden=true;$('uploadLibraryCount').textContent='';$('auditStatus').textContent='';
   auditRequest++;auditCategory='all';auditPage=1;auditPages=1;
   $('auditCategories').replaceChildren();$('auditPageStatus').textContent='';
   for(const id of ['uploadAllCount','uploadLiveCount','uploadArchivedCount'])$(id).textContent='0';
   for(const id of ['uploadDatesPanel','uploadAuditPanel'])$(id).open=false;
-  for(const id of ['channelCount','total','ad','other','views','impressions','rowCount','period','pageInfo','appliedScope'])$(id).textContent='-';
+  for(const id of ['channelCount','total','ad','other','views','impressions','period','appliedScope'])$(id).textContent='-';
   $('preview').hidden=true;$('export').disabled=true;$('userForm').reset();$('passwordForm').reset();$('uploadForm').reset();
   if(window.RevenueCharts)RevenueCharts.render([]);
   window.RevenueShare?.clear();
@@ -220,7 +213,6 @@ function identity(value){
 function overview(){document.querySelectorAll('.view').forEach(v=>v.hidden=v.id!=='dashboard');document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view==='dashboard'));}
 function passwordPrompt(){
   const first=!!me.user.must_change;
-  $('passwordForm').elements.email.value=me.recovery_email||'';
   $('passwordTitle').textContent=first?'Set your own password':'Change password';
   $('currentPasswordLabel').textContent=first?'Temporary password':'Current password';
   $('passwordCancel').hidden=first;$('passwordDialog').querySelector('.form-error').textContent='';
@@ -272,10 +264,6 @@ function dirty(){
   filterTimer=setTimeout(()=>{if(!me)return;refresh().catch(error=>{if(!error.stale)notify(error.message);});},300);
 }
 function query(){const params=new URLSearchParams(normalizeDateInputs($('start'),$('end')));if(!selectedChannels.size)params.append('channel','none');else for(const id of [...selectedChannels].sort((a,b)=>Number(a)-Number(b)))params.append('channel',id);return params.toString();}
-function renderTable(){const size=Number($('pageSize').value),pages=Math.max(1,Math.ceil(reportRows.length/size));pageIndex=Math.min(pageIndex,pages-1);const subset=reportRows.slice(pageIndex*size,(pageIndex+1)*size);
-  $('records').innerHTML=subset.map(r=>`<tr><td>${esc(r.day)}</td><td>${esc(r.channel)}</td><td class="number">${number(r.views)}</td><td class="number">${number(r.impressions)}</td><td class="number">${money(r.ad)}</td><td class="number">${money(r.other)}</td><td class="number"><strong>${money(r.total)}</strong></td></tr>`).join('');
-  $('pageInfo').textContent=reportRows.length?`${pageIndex*size+1}-${Math.min((pageIndex+1)*size,reportRows.length)} of ${number(reportRows.length)}`:'0 records';$('previousPage').disabled=pageIndex===0;$('nextPage').disabled=pageIndex>=pages-1;
-}
 async function refresh(){
   const ticket=++loadingTicket;setLoading(true);
   try{return await loadReport();}finally{if(ticket===loadingTicket)setLoading(false);}
@@ -287,7 +275,7 @@ async function loadReport(){
   $('filterState').textContent='Loading...';$('export').disabled=true;
   let data;try{data=await api('/api/report?'+requested);}catch(error){if(error.stale)return;if(sequence===requestNumber){$('filterState').textContent='Could not apply filters';$('export').disabled=!appliedQuery;window.QuickInsights?.clear('Insights unavailable. Could not load the selected data.');}throw error;}
   if(sequence!==requestNumber)return;
-  appliedQuery=requested;reportRows=data.rows;pageIndex=0;
+  appliedQuery=requested;reportRows=data.rows;
   const dates=data.available_dates||[];
   calendarDates=dates;
   if(resetDateBounds){
@@ -326,9 +314,7 @@ async function loadReport(){
   $('views').textContent=number(data.totals.views);$('impressions').textContent=number(data.totals.impressions);
   $('channelCount').textContent=number(new Set(data.rows.map(row=>row.channel)).size);
   requestAnimationFrame(fitMetricValues);
-  renderTable();
   window.RevenueShare?.render(data.rows);
-  $('rowCount').textContent=number(data.rows.length)+' records';$('empty').hidden=data.rows.length>0;
   $('period').textContent=data.rows.length?[...new Set(data.rows.map(r=>r.day))].sort().filter((v,i,a)=>i===0||i===a.length-1).join(' to '):'No data';
   const monthLabel=day=>new Intl.DateTimeFormat('en-GB',{month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(day+'T00:00:00Z'));
   const firstMonth=paramsMonth($('start').value,data.rows[0]?.day),lastMonth=paramsMonth($('end').value,data.rows.at(-1)?.day);
@@ -401,10 +387,7 @@ $('datePreset').addEventListener('change',()=>{
   else if(value==='7'||value==='30'){const date=new Date(anchor+'T00:00:00Z');date.setUTCDate(date.getUTCDate()-Number(value)+1);$('start').value=date.toISOString().slice(0,10);$('end').value=anchor;}
   dirty();
 });
-$('pageSize').addEventListener('change',()=>{pageIndex=0;renderTable();});
 // Pagination owns its disabled state after rendering.
-$('previousPage').addEventListener('click',()=>{pageIndex--;renderTable();});
-$('nextPage').addEventListener('click',()=>{pageIndex++;renderTable();});
 bind('passwordButton','click',async()=>{$('passwordForm').reset();passwordPrompt();});
 bind('passwordSignout','click',async()=>{await api('/api/logout',{method:'POST'});signOutView('Signed out.');});
 bind('passwordCancel','click',async()=>{$('passwordDialog').close();});
@@ -824,8 +807,6 @@ const inviteLabel=document.createElement('label');inviteLabel.className='check';
 inviteLabel.innerHTML='<input type="checkbox" id="inviteEmail">Invite by email';
 const recoveryLabel=document.createElement('label');
 recoveryLabel.innerHTML='Email<input name="email" type="email" required maxlength="80" autocomplete="off">';
-const ownRecoveryLabel=recoveryLabel.cloneNode(true);
-$('passwordForm').elements.confirm.closest('label').after(ownRecoveryLabel);
 const deliveryStatus=document.createElement('p');deliveryStatus.className='muted';deliveryStatus.setAttribute('role','status');
 $('userForm').elements.username.closest('label').after(recoveryLabel,inviteLabel,deliveryStatus);
 function inviteMode(){const form=$('userForm'),editing=!!form.elements.id.value;form.elements.email.required=!editing||form.elements.active.checked;inviteLabel.hidden=editing;$('inviteEmail').disabled=!accountEmailEnabled;if(editing||!accountEmailEnabled)$('inviteEmail').checked=false;const enabled=$('inviteEmail').checked,protectedProfile=editing&&form.elements.password.disabled;form.elements.password.required=!editing&&!enabled;form.elements.password.closest('label').hidden=enabled||protectedProfile;form.elements.username.type='text';$('showTemporary').closest('label').hidden=enabled||protectedProfile;deliveryStatus.hidden=accountEmailEnabled;deliveryStatus.textContent='Email delivery not configured. Administrator password reset is available.';}

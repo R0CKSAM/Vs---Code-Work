@@ -399,6 +399,8 @@ def create_app(data_dir=None):
     @require()
     def password():
         body=request.get_json() or {}
+        if 'email' in body:
+            return jsonify(error='Email changes must be made by an administrator.'),403
         value=str(body.get('password',''))
         if not 8<=len(value)<=256:
             raise InvalidData('Password must be 8 to 256 characters.')
@@ -406,8 +408,6 @@ def create_app(data_dir=None):
         if not check_password_hash(current,str(body.get('current',''))):
             raise InvalidData('Current password is incorrect.')
         db().begin_write()
-        if 'email' in body:
-            save_recovery_email(g.user['id'],email_address(body['email']))
         db().execute('UPDATE users SET password=?,must_change=0 WHERE id=?',(generate_password_hash(value),g.user['id']))
         db().execute('DELETE FROM email_tokens WHERE user_id=?',(g.user['id'],))
         db().execute('DELETE FROM sessions WHERE user_id=? AND token<>?',(g.user['id'],g.session['token']))
