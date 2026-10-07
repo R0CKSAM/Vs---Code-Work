@@ -13,6 +13,11 @@ window.ChannelComparison=(()=>{
     section=document.createElement('section');section.id='channelComparison';
     section.innerHTML='<h2>Channel comparison</h2><div class="comparison-controls"><details><summary>Channels</summary><div class="comparison-channel-options"></div></details><fieldset><legend>Parameters</legend><div class="comparison-parameters"></div></fieldset></div><p class="comparison-status" role="status"></p><div class="comparison-canvas"><canvas id="channelComparisonCanvas" role="img" aria-label="Daily channel comparison"></canvas></div>';
     document.getElementById('viewsDistribution').after(section);
+    const picker=section.querySelector('details'),list=section.querySelector('.comparison-channel-options');
+    const menu=document.createElement('div');menu.className='comparison-menu';
+    const search=document.createElement('input');search.type='search';search.placeholder='Search channels';search.setAttribute('aria-label','Search comparison channels');
+    list.before(menu);menu.append(search,list);boundedPicker(picker,menu);
+    search.addEventListener('input',()=>{for(const label of list.children)label.hidden=!label.textContent.toLowerCase().includes(search.value.trim().toLowerCase());});
     for(const [key,label] of Object.entries(metrics))section.querySelector('.comparison-parameters').append(checkbox(key,label,parameters.has(key),checked=>{checked?parameters.add(key):parameters.delete(key);draw();}));
   }
   function draw(){
@@ -42,6 +47,7 @@ window.ChannelComparison=(()=>{
     if(!initialized&&names.length){selected=new Set(names.slice(0,2));initialized=true;}
     if(!names.length)initialized=false;
     section.querySelector('.comparison-channel-options').replaceChildren(...names.map(name=>checkbox(name,name,selected.has(name),checked=>{checked?selected.add(name):selected.delete(name);draw();})));
+    section.querySelector('input[type=search]').dispatchEvent(new Event('input'));
     draw();
   }
   return {render};

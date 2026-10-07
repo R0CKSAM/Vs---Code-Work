@@ -9,31 +9,38 @@ window.ChannelMerges=(()=>{
   let plan=null,ticket=0,links=[];
   const selected=new Set();
   $('mergeSearch').parentElement.remove();
-  dialog.querySelector('.merge-pickers').innerHTML='<label>Main channel<select id="mergeTarget" required></select></label><div><label for="mergeSearch">Channels to put under it</label><input id="mergeSearch" type="search" placeholder="Search channel names"><div class="actions"><button type="button" id="mergeSelectShown">Select all</button><button type="button" id="mergeClear">Clear</button></div><div id="mergeSources" role="group" aria-label="Source channels"></div></div>';
+  dialog.querySelector('.merge-pickers').innerHTML='<div><span class="field-label">Main channel</span><input id="mergeTarget" type="hidden"><details id="mergeTargetPicker"><summary id="mergeTargetSummary">Choose main channel</summary><div class="merge-menu"><input id="mergeTargetSearch" type="search" placeholder="Search main channel" aria-label="Search main channel"><div id="mergeTargets" class="merge-options"></div></div></details></div><div><span class="field-label">Channels to put under it</span><details id="mergeSourcePicker"><summary id="mergeSourceSummary">Choose channels</summary><div class="merge-menu"><input id="mergeSearch" type="search" placeholder="Search channels" aria-label="Search source channels"><div class="picker-actions"><button type="button" id="mergeSelectShown">Select all</button><button type="button" id="mergeClear">Clear</button></div><div id="mergeSources" class="merge-options" role="group" aria-label="Source channels"></div></div></details></div>';
+  for(const id of ['mergeTargetPicker','mergeSourcePicker'])boundedPicker($(id),$(id).querySelector('.merge-menu'));
+  const done=document.createElement('button');done.type='button';done.className='merge-picker-done';done.textContent='Done';done.onclick=()=>{$('mergeSourcePicker').open=false;$('mergeSourceSummary').focus();};$('mergeSourcePicker').querySelector('.merge-menu').append(done);
+  function closePickers(){for(const id of ['mergeTargetPicker','mergeSourcePicker'])$(id).open=false;}
+  dialog.addEventListener('close',closePickers);
   const selection=document.createElement('p');selection.id='mergeSelection';selection.setAttribute('aria-live','polite');dialog.querySelector('.merge-pickers').after(selection);
   function reset(){ticket++;plan=null;$('mergeReview').hidden=true;$('mergeConfirm').checked=false;$('mergeSave').disabled=true;dialog.querySelector('.form-error').textContent='';}
   function candidates(){const search=$('mergeSearch').value.trim().toLowerCase();return directoryChannels.filter(c=>!c.archived&&String(c.id)!==$('mergeTarget').value&&!links.some(r=>r.source_id===c.id||r.target_id===c.id)&&c.name.toLowerCase().includes(search));}
   function options(){
     const target=$('mergeTarget'),previous=target.value;
-    target.replaceChildren(new Option('Choose main channel',''));
-    for(const c of directoryChannels.filter(c=>!c.archived&&!links.some(r=>r.source_id===c.id)))target.add(new Option(c.name,c.id));
-    target.value=previous;
+    const query=$('mergeTargetSearch').value.trim().toLowerCase();
+    $('mergeTargets').innerHTML=directoryChannels.filter(c=>!c.archived&&!links.some(r=>r.source_id===c.id)&&c.name.toLowerCase().includes(query)).map(c=>`<button type="button" data-target="${c.id}" aria-pressed="${String(c.id)===previous}">${esc(c.name)}</button>`).join('')||'<p class="muted">No matching channels.</p>';
     $('mergeSources').innerHTML=candidates().map(c=>`<label class="merge-choice"><input type="checkbox" value="${c.id}" ${selected.has(c.id)?'checked':''}><span>${esc(c.name)}</span></label>`).join('')||'<p class="muted">No matching channels.</p>';
     const names=directoryChannels.filter(c=>selected.has(c.id)).map(c=>c.name);
     const main=directoryChannels.find(c=>String(c.id)===target.value);
+    $('mergeTargetSummary').textContent=main?.name||'Choose main channel';
+    $('mergeSourceSummary').textContent=names.length?`${names.length} channels selected`:'Choose channels';
     $('mergeSelection').textContent=`Main channel: ${main?.name||'Not selected'} | ${names.length} selected${names.length?': '+names.join(', '):''}`;
   }
-  $('mergeOpen').onclick=()=>{reset();selected.clear();$('mergeTarget').value='';$('mergeSearch').value='';options();dialog.showModal();};
+  $('mergeOpen').onclick=()=>{reset();closePickers();selected.clear();$('mergeTargetSearch').value='';$('mergeTarget').value='';$('mergeSearch').value='';options();dialog.showModal();};
   $('mergeCancel').onclick=()=>{reset();dialog.close();};
   dialog.addEventListener('cancel',reset);
   $('mergeSearch').oninput=options;
+  $('mergeTargetSearch').oninput=options;
+  $('mergeTargets').onclick=event=>{const button=event.target.closest('[data-target]');if(!button)return;$('mergeTarget').value=button.dataset.target;$('mergeTarget').dispatchEvent(new Event('change'));$('mergeTargetPicker').open=false;$('mergeTargetSummary').focus();};
   $('mergeTarget').onchange=()=>{selected.delete(Number($('mergeTarget').value));reset();options();};
   $('mergeSources').onchange=event=>{const input=event.target;if(input.type!=='checkbox')return;input.checked?selected.add(Number(input.value)):selected.delete(Number(input.value));reset();options();};
   $('mergeSelectShown').onclick=()=>{for(const c of candidates())selected.add(c.id);reset();options();};
   $('mergeClear').onclick=()=>{selected.clear();reset();options();};
   $('mergeConfirm').onchange=()=>{$('mergeSave').disabled=!plan||!!plan.exact_match_dates.length||!$('mergeConfirm').checked;};
   $('mergePreview').onclick=async()=>{
-    reset();const generation=ticket;$('mergePreview').disabled=true;
+    closePickers();reset();const generation=ticket;$('mergePreview').disabled=true;
     try{
       const data=await api('/api/admin/channel-merges/preview',{method:'POST',body:{sources:[...selected],target:Number($('mergeTarget').value)}});
       if(generation!==ticket)return;plan=data;

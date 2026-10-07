@@ -8,8 +8,21 @@
 .merge-pickers select{width:100%;max-width:100%;min-width:0}
 .merge-pickers>div{min-width:0}
 #mergeSources{max-height:240px;overflow:auto;margin-top:8px;border:1px solid #c9d9ec;border-radius:6px;background:#fff}
-#mergeSources .merge-choice{display:flex;align-items:center;gap:10px;padding:10px;margin:0;border-bottom:1px solid #edf2f7;font-weight:500}
+#mergeSources .merge-choice{display:flex;flex-direction:row;justify-content:flex-start;align-items:center;gap:10px;padding:10px;margin:0;border-bottom:1px solid #edf2f7;font-weight:500;text-align:left}
 .merge-choice input{flex:0 0 auto;width:18px;height:18px}
+#mergeDialog .merge-choice input{min-height:18px;margin:0;padding:0;accent-color:#1769d5}
+#mergeDialog .merge-pickers{align-items:start}
+#mergeDialog details{min-width:0;border:1px solid #bbcee5;border-radius:8px;background:#fff}
+#mergeDialog summary{padding:12px;cursor:pointer;font-weight:600;overflow-wrap:anywhere}
+#mergeDialog .merge-menu{padding:12px;background:#fff;color:#17385d;border:1px solid #bbcee5;border-radius:8px;box-shadow:0 8px 24px #17385d24}
+#mergeDialog .merge-options{max-height:220px;overflow:auto;overscroll-behavior:contain}
+#mergeTargets button{display:block;width:100%;text-align:left;border:0;border-radius:4px;background:transparent;overflow-wrap:anywhere;white-space:normal}
+#mergeTargets button:hover,#mergeTargets button[aria-pressed=true]{background:#e8f1ff;color:#1257b3}
+#mergeDialog .actions{margin:0}
+#mergeDialog #mergeSelection{max-height:100px;overflow:auto;margin:0;font-size:13px}
+#mergeDialog .form-error:empty{display:none}
+#mergeDialog #mergePreview{justify-self:start}
+#mergeDialog .merge-picker-done{position:sticky;bottom:0;display:block;margin-top:8px;width:100%;background:#e8f1ff;color:#1257b3;border-color:#bbcee5}
 .merge-choice span{min-width:0;overflow-wrap:anywhere}
 #mergeSelection,#mergeSummary{font-weight:600;line-height:1.6}
 .merge-records{max-height:300px;overflow:auto;border:1px solid #c9d9ec;border-radius:6px}

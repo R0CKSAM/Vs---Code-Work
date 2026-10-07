@@ -164,3 +164,8 @@ th,td{padding:9px 12px}
 @media(max-width:560px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.metrics strong{font-size:20px}#shell>header{padding:8px;gap:8px}.revenue-header{overflow:visible}.revenue-header .filters{gap:8px}.revenue-header #channelPicker{width:180px}}
 @media(prefers-reduced-motion:reduce){#accountMenu .account-panel{animation:none}}
 @media(max-width:760px){.channel-analysis{grid-template-columns:minmax(0,1fr)}}
+.bounded-picker{min-width:0}
+.bounded-menu{box-sizing:border-box;z-index:1100;overflow:auto;overscroll-behavior:contain;white-space:normal;max-width:calc(100vw - 24px)}
+.comparison-menu{padding:12px;background:#fff;color:#17385d;border:1px solid #bbcee5;border-radius:8px;box-shadow:0 8px 24px #17385d24}
+.comparison-menu input[type=search]{width:100%;height:40px;min-height:40px;padding:10px}
+.comparison-menu .comparison-channel-options{padding:4px 0}

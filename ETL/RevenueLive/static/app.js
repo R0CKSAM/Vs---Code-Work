@@ -10,17 +10,31 @@ const headerRow=document.createElement('div');headerRow.className='header-row';
 headerRow.append(topHeader.querySelector('.wordmark'),document.querySelector('#shell > nav'),topHeader.querySelector('.identity'));
 topHeader.prepend(headerRow);
 $('revenueHeader').append($('export'));
-function positionChannelMenu(){
-  if(!$('channelPicker').open)return;
-  const rect=$('channelPicker').getBoundingClientRect(),menu=$('channelPicker').querySelector('.channel-menu');
-  const width=Math.min(Math.max(rect.width,312),innerWidth-24);
-  menu.style.width=width+'px';menu.style.left=Math.max(12,Math.min(rect.left,innerWidth-width-12))+'px';
-  menu.style.top=Math.min(rect.bottom+5,innerHeight-100)+'px';menu.style.maxHeight=Math.max(80,innerHeight-rect.bottom-17)+'px';
+function boundedPicker(picker,menu){
+  function place(){
+    if(!picker.open)return;
+    const anchor=picker.querySelector('summary').getBoundingClientRect();
+    const dialog=picker.closest('dialog'),bounds=dialog?.getBoundingClientRect();
+    const left=Math.max(12,bounds?bounds.left+12:12),right=Math.min(innerWidth-12,bounds?bounds.right-12:innerWidth-12);
+    const top=Math.max(12,bounds?bounds.top+12:12),bottom=Math.min(innerHeight-12,bounds?bounds.bottom-12:innerHeight-12);
+    const width=Math.min(Math.max(anchor.width,300),right-left);
+    menu.style.position='fixed';menu.style.width=width+'px';menu.style.left=Math.max(left,Math.min(anchor.left,right-width))+'px';menu.style.right='auto';
+    const below=bottom-anchor.bottom-6,above=anchor.top-top-6,up=below<220&&above>below;
+    menu.style.maxHeight=Math.max(40,up?above:below)+'px';
+    menu.style.top=(up?Math.max(top,anchor.top-6-menu.getBoundingClientRect().height):Math.max(top,anchor.bottom+6))+'px';
+    menu.style.bottom='auto';
+  }
+  picker.classList.add('bounded-picker');menu.classList.add('bounded-menu');
+  picker.addEventListener('toggle',()=>{if(picker.open){document.querySelectorAll('.bounded-picker[open]').forEach(other=>{if(other!==picker)other.open=false;});place();}});
+  document.addEventListener('click',event=>{if(picker.open&&!picker.contains(event.target))picker.open=false;});
+  picker.addEventListener('keydown',event=>{if(event.key==='Escape'&&picker.open){event.preventDefault();event.stopPropagation();picker.open=false;picker.querySelector('summary').focus();}});
+  window.addEventListener('resize',place);
+  new ResizeObserver(place).observe(menu);
+  document.addEventListener('scroll',event=>{if(!menu.contains(event.target))place();},true);
+  return place;
 }
-$('channelPicker').addEventListener('toggle',positionChannelMenu);
+boundedPicker($('channelPicker'),$('channelPicker').querySelector('.channel-menu'));
 $('channelPicker').addEventListener('toggle',()=>{if($('channelPicker').open)rangePicker.open=false;});
-window.addEventListener('resize',positionChannelMenu);
-document.addEventListener('scroll',positionChannelMenu,true);
 document.querySelector('[data-view="dashboard"]').textContent='Dashboard';
 const updateFilterVisibility=()=>{$('revenueHeader').hidden=$('dashboard').hidden;};
 for(const view of [$('dashboard')])new MutationObserver(updateFilterVisibility).observe(view,{attributes:true,attributeFilter:['hidden']});
@@ -89,6 +103,7 @@ const calendarStyle=document.createElement('link');calendarStyle.rel='stylesheet
 const calendarScript=document.createElement('script');calendarScript.src='/static/flatpickr.min.js';calendarScript.onload=()=>{calendar=flatpickr(calendarInput,{inline:true,mode:'multiple',dateFormat:'Y-m-d',disableMobile:true,enable:[],onChange:autoRange});syncCalendar();};document.head.append(calendarScript);
 rangePicker.addEventListener('toggle',()=>{if(rangePicker.open){$('channelPicker').open=false;syncCalendar();}});
 rangePicker.append(rangePanel);$('filters').prepend(rangePicker);$('revenueHeader').append($('export'));
+boundedPicker(rangePicker,rangePanel);
 function icon(name,className=''){const tile=document.createElement('span');tile.className=className;tile.setAttribute('aria-hidden','true');const glyph=document.createElement('i');glyph.dataset.lucide=name;tile.append(glyph);return tile;}
 const drawerHeading=document.createElement('div');drawerHeading.className='drawer-heading';
 const drawerTitle=document.createElement('strong');drawerTitle.textContent='Menu';
