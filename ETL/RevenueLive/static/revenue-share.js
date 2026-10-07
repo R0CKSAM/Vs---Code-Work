@@ -97,7 +97,13 @@ window.RevenueShare=(()=>{
     }
   }
   const cash=value=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:1,minimumFractionDigits:1}).format(value/100);
-  const percent=(value,total)=>total>0?Math.round(value/total*100)+'%':'0%';
+  const percent=(value,total)=>{
+    if(!(total>0)||!(value>0))return '0%';
+    const share=value/total*100;
+    if(share<0.1)return '<0.1%';
+    if(share>99.9&&value<total)return '>99.9%';
+    return new Intl.NumberFormat('en-IN',{maximumFractionDigits:1}).format(share)+'%';
+  };
   const trigger=document.createElement('button');trigger.type='button';trigger.id='revenueShare';trigger.setAttribute('aria-expanded','false');trigger.setAttribute('aria-controls','revenueShareExpanded');trigger.setAttribute('aria-label','Revenue share: expand all channels');
   trigger.innerHTML='<span class="share-title">Revenue share <span aria-hidden="true">&#8599;</span></span><span class="share-content"><span class="share-ring"><canvas id="summaryShareCanvas" aria-hidden="true"></canvas><span class="share-centre"><strong id="shareSum"></strong><span>Total revenue</span></span></span><span id="summaryShareLegend"></span></span><span id="shareMessage"></span>';
   document.querySelector('#dashboard .metrics').after(trigger);
