@@ -1,6 +1,7 @@
 .channel-merge-panel{margin-top:24px;border-top:1px solid #c9d9ec;padding-top:20px}
-#mergeDialog{width:min(1000px,94vw);max-height:90vh;border:1px solid #c9d9ec;border-radius:8px;padding:24px;color:#102e50;background:#f8fbff}
-#mergeDialog form{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;min-width:0}
+#mergeDialog{width:min(1280px,96vw);min-height:min(680px,92dvh);max-height:92dvh;border:1px solid #c9d9ec;border-radius:8px;padding:28px;color:#102e50;background:#f8fbff}
+#mergeDialog form{display:flex;flex-direction:column;gap:20px;min-width:0;min-height:min(622px,calc(92dvh - 58px))}
+#mergeDialog form>h2{font-size:22px;margin:0 0 4px}
 #mergeDialog form>*{min-width:0;overflow-wrap:anywhere}
 #mergeDialog input:not([type=checkbox]){width:100%;min-width:0;box-sizing:border-box}
 .merge-pickers{display:grid;grid-template-columns:1fr 1fr;gap:16px}
@@ -18,14 +19,14 @@
 #mergeDialog .merge-options{max-height:220px;overflow:auto;overscroll-behavior:contain}
 #mergeTargets button{display:block;width:100%;text-align:left;border:0;border-radius:4px;background:transparent;overflow-wrap:anywhere;white-space:normal}
 #mergeTargets button:hover,#mergeTargets button[aria-pressed=true]{background:#e8f1ff;color:#1257b3}
-#mergeDialog .actions{margin:0}
+#mergeDialog .actions{margin:auto 0 0;padding-top:12px}
 #mergeDialog #mergeSelection{max-height:100px;overflow:auto;margin:0;font-size:13px}
 #mergeDialog .form-error:empty{display:none}
-#mergeDialog #mergePreview{justify-self:start}
+#mergeDialog #mergePreview{align-self:flex-start}
 #mergeDialog .merge-picker-done{position:sticky;bottom:0;display:block;margin-top:8px;width:100%;background:#e8f1ff;color:#1257b3;border-color:#bbcee5}
 .merge-choice span{min-width:0;overflow-wrap:anywhere}
 #mergeSelection,#mergeSummary{font-weight:600;line-height:1.6}
-.merge-records{max-height:300px;overflow:auto;border:1px solid #c9d9ec;border-radius:6px}
+.merge-records{max-height:380px;overflow:auto;border:1px solid #c9d9ec;border-radius:6px}
 .merge-records table{min-width:750px;width:100%}
 .merge-records th,.merge-records td{padding:8px;text-align:right}
 .merge-records th{color:#173753;background:#e8f1fb}
@@ -33,4 +34,34 @@
 .merge-link{display:flex;gap:16px;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #c9d9ec}
 .merge-link span{min-width:0;overflow-wrap:anywhere}
 #mergeWarning{font-weight:700}
-@media(max-width:600px){.merge-pickers{grid-template-columns:1fr}#mergeDialog{padding:16px}.merge-link{align-items:flex-start;flex-direction:column}}
+@media(max-width:600px){.merge-pickers{grid-template-columns:1fr}#mergeDialog{padding:16px;min-height:0}#mergeDialog form{min-height:0;gap:16px}.merge-link{align-items:flex-start;flex-direction:column}}
+
+/* Keep search/actions outside the only scrolling region in a channel picker. */
+.summary-phase .bounded-menu.list-menu{
+  display:flex;flex-direction:column;gap:10px;overflow:hidden;
+  padding:12px;isolation:isolate;border:1px solid #b8cdeb;border-radius:8px;
+  background:linear-gradient(150deg,#fff 45%,#f2f6ff);color:#17385d;
+  box-shadow:0 10px 26px #17385d24;
+}
+.summary-phase .bounded-menu.list-menu> :not(.picker-scroll){flex-shrink:0;margin:0}
+.summary-phase .bounded-menu.list-menu .picker-scroll{
+  flex:0 1 auto;min-height:0;max-height:280px;overflow-x:hidden;overflow-y:auto;
+  overscroll-behavior:contain;scrollbar-gutter:stable;scrollbar-width:thin;
+  scrollbar-color:#95adcc #eef3fa;padding:4px;margin:0;
+  border:1px solid #dce6f3;border-radius:6px;background:#fff;
+}
+.summary-phase .bounded-menu.list-menu .picker-scroll label{
+  display:flex;flex-direction:row;align-items:flex-start;gap:10px;min-height:38px;
+  width:100%;padding:9px 8px;margin:0 0 2px;line-height:20px;
+  font-size:13px;font-weight:500;text-align:left;overflow-wrap:anywhere;
+}
+.summary-phase .bounded-menu.list-menu .picker-scroll input[type=checkbox]{
+  width:16px;height:16px;min-height:16px;flex:0 0 16px;margin:2px 0 0;padding:0;accent-color:#155bb3;
+}
+.summary-phase .bounded-menu.list-menu .picker-scroll label:has(input:checked){background:#edf4ff;border-radius:4px}
+.summary-phase .bounded-menu.list-menu .picker-scroll label:hover{background:#e8f1ff}
+.summary-phase .bounded-menu.list-menu .picker-scroll span{min-width:0;white-space:normal;overflow-wrap:anywhere}
+.summary-phase .bounded-menu.list-menu input[type=search]{min-width:0;width:100%;height:40px;min-height:40px;padding:8px 10px;font-size:13px;border:1px solid #b8cdeb;border-radius:6px;background:#fff;color:#17385d}
+.summary-phase .bounded-menu.list-menu .picker-actions{display:flex;gap:8px}
+.summary-phase .bounded-menu.list-menu .picker-actions button{flex:1;min-width:0;height:34px;min-height:34px;padding:6px 10px;font-size:12px;background:#edf4ff;border-color:#c7d9ef;color:#204d83;box-shadow:none}
+#mergeDialog .list-menu .merge-picker-done{position:static;margin:0;min-height:34px;height:34px;padding:6px 10px}

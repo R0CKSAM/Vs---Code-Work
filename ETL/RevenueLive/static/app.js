@@ -11,17 +11,27 @@ headerRow.append(topHeader.querySelector('.wordmark'),document.querySelector('#s
 topHeader.prepend(headerRow);
 $('revenueHeader').append($('export'));
 function boundedPicker(picker,menu){
+  const list=menu.querySelector('#channelOptions,.comparison-channel-options,.merge-options');
+  if(list){menu.classList.add('list-menu');list.classList.add('picker-scroll');}
   function place(){
     if(!picker.open)return;
     const anchor=picker.querySelector('summary').getBoundingClientRect();
     const dialog=picker.closest('dialog'),bounds=dialog?.getBoundingClientRect();
-    const left=Math.max(12,bounds?bounds.left+12:12),right=Math.min(innerWidth-12,bounds?bounds.right-12:innerWidth-12);
-    const top=Math.max(12,bounds?bounds.top+12:12),bottom=Math.min(innerHeight-12,bounds?bounds.bottom-12:innerHeight-12);
+    const viewport=window.visualViewport,vx=viewport?.offsetLeft||0,vy=viewport?.offsetTop||0;
+    const vw=viewport?.width||innerWidth,vh=viewport?.height||innerHeight;
+    const left=Math.max(vx+12,bounds?bounds.left+12:0),right=Math.min(vx+vw-12,bounds?bounds.right-12:Infinity);
+    const top=Math.max(vy+12,bounds?bounds.top+12:0),bottom=Math.min(vy+vh-12,bounds?bounds.bottom-12:Infinity);
+    if(anchor.bottom<top||anchor.top>bottom||right<=left){picker.open=false;return;}
     const width=Math.min(Math.max(anchor.width,300),right-left);
     menu.style.position='fixed';menu.style.width=width+'px';menu.style.left=Math.max(left,Math.min(anchor.left,right-width))+'px';menu.style.right='auto';
     const below=bottom-anchor.bottom-6,above=anchor.top-top-6,up=below<220&&above>below;
-    menu.style.maxHeight=Math.max(40,up?above:below)+'px';
-    menu.style.top=(up?Math.max(top,anchor.top-6-menu.getBoundingClientRect().height):Math.max(top,anchor.bottom+6))+'px';
+    const available=Math.max(0,up?above:below);
+    // In a short dialog or above a phone keyboard, use the bounded panel area.
+    const overlay=available<200;
+    menu.style.maxHeight=Math.min(list?420:600,overlay?bottom-top:available)+'px';
+    const height=menu.getBoundingClientRect().height;
+    const desired=overlay?top:up?anchor.top-6-height:anchor.bottom+6;
+    menu.style.top=Math.max(top,Math.min(desired,bottom-height))+'px';
     menu.style.bottom='auto';
   }
   picker.classList.add('bounded-picker');menu.classList.add('bounded-menu');
@@ -29,6 +39,8 @@ function boundedPicker(picker,menu){
   document.addEventListener('click',event=>{if(picker.open&&!picker.contains(event.target))picker.open=false;});
   picker.addEventListener('keydown',event=>{if(event.key==='Escape'&&picker.open){event.preventDefault();event.stopPropagation();picker.open=false;picker.querySelector('summary').focus();}});
   window.addEventListener('resize',place);
+  window.visualViewport?.addEventListener('resize',place);
+  window.visualViewport?.addEventListener('scroll',place);
   new ResizeObserver(place).observe(menu);
   document.addEventListener('scroll',event=>{if(!menu.contains(event.target))place();},true);
   return place;

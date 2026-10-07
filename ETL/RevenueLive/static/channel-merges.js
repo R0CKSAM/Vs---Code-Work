@@ -18,6 +18,8 @@ window.ChannelMerges=(()=>{
   function reset(){ticket++;plan=null;$('mergeReview').hidden=true;$('mergeConfirm').checked=false;$('mergeSave').disabled=true;dialog.querySelector('.form-error').textContent='';}
   function candidates(){const search=$('mergeSearch').value.trim().toLowerCase();return directoryChannels.filter(c=>!c.archived&&String(c.id)!==$('mergeTarget').value&&!links.some(r=>r.source_id===c.id||r.target_id===c.id)&&c.name.toLowerCase().includes(search));}
   function options(){
+    const sourceList=$('mergeSources'),scroll=sourceList.scrollTop;
+    const focused=sourceList.contains(document.activeElement)?document.activeElement.value:null;
     const target=$('mergeTarget'),previous=target.value;
     const query=$('mergeTargetSearch').value.trim().toLowerCase();
     $('mergeTargets').innerHTML=directoryChannels.filter(c=>!c.archived&&!links.some(r=>r.source_id===c.id)&&c.name.toLowerCase().includes(query)).map(c=>`<button type="button" data-target="${c.id}" aria-pressed="${String(c.id)===previous}">${esc(c.name)}</button>`).join('')||'<p class="muted">No matching channels.</p>';
@@ -27,11 +29,13 @@ window.ChannelMerges=(()=>{
     $('mergeTargetSummary').textContent=main?.name||'Choose main channel';
     $('mergeSourceSummary').textContent=names.length?`${names.length} channels selected`:'Choose channels';
     $('mergeSelection').textContent=`Main channel: ${main?.name||'Not selected'} | ${names.length} selected${names.length?': '+names.join(', '):''}`;
+    if(focused!==null)[...sourceList.querySelectorAll('input')].find(input=>input.value===focused)?.focus({preventScroll:true});
+    sourceList.scrollTop=scroll;
   }
   $('mergeOpen').onclick=()=>{reset();closePickers();selected.clear();$('mergeTargetSearch').value='';$('mergeTarget').value='';$('mergeSearch').value='';options();dialog.showModal();};
   $('mergeCancel').onclick=()=>{reset();dialog.close();};
   dialog.addEventListener('cancel',reset);
-  $('mergeSearch').oninput=options;
+  $('mergeSearch').oninput=()=>{$('mergeSources').scrollTop=0;options();};
   $('mergeTargetSearch').oninput=options;
   $('mergeTargets').onclick=event=>{const button=event.target.closest('[data-target]');if(!button)return;$('mergeTarget').value=button.dataset.target;$('mergeTarget').dispatchEvent(new Event('change'));$('mergeTargetPicker').open=false;$('mergeTargetSummary').focus();};
   $('mergeTarget').onchange=()=>{selected.delete(Number($('mergeTarget').value));reset();options();};

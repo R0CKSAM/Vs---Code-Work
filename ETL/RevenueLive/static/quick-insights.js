@@ -7,6 +7,22 @@ window.QuickInsights=(()=>{
   const pct=n=>Math.abs(n)<0.1&&n!==0?(n<0?'>-0.1':'<0.1'):n.toFixed(1);
   const total=rows=>rows.reduce((sum,row)=>{for(const key of Object.keys(metrics))sum[key]+=row[key];return sum;},{total:0,ad:0,other:0,views:0,impressions:0});
   function group(rows,key){const map=new Map();for(const row of rows){if(!map.has(row[key]))map.set(row[key],[]);map.get(row[key]).push(row);}return [...map].map(([name,values])=>({name,...total(values)}));}
+  function evidenceParts(text,names){
+    const ranges=[];
+    const add=(start,end)=>{if(!ranges.some(r=>start<r.end&&end>r.start))ranges.push({start,end});};
+    for(const name of [...new Set(names)].filter(Boolean).sort((a,b)=>b.length-a.length)){
+      let start=text.indexOf(name);
+      while(start!==-1){add(start,start+name.length);start=text.indexOf(name,start+name.length);}
+    }
+    for(const match of text.matchAll(/\d{4}-\d{2}-\d{2}|[+\-]?\u20b9?\d+(?:,\d+)*(?:\.\d+)?%?/g))add(match.index,match.index+match[0].length);
+    const parts=[];let offset=0;
+    for(const {start,end} of ranges.sort((a,b)=>a.start-b.start)){
+      if(start>offset)parts.push({text:text.slice(offset,start),emphasis:false});
+      parts.push({text:text.slice(start,end),emphasis:true});offset=end;
+    }
+    if(offset<text.length)parts.push({text:text.slice(offset),emphasis:false});
+    return parts;
+  }
   function build(data,requested,previous=null,status='pending'){
     const params=new URLSearchParams(requested),rows=data.rows||[],out=[],comparisonVisuals={};
     const add=(id,title,evidence,action,priority=20,kind='neutral')=>out.push({id,title,evidence,action,priority,kind});
@@ -104,14 +120,40 @@ window.QuickInsights=(()=>{
       else if(item.id==='peak'){const maximum=Math.max(...daily.map(row=>row.total)),average=sums.total/daily.length;result.title='Highest-earning day';result.icon='calendar-days';result.tone='peak';result.value=cash(maximum);result.context='Selected-period daily revenue';result.channel=daily.filter(row=>row.total===maximum).map(row=>row.name).join(', ');result.badge='+'+pct((maximum-average)/average*100)+'%';result.badgeLabel='above the range\'s daily average';result.series=[...daily].sort((a,b)=>a.name.localeCompare(b.name)).map(row=>({name:row.name,value:row.total}));}
       return result;
     }
-    return out.map(item=>({...item,kpi:presentation(item),visual:comparisonVisuals[item.id]||visuals[item.id],impact:comparisonVisuals[item.id]?.impact||0})).sort((a,b)=>b.priority-a.priority||b.impact-a.impact||a.id.localeCompare(b.id));
+    const highlight=(id,title,evidence,value,label)=>{
+      add(id,title,evidence,'',55,'positive');visuals[id]={value,label};
+    };
+    const scope=' in the selected date range.';
+    if(sums.views>0)highlight('recorded-views','Viewing activity',number(sums.views)+' views recorded across '+number(channels.filter(row=>row.views>0).length)+' channel(s)'+scope,number(sums.views),'Recorded views');
+    if(sums.impressions>0)highlight('recorded-impressions','Ad delivery',number(sums.impressions)+' ad impressions recorded'+scope,number(sums.impressions),'Recorded ad impressions');
+    for(const [key,label] of [['views','views'],['impressions','ad impressions']]){
+      if(channels.length<2||sums[key]<=0||rows.some(row=>row[key]<0))continue;
+      const maximum=Math.max(...channels.map(row=>row[key])),leaders=channels.filter(row=>row[key]===maximum);
+      highlight('leader-'+key,leaders.length>1?'Leading '+label+' contributors':'Leading '+label+' contributor',leaders.map(row=>row.name).join(', ')+' recorded '+number(maximum)+' '+label+(leaders.length>1?' each':'')+', representing '+pct(maximum/sums[key]*100)+'%'+(leaders.length>1?' each':'')+' of reported '+label+' in this selection.',number(maximum),'Reported '+label);
+    }
+    if(nonnegative&&sums.total>0){
+      highlight('recorded-revenue','Revenue highlight',cash(sums.total)+' recorded revenue'+scope,cash(sums.total),'Recorded revenue');
+      for(const [key,label] of [['ad','Ad revenue'],['other','Sponsorship / others']])if(sums[key]>0)highlight('contribution-'+key,label+' contribution',cash(sums[key])+', contributing '+pct(sums[key]/sums.total*100)+'% of reported revenue in this selection.',cash(sums[key]),label);
+      if(channels.length>1){const leaders=ranked.filter(row=>row.total===ranked[0].total);highlight('reported-leader','Revenue contributors',leaders.map(row=>row.name).join(', ')+' contributed '+cash(ranked[0].total)+(leaders.length>1?' each':'')+' to reported revenue in this selection.',cash(ranked[0].total),'Leading recorded revenue');}
+      if(channels.length>3){const first=ranked.slice(0,3),amount=first.reduce((sum,row)=>sum+row.total,0);if(first[2].total>0&&first[2].total!==ranked[3].total)highlight('top-three','Top three revenue contributors',first.map(row=>row.name).join(', ')+' together contributed '+cash(amount)+' ('+pct(amount/sums.total*100)+'% of reported revenue in this selection).',cash(amount),'Top three recorded revenue');}
+    }
+    if(complete&&daily.length>1&&sums.views>0&&rows.every(row=>row.views>=0)){
+      const maximum=Math.max(...daily.map(row=>row.views)),best=daily.filter(row=>row.views===maximum);
+      if(best.length<daily.length)highlight('peak-views',best.length>1?'Strongest viewing days':'Strongest viewing day',best.map(row=>row.name).join(', ')+' recorded '+number(maximum)+' views'+(best.length>1?' each':'')+' within the selected date range.',number(maximum),'Peak daily views');
+    }
+    // Consumer highlights use observed facts; comparisons still require complete periods.
+    const allowed=new Set(['leader','peak','steady-days','mix','yield','ad-yield','exposure','gainer']);
+    return out.filter(item=>{
+      if(item.kind==='positive')return true;
+      if(item.id==='ad-yield'&&sums.ad<=0||item.id==='exposure'&&sums.impressions<=0)return false;
+      if(item.id.startsWith('change-')){const key=item.id.slice(7);return comparisonComplete&&sums[key]>0&&sums[key]>total(previous.rows)[key];}
+      if(item.id==='yield-change')return comparisonComplete&&before?.views>0&&sums.views>0&&sums.total/sums.views>before.total/before.views;
+      return allowed.has(item.id)&&item.kind!=='warning';
+    }).map(item=>({...item,parts:evidenceParts(item.evidence,channels.map(channel=>channel.name)),kpi:presentation(item),visual:comparisonVisuals[item.id]||visuals[item.id],impact:comparisonVisuals[item.id]?.impact||0})).sort((a,b)=>b.priority-a.priority||b.impact-a.impact||a.id.localeCompare(b.id));
   }
   function curate(items){
     const ids=new Set(items.map(item=>item.id));
-    const filtered=items.filter(item=>item.id!=='comparison'&&!(item.id==='leader'&&(ids.has('concentration')||ids.has('pair-gap')))&&!(item.id==='yield'&&ids.has('yield-change')));
-    const important=filtered.filter(item=>item.priority>=75);
-    for(const item of filtered)if(important.length<4&&!important.includes(item))important.push(item);
-    return important.sort((a,b)=>b.priority-a.priority||(b.impact||0)-(a.impact||0)||a.id.localeCompare(b.id));
+    return items.filter(item=>!(item.id==='reported-leader'&&ids.has('leader'))&&!(item.id==='yield'&&ids.has('yield-change')));
   }
   let insights=[],stripInsight=null,lastStripId=null;
   function paintStrip(){
@@ -121,7 +163,11 @@ window.QuickInsights=(()=>{
     if(!stripInsight){delete strip.dataset.insight;return;}
     strip.dataset.insight=stripInsight.id;
     const title=document.createElement('strong');title.textContent=stripInsight.title+'. ';
-    text.append(title,document.createTextNode(stripInsight.evidence+' '+stripInsight.action));
+    text.append(title);
+    for(const part of stripInsight.parts){
+      if(!part.emphasis){text.append(document.createTextNode(part.text));continue;}
+      const highlight=document.createElement('strong');highlight.className='insight-highlight';highlight.textContent=part.text;text.append(highlight);
+    }
   }
   function selectStrip(status){
     if(status==='pending'){stripInsight=null;paintStrip();return;}

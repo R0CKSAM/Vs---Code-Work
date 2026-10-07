@@ -537,6 +537,7 @@ body.summary-phase:has(#shell:not([hidden])){background:linear-gradient(180deg,t
 #performanceInsight h2{margin:0;flex:0 0 auto;font-size:18px;color:#fff;display:flex;align-items:center;gap:12px;font-weight:800}
 #performanceInsight h2 svg{width:28px;height:28px;color:#b7ddff;flex:none;filter:drop-shadow(0 2px 5px #10275d50)}
 #performanceInsight p strong{font-weight:800}
+#performanceInsight p .insight-highlight{font-weight:800;color:#fff;font-variant-numeric:tabular-nums}
 .header-wave-art{position:absolute;left:24%;top:0;width:430px;height:72px;pointer-events:none;overflow:hidden;opacity:.9}
 .header-wave-art::before{content:"";position:absolute;left:0;top:-38px;width:430px;height:125px;border-radius:50%;border-top:1px solid #4c87ff57;transform:rotate(-7deg);box-shadow:0 -10px 0 -9px #4683ff3d,0 -20px 0 -19px #4683ff2e,0 -30px 0 -29px #4683ff21}
 .summary-phase #shell>header>#accountMenu,.summary-phase #shell>header>#revenueHeader{position:relative;z-index:1}
@@ -596,6 +597,25 @@ body.summary-phase:has(#shell:not([hidden])){background:linear-gradient(180deg,t
 #viewsTree .views-tree-tile:nth-child(3n+2){--distribution-tint:#f1eef8}
 #viewsTree .views-tree-tile:nth-child(3n){--distribution-tint:#eef5f3}
 #viewsTree .views-tree-tile:hover{border-color:#8daecc;box-shadow:0 3px 10px #173c7014}
+#viewsTree .views-tree-tile{
+  cursor:pointer;position:relative;transform-origin:center;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+@media(hover:hover) and (pointer:fine){
+  #viewsTree .views-tree-tile:hover{
+    transform:scale(1.018);border-color:#78a9e6;z-index:1;
+    box-shadow:0 0 18px #579af038,0 5px 14px #173c701c,inset 0 0 0 1px #a3c6f0;
+  }
+}
+#viewsTree .views-tree-tile:focus-visible{
+  outline:3px solid #1769d5;outline-offset:3px;border-color:#4f8edb;
+  box-shadow:0 6px 16px #173c7026;
+}
+#viewsTree .views-tree-tile:active{transform:scale(1);box-shadow:inset 0 1px 5px #173c7026}
+@media(prefers-reduced-motion:reduce){
+  #viewsTree .views-tree-tile{transition:none}
+  #viewsTree .views-tree-tile:hover{transform:none}
+}
 #viewsTree .views-tree-tile>.tile-channel-icon.channel-brand{width:40px;height:34px;border:1px solid #dfe6ef;background:#fff;box-shadow:none;border-radius:6px}
 #viewsTree .tile-share{color:#405873;font-size:16px;font-weight:700;margin-top:4px}
 #viewsTree .views-tree-tile{display:grid;grid-template-columns:minmax(0,1fr) 40px;align-content:start;align-items:start;min-height:0;padding:12px;gap:6px 10px}
@@ -624,6 +644,10 @@ body.summary-phase:has(#shell:not([hidden])){background:linear-gradient(180deg,t
 .channel-detail-totals dt{font-size:13px;color:#52677c;font-weight:600}
 .channel-detail-totals dd{font-size:22px;font-weight:800;margin:6px 0 0;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
 .channel-detail-table{overflow:auto}
+/* Modal content scrolls independently; keep the page position and width stable. */
+html{scrollbar-gutter:stable}
+html:has(dialog:modal),body:has(dialog:modal){overflow:hidden;overscroll-behavior:none}
+dialog:modal{overscroll-behavior:contain}
 .channel-detail-table table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
 .channel-detail-table :is(th,td){background:#fff;color:#183452;padding:10px;border-bottom:1px solid #e3edf7;text-align:right;white-space:nowrap;font-size:14px}
 .channel-detail-table thead th{background:#edf5ff;font-size:12px}
@@ -665,7 +689,6 @@ td:nth-child(5) .channel-value-track>span{background:#a881db}
 .summary-phase #quickInsights .insight-item{background:linear-gradient(145deg,#fcfdff 35%,var(--kpi-tint))}
 .summary-phase #channelMetrics tbody :is(th,td){background:linear-gradient(135deg,#fafcff,#f0f5fc)}
 .summary-phase #channelMetrics tbody td:last-child{background:linear-gradient(120deg,#eaf4ff,#eeecfb)}
-.summary-phase #channelMetrics tbody tr:hover :is(th,td){background:linear-gradient(135deg,#eef5ff,#e5edfb)}
 .summary-phase .channel-detail-table :is(th,td){background:linear-gradient(135deg,#fbfdff,#f1f5fc)}
 .summary-phase .channel-detail-table thead th{background:linear-gradient(110deg,#e8f1fd,#eeedf8)}
 .summary-phase :is(button,input:not([type=checkbox]):not([type=radio]),select,textarea,dialog,.table-wrap,.range-panel,.channel-menu,.account-panel,.overview-metric-selector){border-radius:8px}
@@ -698,8 +721,7 @@ td:nth-child(5) .channel-value-track>span{background:#a881db}
 #channelMetrics tbody th{border-left:1px solid #e3edf7;border-radius:6px 0 0 6px;font-size:16px;font-weight:700}
 #channelMetrics tbody td{font-size:18px;font-weight:700;line-height:1.35;white-space:nowrap}
 #channelMetrics tbody td:last-child{border-right:1px solid #dbe8f7;border-radius:0 6px 6px 0;background:#edf5ff;color:#123b72;font-size:20px;font-weight:800}
-#channelMetrics tbody tr:hover :is(th,td){background:#f1f7fe}
-#channelMetrics tbody tr:hover td:last-child{background:#e3efff}
+#channelMetrics tbody tr,#channelMetrics tbody tr:hover{background:transparent;cursor:default}
 #channelMetrics .channel-rank{min-width:24px;height:28px;background:#edf3fa;color:#486382;font-size:13px}
 #channelMetrics tr:nth-child(1) .channel-rank{background:#ffedbb;color:#81500e}
 #channelMetrics tr:nth-child(2) .channel-rank{background:#dfeaf8;color:#355d8f}
