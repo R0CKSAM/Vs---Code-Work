@@ -1,0 +1,89 @@
+@echo off
+REM FanCode Monitor – Phase 0 Setup and Test (Windows CMD batch fallback)
+REM Run from the fancode_monitor/ directory:
+REM   cd d:\MFA\fancode\fancode_monitor
+REM   setup_and_test_cmd.bat
+
+setlocal EnableDelayedExpansion
+
+echo.
+echo ============================================================
+echo   FanCode Monitor - Phase 0 Setup and Test Runner
+echo ============================================================
+echo.
+
+echo [1/6] Checking Python version...
+python --version
+if errorlevel 1 (
+    echo ERROR: Python not found. Install Python 3.11+ and add to PATH.
+    exit /b 1
+)
+
+if not exist ".venv" (
+    echo.
+    echo [2/6] Creating virtual environment .venv ...
+    python -m venv .venv
+) else (
+    echo.
+    echo [2/6] Virtual environment .venv already exists.
+)
+
+echo.
+echo [3/6] Activating virtual environment...
+call .venv\Scripts\activate.bat
+
+echo.
+echo [4/6] Installing requirements...
+python -m pip install --upgrade pip --quiet
+python -m pip install -r requirements.txt
+if errorlevel 1 (
+    echo ERROR: pip install failed.
+    exit /b 1
+)
+
+echo.
+echo [5/6] Installing Playwright Chromium browser...
+python -m playwright install chromium
+if errorlevel 1 (
+    echo ERROR: Playwright browser install failed.
+    exit /b 1
+)
+
+if not exist ".env" (
+    echo.
+    echo Copying .env.example to .env ...
+    copy .env.example .env
+)
+
+echo.
+echo ============================================================
+echo   Running Unit Tests
+echo ============================================================
+python -m pytest tests\unit -v
+set UNIT_EXIT=%errorlevel%
+
+echo.
+echo ============================================================
+echo   Running E2E Tests (headless)
+echo ============================================================
+python -m pytest tests\e2e -v
+set E2E_EXIT=%errorlevel%
+
+echo.
+echo ============================================================
+echo   Summary
+echo ============================================================
+if %UNIT_EXIT%==0 (
+    echo   PASSED: Unit tests
+) else (
+    echo   FAILED: Unit tests
+)
+if %E2E_EXIT%==0 (
+    echo   PASSED: E2E tests
+) else (
+    echo   FAILED: E2E tests
+)
+echo.
+
+if %UNIT_EXIT%==0 if %E2E_EXIT%==0 exit /b 0
+exit /b 1
