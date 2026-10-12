@@ -8555,7 +8555,10 @@ bootstrapDashboard();
 
 def main() -> None:
     """Build source marts, write lazy payload sidecars, and publish the dashboard."""
+    global PARSED_DIR, OUTPUT_DIR
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--parsed-dir", type=Path, default=PARSED_DIR)
+    parser.add_argument("--output-dir", type=Path, default=OUTPUT_DIR)
     parser.add_argument(
         "--input",
         type=Path,
@@ -8575,6 +8578,8 @@ def main() -> None:
         help="Print per-stage cache decisions and elapsed times.",
     )
     args = parser.parse_args()
+    PARSED_DIR = args.parsed_dir.resolve()
+    OUTPUT_DIR = args.output_dir.resolve()
     configure_logging(args.verbose)
     pipeline_started = perf_counter()
     input_paths = args.input or sorted(

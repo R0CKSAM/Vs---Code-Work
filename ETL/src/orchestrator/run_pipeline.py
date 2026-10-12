@@ -17,6 +17,11 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Iterable, Optional
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "runtime"))
+from etl_runtime import configure_windows_platform, worker_environment
+
+configure_windows_platform()
+
 import pyarrow.parquet as pq
 
 
@@ -651,7 +656,7 @@ def run(
 ) -> bool:
     attempt = 1
     current_command = list(command)
-    current_env = dict(env)
+    current_env = worker_environment(env)
     while True:
         nice = " ".join(f'"{c}"' if " " in c else c for c in current_command)
         print(f"\n[run] {nice}")
@@ -716,6 +721,7 @@ def run(
             for line in process.stdout:
                 _print_subprocess_line(line)
                 log.write(line)
+                log.flush()
             return_code = process.wait()
             finished = datetime.now()
             log.write(f"\nfinished_at={finished.isoformat(timespec='seconds')}\n")

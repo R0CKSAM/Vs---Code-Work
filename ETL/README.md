@@ -98,6 +98,15 @@ dates build their required daily marts but defer the top-level watch, overview,
 audience, and master dashboards; the newest backlog date performs the complete
 dashboard refresh once.
 
+Windows Python workers use a process-local platform-information fallback to
+avoid Python 3.13 WMI stalls during pandas imports. This does not stop WMI,
+change Windows security settings, or skip ETL/UA processing. The orchestrator
+passes `src/runtime` to child workers through `PYTHONPATH`; set
+`VG_ETL_DISABLE_WMI=0` to opt out after WMI is healthy. Step output is flushed
+to its log as it arrives. The local workstation venv also has a scoped
+`veto_etl_runtime.pth` bridge for children of the already-running recovery;
+new deployments use the source-controlled orchestrator instead of that file.
+
 Install or refresh the Windows task:
 
 ```powershell
