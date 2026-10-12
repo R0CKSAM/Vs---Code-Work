@@ -114,6 +114,10 @@ Put new weekly source `.xlsm` files into:
 
 - `data/`
 
+Put the matching weekly add/closed-network `.xlsx` file into:
+
+- `add and close data/`
+
 Example:
 
 ```text
@@ -136,7 +140,8 @@ The updater:
 4. reads required sheets from the workbook
 5. appends cleaned rows into history CSV files
 6. updates processed file tracking
-7. rebuilds the standalone dashboard
+7. checks value-to-NA changes for the four tracked channels against the weekly head-end closure workbook
+8. rebuilds the standalone dashboard
 
 ## Week Format
 
@@ -336,14 +341,15 @@ python update.py
 
 ### Weekly Update Cycle
 
-1. put new `.xlsm` file in `data/`
-2. run:
+1. put the new `.xlsm` file in `data/`
+2. put the same week's add/closed-network `.xlsx` file in `add and close data/`
+3. run:
 
 ```powershell
 python update.py
 ```
 
-3. open:
+4. open:
 
 - `output/chrome_report_dashboard.html`
 
@@ -351,6 +357,7 @@ python update.py
 
 - processed files are tracked in `processed_files.json`
 - week extraction is based on workbook filename pattern
+- explicit closure remarks suppress channel-closure alerts for the affected head-end; otherwise a tracked channel changing from a value to `NA` is reported as closed at an available head-end
 - standalone dashboard generation is fully local
 - the dashboard is intended to preserve existing UI behavior while adding automation
 - if source folder contents change but you only need to refresh output, use `python app.py`

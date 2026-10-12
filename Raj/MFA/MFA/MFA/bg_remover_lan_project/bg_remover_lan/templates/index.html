@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Background Remover</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <main class="shell">
+    <section class="hero">
+      <div class="brand">OFFICE AI TOOL</div>
+      <h1>Background Remover</h1>
+      <p>Drop one image for instant preview, or select multiple images to download everything as a ZIP.</p>
+    </section>
+
+    <section class="card">
+      <div id="dropZone" class="drop-zone" tabindex="0">
+        <input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp" multiple hidden />
+        <div class="upload-icon">↑</div>
+        <h2>Drop images here</h2>
+        <p>or click to browse</p>
+        <span>JPG, JPEG, PNG, WEBP · max {{ max_file_mb }} MB each · up to {{ max_batch }} files</span>
+      </div>
+
+      <div id="selection" class="selection hidden">
+        <div class="selection-top">
+          <strong id="fileSummary"></strong>
+          <button id="clearBtn" class="text-btn" type="button">Clear</button>
+        </div>
+        <div id="fileList" class="file-list"></div>
+        <button id="processBtn" class="primary" type="button">Remove Background</button>
+      </div>
+
+      <div id="progress" class="progress hidden">
+        <div class="spinner"></div>
+        <div>
+          <strong>Removing background…</strong>
+          <p>The first image can take longer while the AI model loads.</p>
+        </div>
+      </div>
+
+      <div id="result" class="result hidden">
+        <div id="singleResult" class="single-result hidden">
+          <div class="compare-grid">
+            <div>
+              <span class="label">Original</span>
+              <div class="preview checker"><img id="originalPreview" alt="Original preview" /></div>
+            </div>
+            <div>
+              <span class="label">Background removed</span>
+              <div class="preview checker"><img id="resultPreview" alt="Result preview" /></div>
+            </div>
+          </div>
+        </div>
+        <div class="result-actions">
+          <button id="downloadBtn" class="primary" type="button">Download PNG</button>
+          <button id="anotherBtn" class="secondary" type="button">Process More</button>
+        </div>
+      </div>
+
+      <div id="errorBox" class="error hidden"></div>
+    </section>
+
+    <footer>Runs inside your office network · AI model: {{ model_name }}</footer>
+  </main>
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -84,7 +84,9 @@ def read_distribution_details(file_path: Path, week_label: str) -> pd.DataFrame:
     drop_columns = [column for column in dataframe.columns if normalize_header(column).startswith("WEEK") and column != "Week"]
     if drop_columns:
         dataframe = dataframe.drop(columns=drop_columns)
-    dataframe = _coerce_numeric_columns(dataframe, ["Frequency/LCN No", "TV CH. No.", "Rank Within Genre"])
+    # Frequency/LCN may legitimately be alphanumeric. Preserve it verbatim;
+    # only fields that are inherently numeric should be coerced here.
+    dataframe = _coerce_numeric_columns(dataframe, ["TV CH. No.", "Rank Within Genre"])
     if "Week" in dataframe.columns:
         dataframe["Week"] = week_label
     else:

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Media Monitor — Intelligence Platform</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%230284c7' stroke-width='2'><path d='M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2'/><path d='M18 14h-8'/><path d='M15 18h-5'/><path d='M10 6h8v4h-8V6Z'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css?v=20261006_responsive_filters">
+  <script>
+    (function() {
+      try {
+        localStorage.setItem('mr_theme', 'light');
+        document.documentElement.setAttribute('data-theme', 'light');
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <!-- Dedicated Full-Screen Authentication Portal Container with 3D Glowing Waves -->
+  <div id="auth-portal" style="display:none;"></div>
+
+  <div class="app-container" id="app-container">
+    <!-- Left Sidebar — Permanently Locked for Both User & Admin -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">M</div>
+        <div class="sidebar-brand-copy">
+          <div class="brand-title">Media Monitor</div>
+        </div>
+        <button id="sidebar-close-btn" class="sidebar-close-btn" type="button" title="Hide navigation" aria-label="Hide navigation">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <!-- News Feed Primary Group -->
+        <div>
+          <div class="nav-group-title">Feed</div>
+          <ul class="nav-list">
+            <li>
+              <button class="nav-item-btn active" data-route="news">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Z"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>
+                <span>Latest News</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Analytics Group -->
+        <div>
+          <div class="nav-group-title">Analytics</div>
+          <ul class="nav-list">
+            <li>
+              <button class="nav-item-btn" data-route="analytics-overview">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                <span>Overview</span>
+              </button>
+            </li>
+            <li>
+              <button class="nav-item-btn" data-route="analytics-sources">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+                <span>Sources</span>
+              </button>
+            </li>
+            <li id="nav-item-scraper-status" style="display:none;">
+              <button class="nav-item-btn" data-route="analytics-scraper-status">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
+                <span>Scraper Status</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Monitoring Group -->
+        <div>
+          <div class="nav-group-title">Monitoring</div>
+          <ul class="nav-list">
+            <li>
+              <button class="nav-item-btn" data-route="advertisements">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+                <span>Advertisements</span>
+              </button>
+            </li>
+            <li>
+              <button class="nav-item-btn" data-route="changes">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+                <span>Changes</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Reports Group -->
+        <div>
+          <div class="nav-group-title">Reports</div>
+          <ul class="nav-list">
+            <li>
+              <button class="nav-item-btn" data-route="daily-report">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="m9 16 2 2 4-4"/></svg>
+                <span>Daily Report</span>
+              </button>
+            </li>
+            <li>
+              <button class="nav-item-btn" data-route="weekly-report">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 13h2"/><path d="M14 13h2"/><path d="M8 17h2"/><path d="M14 17h2"/></svg>
+                <span>Weekly Report</span>
+              </button>
+            </li>
+            <li>
+              <button class="nav-item-btn" data-route="custom-report">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="20" y1="21" y2="21"/><line x1="4" x2="20" y1="14" y2="14"/><line x1="4" x2="20" y1="7" y2="7"/><circle cx="8" cy="7" r="2"/><circle cx="16" cy="14" r="2"/><circle cx="10" cy="21" r="2"/></svg>
+                <span>Custom Report</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+ 
+         <!-- Newsletters / Mailer Group -->
+         <div>
+           <div class="nav-group-title">Newsletters</div>
+           <ul class="nav-list">
+             <li>
+               <button class="nav-item-btn" data-route="mailer-data" id="nav-btn-mailer">
+                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                 <span>Mailer Data</span>
+               </button>
+             </li>
+           </ul>
+         </div>
+
+        <!-- System Group -->
+        <div id="nav-group-system">
+          <div class="nav-group-title">System</div>
+          <ul class="nav-list">
+            <li>
+              <button class="nav-item-btn" data-route="settings">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+                <span>Settings</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Administration Group (Admin Only) -->
+        <div id="nav-group-admin" style="display:none;">
+          <div class="nav-group-title">Administration</div>
+          <ul class="nav-list">
+            <li>
+              <button class="nav-item-btn" data-route="users" id="nav-btn-users">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <span>User Management</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-status-box">
+          <span style="display:inline-flex;align-items:center;">
+            <span class="live-indicator"></span>
+            <span class="sidebar-footer-text">9 Sources online</span>
+          </span>
+          <span style="font-family:var(--font-mono);font-size:10.5px;" class="sidebar-footer-text">v0.2.1</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Application Column -->
+    <div class="main-wrapper">
+      <!-- Topbar Header -->
+      <header class="topbar">
+        <div class="topbar-heading">
+          <button id="sidebar-toggle-btn" class="sidebar-toggle-btn" type="button" title="Show or hide navigation" aria-label="Show or hide navigation" aria-controls="sidebar" aria-expanded="true">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+          </button>
+          <div>
+          <h1 id="topbar-title" style="font-size:15px;font-weight:650;line-height:1.2;">Latest News</h1>
+          <span id="topbar-subtitle" style="font-size:11.5px;color:var(--text-muted);"></span>
+          </div>
+        </div>
+
+        <!-- Global Search Bar / Palette Trigger -->
+        <div id="global-search-wrap" style="flex:1;max-width:440px;margin:0 24px;">
+          <button id="open-palette-btn" style="width:100%;height:36px;background:var(--bg-surface-subtle);border:1px solid var(--border-light);border-radius:var(--radius-sm);padding:0 12px;display:flex;align-items:center;justify-content:space-between;font-size:12.5px;color:var(--text-muted);cursor:pointer;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+              <span>Search news and advertisements...</span>
+            </div>
+            <span style="font-size:11px;font-family:var(--font-mono);padding:2px 5px;background:var(--bg-surface);border:1px solid var(--border-light);border-radius:var(--radius-xs);">Ctrl+K</span>
+          </button>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Refresh Sync Button -->
+          <button id="sync-data-btn" style="padding:6px 11px;border-radius:var(--radius-xs);border:1px solid var(--border-light);background:var(--bg-surface-subtle);font-size:12px;color:var(--text-main);display:inline-flex;align-items:center;gap:4px;" title="Sync live data from FastAPI">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+            <span>Sync</span>
+          </button>
+
+          <!-- Live status indicator -->
+          <div class="connection-pill">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" x2="12.01" y1="20" y2="20"/></svg>
+            <span>Live</span>
+          </div>
+
+          <!-- User Profile & Session Controls -->
+          <div id="topbar-user-section" style="display:none;align-items:center;gap:8px;padding-left:8px;border-left:1px solid var(--border-light);">
+            <div id="topbar-avatar" style="width:30px;height:30px;border-radius:var(--radius-xs);background:var(--accent-primary);color:#ffffff;font-size:11.5px;font-weight:600;display:flex;align-items:center;justify-content:center;">MR</div>
+            <div style="display:flex;flex-direction:column;max-width:160px;">
+              <span id="topbar-user-email" style="font-size:12px;font-weight:600;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">User</span>
+              <span id="topbar-user-role" style="font-size:10.5px;color:var(--text-muted);font-weight:500;">Role</span>
+            </div>
+            <button id="logout-btn" style="margin-left:4px;padding:4px 8px;border-radius:var(--radius-xs);border:1px solid var(--border-light);background:var(--bg-surface-subtle);font-size:11.5px;color:var(--text-muted);cursor:pointer;display:inline-flex;align-items:center;gap:4px;" title="Sign out of Media Reporting">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
+              <span>Logout</span>
+            </button>
+          </div>
+          <!-- Login link for unauthenticated state in topbar -->
+          <div id="topbar-login-section" style="display:none;">
+            <button id="topbar-login-btn" style="padding:6px 12px;border-radius:var(--radius-xs);border:1px solid var(--border-light);background:var(--primary);color:#fff;font-size:12px;font-weight:500;cursor:pointer;">Sign In</button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Dynamic Content Container -->
+      <main class="content-area" id="main-content">
+        <!-- Rendered by app.js -->
+      </main>
+    </div>
+  </div>
+
+  <!-- Global Slide-Over Drawer Container -->
+  <div id="drawer-container" style="display:none;"></div>
+
+  <!-- Global Command Palette Container -->
+  <div id="palette-container" style="display:none;"></div>
+
+  <script src="/static/app.js?v=20261006_responsive_filters"></script>
+</body>
+</html>

@@ -231,6 +231,50 @@
         "nbhd": 29271,
         "ots": 1066
       }
+    },
+    "1e8004d78faf3a47e3301fa41c8927790efd6947": {
+      "file_name": "Chrome Track 2.0 Wk-36, 2026 (India TV).xlsm",
+      "file_path": "D:\\Vs - Code Work\\Raj\\P2 ChromeReport\\data\\Chrome Track 2.0 Wk-36, 2026 (India TV).xlsm",
+      "week": "Wk-36'26",
+      "processed_at": "2026-09-23T13:05:13.774762+00:00",
+      "row_counts": {
+        "distribution": 84422,
+        "nbhd": 29235,
+        "ots": 1066
+      }
+    },
+    "88fae32d34c330f6488f387fe865faf06dbb8b83": {
+      "file_name": "Chrome Track 2.0 Wk-37, 2026 (India TV).xlsm",
+      "file_path": "D:\\Vs - Code Work\\Raj\\P2 ChromeReport\\data\\Chrome Track 2.0 Wk-37, 2026 (India TV).xlsm",
+      "week": "Wk-37'26",
+      "processed_at": "2026-09-23T13:05:36.360778+00:00",
+      "row_counts": {
+        "distribution": 84448,
+        "nbhd": 29244,
+        "ots": 1066
+      }
+    },
+    "781eddc4fe472ea07d6d4864578ca7e0d3dcb757": {
+      "file_name": "Chrome Track 2.0 Wk-38, 2026 (India TV).xlsm",
+      "file_path": "D:\\Vs - Code Work\\Raj\\P2 ChromeReport\\data\\Chrome Track 2.0 Wk-38, 2026 (India TV).xlsm",
+      "week": "Wk-38'26",
+      "processed_at": "2026-09-30T05:40:04.604852+00:00",
+      "row_counts": {
+        "distribution": 84448,
+        "nbhd": 29253,
+        "ots": 1066
+      }
+    },
+    "6705424464e8b03b11fff245a87a2ef9688d6358": {
+      "file_name": "Chrome Track 2.0 Wk-39, 2026 (India TV).xlsm",
+      "file_path": "D:\\Vs - Code Work\\Raj\\P2 ChromeReport\\data\\Chrome Track 2.0 Wk-39, 2026 (India TV).xlsm",
+      "week": "Wk-39'26",
+      "processed_at": "2026-10-07T06:46:14.250240+00:00",
+      "row_counts": {
+        "distribution": 84474,
+        "nbhd": 29263,
+        "ots": 1066
+      }
     }
   }
 }

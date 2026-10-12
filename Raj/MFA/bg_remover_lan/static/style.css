@@ -1,0 +1,46 @@
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #101114;
+  background: #f5f6f8;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: radial-gradient(circle at top, #ffffff 0, #f5f6f8 52%, #eef0f3 100%); }
+button, input { font: inherit; }
+.shell { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 56px 0 30px; }
+.hero { text-align: center; margin-bottom: 28px; }
+.brand { display: inline-flex; padding: 7px 11px; border-radius: 999px; background: #111; color: #fff; font-weight: 800; font-size: 11px; letter-spacing: .14em; }
+h1 { margin: 16px 0 8px; font-size: clamp(38px, 7vw, 68px); line-height: .98; letter-spacing: -.055em; }
+.hero p { max-width: 650px; margin: 0 auto; color: #666b74; font-size: 17px; line-height: 1.6; }
+.card { background: rgba(255,255,255,.92); border: 1px solid #e2e4e8; box-shadow: 0 26px 70px rgba(20,24,32,.10); border-radius: 28px; padding: 24px; }
+.drop-zone { min-height: 320px; border: 2px dashed #cfd3d9; border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: .2s ease; padding: 28px; text-align: center; outline: none; }
+.drop-zone:hover, .drop-zone.dragging, .drop-zone:focus { border-color: #111; background: #fafafa; transform: translateY(-1px); }
+.upload-icon { width: 58px; height: 58px; border-radius: 18px; display: grid; place-items: center; background: #111; color: #fff; font-size: 30px; margin-bottom: 18px; }
+.drop-zone h2 { margin: 0; font-size: 24px; }
+.drop-zone p { margin: 7px 0 18px; color: #757a84; }
+.drop-zone span { color: #9a9ea6; font-size: 13px; }
+.hidden { display: none !important; }
+.selection { margin-top: 18px; }
+.selection-top { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 6px 2px 12px; }
+.text-btn { border: 0; background: none; cursor: pointer; color: #666; }
+.file-list { display: grid; gap: 8px; max-height: 220px; overflow: auto; margin-bottom: 16px; }
+.file-row { display: flex; justify-content: space-between; gap: 20px; align-items: center; background: #f5f6f8; padding: 12px 14px; border-radius: 14px; }
+.file-row span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 650; }
+.file-row span:last-child { color: #7a7f88; flex: none; font-size: 13px; }
+.primary, .secondary { width: 100%; border: 0; border-radius: 15px; padding: 15px 20px; cursor: pointer; font-weight: 750; transition: .18s ease; }
+.primary { background: #111; color: white; }
+.primary:hover { transform: translateY(-1px); background: #292929; }
+.secondary { background: #f0f1f3; color: #18191c; }
+.progress { min-height: 160px; align-items: center; justify-content: center; gap: 17px; text-align: left; }
+.progress p { margin: 5px 0 0; color: #767b84; }
+.spinner { width: 38px; height: 38px; border: 4px solid #e6e6e6; border-top-color: #111; border-radius: 50%; animation: spin .8s linear infinite; flex: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.result { margin-top: 18px; }
+.compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.label { display: block; font-size: 13px; color: #696e77; font-weight: 700; margin: 0 0 8px 3px; }
+.preview { min-height: 300px; border-radius: 18px; overflow: hidden; border: 1px solid #e1e3e7; display: grid; place-items: center; }
+.preview img { width: 100%; height: 390px; object-fit: contain; display: block; }
+.checker { background-color: #fff; background-image: linear-gradient(45deg,#e9ebee 25%,transparent 25%),linear-gradient(-45deg,#e9ebee 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e9ebee 75%),linear-gradient(-45deg,transparent 75%,#e9ebee 75%); background-size: 24px 24px; background-position: 0 0,0 12px,12px -12px,-12px 0; }
+.result-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+.error { margin-top: 14px; background: #fff1f1; color: #8c2525; padding: 13px 15px; border-radius: 12px; border: 1px solid #ffd1d1; }
+footer { text-align: center; color: #8a8f98; font-size: 12px; margin-top: 18px; }
+@media (max-width: 720px) { .shell { padding-top: 30px; } .card { padding: 14px; border-radius: 21px; } .drop-zone { min-height: 270px; } .compare-grid, .result-actions { grid-template-columns: 1fr; } .preview img { height: 300px; } }

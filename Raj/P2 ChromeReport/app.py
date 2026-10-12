@@ -15,6 +15,7 @@ from market_mapping import (
     normalize_headend_name,
     normalize_market_name,
 )
+from headend_status import HeadendStatusData, load_headend_status_data
 from weekly_workbook_builder import ensure_combined_weekly_workbooks
 
 
@@ -43,6 +44,7 @@ NBHD_BENCHMARK_SCRIPT_FILE = BASE_DIR / "static" / "nbhd_benchmark.js"
 LANDING_SCRIPT_FILE = BASE_DIR / "static" / "landing.js"
 LANDING_ANALYSIS_DIR = BASE_DIR / "landing analysis"
 LANDING_HISTORY_CSV = HISTORY_DIR / "landing_history.csv"
+ADD_CLOSE_DATA_DIR = BASE_DIR / "add and close data"
 
 SOURCE_COLUMNS = [
     "WEEK LABEL",
@@ -65,7 +67,6 @@ SOURCE_COLUMNS = [
 KEY_COLUMNS = [
     "TRANSMISSION",
     "MARKET",
-    "MSO TYPE",
     "CITY",
     "HEAD-END",
     "CHANNEL NAME",
@@ -125,6 +126,7 @@ def ensure_directories() -> None:
     NBHD_DATA_DIR.mkdir(parents=True, exist_ok=True)
     OTS_DATA_DIR.mkdir(parents=True, exist_ok=True)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    ADD_CLOSE_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def normalize_text(value: Any) -> str:
@@ -178,6 +180,19 @@ def normalize_number(value: Any) -> float | int | None:
     return int(number) if number.is_integer() else number
 
 
+def normalize_frequency(value: Any) -> float | int | str | None:
+    """Keep valid text LCNs while normalizing genuinely numeric cells."""
+    text = normalize_text(value)
+    if text.upper() in {"", "NA", "N/A", "NOT AVAILABLE", "-"}:
+        return None
+
+    numeric_text = text.replace(",", "")
+    if re.fullmatch(r"-?\d+(?:\.\d+)?", numeric_text):
+        number = float(numeric_text)
+        return int(number) if number.is_integer() else number
+    return text
+
+
 def normalize_rank(value: Any) -> int | None:
     number = normalize_number(value)
     if number is None:
@@ -225,7 +240,44 @@ def get_history_signature() -> tuple[tuple[str, int, int], ...]:
         ]
         if path.exists()
     ]
-    return get_signature(paths)
+    status_files = [path for path in ADD_CLOSE_DATA_DIR.glob("*.xlsx") if not path.name.startswith("~$")]
+    return get_signature(paths + sorted(status_files, key=lambda path: path.name.lower()))
+
+
+def apply_headend_status_logic(
+    records: list[dict[str, Any]],
+    weeks: list[str],
+    status_data: HeadendStatusData,
+) -> None:
+    """Classify tracked-channel value-to-NA transitions using weekly head-end events."""
+    focus_channels = set(FOCUS_CHANNELS)
+    for record in records:
+        record["headend_statuses"] = {}
+        record["closure_outcomes"] = {}
+        if normalize_text(record.get("channel_name")).upper() not in focus_channels:
+            continue
+
+        for week in weeks:
+            event = status_data.match(record, week)
+            if event is not None:
+                record["headend_statuses"][week] = {
+                    "status": event.status,
+                    "remark": event.remark,
+                    "source_file": event.source_file,
+                }
+
+        for index in range(1, len(weeks)):
+            current_week = weeks[index]
+            if current_week not in status_data.available_weeks:
+                continue
+            previous = record["frequencies"].get(weeks[index - 1])
+            current = record["frequencies"].get(current_week)
+            if previous in (None, "") or current not in (None, ""):
+                continue
+            event = status_data.match(record, current_week)
+            record["closure_outcomes"][current_week] = (
+                "headend_closed" if event is not None and event.status == "closed" else "channel_closed"
+            )
 
 
 def read_history_csv(path: Path) -> pd.DataFrame:
@@ -1170,6 +1222,7 @@ def empty_report(message: str | None = None) -> dict[str, Any]:
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "weeks": [],
         "records": [],
+        "headend_status_weeks": [],
         "message": message or "Add weekly Excel files to the data folder and refresh the dashboard.",
     }
 
@@ -1201,7 +1254,7 @@ def prepare_week_rows(path: Path, fallback_label: str) -> tuple[str, list[dict[s
         normalized["HEAD-END"] = normalize_headend_text(normalized.get("HEAD-END"))
         normalized["CHANNEL NAME"] = normalize_channel_text(normalized.get("CHANNEL NAME"))
         normalized["NAME"] = normalize_channel_text(row.get("CHANNEL NAME"))
-        normalized[FREQUENCY_COLUMN] = normalize_number(row.get(FREQUENCY_COLUMN))
+        normalized[FREQUENCY_COLUMN] = normalize_frequency(row.get(FREQUENCY_COLUMN))
         normalized[RANK_COLUMN] = normalize_rank(row.get(RANK_COLUMN))
         normalized["BAND"] = normalize_text(row.get("BAND"))
         normalized["TV CH. No."] = normalize_text(row.get("TV CH. No."))
@@ -1221,18 +1274,21 @@ def prepare_week_rows(path: Path, fallback_label: str) -> tuple[str, list[dict[s
     return week_label, list(deduped.values())
 
 
-def calculate_frequency_change(previous: float | int | None, current: float | int | None) -> str:
+def calculate_frequency_change(
+    previous: float | int | str | None,
+    current: float | int | str | None,
+) -> str:
     if previous is None and current is None:
         return "missing"
     if previous is None and current is not None:
         return "increase"
     if previous is not None and current is None:
         return "decrease"
-    if current > previous:
-        return "increase"
-    if current < previous:
-        return "decrease"
-    return "no_change"
+    if current == previous:
+        return "no_change"
+    if isinstance(previous, (int, float)) and isinstance(current, (int, float)):
+        return "increase" if current > previous else "decrease"
+    return "change"
 
 
 def calculate_rank_change(previous: int | None, current: int | None) -> str:
@@ -1286,7 +1342,9 @@ def build_report() -> dict[str, Any]:
             head_end = normalize_headend_text(row.get("Head-End"))
             channel_name = normalize_channel_text(row.get("Channel Name"))
             crn_no = normalize_text(row.get("CRN No."))
-            row_key = "||".join((transmission, market, mso_type, city, head_end, channel_name, crn_no))
+            # MSO Type is descriptive metadata and can be renamed between weeks
+            # for the same CRN/headend. It must not split one channel history.
+            row_key = "||".join((transmission, market, city, head_end, channel_name, crn_no))
             if not row_key.replace("|", ""):
                 continue
 
@@ -1317,7 +1375,17 @@ def build_report() -> dict[str, Any]:
                     "band_changes": {},
                 },
             )
-            record["frequencies"][week_label] = normalize_number(row.get("Frequency/LCN No"))
+            # History is ordered by week; keep descriptive fields from the
+            # latest occurrence while the stable key joins the weekly series.
+            record["transmission"] = transmission
+            record["mso_type"] = mso_type
+            record["mso"] = transmission
+            record["band"] = normalize_text(row.get("Band"))
+            record["tv_ch_no"] = normalize_text(row.get("TV CH. No."))
+            record["genre"] = normalize_text(row.get("Genre"))
+            record["language"] = normalize_text(row.get("Language"))
+            record["week_label"] = week_label
+            record["frequencies"][week_label] = normalize_frequency(row.get("Frequency/LCN No"))
             record["ranks"][week_label] = normalize_rank(row.get("Rank Within Genre"))
             record["bands"][week_label] = normalize_text(row.get("Band"))
 
@@ -1354,10 +1422,13 @@ def build_report() -> dict[str, Any]:
             record["rank_change_status"] = "YES" if has_any_change(record["ranks"], weeks) else "NO"
             record["band_change_status"] = "YES" if has_any_change(record["bands"], weeks) else "NO"
 
+        status_data = load_headend_status_data(ADD_CLOSE_DATA_DIR)
+        apply_headend_status_logic(records, weeks, status_data)
         report = {
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "weeks": weeks,
             "records": records,
+            "headend_status_weeks": sorted(status_data.available_weeks, key=week_sort_key),
             "message": "",
         }
         return report
@@ -1401,6 +1472,14 @@ def build_report() -> dict[str, Any]:
                     "band_changes": {},
                 },
             )
+            record["transmission"] = row["TRANSMISSION"]
+            record["mso_type"] = row["MSO TYPE"]
+            record["mso"] = row["TRANSMISSION"]
+            record["band"] = row["BAND"]
+            record["tv_ch_no"] = row["TV CH. No."]
+            record["genre"] = row["GENRE"]
+            record["language"] = row["LANGUAGE"]
+            record["week_label"] = row["WEEK LABEL"]
             record["frequencies"][week_label] = row[FREQUENCY_COLUMN]
             record["ranks"][week_label] = row[RANK_COLUMN]
             record["bands"][week_label] = row["BAND"]
@@ -1439,10 +1518,13 @@ def build_report() -> dict[str, Any]:
         record["rank_change_status"] = "YES" if has_any_change(record["ranks"], weeks) else "NO"
         record["band_change_status"] = "YES" if has_any_change(record["bands"], weeks) else "NO"
 
+    status_data = load_headend_status_data(ADD_CLOSE_DATA_DIR)
+    apply_headend_status_logic(records, weeks, status_data)
     report = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "weeks": weeks,
         "records": records,
+        "headend_status_weeks": sorted(status_data.available_weeks, key=week_sort_key),
         "message": "",
     }
     OUTPUT_JSON.write_text(compact_json_text(report), encoding="utf-8")
@@ -1461,11 +1543,8 @@ def load_report(force: bool = False) -> dict[str, Any]:
     return report
 
 
-def normalize_frequency_cell(value: Any) -> float | int | None:
-    text = normalize_text(value).upper()
-    if text in {"", "NA", "N/A", "NOT AVAILABLE", "-"}:
-        return None
-    return normalize_number(value)
+def normalize_frequency_cell(value: Any) -> float | int | str | None:
+    return normalize_frequency(value)
 
 
 def comparison_record_key(market: str, city: str, head_end: str, channel: str) -> str:
@@ -1669,7 +1748,7 @@ def get_view_config(view: str) -> dict[str, str]:
 
 def filter_records(records: list[dict[str, Any]], view: str, filters: dict[str, str], ignore_key: str = "") -> list[dict[str, Any]]:
     config = get_view_config(view)
-    changed_states = {"frequency": {"increase", "decrease"}, "rank": {"improve", "decline"}, "band": {"change"}}
+    changed_states = {"frequency": {"increase", "decrease", "change"}, "rank": {"improve", "decline"}, "band": {"change"}}
     changed_set = changed_states.get(view, changed_states["frequency"])
 
     filtered: list[dict[str, Any]] = []
@@ -3362,7 +3441,7 @@ function checkHeadendBecameAvailable(market, headend, previousWeek, currentWeek)
 }
 
 function buildChannelReportRows(channel, weeks, options = {}) {
-  const includeClosedHeadends = Boolean(options.includeClosedHeadends);
+  const closureOnly = Boolean(options.closureOnly);
   const [previousWeek, currentWeek] = weeks;
   const grouped = new Map();
   getChannelReportSourceRecords().forEach((record) => {
@@ -3382,7 +3461,10 @@ function buildChannelReportRows(channel, weeks, options = {}) {
       const previousMissing = previousFrequency === null || previousFrequency === undefined || previousFrequency === "" || String(previousFrequency).toUpperCase() === "NA";
       const currentMissing = currentFrequency === null || currentFrequency === undefined || currentFrequency === "" || String(currentFrequency).toUpperCase() === "NA";
       const hasFrequencyChange = previousMissing !== currentMissing || (!previousMissing && !currentMissing && String(previousFrequency) !== String(currentFrequency));
-      const isClosedHeadend = !previousMissing && currentMissing;
+      const becameUnavailable = !previousMissing && currentMissing;
+      const closureOutcome = record.closure_outcomes?.[currentWeek] || "";
+      const isHeadendClosed = closureOutcome === "headend_closed";
+      const isChannelClosedAtAvailableHeadend = closureOutcome === "channel_closed";
 
       const prevRankNum = Number(previousRank);
       const currRankNum = Number(currentRank);
@@ -3415,15 +3497,21 @@ function buildChannelReportRows(channel, weeks, options = {}) {
         previousRank,
         currentRank,
         hasFrequencyChange,
-        isClosedHeadend,
+        becameUnavailable,
+        isHeadendClosed,
+        isChannelClosedAtAvailableHeadend,
+        closureOutcome,
         hasRankChange,
         isFullyStable,
         hasNeighbourChange,
         hasAnyChange,
       };
     })
-    // Keep only newly available and numeric-to-numeric LCN changes; exclude closures and stable rows.
-    .filter((record) => record.hasFrequencyChange && (includeClosedHeadends || !record.isClosedHeadend))
+    // A value-to-NA change is shown only when the weekly status file confirms
+    // that the headend itself was not closed.
+    .filter((record) => closureOnly
+      ? record.isChannelClosedAtAvailableHeadend
+      : record.hasFrequencyChange && (!record.becameUnavailable || record.isChannelClosedAtAvailableHeadend))
     .sort((left, right) => {
       const marketCompare = String(left.market || "").localeCompare(String(right.market || ""));
       if (marketCompare !== 0) return marketCompare;
@@ -3509,7 +3597,9 @@ function buildChannelReportRemark(row, weeks) {
 
   let remark = "";
 
-  if (prevLcnMissing && !currLcnMissing) {
+  if (row.isChannelClosedAtAvailableHeadend) {
+    remark = `${channelName} is closed at this headend (${prevLcn} â†’ NA)`;
+  } else if (prevLcnMissing && !currLcnMissing) {
     remark = `${channelName}'s LCN became available (NA → ${currLcn})`;
   } else if (!prevLcnMissing && currLcnMissing) {
     remark = `${channelName} became unavailable (${prevLcn} → NA)`;
@@ -3571,7 +3661,9 @@ function buildChannelReportChange(row) {
   const currentLcnMissing = isReportValueMissing(currentLcn);
 
   let change = "";
-  if (previousLcnMissing && !currentLcnMissing) {
+  if (row.isChannelClosedAtAvailableHeadend) {
+    change = `${channelName} is closed at this headend`;
+  } else if (previousLcnMissing && !currentLcnMissing) {
     change = `${channelName}'s LCN became available (NA -> ${currentLcn})`;
   } else if (!previousLcnMissing && currentLcnMissing) {
     change = `${channelName} became unavailable (${previousLcn} -> NA)`;
@@ -3770,18 +3862,18 @@ function exportTable1Excel() {
     blankExcelRow(8),
   ];
   const removedRows = [
-    [excelCell("Source: Chrome Track", "title", { mergeAcross: 7 })],
-    [excelCell("Removed Channels - One of Four per Headend", "meta", { mergeAcross: 7 })],
-    blankExcelRow(8),
-    excelRow(["CHANNEL NAME", "MARKET", "CITY", "HEAD-END", activeWeeks[0] || "Week 1", activeWeeks[1] || "Week 2", `${activeWeeks[0] || "Week 1"} RANK`, `${activeWeeks[1] || "Week 2"} RANK`], "header"),
+    [excelCell("Source: Chrome Track", "title", { mergeAcross: 8 })],
+    [excelCell("Closed Channels - Headend Available", "meta", { mergeAcross: 8 })],
+    blankExcelRow(9),
+    excelRow(["CHANNEL NAME", "MARKET", "CITY", "HEAD-END", activeWeeks[0] || "Week 1", activeWeeks[1] || "Week 2", `${activeWeeks[0] || "Week 1"} RANK`, `${activeWeeks[1] || "Week 2"} RANK`, "CHANGE"], "header"),
   ];
   const removedChannelRecords = [];
 
   targetChannels.forEach((channel) => {
     const rows = buildChannelReportRows(channel, activeWeeks).filter((row) => !isAllCitiesValue(row.city) && row.hasFrequencyChange);
     const consolidatedRows = applyRepeatedChangeStyles(consolidateChannelReportRows(rows, activeWeeks));
-    const removedChannelRows = buildChannelReportRows(channel, activeWeeks, { includeClosedHeadends: true })
-      .filter((row) => !isAllCitiesValue(row.city) && row.isClosedHeadend);
+    const removedChannelRows = buildChannelReportRows(channel, activeWeeks, { closureOnly: true })
+      .filter((row) => !isAllCitiesValue(row.city));
     removedChannelRecords.push(...removedChannelRows);
     if (!consolidatedRows.length) return;
 
@@ -3819,16 +3911,7 @@ function exportTable1Excel() {
 
   });
 
-  const removalCountByHeadend = new Map();
-  removedChannelRecords.forEach((row) => {
-    const key = [row.market, row.city, row.head_end].map((value) => String(value || "").trim().toUpperCase()).join("||");
-    removalCountByHeadend.set(key, (removalCountByHeadend.get(key) || 0) + 1);
-  });
   removedChannelRecords
-    .filter((row) => {
-      const key = [row.market, row.city, row.head_end].map((value) => String(value || "").trim().toUpperCase()).join("||");
-      return removalCountByHeadend.get(key) === 1;
-    })
     .forEach((row) => {
       removedRows.push([
         excelCell(formatChannelLabel(row.channel_name), "cell"),
@@ -3839,6 +3922,7 @@ function exportTable1Excel() {
         excelCell("NA", "negative"),
         excelCell(formatExcelValue(row.previousRank, "No Rank"), "textWrap"),
         excelCell(formatExcelValue(row.currentRank, "No Rank"), "negative"),
+        excelCell(`${formatChannelLabel(row.channel_name)} is closed at this headend`, "textWrap"),
       ]);
     });
 
@@ -3846,7 +3930,7 @@ function exportTable1Excel() {
     reportRows.push([excelCell("No frequency changes found for the selected channels and weeks.", "textWrap", { mergeAcross: 7 })]);
   }
   if (removedRows.length === 4) {
-    removedRows.push([excelCell("No headends had exactly one removed channel for the selected weeks.", "textWrap", { mergeAcross: 7 })]);
+    removedRows.push([excelCell("No tracked channels closed at an available headend for the selected weeks.", "textWrap", { mergeAcross: 8 })]);
   }
 
   downloadExcelWorkbook(`table1_${getActiveBaseView()}_export`, [
@@ -3862,7 +3946,7 @@ function exportTable1Excel() {
     },
     {
       name: "Removed Channels",
-      columns: [180, 170, 140, 240, 90, 90, 90, 90],
+      columns: [180, 170, 140, 240, 90, 90, 90, 90, 320],
       rows: removedRows,
     },
   ]);

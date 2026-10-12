@@ -1,0 +1,875 @@
+MEDIA REPORTING SYSTEM
+COMPLETE DEVELOPMENT PHASE PLAN
+
+PROJECT GOAL
+Build a professional Media Reporting System that monitors media websites,
+collects news and advertisement information, detects changes, maintains
+history, and produces daily/weekly/custom reports.
+
+INITIAL MONITORED WEBSITES
+1. ET BrandEquity
+   https://brandequity.economictimes.indiatimes.com/
+2. Exchange4media
+   https://www.exchange4media.com/
+
+The system should eventually support approximately 10 media websites.
+
+IMPORTANT DEVELOPMENT PRINCIPLES
+- Build incrementally.
+- Complete and verify one phase before starting the next.
+- Keep early versions local and free/open-source.
+- Do not introduce Docker, Redis, Celery, cloud infrastructure, or other
+  heavy infrastructure until the local application is already working.
+- Do not use paid APIs unless explicitly approved later.
+- Use system Python; do not create a Python virtual environment.
+- Keep the UI professional and suitable for non-technical users.
+- Preserve historical monitoring data.
+- Respect robots.txt, website terms, reasonable request rates, and applicable law.
+- Do not automatically bypass anti-bot or access restrictions.
+
+RECOMMENDED STACK
+- Frontend: React + TypeScript + Vite
+- Backend: Python + FastAPI + Pydantic
+- Scraping: Requests + BeautifulSoup; Playwright later if required
+- Scheduling: APScheduler initially
+- Database: PostgreSQL later
+- Storage: Local filesystem initially
+- Reporting: PDF + Excel
+- Charts: Recharts or another lightweight chart library
+
+============================================================
+PHASE 0 — FOUNDATION
+============================================================
+
+OBJECTIVE
+Create the application skeleton, directory hierarchy, frontend/backend
+communication pipeline, and basic professional dashboard foundation.
+
+PROJECT STRUCTURE
+media-reporting-system/
+├── backend/
+├── frontend/
+├── scraper/
+├── database/
+├── storage/
+├── reports/
+└── docs/
+
+BACKEND
+- FastAPI application
+- CORS for local development
+- Pydantic schemas
+- GET /api/health
+- GET /api/dashboard
+- Realistic mock dashboard data
+
+FRONTEND
+- React + TypeScript + Vite
+- Professional dashboard shell
+- Sidebar
+- Header
+- KPI cards
+- Website monitoring cards
+- Latest news
+- Filters/search
+- Routing
+- FastAPI connection status
+- Local mock fallback
+
+DO NOT IMPLEMENT
+- Web scraping
+- PostgreSQL
+- Redis
+- Celery
+- Docker
+- Cloud deployment
+- Authentication
+- Real advertisement detection
+
+COMPLETION
+- Backend runs locally
+- Frontend runs locally
+- Frontend communicates with backend
+- Dashboard renders correctly
+- No major build/TypeScript errors
+
+============================================================
+PHASE 1 — PROFESSIONAL UI EXPANSION
+============================================================
+
+OBJECTIVE
+Turn the Phase 0 dashboard into a complete professional media intelligence
+interface using mock/local data only.
+
+NAVIGATION
+
+OVERVIEW
+- Dashboard
+
+MONITORING
+- Websites
+- News
+- Advertisements
+- Changes
+
+REPORTS
+- Daily Report
+- Weekly Report
+- Custom Report
+
+SYSTEM
+- Scraper Status
+- Settings
+
+DASHBOARD
+- Websites monitored
+- Articles today
+- New articles
+- Advertisements tracked
+- Articles in last 24 hours
+- New advertisements
+- Updated content
+- Pages checked
+- Latest news
+- Website activity
+
+WEBSITES
+Route: /monitoring/websites
+
+Show:
+- Website
+- Status
+- Last checked
+- Articles detected
+- New articles
+- Advertisements
+- Check Now UI
+
+NEWS
+Route: /monitoring/news
+
+Features:
+- Search
+- Website filter
+- Section filter
+- Date filter
+- Content type filter
+- Sort
+- Pagination UI
+- News table
+- NEW / UPDATED / UNCHANGED badges
+- Article detail drawer
+
+ARTICLE DETAIL
+- Headline
+- Source
+- Section
+- URL
+- Image
+- Summary
+- Published time
+- First seen
+- Last seen
+- Status
+- Content hash placeholder
+- Change history placeholder
+
+ADVERTISEMENT MONITORING
+Route: /monitoring/advertisements
+
+Fields:
+- Advertiser
+- Brand
+- Campaign
+- Website
+- Section/Page
+- Position
+- First Seen
+- Last Seen
+- Status
+- Screenshot
+
+ADVERTISEMENT DETAIL
+- Current screenshot
+- Previous screenshot placeholder
+- Ad history
+- First seen
+- Last seen
+- Current status
+- Campaign information
+
+CHANGES
+Route: /monitoring/changes
+
+Change types:
+- NEW ARTICLE
+- ARTICLE UPDATED
+- NEW AD
+- AD CHANGED
+- AD REMOVED
+
+REPORTS
+Routes:
+- /reports/daily
+- /reports/weekly
+- /reports/custom
+
+Phase 1 report buttons are UI placeholders only:
+- Generate Report
+- Export PDF
+- Export Excel
+
+SYSTEM
+Routes:
+- /system/scraper-status
+- /system/settings
+
+Use centralized mock data and reusable TypeScript components.
+
+DO NOT IMPLEMENT
+- Real scraping
+- Database
+- Scheduler
+- Real reports
+- Real advertisement detection
+- Authentication
+- Docker
+- Redis/Celery
+
+COMPLETION
+- All routes work
+- UI looks professional
+- Search/filter UI works with mock data
+- Drawers/modals work
+- Responsive layout works
+- Loading/empty/error states exist
+- Build succeeds
+- No major console errors
+
+============================================================
+PHASE 2 — REAL SCRAPER: ET BRANDEQUITY
+============================================================
+
+OBJECTIVE
+Replace mock news data with real data from ET BrandEquity.
+
+TARGET
+https://brandequity.economictimes.indiatimes.com/
+
+Start with homepage only.
+
+BUILD MODULAR SCRAPER
+scraper/
+├── base/
+│   └── base_scraper.py
+├── et_brand_equity/
+│   ├── scraper.py
+│   ├── parser.py
+│   └── config.py
+├── exchange4media/
+└── utils/
+
+EXTRACT
+- Headline
+- Article URL
+- Image URL
+- Section
+- Summary
+- Published time when available
+- Scraped time
+- Content hash
+
+IMPORTANT
+- Filter navigation links
+- Do not treat menu/category links as articles
+- Prefer article links
+- Normalize URLs
+- Remove duplicates
+- Improve image extraction
+- Derive section from URL/page metadata where possible
+
+Use Requests + BeautifulSoup first.
+Add Playwright only if JavaScript rendering is actually required.
+
+Save scraper test output locally as JSON during this phase.
+
+COMPLETION
+- ET homepage scraper works
+- Extracted articles are meaningful
+- Navigation noise is reduced
+- Images are captured when available
+- JSON output is correct
+- Errors are handled cleanly
+
+============================================================
+PHASE 3 — ET BRANDEQUITY SECTIONS
+============================================================
+
+OBJECTIVE
+Expand ET BrandEquity monitoring from homepage to important sections.
+
+Initial sections to investigate/configure:
+- Marketing
+- Advertising
+- Digital
+- Media
+- Business of Brands
+- The People Report
+- Research
+
+For each section:
+- Discover correct section URL
+- Fetch section page
+- Extract article links
+- Extract metadata
+- Deduplicate against homepage
+- Assign section correctly
+
+Create section-aware scraping.
+
+Do not yet add the full 10-minute scheduler.
+
+COMPLETION
+- Homepage works
+- Configured sections work
+- Duplicates are handled
+- Section names are correct
+- Output is normalized
+
+============================================================
+PHASE 4 — DATABASE & HISTORY
+============================================================
+
+OBJECTIVE
+Introduce PostgreSQL after the scraper is proven.
+
+CORE TABLES
+
+websites
+- id
+- name
+- url
+- status
+- last_checked
+- created_at
+- updated_at
+
+sections
+- id
+- website_id
+- name
+- url
+- active
+- created_at
+
+articles
+- id
+- website_id
+- section_id
+- headline
+- url
+- image_url
+- summary
+- published_at
+- first_seen
+- last_seen
+- content_hash
+- created_at
+- updated_at
+
+scrape_runs
+- id
+- website_id
+- started_at
+- finished_at
+- status
+- items_found
+- error
+
+Later tables:
+- advertisements
+- advertisement_history
+- change_logs
+
+REQUIREMENTS
+- Unique article identity
+- Timestamps
+- History preservation
+- Indexes for common searches
+- Foreign keys
+- Clean migrations
+
+Connect ET scraper output to the database.
+
+COMPLETION
+- PostgreSQL works locally
+- Articles are stored
+- Repeated scraping does not create uncontrolled duplicates
+- First seen/last seen works
+- Scrape runs are recorded
+
+============================================================
+PHASE 5 — CHANGE DETECTION
+============================================================
+
+OBJECTIVE
+Detect new, updated, unchanged, and removed content.
+
+STATUSES
+- NEW
+- UPDATED
+- UNCHANGED
+- REMOVED
+
+Use:
+- Stable article URL/identity
+- Content hash
+- First seen
+- Last seen
+
+Example:
+First scrape: Article A = NEW
+Second scrape: same URL + same hash = UNCHANGED
+Third scrape: same URL + changed hash = UPDATED
+
+If an article previously existed but disappears from a monitored page,
+treat it according to defined monitoring rules. Do not delete history.
+
+CREATE CHANGE LOG RECORDS
+- Website
+- Item type
+- Item ID
+- Change type
+- Timestamp
+- Previous value where appropriate
+- New value where appropriate
+
+COMPLETION
+- Change detection works
+- History is preserved
+- Dashboard can display changes
+
+============================================================
+PHASE 6 — REAL DASHBOARD DATA
+============================================================
+
+OBJECTIVE
+Connect the Phase 1 UI to real backend/database data.
+
+DASHBOARD
+- Websites monitored
+- Articles today
+- New articles
+- Updated articles
+- Advertisements tracked
+- Pages checked
+- Latest news
+- Recent changes
+
+NEWS
+- Real articles
+- Real sections
+- Real timestamps
+- Real statuses
+
+WEBSITES
+- Real monitoring status
+- Real last checked
+- Real article counts
+
+CHANGES
+- Real change logs
+
+Add:
+- Pagination
+- Search
+- Filters
+- Date ranges
+- Sorting
+
+COMPLETION
+- Mock news is replaced by real ET data
+- Dashboard reflects database values
+- Filters work against real data
+
+============================================================
+PHASE 7 — ADVERTISEMENT MONITORING
+============================================================
+
+OBJECTIVE
+Build advertisement monitoring as a separate module.
+
+Start with ET BrandEquity.
+
+ADVERTISEMENT INFORMATION
+- Advertiser
+- Brand
+- Campaign
+- Website
+- Page/section
+- Position
+- First seen
+- Last seen
+- Screenshot/image
+- Status
+
+DETECTION
+- New advertisement
+- Existing advertisement
+- Changed creative
+- Removed advertisement
+
+Use image/screenshot hashing where appropriate.
+
+DATABASE TABLES
+
+advertisements
+- id
+- website_id
+- page_url
+- advertiser
+- brand
+- campaign
+- position
+- image_path
+- image_hash
+- first_seen
+- last_seen
+- status
+
+advertisement_history
+- id
+- advertisement_id
+- detected_at
+- image_path
+- image_hash
+- status
+- change_type
+
+Do not assume every image on a page is an advertisement.
+Build detection rules carefully.
+
+COMPLETION
+- Ads can be detected
+- Screenshots/images are stored
+- History works
+- Ad detail page shows real data
+
+============================================================
+PHASE 8 — EXCHANGE4MEDIA SCRAPER
+============================================================
+
+OBJECTIVE
+Add the second real monitored website.
+
+TARGET
+https://www.exchange4media.com/
+
+Build:
+scraper/exchange4media/
+
+Start with homepage and important sections.
+
+Potential sections to investigate:
+- Latest News
+- Advertising
+- Marketing
+- Media
+- Digital
+- Television
+- Out Of Home
+- Radio
+- Print
+- People Movement
+
+Do not blindly assume URLs/selectors.
+Inspect actual site structure during implementation.
+
+Extract the same normalized article model:
+- Headline
+- URL
+- Image
+- Summary
+- Section
+- Published time
+- First seen
+- Last seen
+- Hash
+
+Reuse the common scraper interface.
+
+COMPLETION
+- E4M scraper works
+- Data enters the same database
+- Dashboard supports both websites
+- Change detection works for both
+
+============================================================
+PHASE 9 — AUTOMATION
+============================================================
+
+OBJECTIVE
+Run monitoring automatically every 10 minutes.
+
+INITIAL SCHEDULER
+APScheduler
+
+WORKFLOW
+Every 10 minutes:
+1. Start monitoring run
+2. Scrape ET BrandEquity
+3. Save/update articles
+4. Detect article changes
+5. Monitor advertisements
+6. Scrape Exchange4media
+7. Save/update articles
+8. Detect changes
+9. Monitor advertisements
+10. Record scrape run
+11. Update dashboard
+12. Store errors/logs
+
+IMPORTANT
+- Avoid overlapping runs
+- Record duration
+- Record failures
+- Continue monitoring other sites if one site fails
+- Use reasonable request delays
+- Respect robots.txt and website terms
+
+SYSTEM SCRAPER STATUS
+- Last run
+- Current status
+- Duration
+- Items found
+- Error count
+- Next run
+
+COMPLETION
+- Automatic 10-minute monitoring works locally
+- Failures are recorded
+- Dashboard reflects monitoring state
+
+============================================================
+PHASE 10 — REPORTING
+============================================================
+
+OBJECTIVE
+Generate useful professional reports.
+
+DAILY REPORT
+- Date
+- Websites monitored
+- Articles detected
+- New articles
+- Updated articles
+- Advertisements
+- Major changes
+- Top stories
+- Source breakdown
+
+WEEKLY REPORT
+- Week
+- Website comparison
+- Article trends
+- Advertisement trends
+- Major changes
+- Top stories
+- Section activity
+
+CUSTOM REPORT
+- Start date
+- End date
+- Websites
+- Sections
+- Content types
+- Statuses
+
+EXPORT
+- PDF
+- Excel
+
+Reports should include:
+- Professional title/header
+- Report date/range
+- Summary metrics
+- Tables
+- Relevant images/screenshots where useful
+- Source attribution
+
+COMPLETION
+- Daily report works
+- Weekly report works
+- Custom filters work
+- PDF export works
+- Excel export works
+
+============================================================
+PHASE 11 — EXPAND TO REMAINING WEBSITES
+============================================================
+
+OBJECTIVE
+Expand from 2 websites to approximately 10.
+
+FOR EACH NEW WEBSITE
+1. Inspect structure
+2. Identify homepage
+3. Identify sections
+4. Identify article patterns
+5. Identify images
+6. Identify publication dates
+7. Identify advertisements
+8. Build scraper adapter
+9. Test locally
+10. Add to database
+11. Add monitoring
+12. Add dashboard visibility
+13. Test change detection
+14. Test reporting
+
+ARCHITECTURE
+Each website has its own adapter/configuration but shares common interfaces
+and database models.
+
+Do not create one giant scraper full of site-specific if/else logic.
+
+COMPLETION
+- Target website count is supported
+- Each scraper can fail independently
+- Dashboard displays site-level status
+- Reports include all configured sites
+
+============================================================
+PHASE 12 — SEARCH, FILTERING & HISTORY
+============================================================
+
+OBJECTIVE
+Make historical data useful for analysts.
+
+SEARCH
+- Headline
+- Source
+- Section
+- Advertiser
+- Brand
+- Campaign
+- URL
+
+FILTERS
+- Website
+- Section
+- Date range
+- Content type
+- Status
+- Change type
+
+HISTORICAL VIEWS
+- Article history
+- Advertisement history
+- Creative changes
+- First seen
+- Last seen
+
+Add useful date-range reporting.
+Optimize database indexes as needed.
+
+============================================================
+PHASE 13 — PRODUCTION HARDENING
+============================================================
+
+Only after the local system is stable.
+
+REVIEW
+- Error handling
+- Logging
+- Retry policies
+- Request timeouts
+- Database connection handling
+- Data validation
+- Storage cleanup
+- Screenshot retention
+- Duplicate prevention
+- Security
+- Configuration management
+- Backup strategy
+
+ADD
+- Environment-based configuration
+- Proper secrets handling
+- Production logging
+- Database backups
+- Monitoring
+- Health checks
+
+Authentication/roles can be introduced here if required.
+
+============================================================
+PHASE 14 — OPTIONAL HEAVY INFRASTRUCTURE
+============================================================
+
+Only introduce this if workload requires it.
+
+Possible future components:
+- Docker
+- Redis
+- Celery
+- Cloud deployment
+- Object storage
+- Managed PostgreSQL
+- Reverse proxy
+- Process manager
+
+Do not add these simply because they are common technologies.
+Introduce them only when there is a real operational reason.
+
+============================================================
+FINAL TARGET SYSTEM
+============================================================
+
+The finished system should provide:
+1. Multi-website media monitoring
+2. Automated monitoring every 10 minutes
+3. News/article extraction
+4. Section-level monitoring
+5. Advertisement monitoring
+6. Advertisement screenshots/images
+7. First-seen/last-seen tracking
+8. Change detection
+9. Historical records
+10. Professional dashboard
+11. Website status monitoring
+12. Search and filters
+13. Daily reports
+14. Weekly reports
+15. Custom reports
+16. PDF export
+17. Excel export
+18. Historical analysis
+19. Scraper status monitoring
+20. Error logging
+21. Local backups
+22. Scalable website adapter architecture
+
+============================================================
+EXACT DEVELOPMENT ORDER
+============================================================
+
+1. Phase 0 — Foundation
+2. Phase 1 — Professional UI
+3. Phase 2 — ET BrandEquity homepage scraper
+4. Phase 3 — ET BrandEquity sections
+5. Phase 4 — Database & history
+6. Phase 5 — Change detection
+7. Phase 6 — Real dashboard data
+8. Phase 7 — Advertisement monitoring
+9. Phase 8 — Exchange4media scraper
+10. Phase 9 — 10-minute automation
+11. Phase 10 — Reporting
+12. Phase 11 — Remaining websites
+13. Phase 12 — Search/filter/history improvements
+14. Phase 13 — Production hardening
+15. Phase 14 — Optional heavy infrastructure
+
+RULE:
+Do not skip ahead simply because a later feature seems useful.
+Finish and verify the current phase before moving to the next phase.
