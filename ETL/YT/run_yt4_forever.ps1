@@ -48,10 +48,16 @@ $argsList = @(
 while ($true) {
     "$(Get-Date -Format o) launching YT4 -> $OutDir" | Add-Content -LiteralPath $log
     Push-Location $root
+    $previousErrorPreference = $ErrorActionPreference
+    $exitCode = 1
     try {
+        # yt-dlp writes expected per-video failures to stderr; use the process
+        # exit code, not NativeCommandError, to decide whether to restart.
+        $ErrorActionPreference = 'Continue'
         & $python @argsList *>> $runnerLog
         $exitCode = $LASTEXITCODE
     } finally {
+        $ErrorActionPreference = $previousErrorPreference
         Pop-Location
     }
     if ($exitCode -eq 3) {

@@ -275,6 +275,14 @@ def main() -> None:
     parser.add_argument("--execute", action="store_true", help="Delete files; otherwise only write a dry-run plan.")
     args = parser.parse_args()
 
+    hold_path = Path(args.base).expanduser().resolve().parent / "output/state/retention_hold.json"
+    if args.execute and hold_path.is_file():
+        hold = json.loads(hold_path.read_text(encoding="utf-8-sig"))
+        if args.date in hold.get("dates", []):
+            print(f"Retention hold for {args.date}: raw and normal stage inputs retained. "
+                  "Verified priority-stage relocation is handled separately.", flush=True)
+            return
+
     try:
         target_date = date.fromisoformat(args.date)
     except ValueError as exc:

@@ -560,8 +560,18 @@ try {
     if ($StageCompression) {
         $pipelineArgs += @("--stage-compression", $StageCompression)
     }
+    $preparedLake = Join-Path $WorkspaceRoot ("output\state\prepared_lake\{0}.json" -f $TargetDate.ToString("yyyy-MM-dd"))
+    $reusePreparedLake = -not $SingleSourceMode -and (Test-Path -LiteralPath $preparedLake)
+    if ($reusePreparedLake) {
+        & $DefaultVenvPython (Join-Path $WorkspaceRoot 'src\tools\prepared_priority_lake.py') --verify $preparedLake --base $DefaultLocalRoot
+        if ($LASTEXITCODE -ne 0) { throw 'Prepared lake verification failed; refusing to rebuild or publish silently.' }
+        $pipelineArgs += '--skip-etl'
+        Write-Host "Reusing verified prepared lake; normal profiles, UA, marts and validation still run."
+    }
     if (-not $SingleSourceMode) {
-        if ($asrunPriority) {
+        if ($reusePreparedLake) {
+            Write-Host "Prepared lake retention: keeping inputs pending archived retention."
+        } elseif ($asrunPriority) {
             Write-Host "[$(Get-Date -Format o)] ASRUN priority retention: keeping raw/stage until the normal post-priority cleanup run."
         } elseif ($KeepProcessedInputs) {
             Write-Host "[$(Get-Date -Format o)] Retention: keeping raw and stage intermediates by request."
