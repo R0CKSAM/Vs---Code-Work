@@ -19,6 +19,7 @@ from typing import Any, Iterable, Optional
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "runtime"))
 from etl_runtime import configure_windows_platform, worker_environment
+from etl_notifications import notify_failure
 
 configure_windows_platform()
 
@@ -685,6 +686,8 @@ def run(
                 entry.update(_classify_failure(f"exit code {result.returncode}"))
             if RUN_RECORDER is not None:
                 RUN_RECORDER.record_step(entry)
+            if result.returncode:
+                notify_failure(step_name, f'Worker exited with code {result.returncode}.')
             if result.returncode and not allow_failure:
                 if RUN_RECORDER is not None:
                     RUN_RECORDER.finish("failed")
@@ -790,6 +793,9 @@ def run(
             RUN_RECORDER.record_step(entry)
 
         if return_code:
+            notify_failure(step_name,
+                f"Worker exited with code {return_code}. {entry.get('hint', 'Open the step log.')}",
+                log_path)
             if allow_failure:
                 print(
                     f"[warn] Optional step failed: {step_name} (exit {return_code}). "

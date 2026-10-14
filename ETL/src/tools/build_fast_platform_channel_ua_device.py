@@ -28,6 +28,7 @@ from build_concurrency import (
     write_append_table,
 )
 from vglive_core import channel_candidate_sql
+from decode_distinct_ua_lookup import normalize_ua
 
 
 ETL_ROOT = Path(__file__).resolve().parents[2]
@@ -83,6 +84,25 @@ def ua_norm_sql(column_expr: str) -> str:
         f"{decoded_expr}, "
         "'\\+', ' ', 'g'), '\\s+', ' ', 'g')), '')"
     )
+
+
+def ensure_ua_normalization_map(con, lake_source: str, row_filter: str) -> int:
+    # Normalize distinct strings in Python: nested native url_decode calls can
+    # crash the Windows DuckDB worker on malformed percent-encoded UA values.
+    rows = con.execute(
+        f"SELECT DISTINCT CAST(UA AS VARCHAR) FROM read_parquet({lake_source}, "
+        f"hive_partitioning=1, union_by_name=1) WHERE ({row_filter}) AND UA IS NOT NULL"
+    ).fetchall()
+    values = [(raw, normalize_ua(raw) or None) for (raw,) in rows]
+    frame = pd.DataFrame(values, columns=['ua_raw', 'ua_norm'])
+    con.register('ua_normalization_df', frame)
+    try:
+        con.execute('CREATE OR REPLACE TEMP TABLE ua_normalization_map AS '
+                    'SELECT CAST(ua_raw AS VARCHAR) AS ua_raw, CAST(ua_norm AS VARCHAR) AS ua_norm '
+                    'FROM ua_normalization_df')
+    finally:
+        con.unregister('ua_normalization_df')
+    return len(values)
 
 
 def ensure_lookup_table(con, lookup_path: Path) -> None:
@@ -147,9 +167,14 @@ def build_device_table(con, args: argparse.Namespace) -> None:
     partition_filter = date_filter_sql(start, end)
     candidate_expr = channel_candidate_sql("reqPath")
     hours_expr = f"{HOURS_PER_TS_SEGMENT:.16f}"
-    ua_norm_expr = ua_norm_sql("UA")
+    row_filter = (f"{source_filter(args.source)} AND ({partition_filter}) "
+                  "AND lower(COALESCE(reqPath, '')) LIKE '%.ts' "
+                  "AND TRY_CAST(reqTimeSec AS DOUBLE) IS NOT NULL")
 
     ensure_lookup_table(con, args.ua_lookup)
+    print('Normalizing distinct User-Agent values...', flush=True)
+    ua_count = ensure_ua_normalization_map(con, lake_source, row_filter)
+    print(f'Normalized {ua_count:,} distinct UA values; aggregating device metrics...', flush=True)
 
     brand_label = f"""
 CASE
@@ -200,14 +225,12 @@ END
                 strftime({minute_ist_sql("reqTimeSec")}, '%Y-%m-%d') AS log_date,
                 lower(COALESCE(reqHost, '')) AS reqHost,
                 COALESCE(NULLIF(cliIP, ''), NULL) AS cliIP,
-                {ua_norm_expr} AS ua_norm,
+                norm.ua_norm AS ua_norm,
                 COALESCE(NULLIF(regexp_replace(CAST(statusCode AS VARCHAR), '\\.0$', ''), ''), 'Unknown') AS statusCode,
                 {candidate_expr} AS candidate_id
-            FROM read_parquet({lake_source}, hive_partitioning=1, union_by_name=1)
-            WHERE {source_filter(args.source)}
-              AND ({partition_filter})
-              AND lower(COALESCE(reqPath, '')) LIKE '%.ts'
-              AND TRY_CAST(reqTimeSec AS DOUBLE) IS NOT NULL
+            FROM read_parquet({lake_source}, hive_partitioning=1, union_by_name=1) AS logs
+            LEFT JOIN ua_normalization_map norm ON CAST(logs.UA AS VARCHAR) = norm.ua_raw
+            WHERE {row_filter}
         ),
         resolved AS (
             SELECT

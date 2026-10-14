@@ -477,6 +477,13 @@ try {
             [Console]::Error.WriteLine("Could not persist recovery failure state: $($_.Exception.Message)")
         }
     }
+    try {
+        $notifyPython = Join-Path $WorkspaceRoot '..\venv\Scripts\python.exe'
+        & $notifyPython (Join-Path $WorkspaceRoot 'src\runtime\etl_notifications.py') `
+            --step 'Daily recovery' --error $failure --state-path $RecoveryStatePath
+    } catch {
+        [Console]::Error.WriteLine("Could not show recovery failure alert: $($_.Exception.Message)")
+    }
     exit 1
 } finally {
     $liveRestartFailure = $null
