@@ -192,8 +192,16 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--out-dir", default=str(ETL_ROOT / "output" / "overview"))
     parser.add_argument("--sources", default="fast,stream")
     parser.add_argument("--dates", default="", help="Optional comma-separated YYYY-MM-DD dates to repair.")
+    parser.add_argument("--include-mismatched", action="store_true", help="Also repair completed dates whose retained lake counts differ from the Overview.")
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args()
+
+
+def selected_repair_dates(requested: str, mismatched: pd.DataFrame, include_mismatched: bool = False) -> list[str]:
+    dates = {item.strip() for item in requested.split(',') if item.strip()}
+    if not dates or include_mismatched:
+        dates.update(mismatched.loc[mismatched['rows_true'] > 0, 'date'].dropna().astype(str))
+    return sorted(dates)
 
 
 def main() -> None:
@@ -223,12 +231,8 @@ def main() -> None:
     merged["rows_overview"] = merged["rows_overview"].fillna(0).astype("int64")
     merged["diff"] = merged["rows_overview"] - merged["rows_true"]
     mismatched = merged[merged["diff"] != 0].copy()
-    if args.dates:
-        requested = {item.strip() for item in args.dates.split(",") if item.strip()}
-        repair_dates = sorted(requested)
-        mismatched = mismatched[mismatched["date"].isin(requested)]
-    else:
-        repair_dates = sorted(set(mismatched["date"].dropna().astype(str)))
+    repair_dates = selected_repair_dates(args.dates, mismatched, args.include_mismatched)
+    mismatched = mismatched[mismatched['date'].isin(repair_dates)]
     audit_dir = out_dir / "audit"
     audit_dir.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d_%H%M%S")

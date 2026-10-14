@@ -1851,6 +1851,7 @@ def main() -> None:
                 args.overview_sources or "fast,stream",
                 "--dates",
                 repair_date_text,
+                "--include-mismatched",
             ]
         return [
             python,
