@@ -35,12 +35,12 @@ class InstanceLock:
     def __enter__(self):
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._stream = self.path.open("a+b")
-        self._stream.seek(0)
-        if self._stream.read(1) == b"":
-            self._stream.write(b"0")
-            self._stream.flush()
-        self._stream.seek(0)
         try:
+            self._stream.seek(0)
+            if self._stream.read(1) == b"":
+                self._stream.write(b"0")
+                self._stream.flush()
+            self._stream.seek(0)
             if os.name == "nt":
                 import msvcrt
 
@@ -497,6 +497,25 @@ class LiveEngine:
                 self.store.event("ERROR", "snapshot", str(exc))
             self.stop_event.wait(self.config.snapshot_seconds)
 
+    def retention_loop(self) -> None:
+        while not self.stop_event.is_set():
+            delay = 3600
+            try:
+                result = self.store.prune_history(
+                    self.config.retention_days, stop_event=self.stop_event
+                )
+                atomic_write_json(self.config.state_dir / "retention_status.json", result)
+                LOGGER.info("Live retention: %s", result)
+                if not result["complete"]:
+                    delay = 60
+            except Exception as exc:
+                LOGGER.exception("Live retention failed; will retry")
+                self._set_runtime(retention_error=str(exc))
+                delay = 300
+            else:
+                self._set_runtime(retention_error=None, retention=result)
+            self.stop_event.wait(delay)
+
     def run(self) -> None:
         with InstanceLock(self.config.state_dir / "live_monitor.lock"):
             stop_request_path = self.config.state_dir / "stop.request"
@@ -534,6 +553,7 @@ class LiveEngine:
             threads = [
                 threading.Thread(target=self.scanner_loop, name="scanner"),
                 threading.Thread(target=self.snapshot_loop, name="snapshot"),
+                threading.Thread(target=self.retention_loop, name="retention"),
             ]
             if self.sync_enabled:
                 threads.extend([
@@ -561,7 +581,8 @@ class LiveEngine:
                     self.stop_event.set()
                     server.stop()
                     for thread in threads:
-                        thread.join(timeout=10)
+                        # Keep the instance lock until maintenance releases SQLite.
+                        thread.join(timeout=None if thread.name == "retention" else 10)
                     # Let a claimed gzip finish its atomic database transaction.
                     # Killing it here would only create more recovery work next start.
                     for worker in workers:

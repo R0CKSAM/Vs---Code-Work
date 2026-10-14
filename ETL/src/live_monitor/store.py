@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import contextlib
 import datetime as dt
+import json
+import shutil
 import sqlite3
 import threading
 import time
@@ -424,6 +426,16 @@ class LiveStore:
             ).fetchone()
             if status is None or status["status"] != "processing":
                 raise RuntimeError(f"File is not claimed for processing: {path}")
+            watermark = connection.execute(
+                "SELECT value FROM metadata WHERE key='retention_cutoff_ist'"
+            ).fetchone()
+            cutoff = watermark[0] if watermark else ""
+            # Late/replayed files must not resurrect expired history, including
+            # files containing events on both sides of the retention boundary.
+            def retained(rows, daily=False):
+                boundary = cutoff[:10] if daily else cutoff
+                return (row for row in rows if row[0] >= boundary)
+
             connection.executemany(
                 """
                 INSERT INTO minute_metrics(
@@ -451,14 +463,14 @@ class LiveStore:
                     tls_overhead_total_ms=tls_overhead_total_ms+excluded.tls_overhead_total_ms,
                     delivery_edge_issues=delivery_edge_issues+excluded.delivery_edge_issues
                 """,
-                [(*key, *values) for key, values in batch.metrics.items()],
+                retained((*key, *values) for key, values in batch.metrics.items()),
             )
             connection.executemany(
                 "INSERT OR IGNORE INTO minute_viewers VALUES(?,?,?,?)",
-                batch.minute_viewers,
+                retained(batch.minute_viewers),
             )
             viewer_history: dict[tuple[str, str], list[str]] = {}
-            for minute_ist, _req_host, target, viewer_key in batch.minute_viewers:
+            for minute_ist, _req_host, target, viewer_key in retained(batch.minute_viewers):
                 bounds = viewer_history.setdefault(
                     (target, viewer_key), [minute_ist, minute_ist]
                 )
@@ -477,11 +489,11 @@ class LiveStore:
             )
             connection.executemany(
                 "INSERT OR IGNORE INTO minute_devices VALUES(?,?,?,?)",
-                batch.minute_devices,
+                retained(batch.minute_devices),
             )
             connection.executemany(
                 "INSERT OR IGNORE INTO minute_sessions VALUES(?,?,?,?)",
-                batch.minute_sessions,
+                retained(batch.minute_sessions),
             )
             connection.executemany(
                 """
@@ -492,7 +504,7 @@ class LiveStore:
                     requests=requests+excluded.requests,
                     bytes=bytes+excluded.bytes
                 """,
-                [(*key, *values) for key, values in batch.dimensions.items()],
+                retained((*key, *values) for key, values in batch.dimensions.items()),
             )
             connection.executemany(
                 """
@@ -513,11 +525,11 @@ class LiveStore:
                     throughput_samples=throughput_samples+excluded.throughput_samples,
                     throughput_total=throughput_total+excluded.throughput_total
                 """,
-                [(*key, *values) for key, values in batch.quality_dimensions.items()],
+                retained((*key, *values) for key, values in batch.quality_dimensions.items()),
             )
             connection.executemany(
                 "INSERT OR IGNORE INTO daily_viewers VALUES(?,?,?,?)",
-                batch.daily_viewers,
+                retained(batch.daily_viewers, daily=True),
             )
             connection.execute(
                 """
@@ -532,6 +544,79 @@ class LiveStore:
                     path_text,
                 ),
             )
+
+    def checkpoint(self) -> dict:
+        """Ask SQLite to reclaim WAL space; never remove its files ourselves."""
+        with self.connect() as connection:
+            connection.execute("PRAGMA busy_timeout=250")
+            busy, pages, copied = connection.execute("PRAGMA wal_checkpoint(TRUNCATE)").fetchone()
+        return {"busy": busy, "wal_pages": pages, "checkpointed_pages": copied}
+
+    def prune_history(self, days: int = 7, *, now: dt.datetime | None = None,
+                      budget_seconds: float = 15, batch_size: int = 5000,
+                      stop_event=None) -> dict:
+        """Bounded, restartable retention. Pending work and source files survive."""
+        if days < 1 or batch_size < 1 or budget_seconds <= 0:
+            raise ValueError("Retention days, batch size and budget must be positive")
+        now = (now or dt.datetime.now(IST)).astimezone(IST)
+        boundary = now.replace(hour=0, minute=0, second=0, microsecond=0) - dt.timedelta(days=days)
+        cutoff = boundary.strftime("%Y-%m-%dT%H:%M:00%z")
+        with self.connect() as connection:
+            # A clock rollback or increased retention cannot recover deleted rows.
+            connection.execute("""INSERT INTO metadata VALUES('retention_cutoff_ist',?)
+                ON CONFLICT(key) DO UPDATE SET value=MAX(value,excluded.value)""", (cutoff,))
+            cutoff = connection.execute(
+                "SELECT value FROM metadata WHERE key='retention_cutoff_ist'"
+            ).fetchone()[0]
+            previous = connection.execute(
+                "SELECT value FROM metadata WHERE key='retention_last_result'"
+            ).fetchone()
+        timestamp = dt.datetime.strptime(cutoff, "%Y-%m-%dT%H:%M:%S%z").timestamp()
+        predicates = [(table, "minute_ist < ?", (cutoff,)) for table in (
+            "minute_metrics", "minute_viewers", "minute_devices", "minute_sessions",
+            "minute_dimensions", "minute_quality_dimensions",
+        )] + [
+            ("daily_viewers", "date_ist < ?", (cutoff[:10],)),
+            ("viewer_history", "last_seen_ist < ?", (cutoff,)),
+            ("runtime_events", "occurred_at < ?", (timestamp,)),
+            # Only completed, fully expired files can lose their replay ledger.
+            ("files", "status='done' AND max_event_ts < ? AND updated_at < ?",
+             (timestamp, timestamp)),
+        ]
+        if previous:
+            progress = json.loads(previous[0])
+            if progress.get("cutoff_ist") == cutoff and not progress.get("complete"):
+                names = [entry[0] for entry in predicates]
+                if progress.get("next_table") in names:
+                    predicates = predicates[names.index(progress["next_table"]):]
+        result = {"cutoff_ist": cutoff, "previous_days": days, "deleted": {}, "complete": True}
+        result["checkpoint_before"] = self.checkpoint()
+        deadline = time.monotonic() + budget_seconds
+        for table, predicate, parameters in predicates:
+            while True:
+                if time.monotonic() >= deadline or (stop_event and stop_event.is_set()):
+                    result["complete"] = False
+                    result["next_table"] = table
+                    break
+                if shutil.disk_usage(self.path.parent).free < 1024 ** 3:
+                    raise RuntimeError("Live retention needs at least 1 GiB free for safe SQLite writes")
+                with self.connect() as connection:
+                    count = connection.execute(
+                        f"DELETE FROM {table} WHERE rowid IN ("
+                        f"SELECT rowid FROM {table} WHERE {predicate} LIMIT ?)",
+                        (*parameters, batch_size),
+                    ).rowcount
+                result["deleted"][table] = result["deleted"].get(table, 0) + count
+                if count < batch_size:
+                    break
+            if not result["complete"]:
+                break
+        result["checkpoint_after"] = self.checkpoint()
+        result["checked_at"] = now.isoformat()
+        with self.connect() as connection:
+            connection.execute("""INSERT INTO metadata VALUES('retention_last_result',?)
+                ON CONFLICT(key) DO UPDATE SET value=excluded.value""", (json.dumps(result),))
+        return result
 
     def fail_file(self, path: Path, message: str, max_attempts: int = 5) -> None:
         now = time.time()

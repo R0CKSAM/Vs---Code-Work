@@ -72,7 +72,7 @@ a time to limit competition with ingestion. Checkbox changes are debounced.
   Selecting every channel reuses the published all-channel snapshot.
 - Positive `VETO_LIVE_DASHBOARD_MINUTES` values opt back into a rolling window;
   `0` (the default) selects today. Changes to this environment setting require
-  a War Room restart. No raw logs or historical aggregates are deleted.
+  a War Room restart. Display range is independent of retention below.
 
 Validate configuration without starting ingestion:
 
@@ -90,6 +90,41 @@ Environment overrides:
 - `VETO_LIVE_HTTP_HOST` and `VETO_LIVE_HTTP_PORT`
 - `VETO_LIVE_MAX_LAG_SECONDS` (default 600)
 - `VETO_LIVE_DASHBOARD_MINUTES` (default 0: today from midnight IST)
+- `VETO_LIVE_RETENTION_DAYS` (default 7: previous seven IST days plus today)
+
+## Automatic retention
+
+While the monitor runs, maintenance starts automatically and checks hourly.
+It retains today plus the previous seven calendar days in IST. For example,
+on 14 October, data from 7 October 00:00 IST onward is retained. Older minute
+metrics, identities, dimensions, daily viewers and runtime events are deleted
+in small transactions. Initial backlog cleanup retries every minute; failures
+retry after five minutes. `output/live_monitor/retention_status.json` records
+the cutoff, deleted row counts and whether the pass finished.
+
+Late files cannot reinsert expired metrics. Only completed file-ledger entries
+whose events and update time are both expired are pruned. Pending, failed and
+in-flight work survives. First-seen metadata for still-active viewers remains
+to preserve returning-viewer classification. This is rolling history retention,
+not a full reset or creation of seven independent database backups.
+
+SQLite performs WAL checkpoints safely, deferring truncation when readers are
+busy. Freed database pages are reused; the `.sqlite3` file need not shrink on
+disk. Never delete its WAL/SHM files manually. No automatic full VACUUM is run
+on this disk-constrained machine. The application log rotates daily with seven
+backups. Unrelated exports, launcher logs, screenshots and source caches are not
+deleted by this policy.
+
+For a bounded maintenance pass while the monitor is stopped (including an ETL
+pause), run from `ETL`:
+
+```powershell
+..\venv\Scripts\python.exe -m src.live_monitor.cli retain --budget-seconds 60
+```
+
+Exit code 2 means more cleanup remains; rerun or let the monitor continue after
+it resumes. The instance lock prevents this command competing with ingestion.
+Normal automatic maintenance is paused whenever the monitor itself is paused.
 
 ## Recovery guarantees
 
