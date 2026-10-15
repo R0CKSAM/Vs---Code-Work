@@ -1,8 +1,0 @@
-<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="styles.css"></head><body>
-<h2>Storyboard Auto Queue <small>v2</small></h2>
-<label>Master style prompt</label><textarea id="master" rows="4" placeholder="16:9 frame, consistent characters…"></textarea>
-<label>One scene per line: Frame 01 || scene description</label><textarea id="prompts" rows="9"></textarea>
-<input id="file" type="file" accept=".txt,text/plain">
-<div class="buttons"><button id="save">Save queue</button><button id="start">Start from frame 1</button><button id="pause">Pause</button><button id="resume">Resume</button><button id="reset">Reset progress</button></div>
-<p><strong>Status:</strong> <span id="status">Idle</span></p><p><strong>Completed:</strong> <span id="progress">0 / 0</span></p><p id="detail"></p><p class="note">Keep this ChatGPT tab open. This extension will pause if completion cannot be verified. Test with 2–3 frames first.</p>
-<script src="popup.js"></script></body></html>
