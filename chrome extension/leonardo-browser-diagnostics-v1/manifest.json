@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Leonardo Browser Diagnostics",
+  "version": "1.0.0",
+  "description": "Read-only diagnostics for Leonardo AI creation UI. No prompt submission.",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["https://app.leonardo.ai/*"],
+  "content_scripts": [{"matches": ["https://app.leonardo.ai/*"], "js": ["content.js"], "run_at": "document_idle"}],
+  "action": {"default_popup": "popup.html", "default_title": "Leonardo Diagnostics"}
+}

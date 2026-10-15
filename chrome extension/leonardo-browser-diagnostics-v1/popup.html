@@ -1,0 +1,11 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Leonardo Diagnostics</title><link rel="stylesheet" href="popup.css"></head>
+<body><main>
+<header><div class="mark">L<span>✦</span></div><div><strong>Leonardo Diagnostics</strong><small>READ-ONLY BROWSER INSPECTOR</small></div><span class="version">v1</span></header>
+<section class="status-card"><div class="row"><span>RECORDER STATUS</span><span id="dot" class="badge">Idle</span></div><h1 id="eventCount">0 <span>events</span></h1><p id="details">Open Leonardo AI to begin.</p></section>
+<div id="notice" class="notice">Only works on app.leonardo.ai. It never clicks Generate or records your prompt text.</div>
+<div class="grid"><button id="start" class="primary">● Start recording</button><button id="stop" class="secondary">■ Stop</button></div>
+<div class="grid"><button id="mark" class="light">＋ Add checkpoint</button><button id="export" class="light">↓ Export JSON</button></div>
+<button id="clear" class="clear">Clear previous log</button>
+<section class="instructions"><b>Quick test</b><p>1. Start recording on Leonardo's image-generation page.</p><p>2. Enter any test prompt and click Generate yourself.</p><p>3. Wait until the final image appears.</p><p>4. Stop and export JSON, then share it here.</p></section>
+<footer>Local diagnostics only · No prompt text or image URLs logged</footer>
+</main><script src="popup.js"></script></body></html>
