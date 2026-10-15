@@ -1,10 +1,10 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="styles.css"></head><body>
-<h2>Storyboard Auto Queue <small>v12 • Manual first send</small></h2>
+<h2>Storyboard Auto Queue <small>v16 • Diagnostic lifecycle</small></h2>
 <label>Master prompt</label><textarea id="master" rows="4" placeholder="Consistent characters, cinematic 16:9..." ></textarea>
 <label>Frames (one per line: Frame 03 || description)</label><textarea id="prompts" rows="8"></textarea>
 <label>Import Excel / CSV / TXT</label><input id="file" type="file" accept=".xlsx,.csv,.txt">
 <div class="recovery"><label for="startRow">Start at Excel queue row (1 = first imported row)</label><input id="startRow" type="number" min="1" step="1" value="1"><button id="setRow">Set next row safely</button></div><div class="buttons"><button id="save">Save queue</button><button id="start">Start / Continue</button><button id="pause">Pause</button><button id="resume">Resume</button><button id="complete">Mark frame complete</button><button id="retry">Retry frame (caution)</button><button id="reset">Reset progress</button></div>
 <p><strong>Status:</strong> <span id="status">idle</span> | <strong>Completed:</strong> <span id="progress">0 / 0</span></p>
 <pre id="detail" aria-live="polite"></pre><p id="importStatus" class="note">Rows are processed in spreadsheet order, regardless of frame numbers.</p>
-<p class="note">Click Send manually for the FIRST imported row, then later rows are automatic. Keep the generating ChatGPT tab open. A single tab owns the queue. Auto-detection is best-effort and may pause for confirmation. It never automatically retries an uncertain submission.</p>
+<p class="note">Rows submit through the observed aria-label=Send button. Keep the generating ChatGPT tab open. A single tab owns the queue. Auto-detection is best-effort and may pause for confirmation. It never automatically retries an uncertain submission.</p>
 <script src="importer.js"></script><script src="popup.js"></script></body></html>

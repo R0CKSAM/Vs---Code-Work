@@ -1,0 +1,932 @@
+{
+  "format": "Storyboard Queue Diagnostic 1",
+  "notice": "Review before sharing. No message text is intentionally recorded.",
+  "exportedAt": "2026-10-15T10:31:57.803Z",
+  "events": [
+    {
+      "assistantTurns": 0,
+      "at": "2026-10-15T10:29:28.907Z",
+      "composer": true,
+      "composerChars": 0,
+      "composerHasText": false,
+      "composerTag": "DIV",
+      "conversationTurns": 0,
+      "detail": "User started read-only recording",
+      "elapsedMs": 0,
+      "kind": "start",
+      "nearbyButtons": [
+        {
+          "aria": "Scroll to bottom",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Add files and more",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Select ChatGPT model",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-tertiary",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        }
+      ],
+      "stopVisible": false,
+      "userTurns": 0,
+      "visualElements": 5
+    },
+    {
+      "assistantTurns": 0,
+      "at": "2026-10-15T10:29:43.534Z",
+      "composer": true,
+      "composerChars": 0,
+      "composerHasText": false,
+      "composerTag": "DIV",
+      "conversationTurns": 0,
+      "detail": "DOM mutation",
+      "elapsedMs": 14627,
+      "kind": "state",
+      "nearbyButtons": [
+        {
+          "aria": "Generated image 1",
+          "disabled": false,
+          "paths": 0,
+          "svg": "",
+          "tag": "button",
+          "testid": "generated-image-preview",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Copy image",
+          "disabled": false,
+          "paths": 1,
+          "svg": "icon-sm",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Like this image",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Dislike this image",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Share",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Try again",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Read aloud",
+          "disabled": false,
+          "paths": 1,
+          "svg": "icon-xs",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "More actions",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Scroll to bottom",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Add files and more",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Select ChatGPT model",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-tertiary",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        }
+      ],
+      "stopVisible": false,
+      "userTurns": 0,
+      "visualElements": 5
+    },
+    {
+      "assistantTurns": 0,
+      "at": "2026-10-15T10:29:43.931Z",
+      "composer": true,
+      "composerChars": 0,
+      "composerHasText": false,
+      "composerTag": "DIV",
+      "conversationTurns": 0,
+      "detail": "DOM mutation",
+      "elapsedMs": 397,
+      "kind": "state",
+      "nearbyButtons": [
+        {
+          "aria": "Scroll to bottom",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Add files and more",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Select ChatGPT model",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-tertiary",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        }
+      ],
+      "stopVisible": false,
+      "userTurns": 0,
+      "visualElements": 5
+    },
+    {
+      "assistantTurns": 0,
+      "at": "2026-10-15T10:29:58.804Z",
+      "composer": true,
+      "composerChars": 902,
+      "composerHasText": true,
+      "composerTag": "DIV",
+      "conversationTurns": 0,
+      "detail": "DOM mutation",
+      "elapsedMs": 14873,
+      "kind": "state",
+      "nearbyButtons": [
+        {
+          "aria": "Expand",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Add files and more",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Select ChatGPT model",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-tertiary",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Dictate",
+          "disabled": false,
+          "paths": 0,
+          "svg": "text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Send",
+          "disabled": false,
+          "paths": 1,
+          "svg": "icon-primary-action text-composer-primary",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "submit"
+        }
+      ],
+      "stopVisible": false,
+      "userTurns": 0,
+      "visualElements": 5
+    },
+    {
+      "assistantTurns": 0,
+      "at": "2026-10-15T10:29:58.937Z",
+      "composer": true,
+      "composerChars": 902,
+      "composerHasText": true,
+      "composerTag": "DIV",
+      "conversationTurns": 0,
+      "detail": "DOM mutation",
+      "elapsedMs": 133,
+      "kind": "state",
+      "nearbyButtons": [
+        {
+          "aria": "Scroll to bottom",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Expand",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Add files and more",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Select ChatGPT model",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-tertiary",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Dictate",
+          "disabled": false,
+          "paths": 0,
+          "svg": "text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Send",
+          "disabled": false,
+          "paths": 1,
+          "svg": "icon-primary-action text-composer-primary",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "submit"
+        }
+      ],
+      "stopVisible": false,
+      "userTurns": 0,
+      "visualElements": 5
+    },
+    {
+      "assistantTurns": 0,
+      "at": "2026-10-15T10:30:01.579Z",
+      "composer": true,
+      "composerChars": 0,
+      "composerHasText": false,
+      "composerTag": "DIV",
+      "conversationTurns": 0,
+      "detail": "DOM mutation",
+      "elapsedMs": 2642,
+      "kind": "state",
+      "nearbyButtons": [
+        {
+          "aria": "Scroll to bottom",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default hidden group-hover/scroll-to-bottom:block group-focus-visible/scr",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Add files and more",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Select ChatGPT model",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-tertiary",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        }
+      ],
+      "stopVisible": false,
+      "userTurns": 0,
+      "visualElements": 3
+    },
+    {
+      "assistantTurns": 0,
+      "at": "2026-10-15T10:30:01.710Z",
+      "composer": true,
+      "composerChars": 0,
+      "composerHasText": false,
+      "composerTag": "DIV",
+      "conversationTurns": 0,
+      "detail": "DOM mutation",
+      "elapsedMs": 131,
+      "kind": "state",
+      "nearbyButtons": [
+        {
+          "aria": "Scroll to bottom",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Add files and more",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Select ChatGPT model",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-tertiary",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        }
+      ],
+      "stopVisible": false,
+      "userTurns": 0,
+      "visualElements": 3
+    },
+    {
+      "assistantTurns": 0,
+      "at": "2026-10-15T10:30:27.358Z",
+      "composer": true,
+      "composerChars": 0,
+      "composerHasText": false,
+      "composerTag": "DIV",
+      "conversationTurns": 0,
+      "detail": "DOM mutation",
+      "elapsedMs": 25648,
+      "kind": "state",
+      "nearbyButtons": [
+        {
+          "aria": "Scroll to bottom",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default hidden group-hover/scroll-to-bottom:block group-focus-visible/scr",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Add files and more",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Select ChatGPT model",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-tertiary",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        }
+      ],
+      "stopVisible": false,
+      "userTurns": 0,
+      "visualElements": 4
+    },
+    {
+      "assistantTurns": 0,
+      "at": "2026-10-15T10:30:27.536Z",
+      "composer": true,
+      "composerChars": 0,
+      "composerHasText": false,
+      "composerTag": "DIV",
+      "conversationTurns": 0,
+      "detail": "poll",
+      "elapsedMs": 178,
+      "kind": "state",
+      "nearbyButtons": [
+        {
+          "aria": "Play Snake while your image is generating",
+          "disabled": false,
+          "paths": 0,
+          "svg": "",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Scroll to bottom",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default hidden group-hover/scroll-to-bottom:block group-focus-visible/scr",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Add files and more",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Select ChatGPT model",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-tertiary",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        }
+      ],
+      "stopVisible": false,
+      "userTurns": 0,
+      "visualElements": 5
+    },
+    {
+      "assistantTurns": 0,
+      "at": "2026-10-15T10:30:49.865Z",
+      "composer": true,
+      "composerChars": 0,
+      "composerHasText": false,
+      "composerTag": "DIV",
+      "conversationTurns": 0,
+      "detail": "DOM mutation",
+      "elapsedMs": 22329,
+      "kind": "state",
+      "nearbyButtons": [
+        {
+          "aria": "Scroll to bottom",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Add files and more",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Select ChatGPT model",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-tertiary",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        }
+      ],
+      "stopVisible": false,
+      "userTurns": 0,
+      "visualElements": 5
+    },
+    {
+      "assistantTurns": 0,
+      "at": "2026-10-15T10:31:12.296Z",
+      "composer": true,
+      "composerChars": 0,
+      "composerHasText": false,
+      "composerTag": "DIV",
+      "conversationTurns": 0,
+      "detail": "DOM mutation",
+      "elapsedMs": 22431,
+      "kind": "state",
+      "nearbyButtons": [
+        {
+          "aria": "Scroll to bottom",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Add files and more",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Select ChatGPT model",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-tertiary",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        }
+      ],
+      "stopVisible": false,
+      "userTurns": 0,
+      "visualElements": 3
+    },
+    {
+      "assistantTurns": 0,
+      "at": "2026-10-15T10:31:15.701Z",
+      "composer": true,
+      "composerChars": 0,
+      "composerHasText": false,
+      "composerTag": "DIV",
+      "conversationTurns": 0,
+      "detail": "DOM mutation",
+      "elapsedMs": 3405,
+      "kind": "state",
+      "nearbyButtons": [
+        {
+          "aria": "Scroll to bottom",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Add files and more",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Select ChatGPT model",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-tertiary",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        }
+      ],
+      "stopVisible": false,
+      "userTurns": 0,
+      "visualElements": 4
+    },
+    {
+      "assistantTurns": 0,
+      "at": "2026-10-15T10:31:34.037Z",
+      "composer": true,
+      "composerChars": 0,
+      "composerHasText": false,
+      "composerTag": "DIV",
+      "conversationTurns": 0,
+      "detail": "poll",
+      "elapsedMs": 18336,
+      "kind": "state",
+      "nearbyButtons": [
+        {
+          "aria": "Generated image 1",
+          "disabled": false,
+          "paths": 0,
+          "svg": "",
+          "tag": "button",
+          "testid": "generated-image-preview",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Edit generated image 1",
+          "disabled": false,
+          "paths": 0,
+          "svg": "",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Share generated image 1",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Copy image",
+          "disabled": false,
+          "paths": 1,
+          "svg": "icon-sm",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Like this image",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Dislike this image",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Share",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "More actions",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Scroll to bottom",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Add files and more",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Select ChatGPT model",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-tertiary",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        }
+      ],
+      "stopVisible": false,
+      "userTurns": 0,
+      "visualElements": 4
+    },
+    {
+      "assistantTurns": 0,
+      "at": "2026-10-15T10:31:34.540Z",
+      "composer": true,
+      "composerChars": 0,
+      "composerHasText": false,
+      "composerTag": "DIV",
+      "conversationTurns": 0,
+      "detail": "poll",
+      "elapsedMs": 503,
+      "kind": "state",
+      "nearbyButtons": [
+        {
+          "aria": "Scroll to bottom",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Add files and more",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Select ChatGPT model",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-tertiary",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        }
+      ],
+      "stopVisible": false,
+      "userTurns": 0,
+      "visualElements": 4
+    },
+    {
+      "assistantTurns": 0,
+      "at": "2026-10-15T10:31:56.245Z",
+      "composer": true,
+      "composerChars": 0,
+      "composerHasText": false,
+      "composerTag": "DIV",
+      "conversationTurns": 0,
+      "detail": "User ended recording",
+      "elapsedMs": 21705,
+      "kind": "stop",
+      "nearbyButtons": [
+        {
+          "aria": "Scroll to bottom",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Add files and more",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-default",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        },
+        {
+          "aria": "Select ChatGPT model",
+          "disabled": false,
+          "paths": 0,
+          "svg": "Icon-X4VkKC text-tertiary",
+          "tag": "button",
+          "testid": "",
+          "title": "",
+          "type": "button"
+        }
+      ],
+      "stopVisible": false,
+      "userTurns": 0,
+      "visualElements": 4
+    }
+  ]
+}

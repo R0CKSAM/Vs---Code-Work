@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Storyboard Auto Queue",
-  "version": "13.0.0",
-  "description": "Auto-submit storyboard rows using composer-scoped idle/send/stop control detection.",
+  "version": "16.0.0",
+  "description": "Auto-submit storyboard rows using diagnostic-confirmed preview lifecycle tracking for image results.",
   "permissions": [
     "storage",
     "tabs"

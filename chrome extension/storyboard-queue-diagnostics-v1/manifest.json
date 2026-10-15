@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Storyboard Queue Diagnostics",
+  "version": "1.0.0",
+  "description": "Read-only diagnostics for ChatGPT composer, send/stop controls, and image-generation transitions.",
+  "permissions": ["storage", "tabs", "downloads"],
+  "host_permissions": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+  "action": {"default_popup": "popup.html"},
+  "content_scripts": [{"matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"], "js": ["observer.js"], "run_at": "document_idle"}]
+}
