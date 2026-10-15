@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Storyboard Auto Queue</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <h2>Storyboard Auto Queue</h2>
+
+    <label>Master Prompt</label>
+    <textarea id="masterPrompt" placeholder="Global style prompt..."></textarea>
+
+    <label>Prompts (one per line, use format: Frame 01 || your scene)</label>
+    <textarea id="promptList" placeholder="Frame 01 || A prince enters the forest..."></textarea>
+
+    <div class="buttons">
+      <button id="saveBtn">Save</button>
+      <button id="startBtn">Start</button>
+      <button id="pauseBtn">Pause</button>
+      <button id="resumeBtn">Resume</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+
+    <div class="status">
+      <p><strong>Status:</strong> <span id="statusText">Idle</span></p>
+      <p><strong>Progress:</strong> <span id="progressText">0 / 0</span></p>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

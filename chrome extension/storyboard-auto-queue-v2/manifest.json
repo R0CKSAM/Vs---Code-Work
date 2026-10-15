@@ -1,0 +1,10 @@
+{
+  "manifest_version": 3,
+  "name": "Storyboard Auto Queue",
+  "version": "2.1.0",
+  "description": "Sequential image prompt queue with completion checks and safe pause.",
+  "permissions": ["storage", "tabs"],
+  "host_permissions": ["https://chatgpt.com/*", "https://chat.openai.com/*"],
+  "action": {"default_popup": "popup.html"},
+  "content_scripts": [{"matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"], "js": ["content.js"], "run_at": "document_idle"}]
+}

@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Storyboard Auto Queue",
+  "version": "1.0",
+  "description": "Automatically sends storyboard prompts one by one to ChatGPT.",
+  "permissions": ["storage", "tabs", "activeTab", "scripting"],
+  "host_permissions": [
+    "https://chat.openai.com/*",
+    "https://chatgpt.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chat.openai.com/*",
+        "https://chatgpt.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
