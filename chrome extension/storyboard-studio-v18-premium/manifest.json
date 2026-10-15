@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "Storyboard Studio",
+  "version": "18.0.0",
+  "description": "Premium storyboard queue with optional frame downloads, history and completion alerts.",
+  "permissions": [
+    "storage",
+    "tabs",
+    "downloads",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}
