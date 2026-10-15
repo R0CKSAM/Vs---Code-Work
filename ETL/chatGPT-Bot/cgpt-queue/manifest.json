@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "ChatGPT Prompt Queue",
+  "version": "1.0.0",
+  "description": "Paste prompts or load a CSV. Types each one into ChatGPT, waits for the image, auto-saves it.",
+  "permissions": ["storage", "downloads", "activeTab"],
+  "host_permissions": ["https://chatgpt.com/*"],
+  "action": { "default_popup": "popup.html", "default_title": "ChatGPT Prompt Queue" },
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["https://chatgpt.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

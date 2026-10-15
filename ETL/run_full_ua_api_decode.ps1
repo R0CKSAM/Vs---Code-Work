@@ -9,14 +9,34 @@ $ErrorActionPreference = "Stop"
 
 $EtlRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $RepoRoot = Split-Path -Parent $EtlRoot
-$LogDir = Join-Path $EtlRoot "output\logs\ua_decode"
-New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
-
-$Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
-$TranscriptPath = Join-Path $LogDir "full_ua_api_decode_$Stamp.log"
-
-Start-Transcript -Path $TranscriptPath -Force | Out-Null
+$Mutex = New-Object System.Threading.Mutex($false, 'Local\VetoETLFullUaApiDecode')
+$OwnsMutex = $false
 try {
+    $OwnsMutex = $Mutex.WaitOne(0)
+} catch [System.Threading.AbandonedMutexException] {
+    $OwnsMutex = $true
+}
+if (-not $OwnsMutex) {
+    $Mutex.Dispose()
+    throw 'A full UA API decode is already running. Check output\logs\ua_decode.'
+}
+$TranscriptStarted = $false
+try {
+    $ActiveWriters = @(Get-CimInstance Win32_Process | Where-Object {
+        $_.Name -match '^python(?:w)?\.exe$' -and
+        $_.CommandLine -match '(decode_all_distinct_ua_api|decode_distinct_ua_lookup|run_pipeline)\.py'
+    })
+    if ($ActiveWriters.Count) {
+        throw 'ETL or another UA decoder is running. Run this command after it finishes.'
+    }
+    $LogDir = Join-Path $EtlRoot "output\logs\ua_decode"
+    New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
+
+    $Stamp = Get-Date -Format "yyyyMMdd_HHmmss"
+    $TranscriptPath = Join-Path $LogDir "full_ua_api_decode_$Stamp.log"
+
+    Start-Transcript -Path $TranscriptPath -Force | Out-Null
+    $TranscriptStarted = $true
     Set-Location -LiteralPath $RepoRoot
     Write-Host "ETL root: $EtlRoot"
     Write-Host "Log     : $TranscriptPath"
@@ -44,8 +64,16 @@ try {
         }
     }
 
+    Write-Host "Refreshing Veto UA Device Intelligence Preview..."
+    & ".\venv\Scripts\python.exe" "ETL\src\tools\generate_ua_decode_preview_dashboard.py"
+    if ($LASTEXITCODE -ne 0) {
+        throw "generate_ua_decode_preview_dashboard.py failed with exit code $LASTEXITCODE"
+    }
+
     Write-Host "Full UA API decode wrapper completed."
 }
 finally {
-    Stop-Transcript | Out-Null
+    if ($TranscriptStarted) { Stop-Transcript | Out-Null }
+    if ($OwnsMutex) { $Mutex.ReleaseMutex() }
+    $Mutex.Dispose()
 }

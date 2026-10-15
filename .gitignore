@@ -185,3 +185,9 @@ ETL/output/temp/
 ETL/output/exports/revenuelive_schema.zip
 ETL/output/exports/revenuelive_schema_20261005/
 ETL/output/exports/scoreboard_templates_20261005/
+
+# ChatGPT batch runner: authenticated browser state and generated responses stay local.
+ETL/chatGPT-Bot/.chrome-profile/
+ETL/chatGPT-Bot/output/
+ETL/chatGPT-Bot/.progress.txt
+ETL/chatGPT-Bot/New Text Document.txt
