@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en"><head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#641735"><title>Smart Report</title>
+  <link rel="stylesheet" href="style.css">
+</head><body><main>
+  <header class="top"><div class="brand-icon">SR</div><div class="brand-name"><strong>Smart Report</strong><small>Grafana → Outlook</small></div><span class="version">v3.6</span></header>
+  <section class="status-card" aria-live="polite">
+    <div class="status-title"><div><small class="eyebrow">REPORT STATUS</small><h1 id="mode">Stopped</h1></div><span class="status-pill" id="modeBadge"><span class="dot"></span><span id="modeLabel">Idle</span></span></div>
+    <div class="three-states"><span id="dashboardReady">Grafana</span><span id="outlookReady">Outlook</span><span id="recipientReady">Recipients</span></div>
+    <div class="progress-title"><span id="stage">Ready to set up</span><b id="percent"></b></div>
+    <div class="progress-track" id="progressTrack" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="bar"></div></div>
+    <div class="times"><span><small>Accepted by Outlook</small><strong id="sent">0</strong></span><span><small>Failed emails</small><strong id="failed">0</strong></span><span><small>Next report</small><strong id="nextRun">—</strong></span></div>
+    <div class="last-mail" role="status"><small>LAST EMAIL ATTEMPT</small><strong id="lastMailOutcome">None yet</strong><span id="lastMailTime"></span></div>
+  </section>
+  <section class="setup-card">
+    <div class="connection"><div><strong>Outlook account</strong><small id="authStatus">Not connected</small></div><button id="signIn" type="button" class="outline">Connect</button><button id="signOut" type="button" class="link" hidden>Disconnect</button></div>
+    <label for="dashboard">Grafana dashboard URL</label>
+    <div class="inline-field"><input id="dashboard" type="url" placeholder="Paste your Grafana link" spellcheck="false" autocomplete="off"><button id="useTab" type="button" class="tiny">Use tab</button></div>
+    <div class="label-row"><label for="to">Send to</label><small id="recipientCount">0 emails</small></div>
+    <textarea id="to" rows="2" placeholder="Type or paste email addresses" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+    <div id="recipientChips" class="recipient-chips" aria-live="polite"></div>
+    <div class="interval-row"><label for="interval">Every</label><input id="interval" type="number" min="1" max="1440" value="15" inputmode="numeric"><span>minutes</span><small id="savedMessage"> </small></div>
+    <div class="buttons"><button id="test" type="button" class="secondary">Send test</button><button id="start" type="button" class="primary">Start reports</button><button id="pauseResume" type="button" class="secondary" hidden>Pause</button><button id="stop" type="button" class="outline" hidden>Stop</button></div>
+  </section>
+  <section class="feedback">
+    <div id="errorBox" class="error-box" hidden><strong id="issueTitle">Report issue</strong><span id="errorText"></span><small>Fix the issue above, then select Send test.</small></div>
+    <div class="feedback-header"><strong>Recent activity</strong><button id="export" type="button" class="link">Export logs</button></div>
+    <ul id="activity"><li>No activity yet</li></ul>
+    <div id="status" role="status" class="hint">Connect Outlook, enter your dashboard and recipients, then send a test.</div>
+    <details><summary>Tools & troubleshooting</summary><div class="tools"><button id="capture" type="button" class="tiny">Check screenshot</button><button id="openTab" type="button" class="tiny">Open Grafana</button><button id="verify" type="button" class="tiny">Check Outlook</button><div id="previewwrap" hidden><img id="preview" alt="Grafana screenshot preview"><p id="previewmeta"></p></div><p id="policyNote"></p></div></details>
+  </section>
+  <footer>Chrome needs to stay open for scheduled reports.</footer>
+</main><script src="popup.js"></script></body></html>

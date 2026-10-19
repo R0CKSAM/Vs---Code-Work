@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#641735"><title>Smart Report</title><link rel="stylesheet" href="style.css"></head>
+<body><main>
+<header class="top"><div class="brand-icon">SR</div><div class="brand-name"><strong>Smart Report</strong><small>Grafana → Outlook</small></div><span class="version">v3.7.0</span></header>
+<section class="status-card" aria-live="polite">
+  <div class="status-title"><h1 id="mode">Stopped</h1><span id="modeBadge" class="status-pill"><span class="dot"></span><span id="modeLabel">Idle</span></span></div>
+  <div class="progress-title"><span id="stage">Check your screenshot first</span><b id="percent"></b></div>
+  <div id="progressTrack" class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="bar"></div></div>
+  <div class="times"><span><small>Accepted by Outlook</small><strong id="sent">0</strong></span><span><small>Failed / unconfirmed</small><strong id="failed">0</strong></span><span><small>Next email</small><strong id="nextRun">—</strong></span></div>
+  <div class="last-mail"><small>LAST COMPLETED</small><strong id="lastMailOutcome">None yet</strong><span id="lastMailTime"></span><span id="elapsed"></span></div>
+  <div class="three-states"><span id="dashboardReady">Screenshot</span><span id="outlookReady">Outlook</span><span id="recipientReady">Recipients</span></div>
+</section>
+<section id="errorBox" class="error-box" hidden><strong id="issueTitle">Report issue</strong><span id="errorText"></span></section>
+<section class="setup-card">
+  <div class="connection"><div><strong>Outlook</strong><small id="authStatus">Not connected</small></div><button id="signIn" class="outline">Connect</button><button id="signOut" class="link" hidden>Disconnect</button></div>
+  <label for="dashboard">Grafana dashboard</label><div class="inline-field"><input id="dashboard" type="url" placeholder="Open Grafana, then select Use tab" spellcheck="false"><button id="useTab" class="tiny">Use tab</button></div>
+  <div class="capture-settings"><select id="rowMode" aria-label="Sections to capture"><option value="all">Open all sections</option><option value="current">As currently open</option></select><span id="captureSettings">1600 px wide · no page reload</span><button id="capture" class="secondary">Check screenshot</button><button id="viewPreview" class="link" hidden>View preview</button></div>
+  <div class="label-row"><label for="to">Send to</label><small id="recipientCount">0 emails</small></div><textarea id="to" rows="1" placeholder="Type or paste email addresses" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+  <div id="recipientChips" class="recipient-chips"></div>
+  <div class="interval-row"><label for="interval">Email every</label><input id="interval" type="number" min="1" max="1440" value="15"><span>minutes</span><small id="savedMessage"></small></div>
+  <div class="buttons"><button id="test" class="secondary">Send test</button><button id="start" class="primary">Start reports</button><button id="pauseResume" class="secondary" hidden>Pause</button><button id="stop" class="outline" hidden>Stop</button></div>
+</section>
+<section class="feedback"><p id="status" class="hint" role="status">Check screenshot, approve its layout, then send one test.</p><details><summary>Activity & troubleshooting</summary><div class="feedback-header"><strong>Recent activity</strong><button id="export" class="link">Export logs</button></div><ul id="activity"></ul><div class="tools"><button id="openTab" class="tiny">Open Grafana</button><button id="verify" class="tiny">Check Outlook</button><p id="policyNote"></p></div></details></section>
+<footer>Accepted means submitted to Microsoft, not confirmed delivered. Keep Chrome open.</footer>
+</main><script src="popup.js"></script></body></html>

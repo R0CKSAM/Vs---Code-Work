@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#6f193d">
+  <title>Smart Report</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <header class="header">
+      <div class="brandmark" aria-hidden="true">S<span>R</span></div>
+      <div class="brand"><strong>Smart Report</strong><small>GRAFANA → OUTLOOK</small></div>
+      <span class="version">v3.3</span>
+    </header>
+
+    <section class="monitor" aria-label="Monitor status">
+      <div class="monitor-head">
+        <div><span class="eyebrow">MONITOR STATUS</span><h1 id="mode">Stopped</h1></div>
+        <span class="mode-pill" id="modeBadge"><i class="dot"></i><span id="modeLabel">Idle</span></span>
+      </div>
+      <div class="checks" aria-label="Readiness checks">
+        <span id="dashboardReady"><i class="dot"></i> Dashboard</span>
+        <span id="outlookReady"><i class="dot"></i> Outlook</span>
+        <span id="recipientReady"><i class="dot"></i> Recipients</span>
+      </div>
+      <div class="run-progress" aria-live="polite">
+        <div class="progress-heading"><span id="stage">No report in progress</span><b id="percent"></b></div>
+        <div class="progress-track" role="progressbar" aria-label="Report progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack"><div id="bar"></div></div>
+      </div>
+      <div class="schedule-stats"><div><small>Next attempt</small><b id="nextRun">Not scheduled</b></div><div><small>Last accepted</small><b id="lastSent">Never</b></div><div><small>Sent</small><b id="sent">0</b></div></div>
+    </section>
+
+    <section class="setup" aria-label="Report setup">
+      <div class="section-title"><h2>Report setup</h2><span id="savedMessage" aria-live="polite"> </span></div>
+      <div class="connection-row">
+        <div><strong>Microsoft Outlook</strong><small id="authStatus">Not connected</small></div>
+        <button type="button" id="signIn" class="outline-button">Connect</button>
+        <button type="button" id="signOut" class="text-button" hidden>Disconnect</button>
+      </div>
+
+      <label for="dashboard">Grafana dashboard link</label>
+      <div class="dashboard-row"><input id="dashboard" placeholder="Paste your dashboard URL" spellcheck="false" autocomplete="off" inputmode="url"><button type="button" id="useTab" class="small-button" title="Use current Grafana tab">Use tab</button></div>
+
+      <div class="recipients-title"><label for="to">Send report to</label><span id="recipientCount">0 addresses</span></div>
+      <textarea id="to" rows="2" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Paste emails here — commas, spaces, or new lines"></textarea>
+      <div class="helper">Paste more addresses anytime. Existing recipients stay.</div>
+
+      <div class="frequency-row">
+        <div class="frequency"><label for="interval">Every</label><div class="number-field"><input type="number" id="interval" min="1" max="1440" value="15"><span>minutes</span></div></div>
+        <button type="button" id="start" class="primary">Start monitoring <span aria-hidden="true">→</span></button>
+      </div>
+      <div class="action-row">
+        <button type="button" id="pauseResume" class="secondary">Pause</button>
+        <button type="button" id="stop" class="quiet">Stop</button>
+        <button type="button" id="test" class="secondary">Send test email</button>
+      </div>
+    </section>
+
+    <section class="feedback" aria-label="Current issues and activity">
+      <div class="error" id="errorBox" hidden><strong>Attention needed</strong><span id="errorText"></span></div>
+      <div class="section-title activity-title"><h2>Recent activity</h2><button type="button" id="export" class="text-button">Export logs ↓</button></div>
+      <ul id="activity"><li><span class="activity-marker"></span><span>Nothing to report yet</span></li></ul>
+      <div role="status" aria-live="polite" id="status" class="status">Ready to set up.</div>
+    </section>
+
+    <details class="advanced"><summary>More settings & tools</summary>
+      <div class="advanced-body">
+        <label for="subject">Email subject</label><input id="subject" value="Grafana Dashboard Report · {time}" spellcheck="false">
+        <div class="two-col"><div><label for="cc">CC</label><textarea id="cc" rows="2" placeholder="Optional CC"></textarea></div><div><label for="bcc">BCC</label><textarea id="bcc" rows="2" placeholder="Optional BCC"></textarea></div></div>
+        <label for="settle">Panel loading delay (seconds)</label><input type="number" id="settle" min="2" max="120" value="12">
+        <div class="advanced-actions"><button type="button" class="small-button" id="capture">Capture preview</button><button type="button" class="small-button" id="openTab">Open dashboard</button></div>
+        <div id="previewwrap" hidden><img id="preview" alt="Grafana screenshot preview"><p id="previewmeta"></p></div>
+        <p class="policy-note" id="policyNote"></p>
+        <p class="redirect" id="redirect"></p>
+      </div>
+    </details>
+    <footer>Chrome must remain open for scheduled reporting.</footer>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>
