@@ -1,0 +1,17 @@
+ASRUN ESTIMATED AUDIENCE REPORT
+
+Original CSV is unchanged. Only empty audience and combined fields were filled.
+Estimated cells are NOT measured data. Do not describe them as verified delivery or billing figures.
+Data Quality and Estimated Fields identify affected rows. Original Coverage Status is retained.
+No video IDs, video titles or live-video counts were invented; original metadata is unchanged.
+Where audience is estimated, original zero active-video counts mean no captured video details, not verified zero live videos.
+AMAGI uses five-minute sums; YouTube uses the event's exact minute. Combined is the existing dashboard's mixed-basis sum, NOT unique viewers.
+Only the report's selected channels/platforms are used. Missing collection is never treated as zero.
+History uses up to 56 prior days, matching time within +/-10 minutes and weekday where sufficient history exists.
+Models are chosen on 28 Sep-4 Oct, then independently evaluated on 5-11 Oct; no target-date future data is used for forecasts.
+A recent/prior-week trend is used only if that model wins historical validation selection; growth is not forced.
+Low/High are estimate +/- the historical 90th percentile absolute error (lower bound >=0). These are empirical error bands, not guaranteed confidence intervals.
+Events, breaking news and outages may make actual audiences differ substantially from these estimates.
+
+AMAGI: daytype_median; validation samples=238; MAE=2166.8; WAPE=20.5%.
+YouTube: daytype_median; validation samples=136; MAE=1568.8; WAPE=17.0%.
