@@ -1,6 +1,6 @@
 [CmdletBinding(PositionalBinding = $false)]
 param(
-    [ValidateSet("Start", "Stop", "Restart", "Status")]
+    [ValidateSet("Start", "Stop", "Restart", "Status", "Disable", "Enable")]
     [string]$Action = "Status",
     [ValidateRange(10, 300)]
     [int]$TimeoutSeconds = 300
@@ -15,6 +15,7 @@ $EtlRoot = $PSScriptRoot
 $Launcher = Join-Path $EtlRoot "run_live_monitor.ps1"
 $StateDir = Join-Path $EtlRoot "output\live_monitor"
 $StopRequest = Join-Path $StateDir "stop.request"
+$DisabledRequest = Join-Path $StateDir "disabled.request"
 $LauncherPidFile = Join-Path $StateDir "launcher.pid"
 $HealthUri = "http://127.0.0.1:8790/healthz"
 
@@ -100,6 +101,10 @@ function Stop-LiveMonitor {
 }
 
 function Start-LiveMonitor {
+    if (Test-Path -LiteralPath $DisabledRequest) {
+        Write-Host "Live monitor is disabled. Use -Action Enable to permit starts again."
+        return
+    }
     if (Test-LiveMonitor) {
         if (Test-Path -LiteralPath $StopRequest) {
             Remove-Item -LiteralPath $StopRequest -Force
@@ -138,6 +143,18 @@ function Start-LiveMonitor {
 }
 
 switch ($Action) {
+    "Disable" {
+        New-Item -ItemType Directory -Path $StateDir -Force | Out-Null
+        Set-Content -LiteralPath $DisabledRequest -Value (Get-Date).ToString("o") -Encoding ASCII
+        Stop-LiveMonitor
+        Write-Host "Live monitor disabled; automatic starts are blocked."
+    }
+    "Enable" {
+        if (Test-Path -LiteralPath $DisabledRequest) {
+            Remove-Item -LiteralPath $DisabledRequest -Force
+        }
+        Write-Host "Live monitor enabled. Use -Action Start to run it."
+    }
     "Start" { Start-LiveMonitor }
     "Stop" { Stop-LiveMonitor }
     "Restart" {
@@ -145,6 +162,9 @@ switch ($Action) {
         Start-LiveMonitor
     }
     "Status" {
+        if (Test-Path -LiteralPath $DisabledRequest) {
+            Write-Host "Live-monitor automatic starts are disabled."
+        }
         if (Test-LiveMonitor) {
             Write-Host "Live monitor is running: http://127.0.0.1:8790/"
         } elseif ($null -ne (Get-LiveMonitorLauncherPid)) {

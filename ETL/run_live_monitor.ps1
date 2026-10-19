@@ -16,6 +16,11 @@ if ($NoSync) { $arguments += "--no-sync" }
 if ($Workers -gt 0) { $arguments += @("--workers", [string]$Workers) }
 
 $StopRequest = Join-Path $EtlRoot "output\live_monitor\stop.request"
+$DisabledRequest = Join-Path $EtlRoot "output\live_monitor\disabled.request"
+if (Test-Path -LiteralPath $DisabledRequest) {
+    Write-Host "Live monitor is disabled; not starting."
+    exit 0
+}
 $LauncherPidFile = Join-Path $EtlRoot "output\live_monitor\launcher.pid"
 if (Test-Path -LiteralPath $StopRequest) {
     Remove-Item -LiteralPath $StopRequest -Force
@@ -37,8 +42,10 @@ Set-Content -LiteralPath $LauncherPidFile -Value $PID -Encoding ASCII
 try {
     Set-Location -LiteralPath $EtlRoot
     do {
+        if (Test-Path -LiteralPath $DisabledRequest) { exit 0 }
         & $Python @arguments
         $exitCode = $LASTEXITCODE
+        if (Test-Path -LiteralPath $DisabledRequest) { exit 0 }
         if ($NoRestart -or $exitCode -eq 0) { exit $exitCode }
         Write-Warning "Live monitor exited with code $exitCode. Restarting in 5 seconds..."
         Start-Sleep -Seconds 5

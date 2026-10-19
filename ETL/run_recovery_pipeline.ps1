@@ -487,7 +487,9 @@ try {
     exit 1
 } finally {
     $liveRestartFailure = $null
-    if ($ensureLiveMonitorAtExit) {
+    if ($ensureLiveMonitorAtExit -and (Test-Path -LiteralPath (Join-Path $WorkspaceRoot 'output\live_monitor\disabled.request'))) {
+        Write-Host "Live monitor remains disabled by operator request."
+    } elseif ($ensureLiveMonitorAtExit) {
         try {
             $liveAction = if ($livePausedForDailyEtl) {
                 "Daily ETL work ended; restarting"

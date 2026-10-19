@@ -18,6 +18,18 @@ TEST_TEMP_ROOT = Path(tempfile.gettempdir()) / "veto_etl_tests"
 
 
 class RecoveryPowerShellGuardsTest(unittest.TestCase):
+    def test_live_disable_blocks_manager_launcher_and_recovery(self) -> None:
+        manager = LIVE_MANAGER_SCRIPT.read_text(encoding='utf-8')
+        launcher = (ETL_ROOT / 'run_live_monitor.ps1').read_text(encoding='utf-8')
+        recovery = RECOVERY_SCRIPT.read_text(encoding='utf-8')
+        self.assertIn('"Disable" {', manager)
+        self.assertIn('"Enable" {', manager)
+        start = manager[manager.index('function Start-LiveMonitor'):manager.index('switch ($Action)')]
+        self.assertLess(start.index('Test-Path -LiteralPath $DisabledRequest'), start.index('if (Test-LiveMonitor)'))
+        self.assertLess(launcher.index('Test-Path -LiteralPath $DisabledRequest'), launcher.index('Remove-Item -LiteralPath $StopRequest'))
+        self.assertIn('if (Test-Path -LiteralPath $DisabledRequest) { exit 0 }', launcher)
+        self.assertIn('Live monitor remains disabled by operator request.', recovery)
+
     def test_cleanup_recovery_runs_even_without_etl_backlog(self) -> None:
         source = RECOVERY_SCRIPT.read_text(encoding='utf-8')
         branch = source.index('if ($cursor -gt $TargetThroughDate)')
@@ -48,6 +60,8 @@ class RecoveryPowerShellGuardsTest(unittest.TestCase):
                 PREFETCH_SCRIPT,
                 WORKER_SCRIPT,
                 LIVE_MANAGER_SCRIPT,
+                ETL_ROOT / 'run_live_monitor.ps1',
+                ETL_ROOT / 'resume_failed_lake.ps1',
             )
         ]
         paths = ",".join(f"'{path}'" for path in escaped_paths)
