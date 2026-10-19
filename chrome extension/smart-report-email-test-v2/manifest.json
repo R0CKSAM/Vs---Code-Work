@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Smart Report - Outlook Screenshot Test",
+  "version": "2.0.0",
+  "description": "Manually capture and preview a Grafana dashboard, then test sending the PNG with Microsoft 365 Outlook.",
+  "permissions": [
+    "identity",
+    "storage",
+    "activeTab",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://login.microsoftonline.com/*",
+    "https://graph.microsoft.com/*",
+    "https://grafana-apj.trafficpeak.live/*"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzD3IDravLE6KXF+hZb6ya6WZAfpx6m/bYSsaZ9BNrGlsDIc8Qqok0mWHcbupNgDptOmLtxBKUJ7u3OjpAP/J3aICxmXNpjK+UIV15Uil64SziQXYfig4RGbnWgxLiZ5c91wt5tg6ezt0ubdQ5FCeOQsgdUdbhOitM2GRaGvtIGwa6Kx4YAiQMF3NMg2T8k0rbCLHym14O/2jElncOQtwTJv91iL3QgWMZQ8eZYtctjpBko9y+rFusV1LTm39/Y1ltpVSC001t+KmRWn4Gc5/Km2Rdvl548f9bQBfSj0UhxNkOXF+JqY61+2ZO8JUeFiIlge2OZqGVzz6lCPYGEGWDwIDAQAB"
+}
