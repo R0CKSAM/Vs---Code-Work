@@ -54,7 +54,8 @@ async function captureDashboardTiles(tabId,c){
     try{await cmd('Emulation.setFocusEmulationEnabled',{enabled:true});}catch{}
     try{await cmd('Page.setWebLifecycleState',{state:'active'});}catch{}
     await chrome.scripting.executeScript({target:{tabId},files:['capture-page.js']});
-    let s=await page('start');started=true;validate(s);
+    started=true;
+    let s=await page('start');validate(s);
     if(s.width!==width||s.height!==height)throw Error('Chrome did not apply the required 1600 × 1000 capture viewport. Screenshot not sent.');
     const originTop=s.rootTop;let discoveredEnd=0,discoverCount=0;
     // Walk the actual Grafana scroll container. This mounts lazy panels and finds
@@ -74,11 +75,11 @@ async function captureDashboardTiles(tabId,c){
     await page('scroll',{top:0});await sleep(500);
     s=await stable('Waiting for first charts to paint',38);
     discoveredEnd=Math.max(discoveredEnd,s.contentEnd);
-    let end=Math.ceil(originTop+discoveredEnd);
+    let end=Math.min(Math.ceil(originTop+discoveredEnd),Math.floor(originTop+s.maxScroll+s.bottom-s.rootTop));
     if(end>24000)throw Error('Expanded dashboard is over 24,000 pixels tall. Close unnecessary sections and use As currently open.');
     let covered=0,index=0;const panelsSeen=new Set(),noData=new Set();
-    while(covered<end-1){
-      if(index>45)throw Error('Capture exceeded 45 parts; use fewer open sections.');
+    while(covered<end){
+      if(index>=45)throw Error('Capture exceeded 45 parts; use fewer open sections.');
       if(index){
         const targetTop=Math.max(0,covered-originTop-(s.visibleTop-s.rootTop)-140);
         await page('scroll',{top:targetTop});await sleep(400);
@@ -86,7 +87,7 @@ async function captureDashboardTiles(tabId,c){
       }
       for(const n of s.noData)noData.add(n);
       for(const r of s.canvasRegions)panelsSeen.add(r.panel);
-      const newEnd=Math.ceil(originTop+s.contentEnd);
+      const newEnd=Math.min(Math.ceil(originTop+s.contentEnd),Math.floor(originTop+s.maxScroll+s.bottom-s.rootTop));
       if(newEnd>end+30)throw Error('Dashboard layout changed while being captured. Retry when its rows stop moving.');
       const mappedTop=originTop+s.scrollTop+(s.visibleTop-s.rootTop);
       const sourceTop=index?Math.round(s.rootTop+covered-originTop-s.scrollTop):0;
@@ -121,7 +122,7 @@ async function captureDashboardTiles(tabId,c){
     if(blob.size>MAX_ATTACH_BYTES)throw Error('Full-width screenshot is too large for this email attachment. Close unnecessary sections; the image was not silently shrunk or emailed.');
     const b=new Uint8Array(await blob.arrayBuffer());let binary='';for(let i=0;i<b.length;i+=32768)binary+=String.fromCharCode(...b.subarray(i,i+32768));
     const meta={width,height:covered,tiles:index,expandedRows:s.expanded,chartPanels:panelsSeen.size,noDataPanels:[...noData],internalScroller:s.internal,
-      startedAt:deadline-240000,finishedAt:Date.now(),rowMode:c.expandRows!==false?'all':'current',method:'viewport-tiles',appVersion:'3.7.0'};
+      startedAt:deadline-240000,finishedAt:Date.now(),rowMode:c.expandRows!==false?'all':'current',method:'viewport-tiles',appVersion:'3.7.1'};
     await log('info',`Screenshot checked: ${width} × ${covered}; ${index} parts; ${meta.chartPanels} chart panels; ${meta.expandedRows} rows opened; ${noData.size} explicitly report No data.`);
     return {data:btoa(binary),mime:blob.type,ext,meta,tabId};
   }finally{

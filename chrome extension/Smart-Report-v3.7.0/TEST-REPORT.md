@@ -1,5 +1,7 @@
 # Smart Report 3.7.0 — Test report
 
+Historical results only. For the current 3.7.1 checks and live acceptance steps, see [RELEASE-3.7.1.md](RELEASE-3.7.1.md). The CDP rendering results below have not been rerun as installed-extension tests for 3.7.1.
+
 ## Passed automated checks
 
 - JavaScript syntax checks for all packaged .js files.

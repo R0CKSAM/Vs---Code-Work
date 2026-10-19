@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Smart Report - Company Edition",
-  "version": "3.7.0",
+  "version": "3.7.1",
   "minimum_chrome_version": "118",
   "description": "Reviewed, fixed-width Grafana screenshots with scroll capture, chart-paint checks and Outlook acceptance status.",
   "permissions": [

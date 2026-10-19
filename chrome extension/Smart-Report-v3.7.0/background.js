@@ -110,7 +110,7 @@ function captureSignature(c) {
   const u=normalizeDashboardUrl(c.dashboard);
   for(const k of IGNORED_URL_PARAMETERS)u.searchParams.delete(k);
   u.searchParams.sort();
-  return JSON.stringify({version:'3.7.0', url:u.href, rows:c.expandRows!==false?'all':'current', width:1600});
+  return JSON.stringify({version:'3.7.1', url:u.href, rows:c.expandRows!==false?'all':'current', width:1600});
 }
 function safeCaptureSignature(c){try{return captureSignature(c);}catch{return '';}}
 async function requireApprovedPreview(c) {
@@ -328,6 +328,18 @@ async function email(c, shot, test) {
     },
     saveToSentItems: true
   };
+  // Revalidate AFTER token renewal and sender checks, immediately before POST.
+  const latest = await effectiveConfig();
+  if (captureSignature(latest) !== captureSignature(c) ||
+      JSON.stringify(parseRecipients(latest)) !== JSON.stringify(parseRecipients(c)))
+    throw Error('Report settings changed during capture. Review them and retry; no email was sent.');
+  await requireApprovedPreview(c);
+  if (!test && (await G(['mode'])).mode !== 'running')
+    throw cancelledError();
+  assertRunActive();
+  await put({ submissionPending: true });
+  if (currentRun) currentRun.submissionPrepared = true;
+  assertRunActive();
   let r;
   try { r = await fetch('https://graph.microsoft.com/v1.0/me/sendMail', {
     method: 'POST', signal: AbortSignal.timeout(30000),
@@ -335,6 +347,7 @@ async function email(c, shot, test) {
     body: JSON.stringify(msg)
   }); } catch(e) { throw Error('Outlook acceptance is unconfirmed (network/timeout). Check Sent Items before retrying to avoid duplicates. '+e.message); }
   if (r.status !== 202) {
+    await put({ submissionPending: false });
     let reason = await r.text();
     try { reason = JSON.parse(reason).error?.message || reason; } catch { /* keep raw text */ }
     throw Error('Graph ' + r.status + ': ' + reason.slice(0, 280));
@@ -344,8 +357,17 @@ async function email(c, shot, test) {
 
 let busy = false;
 let currentRun = null;
+function cancelledError() {
+  const e = Error('Report cancelled before submission. No email was sent.');
+  e.code = 'REPORT_CANCELLED';
+  return e;
+}
+function assertRunActive() {
+  if (currentRun?.cancelled) throw cancelledError();
+}
 async function progress(stage, percent) {
   if (!currentRun) return;
+  assertRunActive();
   currentRun = { ...currentRun, stage, percent };
   const state = { ...currentRun, busy: true, updatedAt: Date.now() };
   await put({ runState: state, lastStatus: stage });
@@ -361,33 +383,38 @@ async function run(test = false, captureOnly = false) {
   currentRun = { kind: captureOnly ? 'preview' : test ? 'test' : 'scheduled', startedAt: Date.now() };
   // Email attempts (not screenshot previews) have their own durable outcome.
   // "accepted" means Graph HTTP success, NOT recipient delivery confirmation.
-  if (!captureOnly) await put({ lastMailAttemptAt: currentRun.startedAt,
-    lastMailKind: currentRun.kind, lastMailOutcome: 'working', lastMailError: '' });
   // A Chrome extension API call during long panel waits prevents the normal
   // service-worker idle cutoff. Chrome may still suspend/discard background tabs.
   const keepAlive = setInterval(() => chrome.runtime.getPlatformInfo().catch(() => {}), 20000);
   try {
+    if (!captureOnly) await put({ lastMailAttemptAt: currentRun.startedAt,
+      lastMailKind: currentRun.kind, lastMailOutcome: 'working', lastMailError: '' });
     await progress('Checking configuration', 5);
     const c = await effectiveConfig();
     captureOnly ? checkCaptureConfig(c) : checkConfig(c);
     if(!captureOnly)await requireApprovedPreview(c);
     await put({ lastError: '' });
     const shot = await screenshot(c);
+    assertRunActive();
     await put({ lastCaptureAt: Date.now(), lastCaptureUrl: c.dashboard, lastCaptureMeta: shot.meta, lastCaptureSignature: captureSignature(c) });
     if (captureOnly) {
+      await put({ capturePreview: `data:${shot.mime};base64,${shot.data}`, capturePreviewMeta: shot.meta,
+        capturePreviewSignature: captureSignature(c), capturePreviewId: crypto.randomUUID() });
       await finishProgress('Preview ready', true);
       await log('info', 'Grafana screenshot preview captured successfully');
-      await put({ capturePreview: `data:${shot.mime};base64,${shot.data}`, capturePreviewMeta: shot.meta, capturePreviewSignature: captureSignature(c) });
+      // The popup may close during a long capture. The worker owns this action.
+      try { await chrome.tabs.create({ url: chrome.runtime.getURL('preview.html') }); }
+      catch (e) { await log('warn', 'Preview saved. Use View preview to open it: ' + e.message); }
       return { previewReady: true, meta: shot.meta };
     }
-    if (!test && (await G(['mode'])).mode !== 'running') throw Error('Monitoring was paused or stopped before email was sent.');
+    if (!test && (await G(['mode'])).mode !== 'running') throw cancelledError();
     await put({ lastMailOutcome:'submitting' });
     await progress('Submitting email to Outlook', 90);
     const res = await email(c, shot, test);
     const stats = await G(['sent', 'sentTest', 'sentScheduled']);
     await put({ sent: (stats.sent || 0) + 1,
       [test ? 'sentTest' : 'sentScheduled']: ((test ? stats.sentTest : stats.sentScheduled) || 0) + 1,
-      lastSent: new Date().toISOString(), lastMailOutcome: 'accepted', lastMailError: '',
+      lastSent: new Date().toISOString(), lastMailOutcome: 'accepted', lastMailError: '', submissionPending: false,
       lastCompletedMail: { at:Date.now(), kind:currentRun.kind, outcome:'accepted' },
       lastMailRecipientCount: res.to + res.cc + res.bcc,
       lastStatus: 'Microsoft Graph accepted email for processing (not confirmed delivered)',
@@ -396,6 +423,18 @@ async function run(test = false, captureOnly = false) {
     await log('success', `${test ? 'Test' : 'Scheduled'} email accepted by Graph; recipients ${res.to + res.cc + res.bcc}. Delivery not confirmed.`);
     return { message: 'Microsoft accepted this email for processing. Check Outlook Sent Items and recipient inbox to verify delivery.' };
   } catch (e) {
+    if (e.code === 'REPORT_CANCELLED') {
+      await put({ ...(currentRun?.submissionPrepared ? { submissionPending: false } : {}), lastStatus: e.message, lastError: '',
+        ...(!captureOnly ? { lastMailOutcome: 'cancelled', lastMailError: '' } : {}) });
+      await finishProgress('Report cancelled', false);
+      await log('info', e.message);
+      throw e;
+    }
+    // A worker/storage failure after POST is also uncertain until reconciled.
+    if (currentRun?.submissionPrepared && (await G(['submissionPending'])).submissionPending &&
+        !/acceptance is unconfirmed/.test(e.message))
+      e = Error('Outlook acceptance is unconfirmed. Check Sent Items before retrying. ' + e.message);
+    if (/acceptance is unconfirmed/.test(e.message)) await schedule('paused');
     const failedStage=(await G(['runState'])).runState?.stage || 'Starting report';
     if (!captureOnly) {
       const stats = await G(['failedMail', 'failedTest', 'failedScheduled']);
@@ -422,6 +461,7 @@ async function run(test = false, captureOnly = false) {
 // ---------------------------------------------------------------------------
 async function schedule(mode) {
   if (mode === 'running') {
+    if (busy) throw Error('Wait for the current report to finish before starting or resuming.');
     const c = await effectiveConfig();
     checkConfig(c);
     await requireApprovedPreview(c);
@@ -430,6 +470,7 @@ async function schedule(mode) {
     await chrome.alarms.create(ALARM, { periodInMinutes: +c.interval, delayInMinutes: +c.interval });
     await put({ consecutiveFailures: 0 });
   } else {
+    if (currentRun) currentRun.cancelled = true;
     await chrome.alarms.clear(ALARM); // pausing/stopping never depends on the config being valid
   }
   await put({ mode, lastStatus: mode === 'running' ? 'Monitoring started' : 'Monitoring ' + mode });
@@ -442,15 +483,22 @@ async function restoreAlarmOnce() {
   // First v3.4 load is a deliberate safe reset: old versions may have been
   // scheduling failed runs with invalid settings. Require an explicit test
   // before re-enabling reports, while preserving dashboard and email settings.
-  const installed = await G(['smartReportVersion', 'mode']);
-  if (installed.smartReportVersion !== '3.7.0') {
+  const installed = await G(['smartReportVersion', 'mode', 'submissionPending']);
+  if (installed.submissionPending) {
     await chrome.alarms.clear(ALARM);
-    await put({ smartReportVersion: '3.7.0', upgradedAt: Date.now(),
+    await put({ mode: 'paused', runState: null, lastMailOutcome: 'failed',
+      lastMailError: 'Previous email acceptance is unconfirmed. Check Sent Items before retrying.',
+      lastError: 'Previous email acceptance is unconfirmed. Check Sent Items before retrying.' });
+    return;
+  }
+  if (installed.smartReportVersion !== '3.7.1') {
+    await chrome.alarms.clear(ALARM);
+    await put({ smartReportVersion: '3.7.1', upgradedAt: Date.now(),
       mode: installed.mode === 'running' ? 'paused' : (installed.mode || 'stopped'),
       runState: null, lastError: '', lastMailError: '', lastMailOutcome:'', consecutiveFailures: 0,
-      approvedCaptureSignature:'', capturePreview:null, capturePreviewSignature:'',
-      lastStatus: 'Updated to v3.7. Check screenshot and approve its layout before emailing.' });
-    await log('info', 'Smart Report v3.7 installed; old monitoring paused until tested');
+      approvedCaptureSignature:'', capturePreview:null, capturePreviewSignature:'', capturePreviewId:'',
+      lastStatus: 'Updated to v3.7.1. Check screenshot and approve its layout before emailing.' });
+    await log('info', 'Smart Report v3.7.1 installed; old monitoring paused until tested');
     return;
   }
   const { mode } = await G(['mode']);
@@ -474,6 +522,7 @@ chrome.alarms.onAlarm.addListener(async a => {
   try {
     await run(false, false);
   } catch (e) {
+    if (e.code === 'REPORT_CANCELLED') return;
     if (/acceptance is unconfirmed/.test(e.message)) { await schedule('paused'); await notify('Check Outlook Sent Items', 'Email acceptance is unconfirmed. Reports paused to avoid duplicate retries.'); return; }
     if (/Microsoft session needs renewal/.test(e.message)) {
       await schedule('paused');
@@ -505,6 +554,7 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
     return false;
   }
   (async () => {
+    await restoreFlight;
     switch (msg.action) {
       case 'GET': {
         const d = await G(['config', 'mode', 'sent', 'sentTest', 'sentScheduled', 'failedMail', 'failedTest', 'failedScheduled', 'lastMailAttemptAt', 'lastMailKind', 'lastMailOutcome', 'lastMailError', 'lastMailRecipientCount', 'lastMailFailAt', 'lastSent', 'lastStatus', 'lastError', 'tokens', 'consecutiveFailures', 'runState', 'logs', 'verifiedAddress', 'verifiedAt', 'lastCaptureAt', 'lastCaptureUrl', 'upgradedAt', 'lastCaptureMeta', 'lastCaptureSignature', 'approvedCaptureSignature', 'lastCompletedMail']);
@@ -545,8 +595,10 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
         if (guid(COMPANY_MICROSOFT.clientId)) updated.client = COMPANY_MICROSOFT.clientId;
         if (guid(COMPANY_MICROSOFT.tenantId)) updated.tenant = COMPANY_MICROSOFT.tenantId;
         // Allow autosaving partial drafts; full checks happen only for Send/Start.
+        const captureChanged = safeCaptureSignature(updated) !== safeCaptureSignature(old.config || {});
+        if (currentRun && (captureChanged || updated.to !== old.config?.to)) currentRun.cancelled = true;
         await put({ config: updated });
-        if(safeCaptureSignature(updated)!==safeCaptureSignature(old.config||{})){
+        if(captureChanged){
           await put({ approvedCaptureSignature:'', lastCaptureSignature:'' });
           if((await G(['mode'])).mode==='running')await schedule('paused');
         }
@@ -562,15 +614,18 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
         return { ok: true };
       }
       case 'APPROVE_CAPTURE': {
-        const c=await effectiveConfig(), d=await G(['capturePreviewSignature','capturePreview']);
+        if (busy) throw Error('Wait for the current report to finish before approving a preview.');
+        const c=await effectiveConfig(), d=await G(['capturePreviewSignature','capturePreview','capturePreviewId']);
+        if (!msg.previewId || msg.previewId !== d.capturePreviewId)
+          throw Error('This preview has been replaced. Open View preview and review the latest screenshot.');
         if(!d.capturePreview || d.capturePreviewSignature!==captureSignature(c))throw Error('Dashboard settings changed. Capture a new preview before approving.');
         await put({approvedCaptureSignature:d.capturePreviewSignature,lastStatus:'Screenshot layout approved. Send one test email next.'});
         await log('info','Screenshot layout approved by user');
         return {approved:true};
       }
       case 'PREVIEW_DATA': {
-        const d=await G(['capturePreview','capturePreviewMeta','capturePreviewSignature','approvedCaptureSignature']);
-        return {image:d.capturePreview,meta:d.capturePreviewMeta,approved:!!d.capturePreviewSignature&&d.capturePreviewSignature===d.approvedCaptureSignature};
+        const d=await G(['capturePreview','capturePreviewMeta','capturePreviewSignature','approvedCaptureSignature','capturePreviewId']);
+        return {image:d.capturePreview,meta:d.capturePreviewMeta,previewId:d.capturePreviewId,approved:!!d.capturePreviewSignature&&d.capturePreviewSignature===d.approvedCaptureSignature};
       }
       case 'LOGIN': { await auth(true); return await verifyOutlook(); }
       case 'VERIFY': return await verifyOutlook();
@@ -588,6 +643,7 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
       case 'TEST': return await run(true, false);
       case 'CAPTURE': return await run(false, true);
       case 'USE_TAB': {
+        if (busy) throw Error('Wait for the current report to finish before linking another tab.');
         if (!Number.isInteger(msg.tabId)) throw Error('Open the Grafana dashboard tab, click the extension icon from that tab, then try again.');
         const tab = await chrome.tabs.get(msg.tabId);
         const url = checkUrl(tab.url || msg.url);
@@ -595,7 +651,8 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
         if(['from','to','refresh'].some(k=>!original.searchParams.has(k))) {
           await chrome.tabs.update(msg.tabId,{url}); // one-time defaults application, not a recurring reload
         }
-        await put({ tabId: msg.tabId, approvedCaptureSignature:'' });
+        if ((await G(['mode'])).mode === 'running') await schedule('paused');
+        await put({ tabId: msg.tabId, approvedCaptureSignature:'', capturePreviewSignature:'', capturePreviewId:'' });
         return { url };
       }
       case 'OPEN_TAB': {

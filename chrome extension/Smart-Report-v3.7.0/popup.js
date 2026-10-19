@@ -89,7 +89,6 @@ async function perform(action, options={}){
     showStatus(options.working||'Working…');
     const result=await send(action,undefined,options.extra);
     if(action==='USE_TAB'){$('dashboard').value=result.url;await persist();}
-    if(action==='CAPTURE'&&result.previewReady){await chrome.tabs.create({url:chrome.runtime.getURL('preview.html')});}
     if(action==='VERIFY')showStatus('Outlook verified: '+result.address);
     if(action==='LOGIN')showStatus('Outlook connected: '+result.address);
     if(action==='TEST')showStatus('Test accepted for processing (not delivery confirmation). Check Sent Items and recipient inbox.');

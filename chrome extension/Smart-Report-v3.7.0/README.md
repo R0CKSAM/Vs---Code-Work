@@ -1,10 +1,23 @@
-# Smart Report 3.7.0 — Capture review build
+# Smart Report 3.7.1 — Reliability fixes
+
+The source folder retains its original `Smart-Report-v3.7.0` name so an existing unpacked installation can be reloaded in place. The extension version is now **3.7.1**. This is a regression-tested release candidate; live Grafana/Outlook acceptance is still required before unattended production use.
+
+## Fixes in 3.7.1
+
+- Clamp capture padding to reachable scroll coordinates, including nested scrollers, and retain the final one-pixel strip.
+- Accept short text status values such as UP/OK while rejecting empty panels, loading placeholders and blank chart canvases.
+- Bind approval to the exact preview ID displayed, and enable approval only after the image decodes. Replaced previews cannot approve a newer image.
+- Cancel pending reports on Pause/Stop, including during token renewal. Recheck settings and approval immediately before submission. A request already submitted cannot be recalled.
+- Open preview tabs from the background worker, so closing the popup does not prevent review.
+- Restore capture state on startup failures and replace outdated injected helpers after extension reload.
+- Persist an uncertain-submission marker before sending, pause after network uncertainty (including manual tests), and pause on worker/browser restart if that marker remains. Check Sent Items before explicitly retrying or resuming.
+- Preserve accepted outcomes if Pause arrives after submission; cancelled reports do not inflate failure counters.
 
 ## Install and test (do not leave 3.6 reporting while testing)
 
 1. Pause the old extension. Back up its unpacked folder.
 2. Replace ALL extension files in that same folder with this package. Keep your existing company Microsoft IDs and approved recipient domains if IT changed them. The manifest key is unchanged, preserving extension identity.
-3. Reload in chrome://extensions and confirm version 3.7.0. Old schedules pause on upgrade. Existing settings, counters and OAuth storage are not intentionally erased.
+3. Reload in chrome://extensions and confirm version 3.7.1. Old schedules pause on upgrade. Existing settings, counters and OAuth storage are not intentionally erased.
 4. Open the required Grafana dashboard, wait for its normal graphs, and click Use tab.
 5. Choose Open all sections (default), or As currently open for your manually selected rows.
 6. Click Check screenshot. It opens a full-size local review tab. Verify the first totals, plotted graphs and the last row. Do NOT approve a blank/incomplete capture.
@@ -53,4 +66,4 @@ A single screenshot preview is stored in extension-local storage for review (rep
 
 ## Test scope
 
-See TEST-REPORT.md. Automated rendering tests use a synthetic Grafana-like page, real Chromium DOM/canvas/CDP rendering, and mocked Chrome-extension/Microsoft APIs. They do not authenticate to or send through the company Grafana/Outlook environment. Live installation and delivery must still be verified on your computer.
+See RELEASE-3.7.1.md for current results and TEST-REPORT.md for historical 3.7.0 results. The 3.7.1 regression suite uses real Chromium DOM/canvas readiness checks and mocked Chrome-extension, CDP screenshot and Microsoft APIs. It does not authenticate to or send through the company Grafana/Outlook environment. Live installation, complete image stitching on your dashboard, and recipient delivery must still be verified on your computer.

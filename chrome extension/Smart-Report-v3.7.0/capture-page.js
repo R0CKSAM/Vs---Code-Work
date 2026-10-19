@@ -4,7 +4,10 @@
  */
 (() => {
   'use strict';
-  if (globalThis.__SR_CAPTURE_PAGE__) return;
+  // Replace an older injected helper after an extension reload.
+  if (globalThis.__SR_CAPTURE_PAGE__) {
+    try { globalThis.__SR_CAPTURE_PAGE__('restore'); } catch {}
+  }
   let session = null;
   const PANEL = [
     '.react-grid-item', '.panel-container', '[data-panelid]', '[data-viz-panel-key]',
@@ -119,11 +122,12 @@
         for(const el of canvases)if(intersect(rect(el),area))canvasRegions.push({...rect(el),panel:name});
       }else{
         const svg=[...p.querySelectorAll('svg')].some(e=>rect(e).width>70&&rect(e).height>40&&e.querySelector('path,rect,circle,polyline'));
-        const table=p.querySelector('table,[role="table"],.markdown-html');
         const clone=(p.querySelector('[data-testid*="panel content"],.panel-content')||p).cloneNode(true);
-        for(const el of clone.querySelectorAll('header,h1,h2,h3,[data-testid*="Panel header"],.panel-title,.u-legend,[data-testid*="VizLegend"],button'))el.remove();
+        for(const el of clone.querySelectorAll('header,h1,h2,h3,[data-testid*="Panel header"],.panel-title,.u-legend,[data-testid*="VizLegend"],button,script,style,[hidden],[aria-hidden="true"]'))el.remove();
         const valueText=clone.textContent.trim();
-        if(svg||table||/[0-9]/.test(valueText)||valueText.length>50)meaningful++;
+        // Value mappings may legitimately render short text such as UP or OK.
+        // Empty panels and loading placeholders must still block capture.
+        if(svg||(valueText.length>0&&!/^(loading|loading data|please wait)[.\s\u2026]*$/i.test(valueText)))meaningful++;
         else missing.push(name+' (visualization has not rendered)');
       }
     }
@@ -134,7 +138,7 @@
     const rows=rowControls();
     const login=!!document.querySelector('input[type="password"]')||/^\/login/.test(location.pathname);
     return {...g,href:location.href,login,ready:document.readyState,panels:list.length,visiblePanels:visible.length,meaningful,busy,missing,errors,noData,
-      paintedCanvases,charts,canvasRegions,contentEnd:Math.ceil(session.end+16),rows:rows.length,collapsed:rows.filter(r=>r.collapsed).map(r=>r.label),expanded:session.expanded};
+      paintedCanvases,charts,canvasRegions,contentEnd:Math.min(Math.ceil(session.end+16),Math.floor(g.maxScroll+g.bottom-g.rootTop)),rows:rows.length,collapsed:rows.filter(r=>r.collapsed).map(r=>r.label),expanded:session.expanded};
   }
   globalThis.__SR_CAPTURE_PAGE__=(op,arg={})=>{
     if(op==='start'){
