@@ -4,25 +4,34 @@ param(
     [string]$FallbackLakeRoot = (Join-Path $PSScriptRoot 'data\lake\source=stream'),
     [string]$Python = (Join-Path $PSScriptRoot '..\venv\Scripts\python.exe'),
     [string]$PipelineState = (Join-Path $PSScriptRoot 'output\state\pipeline_last_run.json'),
+    [string]$DailyStateDir = (Join-Path $PSScriptRoot 'output\state\daily_runs'),
+    [string]$ExportsDir = (Join-Path $PSScriptRoot 'output\exports'),
     [switch]$PlanOnly
 )
 
 $ErrorActionPreference = 'Stop'
-$exports = Join-Path $PSScriptRoot 'output\exports'
+$exports = $ExportsDir
 $dashboard = Join-Path $exports 'vod_stream_query_analysis_dashboard.html'
 $dataDir = Join-Path $exports 'vod_stream_query_analysis_dashboard_data'
 $davisWorkbook = Join-Path $exports 'Davis_Cup_Performance.xlsx'
 $extractor = Join-Path $PSScriptRoot 'src\tools\export_vod_query_events.py'
 $builder = Join-Path $PSScriptRoot 'src\tools\build_vod_query_dashboard.py'
 $stagedFiles = [System.Collections.Generic.List[string]]::new()
-$appendFiles = [System.Collections.Generic.List[string]]::new()
-$dailyDestinations = @{}
 
 function Get-LatestDashboardDate {
     param([string]$Path)
 
+    if (-not (Test-Path -LiteralPath $dashboard -PathType Leaf)) {
+        throw "Dashboard HTML is missing: $dashboard. Run rebuild_vod_query_dashboard_range.ps1 once."
+    }
+    $html = Get-Content -LiteralPath $dashboard -Raw
+    $indexMatch = [regex]::Match($html, '(?m)^const dashboardIndex=(.+);\r?$')
+    if (-not $indexMatch.Success) {
+        throw 'Published dashboard date index could not be read. Dashboard was not changed.'
+    }
+    $publishedDates = ($indexMatch.Groups[1].Value | ConvertFrom-Json).dates
     $dates = Get-ChildItem -LiteralPath $Path -File -Filter '*.js' |
-        Where-Object { $_.BaseName -match '^\d{4}-\d{2}-\d{2}$' } |
+        Where-Object { $_.BaseName -match '^\d{4}-\d{2}-\d{2}$' -and $_.BaseName -in $publishedDates } |
         ForEach-Object {
             [datetime]::ParseExact(
                 $_.BaseName,
@@ -39,26 +48,46 @@ function Get-LatestDashboardDate {
 function Get-CompletedEtlDate {
     param([string]$Path)
 
-    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
-        throw "ETL completion state was not found: $Path"
+    $completedDates = [System.Collections.Generic.List[datetime]]::new()
+    if (Test-Path -LiteralPath $DailyStateDir -PathType Container) {
+        foreach ($file in (Get-ChildItem -LiteralPath $DailyStateDir -File -Filter '*.json')) {
+            $checkpoint = Get-Content -LiteralPath $file.FullName -Raw | ConvertFrom-Json
+            if ($checkpoint.status -eq 'complete' -and $checkpoint.validation_status -in @('PASS', 'REVIEW') -and
+                $checkpoint.date -eq $file.BaseName -and $file.BaseName -match '^\d{4}-\d{2}-\d{2}$') {
+                $completedDates.Add([datetime]::ParseExact($file.BaseName, 'yyyy-MM-dd', [cultureinfo]::InvariantCulture))
+            }
+        }
     }
-    $state = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
-    if ($state.status -notin @('complete', 'complete_with_warnings')) {
-        throw "Latest ETL is not complete (status: $($state.status)). Dashboard was not changed."
+    if (Test-Path -LiteralPath $Path -PathType Leaf) {
+        $state = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
+        if ($state.status -in @('complete', 'complete_with_warnings') -and $state.target_date -match '^\d{4}-\d{2}-\d{2}$') {
+            $completedDates.Add([datetime]::ParseExact($state.target_date, 'yyyy-MM-dd', [cultureinfo]::InvariantCulture))
+        }
     }
-    if ([string]::IsNullOrWhiteSpace([string]$state.target_date)) {
-        throw "ETL completion state has no target_date: $Path"
+    if (-not $completedDates.Count) {
+        throw 'No completed ETL date found in pipeline state or daily checkpoints. Dashboard was not changed.'
     }
-    try {
-        return [datetime]::ParseExact(
-            [string]$state.target_date,
-            'yyyy-MM-dd',
-            [System.Globalization.CultureInfo]::InvariantCulture
-        ).Date
+    return ($completedDates | Sort-Object -Descending | Select-Object -First 1).Date
+}
+
+function Assert-CompletedDay {
+    param([datetime]$TargetDate)
+    $key = $TargetDate.ToString('yyyy-MM-dd')
+    $path = Join-Path $DailyStateDir "$key.json"
+    if (Test-Path -LiteralPath $path -PathType Leaf) {
+        $checkpoint = Get-Content -LiteralPath $path -Raw | ConvertFrom-Json
+        if ($checkpoint.date -eq $key -and $checkpoint.status -eq 'complete' -and
+            $checkpoint.validation_status -in @('PASS', 'REVIEW')) {
+            return
+        }
     }
-    catch {
-        throw "Invalid ETL target_date '$($state.target_date)' in $Path"
+    if (Test-Path -LiteralPath $PipelineState -PathType Leaf) {
+        $state = Get-Content -LiteralPath $PipelineState -Raw | ConvertFrom-Json
+        if ($state.target_date -eq $key -and $state.status -in @('complete', 'complete_with_warnings')) {
+            return
+        }
     }
+    throw "No completed ETL evidence for $key. Dashboard was not refreshed beyond this date."
 }
 
 function Find-StreamPartition {
@@ -87,11 +116,16 @@ if (-not (Test-Path -LiteralPath $dataDir -PathType Container)) {
 }
 
 $dashboardDate = Get-LatestDashboardDate -Path $dataDir
+$completedDate = Get-CompletedEtlDate -Path $PipelineState
 $etlDate = if ($PSBoundParameters.ContainsKey('Date')) {
     $Date.Date
 }
 else {
-    Get-CompletedEtlDate -Path $PipelineState
+    $completedDate
+}
+
+if ($etlDate -gt $completedDate) {
+    throw "Requested date exceeds completed ETL date $($completedDate.ToString('yyyy-MM-dd'))."
 }
 
 if ($etlDate -gt (Get-Date).Date.AddDays(-1)) {
@@ -104,6 +138,7 @@ if ($dashboardDate -ge $etlDate) {
 
 $refreshDates = [System.Collections.Generic.List[datetime]]::new()
 for ($day = $dashboardDate.AddDays(1); $day -le $etlDate; $day = $day.AddDays(1)) {
+    Assert-CompletedDay -TargetDate $day
     $refreshDates.Add($day)
 }
 $dateLabels = ($refreshDates | ForEach-Object { $_.ToString('yyyy-MM-dd') }) -join ', '
@@ -113,13 +148,22 @@ if ($PlanOnly) {
     exit 0
 }
 
+function Publish-DailyCsv {
+    param([string]$Csv)
+    & $Python $builder --out $dashboard --davis-xlsx $davisWorkbook --data-dir $dataDir `
+        --data-url 'vod_stream_query_analysis_dashboard_data' --incremental --append $Csv
+    if ($LASTEXITCODE -ne 0) {
+        throw "VOD dashboard refresh failed for $Csv. Completed daily extracts were retained for retry."
+    }
+}
+
 try {
     foreach ($day in $refreshDates) {
         $dateKey = $day.ToString('yyyy-MM-dd')
         $dailyCsv = Join-Path $exports "vod_stream_query_events_$dateKey.csv"
         if (Test-Path -LiteralPath $dailyCsv -PathType Leaf) {
             Write-Host "Reusing daily extract: $dailyCsv"
-            $appendFiles.Add($dailyCsv)
+            Publish-DailyCsv -Csv $dailyCsv
             continue
         }
 
@@ -128,34 +172,15 @@ try {
             throw "Raw STREAM partition not found for $dateKey in archive or fallback lake. Dashboard was not refreshed."
         }
         $stagedCsv = Join-Path $exports ".vod_stream_query_events_$dateKey.$([guid]::NewGuid().ToString('N')).tmp.csv"
+        $stagedFiles.Add($stagedCsv)
         Write-Host "Extracting VOD activity for $dateKey from $rawPath"
         & $Python $extractor --input $rawPath --date $dateKey --out $stagedCsv --compact
         if ($LASTEXITCODE -ne 0) {
             throw "VOD event extraction failed for $dateKey."
         }
-        $stagedFiles.Add($stagedCsv)
-        $appendFiles.Add($stagedCsv)
-        $dailyDestinations[$stagedCsv] = $dailyCsv
-    }
-
-    $builderArgs = @(
-        $builder,
-        '--out', $dashboard,
-        '--davis-xlsx', $davisWorkbook,
-        '--data-dir', $dataDir,
-        '--data-url', 'vod_stream_query_analysis_dashboard_data',
-        '--incremental'
-    )
-    foreach ($appendFile in $appendFiles) {
-        $builderArgs += @('--append', $appendFile)
-    }
-    & $Python @builderArgs
-    if ($LASTEXITCODE -ne 0) {
-        throw 'VOD dashboard refresh failed.'
-    }
-
-    foreach ($stagedCsv in $stagedFiles) {
-        Move-Item -LiteralPath $stagedCsv -Destination $dailyDestinations[$stagedCsv] -Force
+        Move-Item -LiteralPath $stagedCsv -Destination $dailyCsv -Force
+        Publish-DailyCsv -Csv $dailyCsv
+        Write-Host "Published VOD dashboard through $dateKey."
     }
     Write-Host "VOD dashboard is now current through $($etlDate.ToString('yyyy-MM-dd')): $dashboard"
 }

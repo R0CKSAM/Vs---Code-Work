@@ -294,6 +294,33 @@ def test_parquet_inputs_reads_every_file_in_partition() -> None:
     assert resolved == [str(first), str(second)]
 
 
+def test_host_prefilter_preserves_encoded_vod_on_non_vod_hostname(tmp_path) -> None:
+    source = tmp_path / 'source.parquet'
+    filtered = tmp_path / 'mixed.parquet'
+    lookup = tmp_path / 'lookup.parquet'
+    output = tmp_path / 'events.csv'
+    write_source_parquet(source)
+    write_ua_lookup(lookup)
+    with duckdb.connect() as con:
+        con.execute("CREATE TABLE source AS SELECT * FROM read_parquet(?)", [str(source)])
+        con.execute("UPDATE source SET reqHost='media.example.net', queryStr=replace(queryStr, 'content_type=Vod', 'content_type=V%6Fd')")
+        con.execute("INSERT INTO source SELECT * REPLACE ('live.example.net' AS reqHost, '' AS queryStr) FROM source WHERE reqPath LIKE '%.ts'")
+        con.execute("INSERT INTO source SELECT * REPLACE (? AS reqTimeSec, 'other.example.net' AS reqHost) FROM source WHERE reqHost='media.example.net'", [epoch('2026-08-26 10:00:00')])
+        con.execute('COPY source TO ? (FORMAT PARQUET)', [str(filtered)])
+    subprocess.run([
+        sys.executable, str(TOOLS / 'export_vod_query_events.py'), '--input', str(filtered),
+        '--date', '2026-08-25', '--out', str(output), '--ua-lookup', str(lookup),
+        '--temp-dir', str(tmp_path / 'work'),
+    ], check=True)
+    with output.open(encoding='utf-8', newline='') as handle:
+        rows = list(csv.DictReader(handle))
+    assert len(rows) == 3
+    assert {row['req_host'] for row in rows} == {'media.example.net'}
+    assert {row['status_code'] for row in rows} == {'200', '404'}
+    assert {row['identity_source'] for row in rows} == {'same_cli_manifest'}
+    assert not list((tmp_path / 'work').iterdir())
+
+
 def test_dashboard_has_searchable_multiselect_and_safe_payload() -> None:
     row = {
         "log_date": "2026-08-25",

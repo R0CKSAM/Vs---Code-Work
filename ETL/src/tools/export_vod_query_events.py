@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import duckdb
 
@@ -47,6 +48,9 @@ def main() -> None:
     )
     parser.add_argument("--date", required=True, help="Target IST date (YYYY-MM-DD).")
     parser.add_argument("--out", type=Path, required=True, help="Daily VOD event CSV output.")
+    parser.add_argument("--temp-dir", type=Path, default=ETL_ROOT / "output/temp/vod_query_work")
+    parser.add_argument("--memory-limit", default="4GB")
+    parser.add_argument("--threads", type=int, default=6)
     parser.add_argument(
         "--ua-lookup",
         type=Path,
@@ -68,8 +72,23 @@ def main() -> None:
     # The fourth path component is the content code used by both a VOD manifest
     # and its HLS .ts segments, e.g. .../2026/07/20atoa8e/... .
     content_code = "lower(split_part(ltrim(COALESCE(reqPath, ''), '/'), '/', 4))"
-    connection = duckdb.connect(":memory:")
+    args.temp_dir.mkdir(parents=True, exist_ok=True)
+    workspace = TemporaryDirectory(prefix="extract_", dir=args.temp_dir)
+    connection = duckdb.connect(":memory:", config={
+        "memory_limit": args.memory_limit, "threads": args.threads,
+        "temp_directory": workspace.name, "max_temp_directory_size": "8GB",
+    })
     try:
+        # A segment qualifies via its own VOD query, a same-host manifest, or a
+        # VOD hostname. Host discovery can be date-independent: the final source
+        # filter still enforces the requested day, without scanning timestamps twice.
+        connection.execute(
+            f"""CREATE TEMP TABLE vod_query_hosts AS
+                SELECT DISTINCT lower(COALESCE(reqHost, '')) AS host
+                FROM read_parquet(?)
+                WHERE lower({query_param('content_type')}) = 'vod'
+            """, [source_files],
+        )
         source_columns = {
             row[0]
             for row in connection.execute(
@@ -148,7 +167,8 @@ def main() -> None:
             COPY (
                 WITH source AS (
                     SELECT
-                        *,
+                        reqHost, reqPath, queryStr, country, state, city, asn,
+                        statusCode, cacheStatus,
                         try_cast(reqTimeSec AS DOUBLE) AS req_time_seconds,
                         {timestamp} AS request_timestamp,
                         {content_code} AS content_code,
@@ -166,6 +186,8 @@ def main() -> None:
                         COALESCE(NULLIF({query_param('device_id')}, ''), '') AS query_device_id
                     FROM read_parquet(?)
                     WHERE CAST({timestamp} AS DATE) = CAST(? AS DATE)
+                      AND (regexp_matches(lower(COALESCE(reqHost, '')), '(^|[.-])vod([.-]|$)')
+                           OR lower(COALESCE(reqHost, '')) IN (SELECT host FROM vod_query_hosts))
                 ),
                 ua_lookup AS (
                     SELECT * EXCLUDE (lookup_rank)
@@ -363,6 +385,7 @@ def main() -> None:
         count = connection.execute("SELECT count(*) FROM read_csv_auto(?)", [str(args.out)]).fetchone()[0]
     finally:
         connection.close()
+        workspace.cleanup()
     grain = "minute activity" if args.compact else "request"
     print(f"Wrote {args.out} with {count:,} VOD {grain} rows for {args.date}.")
 

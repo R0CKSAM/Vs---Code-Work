@@ -1718,6 +1718,16 @@ def main() -> None:
             if args.etl1_sources in ("both", "fast"):
                 daily_sources.append(("fast", args.etl1_fast_name))
 
+            if not batch_id:
+                run(
+                    [python, str(etl_root / "src/tools/check_raw_delivery.py"),
+                     "--date", args.etl1_daily_date, "--raw-root", str(daily_raw_root),
+                     "--sources", ",".join(source for source, _ in daily_sources),
+                     "--stream-name", args.etl1_stream_name, "--fast-name", args.etl1_fast_name,
+                     "--report", str(output_root / "validation/raw_delivery" / f"{args.etl1_daily_date}.json")],
+                    cwd=etl_root, env=env, step_name="raw_delivery_preflight", log_dir=log_dir,
+                )
+
             for source_key, source_folder_name in daily_sources:
                 input_dir = daily_raw_root / source_folder_name / month / day
                 if not input_dir.exists() or not input_dir.is_dir():

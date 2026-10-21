@@ -315,3 +315,38 @@ The live-monitor startup wait is five minutes, with launcher output captured in
 `output/live_monitor`. The YouTube collector uses its scheduled login task and
 one-minute crash retries; do not also enable its legacy Startup shortcut.
 
+## VOD Dashboard Refresh
+
+From `ETL`, run `./run_vod_query_dashboard_incremental.ps1`. The default end
+date comes from completed daily checkpoints, so a newer failed ETL run does not
+block earlier completed days. Use `-Date 2026-10-19` to cap the refresh and
+`-PlanOnly` to preview it. Every new date requires completion evidence; PASS and
+completed REVIEW days are accepted, but missing or failed dates are blocked.
+
+Daily extracts are retained and published one day at a time. The extractor
+prefilters VOD-capable hosts without dropping unmarked VOD-host requests or
+non-success HTTP codes. DuckDB uses a 4 GB memory limit, six threads and at most
+8 GB of spill under `output/temp/vod_query_work`, not the C: user temp folder.
+Keep `vod_stream_query_analysis_dashboard_data` beside the exported HTML.
+
+## Missing Source Delivery
+
+Full-day conversion now checks Akamai raw filename timestamps before expensive
+processing. Missing files near the target IST day's end stop processing early,
+preserving inputs. Microbatches are exempt. Passing this necessary-input check
+does not prove completeness: lake coverage and row reconciliation still apply.
+
+For delayed S3 delivery, run from the repository root:
+
+```powershell
+.\venv\Scripts\python.exe ETL/src/tools/wait_for_complete_source.py --date 2026-10-20 --work-dir ETL/output/temp/source_wait_20261020 --interval-seconds 900 --max-hours 12
+```
+
+The watcher checks both sources every 15 minutes after each check, for up to
+12 hours of polling. See `state.json` in its work directory. It starts at most
+one normal recovery attempt once both sources have candidate tail files;
+recovery can run beyond the polling window. Fresh completion evidence is
+required, and a failed attempt is not repeatedly restarted. It cannot restore
+logs missing from the source or replace final coverage validation. It does not
+enable LiveMonitor. Use the same work directory to prevent duplicate watchers.
+
