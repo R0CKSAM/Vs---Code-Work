@@ -18,7 +18,7 @@
     await test(file + ' syntax', () => new Function(sources[file]));
   }
 
-  async function engine({end, maxScroll, rootTop=0, bottom=1000, blank=false, startError=false}) {
+  async function engine({end, maxScroll, rootTop=0, bottom=1000, blank=false, startError=false, stuck=false}) {
     let clock=0, top=0, captures=0, restored=false, detached=false;
     const state=()=>({href:'fixture',width:1600,height:1000,rootTop,visibleTop:rootTop,bottom,
       scrollTop:top,maxScroll,contentEnd:end,scrollWidth:1600,clientWidth:1600,collapsed:[],errors:[],
@@ -30,7 +30,7 @@
       if(args.files)return [];
       const [op,arg]=args.args;
       if(op==='start'&&startError)throw Error('injected startup failure');
-      if(op==='scroll')top=Math.min(maxScroll,arg.top);
+      if(op==='scroll'&&!stuck)top=Math.min(maxScroll,arg.top);
       if(op==='restore')restored=true;
       return [{result:op==='expand'?{count:0}:state()}];
     }}};
@@ -56,6 +56,18 @@
   ]) await test(c.name,async()=>{const r=await engine(c);assert(!r.error,r.error?.message);assert(r.shot.meta.height===c.height,'Wrong output height');});
   await test('blank chart blocks capture and restores tab',async()=>{const r=await engine({end:1000,maxScroll:0,blank:true});assert(r.error&&r.captures===0,'Blank chart accepted');});
   await test('startup failure still restores tab',async()=>{const r=await engine({end:1000,maxScroll:0,startError:true});assert(r.error,'Expected startup failure');});
+  await test('large empty tail exceeding 65 scrolls does not reject short content',async()=>{
+    const r=await engine({end:1500,maxScroll:80000});assert(!r.error,r.error?.message);assert(r.shot.meta.height===1500,'Empty tail included');
+  });
+  await test('actual oversized content is rejected with measured height',async()=>{
+    const r=await engine({end:30000,maxScroll:80000});assert(/Measured dashboard content/.test(r.error?.message),'Missing measured-height failure');assert(r.captures===0,'Oversized content captured');
+  });
+  await test('stuck scroll is distinguished from oversized content',async()=>{
+    const r=await engine({end:1500,maxScroll:80000,stuck:true});assert(/scrolling is stuck/.test(r.error?.message),'Missing stuck-scroll diagnosis');
+  });
+  await test('pathological empty extent remains bounded by deadline',async()=>{
+    const r=await engine({end:1500,maxScroll:10000000});assert(/exceeded 4 minutes/.test(r.error?.message),'Deadline not enforced');
+  });
 
   // Real Chromium DOM and canvas checks, separate from the mocked CDP engine.
   async function panel(markup, extraStyle='') {
@@ -79,7 +91,7 @@
   const dashboard='https://grafana-apj.trafficpeak.live/d/test/dashboard?from=now%2Fd&to=now&refresh=1m';
   async function worker(initial={}) {
     let listener, calls=0, tabs=0, failNetwork=false, onPost=async()=>{};
-    const db={smartReportVersion:'3.7.1',mode:'stopped',config:{dashboard,to:'test@example.com',interval:15},...initial};
+    const db={smartReportVersion:'3.7.2',mode:'stopped',config:{dashboard,to:'test@example.com',interval:15},...initial};
     const storage={get:async keys=>structuredClone(Object.fromEntries((Array.isArray(keys)?keys:[keys]).map(k=>[k,db[k]]))),
       set:async value=>Object.assign(db,structuredClone(value)),remove:async()=>{}};
     const chrome={storage:{local:storage,session:storage},identity:{getRedirectURL:()=>''},
@@ -147,7 +159,7 @@
   });
   await test('upgrade pauses old schedule and requires fresh approval',async()=>{
     const w=await worker({smartReportVersion:'3.7.0',mode:'running',approvedCaptureSignature:'old'});
-    assert(w.db.smartReportVersion==='3.7.1'&&w.db.mode==='paused'&&!w.db.approvedCaptureSignature,'Unsafe upgrade');
+    assert(w.db.smartReportVersion==='3.7.2'&&w.db.mode==='paused'&&!w.db.approvedCaptureSignature,'Unsafe upgrade');
   });
   await test('actual URL matching rejects changed filters',async()=>{
     const w=await worker();assert(w.api.isDashboardTab(dashboard,dashboard),'Matching URL rejected');

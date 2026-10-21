@@ -1,6 +1,12 @@
-# Smart Report 3.7.1 — Reliability fixes
+# Smart Report 3.7.2 — Dashboard discovery fix
 
-The source folder retains its original `Smart-Report-v3.7.0` name so an existing unpacked installation can be reloaded in place. The extension version is now **3.7.1**. This is a regression-tested release candidate; live Grafana/Outlook acceptance is still required before unattended production use.
+The source folder retains its original `Smart-Report-v3.7.0` name so an existing unpacked installation can be reloaded in place. The extension version is now **3.7.2**. This is a regression-tested release candidate; live Grafana/Outlook acceptance is still required before unattended production use.
+
+## Fix in 3.7.2 (21 October 2026)
+
+Removed the arbitrary 65-scroll discovery cutoff. Discovery now scans through large empty tails without declaring short content too long, checks measured content against the existing 24,000-pixel limit, and separately diagnoses stuck scrolling. Scans retain viewport overlap to avoid skipping lazy panels and remain bounded by the four-minute deadline. Discovery logs include step count, content height and scroll extent.
+
+41 regression checks passed in local headless Chrome, including four new checks for empty tails, actual oversized content, stalled scrolling and the deadline. CDP and Microsoft APIs remain mocked; the live signed-in dashboard was not accessible for verification. Reload the extension, confirm 3.7.2, and run Check screenshot again. Genuine over-limit dashboards still require fewer expanded sections.
 
 ## Fixes in 3.7.1
 
@@ -17,7 +23,7 @@ The source folder retains its original `Smart-Report-v3.7.0` name so an existing
 
 1. Pause the old extension. Back up its unpacked folder.
 2. Replace ALL extension files in that same folder with this package. Keep your existing company Microsoft IDs and approved recipient domains if IT changed them. The manifest key is unchanged, preserving extension identity.
-3. Reload in chrome://extensions and confirm version 3.7.1. Old schedules pause on upgrade. Existing settings, counters and OAuth storage are not intentionally erased.
+3. Reload in chrome://extensions and confirm version 3.7.2. Old schedules pause on upgrade. Existing settings, counters and OAuth storage are not intentionally erased.
 4. Open the required Grafana dashboard, wait for its normal graphs, and click Use tab.
 5. Choose Open all sections (default), or As currently open for your manually selected rows.
 6. Click Check screenshot. It opens a full-size local review tab. Verify the first totals, plotted graphs and the last row. Do NOT approve a blank/incomplete capture.

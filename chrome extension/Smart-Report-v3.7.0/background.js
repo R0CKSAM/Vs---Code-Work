@@ -110,7 +110,7 @@ function captureSignature(c) {
   const u=normalizeDashboardUrl(c.dashboard);
   for(const k of IGNORED_URL_PARAMETERS)u.searchParams.delete(k);
   u.searchParams.sort();
-  return JSON.stringify({version:'3.7.1', url:u.href, rows:c.expandRows!==false?'all':'current', width:1600});
+  return JSON.stringify({version:'3.7.2', url:u.href, rows:c.expandRows!==false?'all':'current', width:1600});
 }
 function safeCaptureSignature(c){try{return captureSignature(c);}catch{return '';}}
 async function requireApprovedPreview(c) {
@@ -491,14 +491,14 @@ async function restoreAlarmOnce() {
       lastError: 'Previous email acceptance is unconfirmed. Check Sent Items before retrying.' });
     return;
   }
-  if (installed.smartReportVersion !== '3.7.1') {
+  if (installed.smartReportVersion !== '3.7.2') {
     await chrome.alarms.clear(ALARM);
-    await put({ smartReportVersion: '3.7.1', upgradedAt: Date.now(),
+    await put({ smartReportVersion: '3.7.2', upgradedAt: Date.now(),
       mode: installed.mode === 'running' ? 'paused' : (installed.mode || 'stopped'),
       runState: null, lastError: '', lastMailError: '', lastMailOutcome:'', consecutiveFailures: 0,
       approvedCaptureSignature:'', capturePreview:null, capturePreviewSignature:'', capturePreviewId:'',
-      lastStatus: 'Updated to v3.7.1. Check screenshot and approve its layout before emailing.' });
-    await log('info', 'Smart Report v3.7.1 installed; old monitoring paused until tested');
+      lastStatus: 'Updated to v3.7.2. Check screenshot and approve its layout before emailing.' });
+    await log('info', 'Smart Report v3.7.2 installed; old monitoring paused until tested');
     return;
   }
   const { mode } = await G(['mode']);
