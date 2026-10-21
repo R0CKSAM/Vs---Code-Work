@@ -183,6 +183,13 @@ $DefaultDeepProfileTempDir = if ($DeepProfileTempDir) {
     Resolve-DefaultDuckDbTempDir -Candidates $DefaultTempCandidates
 }
 $env:VG_DUCKDB_TEMP_DIR = $DefaultDeepProfileTempDir
+if (-not $env:VG_ETL_FINAL_CLEAN_ROOT -and (Test-Path -LiteralPath $PreferredSharedTempRoot)) {
+    $env:VG_ETL_FINAL_CLEAN_ROOT = Join-Path $PreferredSharedTempRoot "VetoETL\final_clean"
+}
+if ($env:VG_ETL_FINAL_CLEAN_ROOT) {
+    New-Item -ItemType Directory -Path $env:VG_ETL_FINAL_CLEAN_ROOT -Force | Out-Null
+    Write-Host "Final-clean storage: $env:VG_ETL_FINAL_CLEAN_ROOT"
+}
 $env:VG_DEVICE_SNAPSHOT_THREADS = $DeepProfileThreads.ToString()
 $env:VG_DEVICE_SNAPSHOT_MEMORY_GB = ($DeepProfileMemory -replace '[^0-9]', '')
 try {

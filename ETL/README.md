@@ -269,6 +269,10 @@ python run.py dashboards -- --overview-html ".\output\overview\overview_dashboar
 ## Environment overrides used by dashboard scripts
 
 - `VG_ETL_BASE`
+- `VG_ETL_FINAL_CLEAN_ROOT` (optional final-clean Parquet root; conversion batches
+  remain local for speed. The daily PowerShell runner defaults this to
+  `Z:\Veto Logs Backup\DO NOT DELETE\Temp\VetoETL\final_clean` when that shared
+  temp root is available. Direct Python runs retain the local default.)
 - `VG_ETL_ARCHIVE_LAKE_ROOTS` (semicolon-separated archive roots; the standard
   `Z:\Veto Logs Backup\DO NOT DELETE` root is detected automatically)
 - `VG_DUCKDB_TEMP_DIR` (optional DuckDB spill directory; by default the pipeline uses `output\\cache\\duckdb_temp\\deep_profile` on the ETL drive)
@@ -290,6 +294,22 @@ Archive copies use Parquet metadata and SHA-256 checks before local removal.
 Interrupted `.archiving` files are retried. Cleanup revalidates retained lake row
 counts and uses a process lock. Recent interrupted cleanup manifests are retried
 for seven days; older incidents require an explicit reviewed recovery.
+
+Final-clean storage can be separate from the local data root. Cleanup records
+that root in its manifest and removes only the exact processed source/date after
+full PASS validation and retained-lake reconciliation. Do not manually clear the
+shared final-clean directory while processing or a review is pending.
+For a standalone `resume_failed_lake.py` recovery, supply `--final-clean-root`
+with that NAS path (or set `VG_ETL_FINAL_CLEAN_ROOT` in the recovery environment).
+
+A full-day, exactly reconciled REVIEW retains raw/stage inputs and records cleanup
+as a warning, allowing permanent lake archival to continue. Missing coverage,
+row mismatches and hard validation failures still block the pipeline. REVIEW is
+not a PASS and its channel anomalies still require investigation.
+
+The gzip converter aborts a batch on output-write failure instead of treating it
+as a corrupt input and repeatedly retrying an uncleared buffer. Successful batch
+manifests remain reusable after storage is repaired.
 
 The live-monitor startup wait is five minutes, with launcher output captured in
 `output/live_monitor`. The YouTube collector uses its scheduled login task and

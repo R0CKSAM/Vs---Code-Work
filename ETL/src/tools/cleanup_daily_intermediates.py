@@ -197,18 +197,20 @@ def artifact_groups(
     raw_root: Path,
     target_date: str,
     source_names: dict[str, str],
+    final_clean_root: Path | None = None,
 ) -> list[dict[str, Any]]:
+    final_clean_root = final_clean_root or base_root / "stage" / "final_clean"
     year, month, day = target_date.split("-")
     groups: list[dict[str, Any]] = []
 
     for source, folder_name in source_names.items():
         source_id = f"{source}_{year}_{month}_{day}"
         parquet_dir = base_root / "stage" / "parquet" / f"source={source}" / f"year={year}" / f"month={month}" / f"day={day}"
-        final_dir = base_root / "stage" / "final_clean" / f"source={source}" / f"year={year}" / f"month={month}" / f"day={day}"
+        final_dir = final_clean_root / f"source={source}" / f"year={year}" / f"month={month}" / f"day={day}"
         final_file = final_dir / f"{source_id}_final_clean.parquet"
         raw_dir = raw_root / folder_name / month / day
         ensure_within(parquet_dir, base_root / "stage")
-        ensure_within(final_file, base_root / "stage")
+        ensure_within(final_file, final_clean_root)
         ensure_within(raw_dir, raw_root / folder_name)
         groups.extend(
             [
@@ -254,6 +256,8 @@ def prune_empty_parents(start: Path, stop: Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base", required=True, help="ETL data root containing stage/ and lake/.")
+    parser.add_argument("--final-clean-root", default=os.getenv("VG_ETL_FINAL_CLEAN_ROOT"),
+                        help="Optional separate final-clean storage root (for example NAS scratch).")
     parser.add_argument("--lake", required=True, help="Validated lake root retained after cleanup.")
     parser.add_argument(
         "--archive-lake",
@@ -294,6 +298,8 @@ def main() -> None:
         raise SystemExit(f"Unsupported cleanup source(s): {', '.join(unsupported) or 'none'}")
 
     base_root = Path(args.base).expanduser().resolve()
+    final_clean_root = (Path(args.final_clean_root).expanduser().resolve()
+                        if args.final_clean_root else base_root / "stage" / "final_clean")
     lake_root = Path(args.lake).expanduser().resolve()
     archive_lake_roots = [Path(value).expanduser().resolve() for value in args.archive_lake]
     lake_roots = [lake_root, *archive_lake_roots]
@@ -326,9 +332,7 @@ def main() -> None:
         print(f"Validating {source} final-clean rows against retained lake...", flush=True)
         source_id = f"{source}_{args.date.replace('-', '_')}"
         final_file = (
-            base_root
-            / "stage"
-            / "final_clean"
+            final_clean_root
             / f"source={source}"
             / f"year={args.date[0:4]}"
             / f"month={args.date[5:7]}"
@@ -365,7 +369,7 @@ def main() -> None:
 
     print("Enumerating date-scoped raw and stage artifacts...", flush=True)
     selected_source_names = {source: source_names[source] for source in sources}
-    groups = artifact_groups(base_root, raw_root, args.date, selected_source_names)
+    groups = artifact_groups(base_root, raw_root, args.date, selected_source_names, final_clean_root)
     started = datetime.now(IST)
     stamp = started.strftime("%Y%m%d_%H%M%S_%f")
     manifest_path = audit_dir / f"cleanup_{args.date}_{stamp}.json"
@@ -380,6 +384,7 @@ def main() -> None:
         "validation_report": str(validation_path),
         "validation_generated_at_ist": report.get("generated_at_ist"),
         "lake_roots": [str(path) for path in lake_roots],
+        "final_clean_root": str(final_clean_root),
         "checks": checks,
         "file_count": total_files,
         "planned_bytes": total_bytes,
@@ -429,7 +434,7 @@ def main() -> None:
             if group["category"] == "raw_gz":
                 stop = raw_root / source_names[group["source"]]
             elif group["category"] == "final_clean":
-                stop = base_root / "stage" / "final_clean"
+                stop = final_clean_root
             else:
                 stop = base_root / "stage" / "parquet"
             prune_empty_parents(root.parent, stop)

@@ -584,6 +584,9 @@ def _convert_batch(task: dict) -> dict:
     schema       = None
     buffer       = []
 
+    class OutputWriteError(RuntimeError):
+        pass
+
     def _flush(buf):
         nonlocal writer, schema, rows_written
 
@@ -650,10 +653,16 @@ def _convert_batch(task: dict) -> dict:
 
                         buffer.append(row)
                         if len(buffer) >= buf_size:
-                            _flush(buffer)
+                            # Output failures must not be swallowed as bad input files.
+                            try:
+                                _flush(buffer)
+                            except Exception as exc:
+                                raise OutputWriteError(f"Parquet output failed: {exc}") from exc
                             buffer.clear()
 
                 files_ok += 1
+            except OutputWriteError:
+                raise
             except Exception as e:
                 failed_files.append({"file": fpath, "error": str(e), "stage": "read"})
 

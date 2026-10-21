@@ -99,6 +99,8 @@ def main():
                    '--validation-report', str(report), '--audit-dir', str(audit)]
         if args.archive_lake:
             command += ['--archive-lake', args.archive_lake]
+        if manifest.get('final_clean_root'):
+            command += ['--final-clean-root', manifest['final_clean_root']]
         print(f"Revalidating cleanup for {manifest['date']} ({manifest_path.name})", flush=True)
         if args.execute:
             command.append('--execute')

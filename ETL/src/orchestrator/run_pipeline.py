@@ -351,12 +351,34 @@ def _lake_rows_for_source(lake_root: Path, source_id: str, source_key: str) -> i
     return sum(_parquet_rows(path) for path in files)
 
 
+def _final_clean_root(base_root: Path) -> Path:
+    configured = os.environ.get("VG_ETL_FINAL_CLEAN_ROOT", "").strip()
+    return Path(configured).expanduser().resolve() if configured else base_root / "stage" / "final_clean"
+
+
+def _cleanup_has_review_only(report_path: Path, target_date: str, sources: list[str]) -> bool:
+    """Retain review inputs without blocking archival of a reconciled lake."""
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8-sig"))
+        if (report.get("date") != target_date or report.get("mode") != "full"
+                or report.get("overall_status") != "REVIEW"
+                or report.get("hard_failure_count") != 0 or not sources):
+            return False
+        for source in sources:
+            coverage = next(item for item in report["source_results"] if item["source"] == source)
+            profile = next(item for item in report["profile_reconciliation"] if item["source"] == source)
+            if (coverage.get("status") != "PASS" or coverage.get("selected", {}).get("full_day") is not True
+                    or profile.get("status") != "PASS" or profile.get("delta_rows") != 0):
+                return False
+        return True
+    except (OSError, ValueError, KeyError, TypeError, StopIteration):
+        return False
+
+
 def _final_clean_file(base_root: Path, source_key: str, day_value: date) -> Path:
     source_id = f"{source_key}_{day_value:%Y_%m_%d}"
     return (
-        base_root
-        / "stage"
-        / "final_clean"
+        _final_clean_root(base_root)
         / f"source={source_key}"
         / f"year={day_value:%Y}"
         / f"month={day_value:%m}"
@@ -1716,9 +1738,7 @@ def main() -> None:
                 if batch_id:
                     output_dir = output_dir / f"batch={batch_id}"
                 final_clean_file = (
-                    base_root
-                    / "stage"
-                    / "final_clean"
+                    _final_clean_root(base_root)
                     / f"source={source_key}"
                     / f"year={target_date.strftime('%Y')}"
                     / f"month={month}"
@@ -2953,6 +2973,8 @@ def main() -> None:
             str(cleanup_intermediates_script),
             "--base",
             str(base_root),
+            "--final-clean-root",
+            str(_final_clean_root(base_root)),
             "--lake",
             str(lake_root),
             "--raw-root",
@@ -2972,12 +2994,20 @@ def main() -> None:
         ]
         if args.cleanup_daily_intermediates and not args.dry_run:
             cleanup_cmd.append("--execute")
+        cleanup_review_only = _cleanup_has_review_only(
+            output_root / "validation" / "daily_delivery" / "daily_delivery_validation_latest.json",
+            args.etl1_daily_date,
+            [source_key for source_key, _ in daily_sources],
+        )
+        if cleanup_review_only:
+            print("[retention] Channel review remains open: cleanup will retain raw/stage; lake archival may continue.")
         run(
             cleanup_cmd,
             cwd=etl_root,
             env=env,
             step_name="daily_intermediate_cleanup",
             log_dir=log_dir,
+            allow_failure=cleanup_review_only,
         )
 
     print("\nPipeline complete.")

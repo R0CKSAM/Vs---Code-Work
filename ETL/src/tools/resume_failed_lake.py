@@ -10,16 +10,17 @@ import sys
 from prepared_priority_lake import ETL, atomic_json, fingerprint, pq, sha256, verify
 
 sys.path.insert(0, str(ETL))
-from src.orchestrator.run_pipeline import PipelineRunLock
+from src.orchestrator.run_pipeline import PipelineRunLock, _final_clean_root
 
 
-def check_final(base, day):
+def check_final(base, day, final_clean_root=None):
+    final_clean_root = final_clean_root or _final_clean_root(base)
     dedupe = json.loads((base / '.etl_02_state.json').read_text(encoding='utf-8'))
     jobs = []
     for source in ('fast', 'stream'):
         source_id = f"{source}_{day:%Y_%m_%d}"
         relative = f"source={source}/year={day:%Y}/month={day:%m}/day={day:%d}"
-        final = base / 'stage/final_clean' / relative / f'{source_id}_final_clean.parquet'
+        final = final_clean_root / relative / f'{source_id}_final_clean.parquet'
         record = dedupe.get(source_id, {})
         rows = pq.read_metadata(final).num_rows
         if record.get('status') != 'ok' or rows <= 0 or rows != record.get('rows'):
@@ -39,11 +40,13 @@ def main():
     parser.add_argument('--date', required=True, type=dt.date.fromisoformat)
     parser.add_argument('--base', type=Path, default=ETL / 'data')
     parser.add_argument('--temp-dir', type=Path)
+    parser.add_argument('--final-clean-root', type=Path,
+                        help='Final-clean root override; otherwise use VG_ETL_FINAL_CLEAN_ROOT or local stage.')
     parser.add_argument('--check-only', action='store_true')
     args = parser.parse_args()
     if args.date >= dt.datetime.now(dt.timezone(dt.timedelta(hours=5, minutes=30))).date():
         raise SystemExit('Only completed past dates may be resumed.')
-    jobs = check_final(args.base, args.date)
+    jobs = check_final(args.base, args.date, args.final_clean_root)
     if args.check_only:
         print('Both final-clean files and download checkpoints are verified.', flush=True)
         return

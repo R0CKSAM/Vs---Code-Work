@@ -33,6 +33,12 @@ class ResumeLakeTest(unittest.TestCase):
             state.write_text(json.dumps(records))
             with patch.object(resume, 'ETL', root):
                 self.assertEqual(len(resume.check_final(base, day)), 2)
+                local_final = base / 'stage/final_clean'
+                external_final = root / 'nas_final_clean'
+                local_final.rename(external_final)
+                jobs = resume.check_final(base, day, external_final)
+                self.assertTrue(all(Path(job['final_clean_file']).is_relative_to(external_final) for job in jobs))
+                external_final.rename(local_final)
                 records['stream_2026_10_18']['rows'] = 3
                 state.write_text(json.dumps(records))
                 with self.assertRaisesRegex(RuntimeError, 'final-clean'):
