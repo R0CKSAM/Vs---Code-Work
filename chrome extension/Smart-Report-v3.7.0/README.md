@@ -1,6 +1,29 @@
-# Smart Report 3.7.2 — Dashboard discovery fix
+# Smart Report 3.7.4 — Focused onboarding and report controls
 
-The source folder retains its original `Smart-Report-v3.7.0` name so an existing unpacked installation can be reloaded in place. The extension version is now **3.7.2**. This is a regression-tested release candidate; live Grafana/Outlook acceptance is still required before unattended production use.
+The source folder retains its original `Smart-Report-v3.7.0` name so an existing unpacked installation can be reloaded in place. The extension version is now **3.7.4**. Live Grafana/Outlook acceptance is still required before unattended production use.
+
+## Product flow in 3.7.4
+
+- Signed out: only the Microsoft sign-in screen is shown; account, setup and scheduling controls are hidden. A connection error remains visible when needed.
+- Signed in: show dashboard setup until a preview is approved, delivery setup until recipients and interval are valid, then the overview. Existing approved configurations go straight to the overview.
+- Dashboard/delivery can be edited from the overview. Account verification and sign-out live in the Account menu. Sign-out pauses reporting and retains settings.
+- One primary Start/Pause/Resume action, a next-report countdown, and a compact recipient/frequency summary. Detailed controls and logs are collapsed by default.
+- Accessible modal confirmations for sending tests, starting schedules and signing out; keyboard cancellation and focus return. Inline recipient/domain/interval validation. Persistent errors and dismissible seven-second success toasts.
+- Desktop notifications replace one status notification rather than piling up. Preview readiness, test acceptance and manual failures notify even if the popup closes; routine scheduled successes remain quiet. Existing scheduled failure alerts remain. OS/browser notification settings can suppress display.
+- 53 checks passed in local headless Chrome: prior capture/scheduler tests, notification policy, and actual popup sign-in gating, progressive screens, invalid recipients, navigation, confirmations, active/paused controls and viewport checks. Signed-out and active overview were visually inspected. Chrome APIs/Graph are mocked in tests; installed-extension OAuth, desktop notification display and actual delivery still require live acceptance.
+
+Reload the extension and confirm version 3.7.4 in chrome://extensions. Upgrade pauses schedules and requires fresh screenshot approval. Sign in if needed, follow the visible next step, send a test, then explicitly start automatic emails. Verify two real scheduled deliveries before unattended use.
+
+## Scheduler and UI update in 3.7.3 (21 October 2026)
+
+- Four numbered setup steps, a plain-language next action, separate test/start buttons, and a next-report time with a countdown. Pause/Stop move above setup when scheduling is active so they remain visible in the popup.
+- Start and Resume wait one full interval before the first capture. Screenshot preparation and sending take additional time. A test email does not enable scheduling.
+- Invalid interval edits pause the timer; restart recovery checks settings, preview approval and Outlook connection before restoring an alarm.
+- Start/Pause/Stop alarm changes are serialized. Pausing still cancels a pending report immediately.
+- Chrome may delay alarms when asleep or busy. Keep the computer awake, Chrome open and Grafana available. A missed/busy interval is not a promise of catch-up delivery.
+- 52 automated checks passed in headless Chrome, including actual alarm-handler execution with mocked Chrome timers/Graph, consecutive reports, stop/pause, rapid commands, restart recovery, interval edits, overlapping captures and token expiry. Actual popup markup/scripts also passed setup/running/paused state checks and viewport checks. No live scheduled emails were sent.
+
+After reloading, confirm 3.7.3, review/approve the screenshot again, and explicitly start the schedule. For live acceptance, observe two intervals in the intended mailbox and verify Pause prevents the following scheduled report.
 
 ## Fix in 3.7.2 (21 October 2026)
 
@@ -23,7 +46,7 @@ Removed the arbitrary 65-scroll discovery cutoff. Discovery now scans through la
 
 1. Pause the old extension. Back up its unpacked folder.
 2. Replace ALL extension files in that same folder with this package. Keep your existing company Microsoft IDs and approved recipient domains if IT changed them. The manifest key is unchanged, preserving extension identity.
-3. Reload in chrome://extensions and confirm version 3.7.2. Old schedules pause on upgrade. Existing settings, counters and OAuth storage are not intentionally erased.
+3. Reload in chrome://extensions and confirm version 3.7.4. Old schedules pause on upgrade. Existing settings, counters and OAuth storage are not intentionally erased.
 4. Open the required Grafana dashboard, wait for its normal graphs, and click Use tab.
 5. Choose Open all sections (default), or As currently open for your manually selected rows.
 6. Click Check screenshot. It opens a full-size local review tab. Verify the first totals, plotted graphs and the last row. Do NOT approve a blank/incomplete capture.

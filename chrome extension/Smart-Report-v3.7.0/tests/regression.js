@@ -12,7 +12,7 @@
     throw Error('Expected rejection');
   }
   for (const file of ['background.js','capture-engine.js','capture-page.js','popup.js','preview.js','company-config.js']) {
-    const response = await fetch('../' + file);
+    const response = await fetch('../' + file, {cache:'no-store'});
     assert(response.ok, 'Missing source: ' + file);
     sources[file] = await response.text();
     await test(file + ' syntax', () => new Function(sources[file]));
@@ -90,15 +90,15 @@
 
   const dashboard='https://grafana-apj.trafficpeak.live/d/test/dashboard?from=now%2Fd&to=now&refresh=1m';
   async function worker(initial={}) {
-    let listener, calls=0, tabs=0, failNetwork=false, onPost=async()=>{};
-    const db={smartReportVersion:'3.7.2',mode:'stopped',config:{dashboard,to:'test@example.com',interval:15},...initial};
+    let listener, calls=0, tabs=0, failNetwork=false, onPost=async()=>{}, alarm=null, alarmListener;const notifications=[];
+    const db={smartReportVersion:'3.7.4',mode:'stopped',config:{dashboard,to:'test@example.com',interval:15},...initial};
     const storage={get:async keys=>structuredClone(Object.fromEntries((Array.isArray(keys)?keys:[keys]).map(k=>[k,db[k]]))),
       set:async value=>Object.assign(db,structuredClone(value)),remove:async()=>{}};
     const chrome={storage:{local:storage,session:storage},identity:{getRedirectURL:()=>''},
       runtime:{id:'test',getURL:path=>'chrome-extension://test/'+path,onStartup:{addListener(){}},onInstalled:{addListener(){}},
         onMessage:{addListener(f){listener=f;}},getPlatformInfo:async()=>({})},
       tabs:{create:async()=>{tabs++;return {id:1};}},
-      alarms:{clear:async()=>{},get:async()=>null,create:async()=>{},onAlarm:{addListener(){}}},notifications:{create:async()=>{}}};
+      alarms:{clear:async()=>{alarm=null;},get:async()=>alarm,create:async(name,options)=>{alarm={name,...options,scheduledTime:Date.now()+options.delayInMinutes*60000};},onAlarm:{addListener(f){alarmListener=f;}}},notifications:{create:async(id,options)=>{notifications.push({id,...options});}}};
     const load=new Function('chrome','importScripts','COMPANY_MICROSOFT','COMPANY_POLICY','setInterval','clearInterval','fetch',
       sources['background.js']+`\nreturn (async()=>{await restoreFlight;return {run,schedule,restoreAlarm,captureSignature,isDashboardTab,
         setAccess:f=>getAccess=f,setScreenshot:f=>screenshot=f};})();`);
@@ -110,7 +110,7 @@
       });
     api.setAccess(async()=>'mock-token');
     api.setScreenshot(async()=>({meta:{width:1600,height:1000},data:'eA==',ext:'png',mime:'image/png'}));
-    return {api,db,calls:()=>calls,tabs:()=>tabs,offline:()=>{failNetwork=true;},onPost:fn=>{onPost=fn;},
+    return {api,db,notifications,calls:()=>calls,tabs:()=>tabs,offline:()=>{failNetwork=true;},onPost:fn=>{onPost=fn;},alarm:()=>alarm,fire:(name='smart-report-next')=>alarmListener({name}),
       approve:()=>{db.approvedCaptureSignature=api.captureSignature(db.config);},
       message:msg=>new Promise(resolve=>listener(msg,{id:'test',url:'chrome-extension://test/preview.html'},resolve))};
   }
@@ -159,7 +159,7 @@
   });
   await test('upgrade pauses old schedule and requires fresh approval',async()=>{
     const w=await worker({smartReportVersion:'3.7.0',mode:'running',approvedCaptureSignature:'old'});
-    assert(w.db.smartReportVersion==='3.7.2'&&w.db.mode==='paused'&&!w.db.approvedCaptureSignature,'Unsafe upgrade');
+    assert(w.db.smartReportVersion==='3.7.4'&&w.db.mode==='paused'&&!w.db.approvedCaptureSignature,'Unsafe upgrade');
   });
   await test('actual URL matching rejects changed filters',async()=>{
     const w=await worker();assert(w.api.isDashboardTab(dashboard,dashboard),'Matching URL rejected');
@@ -186,6 +186,91 @@
     const w=await worker();w.approve();w.db.mode='running';
     w.api.setAccess(async()=>{await w.api.schedule('paused');await rejects(()=>w.api.schedule('running'),/Wait/);return 'mock-token';});
     await rejects(()=>w.api.run(false,false),/cancelled/);assert(w.calls()===0,'Cancelled report revived');
+  });
+  async function scheduledWorker(){const w=await worker();w.approve();w.db.tokens={refresh:'mock'};return w;}
+  await test('start creates correct interval with delayed first report',async()=>{
+    const w=await scheduledWorker();w.db.config.interval=7;await w.api.schedule('running');
+    assert(w.alarm().periodInMinutes===7&&w.alarm().delayInMinutes===7&&w.calls()===0,'Wrong initial timer');
+    await w.fire();assert(w.calls()===1&&w.db.sentScheduled===1,'Alarm did not send scheduled mail');
+    await w.fire();assert(w.calls()===2&&w.db.sentScheduled===2,'Second interval failed');
+  });
+  await test('pause and stop clear timer and ignore queued alarm',async()=>{
+    const w=await scheduledWorker();await w.api.schedule('running');await w.api.schedule('paused');await w.fire();
+    assert(!w.alarm()&&w.calls()===0,'Paused alarm sent mail');
+    await w.api.schedule('running');await w.api.schedule('stopped');await w.fire();assert(!w.alarm()&&w.calls()===0,'Stopped alarm sent mail');
+  });
+  await test('rapid start followed by pause leaves no active timer',async()=>{
+    const w=await scheduledWorker();await Promise.all([w.api.schedule('running'),w.api.schedule('paused')]);
+    assert(w.db.mode==='paused'&&!w.alarm(),'Start overwrote pause');
+  });
+  await test('resume starts a fresh interval without sending immediately',async()=>{
+    const w=await scheduledWorker();await w.api.schedule('paused');await w.api.schedule('running');
+    assert(w.alarm().delayInMinutes===15&&w.calls()===0,'Resume sent immediately');
+  });
+  await test('restart restores a valid running schedule',async()=>{
+    const w=await scheduledWorker();w.db.mode='running';const restored=await worker(w.db);
+    assert(restored.alarm()?.periodInMinutes===15&&restored.calls()===0,'Restart did not restore timer');
+  });
+  await test('restart pauses invalid or unapproved schedules',async()=>{
+    const w=await scheduledWorker();w.db.mode='running';w.db.config.interval=0;
+    const invalid=await worker(w.db);assert(invalid.db.mode==='paused'&&!invalid.alarm(),'Invalid interval restored');
+    w.db.config.interval=15;w.db.approvedCaptureSignature='';const unapproved=await worker(w.db);
+    assert(unapproved.db.mode==='paused'&&!unapproved.alarm(),'Unapproved schedule restored');
+  });
+  await test('interval edit updates timer and invalid edit pauses it',async()=>{
+    const w=await scheduledWorker();await w.api.schedule('running');
+    await w.message({action:'CONFIG',config:{interval:3}});assert(w.alarm().periodInMinutes===3,'Interval not updated');
+    await w.message({action:'CONFIG',config:{interval:0}});assert(w.db.mode==='paused'&&!w.alarm(),'Invalid edit left timer running');
+  });
+  await test('unrelated alarm does not send mail',async()=>{const w=await scheduledWorker();await w.api.schedule('running');await w.fire('other');assert(w.calls()===0,'Unrelated alarm sent mail');});
+  await test('overlapping alarm is skipped while capture is busy',async()=>{
+    const w=await scheduledWorker();await w.api.schedule('running');let release,entered;
+    const started=new Promise(resolve=>{entered=resolve;});
+    w.api.setScreenshot(async()=>{entered();await new Promise(resolve=>{release=resolve;});return {meta:{},data:'x',ext:'png',mime:'image/png'};});
+    const first=w.fire();await started;await w.fire();release();await first;
+    assert(w.calls()===1,'Overlapping report submitted');
+  });
+  await test('scheduled token renewal failure pauses the timer',async()=>{
+    const w=await scheduledWorker();await w.api.schedule('running');w.api.setAccess(async()=>{throw Error('Microsoft session needs renewal');});
+    await w.fire();assert(w.db.mode==='paused'&&!w.alarm()&&w.calls()===0,'Expired session kept running');
+  });
+  await test('manual results notify while routine scheduled success stays quiet',async()=>{
+    const w=await scheduledWorker();await w.api.run(false,true);
+    assert(w.notifications.at(-1).title==='Screenshot ready to review','Preview alert missing');
+    await w.api.run(true,false);assert(w.notifications.at(-1).title==='Test accepted by Outlook','Test alert missing');
+    const count=w.notifications.length;await w.api.schedule('running');await w.fire();assert(w.notifications.length===count,'Routine success created alert noise');
+    assert(w.notifications.every(n=>n.id==='smart-report-status'),'Notifications accumulate instead of replacing');
+  });
+  await test('actual popup renders setup, readiness, running and paused states',async()=>{
+    const html=await (await fetch('../popup.html',{cache:'no-store'})).text(),css=await (await fetch('../style.css',{cache:'no-store'})).text();
+    const frame=document.createElement('iframe');frame.style.cssText='width:640px;height:900px;border:0';document.body.append(frame);
+    const w=frame.contentWindow,d=w.document;
+    d.open();d.write(html.replace('<link rel="stylesheet" href="style.css">','<style>'+css+'</style>').replace('<script src="popup.js"></script>',''));d.close();
+    const data={mode:'stopped',config:{dashboard:'',to:'',interval:15},connected:false,approvedPreview:false,events:[],allowedDomains:[]};
+    w.chrome={runtime:{sendMessage:(msg,cb)=>queueMicrotask(()=>cb({ok:true,result:data})),getURL:p=>p},storage:{onChanged:{addListener(){}}}};
+    w.eval(sources['popup.js']+'\nglobalThis.__testRender=render; globalThis.__testRefresh=refresh;globalThis.__testRecipients=recipientUI;');await w.__testRefresh();
+    assert(!d.getElementById('signInView').hidden&&d.getElementById('appView').hidden&&d.getElementById('accountMenu').hidden,'Signed-out view exposes controls');
+    assert(d.getElementById('start').disabled,'Unconfigured start enabled');
+    data.connected=true;w.__testRender(data);assert(!d.getElementById('dashboardView').hidden,'Dashboard setup not shown');
+    d.getElementById('dashboard').value=dashboard;data.approvedPreview=true;w.__testRender(data);assert(!d.getElementById('deliveryView').hidden,'Delivery setup not shown');
+    d.getElementById('to').value='bad-address';w.__testRender(data);assert(d.getElementById('continueDelivery').disabled&&!d.getElementById('recipientError').hidden,'Bad recipient accepted');
+    d.getElementById('to').value='test@example.com';
+    w.__testRecipients();
+    Object.assign(data,{connected:true,approvedPreview:true,config:{dashboard,to:'test@example.com',interval:15}});
+    w.__testRender(data);assert(!d.getElementById('start').disabled,'Ready start disabled');
+    d.getElementById('interval').value='0';w.__testRender(data);assert(d.getElementById('start').disabled,'Invalid interval enabled');
+    d.getElementById('interval').value='15';data.mode='paused';w.__testRender(data);
+    assert(d.getElementById('nextRun').textContent==='Paused'&&d.getElementById('pauseResume').textContent==='Resume automatic emails','Paused state confusing');
+    data.mode='running';data.nextRun=Date.now()+900000;w.__testRender(data);
+    assert(d.getElementById('mode').textContent==='Automatic emails are on'&&d.getElementById('countdown').textContent.includes('min'),'Missing active schedule status');
+    assert(d.documentElement.scrollWidth<=d.documentElement.clientWidth,'Popup overflows horizontally');
+    assert(d.getElementById('pauseResume').getBoundingClientRect().bottom<600,'Pause is below the popup fold');
+    d.getElementById('editDelivery').click();assert(!d.getElementById('deliveryView').hidden,'Edit delivery broken');
+    d.getElementById('deliveryBack').click();assert(!d.getElementById('overviewView').hidden,'Back to overview broken');
+    d.getElementById('test').click();assert(d.getElementById('confirmDialog').open,'Test confirmation missing');
+    d.getElementById('confirmCancel').click();assert(!d.getElementById('confirmDialog').open,'Cancel confirmation broken');
+    if(location.search.includes('signedout')){data.connected=false;w.__testRender(data);}
+    if(location.search.includes('preview')){document.getElementById('results').style.display='none';document.body.style.margin='0';}else frame.remove();
   });
   document.getElementById('results').textContent=results.join('\n')+'\nTOTAL '+results.length+'; FAILED '+results.filter(x=>x.startsWith('FAIL')).length;
   document.title=results.some(x=>x.startsWith('FAIL'))?'FAIL':'PASS';

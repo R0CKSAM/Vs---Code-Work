@@ -48,7 +48,7 @@ const log = async (level, message) => {
 
 async function notify(title, message) {
   try {
-    await chrome.notifications.create({ type: 'basic', iconUrl: 'icon128.png', title, message });
+    await chrome.notifications.create('smart-report-status', { type: 'basic', iconUrl: 'icon128.png', title, message });
   } catch (e) {
     await log('warn', 'Notification failed: ' + e.message);
   }
@@ -110,7 +110,7 @@ function captureSignature(c) {
   const u=normalizeDashboardUrl(c.dashboard);
   for(const k of IGNORED_URL_PARAMETERS)u.searchParams.delete(k);
   u.searchParams.sort();
-  return JSON.stringify({version:'3.7.2', url:u.href, rows:c.expandRows!==false?'all':'current', width:1600});
+  return JSON.stringify({version:'3.7.4', url:u.href, rows:c.expandRows!==false?'all':'current', width:1600});
 }
 function safeCaptureSignature(c){try{return captureSignature(c);}catch{return '';}}
 async function requireApprovedPreview(c) {
@@ -405,6 +405,7 @@ async function run(test = false, captureOnly = false) {
       // The popup may close during a long capture. The worker owns this action.
       try { await chrome.tabs.create({ url: chrome.runtime.getURL('preview.html') }); }
       catch (e) { await log('warn', 'Preview saved. Use View preview to open it: ' + e.message); }
+      await notify('Screenshot ready to review', 'Open Smart Report and review the preview. Approve it before sending reports.');
       return { previewReady: true, meta: shot.meta };
     }
     if (!test && (await G(['mode'])).mode !== 'running') throw cancelledError();
@@ -420,6 +421,7 @@ async function run(test = false, captureOnly = false) {
       lastStatus: 'Microsoft Graph accepted email for processing (not confirmed delivered)',
       lastError: '', consecutiveFailures: 0 });
     await finishProgress('Email accepted by Outlook', true);
+    if (test) await notify('Test accepted by Outlook', 'Check the received attachment before starting automatic reports. Acceptance does not confirm delivery.');
     await log('success', `${test ? 'Test' : 'Scheduled'} email accepted by Graph; recipients ${res.to + res.cc + res.bcc}. Delivery not confirmed.`);
     return { message: 'Microsoft accepted this email for processing. Check Outlook Sent Items and recipient inbox to verify delivery.' };
   } catch (e) {
@@ -447,6 +449,7 @@ async function run(test = false, captureOnly = false) {
     }
     await put({ lastError: e.message, lastStatus: (captureOnly ? 'Screenshot failed: ' : 'Email not sent: ') + e.message });
     await finishProgress(captureOnly ? 'Screenshot failed' : 'Email not sent', false, e.message);
+    if (test || captureOnly) await notify(captureOnly ? 'Screenshot needs attention' : 'Test email needs attention', 'Open Smart Report for the error and next steps.');
     await log('error', '[' + (currentRun?.kind || 'run') + ' / ' + failedStage + '] ' + e.message + (e.stack ? '\n' + e.stack.slice(0, 800) : ''));
     throw e;
   } finally {
@@ -459,7 +462,15 @@ async function run(test = false, captureOnly = false) {
 // ---------------------------------------------------------------------------
 // Scheduling
 // ---------------------------------------------------------------------------
-async function schedule(mode) {
+let scheduleQueue = Promise.resolve();
+function schedule(mode) {
+  // Stop the in-flight report immediately, then serialize alarm changes so a
+  // slow Start cannot overwrite a subsequent Pause/Stop.
+  if (mode !== 'running' && currentRun) currentRun.cancelled = true;
+  scheduleQueue = scheduleQueue.catch(() => {}).then(() => applySchedule(mode));
+  return scheduleQueue;
+}
+async function applySchedule(mode) {
   if (mode === 'running') {
     if (busy) throw Error('Wait for the current report to finish before starting or resuming.');
     const c = await effectiveConfig();
@@ -491,20 +502,29 @@ async function restoreAlarmOnce() {
       lastError: 'Previous email acceptance is unconfirmed. Check Sent Items before retrying.' });
     return;
   }
-  if (installed.smartReportVersion !== '3.7.2') {
+  if (installed.smartReportVersion !== '3.7.4') {
     await chrome.alarms.clear(ALARM);
-    await put({ smartReportVersion: '3.7.2', upgradedAt: Date.now(),
+    await put({ smartReportVersion: '3.7.4', upgradedAt: Date.now(),
       mode: installed.mode === 'running' ? 'paused' : (installed.mode || 'stopped'),
       runState: null, lastError: '', lastMailError: '', lastMailOutcome:'', consecutiveFailures: 0,
       approvedCaptureSignature:'', capturePreview:null, capturePreviewSignature:'', capturePreviewId:'',
-      lastStatus: 'Updated to v3.7.2. Check screenshot and approve its layout before emailing.' });
-    await log('info', 'Smart Report v3.7.2 installed; old monitoring paused until tested');
+      lastStatus: 'Updated to v3.7.4. Check screenshot and approve its layout before emailing.' });
+    await log('info', 'Smart Report v3.7.4 installed; old monitoring paused until tested');
     return;
   }
   const { mode } = await G(['mode']);
   if (mode !== 'running') return;
   const c = await effectiveConfig();
-  const m = Math.max(1, Number(c.interval) || 15);
+  try {
+    checkConfig(c);
+    await requireApprovedPreview(c);
+    if (!(await G(['tokens'])).tokens?.refresh) throw Error('Reconnect Outlook before resuming reports.');
+  } catch (e) {
+    await chrome.alarms.clear(ALARM);
+    await put({mode:'paused',lastError:e.message,lastStatus:'Schedule paused: '+e.message});
+    return;
+  }
+  const m = Number(c.interval);
   const existing = await chrome.alarms.get(ALARM);
   if (existing && existing.periodInMinutes === m) return;
   await chrome.alarms.clear(ALARM);
@@ -609,6 +629,9 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
             await chrome.alarms.create(ALARM, { periodInMinutes: interval, delayInMinutes: interval });
             await put({ lastStatus: 'Schedule updated to every ' + interval + ' minutes' });
             await log('info', 'Schedule updated: every ' + interval + ' minutes');
+          } else {
+            await schedule('paused');
+            await put({lastError:'Enter an interval from 1 to 1440 minutes, then resume automatic emails.'});
           }
         }
         return { ok: true };

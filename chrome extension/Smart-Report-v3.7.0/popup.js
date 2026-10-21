@@ -1,116 +1,117 @@
 "use strict";
-const $ = id => document.getElementById(id);
-const FIELDS = ['dashboard', 'to', 'interval', 'rowMode'];
-let snapshot = {}, saveTimer = null, saveChain = Promise.resolve(), operationBusy = false, localError = '', dirty = false;
-const EMAIL_MATCH = /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+/g;
-const extractEmails = value => (String(value || '').match(EMAIL_MATCH) || []);
-function unique(items) { const seen = new Set(); return items.filter(email => { const key=email.toLowerCase(); if(seen.has(key))return false;seen.add(key);return true; }); }
-const addresses = () => unique(extractEmails($('to').value));
-const formatTime = time => time ? new Date(time).toLocaleString(undefined,{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'}) : null;
-function send(action, config, extra={}) { return new Promise((resolve,reject)=>chrome.runtime.sendMessage({action,config,...extra}, response=>{
-  if(chrome.runtime.lastError)return reject(Error(chrome.runtime.lastError.message));
-  if(!response)return reject(Error('Background extension did not respond. Reload the extension and retry.'));
-  response.ok?resolve(response.result):reject(Error(response.error||'Request failed'));
-})); }
-function showStatus(str){$('status').textContent=str;}
-function recipientUI(){
-  const emails=addresses(), chipbox=$('recipientChips');
-  $('recipientCount').textContent=emails.length+(emails.length===1?' email':' emails');
-  chipbox.replaceChildren();
-  for (const email of emails.slice(0,8)) { const s=document.createElement('span');s.className='chip';s.textContent=email;chipbox.append(s); }
-  if(emails.length>8){const s=document.createElement('span');s.className='chip';s.textContent='+'+(emails.length-8)+' more';chipbox.append(s);}
+const $=id=>document.getElementById(id);
+let snapshot={},view='',operationBusy=false,dirty=false,revision=0,saveTimer,toastTimer,saveChain=Promise.resolve(),localError='',initialized=false;
+const fields=['dashboard','to','interval','rowMode'];
+const time=t=>t?new Date(t).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'';
+function send(action,config,extra={}){return new Promise((resolve,reject)=>chrome.runtime.sendMessage({action,config,...extra},r=>{if(chrome.runtime.lastError)return reject(Error(chrome.runtime.lastError.message));if(!r?.ok)return reject(Error(r?.error||'Extension did not respond. Reload it and retry.'));resolve(r.result);}));}
+function recipients(){
+ const raw=$('to').value.replace(/(?:"[^"\n]+"|[^,;\n<>]+)\s*<\s*([^<>\s]+@[^<>\s]+)\s*>/g,'$1');
+ const all=[...new Set(raw.split(/[,;\s]+/).filter(Boolean).map(x=>x.toLowerCase()))];
+ const domains=snapshot.allowedDomains||[];
+ const invalid=all.find(x=>!/^\S+@[^\s@<>]+\.[^\s@<>]+$/.test(x)|| (domains.length&&!domains.includes(x.split('@')[1])));
+ return {all,error:invalid?'Check this address or its allowed domain: '+invalid:all.length>50?'Use no more than 50 recipients.':''};
 }
-function mergePaste(event){
-  const paste=event.clipboardData?.getData('text/plain')||'';
-  const incoming=unique(extractEmails(paste));if(!incoming.length)return;
-  event.preventDefault();
-  const existing=$('to').value.trim();
-  // Preserve unfinished input and append unique complete addresses.
-  const unfinished=existing.replace(EMAIL_MATCH,'').replace(/[,;\s<>]+/g,' ').trim();
-  const merged=unique([...extractEmails(existing),...incoming]);
-  $('to').value=(unfinished?unfinished+'\n':'')+merged.join(', ');
-  markEdited();
+function recipientUI(){const r=recipients();$('recipientCount').textContent=r.all.length+' recipient'+(r.all.length===1?'':'s');$('recipientError').textContent=r.error;$('recipientError').hidden=!r.error;$('to').setAttribute('aria-invalid',String(!!r.error));}
+function form(){return {dashboard:$('dashboard').value.trim(),to:$('to').value.trim(),interval:Number($('interval').value),expandRows:$('rowMode').value==='all'};}
+function validDelivery(){const r=recipients(),n=Number($('interval').value);return r.all.length>0&&!r.error&&Number.isInteger(n)&&n>=1&&n<=1440;}
+function toast(message){clearTimeout(toastTimer);$('toastText').textContent=message;$('toast').hidden=false;toastTimer=setTimeout(()=>$('toast').hidden=true,7000);}
+function showError(message){localError=message;$('errorText').textContent=message;$('errorBox').hidden=false;}
+function refreshVisualOnly(){if(initialized)render(snapshot);}
+function markEdited(){dirty=true;revision++;localError='';$('savedMessage').textContent='Saving…';clearTimeout(saveTimer);saveTimer=setTimeout(()=>persist().catch(e=>showError(e.message)),600);refreshVisualOnly();}
+async function persist(){clearTimeout(saveTimer);const version=revision,data=form();saveChain=saveChain.catch(()=>{}).then(()=>send('CONFIG',data));await saveChain;if(version===revision){dirty=false;$('savedMessage').textContent='Saved automatically';}await refresh();}
+function render(data){
+ snapshot=data;initialized=true;
+ const connected=!!data.connected,mode=data.mode||'stopped',run=data.runState||{},busy=operationBusy||!!run.busy,ready=!!data.approvedPreview&&validDelivery();
+ $('loading').hidden=true;$('signInView').hidden=connected;$('appView').hidden=!connected;$('accountMenu').hidden=!connected;
+ if(!connected){view='';$('accountMenu').open=false;}
+ let selected=view||(!data.approvedPreview?'dashboard':!validDelivery()?'delivery':'overview');
+ if(selected==='overview'&&!ready)selected=data.approvedPreview?'delivery':'dashboard';
+ for(const name of ['dashboard','delivery','overview'])$(name+'View').hidden=selected!==name;
+ $('stepper').hidden=selected==='overview';
+ ['dashboard','delivery','ready'].forEach((name,i)=>{const index=['dashboard','delivery','overview'].indexOf(selected);$(name+'Step').className=i===index?'active':i<index?'done':'';});
+ $('authStatus').textContent=data.verifiedAddress||'Outlook connected';
+ $('signIn').disabled=busy;$('signIn').textContent=operationBusy?'Connecting…':'Sign in with Microsoft';
+ $('signOut').disabled=busy;$('verify').disabled=busy;
+ $('linkedDashboard').textContent=$('dashboard').value?'Dashboard linked. Review the screenshot below.':'No dashboard linked yet.';
+ $('rowHelp').textContent=$('rowMode').value==='all'?'All recognized channel rows will be opened for each report.':'Open the rows you want in Grafana. Future reports use the tab’s layout; row selections are not saved.';
+ $('capture').disabled=busy||!$('dashboard').value.trim();
+ $('useTab').disabled=busy;$('openTab').disabled=busy||!$('dashboard').value.trim();
+ $('viewPreview').hidden=!data.lastCaptureMeta;
+ $('continueDashboard').hidden=!data.approvedPreview;$('continueDashboard').disabled=busy||dirty;
+ $('approvalHint').textContent=data.approvedPreview?'Screenshot approved. Continue to delivery.':'Check the screenshot, then approve it in the preview tab.';
+ $('approvalHint').className='notice'+(data.approvedPreview?' ready':'');
+ $('dashboardBack').hidden=!ready;
+ $('captureProgress').hidden=!run.busy;
+ $('stage').textContent=run.stage||'Preparing screenshot';$('percent').textContent=(run.percent||0)+'%';
+ $('bar').style.width=Math.min(100,run.percent||0)+'%';$('progressTrack').setAttribute('aria-valuenow',String(run.percent||0));
+ recipientUI();$('policyNote').textContent=data.allowedDomains?.length?'Allowed domains: '+data.allowedDomains.join(', '):'Recipients must use your Outlook account’s domain.';
+ const n=Number($('interval').value);$('interval').setAttribute('aria-invalid',String(!Number.isInteger(n)||n<1||n>1440));
+ $('continueDelivery').disabled=busy||!validDelivery();
+ for(const id of fields)$(id).disabled=!!run.busy;
+ $('mode').textContent=run.busy?(data.lastMailOutcome==='submitting'?'Sending your report':'Preparing your report'):mode==='running'?'Automatic emails are on':mode==='paused'?'Your schedule is paused':'Ready when you are';
+ $('modeLabel').textContent=run.busy?'In progress':mode==='running'?'Active':mode==='paused'?'Paused':'Ready';
+ $('modeBadge').className='status-pill '+(run.busy?'working':mode);
+ $('scheduleSummary').textContent=run.busy?run.stage:mode==='running'?'A fresh screenshot every '+data.config.interval+' minutes.':mode==='paused'?'Settings are saved. Resume when you’re ready.':'Send a test first, then turn on your schedule.';
+ $('nextRun').textContent=mode==='running'?(time(data.nextRun)||'Checking schedule…'):mode==='paused'?'Paused':'Not scheduled';
+ $('countdown').textContent=mode==='running'&&data.nextRun?(data.nextRun>Date.now()?'In '+Math.ceil((data.nextRun-Date.now())/60000)+' min':'Due now · may be delayed'):'';
+ $('elapsed').textContent=run.busy?Math.floor((Date.now()-run.startedAt)/1000)+'s elapsed':'';
+ $('nextAction').textContent=run.busy?'You can close this popup. Keep Chrome and Grafana open.':mode==='running'?'You’re all set. Screenshot preparation happens before each email.':mode==='paused'?'Resume starts the next report after one full interval.':'Check your test email’s attachment before starting automatic reports.';
+ $('summaryRecipients').textContent=recipients().all.join(', ');$('summaryInterval').textContent='Every '+n+' minutes';$('summaryCapture').textContent=data.approvedPreview?'Reviewed & approved':'Review required';
+ $('start').hidden=mode!=='stopped';$('pauseResume').hidden=mode==='stopped';$('pauseResume').textContent=mode==='running'?'Pause automatic emails':'Resume automatic emails';
+ $('start').disabled=busy||dirty||!ready||!connected;$('pauseResume').disabled=mode==='paused'&&(busy||dirty||!ready);$('test').disabled=busy||dirty||!ready||!connected;
+ $('stop').hidden=mode==='stopped';$('stop').disabled=false;
+ $('editDashboard').disabled=busy;$('editDelivery').disabled=busy;
+ const last=data.lastCompletedMail;
+ $('lastMailOutcome').textContent=last?(last.outcome==='accepted'?'Accepted by Outlook':'Failed / unconfirmed'):'None yet';
+ $('lastMailOutcome').className=last?.outcome==='accepted'?'mail-ok':last?'mail-error':'';
+ $('lastMailTime').textContent=last?time(last.at):'';$('sent').textContent=data.sent||0;$('failed').textContent=data.failedMail||0;
+ const error=localError||(connected&&!run.busy?(data.lastError||run.error||''):'');
+ $('errorBox').hidden=!error;$('errorText').textContent=error;
+ $('activity').replaceChildren();
+ for(const e of data.events||[]){const li=document.createElement('li'),s=document.createElement('span'),t=document.createElement('time');s.textContent=e.message.split('\n')[0];t.textContent=time(e.at);li.className=e.level==='error'?'bad':e.level==='success'?'good':'';li.append(s,t);$('activity').append(li);}
+ if(!data.events?.length){const li=document.createElement('li');li.textContent='No activity yet';$('activity').append(li);}
+ $('status').textContent=run.busy?run.stage:'';
 }
-function markEdited(){dirty=true;localError='';recipientUI();$('savedMessage').textContent='Saving…';clearTimeout(saveTimer);saveTimer=setTimeout(()=>persist().catch(e=>showError(e.message)),500);refreshVisualOnly();}
-function form(){return {dashboard:$('dashboard').value.trim(),to:$('to').value.trim(),interval:$('interval').value.trim()===''?null:Number($('interval').value),expandRows:$('rowMode').value==='all'};}
-async function persist(){clearTimeout(saveTimer);const data=form();saveChain=saveChain.catch(()=>{}).then(()=>send('CONFIG',data));await saveChain;dirty=false;$('savedMessage').textContent='Saved';}
-function showError(message){localError=message;$('errorBox').hidden=false;$('errorText').textContent=message;showStatus('Action failed: '+message);}
-function refreshVisualOnly(){if(Object.keys(snapshot).length)render(snapshot,false);}
-function updateEvents(events){const ul=$('activity');ul.replaceChildren();for(const event of (events||[]).slice(0,3)){
-  const li=document.createElement('li');li.className=event.level==='error'?'bad':event.level==='success'?'good':'';
-  const message=document.createElement('span');message.textContent=event.message.split('\n')[0];
-  const time=document.createElement('time');time.textContent=formatTime(event.at)||'';li.append(message,time);ul.append(li);
-}if(!ul.children.length){const li=document.createElement('li');li.textContent='No activity yet';ul.append(li);}}
-function render(data, updateActivity=true){
-  snapshot=data;const mode=data.mode||'stopped',run=data.runState||{},connected=!!data.connected;
-  $('mode').textContent=run.busy?(data.lastMailOutcome==='submitting'?'Sending email…':'Preparing screenshot…'):data.lastMailOutcome==='failed'?'Needs attention':mode==='running'?'Running':mode==='paused'?'Paused':'Stopped';
-  $('modeLabel').textContent=run.busy?'Processing':mode==='running'?'Scheduled':mode==='paused'?'On hold':'Idle';
-  $('modeBadge').className='status-pill '+(run.busy?'working':mode);
-  $('dashboardReady').className=data.approvedPreview?'ready':'';
-  $('dashboardReady').textContent=data.approvedPreview?'Screenshot approved':'Review screenshot';
-  $('viewPreview').hidden=!data.lastCaptureMeta;
-  $('outlookReady').className=(connected && data.verifiedAddress && Date.now()-data.verifiedAt<60*60*1000)?'ready':'';
-  $('recipientReady').className=addresses().length?'ready':'';
-  $('authStatus').textContent=connected?(data.verifiedAddress||'Account connected'):'Not connected';
-  $('signIn').hidden=connected;$('signOut').hidden=!connected;
-  $('stage').textContent=run.stage||(mode==='running'?'Waiting for next report':'No active report');
-  const pct=run.busy?Math.max(0,Math.min(99,run.percent||0)):(run.percent===100?100:0);
-  $('bar').style.width=pct+'%';$('progressTrack').setAttribute('aria-valuenow',String(pct));$('percent').textContent=run.busy?pct+'%':'';
-  $('nextRun').textContent=formatTime(data.nextRun)||(mode==='paused'?'Paused':'—');
-  $('sent').textContent=String(data.sent||0); $('failed').textContent=String(data.failedMail||0);
-  const last=data.lastCompletedMail||(data.lastSent?{at:data.lastSent,kind:'',outcome:'accepted'}:null);
-  $('lastMailOutcome').textContent=last?(last.outcome==='accepted'?'Accepted by Outlook':'Failed / unconfirmed'):'None yet';
-  $('lastMailOutcome').className=last?(last.outcome==='accepted'?'mail-ok':'mail-error'):'';
-  $('lastMailTime').textContent=last?((last.kind==='test'?'Test':last.kind==='scheduled'?'Scheduled':'Email')+' · '+formatTime(last.at)):'';
-  $('elapsed').textContent=run.busy?'Current report: '+Math.floor((Date.now()-run.startedAt)/1000)+'s':'';
-  $('start').hidden=mode==='running';$('pauseResume').hidden=mode==='stopped';$('stop').hidden=mode==='stopped';
-  $('pauseResume').textContent=mode==='paused'?'Resume':'Pause';
-  ['start','test','signIn','signOut','capture','openTab','verify','useTab'].forEach(id=>$(id).disabled=operationBusy||!!run.busy);
-  $('pauseResume').disabled=false;$('stop').disabled=false;
-  $('test').disabled=operationBusy||!!run.busy||!connected||!data.approvedPreview;
-  $('start').disabled=operationBusy||!!run.busy||!connected||!data.approvedPreview;
-  $('test').title=data.approvedPreview?'Send one email':'Check screenshot and approve it first';
-  $('start').title=$('test').title;
-  const emailError = data.lastMailOutcome==='failed' ? data.lastMailError : '';
-  const error=localError || (run.busy?'':(emailError||run.error||data.lastError||''));
-  $('errorBox').hidden=!error;$('errorText').textContent=error;
-  $('issueTitle').textContent=emailError && !localError?'Why last email failed':'Report issue';
-  $('policyNote').textContent=data.allowedDomains?.length?'Approved recipient domains: '+data.allowedDomains.join(', '):'Recipient domain limited to signed-in Outlook account.';
-  if(updateActivity)updateEvents(data.events);
-  if(!operationBusy)showStatus(error?'Problem detected — see Report issue above.':run.busy?'Preparing your report…':(data.lastStatus||'Send a test before you start scheduled reporting.'));
+async function refresh(){const data=await send('GET');if(!initialized){$('dashboard').value=data.config?.dashboard||'';$('to').value=data.config?.to||'';$('interval').value=data.config?.interval||15;$('rowMode').value=data.config?.expandRows===false?'current':'all';}render(data);}
+function confirmAction(title,body,label){return new Promise(resolve=>{const dialog=$('confirmDialog');const previous=document.activeElement;$('confirmTitle').textContent=title;$('confirmBody').textContent=body;$('confirmAccept').textContent=label;function finish(value){dialog.close();previous?.focus();resolve(value);}$('confirmAccept').onclick=()=>finish(true);$('confirmCancel').onclick=()=>finish(false);dialog.oncancel=e=>{e.preventDefault();finish(false);};dialog.showModal();$('confirmCancel').focus();});}
+async function perform(action,{save=false,extra={},confirmation=null}={}){
+ if(operationBusy)return;
+ if(confirmation&&!await confirmAction(...confirmation))return;
+ operationBusy=true;localError='';$('accountMenu').open=false;refreshVisualOnly();
+ try{
+  if(save)await persist();
+  const result=await send(action,undefined,extra);
+  if(action==='USE_TAB'){$('dashboard').value=result.url;await persist();}
+  if(action==='LOGOUT'){view='';$('toast').hidden=true;}else if(action==='LOGIN')view='';
+  await refresh();
+  const messages={LOGIN:'Signed in. Let’s set up your report.',LOGOUT:'Signed out. Automatic emails are paused.',USE_TAB:'Dashboard linked. Check the screenshot next.',CAPTURE:'Preview ready. Review and approve it in the new tab.',VERIFY:'Outlook connection verified.',TEST:'Outlook accepted your test. Check the received attachment.',START:'Schedule started. The first report begins after one interval.',RESUME:'Schedule resumed.',PAUSE:'Automatic emails paused.',STOP:'Schedule stopped. Your settings are saved.'};
+  if(messages[action])toast(messages[action]);
+ }catch(e){showError(e.message);}finally{operationBusy=false;refreshVisualOnly();}
 }
-async function refresh(){const result=await send('GET');render(result);}
-async function perform(action, options={}){
-  if(operationBusy)return;
-  operationBusy=true;localError='';refreshVisualOnly();
-  try{
-    if(options.save)await persist();
-    if(options.confirm){const list=addresses().join('\n');if(!confirm(options.confirm+'\n\nSend to:\n'+(list||'(none)')))return;}
-    showStatus(options.working||'Working…');
-    const result=await send(action,undefined,options.extra);
-    if(action==='USE_TAB'){$('dashboard').value=result.url;await persist();}
-    if(action==='VERIFY')showStatus('Outlook verified: '+result.address);
-    if(action==='LOGIN')showStatus('Outlook connected: '+result.address);
-    if(action==='TEST')showStatus('Test accepted for processing (not delivery confirmation). Check Sent Items and recipient inbox.');
-    await refresh();
-  }catch(e){showError(e.message);}
-  finally{operationBusy=false;refreshVisualOnly();}
-}
-for(const id of FIELDS)$(id).addEventListener('input',markEdited);
-$('to').addEventListener('paste',mergePaste);
-$('signIn').onclick=()=>perform('LOGIN',{working:'Connecting to Microsoft Outlook…'});
-$('signOut').onclick=()=>{if(confirm('Disconnect Outlook and pause reports?'))perform('LOGOUT');};
-$('useTab').onclick=async()=>{try{const [tab]=await chrome.tabs.query({active:true,currentWindow:true});if(!tab?.id)throw Error('Open the Grafana tab first.');perform('USE_TAB',{extra:{tabId:tab.id,url:tab.url}});}catch(e){showError(e.message);}};
+fields.forEach(id=>$(id).addEventListener('input',markEdited));
+$('signIn').onclick=()=>perform('LOGIN');
+$('signOut').onclick=()=>perform('LOGOUT',{confirmation:['Sign out of Outlook?','Automatic reports will pause. Your dashboard and delivery settings will stay saved.','Sign out']});
+$('verify').onclick=()=>perform('VERIFY');
+$('useTab').onclick=async()=>{try{const [tab]=await chrome.tabs.query({active:true,currentWindow:true});if(!tab?.id)throw Error('Open your Grafana dashboard first.');await perform('USE_TAB',{extra:{tabId:tab.id,url:tab.url}});}catch(e){showError(e.message);}};
+$('capture').onclick=()=>perform('CAPTURE',{save:true});
+$('viewPreview').onclick=()=>chrome.tabs.create({url:chrome.runtime.getURL('preview.html')}).catch(e=>showError(e.message));
 $('openTab').onclick=()=>perform('OPEN_TAB',{save:true});
-$('verify').onclick=()=>perform('VERIFY',{working:'Checking Outlook connection…'});
-$('capture').onclick=()=>perform('CAPTURE',{save:true,working:'Checking dashboard screenshot…'});
-$('test').onclick=()=>perform('TEST',{save:true,confirm:'Capture and email the reviewed dashboard layout once?',working:'Taking screenshot and sending email…'});
-$('start').onclick=()=>perform('START',{save:true,confirm:'Start automatic reports every '+$('interval').value+' minute(s)?'});
-$('pauseResume').onclick=()=>send(snapshot.mode==='paused'?'RESUME':'PAUSE').then(refresh).catch(e=>showError(e.message));
-$('stop').onclick=()=>send('STOP').then(refresh).catch(e=>showError(e.message));
-$('viewPreview').onclick=()=>chrome.tabs.create({url:chrome.runtime.getURL('preview.html')});
-$('export').onclick=async()=>{try{const r=await send('LOGS');const blob=new Blob([JSON.stringify({app:'Smart Report v3.7',exportedAt:new Date().toISOString(),events:r.logs},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='smart-report-logs-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}catch(e){showError(e.message);}};
-chrome.storage.onChanged.addListener((_changes,area)=>{if(area==='local')refresh().catch(()=>{});});
-(async()=>{const data=await send('GET');$('dashboard').value=data.config?.dashboard||'';$('to').value=data.config?.to||'';$('rowMode').value=data.config?.expandRows===false?'current':'all';$('interval').value=(Number(data.config?.interval)>0?data.config.interval:15);recipientUI();render(data);if(data.connected){send('VERIFY').then(()=>refresh()).catch(e=>{showError(e.message);});}})().catch(e=>showError('Extension unavailable: '+e.message));
-
-setInterval(()=>{if(snapshot.runState?.busy)refreshVisualOnly();},1000);
+$('continueDashboard').onclick=()=>{view='delivery';refreshVisualOnly();$('to').focus();};
+$('continueDelivery').onclick=async()=>{try{await persist();view='overview';refreshVisualOnly();toast('Delivery settings saved. You’re ready to send a test.');}catch(e){showError(e.message);}};
+$('deliveryBack').onclick=()=>{view=snapshot.approvedPreview&&validDelivery()?'overview':'dashboard';refreshVisualOnly();};
+$('dashboardBack').onclick=()=>{view='overview';refreshVisualOnly();};
+$('editDashboard').onclick=()=>{view='dashboard';refreshVisualOnly();};
+$('editDelivery').onclick=()=>{view='delivery';refreshVisualOnly();};
+$('test').onclick=()=>perform('TEST',{save:true,confirmation:['Send a test email?','Send one fresh screenshot to:\n'+recipients().all.join('\n')+'\n\nThis does not start automatic emails.','Send test']});
+$('start').onclick=()=>perform('START',{save:true,confirmation:['Start automatic emails?','Send to '+recipients().all.join(', ')+' every '+$('interval').value+' minutes.\n\nThe first report starts after one full interval.','Start schedule']});
+async function interrupt(action){try{await send(action);await refresh();toast(action==='STOP'?'Schedule stopped. Settings are saved.':'Automatic emails paused.');}catch(e){showError(e.message);}}
+$('pauseResume').onclick=()=>snapshot.mode==='running'?interrupt('PAUSE'):perform('RESUME',{save:true});
+$('stop').onclick=()=>interrupt('STOP');
+$('dismissToast').onclick=()=>{clearTimeout(toastTimer);$('toast').hidden=true;};
+document.addEventListener('click',e=>{if(!$('accountMenu').contains(e.target))$('accountMenu').open=false;});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('accountMenu').open=false;$('toast').hidden=true;}});
+$('export').onclick=async()=>{try{const r=await send('LOGS'),url=URL.createObjectURL(new Blob([JSON.stringify({app:'Smart Report',events:r.logs},null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='smart-report-logs.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('Logs exported. They may contain internal dashboard details.');}catch(e){showError(e.message);}};
+chrome.storage.onChanged.addListener((_changes,area)=>{if(area==='local')refresh().catch(e=>showError(e.message));});
+refresh().catch(e=>{$('loading').hidden=true;$('signInView').hidden=false;showError(e.message);});
+setInterval(()=>{if(initialized&&snapshot.connected)refreshVisualOnly();},1000);
+setInterval(()=>{if(initialized&&snapshot.connected)refresh().catch(()=>{});},15000);
