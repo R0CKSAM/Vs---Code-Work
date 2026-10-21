@@ -307,6 +307,15 @@ as a warning, allowing permanent lake archival to continue. Missing coverage,
 row mismatches and hard validation failures still block the pipeline. REVIEW is
 not a PASS and its channel anomalies still require investigation.
 
+For an operator-confirmed broadcast exception, run full validation with
+`--channel-review-file <review.json>`. The JSON must contain the exact `date`,
+`confirmed_by`, and `channels` entries with `source`, `channel`,
+`target_raw_ts_chunks`, and `reason`. Confirmation applies only to that observed
+date/channel/count, is included in the new report as `acknowledged_channels`,
+and cannot bypass coverage or profile reconciliation. Keep the original REVIEW
+report and the confirmation file. Never add a permanent channel exclusion just
+to clear one day's warning.
+
 The gzip converter aborts a batch on output-write failure instead of treating it
 as a corrupt input and repeatedly retrying an uncleared buffer. Successful batch
 manifests remain reusable after storage is repaired.
@@ -349,4 +358,25 @@ recovery can run beyond the polling window. Fresh completion evidence is
 required, and a failed attempt is not repeatedly restarted. It cannot restore
 logs missing from the source or replace final coverage validation. It does not
 enable LiveMonitor. Use the same work directory to prevent duplicate watchers.
+
+## Sequential Recovery And Storage
+
+`run_recovery_pipeline.ps1` downloads only one day's STREAM/FAST sources at a
+time, then processes, validates, refreshes dashboards and runs verified
+cleanup/archive maintenance before starting the next date. It no longer
+prefetches the entire backlog. The existing recovery mutex prevents duplicate
+scheduled recovery runners; operator-disabled LiveMonitor stays disabled.
+
+The runner checks source-tail availability before downloading and requires
+50 GiB free on the local data volume and 100 GiB on the archive volume. After
+download, at least 20 GiB must remain locally. These are minimum reserves, not
+a guarantee that every workload will fit. Final-clean and DuckDB scratch keep
+using the daily launcher's shared-storage configuration. Missing source logs,
+unavailable storage or validation failures stop the queue and trigger the
+existing failure notification instead of publishing incomplete data.
+
+An optional `output/state/recovery_dependency.json` can specify `state_path`
+and `success_statuses`. Recovery waits up to 24 hours for that repair to finish
+before downloading anything. A missing required state or failed repair blocks
+recovery. Without this dependency file, normal scheduling is unchanged.
 

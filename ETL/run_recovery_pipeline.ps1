@@ -7,7 +7,7 @@ param(
     [ValidateRange(1, 366)]
     [int]$BootstrapLookbackDays = 60,
     [ValidateRange(1, 6)]
-    [int]$MaxParallelDownloads = 6,
+    [int]$MaxParallelDownloads = 2,
     [ValidateRange(1, 128)]
     [int]$DownloadTransfers = 16,
     [ValidateRange(1, 256)]
@@ -32,6 +32,9 @@ $PipelineLastRunPath = Join-Path $StateDir "pipeline_last_run.json"
 $AsrunPriorityPath = Join-Path $StateDir "asrun_priority.json"
 $ValidationRoot = Join-Path $WorkspaceRoot "output\validation"
 $LogDir = Join-Path $WorkspaceRoot "output\logs"
+$GuardPython = Join-Path (Split-Path $WorkspaceRoot -Parent) 'venv\Scripts\python.exe'
+$CapacityGuard = Join-Path $WorkspaceRoot 'src\tools\recovery_capacity_guard.py'
+$RecoveryDependency = Join-Path $StateDir 'recovery_dependency.json'
 $TargetThroughDate = if ($ThroughDate) { $ThroughDate.Date } else { (Get-Date).Date.AddDays(-1) }
 if ($TargetThroughDate -ge (Get-Date).Date) {
     throw "Through date must be a completed day before today: $($TargetThroughDate.ToString('yyyy-MM-dd'))"
@@ -270,6 +273,13 @@ try {
     Write-Host "[$(Get-Date -Format o)] Recovery runner started. Through date: $($TargetThroughDate.ToString('yyyy-MM-dd'))"
 
     $state = Read-RecoveryState
+    if (-not $DryRun) {
+        Save-RecoveryState -State $state -Status 'waiting_for_required_repair'
+        & $GuardPython $CapacityGuard --dependency $RecoveryDependency
+        if ($LASTEXITCODE -ne 0) { throw 'Required repair did not complete; no new dates will be downloaded.' }
+        # A repair may finish after midnight; catch up through the new yesterday.
+        if (-not $ThroughDate) { $TargetThroughDate = (Get-Date).Date.AddDays(-1) }
+    }
     $pipelineLastRun = Read-PipelineLastRun
     $lastSuccessful = $null
     if ($state["last_successful_date"]) {
@@ -356,7 +366,7 @@ try {
     }
     Write-Host "[$(Get-Date -Format o)] Pending ETL dates: $pendingText"
     if ($DryRun) {
-        Write-Host "Dry-run prefetch plan: $($pendingDates.Count * 2) source/date jobs, max $MaxParallelDownloads parallel, each transfers=$DownloadTransfers/checkers=$DownloadCheckers."
+        Write-Host "Dry-run plan: one date at a time; at most two source downloads, then ETL, validation and archival before the next date."
         Write-Host "Dry run complete; no ETL or checkpoint files were changed."
         exit 0
     }
@@ -368,34 +378,6 @@ try {
         Write-Host "[$(Get-Date -Format o)] Pausing the live monitor while daily source downloads and ETL use workstation resources."
         $livePausedForDailyEtl = $true
         & $LiveManager -Action Stop
-    }
-
-    if ($pendingDates.Count) {
-        $state["current_date"] = $null
-        $state["download_dates"] = @($pendingDates | ForEach-Object { $_.ToString("yyyy-MM-dd") })
-        $state["download_jobs"] = $pendingDates.Count * 2
-        $state["max_parallel_downloads"] = $MaxParallelDownloads
-        $state["download_transfers_each"] = $DownloadTransfers
-        $state["download_checkers_each"] = $DownloadCheckers
-        $state["last_error"] = $null
-        Save-RecoveryState -State $state -Status "downloading"
-
-        Write-Host "[$(Get-Date -Format o)] Starting validated parallel prefetch for $($pendingDates.Count) date(s)."
-        $prefetchArguments = @{
-            Dates = [datetime[]]@($pendingDates)
-            MaxParallelDownloads = $MaxParallelDownloads
-            Transfers = $DownloadTransfers
-            Checkers = $DownloadCheckers
-            ForceRevalidate = $Force.IsPresent
-        }
-        $global:LASTEXITCODE = 0
-        & $PrefetchScript @prefetchArguments
-        if ($LASTEXITCODE -ne 0) {
-            throw "Parallel recovery prefetch returned exit code $LASTEXITCODE."
-        }
-        $state["download_dates"] = @()
-        $state["download_jobs"] = 0
-        Save-RecoveryState -State $state -Status "downloads_complete"
     }
 
     $finalPendingDate = if ($pendingDates.Count) { $pendingDates[$pendingDates.Count - 1] } else { $null }
@@ -412,6 +394,43 @@ try {
             continue
         }
 
+        & $GuardPython $CapacityGuard --data (Join-Path $WorkspaceRoot 'data') --archive 'Z:\Veto Logs Backup\DO NOT DELETE'
+        if ($LASTEXITCODE -ne 0) { throw "Insufficient verified storage reserve before $iso. No download started." }
+        $sourceCheckDir = Join-Path $WorkspaceRoot "output\temp\source_check_$iso"
+        & $GuardPython (Join-Path $WorkspaceRoot 'src\tools\wait_for_complete_source.py') --date $iso --work-dir $sourceCheckDir --check-only
+        if ($LASTEXITCODE -ne 0) { throw "Source availability check failed for $iso." }
+        $sourceCheck = Get-Content -Raw -LiteralPath (Join-Path $sourceCheckDir 'state.json') | ConvertFrom-Json
+        if ($sourceCheck.status -ne 'ready_for_recovery') {
+            throw "Raw source logs for $iso are incomplete. Keeping completed-day dashboards; later dates remain queued. See $sourceCheckDir."
+        }
+        $state["current_date"] = $null
+        $state["download_dates"] = @($iso)
+        $state["download_jobs"] = 2
+        $state["max_parallel_downloads"] = [Math]::Min(2, $MaxParallelDownloads)
+        $state["download_transfers_each"] = $DownloadTransfers
+        $state["download_checkers_each"] = $DownloadCheckers
+        $state["last_error"] = $null
+        Save-RecoveryState -State $state -Status "downloading"
+
+        Write-Host "[$(Get-Date -Format o)] Downloading only $iso before processing and cleanup."
+        $prefetchArguments = @{
+            Dates = [datetime[]]@($dateValue)
+            MaxParallelDownloads = [Math]::Min(2, $MaxParallelDownloads)
+            Transfers = $DownloadTransfers
+            Checkers = $DownloadCheckers
+            ForceRevalidate = $Force.IsPresent
+        }
+        $global:LASTEXITCODE = 0
+        & $PrefetchScript @prefetchArguments
+        if ($LASTEXITCODE -ne 0) {
+            throw "Parallel recovery prefetch returned exit code $LASTEXITCODE."
+        }
+        $state["download_dates"] = @()
+        $state["download_jobs"] = 0
+        Save-RecoveryState -State $state -Status "downloads_complete"
+        & $GuardPython $CapacityGuard --data (Join-Path $WorkspaceRoot 'data') --archive 'Z:\Veto Logs Backup\DO NOT DELETE' --data-reserve-gib 20
+        if ($LASTEXITCODE -ne 0) { throw "Storage reserve is too low after downloading $iso. Inputs retained; processing not started." }
+
         $isFinalPendingDate = $finalPendingDate -and $dateValue.Date -eq $finalPendingDate.Date
         $attemptStartedAt = Get-Date
         $attemptId = "{0}_{1}" -f $iso.Replace("-", ""), $attemptStartedAt.ToString("yyyyMMdd_HHmmss_fff")
@@ -419,11 +438,6 @@ try {
             Date = $dateValue
             SkipPostVerifyDelay = $true
             SkipDownload = $true
-        }
-        if (-not $isFinalPendingDate) {
-            $dailyArguments["SkipWatch"] = $true
-            $dailyArguments["SkipOverview"] = $true
-            $dailyArguments["SkipLakeArchive"] = $true
         }
 
         $state["current_date"] = $iso
@@ -451,6 +465,7 @@ try {
         $state["last_error"] = $null
         Save-RecoveryState -State $state -Status "catching_up"
         Write-Host "[$(Get-Date -Format o)] ETL checkpoint committed for $iso."
+        Resume-PendingCleanup
     }
 
     Resume-PendingCleanup

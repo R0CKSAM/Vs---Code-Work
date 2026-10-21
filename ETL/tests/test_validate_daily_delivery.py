@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import sys
+import json
 import tempfile
 import unittest
+from unittest.mock import patch
 from datetime import date, datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -42,6 +44,50 @@ def write_part(root: Path, source: str, day: date, name: str, values: list[float
 
 
 class DailyDeliveryValidationTests(unittest.TestCase):
+    def test_channel_confirmation_never_overrides_source_failure(self):
+        with tempfile.TemporaryDirectory(dir=TEST_TEMP_ROOT) as tmp:
+            root = Path(tmp)
+            review = root / "review.json"
+            review.write_text(json.dumps({"date": "2026-10-19", "confirmed_by": "operator", "channels": [
+                {"source": "stream", "channel": "Event", "target_raw_ts_chunks": 0, "reason": "Off air"}]}))
+            row = dict(source="stream", channel="Event", date="2026-10-19", target_raw_ts_chunks=0)
+            argv = ["validate", "--lake", str(root), "--date", "2026-10-19", "--sources", "stream",
+                    "--profile-dir", str(root), "--output-dir", str(root), "--channel-review-file", str(review)]
+            failed = dict(source="stream", status="PARTIAL", hard_failure=True,
+                          selected=None, candidates=[], message="Missing hours")
+            with patch.object(sys, "argv", argv), patch.object(validator, "archive_roots", return_value=[]), \
+                 patch.object(validator, "source_result", return_value=failed), \
+                 patch.object(validator, "reconcile_profile", return_value=[]), \
+                 patch.object(validator, "channel_anomalies", return_value=([row], [])):
+                with self.assertRaises(SystemExit) as raised:
+                    validator.main()
+            self.assertEqual(raised.exception.code, 2)
+            report = json.loads((root / "daily_delivery_validation_latest.json").read_text())
+            self.assertEqual(report["overall_status"], "FAIL")
+            self.assertEqual(len(report["acknowledged_channels"]), 1)
+
+    def test_operator_review_matches_only_exact_date_channel_and_count(self):
+        day = date(2026, 10, 19)
+        row = dict(source="stream", channel="UP Government Live", date=str(day), target_raw_ts_chunks=0)
+        review = dict(date=str(day), confirmed_by="test operator", channels=[
+            dict(source="stream", channel=row["channel"], target_raw_ts_chunks=0, reason="No broadcast")])
+        remaining, accepted, warnings = validator.apply_channel_review([row], day, review)
+        self.assertEqual(remaining, [])
+        self.assertEqual(accepted[0]["status"], "OPERATOR_CONFIRMED")
+        self.assertEqual(warnings, [])
+        self.assertNotIn("reason", row)
+        for change in ({"target_raw_ts_chunks": 1}, {"source": "fast"}, {"channel": "Other"}, {"date": "2026-10-18"}):
+            observed = {**row, **change}
+            remaining, accepted, warnings = validator.apply_channel_review([observed], day, review)
+            self.assertEqual(remaining, [observed])
+            self.assertEqual(accepted, [])
+            self.assertTrue(warnings)
+        with self.assertRaises(ValueError):
+            validator.apply_channel_review([row], date(2026, 10, 20), review)
+        review["channels"].append(review["channels"][0])
+        with self.assertRaises(ValueError):
+            validator.apply_channel_review([row], day, review)
+
     def test_full_day_passes(self) -> None:
         with tempfile.TemporaryDirectory(dir=TEST_TEMP_ROOT) as temp:
             root = Path(temp)

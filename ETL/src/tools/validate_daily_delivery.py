@@ -503,6 +503,37 @@ def channel_anomalies(
     return anomalies, warnings
 
 
+def apply_channel_review(
+    anomalies: list[dict[str, Any]], target: date, review: dict[str, Any]
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[str]]:
+    """Accept operator-confirmed traffic only for the exact observed date/count."""
+    if review.get("date") != target.isoformat() or not str(review.get("confirmed_by", "")).strip():
+        raise ValueError("Channel review requires the target date and a confirming operator.")
+    approved = {}
+    for entry in review.get("channels", []):
+        key = (entry.get("source"), entry.get("channel"))
+        count = entry.get("target_raw_ts_chunks")
+        if (key in approved or key[0] not in {"fast", "stream"} or not key[1]
+                or type(count) is not int or count < 0 or not str(entry.get("reason", "")).strip()):
+            raise ValueError("Invalid or duplicate channel review entry.")
+        approved[key] = entry
+    remaining, acknowledged = [], []
+    used = set()
+    for row in anomalies:
+        key = (row["source"], row["channel"])
+        entry = approved.get(key)
+        if (entry and row.get("date") == target.isoformat()
+                and row["target_raw_ts_chunks"] == entry["target_raw_ts_chunks"]):
+            acknowledged.append({**row, "status": "OPERATOR_CONFIRMED",
+                                 "reason": entry["reason"], "confirmed_by": review["confirmed_by"]})
+            used.add(key)
+        else:
+            remaining.append(row)
+    warnings = [f"Channel review no longer matches observed anomaly: {source}/{channel}"
+                for source, channel in sorted(set(approved) - used)]
+    return remaining, acknowledged, warnings
+
+
 def atomic_write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temp = path.with_suffix(path.suffix + ".tmp")
@@ -574,6 +605,8 @@ def main() -> None:
     parser.add_argument("--reconcile-tolerance-pct", type=float, default=0.1)
     parser.add_argument("--reconcile-tolerance-rows", type=int, default=100)
     parser.add_argument("--fail-on-channel-anomaly", action="store_true")
+    parser.add_argument("--channel-review-file", type=Path,
+                        help="Explicit operator confirmation of exact date/channel/count anomalies; never bypasses source validation.")
     parser.add_argument("--report-prefix", default="daily_delivery_validation")
     args = parser.parse_args()
 
@@ -601,6 +634,7 @@ def main() -> None:
     anomalies: list[dict[str, Any]] = []
     expected_inactive_channels: list[dict[str, Any]] = []
     warnings: list[str] = []
+    acknowledged_channels: list[dict[str, Any]] = []
     if args.mode == "full":
         if args.profile_dir is None:
             raise SystemExit("--profile-dir is required in full mode")
@@ -624,6 +658,13 @@ def main() -> None:
             expected_inactive_channels,
         )
         warnings.extend(channel_warnings)
+
+    if args.channel_review_file:
+        if args.mode != "full":
+            raise SystemExit("Channel review requires full validation.")
+        review = json.loads(args.channel_review_file.read_text(encoding="utf-8-sig"))
+        anomalies, acknowledged_channels, review_warnings = apply_channel_review(anomalies, target, review)
+        warnings.extend(review_warnings)
 
     hard_failures = [item for item in source_results if item["hard_failure"]]
     hard_failures.extend(item for item in reconciliation if item.get("status") == "FAILED")
@@ -652,6 +693,8 @@ def main() -> None:
         "source_results": source_results,
         "profile_reconciliation": reconciliation,
         "channel_anomalies": anomalies,
+        "acknowledged_channels": acknowledged_channels,
+        "channel_review_file": str(args.channel_review_file.resolve()) if args.channel_review_file else None,
     }
     stamp = generated.strftime("%Y%m%d_%H%M%S")
     prefix = args.report_prefix
@@ -681,6 +724,7 @@ def main() -> None:
                     f"delta={item.get('delta_rows', 0):,}"
                 )
     print(f"Channel anomalies: {len(anomalies)}")
+    print(f"Operator-confirmed channel anomalies: {len(acknowledged_channels)}")
     print(f"Expected inactive event channels: {len(expected_inactive_channels)}")
     print(f"Report: {latest_json}")
 

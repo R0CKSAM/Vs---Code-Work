@@ -18,6 +18,19 @@ TEST_TEMP_ROOT = Path(tempfile.gettempdir()) / "veto_etl_tests"
 
 
 class RecoveryPowerShellGuardsTest(unittest.TestCase):
+    def test_recovery_downloads_and_archives_one_date_at_a_time(self) -> None:
+        source = RECOVERY_SCRIPT.read_text(encoding='utf-8')
+        loop = source.index('foreach ($dateValue in $dates) {', source.index('$finalPendingDate ='))
+        self.assertGreater(source.index('& $PrefetchScript @prefetchArguments'), loop)
+        self.assertIn('Dates = [datetime[]]@($dateValue)', source)
+        self.assertNotIn('Dates = [datetime[]]@($pendingDates)', source)
+        self.assertNotIn('$dailyArguments["SkipLakeArchive"] = $true', source)
+        self.assertNotIn('$dailyArguments["SkipWatch"] = $true', source)
+        checkpoint = source.index('ETL checkpoint committed for $iso.')
+        self.assertIn('Resume-PendingCleanup', source[checkpoint:checkpoint + 150])
+        self.assertLess(source.index('--dependency $RecoveryDependency'), source.index('$pipelineLastRun = Read-PipelineLastRun'))
+        self.assertLess(source.index('--check-only'), source.index('& $PrefetchScript @prefetchArguments'))
+
     def test_live_disable_blocks_manager_launcher_and_recovery(self) -> None:
         manager = LIVE_MANAGER_SCRIPT.read_text(encoding='utf-8')
         launcher = (ETL_ROOT / 'run_live_monitor.ps1').read_text(encoding='utf-8')
@@ -119,7 +132,7 @@ if ($Operation -eq 'size') {
     }
     exit 0
 }
-if ($Operation -eq 'sync') {
+if ($Operation -eq 'copy') {
     New-Item -ItemType Directory -Path $DestinationPath -Force | Out-Null
     [IO.File]::WriteAllBytes((Join-Path $DestinationPath 'sample.gz'), [byte[]](111, 107))
     Start-Sleep -Milliseconds 150

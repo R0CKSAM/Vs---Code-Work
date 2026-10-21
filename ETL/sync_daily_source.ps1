@@ -94,8 +94,10 @@ function Wait-ForStableRemote {
 }
 
 function Sync-Remote {
+    # Preserve local raw evidence if an upstream object disappears. Snapshot
+    # verification below must report any mismatch instead of deleting inputs.
     $syncArguments = @(
-            "sync", $RemotePath, $LocalPath,
+            "copy", $RemotePath, $LocalPath,
             "--size-only",
             "--transfers", $Transfers.ToString(),
             "--checkers", $Checkers.ToString(),
