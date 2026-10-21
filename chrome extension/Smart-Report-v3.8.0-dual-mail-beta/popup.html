@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#641735"><title>Smart Report</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header class="top"><div class="brand"><span class="brand-icon" aria-hidden="true">sr.</span><div><strong>Smart Report</strong><small>Dashboard to inbox</small></div></div>
+<details id="accountMenu" class="account-menu" hidden><summary aria-label="Account menu">Account <span aria-hidden="true">⌄</span></summary><div class="account-popover"><span class="eyebrow">SENDING ACCOUNT</span><strong id="authStatus"></strong><button id="verify" class="text-button">Check connection</button><button id="signOut" class="text-button danger">Sign out &amp; pause reports</button></div></details></header>
+<main>
+<div id="loading" class="loading" role="status">Getting things ready…</div>
+<section id="signInView" class="welcome" hidden>
+<div class="welcome-art" aria-hidden="true"><span class="mini-chart"><i></i><i></i><i></i><i></i></span><span class="art-arrow">→</span><span class="mini-mail">✉</span></div>
+<p class="eyebrow">ONE LESS THING TO REMEMBER</p><h1>Your dashboard.<br>Delivered on time.</h1><p class="lead">Turn your Grafana dashboard into an email report. Review the screenshot, choose your team, and set a schedule.</p>
+<button id="signIn" class="primary full">Sign in with Microsoft</button><div class="google-beta"><strong>Prefer Gmail?</strong><p>Connect Google to test sending one approved Grafana screenshot. Scheduled monitoring remains on Outlook until Gmail is validated.</p><button id="googleSignIn" class="secondary full">Connect Google / Gmail (Beta)</button><p id="googleState" class="help"></p></div><p class="privacy">Use the Outlook account that will send your reports.<br>Nothing is emailed until you choose to send.</p>
+</section>
+<section id="errorBox" class="error-box" role="alert" hidden><strong id="issueTitle">Something needs attention</strong><span id="errorText"></span></section>
+<section class="google-beta" id="googleTools" hidden><strong>Gmail test (optional)</strong><p id="googleStatus">Configure Google OAuth before using.</p><div class="actions"><button id="googleVerify" class="secondary">Connect Gmail</button><button id="googleTest" class="secondary">Send approved screenshot via Gmail</button></div><p class="help">Outlook scheduling is unchanged. Google test uses your approved screenshot and the current recipient list.</p></section><div id="appView" hidden>
+<div id="stepper" class="stepper" aria-label="Setup progress"><span id="dashboardStep">1 · Dashboard</span><span id="deliveryStep">2 · Delivery</span><span id="readyStep">3 · Ready</span></div>
+<section id="dashboardView" class="panel" hidden>
+<p class="eyebrow">YOUR REPORT STARTS HERE</p><h1>Choose your dashboard</h1><p class="lead">Open Grafana in this tab, then link the dashboard you want to report.</p>
+<button id="useTab" class="secondary full">Use the current Grafana tab</button>
+<p id="linkedDashboard" class="linked"></p>
+<details class="advanced"><summary>Dashboard address</summary><label for="dashboard">Grafana URL</label><input id="dashboard" type="url" placeholder="https://grafana-apj.trafficpeak.live/d/…" spellcheck="false"></details>
+<div class="field"><label for="rowMode">Which sections should we capture?</label><select id="rowMode"><option value="all">All sections — open them automatically</option><option value="current">Only the sections I have opened</option></select><p id="rowHelp" class="help">All recognized channel rows will be opened for each report.</p></div>
+<div id="captureProgress" class="progress-box" hidden><div><span id="stage"></span><b id="percent"></b></div><div id="progressTrack" role="progressbar" aria-label="Screenshot progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="bar"></div></div></div>
+<p id="approvalHint" class="notice">Next: check the screenshot, then approve it in the preview tab.</p>
+<div class="actions"><button id="capture" class="primary">Check screenshot</button><button id="viewPreview" class="secondary" hidden>Open preview</button><button id="continueDashboard" class="primary" hidden>Continue to delivery →</button></div>
+<button id="dashboardBack" class="text-button" hidden>Back to overview</button>
+</section>
+<section id="deliveryView" class="panel" hidden>
+<p class="eyebrow">THE RIGHT PEOPLE. THE RIGHT TIME.</p><h1>Set up delivery</h1><p class="lead">Choose who gets the report and how often.</p>
+<div class="field"><label for="to">Recipient email addresses <small id="recipientCount"></small></label><textarea id="to" rows="3" placeholder="colleague@company.com, team@company.com" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="recipientHelp recipientError"></textarea><p id="recipientHelp" class="help">Separate addresses with commas, spaces or new lines.</p><p id="recipientError" class="field-error" hidden></p><p id="policyNote" class="help"></p></div>
+<details class="advanced"><summary>Add CC / BCC</summary><div class="field"><label for="cc">CC</label><textarea id="cc" rows="2" placeholder="Optional copies"></textarea></div><div class="field"><label for="bcc">BCC</label><textarea id="bcc" rows="2" placeholder="Optional hidden copies"></textarea></div></details>
+<div class="field interval-field"><label for="interval">Send a report every</label><div><input id="interval" type="number" min="1" max="1440" value="15" aria-describedby="intervalHelp"><span>minutes</span></div><p id="intervalHelp" class="help">1–1440 minutes. The first report starts after one full interval.</p></div>
+<p id="savedMessage" class="save-status" role="status"></p>
+<div class="actions"><button id="continueDelivery" class="primary">Review &amp; continue →</button><button id="deliveryBack" class="text-button">Back</button></div>
+</section>
+<section id="overviewView" hidden>
+<div class="status-card"><div class="status-heading"><span id="modeBadge" class="status-pill"><i></i><span id="modeLabel">Ready</span></span><span id="elapsed"></span></div><h1 id="mode">Ready to send</h1><p id="scheduleSummary"></p><div class="next-report"><small>Next scheduled report starts</small><strong id="nextRun">Not scheduled</strong><span id="countdown"></span></div></div>
+<p id="nextAction" class="next-action" role="status"></p>
+<div class="primary-actions"><button id="start" class="primary full">Start automatic emails</button><button id="pauseResume" class="primary full" hidden>Pause emails</button></div>
+<div class="report-summary"><div><span>To</span><strong id="summaryRecipients"></strong></div><div><span>Frequency</span><strong id="summaryInterval"></strong></div><div><span>Screenshot</span><strong id="summaryCapture">Reviewed &amp; approved</strong></div><div class="summary-links"><button id="editDashboard" class="text-button">Change dashboard</button><button id="editDelivery" class="text-button">Edit delivery</button></div></div>
+<div class="test-row"><div><strong>Check your first delivery</strong><p>A test sends one email. It does not start the schedule.</p></div><button id="test" class="secondary">Send test</button></div>
+<div class="last-mail"><span>Last email</span><strong id="lastMailOutcome">None yet</strong><small id="lastMailTime"></small></div>
+<details class="advanced"><summary>More controls &amp; totals</summary><div class="totals"><span>Accepted by Outlook <strong id="sent">0</strong></span><span>Failed / unconfirmed <strong id="failed">0</strong></span></div><button id="stop" class="text-button danger" hidden>Stop schedule</button></details>
+</section>
+<details id="helpPanel" class="support"><summary>Activity &amp; help</summary><div class="feedback-header"><strong>Recent activity</strong><button id="export" class="text-button">Export logs</button></div><ul id="activity"></ul><button id="openTab" class="text-button">Open saved Grafana dashboard</button><p id="notificationNote" class="help">Desktop alerts highlight failures and important results. Routine emails stay quiet.</p></details>
+<p id="status" class="sr-only" role="status"></p>
+<footer>Keep Chrome and Grafana open, and your computer awake.<br>“Accepted” means Outlook accepted the email, not confirmed delivery.</footer>
+</div>
+</main>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden><span id="toastText"></span><button id="dismissToast" aria-label="Dismiss notification">×</button></div>
+<dialog id="confirmDialog" aria-labelledby="confirmTitle" aria-describedby="confirmBody"><h2 id="confirmTitle"></h2><p id="confirmBody"></p><div class="actions"><button id="confirmCancel" class="secondary">Cancel</button><button id="confirmAccept" class="primary">Confirm</button></div></dialog>
+<script src="popup.js"></script></body></html>
