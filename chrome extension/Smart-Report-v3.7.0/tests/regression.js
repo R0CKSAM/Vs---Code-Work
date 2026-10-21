@@ -91,7 +91,7 @@
   const dashboard='https://grafana-apj.trafficpeak.live/d/test/dashboard?from=now%2Fd&to=now&refresh=1m';
   async function worker(initial={}) {
     let listener, calls=0, tabs=0, failNetwork=false, onPost=async()=>{}, alarm=null, alarmListener;const notifications=[];
-    const db={smartReportVersion:'3.7.4',mode:'stopped',config:{dashboard,to:'test@example.com',interval:15},...initial};
+    const db={smartReportVersion:'3.7.5',mode:'stopped',config:{dashboard,to:'test@example.com',interval:15},...initial};
     const storage={get:async keys=>structuredClone(Object.fromEntries((Array.isArray(keys)?keys:[keys]).map(k=>[k,db[k]]))),
       set:async value=>Object.assign(db,structuredClone(value)),remove:async()=>{}};
     const chrome={storage:{local:storage,session:storage},identity:{getRedirectURL:()=>''},
@@ -159,7 +159,7 @@
   });
   await test('upgrade pauses old schedule and requires fresh approval',async()=>{
     const w=await worker({smartReportVersion:'3.7.0',mode:'running',approvedCaptureSignature:'old'});
-    assert(w.db.smartReportVersion==='3.7.4'&&w.db.mode==='paused'&&!w.db.approvedCaptureSignature,'Unsafe upgrade');
+    assert(w.db.smartReportVersion==='3.7.5'&&w.db.mode==='paused'&&!w.db.approvedCaptureSignature,'Unsafe upgrade');
   });
   await test('actual URL matching rejects changed filters',async()=>{
     const w=await worker();assert(w.api.isDashboardTab(dashboard,dashboard),'Matching URL rejected');
@@ -241,6 +241,36 @@
     const count=w.notifications.length;await w.api.schedule('running');await w.fire();assert(w.notifications.length===count,'Routine success created alert noise');
     assert(w.notifications.every(n=>n.id==='smart-report-status'),'Notifications accumulate instead of replacing');
   });
+  const authTenant='c6ac1249-3f6f-4a68-989a-f100bd6bda03',indiaTenant='58d06ce1-84cf-4285-97b3-064d36383d60',authClient='00ad226c-9ab3-42d0-add9-1d5d8964f41b';
+  // Keep headless virtual time from finishing while native WebCrypto is pending.
+  let cryptoDone=false;
+  const cryptoHeartbeat=(async()=>{while(!cryptoDone)await fetch('runner.html',{cache:'no-store'});})();
+  const keyPair=await crypto.subtle.generateKey({name:'RSASSA-PKCS1-v1_5',modulusLength:2048,publicExponent:new Uint8Array([1,0,1]),hash:'SHA-256'},true,['sign','verify']);
+  const jwk={...await crypto.subtle.exportKey('jwk',keyPair.publicKey),kid:'test-key',use:'sig'};
+  const encode=b=>btoa(String.fromCharCode(...b)).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  async function identityToken(overrides={},key=keyPair.privateKey){
+    const claims={tid:authTenant,iss:'https://login.microsoftonline.com/'+authTenant+'/v2.0',aud:authClient,ver:'2.0',exp:Math.floor(Date.now()/1000)+3600,nbf:Math.floor(Date.now()/1000)-10,sub:'user',nonce:'test-nonce',...overrides};
+    const data=encode(new TextEncoder().encode(JSON.stringify({alg:'RS256',kid:'test-key'})))+'.'+encode(new TextEncoder().encode(JSON.stringify(claims)));
+    return data+'.'+encode(new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5',key,new TextEncoder().encode(data))));
+  }
+  const policySource=sources['background.js'].split('// Authentication policy is separate from recipient policy.')[1].split('async function tokenRequest')[0];
+  const validate=new Function('COMPANY_MICROSOFT','guid','fetch',policySource+';return validateMicrosoftIdentity;')(
+    {allowedTenantIds:[authTenant,indiaTenant]},x=>/^[0-9a-f-]{36}$/.test(x),async url=>{
+      assert(url.startsWith('https://login.microsoftonline.com/'),'Unpinned identity endpoint');
+      const tenant=new URL(url).pathname.split('/')[1];
+      return {ok:true,json:async()=>url.includes('openid-configuration')?{issuer:'https://login.microsoftonline.com/'+tenant+'/v2.0',jwks_uri:'https://login.microsoftonline.com/'+tenant+'/keys'}:{keys:[jwk]}};
+    });
+  for(const tenant of [authTenant,indiaTenant])await test('signed identity accepted for approved tenant '+tenant,async()=>{
+    assert(await validate(await identityToken({tid:tenant,iss:'https://login.microsoftonline.com/'+tenant+'/v2.0'}),authClient,'test-nonce')===tenant,'Wrong validated tenant');
+  });
+  for(const [label,claims] of [['unapproved tenant',{tid:'11111111-1111-1111-1111-111111111111'}],['wrong audience',{aud:'wrong'}],['wrong issuer',{iss:'https://attacker.example'}],['expired identity',{exp:1}],['wrong nonce',{nonce:'wrong'}]])await test('reject '+label,async()=>{
+    await rejects(()=>identityToken(claims).then(t=>validate(t,authClient,'test-nonce')),/approved|validation/);
+  });
+  await test('reject modified signature',async()=>{
+    const token=await identityToken(),parts=token.split('.');parts[2]=(parts[2][0]==='A'?'B':'A')+parts[2].slice(1);
+    await rejects(()=>validate(parts.join('.'),authClient,'test-nonce'),/signature/);
+  });
+  cryptoDone=true;await cryptoHeartbeat;
   await test('actual popup renders setup, readiness, running and paused states',async()=>{
     const html=await (await fetch('../popup.html',{cache:'no-store'})).text(),css=await (await fetch('../style.css',{cache:'no-store'})).text();
     const frame=document.createElement('iframe');frame.style.cssText='width:640px;height:900px;border:0';document.body.append(frame);

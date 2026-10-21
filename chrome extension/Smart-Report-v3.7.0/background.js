@@ -110,7 +110,7 @@ function captureSignature(c) {
   const u=normalizeDashboardUrl(c.dashboard);
   for(const k of IGNORED_URL_PARAMETERS)u.searchParams.delete(k);
   u.searchParams.sort();
-  return JSON.stringify({version:'3.7.4', url:u.href, rows:c.expandRows!==false?'all':'current', width:1600});
+  return JSON.stringify({version:'3.7.5', url:u.href, rows:c.expandRows!==false?'all':'current', width:1600});
 }
 function safeCaptureSignature(c){try{return captureSignature(c);}catch{return '';}}
 async function requireApprovedPreview(c) {
@@ -167,6 +167,53 @@ function checkConfig(c) {
 // ---------------------------------------------------------------------------
 // Microsoft sign-in (OAuth code flow + PKCE, public client, no secret)
 // ---------------------------------------------------------------------------
+// Authentication policy is separate from recipient policy.
+function approvedTenants() {
+  return (COMPANY_MICROSOFT.allowedTenantIds || [COMPANY_MICROSOFT.tenantId]).map(x=>String(x).toLowerCase());
+}
+function validStoredIdentity(tokens) {
+  return tokens?.identityVersion === 1 && tokens.client === COMPANY_MICROSOFT.clientId &&
+    approvedTenants().includes(tokens.tenant);
+}
+function jwtBytes(part) {
+  const s=part.replace(/-/g,'+').replace(/_/g,'/');
+  return Uint8Array.from(atob(s.padEnd(Math.ceil(s.length/4)*4,'=')),c=>c.charCodeAt(0));
+}
+async function validateMicrosoftIdentity(token, client, expectedNonce) {
+  if(typeof token!=='string'||token.length>50000)throw Error('Microsoft returned no valid identity token.');
+  const parts=token.split('.');
+  if(parts.length!==3)throw Error('Invalid identity token format.');
+  const header=JSON.parse(new TextDecoder().decode(jwtBytes(parts[0])));
+  const claims=JSON.parse(new TextDecoder().decode(jwtBytes(parts[1])));
+  const tenant=String(claims.tid||'').toLowerCase(),now=Date.now()/1000;
+  if(header.alg!=='RS256'||!header.kid||!guid(tenant)||!approvedTenants().includes(tenant))
+    throw Error('This Microsoft organization is not approved for Smart Report.');
+  const issuer='https://login.microsoftonline.com/'+tenant+'/v2.0';
+  if(claims.iss!==issuer||claims.aud!==client||claims.ver!=='2.0'||
+     typeof claims.exp!=='number'||claims.exp<=now||
+     typeof claims.nbf!=='number'||claims.nbf>now+120||
+     typeof claims.sub!=='string'||!claims.sub||
+     !expectedNonce||claims.nonce!==expectedNonce)
+    throw Error('Microsoft identity validation failed. Sign in again.');
+  // Only retrieve metadata/keys from the pinned Microsoft host, never token URLs.
+  const getJson=async url=>{
+    const r=await fetch(url,{signal:AbortSignal.timeout(15000),redirect:'error'});
+    if(!r.ok)throw Error('Could not verify Microsoft signing keys. Retry sign-in.');
+    return r.json();
+  };
+  const metadata=await getJson('https://login.microsoftonline.com/'+tenant+'/v2.0/.well-known/openid-configuration');
+  const keysUrl=new URL(metadata.jwks_uri);
+  if(metadata.issuer!==issuer||keysUrl.origin!=='https://login.microsoftonline.com'||keysUrl.username||keysUrl.password)
+    throw Error('Unexpected Microsoft identity metadata.');
+  const jwks=await getJson(keysUrl.href);
+  const key=jwks.keys?.find(k=>k.kid===header.kid&&k.kty==='RSA'&&k.use==='sig'&&
+    (!k.issuer||k.issuer.replace('{tenantid}',tenant)===issuer));
+  if(!key)throw Error('Microsoft signing key unavailable. Retry sign-in.');
+  const publicKey=await crypto.subtle.importKey('jwk',key,{name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['verify']);
+  if(!await crypto.subtle.verify('RSASSA-PKCS1-v1_5',publicKey,jwtBytes(parts[2]),new TextEncoder().encode(parts[0]+'.'+parts[1])))
+    throw Error('Microsoft identity signature is invalid.');
+  return tenant;
+}
 async function tokenRequest(tenant, params) {
   const r = await fetch(`https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`, {
     method: 'POST',
@@ -183,47 +230,58 @@ async function tokenRequest(tenant, params) {
   return j;
 }
 
-async function saveTokens(j) {
+async function saveTokens(j, identity = null) {
   const prior = await G(['tokens']);
   await S.set({ access: { token: j.access_token, expiresAt: Date.now() + Math.max(30, j.expires_in - 120) * 1000 } });
-  await put({ tokens: { refresh: j.refresh_token || prior.tokens?.refresh || null } });
+  await put({ tokens: { ...(identity || prior.tokens), refresh: j.refresh_token || (identity ? null : prior.tokens?.refresh) || null } });
 }
 
 async function auth(interactive = true) {
   const c = await effectiveConfig();
   if (!guid(c.client) || !guid(c.tenant)) throw Error('Configure Microsoft application IDs first.');
-  const verifier = nonce(), state = nonce();
+  const verifier = nonce(), state = nonce(), loginNonce = nonce();
   const challenge = b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)));
-  const u = new URL(`https://login.microsoftonline.com/${c.tenant}/oauth2/v2.0/authorize`);
+  const authority = COMPANY_MICROSOFT.authority === 'organizations' ? 'organizations' : c.tenant;
+  const u = new URL(`https://login.microsoftonline.com/${authority}/oauth2/v2.0/authorize`);
   u.search = new URLSearchParams({
     client_id: c.client, response_type: 'code', redirect_uri: redirect, response_mode: 'query',
-    scope: SCOPE, state, code_challenge: challenge, code_challenge_method: 'S256',
+    scope: SCOPE, state, nonce: loginNonce, code_challenge: challenge, code_challenge_method: 'S256',
     prompt: interactive ? 'select_account' : 'none'
   }).toString();
   const cb = await chrome.identity.launchWebAuthFlow({ url: u.href, interactive });
   if (!cb) throw Error('Microsoft authorization returned no URL');
-  const p = new URL(cb).searchParams;
+  const callback = new URL(cb), expectedRedirect = new URL(redirect);
+  if(callback.origin!==expectedRedirect.origin||callback.pathname!==expectedRedirect.pathname)
+    throw Error('Unexpected Microsoft redirect URL.');
+  const p = callback.searchParams;
   if (p.get('error')) throw Error(p.get('error_description') || p.get('error'));
   if (p.get('state') !== state) throw Error('OAuth state mismatch');
   if (!p.get('code')) throw Error('No authorization code returned');
-  const j = await tokenRequest(c.tenant, {
+  const j = await tokenRequest(authority, {
     client_id: c.client, grant_type: 'authorization_code', code: p.get('code'),
     redirect_uri: redirect, code_verifier: verifier, scope: SCOPE
   });
-  await saveTokens(j);
+  const tenant = await validateMicrosoftIdentity(j.id_token, c.client, loginNonce);
+  await saveTokens(j, {tenant, client:c.client, identityVersion:1});
   await log('info', 'Microsoft Outlook account connected');
   return 'Microsoft connected';
 }
 
 async function getAccess() {
   const c = await effectiveConfig();
+  const stored = await G(['tokens']);
+  if (!validStoredIdentity(stored.tokens)) {
+    await S.remove('access');
+    await put({tokens:{refresh:null},verifiedAddress:'',verifiedAt:0});
+    throw Error('Microsoft session needs renewal. Sign in again to verify your organization.');
+  }
   const { access } = await S.get('access');
   if (access?.token && access.expiresAt > Date.now() + 60000) return access.token;
 
   const { tokens } = await G(['tokens']);
   if (tokens?.refresh && guid(c.client) && guid(c.tenant)) {
     try {
-      const j = await tokenRequest(c.tenant, {
+      const j = await tokenRequest(tokens.tenant, {
         client_id: c.client, grant_type: 'refresh_token', refresh_token: tokens.refresh, scope: SCOPE
       });
       await saveTokens(j);
@@ -502,14 +560,14 @@ async function restoreAlarmOnce() {
       lastError: 'Previous email acceptance is unconfirmed. Check Sent Items before retrying.' });
     return;
   }
-  if (installed.smartReportVersion !== '3.7.4') {
+  if (installed.smartReportVersion !== '3.7.5') {
     await chrome.alarms.clear(ALARM);
-    await put({ smartReportVersion: '3.7.4', upgradedAt: Date.now(),
+    await put({ smartReportVersion: '3.7.5', upgradedAt: Date.now(),
       mode: installed.mode === 'running' ? 'paused' : (installed.mode || 'stopped'),
       runState: null, lastError: '', lastMailError: '', lastMailOutcome:'', consecutiveFailures: 0,
       approvedCaptureSignature:'', capturePreview:null, capturePreviewSignature:'', capturePreviewId:'',
-      lastStatus: 'Updated to v3.7.4. Check screenshot and approve its layout before emailing.' });
-    await log('info', 'Smart Report v3.7.4 installed; old monitoring paused until tested');
+      lastStatus: 'Updated to v3.7.5. Check screenshot and approve its layout before emailing.' });
+    await log('info', 'Smart Report v3.7.5 installed; old monitoring paused until tested');
     return;
   }
   const { mode } = await G(['mode']);
@@ -589,7 +647,7 @@ chrome.runtime.onMessage.addListener((msg, sender, reply) => {
           lastSent: d.lastSent, lastStatus: d.lastStatus, lastError: d.lastError,
           consecutiveFailures: d.consecutiveFailures || 0,
           companyConfigured: guid(COMPANY_MICROSOFT.clientId) && guid(COMPANY_MICROSOFT.tenantId),
-          connected: !!d.tokens?.refresh, verifiedAddress: d.verifiedAddress || '', verifiedAt: d.verifiedAt || 0, lastCaptureAt: d.lastCaptureAt || 0, lastCaptureUrl: d.lastCaptureUrl || '',
+          connected: !!d.tokens?.refresh && validStoredIdentity(d.tokens), verifiedAddress: d.verifiedAddress || '', verifiedAt: d.verifiedAt || 0, lastCaptureAt: d.lastCaptureAt || 0, lastCaptureUrl: d.lastCaptureUrl || '',
           lastCaptureMeta: d.lastCaptureMeta || null, lastCompletedMail: d.lastCompletedMail || null,
           approvedPreview: !!d.approvedCaptureSignature && !!d.config?.dashboard && d.approvedCaptureSignature===safeCaptureSignature(await effectiveConfig()),
           allowedDomains: ALLOWED_DOMAINS,

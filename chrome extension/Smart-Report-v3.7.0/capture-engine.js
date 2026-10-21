@@ -128,7 +128,7 @@ async function captureDashboardTiles(tabId,c){
     if(blob.size>MAX_ATTACH_BYTES)throw Error('Full-width screenshot is too large for this email attachment. Close unnecessary sections; the image was not silently shrunk or emailed.');
     const b=new Uint8Array(await blob.arrayBuffer());let binary='';for(let i=0;i<b.length;i+=32768)binary+=String.fromCharCode(...b.subarray(i,i+32768));
     const meta={width,height:covered,tiles:index,expandedRows:s.expanded,chartPanels:panelsSeen.size,noDataPanels:[...noData],internalScroller:s.internal,
-      startedAt:deadline-240000,finishedAt:Date.now(),rowMode:c.expandRows!==false?'all':'current',method:'viewport-tiles',appVersion:'3.7.4'};
+      startedAt:deadline-240000,finishedAt:Date.now(),rowMode:c.expandRows!==false?'all':'current',method:'viewport-tiles',appVersion:'3.7.5'};
     await log('info',`Screenshot checked: ${width} × ${covered}; ${index} parts; ${meta.chartPanels} chart panels; ${meta.expandedRows} rows opened; ${noData.size} explicitly report No data.`);
     return {data:btoa(binary),mime:blob.type,ext,meta,tabId};
   }finally{
