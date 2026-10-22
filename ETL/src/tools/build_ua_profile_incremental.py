@@ -20,6 +20,8 @@ if str(TOOLS_ROOT) not in sys.path:
     sys.path.insert(0, str(TOOLS_ROOT))
 
 import profile_user_agents as ua_profile  # noqa: E402
+sys.path.insert(0, str(ETL_ROOT))
+from src.common.lake_partitions import discover_partitions, resolve_lake_roots
 
 
 DEFAULT_LAKE = ETL_ROOT / "data" / "lake"
@@ -68,28 +70,17 @@ def part_dir(parts_root: Path, source: str, day_value: date) -> Path:
     )
 
 
+def discover_day_files(lake, sources, start, end, archives=None):
+    roots = resolve_lake_roots(lake, archives)
+    # Limit archive directory enumeration when the requested range is bounded.
+    year = start.year if start and end and start.year == end.year else None
+    month = start.month if year and start.month == end.month else None
+    partitions = discover_partitions(roots, sources=sources, start=start, end=end, year=year, month=month)
+    return {(p.source, date.fromisoformat(p.date_text)): p.files for p in partitions}
+
+
 def discover_days(lake: Path, sources: list[str], start: date | None, end: date | None) -> list[tuple[str, date]]:
-    jobs: list[tuple[str, date]] = []
-    for source in sources:
-        root = lake / f"source={source}"
-        for folder in root.glob("year=*/month=*/day=*"):
-            if not folder.is_dir() or not any(folder.glob("part_*.parquet")):
-                continue
-            try:
-                values = {
-                    item.split("=", 1)[0]: item.split("=", 1)[1]
-                    for item in folder.parts
-                    if "=" in item
-                }
-                day_value = date(int(values["year"]), int(values["month"]), int(values["day"]))
-            except (KeyError, ValueError, IndexError):
-                continue
-            if start and day_value < start:
-                continue
-            if end and day_value > end:
-                continue
-            jobs.append((source, day_value))
-    return sorted(set(jobs), key=lambda item: (item[1], item[0]))
+    return sorted(discover_day_files(lake, sources, start, end), key=lambda item: (item[1], item[0]))
 
 
 def source_list(value: str) -> list[str]:
@@ -98,8 +89,8 @@ def source_list(value: str) -> list[str]:
     return [value]
 
 
-def signature_for_day(lake: Path, source: str, day_value: date) -> dict:
-    files = sorted(day_path(lake, source, day_value).glob("part_*.parquet"))
+def signature_for_day(lake: Path, source: str, day_value: date, files=None) -> dict:
+    files = sorted(files if files is not None else day_path(lake, source, day_value).glob("part_*.parquet"))
     total_bytes = 0
     max_mtime_ns = 0
     for file in files:
@@ -110,6 +101,7 @@ def signature_for_day(lake: Path, source: str, day_value: date) -> dict:
         "file_count": len(files),
         "total_bytes": total_bytes,
         "max_mtime_ns": max_mtime_ns,
+        "files": [{"path": str(f), "bytes": f.stat().st_size, "mtime_ns": f.stat().st_mtime_ns} for f in files],
     }
 
 
@@ -139,8 +131,8 @@ def atomic_write_parquet(frame: pd.DataFrame, path: Path) -> None:
 
 
 def day_sql(args: argparse.Namespace, source: str, day_value: date) -> str:
-    folder = day_path(args.lake, source, day_value)
-    parquet_glob = q(folder / "part_*.parquet")
+    files = args.day_files[(source, day_value)]
+    parquet_files = "[" + ",".join(sql_text(str(f).replace("\\", "/")) for f in files) + "]"
     day_expr = ua_profile.ist_date_expr("reqTimeSec")
     day_sql_literal = sql_text(day_value.isoformat())
     source_literal = sql_text(source)
@@ -155,7 +147,7 @@ def day_sql(args: argparse.Namespace, source: str, day_value: date) -> str:
             reqPath,
             regexp_replace(CAST(statusCode AS VARCHAR), '\\.0$', '') AS statusCode,
             lower(reqPath) LIKE '%.ts' AS is_ts
-        FROM read_parquet('{parquet_glob}', hive_partitioning=1, union_by_name=1)
+        FROM read_parquet({parquet_files}, hive_partitioning=1, union_by_name=1)
         WHERE {day_expr} = DATE {day_sql_literal}
           AND NULLIF(UA, '') IS NOT NULL
     )
@@ -191,7 +183,7 @@ def process_day(args: argparse.Namespace, source: str, day_value: date) -> dict:
     folder = part_dir(args.parts_dir, source, day_value)
     out_path = folder / "ua_distinct.parquet"
     manifest_path = folder / "manifest.json"
-    signature = signature_for_day(args.lake, source, day_value)
+    signature = signature_for_day(args.lake, source, day_value, args.day_files[(source, day_value)])
     old_manifest = read_json(manifest_path)
     if (
         not args.force
@@ -313,6 +305,7 @@ def merge_parts(args: argparse.Namespace, jobs: list[tuple[str, date]]) -> tuple
 def main() -> None:
     parser = argparse.ArgumentParser(description="Incrementally build distinct-UA profile from lake day partitions.")
     parser.add_argument("--lake", type=Path, default=DEFAULT_LAKE)
+    parser.add_argument("--archive-lake", type=Path, action="append", help="Additional lake roots; defaults to configured archive roots.")
     parser.add_argument("--out-dir", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--parts-dir", type=Path, default=DEFAULT_PARTS)
     parser.add_argument("--source", choices=["both", "stream", "fast"], default="both")
@@ -330,12 +323,12 @@ def main() -> None:
     args.out_dir = args.out_dir.expanduser().resolve()
     args.parts_dir = args.parts_dir.expanduser().resolve()
     args.temp_dir = args.temp_dir.expanduser().resolve() if args.temp_dir else None
-    if not args.lake.exists():
-        raise SystemExit(f"Lake not found: {args.lake}")
-
     start = parse_date(args.start)
     end = parse_date(args.end)
-    jobs = discover_days(args.lake, source_list(args.source), start, end)
+    if start and end and start > end:
+        parser.error("start must not be after end")
+    args.day_files = discover_day_files(args.lake, source_list(args.source), start, end, args.archive_lake)
+    jobs = sorted(args.day_files, key=lambda item: (item[1], item[0]))
     if not jobs:
         raise SystemExit("No lake day partitions found for requested range/source.")
 

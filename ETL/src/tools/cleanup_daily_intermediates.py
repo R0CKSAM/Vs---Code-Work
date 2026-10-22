@@ -88,7 +88,7 @@ def etl_state_rows(path: Path, source: str, source_id: str) -> int:
     return rows
 
 
-def load_validation_report(path: Path, target_date: str, sources: list[str]) -> dict[str, Any]:
+def load_validation_report(path: Path, target_date: str, sources: list[str], *, allow_lake_only: bool = False) -> dict[str, Any]:
     if not path.is_file():
         raise SystemExit(f"Cleanup refused: validation report is missing: {path}")
     report = json.loads(path.read_text(encoding="utf-8"))
@@ -97,7 +97,8 @@ def load_validation_report(path: Path, target_date: str, sources: list[str]) -> 
             "Cleanup refused: validation report date does not match "
             f"({report.get('date')!r} != {target_date!r})."
         )
-    if report.get("mode") != "full" or report.get("overall_status") != "PASS":
+    lake_only = allow_lake_only and report.get("mode") == "structural"
+    if (report.get("mode") != "full" and not lake_only) or report.get("overall_status") != "PASS":
         raise SystemExit("Cleanup refused: a full PASS validation report is required.")
     if int(report.get("hard_failure_count") or 0) != 0:
         raise SystemExit("Cleanup refused: validation report contains hard failures.")
@@ -113,7 +114,7 @@ def load_validation_report(path: Path, target_date: str, sources: list[str]) -> 
         if not result or result.get("status") != "PASS" or not selected.get("full_day"):
             raise SystemExit(f"Cleanup refused: {source} does not have validated full-day coverage.")
         reconciliation = reconciliations.get(source)
-        if (
+        if not lake_only and (
             not reconciliation
             or reconciliation.get("status") != "PASS"
             or int(reconciliation.get("delta_rows") or 0) != 0
@@ -275,6 +276,8 @@ def main() -> None:
     parser.add_argument("--stream-name", default="Veto Stream Backup")
     parser.add_argument("--fast-name", default="Veto fast Backup")
     parser.add_argument("--validation-report", required=True)
+    parser.add_argument("--allow-lake-only-validation", action="store_true",
+                        help="Allow structural PASS for core-only retirement; exact final-clean/lake row checks still apply. Does not mark dashboards complete.")
     parser.add_argument("--audit-dir", required=True)
     parser.add_argument("--execute", action="store_true", help="Delete files; otherwise only write a dry-run plan.")
     args = parser.parse_args()
@@ -324,7 +327,7 @@ def main() -> None:
     for root in lake_roots:
         if not root.is_dir():
             raise SystemExit(f"Cleanup refused: retained lake root is missing: {root}")
-    report = load_validation_report(validation_path, args.date, sources)
+    report = load_validation_report(validation_path, args.date, sources, allow_lake_only=args.allow_lake_only_validation)
 
     source_names = {"fast": args.fast_name, "stream": args.stream_name}
     checks: list[dict[str, Any]] = []
@@ -382,6 +385,7 @@ def main() -> None:
         "mode": "execute" if args.execute else "dry-run",
         "status": "planned",
         "validation_report": str(validation_path),
+        "validation_mode": report.get("mode"),
         "validation_generated_at_ist": report.get("generated_at_ist"),
         "lake_roots": [str(path) for path in lake_roots],
         "final_clean_root": str(final_clean_root),

@@ -24,17 +24,18 @@ def link_verified(source, target):
 
 def verify(receipt, base):
     data = json.loads(receipt.read_text(encoding="utf-8"))
-    if data.get("status") != "prepared" or set(data["sources"]) != {"fast", "stream"}:
+    if data.get("status") not in {"prepared", "lake_ready"} or set(data["sources"]) != {"fast", "stream"}:
         raise RuntimeError("Invalid prepared-lake receipt")
     for source, item in data["sources"].items():
         checkpoint = ETL / "output/state/downloads" / f"{data['date']}_{source}.json"
         if sha256(checkpoint) != item["download_checkpoint_sha256"]:
             raise RuntimeError("Download checkpoint changed; prepared lake must be reviewed")
-        for record in [item["final"], *item["lake"]]:
+        lake_only = data["status"] == "lake_ready"
+        for record in ([item["final"]] if not lake_only else []) + item["lake"]:
             path = Path(record["path"]).resolve()
             if not path.is_relative_to(base.resolve()) or fingerprint(path) != record:
                 raise RuntimeError(f"Prepared output changed or escaped data root: {path}")
-        rows = pq.read_metadata(item["final"]["path"]).num_rows
+        rows = int(item["rows"]) if lake_only else pq.read_metadata(item["final"]["path"]).num_rows
         if rows <= 0 or rows != sum(pq.read_metadata(p["path"]).num_rows for p in item["lake"]):
             raise RuntimeError("Prepared final/lake row count mismatch")
     return data

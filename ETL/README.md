@@ -380,3 +380,19 @@ and `success_statuses`. Recovery waits up to 24 hours for that repair to finish
 before downloading anything. A missing required state or failed repair blocks
 recovery. Without this dependency file, normal scheduling is unchanged.
 
+### Core-Only Lake Priority
+
+`src/tools/run_core_lake_priority.py` can take a verified downloaded day through
+001/02/03 without rendering dashboards. It waits for the active pipeline to
+finish; new pipeline runs yield to its PID-owned priority request. The existing
+run is never interrupted. Full-day structural validation and exact raw-batch
+final-clean/lake row reconciliation are required before retiring that day's
+inputs. Missing coverage retains all raw/stage data and raises an alert.
+
+The explicit cleanup flag `--allow-lake-only-validation` permits this core-only
+workflow, while normal cleanup still requires full dashboard-profile validation.
+A `lake_ready` receipt in `output/state/prepared_lake` is not a daily completion
+checkpoint: dashboards remain pending. Later recovery verifies the retained
+file fingerprints, row counts and download receipt before skipping redundant
+raw download and 001/02/03 processing.
+

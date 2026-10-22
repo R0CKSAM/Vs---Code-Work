@@ -12,6 +12,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 import uuid
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -179,6 +180,30 @@ def _split_path_list(value: str | None) -> list[Path]:
         return []
     parts = [part.strip().strip('"') for part in re.split(r"[;,]", value) if part.strip()]
     return [Path(part).expanduser().resolve() for part in parts]
+
+
+def wait_for_core_priority(output_root: Path, state_name: str, timeout: float = 86400) -> None:
+    """Let a requested core-lake run take the next turn, never interrupt a writer."""
+    request_path = output_root / "state/core_lake_priority.json"
+    deadline = time.monotonic() + timeout
+    while request_path.exists():
+        request = json.loads(request_path.read_text(encoding="utf-8"))
+        if request.get("status") not in {"downloading", "waiting", "running", "cleaning"}:
+            return
+        if not _process_is_running(int(request.get("pid", 0))):
+            return
+        own_turn = state_name in request.get("state_names", [])
+        lock_path = output_root / "state/pipeline.lock"
+        if own_turn:
+            if not lock_path.exists():
+                return
+            lock = json.loads(lock_path.read_text(encoding="utf-8"))
+            if not _process_is_running(int(lock.get("pid", 0))):
+                return
+        if time.monotonic() >= deadline:
+            raise RuntimeError("Timed out waiting for the core-lake priority turn")
+        print("[wait] Existing pipeline/core-lake priority is active; no overlapping lake writes.", flush=True)
+        time.sleep(15)
 
 
 def _print_subprocess_line(line: str) -> None:
@@ -1428,6 +1453,7 @@ def main() -> None:
     output_root.mkdir(parents=True, exist_ok=True)
     log_dir = output_root / "logs"
     global RUN_RECORDER, PIPELINE_LOCK
+    wait_for_core_priority(output_root, args.state_name)
     PIPELINE_LOCK = PipelineRunLock(output_root)
     PIPELINE_LOCK.acquire()
     RUN_RECORDER = RunRecorder(output_root, args, base_root, lake_root)
@@ -2151,6 +2177,8 @@ def main() -> None:
             "--temp-dir",
             str(deep_profile_temp_dir),
         ]
+        for archive_root in archive_lake_roots:
+            ua_cmd.extend(["--archive-lake", str(archive_root)])
         if ua_start and ua_end:
             ua_cmd.extend(["--start", ua_start, "--end", ua_end])
         if args.dry_run:
@@ -2319,9 +2347,11 @@ def main() -> None:
     if not args.skip_concurrency:
         fast_lake = lake_root / "source=fast"
         stream_lake = lake_root / "source=stream"
+        has_fast_lake = any((root / "source=fast").exists() for root in [lake_root, *archive_lake_roots])
+        has_stream_lake = any((root / "source=stream").exists() for root in [lake_root, *archive_lake_roots])
         if args.dry_run:
             print("\n[skip] FAST/STREAM concurrency skipped in dry-run mode.")
-        elif not fast_lake.exists():
+        elif not has_fast_lake:
             print(f"\n[skip] FAST concurrency skipped because FAST lake folder is missing: {fast_lake}")
         else:
             concurrency_start = args.concurrency_start
@@ -2374,7 +2404,7 @@ def main() -> None:
             )
 
             stream_concurrency_ok = True
-            if stream_lake.exists():
+            if has_stream_lake:
                 stream_concurrency_cmd = [
                     python,
                     str(concurrency_script),
@@ -2431,7 +2461,7 @@ def main() -> None:
                 retry_on_memory=True,
             )
 
-            if stream_lake.exists():
+            if has_stream_lake:
                 manifest_minute_stream_cmd = [
                     python,
                     str(manifest_minute_script),
@@ -2493,7 +2523,7 @@ def main() -> None:
                 retry_on_memory=True,
             )
 
-            if stream_lake.exists():
+            if has_stream_lake:
                 identity_minute_stream_cmd = [
                     python,
                     str(identity_minute_script),

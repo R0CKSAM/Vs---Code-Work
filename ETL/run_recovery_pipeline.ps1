@@ -394,6 +394,15 @@ try {
             continue
         }
 
+        $preparedReady = $false
+        $preparedReceipt = Join-Path $StateDir "prepared_lake\$iso.json"
+        if (Test-Path -LiteralPath $preparedReceipt) {
+            & $GuardPython (Join-Path $WorkspaceRoot 'src\tools\prepared_priority_lake.py') --verify $preparedReceipt --base (Join-Path $WorkspaceRoot 'data')
+            if ($LASTEXITCODE -ne 0) { throw "Prepared lake receipt is invalid for $iso; inputs will not be silently rebuilt." }
+            $preparedReady = $true
+            Write-Host "Reusing verified lake for $iso; raw download and 001/02/03 are not repeated."
+        }
+        if (-not $preparedReady) {
         & $GuardPython $CapacityGuard --data (Join-Path $WorkspaceRoot 'data') --archive 'Z:\Veto Logs Backup\DO NOT DELETE'
         if ($LASTEXITCODE -ne 0) { throw "Insufficient verified storage reserve before $iso. No download started." }
         $sourceCheckDir = Join-Path $WorkspaceRoot "output\temp\source_check_$iso"
@@ -430,6 +439,7 @@ try {
         Save-RecoveryState -State $state -Status "downloads_complete"
         & $GuardPython $CapacityGuard --data (Join-Path $WorkspaceRoot 'data') --archive 'Z:\Veto Logs Backup\DO NOT DELETE' --data-reserve-gib 20
         if ($LASTEXITCODE -ne 0) { throw "Storage reserve is too low after downloading $iso. Inputs retained; processing not started." }
+        }
 
         $isFinalPendingDate = $finalPendingDate -and $dateValue.Date -eq $finalPendingDate.Date
         $attemptStartedAt = Get-Date

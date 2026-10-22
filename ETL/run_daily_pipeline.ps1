@@ -31,8 +31,8 @@
     [switch]$SkipWatch,
     [switch]$SkipOverview,
     [switch]$SkipUaProfile,
-    # Keep the daily path bounded; use -UaApiLimit -1 only for a deliberate backlog run.
-    [int]$UaApiLimit = 25,
+    # Defer new UA decoding during catch-up; enable explicitly with -UaApiLimit.
+    [int]$UaApiLimit = 0,
     [switch]$SkipUaMalformedApi,
     [switch]$RunDeviceDecode,
     [switch]$StrictPipeline,
