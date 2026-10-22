@@ -1,0 +1,17 @@
+*{box-sizing:border-box}body{margin:0;background:#e9e5e7;color:#331f2a;font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}header{display:flex;gap:14px;align-items:center;padding:14px 22px;background:#641735;color:#fff;position:sticky;top:0;z-index:2}header>div{flex:1}header strong{font-size:18px}p{margin:2px 0 0;font-size:12px;color:#f1cedd}button,a{font:inherit;padding:9px 13px;border-radius:8px;border:1px solid #e9c9d8;background:white;color:#641735;text-decoration:none;cursor:pointer}button:disabled{opacity:.6;cursor:default}aside{padding:12px 22px;background:#fff6e5;border-bottom:1px solid #e4d5ba}#canvas{overflow:auto;padding:20px;min-height:70vh}img{display:block;max-width:100%;height:auto;margin:auto}body.actual img{width:1600px;max-width:none}body.actual #canvas{overflow:visible}#message.error{background:#ffe1e4;color:#8e1434}
+
+/* Cohesive Smart Report brand for the standalone preview tab */
+body{background:#ecf4f3;color:#193442}
+header{background:radial-gradient(circle at right top,rgba(41,204,167,.15),transparent 46%),linear-gradient(110deg,#0b293b,#092136);
+ border-bottom:1px solid #39bcaa77;flex-wrap:wrap}
+.preview-brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.preview-brand>div{min-width:0}
+.preview-brand img{object-fit:contain;flex:0 0 43px}
+header strong{font-size:17px;overflow-wrap:anywhere}
+header p{color:#b3d2d8;overflow-wrap:anywhere}
+header button,header a{border:1px solid #7dd6c3;border-radius:9px;background:#f5fcfa;color:#0d5c63;font-weight:650}
+header #approve:enabled{background:linear-gradient(120deg,#087b6a,#12a68c);color:white;border-color:#279e89}
+aside{background:#fff6df;border-color:#e1c993;color:#765116}
+#message.error{background:#ffebef;color:#9d2843}
+#canvas{background:radial-gradient(circle at 50% -10%,#d9f1ec,transparent 60%),#edf4f3}
+@media(max-width:800px){header{padding:12px 14px;gap:8px}.preview-brand{flex-basis:100%}header button,header a{font-size:12px;padding:7px 9px}}

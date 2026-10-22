@@ -1,0 +1,9 @@
+/* Match Smart Report's screenshot review window with the Aurora application palette. */
+body{background:#090e20;color:#e8edff}
+header{background:linear-gradient(110deg,#10152e,#1e1c45 58%,#0c2749)!important;border-bottom:1px solid #514883!important;color:#fff!important}
+header p{color:#acb7df!important}
+header button,header a{background:linear-gradient(115deg,#282345,#1b2d4e)!important;color:#e5eaff!important;border-color:#585789!important}
+header #approve:enabled{background:linear-gradient(110deg,#973de8,#287eee)!important;border-color:#8f5ee2!important}
+aside{background:#26203d!important;color:#dfd2f5!important;border-color:#594a83!important}
+#message.error{background:#4f243d!important;color:#ffcad9!important}
+#canvas{background:radial-gradient(ellipse at 50% -15%,#272354 0%,transparent 70%),#090e20!important}
