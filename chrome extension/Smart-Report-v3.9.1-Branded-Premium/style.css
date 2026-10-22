@@ -1,0 +1,231 @@
+:root{--wine:#651a3b;--dark:#341526;--ink:#30232d;--muted:#746b73;--line:#e9e2e7;--bg:#faf8fa;--soft:#f5edf2;--green:#18704e;--red:#a32843}
+*{box-sizing:border-box}[hidden]{display:none!important}body{width:555px;max-width:100%;margin:0 auto;background:var(--bg);color:var(--ink);font:13px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}button,input,textarea,select{font:inherit}button{cursor:pointer;border:1px solid transparent;border-radius:10px;padding:11px 14px;font-size:12px;font-weight:650}button:disabled{opacity:.45;cursor:not-allowed}button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid #799ec5;outline-offset:3px}button:hover:not(:disabled){filter:brightness(.96)}.primary{background:var(--wine);color:white}.secondary{background:white;border-color:#d8c8d2;color:var(--wine)}.full{width:100%}.text-button{background:none;color:var(--wine);padding:5px 0;font-size:11px;text-align:left}.danger{color:var(--red)}.top{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line);background:#fff}.brand{display:flex;align-items:center;gap:10px}.brand-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:var(--wine);color:white;font-size:22px;font-weight:750;letter-spacing:-1px}.brand strong,.brand small{display:block}.brand strong{font-size:15px;letter-spacing:-.3px}.brand small{font-size:10px;color:var(--muted)}
+main{padding:20px 22px 18px}h1{font-size:25px;line-height:1.2;letter-spacing:-.8px;margin:7px 0 12px;font-weight:700}h2{font-size:19px;margin:0 0 10px}.eyebrow{font-size:9px;font-weight:750;letter-spacing:1.6px;color:var(--wine);margin:0}.lead{font-size:12px;color:var(--muted);margin:0 0 20px;line-height:1.65}.loading{text-align:center;color:var(--muted);padding:50px 0}.welcome{text-align:center;padding:18px 10px 12px}.welcome h1{font-size:34px;letter-spacing:-1.4px;margin:12px 0 16px}.welcome .lead{max-width:340px;margin:0 auto 24px}.privacy{font-size:10px;color:var(--muted);margin:13px 0 0}.welcome-art{height:88px;display:flex;justify-content:center;align-items:center;gap:22px;margin:0 0 23px}.mini-chart,.mini-mail{width:68px;height:62px;border-radius:15px;background:#fff;border:1px solid var(--line);box-shadow:0 5px 15px #3d1b2e09}.mini-chart{display:flex;align-items:flex-end;justify-content:center;padding:14px;gap:4px;transform:rotate(-6deg)}.mini-chart i{background:#a76b88;width:6px;height:13px;border-radius:2px}.mini-chart i:nth-child(2){height:24px}.mini-chart i:nth-child(3){height:19px}.mini-chart i:nth-child(4){height:32px;background:var(--wine)}.mini-mail{font-size:32px;display:grid;place-items:center;color:var(--wine);transform:rotate(6deg)}.art-arrow{color:#b5a0ad;font-size:23px}
+.account-menu{position:relative;font-size:11px}.account-menu summary{list-style:none;cursor:pointer;color:var(--wine);padding:7px}.account-menu summary::-webkit-details-marker{display:none}.account-popover{position:absolute;right:0;top:35px;width:245px;padding:15px;background:white;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px #3015251c;z-index:5;display:flex;flex-direction:column;gap:8px}.account-popover strong{font-size:12px;overflow-wrap:anywhere}.account-popover .eyebrow{font-size:8px}.stepper{display:flex;gap:7px;margin-bottom:22px;font-size:10px;color:#8a8188}.stepper span{flex:1;padding:0 0 9px;border-bottom:2px solid var(--line)}.stepper .active{border-color:var(--wine);color:var(--wine);font-weight:700}.stepper .done{border-color:#98c9b4;color:var(--green)}
+.field{margin:18px 0}label{display:flex;justify-content:space-between;font-size:12px;font-weight:650;margin:0 0 7px}label small{font-weight:400;color:var(--muted)}input,select,textarea{border:1px solid #d9cfd6;background:white;color:var(--ink);border-radius:9px;padding:10px 11px;width:100%;min-width:0}input[type=url]{font-size:11px}textarea{resize:vertical;min-height:88px}select{font-size:12px}input[aria-invalid=true],textarea[aria-invalid=true]{border-color:var(--red)}.help{color:var(--muted);font-size:10px;margin:6px 0;line-height:1.6}.field-error{color:var(--red);font-size:11px;margin:5px 0}.linked{font-size:11px;color:var(--green);overflow-wrap:anywhere;margin:8px 0}.advanced{font-size:11px;border-top:1px solid var(--line);padding-top:10px;margin-top:13px}.advanced summary,.support summary{cursor:pointer;color:var(--muted);font-size:11px}.advanced label{margin-top:10px}.notice{border-left:3px solid #d8b9ca;padding:6px 10px;color:var(--muted);font-size:11px;line-height:1.6}.notice.ready{color:var(--green);border-color:#7ab49a}.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:14px}.actions .primary{flex:1}.interval-field>div{display:flex;align-items:center;gap:10px}.interval-field input{width:90px}.interval-field span{color:var(--muted);font-size:12px}.save-status{min-height:16px;font-size:10px;color:var(--green);margin:5px 0}.progress-box{padding:12px;background:var(--soft);border-radius:9px;margin-top:15px;font-size:11px}.progress-box>div:first-child{display:flex;justify-content:space-between;gap:10px}#progressTrack{height:4px;background:#e3d1dc;border-radius:4px;overflow:hidden;margin-top:8px}#bar{height:100%;background:var(--wine);width:0}
+.status-card{background:linear-gradient(125deg,#671b3d,#341525);color:white;border-radius:16px;padding:20px}.status-heading{display:flex;align-items:center;justify-content:space-between}.status-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 8px;border:1px solid #ffffff40;border-radius:30px;font-size:10px}.status-pill i{height:6px;width:6px;border-radius:50%;background:#d9bbcb}.status-pill.running i{background:#91eab9}.status-pill.working i{background:#ffe0a1}.status-card h1{font-size:24px;margin:13px 0 7px}.status-card p{color:#edd7e2;font-size:11px;margin:0}.next-report{border-top:1px solid #ffffff30;margin-top:15px;padding-top:12px}.next-report small{display:block;font-size:10px;color:#e4bfd2}.next-report strong{display:inline-block;font-size:18px;margin-top:3px}.next-report span{margin-left:10px;font-size:10px;color:#ffe4a8}#elapsed{font-size:10px;color:#efdbe5}.next-action{font-size:11px;color:var(--muted);margin:12px 0;line-height:1.6}.report-summary{margin:16px 0;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px}.report-summary>div:not(.summary-links){display:flex;justify-content:space-between;gap:15px;font-size:11px;padding:4px 0}.report-summary span{color:var(--muted);flex-shrink:0}.report-summary strong{text-align:right;font-weight:550;overflow-wrap:anywhere;max-width:290px}.summary-links{display:flex;gap:18px;border-top:1px solid var(--line);margin-top:8px;padding-top:7px}.test-row{display:flex;align-items:center;gap:12px}.test-row>div{flex:1}.test-row strong{font-size:11px}.test-row p{font-size:10px;color:var(--muted);margin:3px 0}.last-mail{display:flex;gap:7px;align-items:baseline;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:11px;margin-top:15px;font-size:10px}.last-mail>span,.last-mail small{color:var(--muted)}.mail-ok{color:var(--green)}.mail-error{color:var(--red)}.totals{display:flex;justify-content:space-between;margin:10px 0;font-size:10px}.totals strong{margin-left:5px}
+.error-box{padding:12px 14px;border:1px solid #e6bec9;background:#fff1f4;border-radius:10px;color:var(--red);margin-bottom:16px}.error-box strong{display:block;font-size:12px}.error-box span{display:block;white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px;margin-top:4px}.support{margin-top:20px;padding-top:12px;border-top:1px solid var(--line)}.feedback-header{display:flex;align-items:center;justify-content:space-between;font-size:11px;margin-top:9px}ul{list-style:none;margin:0;padding:0}li{display:flex;justify-content:space-between;gap:8px;font-size:10px;padding:6px 0;border-bottom:1px solid var(--line)}li span{overflow-wrap:anywhere}li time{color:var(--muted);flex-shrink:0}.bad{color:var(--red)}.good{color:var(--green)}footer{color:#877d85;font-size:9px;line-height:1.7;margin-top:16px;text-align:center}
+.toast{position:fixed;bottom:14px;left:18px;right:18px;max-width:454px;margin:auto;z-index:20;background:#263d32;color:white;border-radius:11px;padding:12px 14px;box-shadow:0 8px 25px #0002;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px}.toast button{padding:0 4px;color:white;background:none;font-size:20px}.toast:hover{opacity:1}dialog{border:1px solid var(--line);border-radius:16px;padding:22px;max-width:410px;width:calc(100% - 40px);box-shadow:0 20px 60px #0003;color:var(--ink)}dialog::backdrop{background:#24121f66}dialog p{white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;color:var(--muted)}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}@media(prefers-reduced-motion:no-preference){button{transition:background .15s,filter .15s}}
+
+/* Dual-mail opt-in: contained, readable on narrow Chrome popups. */
+.google-beta{margin:14px 0;padding:14px;border-radius:12px;border:1px solid var(--line);background:white;overflow-wrap:anywhere;min-width:0}.google-beta p{font-size:11px;color:var(--muted);line-height:1.5}.google-beta .actions button{flex:1;min-width:170px;white-space:normal}.google-beta strong{font-size:12px}.google-beta .full{margin-top:8px}
+
+/* v3.8.2: dual-provider control and overflow hardening. */
+html,body{overflow-x:hidden}
+main,.panel,#appView,.status-card,.report-summary,.google-beta{min-width:0}
+.provider-bar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:0 0 15px}
+.provider-cell{display:flex;align-items:center;gap:8px;min-width:0;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.provider-mark{width:27px;height:27px;flex:0 0 27px;display:grid;place-items:center;border-radius:8px;font-weight:800;color:white;background:#36598b}
+.gmail-mark{background:#fff;color:#bd3737;border:1px solid #e0dce0}
+.provider-name{min-width:0;flex:1;line-height:1.3}
+.provider-name strong{font-size:11px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.provider-name small{display:block;font-size:9px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.provider-action{flex:0 0 auto;max-width:78px;line-height:1.25;white-space:normal;text-align:center}
+.provider-notice{font-size:10px;color:#865017;border-left:3px solid #e0b36b;background:#fff7e9;padding:8px 10px;margin:-5px 0 12px;border-radius:4px;overflow-wrap:anywhere}
+.gmail-delivery{margin:12px 0 14px;padding:12px 14px}
+.gmail-panel-title{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.gmail-panel-title>div{min-width:0;flex:1}
+.gmail-panel-title p{margin:2px 0 1px;overflow-wrap:anywhere}
+.beta-chip{font-size:9px;color:#7b4c67;border:1px solid #e3cad9;padding:2px 6px;border-radius:10px;flex:0 0 auto}
+.gmail-recovery{border-top:1px solid var(--line);margin-top:12px;padding-top:8px;color:var(--red);overflow-wrap:anywhere}
+.gmail-recovery .text-button{padding:8px 0}
+#googleTest{white-space:normal;overflow-wrap:anywhere;text-align:center}
+#outlookTestRow[hidden]{display:none!important}
+.actions button{min-width:0;overflow-wrap:anywhere}
+.report-summary strong,.status-card h1,#summaryRecipients,.test-row p{min-width:0;overflow-wrap:anywhere}
+#nextRun{overflow-wrap:anywhere}
+textarea{max-height:165px;min-height:70px;resize:vertical}
+.provider-bar button,.gmail-delivery button{touch-action:manipulation}
+@media(max-width:460px){
+ body{width:100%;max-width:100vw}main{padding:15px 14px}.top{padding:13px 14px}
+ .provider-bar{grid-template-columns:minmax(0,1fr);gap:6px}.provider-cell{padding:8px}
+ .provider-name small{white-space:normal;overflow-wrap:anywhere}
+ .report-summary>div:not(.summary-links){flex-wrap:wrap}
+ .report-summary strong{text-align:left;max-width:100%}
+ .test-row{flex-wrap:wrap}.test-row button{margin-left:auto}
+ .actions .primary{flex-basis:100%}
+}
+
+/* Additional v3.8.2 review: retain email labels in two-column provider controls. */
+.provider-cell{gap:7px}.provider-action{max-width:64px;padding:5px 2px}.provider-name strong{font-size:10.5px}
+.gmail-last-result{font-size:10px;color:var(--green);margin:5px 0 8px;overflow-wrap:anywhere}
+.account-popover{max-width:calc(100vw - 32px)}
+
+
+/* v3.8.3 Chrome ACTION POPUP CRITICAL FIX
+   The action popup is content-sized before it is shown. A body width combined
+   with max-width:100% and an html element lacking an intrinsic width can
+   collapse its preferred inline size to the scrollbar. Keep an explicit
+   intrinsic width on the root. Chrome's popup maximum is wider than 540px.
+   Do not use 100vw/% or media-query overrides on html/body here. */
+html {
+  width: 540px;
+  min-width: 540px;
+  max-width: none;
+  min-height: 180px;
+  overflow-x: clip;
+  background: var(--bg);
+}
+body {
+  width: 540px;
+  min-width: 540px;
+  max-width: none;
+  margin: 0;
+  overflow-x: clip;
+}
+#loading { min-height: 155px; }
+.top, main, #appView { width: 100%; min-width: 0; }
+/* Long IDs, dynamic button text and error details must not widen the popup. */
+.provider-cell, .provider-name, .status-card, .report-summary, .test-row > div {
+  min-width: 0;
+}
+.provider-name strong, .provider-name small, .status-card, .notice, .error-box,
+.report-summary, .report-summary strong, .support-note, .last-mail {
+  overflow-wrap: anywhere;
+}
+
+
+/* Smart Report v3.9.1 — cohesive brand and layout hardening.
+   Visual layer only; the OAuth, scheduled capture and sending engines are unchanged. */
+:root{
+  --wine:#087d79; --dark:#0b2638; --ink:#172f3e; --muted:#647a85;
+  --line:#d9e8e9; --bg:#f6faf9; --soft:#edf8f5;
+  --green:#086b55; --red:#ad3445;
+  --sf-navy:#092436; --sf-deep:#0a1c2d; --sf-mint:#3ad6b9;
+  --sf-blue:#266bc1; --sf-amber:#935c15; --sf-red:#ae3949;
+}
+/* CRITICAL Chrome intrinsic sizing: don't use percentage or viewport widths here. */
+html{width:540px!important;min-width:540px!important;max-width:none!important;overflow-x:clip; background:var(--bg)}
+body{width:540px!important;min-width:540px!important;max-width:none!important;margin:0!important;
+  background:radial-gradient(ellipse 330px 190px at 94% 1%,rgba(49,211,183,.09),transparent 82%),
+  radial-gradient(ellipse 290px 160px at 3% 8%,rgba(46,122,167,.065),transparent 80%),var(--bg);
+  color:var(--ink);overflow-x:clip;font-size:13px;
+}
+:where(.top,main,#appView,section,.panel,.status-card,.report-summary,.google-beta,.test-row,.toast,.provider-cell,.provider-name,.account-popover){min-width:0}
+.top{padding:13px 19px;min-height:74px;border-bottom:1px solid #dbe9e8;
+  background:linear-gradient(125deg,rgba(255,255,255,.99),rgba(242,253,249,.98));
+  box-shadow:0 4px 18px rgba(9,38,54,.04)}
+.brand{min-width:0;gap:11px}.brand-icon{width:44px;height:44px;flex:0 0 44px;
+  display:grid;place-items:center;overflow:visible;border-radius:13px;background:none;
+  box-shadow:0 6px 18px rgba(8,35,52,.16)}
+.brand-icon img{display:block;width:100%;height:100%;object-fit:contain}
+.brand-copy{min-width:0}.brand strong{font-size:17px;letter-spacing:-.5px;color:#102a3a;line-height:1.15}
+.brand strong span{color:#058d7c}.brand small{font-size:10px;color:#6d8791;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.account-menu{flex-shrink:0}.account-menu summary{color:#126b73;font-size:11px;font-weight:700;
+  border:1px solid transparent;border-radius:9px;white-space:nowrap;padding:8px}
+.account-menu summary:hover{background:#e8f7f3;border-color:#c1e8dd}
+.account-popover{border:1px solid #cce7df;box-shadow:0 22px 50px rgba(11,39,54,.15);max-width:calc(100% - 32px)}
+main{padding:18px 20px 16px}h1,h2{color:var(--ink)}h1{letter-spacing:-.8px}
+.eyebrow{color:#087d79;letter-spacing:1.45px}
+.lead{color:#637987}
+/* Approved full wordmark used prominently at login; no duplicated title next to it. */
+.welcome{padding:11px 9px 15px}
+.welcome-brand{display:flex;justify-content:center;align-items:center;min-height:90px;max-width:100%;margin:0 auto 5px;}
+.welcome-brand img{display:block;width:min(295px,90%);height:auto;max-height:105px;object-fit:contain}
+.welcome h1{font-size:30px;line-height:1.15;letter-spacing:-1.25px;margin:10px 0 14px}
+.welcome .lead{max-width:375px;margin-bottom:19px}
+/* Refined gradient borders and restrained light effects. */
+.provider-cell,.report-summary,.google-beta,.panel{box-shadow:0 4px 18px rgba(13,60,76,.035)}
+.provider-cell{background:linear-gradient(135deg,#fff 62%,#f6fdfa);border-color:#d9e6e9;
+  transition:border-color .18s,box-shadow .18s;min-width:0;overflow:hidden}
+.provider-cell:hover{border-color:#9bdccd;box-shadow:0 5px 18px rgba(8,132,114,.08)}
+.provider-name{min-width:0}.provider-name strong{font-size:11px;color:#172f3e}
+.provider-name small{color:#647a85;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.provider-action{max-width:76px;flex:0 0 auto;white-space:normal;overflow-wrap:anywhere;color:#0b7775;text-align:right}
+.provider-notice{border-color:#e4be78;background:#fff8ec;color:#765018}
+.microsoft-mark{background:#315a86}.gmail-mark{background:#fff;color:#c33a37;border:1px solid #e4dfdf}
+.stepper span.active{color:#087c76;border-color:#2dc9a7}.stepper span.done{color:#11785e;border-color:#85d7bb}
+/* Buttons: meaning is visually distinctive even with reduced motion. */
+button{min-width:0;max-width:100%;border-radius:10px;overflow-wrap:anywhere;white-space:normal;
+  transition:background .18s ease,box-shadow .18s ease,transform .18s ease,border-color .18s ease,filter .18s ease}
+button:hover:not(:disabled){filter:none;transform:translateY(-1px)}
+button:active:not(:disabled){transform:translateY(0)}
+button:disabled{opacity:.53;filter:grayscale(.13);box-shadow:none!important}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid rgba(32,155,205,.45);outline-offset:2px}
+.primary{background:linear-gradient(120deg,#08786b,#0a9a83);color:#fff;border:1px solid #168979;
+  box-shadow:0 3px 0 rgba(5,75,65,.08),0 7px 18px rgba(8,126,107,.15)}
+.primary:hover:not(:disabled){background:linear-gradient(120deg,#06685d,#098773);box-shadow:0 10px 20px rgba(8,126,107,.2)}
+.secondary{background:linear-gradient(135deg,#fff,#f6fcfb);border:1px solid #bcd8d8;color:#125f6b;
+  box-shadow:0 2px 8px rgba(16,78,94,.04)}
+.secondary:hover:not(:disabled){background:#effaf7;border-color:#66bdad}
+.text-button{color:#0d7775;font-weight:700}.text-button:hover:not(:disabled){color:#045b59}
+.text-button.danger,.danger{color:var(--sf-red)}
+#start,#continueDelivery{background:linear-gradient(118deg,#06695e,#0a9a7f);border-color:#1a9b85;color:white}
+#start:hover:not(:disabled){box-shadow:0 0 0 3px rgba(48,213,175,.12),0 13px 28px rgba(5,105,90,.2)}
+#pauseResume[data-control-mode="running"]{background:linear-gradient(115deg,#fff0ce,#ffe5a9);border:1px solid #e6b65c;color:#7f4b03;box-shadow:none}
+#pauseResume[data-control-mode="paused"]{background:linear-gradient(115deg,#e7f0ff,#dceaff);border:1px solid #9cbfea;color:#194b8e;box-shadow:none}
+#stop{background:#ffedf0;color:#ab3144;border:1px solid #eab2be;padding:9px 12px;margin-top:6px;border-radius:9px}
+#stop:hover:not(:disabled){background:#ffe0e6;color:#9b2435}
+#test,#googleTest{background:linear-gradient(120deg,#edf3ff,#f4f8ff);border-color:#bdd0ea;color:#25538d;box-shadow:0 4px 13px rgba(34,84,135,.065)}
+#test:hover:not(:disabled),#googleTest:hover:not(:disabled){border-color:#7ea6df;background:#e2efff}
+#capture,#useTab,#viewPreview{border-color:#8ddccc;background:linear-gradient(115deg,#eefbf8,#f8fffe);color:#086a69}
+#capture{background:linear-gradient(115deg,#0e7d85,#145f86);border-color:#2c859a;color:white}
+#export{color:#166a99}
+/* Premium status card with controlled internal lighting and border. */
+.status-card{position:relative;isolation:isolate;overflow:hidden;color:white;
+  background:radial-gradient(ellipse 75% 80% at 105% -25%,rgba(78,243,200,.21),transparent 82%),
+   radial-gradient(ellipse 70% 85% at -17% 130%,rgba(31,136,195,.20),transparent 85%),
+   linear-gradient(126deg,#102c40 0%,#0d2736 48%,#081c2d 100%);
+  border:1px solid rgba(55,196,173,.48);border-radius:17px;
+  box-shadow:0 15px 32px rgba(10,40,55,.17), inset 0 1px 0 rgba(255,255,255,.14)}
+.status-card::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:17px;
+  background:linear-gradient(135deg,rgba(255,255,255,.12),transparent 27%,transparent 76%,rgba(22,195,164,.035));z-index:-1}
+.status-card h1{color:#fff;overflow-wrap:anywhere}
+.status-card p{color:#b7d6d9}
+.status-pill{border-color:rgba(111,230,205,.35);background:rgba(255,255,255,.065);color:#e1fcf5}
+.status-pill.running{background:rgba(22,174,126,.13);color:#acffdd;border-color:rgba(116,235,164,.5)}
+.status-pill.working{background:rgba(226,160,71,.14);color:#ffe3a8;border-color:rgba(244,191,107,.5)}
+.status-pill.running i{background:#78f5b5;box-shadow:0 0 9px #5df3af99}
+.status-pill.working i{background:#ffc770;box-shadow:0 0 9px #f8ca87a8}
+.next-report{border-top-color:rgba(195,236,226,.19)}.next-report small{color:#9dcac9}.next-report strong{color:#fff}
+.next-report span{color:#a4edd5}#elapsed{color:#c3e9e6}
+.report-summary{border-color:#d8e5e7;background:linear-gradient(135deg,#fff 70%,#fbfffe);border-radius:13px}
+.report-summary>div:not(.summary-links){display:grid;grid-template-columns:120px minmax(0,1fr);align-items:start;gap:11px}
+.report-summary span{flex-shrink:initial;color:#657d85}
+.report-summary strong{max-width:none;text-align:right;min-width:0;max-height:104px;overflow-wrap:anywhere;overflow-y:auto}
+.summary-links{flex-wrap:wrap;column-gap:18px;row-gap:2px}
+.test-row{min-width:0;flex-wrap:wrap;justify-content:space-between}
+.test-row >div{flex:1 1 220px}.test-row button{flex:0 1 auto;min-width:135px}
+.last-mail{min-width:0;overflow-wrap:anywhere}
+.google-beta{border-color:#cfe5e3;background:linear-gradient(135deg,#fff 72%,#f5fcfa);border-radius:13px}
+.beta-chip{white-space:nowrap;border-color:#bcdedb;color:#297873;background:#eefbf9}
+.gmail-recovery{border-top-color:#e7d4d6;color:#9d4050}
+.gmail-last-result,.linked,.mail-ok{color:var(--green)}
+.error-box{border:1px solid #ecc1cc;background:linear-gradient(135deg,#fff2f4,#fffafa);box-shadow:0 5px 13px rgba(173,52,69,.045)}
+.notice{border-left-color:#6fcab6}.notice.ready{border-left-color:#44b38a}
+.progress-box{background:#eaf7f3;border:1px solid #cce8df}
+#progressTrack{background:#d4e9e6}#bar{background:linear-gradient(90deg,#097d8a,#4cdeb1)}
+/* Dropdowns and accordions: consistent right aligned chevron, no collision with text. */
+.advanced summary,.support summary{display:flex;align-items:center;justify-content:space-between;
+  list-style:none;gap:12px;line-height:1.45;min-width:0;padding:8px 0;
+  overflow-wrap:anywhere;color:#4d6e78;font-weight:650}
+.advanced summary::-webkit-details-marker,.support summary::-webkit-details-marker{display:none}
+.advanced summary::after,.support summary::after{content:"";display:block;flex:0 0 7px;width:7px;height:7px;
+  border-right:1.8px solid #628b94;border-bottom:1.8px solid #628b94;transform:rotate(45deg);margin:0 4px 3px 0;transition:transform .17s}
+.advanced[open] summary::after,.support[open] summary::after{transform:rotate(225deg);margin-top:5px}
+.advanced[open],.support[open]{min-width:0}
+.account-menu summary{display:flex;align-items:center;gap:8px}
+/* Inputs remain inside the popup even with huge subjects, addresses or errors. */
+input,select,textarea{max-width:100%;min-width:0;background:#fff;border:1px solid #cadfe0;border-radius:10px}
+input:focus,select:focus,textarea:focus{border-color:#1aaca0;box-shadow:0 0 0 3px rgba(19,163,151,.11)}
+input[aria-invalid=true],textarea[aria-invalid=true]{border-color:#d55a6c;box-shadow:0 0 0 2px #f7dee4}
+textarea{resize:vertical;min-height:70px;max-height:180px;overflow:auto}
+select{padding-right:32px;text-overflow:ellipsis}
+.provider-cell,.gmail-panel-title,.test-row,.totals,.feedback-header,.summary-links,.toast,.status-heading{min-width:0}
+.gmail-panel-title{flex-wrap:wrap}.gmail-panel-title>div{flex:1;min-width:0}
+.toast{max-width:calc(100% - 36px);width:auto;left:18px;right:18px;
+  background:linear-gradient(115deg,#103a3a,#104e45);border:1px solid #3ba391;
+  box-shadow:0 17px 38px rgba(0,54,50,.21)}
+.toast span{flex:1;min-width:0;max-height:150px;overflow:auto;overflow-wrap:anywhere}
+#dismissToast{flex:0 0 24px;align-self:center}
+#activity{max-height:205px;overflow-y:auto;overflow-x:hidden}
+#activity li{min-width:0;align-items:flex-start}#activity li span{min-width:0;flex:1;overflow-wrap:anywhere;word-break:break-word}
+#activity li time{max-width:90px;white-space:normal;text-align:right}
+.support{margin-top:14px;padding-top:8px}
+footer{border-top:1px solid #e6eeee;padding-top:12px;margin-top:15px;color:#758c95}
+dialog{max-width:calc(100% - 40px);background:#fff;border:1px solid #bdded8;box-shadow:0 28px 70px rgba(3,27,41,.27)}
+dialog::backdrop{background:rgba(7,31,45,.58)}
+.privacy{color:#6f8491}
+/* User accessibility and reduced motion. */
+@media (prefers-reduced-motion:reduce){button,.advanced summary::after,.support summary::after,.provider-cell{transition:none!important}button:hover:not(:disabled){transform:none}}
+/* Deliberately DO NOT add any html/body @media width overrides: Chrome popups can collapse. */

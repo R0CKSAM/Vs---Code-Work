@@ -1,0 +1,326 @@
+'use strict';
+// Run from a localhost HTTP server. No corporate service is contacted.
+(async () => {
+  const results = [], sources = {};
+  const assert = (condition, message) => { if (!condition) throw Error(message); };
+  async function test(name, fn) {
+    try { await fn(); results.push('PASS ' + name); }
+    catch (e) { results.push('FAIL ' + name + ': ' + e.message); }
+  }
+  async function rejects(fn, pattern) {
+    try { await fn(); } catch (e) { assert(pattern.test(e.message), e.message); return; }
+    throw Error('Expected rejection');
+  }
+  for (const file of ['background.js','capture-engine.js','capture-page.js','popup.js','preview.js','company-config.js','google-mail.js']) {
+    const response = await fetch('../' + file, {cache:'no-store'});
+    assert(response.ok, 'Missing source: ' + file);
+    sources[file] = await response.text();
+    await test(file + ' syntax', () => new Function(sources[file]));
+  }
+
+  async function engine({end, maxScroll, rootTop=0, bottom=1000, blank=false, startError=false, stuck=false}) {
+    let clock=0, top=0, captures=0, restored=false, detached=false;
+    const state=()=>({href:'fixture',width:1600,height:1000,rootTop,visibleTop:rootTop,bottom,
+      scrollTop:top,maxScroll,contentEnd:end,scrollWidth:1600,clientWidth:1600,collapsed:[],errors:[],
+      missing:blank?['blank chart']:[],visiblePanels:1,ready:'complete',busy:0,paintedCanvases:1,
+      meaningful:1,noData:[],canvasRegions:[],expanded:0});
+    const chrome={debugger:{attach:async()=>{},detach:async()=>{detached=true;},sendCommand:async(_,m)=>{
+      if(m==='Page.captureScreenshot'){captures++;return {data:'x'};}
+    }},scripting:{executeScript:async args=>{
+      if(args.files)return [];
+      const [op,arg]=args.args;
+      if(op==='start'&&startError)throw Error('injected startup failure');
+      if(op==='scroll'&&!stuck)top=Math.min(maxScroll,arg.top);
+      if(op==='restore')restored=true;
+      return [{result:op==='expand'?{count:0}:state()}];
+    }}};
+    class Canvas {
+      getContext(){return {drawImage(){}};}
+      async convertToBlob(){return {size:1,type:'image/png',arrayBuffer:async()=>new Uint8Array([1]).buffer};}
+    }
+    const run=new Function('chrome','Date','sleep','progress','isDashboardTab','OffscreenCanvas',
+      'createImageBitmap','Blob','atob','btoa','MAX_ATTACH_BYTES','log',
+      sources['capture-engine.js']+'\nreturn captureDashboardTiles(1,{dashboard:"fixture"});');
+    let shot, error;
+    try { shot=await run(chrome,{now:()=>clock},async ms=>{clock+=ms;},async()=>{},()=>true,Canvas,
+      async()=>({width:1600,height:1000,close(){}}),class{},()=>'',()=>'x',2621440,async()=>{}); }
+    catch(e){error=e;}
+    assert(restored&&detached,'Capture cleanup did not run');
+    return {shot,error,captures};
+  }
+  for(const c of [
+    {name:'single viewport without trailing scroll',end:1016,maxScroll:0,height:1000},
+    {name:'multiple tiles without trailing scroll',end:1516,maxScroll:500,height:1500},
+    {name:'nested scroller with toolbar and footer',end:1316,maxScroll:500,rootTop:100,bottom:900,height:1400},
+    {name:'last one-pixel strip is retained',end:1001,maxScroll:100,height:1001}
+  ]) await test(c.name,async()=>{const r=await engine(c);assert(!r.error,r.error?.message);assert(r.shot.meta.height===c.height,'Wrong output height');});
+  await test('blank chart blocks capture and restores tab',async()=>{const r=await engine({end:1000,maxScroll:0,blank:true});assert(r.error&&r.captures===0,'Blank chart accepted');});
+  await test('startup failure still restores tab',async()=>{const r=await engine({end:1000,maxScroll:0,startError:true});assert(r.error,'Expected startup failure');});
+  await test('large empty tail exceeding 65 scrolls does not reject short content',async()=>{
+    const r=await engine({end:1500,maxScroll:80000});assert(!r.error,r.error?.message);assert(r.shot.meta.height===1500,'Empty tail included');
+  });
+  await test('actual oversized content is rejected with measured height',async()=>{
+    const r=await engine({end:30000,maxScroll:80000});assert(/Measured dashboard content/.test(r.error?.message),'Missing measured-height failure');assert(r.captures===0,'Oversized content captured');
+  });
+  await test('stuck scroll is distinguished from oversized content',async()=>{
+    const r=await engine({end:1500,maxScroll:80000,stuck:true});assert(/scrolling is stuck/.test(r.error?.message),'Missing stuck-scroll diagnosis');
+  });
+  await test('pathological empty extent remains bounded by deadline',async()=>{
+    const r=await engine({end:1500,maxScroll:10000000});assert(/exceeded 4 minutes/.test(r.error?.message),'Deadline not enforced');
+  });
+
+  // Real Chromium DOM and canvas checks, separate from the mocked CDP engine.
+  async function panel(markup, extraStyle='') {
+    const frame=document.createElement('iframe');frame.style.cssText='width:1600px;height:1000px;border:0';
+    document.body.append(frame);
+    const w=frame.contentWindow,d=w.document;
+    d.open();d.write('<style>html,body{margin:0}.panel-container{width:800px;height:1000px}'+extraStyle+'</style>'+markup);d.close();
+    w.eval(sources['capture-page.js']);
+    try{return w.__SR_CAPTURE_PAGE__('start');}
+    finally{try{w.__SR_CAPTURE_PAGE__('restore');}catch{}frame.remove();}
+  }
+  for(const value of ['42','UP','OK','Healthy','No data'])await test('real DOM panel value '+value,async()=>{
+    const s=await panel('<div class="panel-container"><h2>Panel title</h2><div class="panel-content">'+value+'</div></div>');
+    assert(!s.missing.length,s.missing.join(';'));assert(s.contentEnd<=1000,'End extends beyond reachable pixels');
+  });
+  for(const value of ['', 'Loading...', '<span hidden>42</span>', '<canvas width="300" height="200"></canvas>'])await test('real DOM rejects empty/loading panel '+value,async()=>{
+    const s=await panel('<div class="panel-container"><h2>Title 123</h2><div class="panel-content">'+value+'</div></div>');
+    assert(s.missing.length>0,'Empty/loading visualization accepted');
+  });
+
+  const dashboard='https://grafana-apj.trafficpeak.live/d/test/dashboard?from=now%2Fd&to=now&refresh=1m';
+  async function worker(initial={},policyOverride={}) {
+    let listener, calls=0, gmailCalls=0, tabs=0, failNetwork=false, onPost=async()=>{}, alarm=null, alarmListener;const notifications=[];
+    const db={smartReportVersion:'3.7.5',productionRelease:'3.9.0',mode:'stopped',config:{dashboard,to:'test@example.com',interval:15,sender:'outlook'},...initial};
+    const storage={get:async keys=>structuredClone(Object.fromEntries((Array.isArray(keys)?keys:[keys]).map(k=>[k,db[k]]))),
+      set:async value=>Object.assign(db,structuredClone(value)),remove:async()=>{}};
+    const chrome={storage:{local:storage,session:storage},identity:{getRedirectURL:()=>'',getAuthToken:async()=>({token:'google_token'}),removeCachedAuthToken:async()=>{},clearAllCachedAuthTokens:async()=>{}},
+      runtime:{id:'test',getURL:path=>'chrome-extension://test/'+path,getManifest:()=>({oauth2:{client_id:'12345-test.apps.googleusercontent.com'}}),onStartup:{addListener(){}},onInstalled:{addListener(){}},
+        onMessage:{addListener(f){listener=f;}},getPlatformInfo:async()=>({})},
+      tabs:{create:async()=>{tabs++;return {id:1};}},
+      alarms:{clear:async()=>{alarm=null;},get:async()=>alarm,create:async(name,options)=>{alarm={name,...options,scheduledTime:Date.now()+options.delayInMinutes*60000};},onAlarm:{addListener(f){alarmListener=f;}}},notifications:{create:async(id,options)=>{notifications.push({id,...options});}}};
+    const load=new Function('chrome','importScripts','COMPANY_MICROSOFT','COMPANY_POLICY','setInterval','clearInterval','fetch',
+      sources['google-mail.js']+'\n'+sources['background.js']+`\nreturn (async()=>{await restoreFlight;return {run,schedule,restoreAlarm,captureSignature,isDashboardTab,
+        setAccess:f=>getAccess=f,setScreenshot:f=>screenshot=f};})();`);
+    const api=await load(chrome,()=>{},
+      {clientId:'00000000-0000-0000-0000-000000000001',tenantId:'00000000-0000-0000-0000-000000000002'},
+      {allowedRecipientDomains:['example.com'],...policyOverride},()=>1,()=>{},async url=>{
+        if(url.includes('/userinfo'))return {ok:true,json:async()=>({email:'test@gmail.com',email_verified:true})};
+        if(url.includes('/messages/send')){gmailCalls++;if(failNetwork)throw Error('simulated offline');await onPost();return {ok:true,status:200,json:async()=>({id:'gmail-message-id'})};}
+        assert(url.endsWith('/sendMail'),'Unexpected network request: '+url);calls++;
+        if(failNetwork)throw Error('simulated offline');await onPost();return {status:202};
+      });
+    api.setAccess(async()=>'mock-token');
+    api.setScreenshot(async()=>({meta:{width:1600,height:1000},data:'eA==',ext:'png',mime:'image/png'}));
+    return {api,db,notifications,calls:()=>calls,gmailCalls:()=>gmailCalls,tabs:()=>tabs,offline:()=>{failNetwork=true;},onPost:fn=>{onPost=fn;},alarm:()=>alarm,fire:(name='smart-report-next')=>alarmListener({name}),
+      approve:()=>{db.approvedCaptureSignature=api.captureSignature(db.config);},
+      message:msg=>new Promise(resolve=>listener(msg,{id:'test',url:'chrome-extension://test/preview.html'},resolve))};
+  }
+  await test('stale preview rejected even with identical dashboard settings',async()=>{
+    const w=await worker();w.db.capturePreview='image-B';w.db.capturePreviewSignature=w.api.captureSignature(w.db.config);w.db.capturePreviewId='B';
+    const old=await w.message({action:'APPROVE_CAPTURE',previewId:'A'});assert(!old.ok,'Stale approval accepted');
+    const current=await w.message({action:'APPROVE_CAPTURE',previewId:'B'});assert(current.ok,current.error);
+  });
+  await test('preview without identity cannot approve',async()=>{
+    const w=await worker();w.db.capturePreview='image';w.db.capturePreviewSignature=w.api.captureSignature(w.db.config);
+    const r=await w.message({action:'APPROVE_CAPTURE'});assert(!r.ok,'Legacy approval accepted');
+  });
+  await test('changed dashboard cannot approve old preview',async()=>{
+    const w=await worker();w.db.capturePreview='image';w.db.capturePreviewSignature=w.api.captureSignature(w.db.config);w.db.capturePreviewId='A';
+    w.db.config.dashboard+='&var-region=new';
+    const r=await w.message({action:'APPROVE_CAPTURE',previewId:'A'});assert(!r.ok,'Changed settings approved');
+  });
+  for(const testSend of [false,true])await test('pause during token renewal cancels '+(testSend?'test':'scheduled')+' mail',async()=>{
+    const w=await worker();w.approve();w.db.mode='running';
+    w.api.setAccess(async()=>{await w.api.schedule('paused');return 'mock-token';});
+    await rejects(()=>w.api.run(testSend,false),/cancelled/);
+    assert(w.calls()===0,'Email submitted after pause');assert(!w.db.failedMail,'Cancellation counted as failure');
+    assert(!w.db.submissionPending,'Cancelled run left uncertain submission');
+  });
+  await test('changed recipients during token renewal prevent stale submission',async()=>{
+    const w=await worker();w.approve();w.api.setAccess(async()=>{w.db.config.to='changed@example.com';return 'mock-token';});
+    await rejects(()=>w.api.run(true,false),/settings changed/);assert(w.calls()===0,'Stale recipients used');
+  });
+  await test('approved successful send increments acceptance exactly once',async()=>{
+    const w=await worker();w.approve();await w.api.run(true,false);
+    assert(w.calls()===1&&w.db.sent===1&&w.db.sentTest===1,'Wrong acceptance count');assert(!w.db.submissionPending,'Submission flag not cleared');
+  });
+  await test('unapproved email blocked before capture/submission',async()=>{
+    const w=await worker();await rejects(()=>w.api.run(true,false),/Check screenshot/);assert(w.calls()===0,'Unapproved email submitted');
+  });
+  await test('preview opens without popup and leaves mail counters unchanged',async()=>{
+    const w=await worker();await w.api.run(false,true);
+    assert(w.tabs()===1&&w.db.capturePreviewId,'Preview not opened/stored');assert(!w.db.sent&&!w.db.failedMail&&w.calls()===0,'Preview affected mail');
+  });
+  await test('network uncertainty pauses even a manual test and survives restart',async()=>{
+    const w=await worker();w.approve();w.db.mode='running';w.offline();
+    await rejects(()=>w.api.run(true,false),/acceptance is unconfirmed/);
+    assert(w.db.mode==='paused'&&w.db.submissionPending,'Uncertain send did not pause');
+    const recovered=await worker({...w.db,mode:'running'});
+    assert(recovered.db.mode==='paused'&&recovered.calls()===0,'Restart resumed uncertain submission');
+  });
+  await test('upgrade pauses old schedule and requires fresh approval',async()=>{
+    const w=await worker({smartReportVersion:'3.7.0',productionRelease:'3.8.3',mode:'running',approvedCaptureSignature:'old'});
+    assert(w.db.smartReportVersion==='3.7.5'&&w.db.mode==='paused'&&!w.db.approvedCaptureSignature,'Unsafe upgrade');
+  });
+  await test('actual URL matching rejects changed filters',async()=>{
+    const w=await worker();assert(w.api.isDashboardTab(dashboard,dashboard),'Matching URL rejected');
+    assert(!w.api.isDashboardTab(dashboard+'&var-region=other',dashboard),'Changed filter accepted');
+  });
+  await test('pause after POST keeps the accepted outcome accurate',async()=>{
+    const w=await worker();w.approve();w.db.mode='running';w.onPost(()=>w.api.schedule('paused'));
+    await w.api.run(false,false);
+    assert(w.calls()===1&&w.db.sent===1&&w.db.lastMailOutcome==='accepted'&&w.db.mode==='paused','Accepted mail misreported');
+  });
+  await test('capture failure never submits and releases busy lock for retry',async()=>{
+    const w=await worker();w.approve();w.api.setScreenshot(async()=>{throw Error('blank chart');});
+    await rejects(()=>w.api.run(true,false),/blank chart/);
+    assert(w.calls()===0&&w.db.failedMail===1,'Wrong failed-capture outcome');
+    w.api.setScreenshot(async()=>({meta:{},data:'x',ext:'png',mime:'image/png'}));
+    await w.api.run(true,false);assert(w.calls()===1&&w.db.sent===1,'Busy lock stuck after failure');
+  });
+  await test('pause during capture prevents submission',async()=>{
+    const w=await worker();w.approve();w.db.mode='running';
+    w.api.setScreenshot(async()=>{await w.api.schedule('paused');return {meta:{}};});
+    await rejects(()=>w.api.run(false,false),/cancelled/);assert(w.calls()===0,'Cancelled capture submitted');
+  });
+  await test('resume cannot revive an in-flight cancelled report',async()=>{
+    const w=await worker();w.approve();w.db.mode='running';
+    w.api.setAccess(async()=>{await w.api.schedule('paused');await rejects(()=>w.api.schedule('running'),/Wait/);return 'mock-token';});
+    await rejects(()=>w.api.run(false,false),/cancelled/);assert(w.calls()===0,'Cancelled report revived');
+  });
+  async function scheduledWorker(){const w=await worker();w.approve();w.db.tokens={refresh:'mock'};return w;}
+  await test('start creates correct interval with delayed first report',async()=>{
+    const w=await scheduledWorker();w.db.config.interval=7;await w.api.schedule('running');
+    assert(w.alarm().periodInMinutes===7&&w.alarm().delayInMinutes===7&&w.calls()===0,'Wrong initial timer');
+    await w.fire();assert(w.calls()===1&&w.db.sentScheduled===1,'Alarm did not send scheduled mail');
+    await w.fire();assert(w.calls()===2&&w.db.sentScheduled===2,'Second interval failed');
+  });
+  await test('pause and stop clear timer and ignore queued alarm',async()=>{
+    const w=await scheduledWorker();await w.api.schedule('running');await w.api.schedule('paused');await w.fire();
+    assert(!w.alarm()&&w.calls()===0,'Paused alarm sent mail');
+    await w.api.schedule('running');await w.api.schedule('stopped');await w.fire();assert(!w.alarm()&&w.calls()===0,'Stopped alarm sent mail');
+  });
+  await test('rapid start followed by pause leaves no active timer',async()=>{
+    const w=await scheduledWorker();await Promise.all([w.api.schedule('running'),w.api.schedule('paused')]);
+    assert(w.db.mode==='paused'&&!w.alarm(),'Start overwrote pause');
+  });
+  await test('resume starts a fresh interval without sending immediately',async()=>{
+    const w=await scheduledWorker();await w.api.schedule('paused');await w.api.schedule('running');
+    assert(w.alarm().delayInMinutes===15&&w.calls()===0,'Resume sent immediately');
+  });
+  await test('restart restores a valid running schedule',async()=>{
+    const w=await scheduledWorker();w.db.mode='running';const restored=await worker(w.db);
+    assert(restored.alarm()?.periodInMinutes===15&&restored.calls()===0,'Restart did not restore timer');
+  });
+  await test('restart pauses invalid or unapproved schedules',async()=>{
+    const w=await scheduledWorker();w.db.mode='running';w.db.config.interval=0;
+    const invalid=await worker(w.db);assert(invalid.db.mode==='paused'&&!invalid.alarm(),'Invalid interval restored');
+    w.db.config.interval=15;w.db.approvedCaptureSignature='';const unapproved=await worker(w.db);
+    assert(unapproved.db.mode==='paused'&&!unapproved.alarm(),'Unapproved schedule restored');
+  });
+  await test('interval edit updates timer and invalid edit pauses it',async()=>{
+    const w=await scheduledWorker();await w.api.schedule('running');
+    await w.message({action:'CONFIG',config:{interval:3}});assert(w.alarm().periodInMinutes===3,'Interval not updated');
+    await w.message({action:'CONFIG',config:{interval:0}});assert(w.db.mode==='paused'&&!w.alarm(),'Invalid edit left timer running');
+  });
+  await test('unrelated alarm does not send mail',async()=>{const w=await scheduledWorker();await w.api.schedule('running');await w.fire('other');assert(w.calls()===0,'Unrelated alarm sent mail');});
+  await test('overlapping alarm is skipped while capture is busy',async()=>{
+    const w=await scheduledWorker();await w.api.schedule('running');let release,entered;
+    const started=new Promise(resolve=>{entered=resolve;});
+    w.api.setScreenshot(async()=>{entered();await new Promise(resolve=>{release=resolve;});return {meta:{},data:'x',ext:'png',mime:'image/png'};});
+    const first=w.fire();await started;await w.fire();release();await first;
+    assert(w.calls()===1,'Overlapping report submitted');
+  });
+  await test('scheduled token renewal failure pauses the timer',async()=>{
+    const w=await scheduledWorker();await w.api.schedule('running');w.api.setAccess(async()=>{throw Error('Microsoft session needs renewal');});
+    await w.fire();assert(w.db.mode==='paused'&&!w.alarm()&&w.calls()===0,'Expired session kept running');
+  });
+  await test('manual results notify while routine scheduled success stays quiet',async()=>{
+    const w=await scheduledWorker();await w.api.run(false,true);
+    assert(w.notifications.at(-1).title==='Screenshot ready to review','Preview alert missing');
+    await w.api.run(true,false);assert(w.notifications.at(-1).title==='Test accepted by Outlook','Test alert missing');
+    const count=w.notifications.length;await w.api.schedule('running');await w.fire();assert(w.notifications.length===count,'Routine success created alert noise');
+    assert(w.notifications.every(n=>n.id==='smart-report-status'),'Notifications accumulate instead of replacing');
+  });
+  await test('Gmail test unlocks Gmail scheduling for only the tested recipients',async()=>{
+    const w=await worker({googleAddress:'test@gmail.com',tokens:{refresh:null},
+      config:{dashboard,to:'receiver@example.com',cc:'copy@example.com',bcc:'blind@example.com',interval:15,sender:'gmail'}});
+    w.approve();w.db.capturePreview='data:image/png;base64,eA==';w.db.capturePreviewSignature=w.api.captureSignature(w.db.config);
+    const g=await w.message({action:'GOOGLE_TEST'});assert(g.ok,g.error);
+    assert(w.gmailCalls()===1&&!!w.db.gmailTestKey,'Gmail test not accepted or recorded');
+    await w.api.schedule('running');await w.fire();assert(w.gmailCalls()===2&&w.db.sentScheduled===1&&w.db.lastCompletedMail.provider==='gmail','Scheduled Gmail did not send');
+    const old=w.gmailCalls();await w.message({action:'CONFIG',config:{to:'changed@example.com'}});
+    assert(w.db.mode==='paused'&&!w.alarm(),'Editing Gmail recipients did not pause running schedule');
+    await rejects(()=>w.api.schedule('running'),/Gmail test/, 'Changed recipient list incorrectly reused Gmail test');
+    assert(w.gmailCalls()===old,'New recipient sent before a new Gmail test');
+  });
+  await test('Gmail test cannot reuse Outlook identity or absent Google approval',async()=>{
+    const w=await worker({googleAddress:'test@gmail.com',tokens:{refresh:null},config:{dashboard,to:'test@example.com',interval:15,sender:'gmail'}});w.approve();
+    await rejects(()=>w.api.schedule('running'),/Gmail test/);
+    assert(!w.alarm(),'Unverified Gmail auto schedule started');
+  });
+  await test('Uncertain Gmail send pauses future schedules and prevents duplicates',async()=>{
+    const w=await worker({googleAddress:'test@gmail.com',tokens:{refresh:null},config:{dashboard,to:'test@example.com',interval:15,sender:'gmail'}});
+    w.approve();w.db.capturePreview='data:image/png;base64,eA==';w.db.capturePreviewSignature=w.api.captureSignature(w.db.config);
+    const testSend=await w.message({action:'GOOGLE_TEST'});assert(testSend.ok,testSend.error);
+    await w.api.schedule('running');w.offline();await w.fire();
+    assert(w.db.mode==='paused'&&w.db.gmailSubmissionPending,'Uncertain Gmail outcome did not pause');
+    const count=w.gmailCalls();await rejects(()=>w.api.schedule('running'),/unconfirmed/);
+    assert(w.gmailCalls()===count,'Uncertain Gmail outcome duplicated');
+  });
+  await test('Outlook one-time test works even if Gmail is selected for scheduled mail',async()=>{
+    const w=await worker({config:{dashboard,to:'test@example.com',interval:15,sender:'gmail'},
+      googleAddress:'test@gmail.com',tokens:{refresh:'mock'}});w.approve();
+    const result=await w.message({action:'TEST'});
+    assert(result.ok,result.error);assert(w.calls()===1&&w.gmailCalls()===0,'Outlook test delivered through wrong provider');
+  });
+  await test('External domain sending requires explicit company policy switch',async()=>{
+    const input={config:{dashboard,to:'someone@externaldomain.org',interval:15,sender:'outlook'}};
+    const blocked=await worker(input);blocked.approve();
+    await rejects(()=>blocked.api.run(true,false),/Recipient not allowed/);
+    assert(blocked.calls()===0,'Restricted policy accidentally allowed external email');
+    const allowed=await worker(input,{allowExternalRecipients:true});allowed.approve();
+    await allowed.api.run(true,false);assert(allowed.calls()===1,'Explicit external domain policy not honored');
+  });
+  await test('Uncertain Outlook submission blocks manual resume until confirmed',async()=>{
+    const w=await worker();w.approve();w.db.tokens={refresh:'mock'};w.offline();
+    await rejects(()=>w.api.run(true,false),/acceptance is unconfirmed/);
+    await rejects(()=>w.api.schedule('running'),/unconfirmed/);
+    const cleared=await w.message({action:'OUTLOOK_CLEAR_PENDING'});
+    assert(cleared.ok&&w.db.submissionPending===false,'Cannot clear reconciled Outlook blocker');
+  });
+  await test('Google stored identity mismatch never starts a schedule',async()=>{
+    const w=await worker({googleAddress:'different@gmail.com',tokens:{refresh:null},
+      config:{dashboard,to:'receiver@example.com',interval:15,sender:'gmail'}});
+    w.approve();
+    // No test was accepted for this sender, so the session must stay stopped.
+    await rejects(()=>w.api.schedule('running'),/Gmail test/);
+    assert(!w.alarm(),'Google identity mismatch started a schedule');
+  });
+  await test('Sender change while Outlook running pauses before switching to Gmail',async()=>{
+    const w=await worker();w.approve();w.db.tokens={refresh:'mock'};await w.api.schedule('running');
+    const r=await w.message({action:'CONFIG',config:{sender:'gmail'}});
+    assert(r.ok&&w.db.mode==='paused'&&!w.alarm(),'Provider change did not pause existing schedule');
+  });
+  // The interactive popup is exercised by tests/ui_browser_qa.py against a
+  // Chromium top-level document. Old iframe about:srcdoc fixtures can be
+  // replaced asynchronously in restricted testing environments and misreport
+  // missing elements despite a correctly rendered extension popup.
+  await test('popup contains all Outlook and Gmail controls without duplicated IDs',async()=>{
+    const html=await (await fetch('../popup.html',{cache:'no-store'})).text();
+    const doc=new DOMParser().parseFromString(html,'text/html');
+    const required=['signIn','googleSignIn','providerBar','connectOutlook','googleVerify','googleSignOut',
+      'dashboard','useTab','capture','viewPreview','continueDashboard','deliveryView','to','cc','bcc',
+      'interval','overviewView','googleTools','googleTest','gmailRecovery','clearGmailPending',
+      'outlookTestRow','test','start','pauseResume','stop','editDashboard','editDelivery',
+      'accountMenu','helpPanel','export','confirmDialog','subject','sender','summarySender','outlookRecovery','clearOutlookPending'];
+    for(const id of required)assert(doc.getElementById(id),'Missing popup control '+id);
+    const ids=[...doc.querySelectorAll('[id]')].map(e=>e.id);
+    assert(new Set(ids).size===ids.length,'Duplicate popup element ID');
+    assert(doc.getElementById('googleTools').closest('#overviewView'),'Gmail test not inside delivery overview');
+    assert(doc.getElementById('providerBar').closest('#appView'),'Providers not part of app view');
+  });
+  document.getElementById('results').textContent=results.join('\n')+'\nTOTAL '+results.length+'; FAILED '+results.filter(x=>x.startsWith('FAIL')).length;
+  document.title=results.some(x=>x.startsWith('FAIL'))?'FAIL':'PASS';
+})().catch(e=>{document.getElementById('results').textContent='HARNESS ERROR: '+e.stack;document.title='FAIL';});
