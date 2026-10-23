@@ -88,7 +88,7 @@ def etl_state_rows(path: Path, source: str, source_id: str) -> int:
     return rows
 
 
-def load_validation_report(path: Path, target_date: str, sources: list[str], *, allow_lake_only: bool = False) -> dict[str, Any]:
+def load_validation_report(path: Path, target_date: str, sources: list[str], *, allow_lake_only: bool = False, coverage_exception: Path | None = None) -> dict[str, Any]:
     if not path.is_file():
         raise SystemExit(f"Cleanup refused: validation report is missing: {path}")
     report = json.loads(path.read_text(encoding="utf-8"))
@@ -98,9 +98,29 @@ def load_validation_report(path: Path, target_date: str, sources: list[str], *, 
             f"({report.get('date')!r} != {target_date!r})."
         )
     lake_only = allow_lake_only and report.get("mode") == "structural"
-    if (report.get("mode") != "full" and not lake_only) or report.get("overall_status") != "PASS":
+    accepted_partial = False
+    if coverage_exception is not None:
+        approval = json.loads(coverage_exception.read_text(encoding="utf-8-sig"))
+        results = report.get("source_results", [])
+        accepted_partial = (
+            lake_only and approval.get("kind") == "operator_confirmed_cdn_loss"
+            and bool(approval.get("reason")) and bool(approval.get("confirmed_at"))
+            and target_date in approval.get("dates", [])
+            and set(sources) == set(approval.get("sources", []))
+            and len(results) == len(sources)
+            and {r.get("source") for r in results} == set(sources)
+            and all(r.get("status") in {"PASS", "PARTIAL"}
+                    and int((r.get("selected") or {}).get("rows", 0)) > 0
+                    and (r.get("selected") or {}).get("files") for r in results)
+            and report.get("hard_failure_count") == sum(r.get("status") == "PARTIAL" for r in results)
+            and report.get("overall_status") in {"FAIL", "PASS"}
+        )
+        if not accepted_partial:
+            raise SystemExit("Cleanup refused: CDN approval does not match coverage-only failures.")
+        report["accepted_cdn_incident"] = approval
+    if (report.get("mode") != "full" and not lake_only) or (report.get("overall_status") != "PASS" and not accepted_partial):
         raise SystemExit("Cleanup refused: a full PASS validation report is required.")
-    if int(report.get("hard_failure_count") or 0) != 0:
+    if int(report.get("hard_failure_count") or 0) != 0 and not accepted_partial:
         raise SystemExit("Cleanup refused: validation report contains hard failures.")
 
     source_results = {str(row.get("source", "")).lower(): row for row in report.get("source_results", [])}
@@ -111,7 +131,7 @@ def load_validation_report(path: Path, target_date: str, sources: list[str], *, 
     for source in sources:
         result = source_results.get(source)
         selected = (result or {}).get("selected") or {}
-        if not result or result.get("status") != "PASS" or not selected.get("full_day"):
+        if not accepted_partial and (not result or result.get("status") != "PASS" or not selected.get("full_day")):
             raise SystemExit(f"Cleanup refused: {source} does not have validated full-day coverage.")
         reconciliation = reconciliations.get(source)
         if not lake_only and (
@@ -276,6 +296,8 @@ def main() -> None:
     parser.add_argument("--stream-name", default="Veto Stream Backup")
     parser.add_argument("--fast-name", default="Veto fast Backup")
     parser.add_argument("--validation-report", required=True)
+    parser.add_argument("--coverage-exception", type=Path,
+                        help="Explicit date/source CDN coverage approval; final-clean/lake equality is still required.")
     parser.add_argument("--allow-lake-only-validation", action="store_true",
                         help="Allow structural PASS for core-only retirement; exact final-clean/lake row checks still apply. Does not mark dashboards complete.")
     parser.add_argument("--audit-dir", required=True)
@@ -327,7 +349,8 @@ def main() -> None:
     for root in lake_roots:
         if not root.is_dir():
             raise SystemExit(f"Cleanup refused: retained lake root is missing: {root}")
-    report = load_validation_report(validation_path, args.date, sources, allow_lake_only=args.allow_lake_only_validation)
+    report = load_validation_report(validation_path, args.date, sources, allow_lake_only=args.allow_lake_only_validation,
+                                    coverage_exception=args.coverage_exception)
 
     source_names = {"fast": args.fast_name, "stream": args.stream_name}
     checks: list[dict[str, Any]] = []
@@ -386,6 +409,7 @@ def main() -> None:
         "status": "planned",
         "validation_report": str(validation_path),
         "validation_mode": report.get("mode"),
+        "accepted_cdn_incident": report.get("accepted_cdn_incident"),
         "validation_generated_at_ist": report.get("generated_at_ist"),
         "lake_roots": [str(path) for path in lake_roots],
         "final_clean_root": str(final_clean_root),
