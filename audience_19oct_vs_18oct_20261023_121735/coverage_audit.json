@@ -1,0 +1,191 @@
+{
+  "daily": [
+    {
+      "date": "2026-10-18",
+      "sources": [
+        {
+          "source": "stream",
+          "status": "PASS",
+          "hard_failure": false,
+          "message": "Full-day source coverage passed.",
+          "selected": {
+            "source": "stream",
+            "date": "2026-10-18",
+            "root": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE",
+            "day_dir": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=18",
+            "priority": 0,
+            "files": [
+              {
+                "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=18\\part_stream_2026_10_17_0.parquet",
+                "rows": 1443787,
+                "start_ist": "2026-10-18T00:00:00+05:30",
+                "end_ist": "2026-10-18T05:29:54+05:30",
+                "start_epoch": 1792261800.002,
+                "end_epoch": 1792281594.988
+              },
+              {
+                "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=18\\part_stream_2026_10_18_0.parquet",
+                "rows": 443921798,
+                "start_ist": "2026-10-18T00:00:02+05:30",
+                "end_ist": "2026-10-18T23:59:59+05:30",
+                "start_epoch": 1792261802.664,
+                "end_epoch": 1792348199.996
+              },
+              {
+                "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=18\\part_stream_2026_10_19_0.parquet",
+                "rows": 513463,
+                "start_ist": "2026-10-18T15:29:22+05:30",
+                "end_ist": "2026-10-18T20:39:46+05:30",
+                "start_epoch": 1792317562.588,
+                "end_epoch": 1792336186.572
+              }
+            ],
+            "rows": 445879048,
+            "start_ist": "2026-10-18T00:00:00+05:30",
+            "end_ist": "2026-10-18T23:59:59+05:30",
+            "start_epoch": 1792261800.002,
+            "end_epoch": 1792348199.996,
+            "coverage_seconds": 86399.994,
+            "start_gap_minutes": 0.0,
+            "end_gap_minutes": 0.0,
+            "max_internal_gap_minutes": 0.0,
+            "overlap_minutes": 640.272,
+            "full_day": true
+          },
+          "candidates": [
+            {
+              "source": "stream",
+              "date": "2026-10-18",
+              "root": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE",
+              "day_dir": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=18",
+              "priority": 0,
+              "files": [
+                {
+                  "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=18\\part_stream_2026_10_17_0.parquet",
+                  "rows": 1443787,
+                  "start_ist": "2026-10-18T00:00:00+05:30",
+                  "end_ist": "2026-10-18T05:29:54+05:30",
+                  "start_epoch": 1792261800.002,
+                  "end_epoch": 1792281594.988
+                },
+                {
+                  "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=18\\part_stream_2026_10_18_0.parquet",
+                  "rows": 443921798,
+                  "start_ist": "2026-10-18T00:00:02+05:30",
+                  "end_ist": "2026-10-18T23:59:59+05:30",
+                  "start_epoch": 1792261802.664,
+                  "end_epoch": 1792348199.996
+                },
+                {
+                  "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=18\\part_stream_2026_10_19_0.parquet",
+                  "rows": 513463,
+                  "start_ist": "2026-10-18T15:29:22+05:30",
+                  "end_ist": "2026-10-18T20:39:46+05:30",
+                  "start_epoch": 1792317562.588,
+                  "end_epoch": 1792336186.572
+                }
+              ],
+              "rows": 445879048,
+              "start_ist": "2026-10-18T00:00:00+05:30",
+              "end_ist": "2026-10-18T23:59:59+05:30",
+              "start_epoch": 1792261800.002,
+              "end_epoch": 1792348199.996,
+              "coverage_seconds": 86399.994,
+              "start_gap_minutes": 0.0,
+              "end_gap_minutes": 0.0,
+              "max_internal_gap_minutes": 0.0,
+              "overlap_minutes": 640.272,
+              "full_day": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "date": "2026-10-19",
+      "sources": [
+        {
+          "source": "stream",
+          "status": "PASS",
+          "hard_failure": false,
+          "message": "Full-day source coverage passed.",
+          "selected": {
+            "source": "stream",
+            "date": "2026-10-19",
+            "root": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE",
+            "day_dir": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=19",
+            "priority": 0,
+            "files": [
+              {
+                "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=19\\part_stream_2026_10_18_0.parquet",
+                "rows": 2597914,
+                "start_ist": "2026-10-19T00:00:00+05:30",
+                "end_ist": "2026-10-19T05:29:54+05:30",
+                "start_epoch": 1792348200.003,
+                "end_epoch": 1792367994.463
+              },
+              {
+                "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=19\\part_stream_2026_10_19_0.parquet",
+                "rows": 17167145,
+                "start_ist": "2026-10-19T05:14:19+05:30",
+                "end_ist": "2026-10-19T23:59:59+05:30",
+                "start_epoch": 1792367059.23,
+                "end_epoch": 1792434599.988
+              }
+            ],
+            "rows": 19765059,
+            "start_ist": "2026-10-19T00:00:00+05:30",
+            "end_ist": "2026-10-19T23:59:59+05:30",
+            "start_epoch": 1792348200.003,
+            "end_epoch": 1792434599.988,
+            "coverage_seconds": 86399.985,
+            "start_gap_minutes": 0.0,
+            "end_gap_minutes": 0.0,
+            "max_internal_gap_minutes": 0.0,
+            "overlap_minutes": 15.587,
+            "full_day": true
+          },
+          "candidates": [
+            {
+              "source": "stream",
+              "date": "2026-10-19",
+              "root": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE",
+              "day_dir": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=19",
+              "priority": 0,
+              "files": [
+                {
+                  "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=19\\part_stream_2026_10_18_0.parquet",
+                  "rows": 2597914,
+                  "start_ist": "2026-10-19T00:00:00+05:30",
+                  "end_ist": "2026-10-19T05:29:54+05:30",
+                  "start_epoch": 1792348200.003,
+                  "end_epoch": 1792367994.463
+                },
+                {
+                  "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=19\\part_stream_2026_10_19_0.parquet",
+                  "rows": 17167145,
+                  "start_ist": "2026-10-19T05:14:19+05:30",
+                  "end_ist": "2026-10-19T23:59:59+05:30",
+                  "start_epoch": 1792367059.23,
+                  "end_epoch": 1792434599.988
+                }
+              ],
+              "rows": 19765059,
+              "start_ist": "2026-10-19T00:00:00+05:30",
+              "end_ist": "2026-10-19T23:59:59+05:30",
+              "start_epoch": 1792348200.003,
+              "end_epoch": 1792434599.988,
+              "coverage_seconds": 86399.985,
+              "start_gap_minutes": 0.0,
+              "end_gap_minutes": 0.0,
+              "max_internal_gap_minutes": 0.0,
+              "overlap_minutes": 15.587,
+              "full_day": true
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "mode": "structural"
+}
