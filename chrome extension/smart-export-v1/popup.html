@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Smart Export</title>
+  <link href="popup.css" rel="stylesheet">
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand"><img src="icons/icon48.png" alt="Smart Export icon" class="brandmark"/><div class="brandtext"><strong>Smart<span>Export</span></strong><small>GRAFANA DATA AUTOMATION</small></div></div>
+      <span class="version">v1.0</span>
+    </header>
+    <main>
+      <section class="hero card">
+        <div class="eyebrow"><span class="live-dot"></span> DAILY GEO INTELLIGENCE</div>
+        <h1>Every day.<br><em>One master file.</em></h1>
+        <p>Collect your Grafana playtime figures by date, state and city. No repetitive CSV downloads.</p>
+      </section>
+
+      <section class="card source">
+        <div class="section-top"><h2><span class="number">01</span> Grafana dashboard</h2><span class="source-tag">PLAYTIME BY GEO</span></div>
+        <label for="dashboardUrl">Dashboard URL</label>
+        <input id="dashboardUrl" type="url" autocomplete="off" spellcheck="false" aria-describedby="filterNote"/>
+        <div class="hstack split source-bottom"><button id="useCurrent" class="btn ghost small" type="button"><span>↗</span> Use open Grafana tab</button><span class="hint">Signed-in tab required</span></div>
+        <p class="notice" id="filterNote">Uses the unfiltered Playtime by GEO metric from your dashboard. Active Grafana ad-hoc filters are blocked to prevent incorrect exports.</p>
+      </section>
+
+      <section class="card dates">
+        <div class="section-top"><h2><span class="number">02</span> Historical export</h2><span class="hint">IST calendar dates</span></div>
+        <div class="two-cols">
+          <div><label for="dateFrom">From</label><input id="dateFrom" type="date" /></div>
+          <div><label for="dateTo">To (inclusive)</label><input id="dateTo" type="date" /></div>
+        </div>
+        <div class="hstack spaced"><button id="last7" class="btn preset" type="button">Last 7 complete days</button><button id="last30" class="btn preset" type="button">Last 30 days</button></div>
+        <button id="syncNow" class="btn primary block" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v3h16v-3"/></svg><span>Fetch & merge data</span><span class="button-tail">›</span></button>
+      </section>
+
+      <section class="card results">
+        <div class="section-top"><h2><span class="number">03</span> Your master dataset</h2><span id="stateChip" class="chip neutral">READY</span></div>
+        <div class="metrics"><div><strong id="rowCount" class="mono">0</strong><small>GEO records</small></div><div><strong id="dayCount" class="mono">0</strong><small>Dates merged</small></div></div>
+        <div class="master-caption" id="rangeDetails">No imported data yet</div>
+        <div class="two-cols action-grid">
+          <button class="btn excel" type="button" id="downloadXlsx"><span class="ext-icon">X</span> Export Excel</button>
+          <button class="btn csv" type="button" id="downloadCsv"><span class="ext-icon">↧</span> Export CSV</button>
+        </div>
+      </section>
+
+      <section class="card scheduler">
+        <div class="section-top"><h2><span class="number">04</span> Automatic daily update</h2><label class="switch" aria-label="Automatic daily sync"><input id="autoDaily" type="checkbox" role="switch"/><span class="track"></span></label></div>
+        <p>Reconcile the last 3 completed IST days, around <strong>8:00 AM IST</strong>, when Chrome is running and your Grafana tab is open.</p>
+        <p class="hint" id="lastSynced">Last successful sync: —</p>
+      </section>
+
+      <div id="feedback" class="feedback" role="status" aria-live="polite">Ready to connect your Grafana dashboard.</div>
+      <details class="advanced">
+        <summary>Advanced & support <span class="chevron">⌄</span></summary>
+        <div class="advanced-body">
+          <div class="details-row"><span>Data source</span><code>Hydrolix · GEO panel 20</code></div>
+          <div class="details-row"><span>Export timezone</span><code>Asia/Kolkata</code></div>
+          <div class="details-row"><span>Data storage</span><code>Local Chrome IndexedDB</code></div>
+          <p class="notice">A daily sync updates the extension’s master dataset. It cannot silently overwrite an existing Excel file on your hard drive. Use Export Excel for the latest combined workbook.</p>
+          <div class="hstack"><button id="logs" class="btn ghost small" type="button">Download diagnostic logs</button><button id="clearData" class="btn danger small" type="button">Clear master data</button></div>
+          <div class="help">Problem? Please contact <strong>Smarth</strong> for support.</div>
+        </div>
+      </details>
+    </main>
+    <footer><div><span class="footer-pulse"></span> Private browser extension</div><span>No tokens · No passwords</span></footer>
+  </div>
+  <script type="module" src="popup.mjs"></script>
+</body>
+</html>
