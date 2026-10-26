@@ -391,6 +391,7 @@ def load_viewer_minute_snapshot(
 def validate_asrun_viewer_coverage(
     events: pd.DataFrame,
     viewer_minute: pd.DataFrame,
+    unavailable_days: set[tuple[str, str]] | None = None,
 ) -> None:
     """Refuse to publish ASRUN audience zeros from a stale partial-day mart."""
     ads = events.loc[events["is_ad"]].copy()
@@ -416,6 +417,8 @@ def validate_asrun_viewer_coverage(
         source_coverage = coverage.loc[coverage["source"].astype(str).eq(source)]
         by_date = source_coverage.set_index("log_date")
         for row in required.itertuples(index=False):
+            if (source, row.log_date) in (unavailable_days or set()):
+                continue
             if row.log_date not in by_date.index:
                 problems.append(f"{source.upper()} {row.log_date}: no identity-minute data")
                 continue
@@ -8445,6 +8448,12 @@ audienceMinuteMap=function(source){
   state.coverage=new Set(viewerScope(source).map(row=>minuteKey(row.minute_ist)));
   return state;
 };
+const originalAudienceScopeMap=audienceScopeMap;
+audienceScopeMap=function(scope){
+  const map=originalAudienceScopeMap(scope);
+  map.source=String(scope.source).toLowerCase();
+  return map;
+};
 function audienceValue(event,state){
   const window=fiveMinuteWindow(event),map=state&&state.map instanceof Map?state.map:new Map();
   const coverage=state&&state.coverage instanceof Set?state.coverage:new Set();
@@ -8457,6 +8466,10 @@ function audienceValue(event,state){
 }
 function audienceScopeValue(event,state){
   const window=fiveMinuteWindow(event),map=state instanceof Map?state:state.map;
+  const day=String(event.on_air_start_ist).slice(0,10);
+  if((DATA.unavailable_viewer_days||[]).some(row=>row.source===map.source&&row.date===day)){
+    return {window:window.label,total:null,available:false};
+  }
   let total=0;
   for(const key of window.keys)total+=Number(map.get(key)||0);
   return {window:window.label,total,available:true};
@@ -8559,6 +8572,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--parsed-dir", type=Path, default=PARSED_DIR)
     parser.add_argument("--output-dir", type=Path, default=OUTPUT_DIR)
+    parser.add_argument('--unavailable-viewer-day', action='append', default=[],
+                        help='Explicitly omit audience source/date, e.g. stream:2026-10-25; displayed as unavailable.')
     parser.add_argument(
         "--input",
         type=Path,
@@ -8578,6 +8593,18 @@ def main() -> None:
         help="Print per-stage cache decisions and elapsed times.",
     )
     args = parser.parse_args()
+    unavailable_days = set()
+    for value in args.unavailable_viewer_day:
+        source, separator, day = value.partition(':')
+        if source not in {'fast', 'stream'} or not separator:
+            parser.error('Unavailable viewer day must be fast:YYYY-MM-DD or stream:YYYY-MM-DD')
+        try:
+            parsed_day = datetime.strptime(day, '%Y-%m-%d').date().isoformat()
+        except ValueError:
+            parser.error('Invalid unavailable viewer date')
+        if parsed_day != day:
+            parser.error('Unavailable viewer date must use YYYY-MM-DD')
+        unavailable_days.add((source, day))
     PARSED_DIR = args.parsed_dir.resolve()
     OUTPUT_DIR = args.output_dir.resolve()
     configure_logging(args.verbose)
@@ -8633,7 +8660,12 @@ def main() -> None:
         args.identity_minute,
         [*fct_ranges, *nct_ranges],
     )
-    validate_asrun_viewer_coverage(events, viewer_minute)
+    for source, day in unavailable_days:
+        viewer_minute = viewer_minute.loc[~(
+            viewer_minute['source'].astype(str).eq(source)
+            & viewer_minute['log_date'].astype(str).str[:10].eq(day)
+        )].copy()
+    validate_asrun_viewer_coverage(events, viewer_minute, unavailable_days)
     youtube = timed_step("YouTube concurrency marts", build_youtube_marts)
     amagi = timed_step("Amagi concurrency mart", build_amagi_minute_mart, events)
     viewer_snapshot_path = PARSED_DIR / "audience_ops_identity_minute_asrun_dates.parquet"
@@ -8648,6 +8680,7 @@ def main() -> None:
         fct,
         nct,
     )
+    payload['unavailable_viewer_days'] = [dict(source=s, date=d) for s, d in sorted(unavailable_days)]
     core_payload, source_chunks = split_dashboard_payload(payload)
     (OUTPUT_DIR / "asrun_ad_events.csv").write_text(
         events.loc[events["is_ad"]].to_csv(index=False), encoding="utf-8-sig"
@@ -8663,7 +8696,12 @@ def main() -> None:
         amagi["minute"],
     )
     html_path = OUTPUT_DIR / "asrun_delivery_demo.html"
-    html_path.write_text(render_dashboard(core_payload), encoding="utf-8")
+    rendered = render_dashboard(core_payload)
+    if unavailable_days:
+        notice = '; '.join(f'{s.upper()} audience unavailable on {d}' for s, d in sorted(unavailable_days))
+        rendered = rendered.replace('<body>', '<body><div role="status" style="padding:12px 24px;background:#fff4d6;color:#624600">'
+                                    + html.escape(notice) + '. Missing values are not zero; combined totals are unavailable.</div>', 1)
+    html_path.write_text(rendered, encoding="utf-8")
     print(f"Parsed events : {len(events):,}")
     print(f"Ad events     : {payload['kpis']['ad_plays']:,}")
     print(f"Viewer rows   : {len(viewer_minute):,} (Audience Operations identity-minute snapshot)")

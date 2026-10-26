@@ -6,6 +6,7 @@ import json
 import logging
 import os
 import tempfile
+import time
 from pathlib import Path
 from typing import Any
 
@@ -17,7 +18,15 @@ LOGGER = logging.getLogger("veto.asrun.cache")
 
 def source_file_fingerprint(path: Path) -> dict[str, int]:
     """Return the stable local metadata used by incremental source manifests."""
-    stat = path.stat()
+    for attempt in range(3):
+        try:
+            stat = path.stat()
+            break
+        except OSError as exc:
+            if getattr(exc, 'winerror', None) not in {59, 64, 121} or attempt == 2:
+                raise
+            LOGGER.warning('Transient network error checking %s; retrying', path)
+            time.sleep(attempt + 1)
     return {"size": int(stat.st_size), "mtime_ns": int(stat.st_mtime_ns)}
 
 
