@@ -423,6 +423,12 @@ try {
 
     if ($SkipDownload) {
         if ($SingleSourceMode) { throw "-SkipDownload is not supported with -SingleSourceMode." }
+        $downloadPrepared = Join-Path $WorkspaceRoot ("output\state\prepared_lake\{0}.json" -f $TargetDate.ToString("yyyy-MM-dd"))
+        $hasVerifiedPrepared = Test-Path -LiteralPath $downloadPrepared
+        if ($hasVerifiedPrepared) {
+            & $DefaultVenvPython (Join-Path $WorkspaceRoot 'src\tools\prepared_priority_lake.py') --verify $downloadPrepared --base $DefaultLocalRoot
+            if ($LASTEXITCODE -ne 0) { throw 'Prepared lake verification failed before skipping retired raw inputs.' }
+        }
         $downloadResultRoot = Join-Path $WorkspaceRoot "output\state\downloads"
         foreach ($source in @("stream", "fast")) {
             $resultPath = Join-Path $downloadResultRoot ("{0}_{1}.json" -f $TargetDate.ToString("yyyy-MM-dd"), $source)
@@ -440,7 +446,7 @@ try {
                 [int64]$downloadResult.remote_count -le 0 -or
                 [int64]$downloadResult.remote_count -ne [int64]$downloadResult.local_count -or
                 [int64]$downloadResult.remote_bytes -ne [int64]$downloadResult.local_bytes -or
-                -not (Test-Path -LiteralPath $downloadResult.local_path)
+                (-not $hasVerifiedPrepared -and -not (Test-Path -LiteralPath $downloadResult.local_path))
             ) {
                 throw "Validated prefetch result did not pass integrity checks: $resultPath"
             }

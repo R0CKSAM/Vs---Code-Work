@@ -158,6 +158,12 @@ function Get-DateCompletion {
 
     $iso = $Date.ToString("yyyy-MM-dd")
     $marker = Join-Path $DailyStateDir "$iso.json"
+    $incident = Join-Path $StateDir "cdn_incident_closeout\$iso.json"
+    if (Test-Path -LiteralPath $incident) {
+        & $GuardPython (Join-Path $WorkspaceRoot 'src\tools\verify_cdn_closeout.py') --etl-root $WorkspaceRoot --date $iso | ForEach-Object { Write-Host $_ }
+        if ($LASTEXITCODE -ne 0) { throw "CDN closeout evidence failed verification for $iso." }
+        return [pscustomobject]@{ Complete = $false; Kind = 'accepted_source_gap'; Path = $incident; OverallStatus = 'PARTIAL' }
+    }
     if (Test-Path -LiteralPath $marker) {
         try {
             $payload = Get-Content -Raw -LiteralPath $marker | ConvertFrom-Json
@@ -384,6 +390,12 @@ try {
     foreach ($dateValue in $dates) {
         $iso = $dateValue.ToString("yyyy-MM-dd")
         $existing = $completionByDate[$iso]
+        if ($existing -and $existing.Kind -eq 'accepted_source_gap' -and -not $Force) {
+            Write-Host "$iso accepted CDN source gap; skipping without creating a full-day checkpoint."
+            $state['last_processed_exception_date'] = $iso
+            Save-RecoveryState -State $state -Status 'catching_up'
+            continue
+        }
         if ($existing -and -not $Force) {
             Write-Host "[$(Get-Date -Format o)] $iso already complete via $($existing.Kind); advancing checkpoint."
             Save-DailyCheckpoint -Date $dateValue -Evidence $existing
