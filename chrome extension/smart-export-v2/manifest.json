@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Smart Export \u2014 Analytics Suite",
+  "short_name": "Smart Export",
+  "version": "2.0.0",
+  "description": "Day-wise Grafana reports for KPIs, channels, GEO, devices, content and hourly traffic. One Excel master; no stored credentials.",
+  "permissions": [
+    "storage",
+    "alarms",
+    "tabs",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://grafana-apj.trafficpeak.live/*"
+  ],
+  "background": {
+    "service_worker": "background.mjs",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Smart Export",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

@@ -1,0 +1,16 @@
+PASS Grafana URL matches exact expected UID
+PASS Active filter refuses unsupported export
+PASS Invalid host refused
+PASS Bad date refused
+PASS No future or ongoing day allowed
+PASS Date ordering and 366 day cap
+PASS IST midnight is UTC 18:30 previous day
+PASS Preset takes only completed IST dates
+PASS SQL preserves original GEO metric filters
+PASS Parses day-wise Grafana dataframe
+PASS Rejects result date outside requested range
+PASS Rejects duplicate groups before database commit
+PASS CSV protects formula injection and sorts
+PASS Daily summary
+PASS XLSX is a nonempty ZIP
+PASS 15 assertions. Workbook fixture: /mnt/data/smart-export-v1/tests/sample-built.xlsx

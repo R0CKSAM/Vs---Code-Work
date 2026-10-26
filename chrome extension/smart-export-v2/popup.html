@@ -1,0 +1,48 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Smart Export</title><link rel="stylesheet" href="popup.css"></head>
+<body><div class="shell">
+  <header class="topbar"><div class="brand"><img class="brandmark" src="icons/icon48.png" alt="Smart Export"><div class="brandtext"><strong>smart<span>export</span></strong><small>GRAFANA ANALYTICS ENGINE</small></div></div><span class="version">v2.0</span></header>
+  <main>
+    <section class="hero"><div class="eyebrow"><span class="live-dot"></span> YOUR DATA, ONE WORKBOOK</div><h1>Choose. Fetch. <em>Analyze.</em></h1><p>Six ready-made Grafana reports. Day-wise master data, Excel exports and optional daily updates.</p></section>
+    <section class="card">
+      <div class="section-top"><h2><span class="number">01</span> Report type</h2><span class="pill">6 DATA SOURCES</span></div>
+      <label for="reportType">What would you like to export?</label>
+      <div class="select-wrap"><select id="reportType" aria-describedby="reportDescription">
+        <option value="executive">Executive Workbook — All 6 reports</option>
+        <option value="kpis">Daily KPIs — Users, sessions, views</option>
+        <option value="channel">Channel Performance</option>
+        <option value="geo">GEO Performance</option>
+        <option value="devices">Device &amp; OS Performance</option>
+        <option value="content">Popular Content</option>
+        <option value="traffic">Traffic Trends — Hourly</option>
+      </select><span class="select-arrow" aria-hidden="true">⌄</span></div>
+      <p class="hint report-desc" id="reportDescription">Six report sheets plus definitions.</p>
+    </section>
+    <section class="card">
+      <div class="section-top"><h2><span class="number">02</span> Grafana source</h2><span class="hint">Signed-in tab</span></div>
+      <div class="source-inline"><input type="url" id="dashboardUrl" autocomplete="off" spellcheck="false" aria-label="Grafana dashboard URL"><button id="useCurrent" class="btn secondary" type="button" title="Use the currently open Grafana dashboard">Use open tab</button></div>
+      <p class="hint note">The dashboard must be open in Chrome. Ad-hoc Grafana filters are blocked to avoid incorrect data.</p>
+    </section>
+    <section class="card">
+      <div class="section-top"><h2><span class="number">03</span> Export range</h2><span class="hint">IST · Completed days</span></div>
+      <div class="two-cols"><div><label for="dateFrom">From</label><input id="dateFrom" type="date"></div><div><label for="dateTo">To (inclusive)</label><input id="dateTo" type="date"></div></div>
+      <div class="preset-row"><button id="last7" class="btn preset" type="button">Last 7 days</button><button id="last30" class="btn preset" type="button">Last 30 days</button></div>
+      <button id="syncNow" class="btn primary full" type="button"><span class="btn-icon">↧</span><span id="syncLabel">Fetch &amp; merge data</span><span class="tail">→</span></button>
+    </section>
+    <section class="card progress-card"><div class="section-top"><h2><span class="number">04</span> Your master</h2><span id="stateChip" class="chip neutral">READY</span></div>
+      <div class="metrics"><div><strong id="rowCount">0</strong><small>Rows in report</small></div><div><strong id="dayCount">0</strong><small>Days covered</small></div><div><strong id="variantCount">0<span class="slash">/6</span></strong><small>Report datasets</small></div></div>
+      <p id="rangeDetails" class="range-details">No data fetched yet.</p>
+      <div class="two-cols export-actions"><button id="downloadXlsx" class="btn excel" type="button"><span class="glyph">X</span> Export Excel</button><button id="downloadCsv" class="btn csv" type="button"><span class="glyph">↧</span> Export CSV</button></div>
+    </section>
+    <section class="card scheduler"><div class="section-top"><h2><span class="number">05</span> Daily updates</h2><label class="switch" title="Enable automatic daily reconciliation"><input id="autoDaily" type="checkbox" role="switch" aria-label="Automatic daily update"><span class="track"></span></label></div>
+      <p>Refresh the selected report around <strong>8 AM IST</strong>. Recent three completed days are reconciled when Chrome and Grafana are open.</p>
+      <p class="hint" id="lastSynced">Last sync: —</p>
+    </section>
+    <div id="feedback" class="feedback" role="status" aria-live="polite">Select a report and fetch your Grafana data.</div>
+    <details class="advanced"><summary>Advanced &amp; support <span class="chevron" aria-hidden="true">⌄</span></summary><div class="advanced-body">
+      <div class="details-row"><span>Data</span><code>Hydrolix · Veto_Streamin.logs</code></div><div class="details-row"><span>Master</span><code>Local Chrome IndexedDB</code></div><div class="details-row"><span>Timezone</span><code>Asia/Kolkata</code></div>
+      <p class="notice">Distinct daily users/IPs are <strong>not additive</strong> across dates. Excel downloads are snapshots: this extension does not overwrite an existing file on your PC.</p>
+      <div class="help-row"><button id="logs" class="btn secondary" type="button">Export error logs</button><button id="clearData" class="btn danger" type="button">Clear v2 master</button></div>
+      <p class="help">Need help? Please contact <strong>Smarth</strong> for support. Legacy v1 GEO data remains available after an upgrade.</p>
+    </div></details>
+  </main><footer><span><span class="footer-pulse"></span> Private Chrome extension</span><span>No passwords saved</span></footer>
+</div><script type="module" src="popup.mjs"></script></body></html>

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Smart Export</title><link rel="stylesheet" href="popup.css"></head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand"><img src="icons/icon48.png" class="brandmark" alt="Smart Export logo"><div class="brandtext"><strong>smart<span>export</span></strong><small>GRAFANA DATA STUDIO</small></div></div>
+    <span class="version">v2.1.1</span>
+  </header>
+  <main>
+    <section class="intro">
+      <div class="eyebrow"><i class="live-dot"></i> ASK YOUR DATA</div>
+      <h1>Pick what matters.<br><em>We'll organize the rest.</em></h1>
+      <p>No SQL, no panel hunting. Choose a question or pick exactly the numbers you need.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="quickHeading">
+      <div class="section-heading"><h2 id="quickHeading">Start with a question</h2><span class="overline">QUICK PICKS</span></div>
+      <div id="quickPicks" class="quick-grid" role="group" aria-label="Suggested report combinations"></div>
+    </section>
+
+    <section class="panel select-panel" aria-labelledby="metricsHeading">
+      <div class="section-heading"><div><h2 id="metricsHeading">Choose your numbers</h2><p class="subtext">Search, tick and combine supported metrics.</p></div><span id="selectedCount" class="count-chip">0 selected</span></div>
+      <div class="searchbox"><span class="search-icon" aria-hidden="true">⌕</span><input id="metricSearch" type="search" placeholder="Search users, views, GEO, devices…" aria-label="Search available metrics" autocomplete="off"><button id="clearSearch" type="button" aria-label="Clear metric search" title="Clear search">×</button></div>
+      <div id="metricCatalog" class="metric-list" aria-label="Available Grafana metrics"></div>
+      <div class="selected-zone"><div class="summary-line"><span><strong id="sourceCount">0</strong> report categories</span><span id="sheetHint">No fields selected</span></div><div id="selectedChips" class="chips" aria-label="Chosen metrics"></div></div>
+      <p class="smart-note"><span aria-hidden="true">✦</span> Smart Export keeps incompatible groupings on separate Excel tabs. Device IDs, IPs and sessions are never confused or added across days.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="sourceHeading">
+      <div class="section-heading"><h2 id="sourceHeading">Where and when?</h2><span class="overline">IST TIMEZONE</span></div>
+      <label for="dashboardUrl">Grafana dashboard</label>
+      <div class="source-row"><input id="dashboardUrl" type="url" autocomplete="off" spellcheck="false" placeholder="Paste your Grafana dashboard URL"><button id="useCurrent" class="btn outline" type="button">Use open tab</button></div>
+      <div class="date-grid"><div><label for="dateFrom">From</label><input id="dateFrom" type="date"></div><div><label for="dateTo">To (inclusive)</label><input id="dateTo" type="date"></div></div>
+      <div class="range-row"><button id="last7" type="button" class="btn subtle">Last 7 completed days</button><button id="last30" type="button" class="btn subtle">Last 30 days</button></div>
+      <p class="subtext date-note">For multiple categories, fetch up to 31 days at once. All data uses completed IST dates.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="previewHeading">
+      <div class="section-heading"><h2 id="previewHeading">Preview your Excel</h2><span id="stateChip" class="state-chip">READY</span></div>
+      <div class="summary-stats"><div><strong id="rowCount">0</strong><small>Stored rows</small></div><div><strong id="dayCount">0</strong><small>Dates</small></div><div><strong id="variantCount">0</strong><small>Datasets ready</small></div></div>
+      <div id="exportFilterBox" class="filter-box" hidden>
+        <div class="filter-head"><span>Optional: filter rows in the downloaded file</span><span class="muted-tip">Original data stays intact</span></div>
+        <div class="filter-grid"><div class="select-wrap"><select id="filterField" aria-label="Dimension to filter"></select><span class="chevron" aria-hidden="true"></span></div><input id="filterText" type="text" maxlength="120" placeholder="e.g. Mumbai, News, Fire TV" aria-label="Filter export results"></div>
+      </div>
+      <div class="preview-head"><span id="previewName">Nothing saved yet</span><span id="previewMeta">—</span></div>
+      <div id="previewScroll" class="preview-scroll"><table id="previewTable" aria-label="Preview of selected exported columns"><thead></thead><tbody></tbody></table><p id="previewEmpty" class="preview-empty">Fetch selected data to preview its columns and example rows.</p></div>
+      <p class="range-details" id="rangeDetails">No saved history for these selections.</p>
+    </section>
+
+    <section class="action-panel">
+      <button id="syncNow" type="button" class="btn primary large"><span class="button-icon">↧</span><span id="syncLabel">Fetch selected data</span><span class="button-arrow">→</span></button>
+      <div class="action-grid"><button id="downloadXlsx" type="button" class="btn excel"><span class="file-badge">X</span> Export Excel</button><button id="downloadCsv" type="button" class="btn csv"><span class="file-badge">↓</span> Export CSV</button></div>
+      <div id="feedback" role="status" aria-live="polite" class="feedback">Choose the metrics you need, then fetch your Grafana data.</div>
+    </section>
+
+    <details class="settings" id="automationSettings">
+      <summary><span>Daily updates &amp; saved views</span><span class="chev" aria-hidden="true"></span></summary>
+      <div class="settings-body">
+        <div class="schedule-row"><div><strong>Daily auto-update</strong><p>Refresh these same report categories around 8 AM IST when Chrome and Grafana are open.</p></div><label class="toggle" title="Enable daily updates"><input type="checkbox" id="autoDaily" role="switch" aria-label="Automatic daily update"><span class="toggle-track"></span></label></div>
+        <p id="lastSynced" class="hint">Last update: —</p>
+        <div class="splitter"></div>
+        <label for="presetName">Save your favorite selection</label>
+        <div class="preset-save"><input id="presetName" type="text" placeholder="e.g. Daily channel report" maxlength="40"><button id="savePreset" class="btn outline" type="button">Save view</button></div>
+        <label for="savedPresets">My saved views</label>
+        <div class="preset-picker"><div class="select-wrap"><select id="savedPresets" aria-label="Previously saved report selections"><option value="">Choose a saved view…</option></select><span class="chevron" aria-hidden="true"></span></div><div class="preset-actions"><button id="loadPreset" class="btn outline" type="button">Load selected view</button><button id="deletePreset" class="btn danger-quiet" type="button" title="Delete chosen saved view">Delete view</button></div></div>
+      </div>
+    </details>
+    <details class="settings" id="advancedSettings">
+      <summary><span>Advanced &amp; help</span><span class="chev" aria-hidden="true"></span></summary>
+      <div class="settings-body">
+        <div class="key-value"><span>Source</span><code>Hydrolix · Veto_Streamin.logs</code></div>
+        <div class="key-value"><span>Storage</span><code>Local Chrome IndexedDB</code></div>
+        <div class="key-value"><span>Queries</span><code>Fixed, validated source templates</code></div>
+        <p class="hint">Supports six verified datasets from your dashboard. Some panels (including five-minute series and GEO IP-only counts) are not yet mapped. You can inspect the live panel catalog below without executing unsupported queries.</p>
+        <button id="scanPanels" class="btn outline full" type="button">Explore all Grafana sections</button><div id="panelBrowser" class="panel-browser" aria-live="polite"></div>
+        <div class="action-grid"><button id="logs" class="btn outline" type="button">Download error logs</button><button id="classic" class="btn outline" type="button">Classic v2 interface</button></div>
+        <button id="clearData" class="btn danger-quiet full" type="button">Clear this dashboard's v2 data master</button>
+        <p class="support">Need help? <strong>Please contact Smarth for support.</strong></p>
+      </div>
+    </details>
+  </main>
+  <footer class="dock"><span class="dock-label"><i class="footer-light"></i> Local &amp; private</span><button id="dockFetch" type="button" class="dock-action">Fetch data <span aria-hidden="true">→</span></button><button id="dockExcel" type="button" class="dock-download">Excel ↧</button></footer>
+</div>
+<script type="module" src="popup.mjs"></script>
+</body></html>
