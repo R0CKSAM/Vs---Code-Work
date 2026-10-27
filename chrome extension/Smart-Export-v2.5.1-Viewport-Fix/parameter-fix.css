@@ -1,0 +1,219 @@
+/* Smart Export 2.5.1 — full-window layout fix.
+   This stylesheet intentionally follows the v2.4 stylesheet and overrides
+   the legacy #view-build two-column grid. It does not alter data/query code. */
+:root{color-scheme:dark}
+html,body{margin:0;width:100%;min-width:0;height:100%;}
+body.parameter-studio{background:#10151b;color:#f2f5fa;font-size:14px;}
+body.parameter-studio .shell{
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  grid-template-rows:68px minmax(0,1fr)!important;
+  grid-template-areas:none!important;width:100%!important;max-width:none!important;
+  min-width:0;height:100dvh;min-height:0;overflow:hidden;
+  background:#10151b;
+}
+body.parameter-studio .sidebar,body.parameter-studio .topbar,body.parameter-studio .dock{display:none!important}
+body.parameter-studio .ps-header{
+  grid-column:1;grid-row:1;display:flex;position:relative;z-index:20;
+  margin:0!important;padding:0 clamp(16px,1.8vw,32px)!important;width:100%;min-width:0;height:68px;
+  border:0;border-bottom:1px solid #303c4b;background:#121a23;gap:clamp(16px,2vw,32px);
+}
+.ps-header .ps-brand{flex:1 1 auto;gap:12px;min-width:0;}
+.ps-header .ps-bars{font-size:31px;min-width:33px;letter-spacing:-4px;line-height:1;color:#65ed78}
+.ps-header .ps-brand strong{font-size:23px;letter-spacing:-.7px}
+.ps-header .ps-subtitle{font-size:12px;padding-left:17px;max-width:370px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ps-navigation{display:flex;flex:0 1 auto;align-items:center;gap:6px;min-width:0;}
+.ps-navigation button{appearance:none;min-height:37px;white-space:nowrap;border:1px solid transparent;border-radius:7px;background:transparent;padding:8px 12px;color:#a9b7c9;font-size:12px;font-weight:680;cursor:pointer;}
+.ps-navigation button:hover{color:#fff;background:#1c2835}
+.ps-navigation button[aria-pressed=true]{color:#65ed78;background:#1b3426;border-color:#346b46}
+.ps-navigation button:focus-visible{outline:2px solid #65ed78;outline-offset:2px}
+.ps-header .ps-status{flex:0 0 auto;font-size:12px;max-width:190px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.parameter-studio .workbench{
+  display:block!important;grid-column:1!important;grid-row:2!important;grid-area:auto!important;
+  width:100%!important;max-width:none!important;min-width:0;margin:0!important;padding:0!important;
+  min-height:0;height:100%;overflow:hidden!important;
+}
+body.parameter-studio .view{width:100%!important;max-width:none!important;height:100%;min-width:0;min-height:0;}
+/* This is the root-cause correction: the old layout still had
+   #view-build { display:grid; grid-template-columns:38% 1fr }. */
+body.parameter-studio #view-build{
+  display:block!important;grid-template-columns:none!important;grid-template-rows:none!important;
+  width:100%!important;max-width:none!important;height:100%;margin:0!important;
+  padding:0!important;overflow-y:auto!important;overflow-x:hidden!important;
+  scrollbar-color:#4b5c6b transparent;
+}
+body.parameter-studio #view-build .ps-shell{
+  display:block;width:100%!important;max-width:none!important;min-width:0;
+  height:auto;min-height:100%;margin:0!important;padding:18px clamp(16px,1.4vw,28px) 94px!important;
+  background:#10151b;
+}
+/* Full-width date toolbar */
+body.parameter-studio .ps-datebar{
+  display:flex;width:100%;align-items:center;gap:12px;flex-wrap:wrap;
+  min-width:0;padding:13px 17px;margin:0;background:#181f28;border:1px solid #303c4b;
+  border-radius:10px;
+}
+.ps-datebar>strong{font-size:13px;min-width:79px;margin-right:4px}
+.ps-datebar label{display:flex!important;align-items:center;flex:0 1 auto;gap:9px;margin:0!important;white-space:nowrap;color:#a6b5c6!important;font-weight:600!important;}
+.ps-datebar input[type=date]{flex:0 0 auto;width:166px!important;min-width:140px!important;min-height:40px;border:1px solid #384b5e!important;border-radius:6px;background:#111a24!important;color:#edf6ff!important;color-scheme:dark;padding:8px 9px!important;font-size:13px;}
+.ps-presets{display:flex;gap:7px;flex-wrap:wrap;align-items:center;}
+.ps-presets button{min-height:39px;flex:none;font-size:12px;padding:8px 12px;}
+.ps-presets button.active{border-color:#65ed78;color:#65ed78;background:#193327}
+.ps-tz{font-size:12px;color:#aab9ca;margin-left:auto;white-space:nowrap}
+.ps-validation{min-height:20px;padding:5px 2px 1px;font-size:12px}
+/* Main wide workspace: flexible 73% + 27% with realistic minimum sizes. */
+.ps-main{display:grid!important;grid-template-columns:minmax(0,2.7fr) minmax(310px,1fr)!important;gap:14px;width:100%;min-width:0;align-items:stretch;}
+.ps-catalog-panel,.ps-selection{min-width:0;background:#181f28;border:1px solid #303c4b;border-radius:10px;box-shadow:none}
+.ps-catalog-panel{display:flex;flex-direction:column;min-height:490px;height:min(665px,calc(100dvh - 240px));max-height:none!important;}
+.ps-selection{display:flex;flex-direction:column;gap:12px;min-height:490px;height:min(665px,calc(100dvh - 240px));max-height:none!important;padding:18px;}
+.ps-sectionhead{padding:18px 18px 13px;gap:16px;min-width:0;}
+.ps-sectionhead>div:first-child{flex:1;min-width:0}
+.ps-sectionhead h1{font-size:21px;line-height:1.1;margin:0 0 6px;white-space:normal;}
+.ps-sectionhead p{font-size:12px;line-height:1.45}
+.ps-search-controls{display:flex;align-items:center;gap:8px;flex:none;min-width:0}
+.ps-search-controls input{width:clamp(178px,17vw,280px);min-width:0;height:40px;padding:10px 12px}
+.ps-search-controls button{min-height:40px;font-size:12px;padding:8px 13px}
+.ps-tabs{display:flex;flex:none;flex-wrap:nowrap;overflow-x:auto;min-width:0;gap:8px;margin:0 18px;scrollbar-width:thin;scrollbar-color:#617086 transparent}
+.ps-tabs button{padding:11px 15px;white-space:nowrap;font-size:13px;}
+.ps-metrics-scroll{overflow-y:auto;min-height:0;flex:1;padding:14px 18px 16px;scrollbar-color:#5e6d82 transparent;scrollbar-width:thin;}
+.ps-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:11px;}
+.ps-metric{min-height:123px;display:flex;flex-direction:column;gap:8px;border-radius:7px;padding:14px 14px 12px;background:#1b2530;text-align:left;color:#f2f5fa;border:1px solid #354458;}
+.ps-metric-top{display:flex;min-width:0;justify-content:space-between;align-items:start;gap:14px}
+.ps-metric-title{font-size:13px;font-weight:700;line-height:1.35;min-width:0;overflow-wrap:normal;word-break:normal;hyphens:none;}
+.ps-check{flex:0 0 20px;width:20px;height:20px;border-radius:4px;font-size:14px}
+.ps-metric-help{font-size:11px;line-height:1.48;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;min-width:0;}
+.ps-metric.selected{border-color:#65ed78;box-shadow:inset 0 0 0 1px rgba(101,237,120,.08);background:#1c332b}
+.ps-metric:hover:not(:disabled){border-color:#91cfa7;transform:translateY(-1px)}
+.ps-breakdowns{display:flex;min-width:0;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:14px 18px;gap:10px 16px}
+.ps-breakdowns>div:first-child{flex:1 1 215px}
+.ps-breakdown-row{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.ps-breakdown-row button{min-height:38px;padding:8px 13px}
+.ps-side-head h2{font-size:21px;margin:0}
+.ps-selected-list{min-height:0;overflow-y:auto;flex:1;border-radius:7px;padding:8px;scrollbar-width:thin;scrollbar-color:#607184 transparent}
+.ps-selected-row{gap:10px;padding:10px;font-size:12px;align-items:center;min-height:40px}
+.ps-selected-row span{min-width:0;line-height:1.3;overflow-wrap:anywhere}
+.ps-selected-row button{flex:none;width:28px;height:28px;min-width:28px;border-radius:5px;display:grid;place-items:center;}
+.ps-selected-row button:hover{background:#243344;color:#fff}
+.ps-side-row{padding-top:10px;gap:6px;}
+.ps-side-row select{width:100%;min-width:0;max-width:100%;background:#111a24!important;color:#f2f5fa!important;color-scheme:dark}
+.ps-hint{padding:11px;font-size:11px}
+.ps-secondary-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.ps-secondary-actions button{white-space:normal;min-width:0;font-size:11px;line-height:1.3;padding:10px 8px;}
+/* Footer action bar only belongs to the builder view. It never overlays the metric panel. */
+.ps-actionbar{position:fixed;left:0;right:0;bottom:0;z-index:25;min-height:67px;padding:11px clamp(18px,1.8vw,30px);gap:16px;background:rgba(19,26,35,.98);border-top:1px solid #303c4b;box-shadow:0 -7px 24px #070b1175;}
+.ps-actionbar span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.ps-actionbar button{min-height:42px;padding:9px 18px;font-size:12px}
+.ps-actionbar>div{gap:9px;flex:none}
+/* Modal and feedback */
+#psDialog{max-width:calc(100vw - 32px);width:min(630px,92vw);max-height:calc(100dvh - 36px);padding:22px;background:#1b2532;color:#f2f5fa;}
+#psDialog .ps-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+#psPreviewBody{font-size:12px;line-height:1.6;overflow-wrap:anywhere;white-space:pre-wrap;}
+.ps-shell input[type=search], .ps-shell button, .ps-shell select{box-sizing:border-box}
+body.parameter-studio #view-results,body.parameter-studio #view-automation{padding:24px clamp(20px,2vw,38px) 26px;overflow:auto;scrollbar-color:#536579 transparent;background:#10151b;color:#f2f5fa;}
+/* Existing Results and Settings pages remain functional, but share the dark shell. */
+body.parameter-studio #view-results .view-heading h1,body.parameter-studio #view-automation .view-heading h1{color:#f2f5fa}
+body.parameter-studio #view-results .view-heading p,body.parameter-studio #view-automation .view-heading p{color:#9aaac0}
+body.parameter-studio #view-results .panel,body.parameter-studio #view-automation .panel,body.parameter-studio #view-automation .settings{background:#181f28;border:1px solid #303c4b;color:#edf3fa;box-shadow:none;border-radius:10px;}
+body.parameter-studio #view-results h2,body.parameter-studio #view-automation h2,body.parameter-studio #view-automation summary{color:#f2f5fa}
+body.parameter-studio #view-results input,body.parameter-studio #view-results select,body.parameter-studio #view-automation input,body.parameter-studio #view-automation select{color:#f2f5fa;background:#101820;border-color:#394c60;color-scheme:dark;}
+body.parameter-studio #view-results .summary-stats>div{background:#182c24;border-color:#386d4f}
+body.parameter-studio #view-results .summary-stats strong{color:#65ed78}
+body.parameter-studio #view-results .summary-stats small,body.parameter-studio #view-results .range-details{color:#9aaac0}
+body.parameter-studio #view-results .preview-scroll{background:#151e28;border-color:#354457}
+body.parameter-studio #view-results .preview-scroll table{color:#e7eff8}
+body.parameter-studio #view-results .preview-scroll th{background:#202d3c;color:#9cdcb0;border-color:#394b5d}
+body.parameter-studio #view-results .preview-scroll td{color:#d3dfea;border-color:#29394b}
+body.parameter-studio #view-results .preview-scroll tr:nth-child(even) td{background:#19232e}
+body.parameter-studio #view-results .filter-box{background:#151f2a;border-color:#384b59;color:#f2f5fa}
+body.parameter-studio #view-results .section-heading h2,body.parameter-studio #view-results .preview-head,body.parameter-studio #view-automation .section-heading h2{color:#eaf2fa}
+body.parameter-studio #view-results .btn,body.parameter-studio #view-automation .btn{background:#263548;color:#eaf2fa;border-color:#425571;}
+body.parameter-studio #view-results .btn.primary,body.parameter-studio #view-automation .btn.primary{background:#65ed78;color:#10151b;border-color:#65ed78}
+body.parameter-studio #view-automation .settings-body{border-top-color:#374b60}
+body.parameter-studio #view-automation .settings .chev{border-color:#65ed78}
+body.parameter-studio .feedback-wrap{background:#202b39;border:1px solid #445a6f;color:#edf3fa}
+body.parameter-studio .feedback{color:#edf3fa}
+body.parameter-studio .feedback-wrap[data-kind=error]{background:#42252b;border-color:#a65b66}
+body.parameter-studio .feedback-wrap[data-kind=warning]{background:#3b3023;border-color:#aa8750}
+body.parameter-studio .feedback-wrap[data-kind=success]{background:#20392d;border-color:#417c59}
+body.parameter-studio .feedback.error{color:#ffb8c4}
+body.parameter-studio .feedback.warn{color:#ffe0a5}
+body.parameter-studio .feedback.success{color:#bbf0ce}
+/* Dynamic screen-size priorities. Full desktop width, no squeeze. */
+@media(max-width:1380px){
+  .ps-header .ps-subtitle{display:none}
+  .ps-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .ps-main{grid-template-columns:minmax(0,2.25fr) minmax(305px,1fr)!important}
+  .ps-sectionhead{flex-wrap:wrap}
+  .ps-sectionhead>div:first-child{flex:1}
+  .ps-search-controls{margin-left:auto}
+}
+@media(max-width:1100px){
+  .ps-main{grid-template-columns:minmax(0,1.9fr) minmax(280px,1fr)!important}
+  .ps-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .ps-tz{margin-left:0}
+  .ps-catalog-panel,.ps-selection{height:auto;min-height:580px;}
+  .ps-metrics-scroll{overflow:visible}
+  .ps-selection{max-height:none!important}
+  body.parameter-studio #view-build{overflow-y:auto!important}
+  .ps-catalog-panel{max-height:none!important}
+}
+@media(max-width:810px){
+  body.parameter-studio .shell{grid-template-rows:auto minmax(0,1fr)!important}
+  body.parameter-studio .ps-header{min-height:64px;height:auto;padding:10px 14px!important;flex-wrap:wrap;gap:8px}
+  .ps-brand strong{font-size:19px!important}
+  .ps-header .ps-status{font-size:11px}
+  .ps-navigation{order:3;flex:1 0 100%;justify-content:space-between;border-top:1px solid #2c3c4a;padding-top:7px}
+  .ps-navigation button{flex:1;text-align:center;padding:8px 5px;font-size:11px}
+  body.parameter-studio #view-build .ps-shell{padding:14px 14px 122px!important}
+  .ps-main{grid-template-columns:1fr!important}
+  .ps-catalog-panel,.ps-selection{height:auto;min-height:0;max-height:none!important}
+  .ps-metrics-scroll{max-height:none;overflow:visible}
+  .ps-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .ps-selection{gap:10px}
+  .ps-selected-list{flex:none;max-height:240px}
+  .ps-sectionhead{align-items:flex-start}
+  .ps-search-controls{width:100%}
+  .ps-search-controls input{flex:1;width:auto;min-width:0}
+  .ps-breakdowns{align-items:flex-start}
+  .ps-actionbar{gap:7px;padding:10px 12px;flex-wrap:wrap}
+  .ps-actionbar span{flex:0 0 100%}
+  .ps-actionbar>div{flex:1}
+  .ps-actionbar button{flex:1;padding:9px 8px}
+}
+@media(max-width:540px){
+  .ps-datebar{gap:9px}
+  .ps-datebar>strong{flex:0 0 100%}
+  .ps-datebar label{flex:1 1 120px;align-items:stretch;flex-direction:column;gap:4px}
+  .ps-datebar input[type=date]{width:100%!important;max-width:none!important;min-width:0!important}
+  .ps-presets{gap:5px}
+  .ps-presets button{font-size:11px;padding:7px 9px}
+  .ps-sectionhead h1,.ps-side-head h2{font-size:19px}
+  .ps-grid{grid-template-columns:1fr!important}
+  .ps-metric{min-height:105px}
+  .ps-search-controls button{padding:8px 10px;font-size:11px}
+  .ps-header .ps-bars{font-size:25px}
+  .ps-header .ps-brand strong{font-size:17px}
+  .ps-header .ps-status{max-width:120px;font-size:10px}
+  .ps-tabs{gap:1px;margin:0 12px}
+  .ps-tabs button{padding:10px 10px;font-size:12px}
+  body.parameter-studio #view-results,body.parameter-studio #view-automation{padding:16px 12px}
+  body.parameter-studio #view-results{display:flex;flex-direction:column;height:auto;min-height:100%}
+  body.parameter-studio #view-results>.preview-panel{min-height:350px}
+  body.parameter-studio #view-automation{display:flex;flex-direction:column;height:auto;min-height:100%}
+  .ps-secondary-actions{grid-template-columns:1fr}
+}
+.ps-results-download{flex:none;min-height:39px;padding:9px 14px;border:1px solid #65ed78;border-radius:7px;background:#65ed78;color:#10151b;font-weight:750;white-space:nowrap}
+.ps-empty{padding:16px;font-size:12px;line-height:1.5;color:#9aabbe}
+.ps-validation:empty{padding:0;min-height:12px}
+@media(max-width:550px){.ps-results-download{width:100%;white-space:normal}body.parameter-studio #view-results .view-heading{flex-wrap:wrap}}
+
+/* Fit typical selected rows before a local list scroll is needed. */
+body.parameter-studio #view-build{min-height:0!important}
+.ps-selection{gap:9px;padding:16px}
+.ps-selected-row{min-height:36px;padding:7px 9px;margin-bottom:5px}
+.ps-side-row{padding-top:7px;gap:4px}
+.ps-hint{padding:9px 10px}
+/* A hidden panel MUST override old stylesheet ID display rules.
+   Without this, both Build and Results appear simultaneously. */
+body.parameter-studio #view-build[hidden],
+body.parameter-studio #view-results[hidden],
+body.parameter-studio #view-automation[hidden]{display:none!important}

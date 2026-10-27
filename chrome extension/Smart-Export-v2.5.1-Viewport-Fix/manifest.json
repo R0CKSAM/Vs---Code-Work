@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Smart Export — Parameter Studio",
+  "short_name": "Smart Export",
+  "version": "2.5.1",
+  "description": "Full-screen, responsive Grafana analytics studio with saved data, presets, scheduling, and Excel/CSV exports.",
+  "permissions": [
+    "storage",
+    "alarms",
+    "tabs",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://grafana-apj.trafficpeak.live/*"
+  ],
+  "background": {
+    "service_worker": "background.mjs",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Open Smart Export Workspace",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

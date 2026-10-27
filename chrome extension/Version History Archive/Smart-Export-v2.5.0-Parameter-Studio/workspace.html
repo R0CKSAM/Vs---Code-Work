@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="#f1f5fe" name="theme-color"/>
+<title>
+   Smart Export · Horizon Workspace
+  </title>
+<link href="workspace.css" rel="stylesheet"/>
+<link href="parameter-studio.css" rel="stylesheet"/></head>
+<body class="parameter-studio workspace-mode horizon-theme">
+<div class="shell" data-layout="horizon" id="appRoot">
+<aside aria-label="Smart Export navigation" class="sidebar">
+<div class="brand">
+<img alt="" class="brandmark" src="icons/icon48.png"/>
+<div class="brandtext">
+<strong>
+       smart
+       <span>
+        export
+       </span>
+</strong>
+<small>
+       GRAFANA ANALYTICS STUDIO
+      </small>
+</div>
+</div>
+<p class="sidebar-label">
+     YOUR WORKSPACE
+    </p>
+<nav aria-label="Smart Export screens" class="page-tabs" role="tablist">
+<button aria-controls="view-build" aria-selected="true" class="page-tab active" data-view="build" id="tabBuild" role="tab" type="button">
+<span class="tab-number">
+       01
+      </span>
+      Choose data
+     </button>
+<button aria-controls="view-results" aria-selected="false" class="page-tab" data-view="results" id="tabResults" role="tab" type="button">
+<span class="tab-number">
+       02
+      </span>
+      Preview &amp; export
+     </button>
+<button aria-controls="view-automation" aria-selected="false" class="page-tab" data-view="automation" id="tabAutomation" role="tab" type="button">
+<span class="tab-number">
+       03
+      </span>
+      Settings
+     </button>
+</nav>
+<div class="side-foot">
+<span class="side-badge">
+      ● PRIVATE &amp; SECURE
+     </span>
+<p>
+      Your reports stay in this browser. Grafana data is only fetched from your signed-in tab.
+     </p>
+</div>
+</aside>
+<header class="topbar">
+<div class="top-context">
+<small>
+      ANALYTICS WORKSPACE / HYDROLIX
+     </small>
+<strong>
+      Your data, beautifully organized.
+     </strong>
+</div>
+<div class="workspace-top-actions">
+<span class="online-indicator">
+<span class="online-dot">
+</span>
+      Local workspace
+     </span>
+<button class="return-grafana" id="openGrafana" title="Return to your Grafana browser tab" type="button">
+      ↗  Back to Grafana
+     </button>
+<span class="version">
+      v2.4.0
+     </span>
+</div>
+</header>
+<main class="workbench" id="workbench">
+<section aria-labelledby="tabBuild" class="view" id="view-build" role="tabpanel"><div class="ps-shell">
+<div class="ps-header"><div class="ps-brand"><div class="ps-bars">▂▅▇</div><strong>Smart Export</strong><span class="ps-subtitle">Select parameters. Choose dates. Get your data.</span></div><div class="ps-status" id="psConnection">● Checking Grafana</div></div>
+<div class="ps-datebar"><strong>Date range</strong><label>From <input id="psFrom" type="date"/></label><label>To <input id="psTo" type="date"/></label><div class="ps-presets"><button data-date="today">Today</button><button data-date="yesterday">Yesterday</button><button data-date="7">Last 7 days</button><button data-date="30">Last 30 days</button><button data-date="custom">Custom</button></div><span class="ps-tz">Timezone: <b>IST (Asia/Kolkata)</b></span></div>
+<div class="ps-validation" id="psValidation" role="status"></div>
+<div class="ps-main"><div class="ps-catalog-panel"><div class="ps-sectionhead"><div><h1>Choose parameters</h1><p>Pick the numbers you need for your report.</p></div><div class="ps-search-controls"><input aria-label="Search metrics" id="psSearch" placeholder="⌕  Search metrics…" type="search"/><button id="psSelectAll">Select visible</button><button id="psClear">Clear</button></div></div><div class="ps-tabs" id="psTabs" role="tablist"></div><div class="ps-metrics-scroll" id="psMetricsScroll"><div class="ps-grid" id="psMetrics"></div></div><div class="ps-breakdowns"><div><strong>Breakdown options</strong><p>Different dimensions are exported to separate sheets.</p></div><div class="ps-breakdown-row"><button class="on" data-break="day">By day</button><button data-break="channel">By channel</button><button data-break="country">By country</button><button data-break="platform">By platform</button></div></div></div>
+<aside class="ps-selection"><div class="ps-side-head"><h2>Your selection</h2><span id="psBadge">0 parameters</span></div><p class="ps-muted">Review selected parameters and settings.</p><div class="ps-selected-list" id="psSelected"></div><div class="ps-side-row"><span>Date range</span><strong id="psDates">—</strong></div><div class="ps-side-row"><span>Group by</span><strong id="psGroup">Day</strong></div><div class="ps-side-row"><span>Output format</span><select id="psFormat"><option value="xlsx">Excel (.xlsx)</option><option value="csv">CSV (.csv)</option></select></div><div class="ps-hint">ⓘ Data appears after you click Get data. Unique counts remain separate by date and category.</div><div class="ps-secondary-actions"><button id="psUseGrafana">Use open Grafana tab</button><button id="psOpenGrafana">Back to Grafana ↗</button></div></aside></div>
+<div class="ps-error" hidden="" id="psError" role="alert"></div>
+<div class="ps-actionbar"><span id="psBottomSummary">Select parameters to begin</span><div><button id="psPreview">Preview selection</button><button class="ps-green" id="psFetch">Get data →</button></div></div>
+<dialog id="psDialog"><div class="ps-dialog-head"><h2>Exact export selection</h2><button aria-label="Close preview" id="psClose">✕</button></div><pre id="psPreviewBody"></pre><button class="ps-green" id="psDialogFetch">Get data →</button></dialog>
+</div><div aria-hidden="true" hidden="" id="engineControls">
+<div class="view-heading">
+<div>
+<span class="eyebrow">
+        REPORT BUILDER
+       </span>
+<h1>
+        Choose what matters.
+       </h1>
+<p>
+        Pick a report or build your own. No SQL, no complicated menus.
+       </p>
+</div>
+<span class="count-chip" id="selectedCount">
+       0 selected
+      </span>
+</div>
+<div class="builder-sidebar">
+<section aria-labelledby="quickHeading" class="panel quick-panel">
+<div class="section-heading">
+<h2 id="quickHeading">
+         Quick start
+        </h2>
+<span class="overline">
+         ONE CLICK
+        </span>
+</div>
+<div aria-label="Suggested report combinations" class="quick-grid" id="quickPicks" role="group">
+</div>
+<button aria-expanded="false" class="more-templates" id="moreTemplates" type="button">
+        Show more templates
+        <span aria-hidden="true">
+         ⌄
+        </span>
+</button>
+</section>
+<section aria-labelledby="sourceHeading" class="panel source-panel">
+<div class="section-heading">
+<h2 id="sourceHeading">
+         Data source &amp; dates
+        </h2>
+<span class="overline">
+         INDIA TIME (IST)
+        </span>
+</div>
+<label for="dashboardUrl">
+        Grafana dashboard URL
+       </label>
+<div class="source-row">
+<input autocomplete="off" id="dashboardUrl" placeholder="Use open tab or paste URL" spellcheck="false" type="url"/>
+<button class="btn outline" id="useCurrent" type="button">
+         Use open tab
+        </button>
+</div>
+<div class="date-grid">
+<div>
+<label for="dateFrom">
+          From date
+         </label>
+<input id="dateFrom" type="date"/>
+</div>
+<div>
+<label for="dateTo">
+          Through date
+         </label>
+<input id="dateTo" type="date"/>
+</div>
+</div>
+<div class="range-row">
+<button class="btn subtle" id="last7" type="button">
+         Last 7 days
+        </button>
+<button class="btn subtle" id="last30" type="button">
+         Last 30 days
+        </button>
+</div>
+<p class="hint">
+        Completed calendar days only · Up to 31 days per multi-report fetch.
+       </p>
+</section>
+</div>
+<section aria-labelledby="metricsHeading" class="panel picker-panel">
+<div class="section-heading">
+<div>
+<h2 id="metricsHeading">
+         Your metrics
+        </h2>
+<p class="subtext">
+         Pick a category, then select the numbers you need.
+        </p>
+</div>
+<span class="mini-stat" id="sourceCount">
+        0
+       </span>
+</div>
+<div class="searchbox">
+<span aria-hidden="true" class="search-icon">
+        ⌕
+       </span>
+<input aria-label="Search available metrics" autocomplete="off" id="metricSearch" placeholder="Search all metrics..." type="search"/>
+<button aria-label="Clear search" id="clearSearch" title="Clear search" type="button">
+        ×
+       </button>
+</div>
+<div aria-label="Metric categories" class="category-tabs" id="categoryTabs" role="group">
+</div>
+<div class="metric-subtitle">
+<span id="catalogTitle">
+        Audience &amp; overview
+       </span>
+<span id="catalogCount">
+</span>
+</div>
+<div aria-label="Available metrics" class="metric-list" id="metricCatalog">
+</div>
+<div class="selected-zone">
+<div class="summary-line">
+<span>
+         Selected fields
+        </span>
+<span id="sheetHint">
+         No fields selected
+        </span>
+</div>
+<div aria-label="Chosen metrics" class="chips" id="selectedChips">
+</div>
+</div>
+<p class="smart-note">
+       Metrics with different groupings go into separate Excel tabs. Unique users are not incorrectly summed across days.
+      </p>
+</section>
+</div></section>
+<section aria-labelledby="tabResults" class="view" hidden="" id="view-results" role="tabpanel">
+<div class="view-heading">
+<div>
+<span class="eyebrow">
+        DATA &amp; DOWNLOADS
+       </span>
+<h1>
+        Review. Verify. Export.
+       </h1>
+<p>
+        Your saved report is ready to check before downloading.
+       </p>
+</div>
+</div>
+<section aria-labelledby="previewHeading" class="panel">
+<div class="section-heading">
+<h2 id="previewHeading">
+        Data overview
+       </h2>
+<span class="state-chip" id="stateChip">
+        READY
+       </span>
+</div>
+<div class="summary-stats">
+<div>
+<strong id="rowCount">
+         0
+        </strong>
+<small>
+         Stored rows
+        </small>
+</div>
+<div>
+<strong id="dayCount">
+         0
+        </strong>
+<small>
+         Dates
+        </small>
+</div>
+<div>
+<strong id="variantCount">
+         0
+        </strong>
+<small>
+         Datasets
+        </small>
+</div>
+</div>
+<p class="range-details" id="rangeDetails">
+       No saved data for the current report.
+      </p>
+</section>
+<section aria-label="Preview and filter rows" class="panel preview-panel">
+<div class="section-heading">
+<h2>
+        Preview selected fields
+       </h2>
+<span class="overline">
+        SAMPLE ROWS
+       </span>
+</div>
+<div class="filter-box" hidden="" id="exportFilterBox">
+<label for="filterField">
+        Filter downloaded rows (optional)
+       </label>
+<div class="filter-grid">
+<div class="select-wrap">
+<select aria-label="Dimension to filter" id="filterField">
+</select>
+<span aria-hidden="true" class="chevron">
+</span>
+</div>
+<input aria-label="Filter export results" id="filterText" maxlength="120" placeholder="Search values, e.g. Delhi" type="text"/>
+</div>
+<p class="hint">
+        Only the export is filtered. Your saved master stays unchanged.
+       </p>
+</div>
+<div class="preview-head">
+<span id="previewName">
+        Nothing saved yet
+       </span>
+<span id="previewMeta">
+        —
+       </span>
+</div>
+<div class="preview-scroll" id="previewScroll">
+<table aria-label="Preview of selected exported columns" id="previewTable">
+<thead>
+</thead>
+<tbody>
+</tbody>
+</table>
+<p class="preview-empty" id="previewEmpty">
+        Fetch selected data to preview example rows.
+       </p>
+</div>
+</section>
+<section aria-label="Export data" class="panel export-panel">
+<div class="section-heading">
+<h2>
+        Download report
+       </h2>
+<span class="overline">
+        LOCAL FILE
+       </span>
+</div>
+<button class="btn primary large" id="syncNow" type="button">
+<span class="button-icon">
+        ↻
+       </span>
+<span id="syncLabel">
+        Fetch selected data
+       </span>
+<span class="button-arrow">
+        →
+       </span>
+</button>
+<div class="action-grid">
+<button class="btn excel" id="downloadXlsx" type="button">
+<span class="file-badge">
+         X
+        </span>
+        Export Excel
+       </button>
+<button class="btn csv" id="downloadCsv" type="button">
+<span class="file-badge">
+         ↓
+        </span>
+        Export CSV
+       </button>
+</div>
+<p class="hint">
+       Excel supports multiple report tabs. CSV supports one category at a time.
+      </p>
+</section>
+</section>
+<section aria-labelledby="tabAutomation" class="view" hidden="" id="view-automation" role="tabpanel">
+<div class="view-heading">
+<div>
+<span class="eyebrow">
+        AUTOMATION &amp; HELP
+       </span>
+<h1>
+        Your workspace settings.
+       </h1>
+<p>
+        Daily refresh, reusable selections, and export history tools.
+       </p>
+</div>
+</div>
+<section aria-labelledby="autoHeading" class="panel">
+<div class="section-heading">
+<h2 id="autoHeading">
+        Daily updates
+       </h2>
+<span class="overline">
+        OPTIONAL
+       </span>
+</div>
+<div class="schedule-row">
+<div>
+<strong>
+         Update your saved data each day
+        </strong>
+<p>
+         When Chrome is running and Grafana is signed in, check completed days around 8 AM IST.
+        </p>
+</div>
+<label class="toggle" title="Enable daily updates">
+<input aria-label="Automatic daily update" id="autoDaily" role="switch" type="checkbox"/>
+<span class="toggle-track">
+</span>
+</label>
+</div>
+<p class="hint" id="lastSynced">
+       Last update: —
+      </p>
+</section>
+<section aria-labelledby="savedHeading" class="panel">
+<div class="section-heading">
+<h2 id="savedHeading">
+        My saved views
+       </h2>
+<span class="overline">
+        UP TO 20
+       </span>
+</div>
+<label for="presetName">
+       Name this selection
+      </label>
+<div class="preset-save">
+<input id="presetName" maxlength="40" placeholder="e.g. Daily channel overview" type="text"/>
+<button class="btn outline" id="savePreset" type="button">
+        Save view
+       </button>
+</div>
+<label for="savedPresets">
+       Load a previously saved view
+      </label>
+<div class="preset-picker">
+<div class="select-wrap">
+<select aria-label="Previously saved report selections" id="savedPresets">
+<option value="">
+          Choose a saved view…
+         </option>
+</select>
+<span aria-hidden="true" class="chevron">
+</span>
+</div>
+<div class="preset-actions">
+<button class="btn outline" id="loadPreset" type="button">
+         Load selection
+        </button>
+<button class="btn danger-quiet" id="deletePreset" title="Delete chosen saved view" type="button">
+         Delete view
+        </button>
+</div>
+</div>
+</section>
+<details class="settings" id="advancedSettings">
+<summary>
+<span>
+        Advanced tools &amp; troubleshooting
+       </span>
+<span aria-hidden="true" class="chev">
+</span>
+</summary>
+<div class="settings-body">
+<div class="key-value">
+<span>
+         Data source
+        </span>
+<code>
+         Hydrolix · Veto_Streamin.logs
+        </code>
+</div>
+<div class="key-value">
+<span>
+         Storage
+        </span>
+<code>
+         Chrome local IndexedDB
+        </code>
+</div>
+<p class="hint">
+        Only mapped, verified panels are queryable. Unmapped panels can be discovered but not exported automatically.
+       </p>
+<button class="btn outline full" id="scanPanels" type="button">
+        Browse Grafana panels
+       </button>
+<div aria-live="polite" class="panel-browser" id="panelBrowser">
+</div>
+<div class="action-grid">
+<button class="btn outline" id="logs" type="button">
+         Download error logs
+        </button>
+<button class="btn outline" id="classic" type="button">
+         Open classic interface
+        </button>
+</div>
+<details class="danger-zone">
+<summary>
+         Data management
+        </summary>
+<button class="btn danger-quiet full" id="clearData" type="button">
+         Clear this dashboard's saved v2 data
+        </button>
+</details>
+<p class="support">
+        Need help?
+        <strong>
+         Please contact Smarth for support.
+        </strong>
+</p>
+</div>
+</details>
+</section>
+</main>
+<div class="feedback-wrap">
+<span aria-hidden="true" class="feedback-indicator">
+</span>
+<div aria-live="polite" class="feedback" id="feedback" role="status">
+     Choose a report or metric to begin.
+    </div>
+<button aria-label="Open troubleshooting tools" class="feedback-help" hidden="" id="feedbackHelp" type="button">Troubleshoot ↗</button><button aria-label="Dismiss this message" class="feedback-dismiss" hidden="" id="feedbackDismiss" type="button">×</button></div>
+<footer class="dock">
+<span class="dock-label">
+<span id="dockStatus">
+      Choose a report to start
+     </span>
+</span>
+<button class="dock-action" id="dockFetch" type="button">
+     Fetch data →
+    </button>
+<button class="dock-download" id="dockExcel" type="button">
+     Download Excel ↓
+    </button>
+</footer>
+</div>
+<script src="popup.mjs" type="module">
+</script>
+<script src="workspace-nav.mjs" type="module">
+</script>
+<script src="parameter-studio.mjs" type="module"></script></body>
+</html>
