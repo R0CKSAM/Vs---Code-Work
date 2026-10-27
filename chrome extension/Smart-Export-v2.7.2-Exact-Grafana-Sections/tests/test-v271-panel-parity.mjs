@@ -23,6 +23,6 @@ const records=[{date:'2026-10-20',new_users:67,returning_users:32,session_hours:
 const csv=selectedCsv('kpis',records,{kpis:['new_users','session_hours']});assert.match(csv,/New users \(single session in day\)/);assert.match(csv,/67/);
 const workbook=buildPickedWorkbook({kpis:records},{selection:choice,from:'2026-10-20',to:'2026-10-20',perMetricSheets:true});
 const data=Buffer.from(await workbook.arrayBuffer());fs.writeFileSync('/mnt/data/Smart-Export-v2.7.1-KPI-Test.xlsx',data);assert(data.length>3000);
-assert.throws(()=>selectedCsv('kpis',[{date:'2026-10-20',new_users:1}],{kpis:['returning_users']}),/Click Get data to refresh/);
-assert.throws(()=>buildPickedWorkbook({kpis:[{date:'2026-10-20',new_users:1}]},{selection:{kpis:['returning_users']},from:'2026-10-20',to:'2026-10-20',perMetricSheets:true}),/Click Get data to refresh/);
-console.log('PASS source dashboard 3x3 + 1 panel order, titles, source mappings, KPI SQL, CSV/XLSX integrity, legacy refresh guard');
+assert.match(selectedCsv('kpis',[{date:'2026-10-20',new_users:1}],{kpis:['returning_users']}),/"2026-10-20",""/);
+assert(buildPickedWorkbook({kpis:[{date:'2026-10-20',new_users:1}]},{selection:{kpis:['returning_users']},from:'2026-10-20',to:'2026-10-20',perMetricSheets:true}).size>3000);
+console.log('PASS source dashboard 3x3 + 1 panel order, titles, source mappings, KPI SQL, CSV/XLSX integrity, missing values exported blank');

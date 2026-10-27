@@ -2,6 +2,7 @@
  * Writes typed date/number cells and formulas, with frozen headers and a metric dictionary. */
 import {REPORT_ORDER,ALL_REPORT_ORDER,REPORT_COLUMNS,EXCEL_SHEETS,DEFINITIONS} from './reports.mjs';
 import {normalizeSelection,selectedColumns,FIELD_LABELS} from './metric-catalog.mjs';
+import {exportCellValue} from './picked-export.mjs';
 const TE=new TextEncoder();
 const esc=x=>String(x??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;').replace(/[\x00-\x08\x0b\x0c\x0e-\x1f]/g,'');
 const colName=n=>{let x=n+1,out='';while(x){out=String.fromCharCode(65+(x-1)%26)+out;x=Math.floor((x-1)/26);}return out;};
@@ -69,6 +70,9 @@ function definitionsSheet(meta){
   ['Date range',`${meta.from||'Stored history'} to ${meta.to||'Stored history'}`],
   ['Date grouping','Daily for KPIs/channel/GEO/devices/content; hourly IST for traffic'],
   ['Export method','Grafana Hydrolix datasource query via signed-in browser tab'],
+  ['Missing values','Blank cells mean the value was not available. Available values, including zero, are retained.'],
+  ...(meta.skipped?.length ? [['Sections without saved rows (omitted)',meta.skipped.join(', ')]] : []),
+  ...(meta.missingCells ? [['Missing selected values (before splitting sheets)',meta.missingCells]] : []),
   ...(meta.selection ? Object.entries(normalizeSelection(meta.selection)).map(([id,fields])=>[EXCEL_SHEETS[id]+' selected metrics',fields.map(f=>FIELD_LABELS[f]||f).join(', ')]) : []),
   ...(meta.filter?.text ? [['Export-only dimension filter',String(meta.filter.field)+': '+String(meta.filter.text).slice(0,120)]] : []),
   ['Filter handling','Ad hoc Grafana filters are not supported in this release'],
@@ -97,10 +101,6 @@ export function buildReportWorkbook(byReport,meta){
    deliberately never merges differently-grained metrics into one invalid table. */
 function chosenSheet(id,records,choice){
  const fields=selectedColumns(id,choice);
- for(const row of records)for(const [key] of fields){
-  if(key==='date'||typeof row[key]==='string'&&row[key]!=='' )continue;
-  if(typeof row[key]!=='number'||!Number.isFinite(row[key]))throw new Error(`Missing ${key} in stored ${id} data. Click Get data to refresh these metrics before exporting.`);
- }
  const columns=fields.map(([key,title])=>({key,title,width:key==='content_title'?40:key==='channel_name'?27:key==='date'?16:Math.max(21,Math.min(35,title.length+3))}));
  // DoD calculations are included only if their underlying KPI column is selected.
  const added=[];
@@ -111,12 +111,12 @@ function chosenSheet(id,records,choice){
  }
  const sorted=[...records].sort((a,b)=>a.date.localeCompare(b.date)||JSON.stringify(a).localeCompare(JSON.stringify(b)));
  const data=sorted.map((r,i)=>{
-  const base=fields.map(([key])=>key==='date'?{date:r.date}:r[key]);
+  const base=fields.map(([key])=>key==='date'?{date:r.date}:exportCellValue(id,key,r[key]));
   for(const [key] of added){
    const previous=sorted[i-1];
    if(previous){
     const row=i+2,old=row-1,letter=colName(fields.findIndex(([k])=>k===key));
-    base.push({formula:`IF(A${row}=A${old}+1,IFERROR((${letter}${row}-${letter}${old})/${letter}${old},""),"")`,format:'percent'});
+    base.push({formula:`IF(AND(A${row}=A${old}+1,ISNUMBER(${letter}${row}),ISNUMBER(${letter}${old})),IFERROR((${letter}${row}-${letter}${old})/${letter}${old},""),"")`,format:'percent'});
    }else base.push('');
   }
   return base;

@@ -5,7 +5,7 @@ import {REPORT_ORDER,ALL_REPORT_ORDER,REPORTS} from './reports.mjs';
 import {GROUPS,DETAILS,FIELD_LABELS,PRESETS,DEFAULT_SELECTION,normalizeSelection,selectedColumns,selectionCounts,selectionReports} from './metric-catalog.mjs';
 import {allReportRows} from './report-db.mjs';
 import {buildPickedWorkbook} from './multi-xlsx.mjs';
-import {rowsForExport,selectedCsv} from './picked-export.mjs';
+import {rowsForExport,selectedCsv,availableExport} from './picked-export.mjs';
 import {buildCsvZip} from './csv-zip.mjs';
 
 const $=id=>document.getElementById(id);
@@ -73,7 +73,7 @@ function busy(isBusy){
 }
 function updateButtons(){
  const types=ids(),sameSource=$('dashboardUrl').value.trim()===(config.dashboardUrl||'').trim();
- const ready=types.length&&sameSource&&types.every(id=>Number(summaries[id]?.rows)>0);
+ const ready=types.length&&sameSource&&types.some(id=>Number(summaries[id]?.rows)>0);
  $('downloadXlsx').disabled=working||!ready;
  $('downloadCsv').disabled=working||!ready||types.length!==1;
  $('downloadCsv').title=types.length!==1?'CSV supports one report category. Excel contains a tab for each selected category.':'';
@@ -268,13 +268,14 @@ async function fetchSelected(){if(working)return false;busy(true);try{
  }catch(e){show(e.message,'error');return false;}finally{busy(false);await loadState();}
 }
 async function exportNow(format){try{
- const choice=normalizeSelection(selection),types=ids();const spec=parseDashboardUrl($('dashboardUrl').value.trim());
+ const requested=normalizeSelection(selection);const spec=parseDashboardUrl($('dashboardUrl').value.trim());
  const datasets=await allReportRows(spec.datasetKey);
  const from=$('dateFrom').value,to=$('dateTo').value;
- const picked=rowsForExport(datasets,choice,filterConfig());
+ const picked=rowsForExport(datasets,requested,filterConfig());
  // Never export records outside the date range shown in the header.
- const selected=Object.fromEntries(types.map(id=>[id,(picked[id]||[]).filter(row=>row.date>=from&&row.date<=to)]));
- if(types.some(id=>!(selected[id]||[]).length))throw new Error('One selected section has no saved data for these dates. Click Get data first or change the date range.');
+ const candidates=Object.fromEntries(Object.keys(requested).map(id=>[id,(picked[id]||[]).filter(row=>row.date>=from&&row.date<=to)]));
+ const {selection:choice,rows:selected,skipped,missingCells}=availableExport(candidates,requested);
+ const types=Object.keys(choice);
  const dateList=types.flatMap(id=>selected[id].map(x=>x.date)).sort();
  const base=`Smart-Export-Selected-${istToday()}`;
  if(format==='csv'||format==='csvzip'){
@@ -288,10 +289,13 @@ async function exportNow(format){try{
    download(new Blob([buildCsvZip(entries)],{type:'application/zip'}),`${base}-Individual-CSV-Parameters.zip`);
   }
  }else{
-  const wb=buildPickedWorkbook(selected,{selection:choice,from:dateList[0],to:dateList.at(-1),filter:filterConfig(),perMetricSheets:true});
+  const wb=buildPickedWorkbook(selected,{selection:choice,from:dateList[0],to:dateList.at(-1),filter:filterConfig(),perMetricSheets:true,skipped,missingCells});
   download(wb,`${base}.xlsx`);
  }
- show(`${format==='csvzip'?'Individual CSV files':format.toUpperCase()} downloaded. Your saved master was not changed.`,'success');
+ const notes=[];
+ if(missingCells)notes.push(`${prettyCount(missingCells)} missing values left blank`);
+ if(skipped.length)notes.push(`No rows available; skipped: ${skipped.map(id=>REPORTS[id]?.title||id).join(', ')}`);
+ show(`${format==='csvzip'?'Individual CSV files':format.toUpperCase()} downloaded.${notes.length?' '+notes.join('. ')+'.':''}`,notes.length?'warning':'success');
  }catch(e){show(e.message,'error');}
 }
 async function toggleSchedule(){const enabled=$('autoDaily').checked;try{
