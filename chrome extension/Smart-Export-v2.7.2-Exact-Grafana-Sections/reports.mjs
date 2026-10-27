@@ -157,7 +157,7 @@ export function sqlForReport(report,from,to){
       const where=panelId===3?` AND ${MASTER}`:'';
       return `WITH toStartOfMinute(reqTimeSec) AS bucket
         SELECT toDate(toTimeZone(bucket,'Asia/Kolkata')) AS report_date,
-          formatDateTime(toTimeZone(bucket,'Asia/Kolkata'),'%Y-%m-%d %H:%M') AS minute_ist,
+          formatDateTime(toTimeZone(bucket,'Asia/Kolkata'),'%Y-%m-%d %H:%i') AS minute_ist,
           ${aggregate} AS value ${prefix} WHERE ${range}${where}
           GROUP BY bucket ORDER BY bucket ${setting}`;
     }
@@ -179,13 +179,13 @@ export function sqlForReport(report,from,to){
       ranked FROM per_minute
     )
     SELECT toDate(toTimeZone(window_5m,'Asia/Kolkata')) AS report_date,
-      formatDateTime(toTimeZone(window_5m,'Asia/Kolkata'),'%Y-%m-%d %H:%M') AS bucket_5m_ist,
+      formatDateTime(toTimeZone(window_5m,'Asia/Kolkata'),'%Y-%m-%d %H:%i') AS bucket_5m_ist,
       cumulative_sum_5_min AS value
     FROM cumulative WHERE ranked=5 ORDER BY window_5m ${setting}`;
   }
   if(report==='viewership_minute')return `WITH toStartOfMinute(reqTimeSec) AS bucket
     SELECT toDate(toTimeZone(bucket,'Asia/Kolkata')) AS report_date,
-      formatDateTime(toTimeZone(bucket,'Asia/Kolkata'),'%Y-%m-%d %H:%M') AS minute_ist,
+      formatDateTime(toTimeZone(bucket,'Asia/Kolkata'),'%Y-%m-%d %H:%i') AS minute_ist,
       count()*6.0/60.0 AS value ${prefix} WHERE ${range} AND ${SEGMENT}
       GROUP BY bucket ORDER BY bucket ${setting}`;
   if(report==='viewership_stats')return `SELECT ${D} AS report_date,
@@ -321,9 +321,10 @@ export function parseReportFrames(payload,report,from,to,diagnostics={}){
   if(!Array.isArray(result.frames))throw new Error(`Grafana ${report} response has no frames.`);
   const dims=REPORTS[report].dimension,nums=REPORTS[report].metrics;
   const rows=[],seen=new Map();
-  diagnostics.duplicatesSkipped=0; diagnostics.frameCount=result.frames.length;
+  diagnostics.duplicatesSkipped=0; diagnostics.frameCount=result.frames.length;diagnostics.missingValues=0;
   for(const f of result.frames){
     const names=f?.schema?.fields?.map(x=>String(x.name||'').toLowerCase())||[];
+    if(new Set(names).size!==names.length)throw new Error('Grafana returned duplicate column names. Nothing was saved.');
     const values=f?.data?.values||[];if(!names.length)continue;
     const at=Object.fromEntries(names.map((n,i)=>[n,i]));
     const dateCol=at.report_date;
@@ -343,7 +344,7 @@ export function parseReportFrames(payload,report,from,to,diagnostics={}){
           throw new Error('Grafana returned a misaligned five-minute window.');
       }
 
-      for(const n of nums){const raw=values[at[n]][i];if(raw===null||raw===undefined||raw==='')throw new Error(`Missing ${n} value from Grafana.`);const v=typeof raw==='number'?raw:Number(String(raw).replace(/,/g,''));if(!Number.isFinite(v)||v<0||v>Number.MAX_SAFE_INTEGER)throw new Error(`Invalid ${n} metric from Grafana.`);obj[n]=v;}
+      for(const n of nums){const raw=values[at[n]][i];if(raw===null||raw===undefined||typeof raw==='string'&&raw.trim()===''){obj[n]=null;diagnostics.missingValues++;continue;}const v=typeof raw==='number'?raw:Number(String(raw).replace(/,/g,''));if(!Number.isFinite(v)||v<0||v>Number.MAX_SAFE_INTEGER)throw new Error(`Invalid ${n} metric from Grafana.`);obj[n]=v;}
       const key=JSON.stringify(dims.map(x=>obj[x]));
       const previous=seen.get(key);
       if(previous){

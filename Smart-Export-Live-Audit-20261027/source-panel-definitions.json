@@ -1,0 +1,57 @@
+{
+  "panels": [
+    {
+      "id": 41,
+      "title": "Total Session Duration (Hours)",
+      "sql": "SELECT \n  ROUND(count() * 6 / 3600.0, 2) as total_playtime_hours\nFROM ${table}\nWHERE $__timeFilter(reqTimeSec)\n  AND reqPath LIKE '%.ts'\n  AND reqPath NOT LIKE '%.m3u8'\n  AND statusCode IN (200, 206)\n  AND extract(reqPath, '[-_](\\\\d+)\\\\.ts$') != ''\n  AND $__adHocFilter()\n  SETTINGS hdx_query_max_execution_time=60, hdx_query_admin_comment='db=${__dashboard}; dp=Total Session Duration (Hours); du=${__user.login}'"
+    },
+    {
+      "id": 4,
+      "title": "Total Users ( Based on Device ID - APP DATA) - Per Minute",
+      "sql": "SELECT \nuniq(device_id) as uniq_users, \n$__timeInterval(toStartOfMinute(reqTimeSec)) as time\nFROM ${table}\nWHERE $__timeFilter(reqTimeSec)\nAND $__adHocFilter() \nGROUP BY time"
+    },
+    {
+      "id": 20,
+      "title": "Playtime by GEO",
+      "sql": "\n  SELECT \n    decodeURLComponent(country) as country,\n    decodeURLComponent(state) as state,\n   decodeURLComponent(city) as city,\n  count() * 6 / 60.0 as playtime_hours\nFROM ${table}\nWHERE $__timeFilter(reqTimeSec)\n  AND reqPath LIKE '%.ts'\n  AND statusCode IN (200, 206)\n  AND state!= ''\n  AND extract(reqPath, '[-_](\\\\d+)\\\\.ts$') != ''\n  AND $__adHocFilter()\nGROUP BY  state,country,city\nORDER BY playtime_hours DESC\n  SETTINGS hdx_query_max_execution_time=60, hdx_query_admin_comment='db=${__dashboard}; dp=Playtime by Geography; du=${__user.login}'"
+    },
+    {
+      "id": 53,
+      "title": "Unique Client IP by Geo",
+      "sql": "SELECT \n    decodeURLComponent(country) as country,\n    decodeURLComponent(state) as state,\n     decodeURLComponent(city) as city,\n    uniqExact(cliIP) AS unique_cliIP\nFROM ${table}\nWHERE $__timeFilter(reqTimeSec)\n  AND $__adHocFilter()\nGROUP BY country, state,city\nORDER BY unique_cliIP DESC\nSETTINGS hdx_query_max_execution_time=60, hdx_query_admin_comment='db=${__dashboard}; dp=Playtime by Geography; du=${__user.login}'"
+    }
+  ],
+  "variables": [
+    {
+      "name": "filter",
+      "type": "adhoc"
+    },
+    {
+      "name": "table",
+      "type": "constant",
+      "query": "Veto_Streamin.logs",
+      "current": {
+        "text": "Veto_Streamin.logs",
+        "value": "Veto_Streamin.logs"
+      }
+    },
+    {
+      "name": "master_manifest",
+      "type": "constant",
+      "query": "(URL like '%main.m3u8%' OR URL like '%satsangmaster.m3u8%' OR URL like '%sanskarmaster.m3u8%' OR URL like '%index.m3u8%' OR URL like '%shubhmaster.m3u8%' OR URL like '%playlist.m3u8%' OR URL like '%master.m3u8%' )",
+      "current": {
+        "text": "(URL like '%main.m3u8%' OR URL like '%satsangmaster.m3u8%' OR URL like '%sanskarmaster.m3u8%' OR URL like '%index.m3u8%' OR URL like '%shubhmaster.m3u8%' OR URL like '%playlist.m3u8%' OR URL like '%master.m3u8%' )",
+        "value": "(URL like '%main.m3u8%' OR URL like '%satsangmaster.m3u8%' OR URL like '%sanskarmaster.m3u8%' OR URL like '%index.m3u8%' OR URL like '%shubhmaster.m3u8%' OR URL like '%playlist.m3u8%' OR URL like '%master.m3u8%' )"
+      }
+    },
+    {
+      "name": "child_manifest",
+      "type": "constant",
+      "query": "((URL like '%main%.m3u8%' and URL not like '%main.m3u8%') OR (URL like '%live%/chunks.m3u8%' OR (URL like '%index%.m3u8%' and URL not like '%index.m3u8%') or (URL like '%HD%/HD%.m3u8%' or URL like '%SD%/SD%.m3u8%') OR URL like '%ndtvindia%.m3u8%' or URL like '%ndtvmarathi%.m3u8%'))",
+      "current": {
+        "text": "((URL like '%main%.m3u8%' and URL not like '%main.m3u8%') OR (URL like '%live%/chunks.m3u8%' OR (URL like '%index%.m3u8%' and URL not like '%index.m3u8%') or (URL like '%HD%/HD%.m3u8%' or URL like '%SD%/SD%.m3u8%') OR URL like '%ndtvindia%.m3u8%' or URL like '%ndtvmarathi%.m3u8%'))",
+        "value": "((URL like '%main%.m3u8%' and URL not like '%main.m3u8%') OR (URL like '%live%/chunks.m3u8%' OR (URL like '%index%.m3u8%' and URL not like '%index.m3u8%') or (URL like '%HD%/HD%.m3u8%' or URL like '%SD%/SD%.m3u8%') OR URL like '%ndtvindia%.m3u8%' or URL like '%ndtvmarathi%.m3u8%'))"
+      }
+    }
+  ]
+}

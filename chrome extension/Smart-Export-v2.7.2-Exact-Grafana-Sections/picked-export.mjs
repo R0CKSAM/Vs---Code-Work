@@ -1,12 +1,13 @@
 /* Export-only presentation. Does not mutate stored Grafana records. */
 import {selectedColumns,normalizeSelection,filterRecords} from './metric-catalog.mjs';
-export function rowsForExport(allRows,rawSelection,filter){
+import {validYMD} from './core.mjs';
+export function rowsForExport(allRows,rawSelection,filter,range=null){
  const selected=normalizeSelection(rawSelection);
  const out={};
  const categories=Object.keys(selected);
  for(const id of categories){
   const onlyFilter=categories.length===1?filter:null;
-  out[id]=filterRecords(id,allRows[id]||[],onlyFilter);
+  out[id]=filterRecords(id,allRows[id]||[],onlyFilter).filter(row=>!range||row.date>=range.from&&row.date<=range.to);
  }
  return out;
 }
@@ -18,7 +19,7 @@ const csvSafe=x=>{
 // Missing dimensions and metrics remain blank; a missing measurement is not zero.
 export function exportCellValue(report,key,value){
  if(key==='date'){
-  if(typeof value!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(value))throw new Error(`Invalid date in stored ${report} data.`);
+  if(!validYMD(value))throw new Error(`Invalid date in stored ${report} data.`);
   return value;
  }
  if(value===null||value===undefined||typeof value==='string'&&value.trim()==='')return '';

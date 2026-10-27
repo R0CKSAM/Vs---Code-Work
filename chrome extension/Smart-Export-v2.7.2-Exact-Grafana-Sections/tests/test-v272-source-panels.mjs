@@ -30,9 +30,11 @@ for(const section of SECTIONS.slice(1,6)){
  assert(sql1.includes('toStartOfMinute')&&sql1.includes('minute_ist'));
  assert(sql5.includes('row_number() OVER')&&sql5.includes('WHERE ranked=5')&&sql5.includes('cumulative_sum_5_min'));
  assert(sql1.includes('reqTimeSec >=')&&sql5.includes('reqTimeSec <'));
+ assert(sql1.includes('%H:%i')&&sql5.includes('%H:%i'),'Minutes must use %i; %M returns month names on the live Hydrolix server');
  assert(!sql1.includes('$__adHocFilter()'));
 }
 assert(sqlForReport('ts_views_1m','2026-10-20','2026-10-20').includes("URL like '%main.m3u8%'"));
+assert(sqlForReport('viewership_minute','2026-10-20','2026-10-20').includes('%H:%i'));
 assert(!sqlForReport('ts_views_5m','2026-10-20','2026-10-20').includes("URL like '%main.m3u8%'"));
 for(const key of ['viewership_stats','viewership_minute','geo_ips','platform_devices','os_devices','platform_ips','os_ips']){
  const sql=sqlForReport(key,'2026-10-20','2026-10-20');

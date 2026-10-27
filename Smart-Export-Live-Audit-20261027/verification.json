@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "date": "2026-10-26",
+  "source_matches": [
+    "103 GEO groups",
+    "1440 minute buckets and all values",
+    "viewership summary"
+  ],
+  "excel_rows_verified": 1544,
+  "csv_rows_verified": 1544,
+  "headers": "bold black on light fill",
+  "nulls_preserved": true,
+  "zip_integrity": "PASS"
+}

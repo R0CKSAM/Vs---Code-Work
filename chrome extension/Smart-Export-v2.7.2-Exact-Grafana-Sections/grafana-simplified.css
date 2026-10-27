@@ -120,3 +120,49 @@ body.parameter-studio #view-results .export-panel{display:none!important}
 
 /* Hide legacy export-only options from the simplified results screen; preserve their engine nodes. */
 body.parameter-studio #view-results .filter-box{display:none!important}
+body.parameter-studio .feedback-wrap[hidden]{display:none!important}
+body.parameter-studio .feedback-wrap[data-kind="info"]{opacity:1;transform:none;pointer-events:auto;border-color:#557b9c;background:#172b3c}
+body.parameter-studio .feedback{color:#dceafb}
+body.parameter-studio .feedback.error{color:#ffd0dc}
+body.parameter-studio .feedback.warn{color:#ffe1a8}
+body.parameter-studio .feedback.success{color:#b8f4ca}
+body.parameter-studio .feedback-help{background:#402832;border-color:#b77f91;color:#ffe0e9}
+body.parameter-studio .feedback-dismiss{color:#c6d6e8}
+body.parameter-studio .feedback-dismiss:hover{background:#425368;color:#fff}
+body.parameter-studio .feedback-wrap{max-height:min(45vh,300px);overflow:auto;overflow-wrap:anywhere;right:18px;bottom:18px;max-width:min(560px,calc(100vw - 36px))}
+body.parameter-studio[data-screen="build"] .feedback-wrap{bottom:92px}
+.gx-validation{color:#dfc18b;font-size:11px;max-width:300px;line-height:1.4}
+@media(prefers-reduced-motion:reduce){body.parameter-studio *,body.parameter-studio *::before,body.parameter-studio *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* One action area per screen; Settings shares the workspace's dark palette. */
+body.parameter-studio:not([data-screen="build"]) .gx-actionbar{display:none!important}
+body.parameter-studio[data-screen="automation"] .gx-toolbar{display:none!important}
+.gx-fetch-hint{color:#9aaec1;font-size:11px;max-width:260px;line-height:1.4}
+body.parameter-studio #view-automation{padding-bottom:90px}
+body.parameter-studio #view-automation>.panel,body.parameter-studio #view-automation>.settings{max-width:980px;margin-left:auto;margin-right:auto}
+body.parameter-studio #view-automation .view-heading{max-width:980px;margin-left:auto;margin-right:auto}
+body.parameter-studio #view-automation .hint,body.parameter-studio #view-automation .schedule-row p{color:#a8b9cb;line-height:1.6}
+body.parameter-studio #view-automation label{color:#d8e4f0}
+.settings-facts{margin:0 0 16px;display:grid;gap:13px}
+.settings-facts>div{display:grid;grid-template-columns:125px minmax(0,1fr);gap:12px;font-size:12px;line-height:1.5}
+.settings-facts dt{color:#9eafc2}.settings-facts dd{margin:0;color:#e6eef7;overflow-wrap:anywhere}
+.settings-note{border-left:3px solid #547e64;background:#14271e;color:#b9d5c3;padding:12px 14px;border-radius:4px;font-size:12px;line-height:1.6;overflow-wrap:anywhere}
+#scheduleStatus{color:#adbed0}#scheduleStatus.is-on{color:#85ee9b}
+.settings-help{margin:0;padding-left:20px;color:#b5c5d6;font-size:12px;line-height:1.65}
+.settings-help li+li{margin-top:10px}.settings-help strong{color:#edf3fa}
+body.parameter-studio #view-automation .settings>summary{color:#e6eef8}
+body.parameter-studio #view-automation .settings-body{border-color:#344457}
+body.parameter-studio #view-automation .key-value{color:#aebed0}
+body.parameter-studio #view-automation .key-value code{color:#d1e0f0}
+body.parameter-studio #view-automation .panel-group{background:#15202b;border-color:#35485c;border-radius:6px}
+body.parameter-studio #view-automation .panel-group strong{color:#e4eef9}
+body.parameter-studio #view-automation .panel-item{border-color:#35485c;color:#c2d1e1}
+body.parameter-studio #view-automation .panel-status{color:#8bdea1}
+body.parameter-studio #view-automation .panel-status.unmapped{color:#d8b57a}
+body.parameter-studio #view-automation .danger-zone{background:#2b1e24;border-color:#704453}
+body.parameter-studio #view-automation .danger-zone summary{color:#efb6c3}
+body.parameter-studio #view-automation .danger-zone>.hint{padding:0 12px 12px;margin:0}
+body.parameter-studio #view-automation .support,body.parameter-studio #view-automation .support strong{color:#c7b5df}
+body.parameter-studio #view-automation button:disabled{opacity:.45;cursor:not-allowed}
+body.parameter-studio #view-automation button:focus-visible,body.parameter-studio #view-automation summary:focus-visible{outline:2px solid #82e79a;outline-offset:3px}
+@media(max-width:680px){.gx-fetch-hint{display:none}.settings-facts>div{grid-template-columns:1fr;gap:3px}body.parameter-studio #view-automation .preset-save{grid-template-columns:1fr}body.parameter-studio #view-automation .settings-body{padding:14px}body.parameter-studio #view-automation .view-heading{margin-bottom:16px}}

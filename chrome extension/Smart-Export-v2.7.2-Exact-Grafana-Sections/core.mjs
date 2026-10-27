@@ -60,7 +60,7 @@ export function parseDashboardUrl(raw) {
   if (!/^\d{1,8}$/.test(orgId)) throw new Error('Invalid Grafana organization ID.');
   const vars=[];
   for (const [k,v] of u.searchParams.entries()) {
-    if (k.startsWith('var-') && v.trim()) vars.push(`${k}=${v}`);
+    if (k.startsWith('var-') && k!=='var-hdx_query_errors' && v.trim()) vars.push(`${k}=${v}`);
   }
   if (vars.length) throw new Error('Grafana dashboard filters are active. v1 cannot safely reproduce ad-hoc filters in the API query. Clear them before syncing: '+vars.join('; '));
   return {origin:u.origin, uid:m[1], orgId, datasetKey:`${u.origin}|${m[1]}|org=${orgId}|filters=none`, url:u.toString()};
@@ -116,6 +116,7 @@ export function parseGrafanaFrames(payload, from, to, diagnostics={}) {
       const state=norm(get(['state'],j));
       const city=norm(get(['city'],j));
       const raw=get(['playtime_minutes'],j);
+      if(raw===null||raw===undefined||typeof raw==='string'&&raw.trim()==='')throw new Error('Missing playtime value returned by Grafana.');
       const value=typeof raw==='number'?raw:Number(String(raw??'').replace(/,/g,''));
       if (!Number.isFinite(value) || value<0) throw new Error('Invalid playtime value returned by Grafana.');
       output.push({date,country,state,city,playtime_minutes:Math.round(value*100)/100});
@@ -141,7 +142,7 @@ export function normalizeRows(rows) {
 function safeCsvCell(value) {
   let s=String(value??'');
   // CSV exported from external data should not execute formulas on opening in Excel.
-  if (/^[=+@\-\t\r]/.test(s)) s="'"+s;
+  if (/^\s*[=+@\-\t\r]/.test(s)) s="'"+s;
   return '"'+s.replace(/"/g,'""')+'"';
 }
 export function toCSV(rows) {

@@ -1,5 +1,6 @@
 /* Independent v2 multi-report master. V1 GEO database remains untouched for rollback. */
 import {ALL_REPORT_ORDER,REPORTS} from './reports.mjs';
+import {validYMD} from './core.mjs';
 const DB_NAME='smart-export-reports-v2';
 const STORE='rows';
 function getDb(){return new Promise((resolve,reject)=>{
@@ -8,7 +9,8 @@ function getDb(){return new Promise((resolve,reject)=>{
     const s=db.createObjectStore(STORE,{keyPath:'id'});
     s.createIndex('datasetKey','datasetKey',{unique:false});
   }};
-  r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+  r.onsuccess=()=>{r.result.onversionchange=()=>r.result.close();resolve(r.result);};r.onerror=()=>reject(r.error);
+  r.onblocked=()=>reject(new Error('Saved reports are open in another extension version. Close other Smart Export tabs and retry.'));
 });}
 function txDone(tx){return new Promise((ok,fail)=>{tx.oncomplete=()=>ok();tx.onerror=()=>fail(tx.error||new Error('Storage error'));tx.onabort=()=>fail(tx.error||new Error('Storage transaction aborted'));});}
 export function rowIdentity(datasetKey,type,row){
@@ -17,12 +19,15 @@ export function rowIdentity(datasetKey,type,row){
   return JSON.stringify([datasetKey,type,...dims.map(d=>row[d])]);
 }
 export async function putReportsAtomically(datasetKey,from,to,byReport){
+  if(!validYMD(from)||!validYMD(to)||from>to)throw new Error('Invalid storage date range.');
   const ids=Object.keys(byReport);
   if(!ids.length)throw new Error('No reports to merge.');
   let count=0;
+  const identities=new Set();
   for(const type of ids){
     if(!ALL_REPORT_ORDER.includes(type))throw new Error('Invalid report type.');
-    for(const row of byReport[type]){if(row.date<from||row.date>to)throw new Error('Refusing to store out-of-range report data.');rowIdentity(datasetKey,type,row);count++;}
+    if(!Array.isArray(byReport[type])||!byReport[type].length)throw new Error('No report rows to merge. Existing data was kept.');
+    for(const row of byReport[type]){if(!validYMD(row.date)||row.date<from||row.date>to)throw new Error('Refusing to store out-of-range report data.');const key=rowIdentity(datasetKey,type,row);if(identities.has(key))throw new Error('Duplicate stored report group. Existing data was kept.');identities.add(key);count++;}
   }
   if(count>120000)throw new Error('Too many records for a single update. Use a shorter date range.');
   const db=await getDb();
@@ -34,10 +39,10 @@ export async function putReportsAtomically(datasetKey,from,to,byReport){
     rq.onsuccess=()=>{const cursor=rq.result;
       if(cursor){const v=cursor.value;if(update.has(v.report)&&v.date>=from&&v.date<=to)cursor.delete();cursor.continue();return;}
       // Insert after deletions have completed, in the same IndexedDB transaction.
-      for(const type of ids)for(const row of byReport[type]){
+      try{for(const type of ids)for(const row of byReport[type]){
         const id=rowIdentity(datasetKey,type,row);
-        s.put({id,datasetKey,report:type,...row,updatedAt:timestamp});
-      }
+        s.put({...row,id,datasetKey,report:type,updatedAt:timestamp});
+      }}catch{tx.abort();}
     };
     await promise;return count;
   }finally{db.close();}

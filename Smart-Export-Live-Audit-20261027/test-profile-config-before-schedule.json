@@ -1,0 +1,14 @@
+{
+  "smartExportConfig": {
+    "autoRefreshDays": 3,
+    "dashboardUrl": "https://grafana-apj.trafficpeak.live/d/db7ce6f6-d689-4976-89e5-ddf0b5401f97/6ea3fc9?orgId=743&timezone=Asia%2FKolkata&var-filter=&from=now-1h&to=now",
+    "enabled": false,
+    "lastDateFrom": "2026-10-26",
+    "lastDateTo": "2026-10-26",
+    "lastSuccessAt": "2026-10-27T12:26:32.246Z",
+    "orgId": "743",
+    "scheduleHourIST": 8,
+    "selectedReport": "geo",
+    "version": 1
+  }
+}

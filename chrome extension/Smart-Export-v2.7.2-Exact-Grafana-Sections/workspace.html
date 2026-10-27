@@ -118,10 +118,8 @@
 </div>
 <div class="gx-actionbar">
 <div aria-live="polite" class="gx-count" id="gxCount">Select panels to export</div>
-<fieldset aria-label="Export format" class="gx-output"><legend class="sr-only">Export format</legend>
-<label><input checked="" name="gxFormat" type="radio" value="xlsx"/><span><strong>Excel workbook</strong><small>One worksheet per metric</small></span></label>
-<label><input name="gxFormat" type="radio" value="csvzip"/><span><strong>Individual CSV files</strong><small>One file per metric</small></span></label>
-</fieldset>
+<small id="gxValidation" class="gx-validation" role="status" hidden=""></small>
+<span class="gx-fetch-hint">Choose your download format after previewing the data.</span>
 <button class="gx-primary" id="gxFetch" type="button">Get data <span aria-hidden="true">→</span></button>
 </div>
 </div><div aria-hidden="true" hidden="" id="engineControls">
@@ -402,23 +400,32 @@
 <div class="view-heading">
 <div>
 <span class="eyebrow">
-        AUTOMATION &amp; HELP
+        WORKSPACE PREFERENCES
        </span>
 <h1>
-        Your workspace settings.
+        Settings
        </h1>
 <p>
-        Daily refresh, reusable selections, and export history tools.
+        Manage daily updates, save panel selections, and get help with exports.
        </p>
 </div>
 </div>
+<section aria-labelledby="workspaceSettingsHeading" class="panel settings-overview">
+<div class="section-heading"><h2 id="workspaceSettingsHeading">Your workspace</h2><span class="overline" id="settingsConnection" role="status">Checking Grafana tab</span></div>
+<dl class="settings-facts">
+<div><dt>Dashboard</dt><dd id="settingsDashboard">Loading dashboard…</dd></div>
+<div><dt>Current selection</dt><dd id="settingsSelection">Choose panels on the Select panels screen.</dd></div>
+<div><dt>Saved data</dt><dd id="settingsStorage">Checking this Chrome profile…</dd></div>
+</dl>
+<button class="btn outline" id="settingsReconnect" type="button">Check Grafana connection</button>
+</section>
 <section aria-labelledby="autoHeading" class="panel">
 <div class="section-heading">
 <h2 id="autoHeading">
         Daily updates
        </h2>
 <span class="overline">
-        OPTIONAL
+        <span id="scheduleStatus" role="status">OFF</span>
        </span>
 </div>
 <div class="schedule-row">
@@ -427,7 +434,7 @@
          Update your saved data each day
         </strong>
 <p>
-         When Chrome is running and Grafana is signed in, check completed days around 8 AM IST.
+         Refreshes saved data only. Download files from Preview &amp; export when you need them.
         </p>
 </div>
 <label class="toggle" title="Enable daily updates">
@@ -436,6 +443,7 @@
 </span>
 </label>
 </div>
+<p class="settings-note" id="scheduleDetails">Choose panels before enabling daily updates.</p>
 <p class="hint" id="lastSynced">
        Last update: —
       </p>
@@ -443,14 +451,14 @@
 <section aria-labelledby="savedHeading" class="panel">
 <div class="section-heading">
 <h2 id="savedHeading">
-        My saved views
+        Saved panel selections
        </h2>
 <span class="overline">
         UP TO 20
        </span>
 </div>
 <label for="presetName">
-       Name this selection
+       Save the current panel selection
       </label>
 <div class="preset-save">
 <input id="presetName" maxlength="40" placeholder="e.g. Daily channel overview" type="text"/>
@@ -458,6 +466,7 @@
         Save view
        </button>
 </div>
+<p class="hint">Saves panel choices only. Dates, downloaded files, and fetched rows are not included.</p>
 <label for="savedPresets">
        Load a previously saved view
       </label>
@@ -480,16 +489,22 @@
         </button>
 </div>
 </div>
+<p class="hint" id="savedViewsStatus" role="status">No saved selections yet.</p>
 </section>
 <details class="settings" id="advancedSettings">
 <summary>
 <span>
-        Advanced tools &amp; troubleshooting
+        Help &amp; troubleshooting
        </span>
 <span aria-hidden="true" class="chev">
 </span>
 </summary>
 <div class="settings-body">
+<ol class="settings-help">
+<li><strong>Cannot fetch data?</strong> Open Grafana, sign in, then choose Check Grafana connection above.</li>
+<li><strong>Missing dates or values?</strong> Choose completed IST dates and fetch again. Blank values remain blank in downloads; sections without rows are identified when exporting.</li>
+<li><strong>Still having trouble?</strong> Download diagnostic logs and contact Smarth. Logs contain error details and may include dashboard addresses.</li>
+</ol>
 <div class="key-value">
 <span>
          Data source
@@ -510,13 +525,13 @@
         Only mapped, verified panels are queryable. Unmapped panels can be discovered but not exported automatically.
        </p>
 <button class="btn outline full" id="scanPanels" type="button">
-        Browse Grafana panels
+        Check source panel mapping
        </button>
 <div aria-live="polite" class="panel-browser" id="panelBrowser">
 </div>
 <div class="action-grid">
 <button class="btn outline" id="logs" type="button">
-         Download error logs
+         Download diagnostic logs
         </button>
 <button class="btn outline" id="classic" type="button">
          Open classic interface
@@ -527,8 +542,9 @@
          Data management
         </summary>
 <button class="btn danger-quiet full" id="clearData" type="button">
-         Clear this dashboard's saved v2 data
+         Clear saved reports for this dashboard
         </button>
+<p class="hint">Removes locally saved reports and pauses daily updates. Saved selections, downloaded files, and Grafana source data are kept.</p>
 </details>
 <p class="support">
         Need help?

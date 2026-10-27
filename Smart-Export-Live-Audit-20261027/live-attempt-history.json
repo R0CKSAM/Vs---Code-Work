@@ -1,0 +1,88 @@
+{
+  "started": "2026-10-27T12:25:29.889Z",
+  "profile": "isolated acceptance-test profile",
+  "date": "2026-10-26",
+  "checks": [
+    {
+      "name": "dashboard-tab",
+      "ok": true
+    },
+    {
+      "name": "selection-and-dates",
+      "ok": true
+    },
+    {
+      "name": "live-panel-scan",
+      "ok": true,
+      "panels": 34,
+      "mapped": 34
+    },
+    {
+      "name": "live-three-category-fetch",
+      "ok": true,
+      "rows": 1544,
+      "days": 1,
+      "reports": 3,
+      "warning": ""
+    },
+    {
+      "name": "saved-data-summary",
+      "ok": true,
+      "summaries": {
+        "geo": {
+          "rows": 103,
+          "days": 1,
+          "from": "2026-10-26",
+          "to": "2026-10-26"
+        },
+        "ts_device_1m": {
+          "rows": 1440,
+          "days": 1,
+          "from": "2026-10-26",
+          "to": "2026-10-26"
+        },
+        "viewership_stats": {
+          "rows": 1,
+          "days": 1,
+          "from": "2026-10-26",
+          "to": "2026-10-26"
+        }
+      }
+    },
+    {
+      "name": "real-browser-download-xlsx",
+      "ok": false
+    },
+    {
+      "name": "real-browser-download-csvzip",
+      "ok": false
+    },
+    {
+      "name": "controlled-expired-login-response",
+      "ok": true,
+      "intercepted": 1,
+      "error": "Grafana query HTTP 401: Controlled acceptance test: sign-in expired",
+      "geoRowsPreserved": 103
+    },
+    {
+      "name": "live-fetch-after-401-recovery",
+      "ok": true,
+      "rows": 103
+    },
+    {
+      "name": "actual-chrome-alarm-refresh",
+      "ok": true,
+      "completedDate": "2026-10-26",
+      "rows": 103
+    },
+    {
+      "name": "alarm-does-not-repeat-completed-day",
+      "ok": true
+    },
+    {
+      "name": "test-profile-schedule-paused",
+      "ok": true
+    }
+  ],
+  "finished": "2026-10-27T12:26:40.463Z"
+}

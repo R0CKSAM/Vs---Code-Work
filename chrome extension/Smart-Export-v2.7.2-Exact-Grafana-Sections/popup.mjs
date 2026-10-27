@@ -1,6 +1,6 @@
 /* Smart Export v2.3.0 — production UI with isolated views and a flat metric picker.
    The Grafana background engine and export writers are unchanged. */
-import {DEFAULT_CONFIG,parseDashboardUrl,datesForLastCompleteDays,istToday} from './core.mjs';
+import {DEFAULT_CONFIG,parseDashboardUrl,datesForLastCompleteDays,istToday,assertDateRange} from './core.mjs';
 import {REPORT_ORDER,ALL_REPORT_ORDER,REPORTS} from './reports.mjs';
 import {GROUPS,DETAILS,FIELD_LABELS,PRESETS,DEFAULT_SELECTION,normalizeSelection,selectedColumns,selectionCounts,selectionReports} from './metric-catalog.mjs';
 import {allReportRows} from './report-db.mjs';
@@ -13,6 +13,11 @@ const STORE='smartExportSmartPicker_v21',VIEWS='smartExportSavedViews_v21';
 let selection=normalizeSelection(DEFAULT_SELECTION),working=false,config={...DEFAULT_CONFIG};
 let summaries={},coverage={},allData={},savedViews={},lastDataKey='',latestActivity=null,filter={field:'',text:''};
 let activePreset='overview';
+let scanningPanels=false;
+let exporting=false,remoteBusy=false,feedbackTimer=null,stateRefreshTimer=null;
+let stateLoadVersion=0,savingView=false;
+let lastBusyState=null;
+const isBusy=()=>working||exporting||remoteBusy||scanningPanels||savingView;
 // Keep accordions stable across checkbox changes, search, and persisted view selections.
 let activeCategory = 'kpis';
 const UI_VIEW='smartExportActiveView_v22';
@@ -24,14 +29,21 @@ const send=(type,args={})=>new Promise((resolve,reject)=>chrome.runtime.sendMess
  resolve(res.data);
 }));
 const show=(value,kind='info')=>{
+ clearTimeout(feedbackTimer);
  const el=$('feedback');el.textContent=String(value);
+ el.setAttribute('role',kind==='error'?'alert':'status');el.setAttribute('aria-live',kind==='error'?'assertive':'polite');
  el.className='feedback '+(kind==='warning'?'warn':kind==='error'?'error':kind==='success'?'success':'');
- el.title=String(value);const wrap=el.closest('.feedback-wrap');if(wrap)wrap.dataset.kind=kind;
- const helper=$('feedbackHelp'),dismiss=$('feedbackDismiss');if(helper)helper.hidden=kind!=='error';if(dismiss)dismiss.hidden=!['success','error','warning'].includes(kind);
+ el.title=String(value);const wrap=el.closest('.feedback-wrap');if(wrap){wrap.dataset.kind=kind;wrap.hidden=false;}
+ const helper=$('feedbackHelp'),dismiss=$('feedbackDismiss');if(helper)helper.hidden=kind!=='error';if(dismiss)dismiss.hidden=false;
+ if(kind==='success'){
+  const dismissWhenIdle=()=>{if(wrap?.matches(':hover')||wrap?.contains(document.activeElement)){feedbackTimer=setTimeout(dismissWhenIdle,2000);return;}if(wrap)wrap.hidden=true;};
+  feedbackTimer=setTimeout(dismissWhenIdle,7000);
+ }
 };
 function switchView(view,{remember=true}={}){
  if(!['build','results','automation'].includes(view))view='build';
  currentView=view;
+ document.body.dataset.screen=view;
  for(const key of ['build','results','automation']){
   const panel=$('view-'+key),tab=$('tab'+(key==='build'?'Build':key==='results'?'Results':'Automation'));
   const active=key===view; panel.hidden=!active;tab.classList.toggle('active',active);
@@ -70,16 +82,28 @@ function busy(isBusy){
  $('syncLabel').textContent=working?'Fetching your numbers…':'Fetch selected data';
  $('dockFetch').innerHTML=working?'Fetching…':'Fetch data <span aria-hidden="true">→</span>'; 
  updateButtons();
+ window.dispatchEvent(new Event('smart-export-busy'));
 }
 function updateButtons(){
- const types=ids(),sameSource=$('dashboardUrl').value.trim()===(config.dashboardUrl||'').trim();
- const ready=types.length&&sameSource&&types.some(id=>Number(summaries[id]?.rows)>0);
- $('downloadXlsx').disabled=working||!ready;
- $('downloadCsv').disabled=working||!ready||types.length!==1;
+ const types=ids(),sameSource=sourceMatches(),locked=isBusy();
+ let available={};try{available=dataSelected();}catch{}
+ const ready=types.length&&sameSource&&types.some(id=>available[id]?.length);
+ $('downloadXlsx').disabled=locked||!ready;
+ $('downloadCsv').disabled=locked||!ready||types.length!==1;
  $('downloadCsv').title=types.length!==1?'CSV supports one report category. Excel contains a tab for each selected category.':'';
- $('syncNow').disabled=working||!types.length;
- $('dockFetch').disabled=working||!types.length;
- $('dockExcel').disabled=working||!ready;
+ $('syncNow').disabled=locked||!types.length;
+ $('dockFetch').disabled=locked||!types.length;
+ $('dockExcel').disabled=locked||!ready;
+ $('autoDaily').disabled=locked||(!config.enabled&&!types.length);
+ $('autoDaily').title=!config.enabled&&!types.length?'Choose panels on Select panels first.':'Enable or pause daily updates';
+ $('savePreset').disabled=locked||!types.length||!$('presetName').value.trim();
+ const hasView=Object.hasOwn(savedViews,$('savedPresets').value);
+ $('loadPreset').disabled=locked||!hasView;
+ $('deletePreset').disabled=locked||!hasView;
+ $('savedPresets').disabled=locked||!Object.keys(savedViews).length;
+ $('scanPanels').disabled=locked;
+ for(const id of ['clearData','classic','presetName'])$(id).disabled=locked;
+ if(lastBusyState!==locked){lastBusyState=locked;window.dispatchEvent(new Event('smart-export-busy'));}
 }
 function renderQuickPicks(){
  const host=$('quickPicks');
@@ -174,7 +198,8 @@ function updateCatalogChecks(){
 }
 async function saveChoice(){await chrome.storage.local.set({[STORE]:selection});}
 async function setSelection(input,{announce=false,fromCheckbox=false}={}){
- if(working)return;
+ if(isBusy())return false;
+ const previous=selection;
  selection=normalizeSelection(input,{allowEmpty:true});
  if(fromCheckbox){
   // Preserve accordion position, checked checkbox focus, and native dropdown state.
@@ -182,12 +207,14 @@ async function setSelection(input,{announce=false,fromCheckbox=false}={}){
  }else{
   activeCategory=ids()[0]||'kpis';draw();
  }
- try{await saveChoice();}catch(e){show(`Could not save metric selection: ${e.message}`,'error');return;}
+ try{await saveChoice();}catch(e){selection=previous;draw();window.dispatchEvent(new CustomEvent('smart-export-selection-changed',{detail:{selection:previous}}));show(`Could not save metric selection: ${e.message}`,'error');return false;}
  if(config.enabled&&config.autoReport==='picked'&&!sameReports(ids(),config.autoReports||[])){
   try{const old=config.autoReports?.length?config.autoReports:ids();await send('ENABLE_PICKED',{enabled:false,reports:old});config.enabled=false;$('autoDaily').checked=false;updateStats();show('Your scheduled categories changed. Daily updates have been paused until you review the new selection.','warning');}
   catch(e){show('Could not pause the old scheduled selection: '+e.message,'error');}
  }
  if(announce)show(`${selectionCounts(selection).metrics} metrics selected. Pick dates and fetch the data.`, 'success');
+ window.dispatchEvent(new CustomEvent('smart-export-selection-changed',{detail:{selection:normalizeSelection(selection,{allowEmpty:true})}}));
+ return true;
 }
 const sameReports=(a,b)=>JSON.stringify(ALL_REPORT_ORDER.filter(id=>a.includes(id)))===JSON.stringify(ALL_REPORT_ORDER.filter(id=>b.includes(id)));
 function toggleMetric(id,field,checked){
@@ -214,13 +241,14 @@ function renderFilter(){
 function filterConfig(){return ids().length===1 && !$('exportFilterBox').hidden && $('filterText').value.trim()?{
  field:$('filterField').value,text:$('filterText').value.trim()
  }:null;}
-function dataSelected(){return rowsForExport(allData,selection,filterConfig());}
+function sourceMatches(){try{const key=parseDashboardUrl($('dashboardUrl').value.trim()).datasetKey;return key===parseDashboardUrl(config.dashboardUrl).datasetKey&&key===lastDataKey;}catch{return false;}}
+function dataSelected(){return sourceMatches()&&ids().length?rowsForExport(allData,selection,filterConfig(),{from:$('dateFrom').value,to:$('dateTo').value}):{};}
 function renderPreview(){
  const types=ids(),table=$('previewTable'),thead=table.querySelector('thead'),tbody=table.querySelector('tbody');
  thead.replaceChildren();tbody.replaceChildren();
- const eligible=types.find(id=>(allData[id]||[]).length);
+ const available=dataSelected(),eligible=types.find(id=>available[id]?.length);
  if(!eligible){$('previewScroll').hidden=false;table.hidden=true;$('previewEmpty').hidden=false;$('previewName').textContent='Preview of selected fields';$('previewMeta').textContent='Not fetched';$('previewEmpty').textContent='Fetch selected data to preview its columns and example rows.';return;}
- let rows=[];try{rows=dataSelected()[eligible]||[];}catch(e){show(e.message,'error');}
+ const rows=available[eligible]||[];
  const cols=selectedColumns(eligible,selection);
  $('previewName').textContent=GROUPS[eligible].title;
  $('previewMeta').textContent=`${prettyCount(rows.length)} matching rows`;
@@ -230,29 +258,51 @@ function renderPreview(){
  if(!rows.length)$('previewEmpty').textContent='No rows match this optional export filter. Clear the filter to include more data.';
 }
 function updateStats(){
- const reports=ids(),summariesChosen=reports.map(id=>summaries[id]||{}),total=summariesChosen.reduce((n,a)=>n+(a.rows||0),0);
- const dates=new Set();for(const id of reports)for(const r of allData[id]||[])dates.add(r.date);
+ const reports=ids(),available=dataSelected(),total=reports.reduce((n,id)=>n+(available[id]?.length||0),0);
+ const dates=new Set();for(const id of reports)for(const r of available[id]||[])dates.add(r.date);
  $('rowCount').textContent=prettyCount(total);$('dayCount').textContent=prettyCount(dates.size);
- $('variantCount').textContent=prettyCount(reports.filter(id=>summaries[id]?.rows).length);
- const vals=summariesChosen.filter(x=>x.rows);
- $('rangeDetails').textContent=vals.length?`Saved dates: ${vals.map(x=>x.from).sort()[0]} to ${vals.map(x=>x.to).sort().at(-1)}. All six certified datasets remain available when requested.`:'No saved rows for your chosen categories yet.';
- const ready=reports.length&&$('dashboardUrl').value.trim()===(config.dashboardUrl||'').trim()&&reports.every(id=>summaries[id]?.rows);
- const status=$('stateChip');status.textContent=working?'FETCHING':config.enabled?'DAILY ON':ready?'READY TO EXPORT':'NOT FETCHED';
+ $('variantCount').textContent=prettyCount(reports.filter(id=>available[id]?.length).length);
+ const sorted=[...dates].sort(),missing=reports.filter(id=>!available[id]?.length);
+ $('rangeDetails').textContent=sorted.length?`Available in selected dates: ${sorted[0]} to ${sorted.at(-1)}.${missing.length?' No saved rows for: '+missing.map(id=>REPORTS[id].title).join(', ')+'.':''}`:'No saved rows for the selected panels and dates. Choose other dates or Get data.';
+ const ready=total>0;
+ const status=$('stateChip');status.textContent=isBusy()?'WORKING':ready?(missing.length?'PARTIAL DATA':'READY TO EXPORT'):'NOT FETCHED';
  status.className='state-chip '+(working?'working':config.enabled?'':'warn');
- $('autoDaily').checked=!!config.enabled&&!!config.v2Mode&&config.autoReport==='picked'&&sameReports(reports,config.autoReports||[]);
+ $('autoDaily').checked=!!config.enabled;
  $('dockStatus').textContent=working?'Fetching reports…':!$('dashboardUrl').value.trim()?'Choose Grafana tab':`${selectionCounts(selection).metrics} metrics · ${prettyCount(total)} saved rows`;
  $('lastSynced').textContent=`Last successful fetch: ${dateStamp(config.lastSuccessAt)}. ${config.enabled?`Active schedule: ${config.autoReport==='picked'?'Smart Picker':config.autoReport||'legacy'} categories.`:'Daily updates are off.'}`;
+ updateSettings();
+}
+function updateSettings(){
+ if(!$('settingsDashboard'))return;
+ const url=$('dashboardUrl').value.trim();
+ $('settingsDashboard').textContent=url||'Connect an open Grafana dashboard.';
+ $('settingsDashboard').title=url;
+ const names=ids().map(id=>REPORTS[id].title);
+ $('settingsSelection').textContent=names.length?`${selectionCounts(selection).metrics} metrics across ${names.join(', ')}`:'No panels selected. Choose panels on Select panels first.';
+ const totals=Object.values(summaries).reduce((n,s)=>n+(Number(s.rows)||0),0);
+ $('settingsStorage').textContent=`${prettyCount(totals)} saved rows in this Chrome profile. Downloads are stored separately.`;
+ $('scheduleStatus').textContent=config.enabled?'ON':'OFF';
+ $('scheduleStatus').classList.toggle('is-on',!!config.enabled);
+ const scheduled=config.v2Mode?(config.autoReport==='picked'?config.autoReports||[]:config.autoReport==='executive'?REPORT_ORDER:[config.autoReport||'geo']):['geo'];
+ const target=config.enabled?scheduled:ids();
+ const scope=target.map(id=>REPORTS[id]?.title||id).join(', ');
+ const hour=Number(config.scheduleHourIST??8);
+ const scheduleTime=`${String(hour%12||12)} ${hour<12?'AM':'PM'} IST`;
+ $('scheduleDetails').textContent=scope?`${config.enabled?'Scheduled sections':'Enable for'}: ${scope}. Checks hourly from ${scheduleTime} and refreshes the last ${config.autoRefreshDays||3} completed days. Chrome must be running with Grafana signed in.`:'Choose panels before enabling daily updates. You can always pause an active schedule here.';
+ $('lastSynced').textContent=`Last successful fetch (manual or automatic): ${dateStamp(config.lastSuccessAt)}.`;
 }
 async function loadState({showActivity=false}={}){
+ const version=++stateLoadVersion;
  try{
-  const r=await send('STATE_V2');config={...DEFAULT_CONFIG,...r.config};summaries=r.summaries||{};coverage=r.coverage||{};
+  const r=await send('STATE_V2'),nextConfig={...DEFAULT_CONFIG,...r.config};
+  const spec=parseDashboardUrl(nextConfig.dashboardUrl),rows=await allReportRows(spec.datasetKey);
+  if(version!==stateLoadVersion)return;
+  config=nextConfig;summaries=r.summaries||{};coverage=r.coverage||{};remoteBusy=!!r.busy;allData=rows;lastDataKey=spec.datasetKey;
   if(document.activeElement!==$('dashboardUrl'))$('dashboardUrl').value=config.dashboardUrl;
-  const spec=parseDashboardUrl(config.dashboardUrl);
-  if(lastDataKey!==spec.datasetKey || !Object.keys(allData).length){allData=await allReportRows(spec.datasetKey);lastDataKey=spec.datasetKey;}
-  else{allData=await allReportRows(spec.datasetKey);}
   updateStats();renderPreview();updateButtons();
+  window.dispatchEvent(new Event('smart-export-busy'));
   if(showActivity&&r.activity&&Date.now()-(r.activity.time||0)<240000)show(r.activity.message,r.activity.kind);
- }catch(e){show(e.message,'error');}
+ }catch(e){if(version===stateLoadVersion)show(e.message,'error');}
 }
 async function saveSource(){
  const reports=ids();if(!reports.length)throw new Error('Choose at least one metric.');
@@ -260,17 +310,19 @@ async function saveSource(){
  await send('SAVE_PICKER',{dashboardUrl:spec.url,reports});
  return spec;
 }
-async function fetchSelected(){if(working)return false;busy(true);try{
+async function fetchSelected(){if(isBusy())return false;busy(true);try{
  const spec=await saveSource();const from=$('dateFrom').value,to=$('dateTo').value;
  const result=await send('SYNC_PICKED',{reports:ids(),from,to});
- lastDataKey='';await loadState();
- switchView('results');show(`${prettyCount(result.rows)} records merged across ${result.reports} report ${result.reports===1?'category':'categories'}. Review and download below.`,'success');return true;
+ lastDataKey='';
+ switchView('results');show(result.warning||`${prettyCount(result.rows)} records merged across ${result.reports} report ${result.reports===1?'category':'categories'}. Review and download below.`,result.warning?'warning':'success');return true;
  }catch(e){show(e.message,'error');return false;}finally{busy(false);await loadState();}
 }
-async function exportNow(format){try{
+async function exportNow(format){if(isBusy())return false;exporting=true;updateButtons();window.dispatchEvent(new Event('smart-export-busy'));try{
+ if(!['xlsx','csv','csvzip'].includes(format))throw new Error('Choose Excel or CSV as the download format.');
  const requested=normalizeSelection(selection);const spec=parseDashboardUrl($('dashboardUrl').value.trim());
  const datasets=await allReportRows(spec.datasetKey);
  const from=$('dateFrom').value,to=$('dateTo').value;
+ assertDateRange(from,to);
  const picked=rowsForExport(datasets,requested,filterConfig());
  // Never export records outside the date range shown in the header.
  const candidates=Object.fromEntries(Object.keys(requested).map(id=>[id,(picked[id]||[]).filter(row=>row.date>=from&&row.date<=to)]));
@@ -282,7 +334,7 @@ async function exportNow(format){try{
   const entries=types.flatMap(id=>choice[id].map(field=>({
    name:`${id}-${field}.csv`,csv:selectedCsv(id,selected[id],{[id]:[field]})
   })));
-  if(entries.length===1){
+  if(entries.length===1&&format==='csv'){
    download(new Blob([entries[0].csv],{type:'text/csv;charset=utf-8'}),`${base}-${entries[0].name}`);
   }else{
    if(format==='csv')throw new Error('Choose Individual CSV files to export multiple parameters.');
@@ -296,34 +348,42 @@ async function exportNow(format){try{
  if(missingCells)notes.push(`${prettyCount(missingCells)} missing values left blank`);
  if(skipped.length)notes.push(`No rows available; skipped: ${skipped.map(id=>REPORTS[id]?.title||id).join(', ')}`);
  show(`${format==='csvzip'?'Individual CSV files':format.toUpperCase()} downloaded.${notes.length?' '+notes.join('. ')+'.':''}`,notes.length?'warning':'success');
- }catch(e){show(e.message,'error');}
+ return true;
+ }catch(e){show(e.message,'error');return false;}finally{exporting=false;updateButtons();window.dispatchEvent(new Event('smart-export-busy'));}
 }
-async function toggleSchedule(){const enabled=$('autoDaily').checked;try{
- await saveSource();const r=await send('ENABLE_PICKED',{enabled,reports:ids()});config={...config,...r.config};
+async function toggleSchedule(){const enabled=$('autoDaily').checked;if(working)return;busy(true);try{
+ if(enabled)await saveSource();
+ const r=enabled?await send('ENABLE_PICKED',{enabled:true,reports:ids()}):await send('ENABLE',{enabled:false});config={...config,...r.config};
  show(enabled?'Daily updates enabled for your selected categories. Chrome and signed-in Grafana must remain available.':'Automatic updates paused.','success');
  await loadState();
- }catch(e){$('autoDaily').checked=!enabled;show(e.message,'error');}
+ }catch(e){$('autoDaily').checked=!!config.enabled;show(e.message,'error');}finally{busy(false);updateStats();}
 }
 function updateSavedList(){
  const select=$('savedPresets'),current=select.value;select.replaceChildren();
  const first=document.createElement('option');first.value='';first.textContent='Choose a saved view…';select.append(first);
  for(const name of Object.keys(savedViews).sort((a,b)=>a.localeCompare(b))){const o=document.createElement('option');o.value=name;o.textContent=name;select.append(o);}if(savedViews[current])select.value=current;
+ if($('savedViewsStatus'))$('savedViewsStatus').textContent=Object.keys(savedViews).length?`${Object.keys(savedViews).length} of 20 saved selections. Choose one to load or delete.`:'No saved selections yet. Choose panels, enter a name, then save.';
+ updateButtons();
 }
-async function savePreset(){try{
+async function savePreset(){if(isBusy())return;savingView=true;updateButtons();try{
  const name=$('presetName').value.trim();if(!name||name.length>40)throw new Error('Give your saved view a name (up to 40 characters).');
  if(ids().length===0)throw new Error('Select metrics before saving a view.');
  const sameName=Object.keys(savedViews).find(x=>x.toLocaleLowerCase()===name.toLocaleLowerCase());
- if(sameName){if(!confirm(`Replace your existing view “${sameName}”?`))return;delete savedViews[sameName];}
- if(Object.keys(savedViews).length>=20)throw new Error('Maximum 20 saved views. Delete one before creating another.');
- savedViews[name]=normalizeSelection(selection);await chrome.storage.local.set({[VIEWS]:savedViews});updateSavedList();$('savedPresets').value=name;show(`Saved view “${name}”.`,'success');
- }catch(e){show(e.message,'error');}
+ if(sameName&&!confirm(`Replace your existing view “${sameName}”?`))return;
+ if(!sameName&&Object.keys(savedViews).length>=20)throw new Error('Maximum 20 saved views. Delete one before creating another.');
+ const next={...savedViews};if(sameName)delete next[sameName];Object.defineProperty(next,name,{value:normalizeSelection(selection),enumerable:true,configurable:true,writable:true});
+ await chrome.storage.local.set({[VIEWS]:next});savedViews=next;updateSavedList();$('savedPresets').value=name;updateButtons();show(`Saved view “${name}”.`,'success');
+ }catch(e){show(e.message,'error');}finally{savingView=false;updateButtons();}
 }
-async function loadPreset(){const key=$('savedPresets').value;if(!savedViews[key]){show('Choose a saved view first.','warning');return;}await setSelection(savedViews[key],{announce:true});switchView('build');}
-async function deletePreset(){const key=$('savedPresets').value;if(!savedViews[key]){show('Choose a saved view first.','warning');return;}if(!confirm(`Delete saved view “${key}”?`))return;delete savedViews[key];await chrome.storage.local.set({[VIEWS]:savedViews});updateSavedList();show('Saved view deleted.','success');}
+async function loadPreset(){try{const key=$('savedPresets').value;if(!Object.hasOwn(savedViews,key)){show('Choose a saved view first.','warning');return;}if(await setSelection(savedViews[key],{announce:true}))switchView('build');}catch(e){show(e.message,'error');}}
+async function deletePreset(){if(isBusy())return;savingView=true;updateButtons();try{const key=$('savedPresets').value;if(!Object.hasOwn(savedViews,key)){show('Choose a saved view first.','warning');return;}if(!confirm(`Delete saved view “${key}”?`))return;const next={...savedViews};delete next[key];await chrome.storage.local.set({[VIEWS]:next});savedViews=next;updateSavedList();show('Saved view deleted.','success');}catch(e){show(e.message,'error');}finally{savingView=false;updateButtons();}}
 async function scanPanels(){
+ if(scanningPanels||working)return;scanningPanels=true;updateButtons();
  try{
   const browser=$('panelBrowser');browser.textContent='Scanning the signed-in dashboard…';
-  await saveSource();const data=await send('SCAN_DASHBOARD_PANELS');
+  const spec=parseDashboardUrl($('dashboardUrl').value.trim());
+  if(spec.url!==config.dashboardUrl){const saved=await send('SAVE_SETTINGS',{dashboardUrl:spec.url,enabled:!!config.enabled});config={...config,...saved.config};updateStats();}
+  const data=await send('SCAN_DASHBOARD_PANELS');
   const groups=new Map();for(const p of data.panels||[]){const key=p.section||'Other panels';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(p);}
   browser.replaceChildren();
   for(const [section,panels] of groups){
@@ -338,11 +398,11 @@ async function scanPanels(){
   }
   if(!groups.size)browser.textContent='No panels found on the selected dashboard.';
   show(`Found ${(data.panels||[]).length} live dashboard panels. Only verified parameters can be exported automatically.`, 'success');
- }catch(e){$('panelBrowser').textContent='Panel scan failed. Use Download error logs or check Grafana sign-in.';show(e.message,'error');}
+ }catch(e){$('panelBrowser').textContent='Panel scan failed. Check Grafana sign-in, then download diagnostic logs if the problem continues.';show(e.message,'error');}finally{scanningPanels=false;updateButtons();}
 }
 async function init(){
  const stored=await chrome.storage.local.get({[STORE]:DEFAULT_SELECTION,[VIEWS]:{},[UI_VIEW]:'build'});
- try{selection=normalizeSelection(stored[STORE]);}catch{selection=normalizeSelection(DEFAULT_SELECTION);}
+ try{selection=normalizeSelection(stored[STORE],{allowEmpty:true});}catch{selection=normalizeSelection(DEFAULT_SELECTION);}
  savedViews=typeof stored[VIEWS]==='object'&&stored[VIEWS]&&!Array.isArray(stored[VIEWS])?stored[VIEWS]:{};
  bindNavigation();switchView(stored[UI_VIEW],{remember:false});
  $('moreTemplates').addEventListener('click',()=>{const expanded=$('quickPicks').classList.toggle('expanded');$('moreTemplates').setAttribute('aria-expanded',String(expanded));$('moreTemplates').innerHTML=expanded?'Show fewer templates <span aria-hidden="true">⌃</span>':'Show more templates <span aria-hidden="true">⌄</span>';});
@@ -362,6 +422,7 @@ async function init(){
  $('filterField').addEventListener('change',()=>{filter.field=$('filterField').value;renderPreview();});
  $('filterText').addEventListener('input',()=>{filter.text=$('filterText').value;renderPreview();});
  $('savePreset').addEventListener('click',savePreset);$('loadPreset').addEventListener('click',loadPreset);$('deletePreset').addEventListener('click',deletePreset);
+ $('presetName').addEventListener('input',updateButtons);$('savedPresets').addEventListener('change',updateButtons);
  $('classic').addEventListener('click',()=>chrome.tabs.create({url:chrome.runtime.getURL('legacy-popup.html')}));
  $('scanPanels').addEventListener('click',scanPanels);
  $('feedbackHelp')?.addEventListener('click',()=>{
@@ -369,12 +430,18 @@ async function init(){
    $('advancedSettings').scrollIntoView({block:'nearest',behavior:'smooth'});
  });
  $('feedbackDismiss')?.addEventListener('click',()=>{
-   const wrap=$('feedback')?.closest('.feedback-wrap');if(wrap)wrap.dataset.kind='info';
+   clearTimeout(feedbackTimer);const wrap=$('feedback')?.closest('.feedback-wrap');if(wrap)wrap.hidden=true;
    $('feedbackHelp').hidden=true;$('feedbackDismiss').hidden=true;
  });
- $('logs').addEventListener('click',async()=>{try{const x=await send('EXPORT_LOGS');download(new Blob([JSON.stringify({product:'Smart Export v2.6.0',exportedAt:new Date().toISOString(),logs:x.logs},null,2)],{type:'application/json'}),'Smart-Export-Errors.json');show('Diagnostics downloaded. Please review them before sharing.','success');}catch(e){show(e.message,'error');}});
- $('clearData').addEventListener('click',async()=>{if(!confirm('Delete the saved v2 report master for this Grafana dashboard? Export Excel first.'))return;if(!confirm('Are you sure? The existing GEO v1 master will remain untouched.'))return;try{await send('CLEAR_V2');lastDataKey='';allData={};await loadState();show('Saved v2 master cleared. Legacy GEO data preserved.','success');}catch(e){show(e.message,'error');}});
- chrome.storage.onChanged.addListener(ch=>{if(ch.smartExportActivity||ch.smartExportConfig)loadState().catch(()=>{});});
+ $('logs').addEventListener('click',async()=>{if($('logs').disabled)return;$('logs').disabled=true;try{const x=await send('EXPORT_LOGS');download(new Blob([JSON.stringify({product:`Smart Export v${chrome.runtime.getManifest().version}`,exportedAt:new Date().toISOString(),logs:x.logs},null,2)],{type:'application/json'}),'Smart-Export-Errors.json');show('Diagnostic logs downloaded. Review them before sharing with support.','success');}catch(e){show(e.message,'error');}finally{$('logs').disabled=false;}});
+ $('clearData').addEventListener('click',async()=>{if(working)return;const url=config.dashboardUrl;if(!confirm(`Clear locally saved reports for this dashboard?\n\n${url}\n\nDaily updates will pause. Downloaded files, saved panel selections, Grafana source data and the legacy GEO store are kept.`))return;busy(true);try{await send('CLEAR_V2');lastDataKey='';allData={};await loadState();show('Saved reports cleared for this dashboard. Daily updates paused.','success');}catch(e){show(e.message,'error');}finally{busy(false);}});
+ chrome.storage.onChanged.addListener(ch=>{
+  const event=ch.smartExportActivity?.newValue;
+  if(event){show(event.message,event.kind);remoteBusy=event.kind==='info';updateButtons();window.dispatchEvent(new Event('smart-export-busy'));}
+  if(ch.smartExportConfig||event&&event.kind!=='info'){
+   clearTimeout(stateRefreshTimer);stateRefreshTimer=setTimeout(()=>loadState().catch(()=>{}),100);
+  }
+ });
 }
 // Internal, UI-only facade. This exposes the existing certified reporting engine
 // to the modern parameter studio without fragile DOM click/search simulation.
@@ -389,6 +456,7 @@ const bridge = {
    for(const size of [7,30]){
      const btn=$(size===7?'last7':'last30');btn.classList.remove('is-active');btn.setAttribute('aria-pressed','false');
    }
+   updateStats();renderPreview();updateButtons();
  },
  getDashboardUrl:()=>$('dashboardUrl').value,
  useGrafana:async()=>{
@@ -402,9 +470,10 @@ const bridge = {
    return result.url;
  },
  backGrafana:()=>document.getElementById('openGrafana')?.click(),
- isBusy:()=>working,
+ isBusy,
  fetch:()=>fetchSelected(),
  export:format=>exportNow(format),
+ notify:show,
  showView:view=>switchView(view),
 };
 window.SmartExportBridge=bridge;

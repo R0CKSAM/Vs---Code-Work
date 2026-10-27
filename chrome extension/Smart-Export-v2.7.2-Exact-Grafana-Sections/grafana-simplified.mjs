@@ -21,6 +21,10 @@ const FRIENDLY=Object.fromEntries(SECTIONS.flatMap(s=>s.panels.filter(p=>!p.comp
 const state={bridge:null,working:false,connected:false,source:'',selection:{},search:'',format:'xlsx',initialized:false,
  expanded:new Set(SECTIONS.map(s=>s.key)),verifiedSnapshot:null,saveQueue:Promise.resolve(),saveVersion:0};
 const OUTPUT_KEY='smartExportExportFormat_v26';
+const visibleSelection=raw=>{
+ const clean=normalizeSelection(raw,{allowEmpty:true});
+ return Object.fromEntries(Object.entries(clean).map(([id,fields])=>[id,fields.filter(field=>VISIBLE_FIELDS.includes(`${id}:${field}`))]).filter(([,fields])=>fields.length));
+};
 const DATE_KEY='smartExportDateRange_v26';
 const snapshot=()=>JSON.stringify({from:$('gxFrom').value,to:$('gxTo').value,selection:state.selection,source:state.source});
 const validDate = v => typeof v==='string'&&validYMD(v);
@@ -28,8 +32,12 @@ const count=()=>SECTIONS.reduce((n,section)=>n+section.panels.filter(p=>panelSel
 const reportsSelected=()=>ALL_REPORT_ORDER.filter(id=>(state.selection[id]||[]).length);
 const dateDays=()=>{const a=$('gxFrom').value,b=$('gxTo').value;
  if(!validDate(a)||!validDate(b))return 0;return Math.round((Date.parse(b+'T12:00:00Z')-Date.parse(a+'T12:00:00Z'))/86400000)+1;};
-function warn(message){const node=$('gxError');node.textContent=String(message);node.hidden=false;}
+function warn(message){if(state.bridge?.notify){state.bridge.notify(message,'error');return;}const node=$('gxError');node.textContent=String(message);node.hidden=false;}
 function clearWarn(){$('gxError').hidden=true;$('gxError').textContent='';}
+function canDownload(){
+ const dates=state.bridge?.getDates();
+ return !state.bridge?.isBusy()&&JSON.stringify(state.bridge?.getSelection())===JSON.stringify(state.selection)&&dates?.from===$('gxFrom').value&&dates?.to===$('gxTo').value&&!$('downloadXlsx').disabled;
+}
 function formatMessage(){return state.format==='xlsx'?'Excel workbook · one sheet per parameter':'Individual CSVs · ZIP file';}
 function validate(){
  if(!state.initialized||!state.bridge?.ready)return 'Loading reporting engine…';
@@ -50,6 +58,7 @@ function validate(){
 function setConnected(connected,message){state.connected=connected;
  const target=$('gxConnection');target.textContent=(connected?'● ':'○ ')+message;
  target.classList.toggle('is-connected',connected);target.title=connected?'Grafana tab detected. Click to check again.':'Click to connect an open Grafana tab.';
+ if($('settingsConnection'))$('settingsConnection').textContent=connected?'Grafana tab detected':'Open Grafana to connect';
  refreshActions();}
 function panelFields(panel){return panel.fields||[panel.field];}
 function panelSelection(panel){const current=state.selection[panel.report]||[];return panelFields(panel).filter(field=>current.includes(field)).length;}
@@ -61,7 +70,7 @@ function updateChecks(){
   box.checked=selected;box.indeterminate=chosen>0&&!selected;
   box.closest('.gx-metric')?.classList.toggle('is-selected',selected);
   box.closest('.gx-metric')?.classList.toggle('is-partial',chosen>0&&!selected);
-  box.disabled=state.working;
+  box.disabled=state.working||!!state.bridge?.isBusy();
  });
  for(const section of SECTIONS){
   const el=document.querySelector(`[data-section-count="${section.key}"]`);
@@ -72,18 +81,20 @@ function updateChecks(){
  refreshActions();
 }
 function refreshActions(){
+ const locked=state.working||!!state.bridge?.isBusy();
  const msg=validate();const num=count();const groups=reportsSelected().length;
  $('gxCount').textContent=`${num} Grafana panel${num===1?'':'s'} selected · ${groups} data request${groups===1?'':'s'} · ${dateDays()||'—'} day${dateDays()===1?'':'s'} (IST)`;
- $('gxFetch').disabled=!!msg||state.working;
+ $('gxFetch').disabled=!!msg||locked;
+ $('gxFetch').title=msg||'Fetch the selected Grafana panels';
+ const hint=$('gxValidation');if(hint){hint.textContent=locked?'Please wait for the current task to finish.':msg;hint.hidden=!hint.textContent;}
  $('gxFetch').innerHTML=state.working?'Fetching Grafana data…':'Get data <span aria-hidden="true">→</span>';
- for(const btn of ['gxSelectVisible','gxClear'])$(btn).disabled=state.working;
- for(const input of ['gxFrom','gxTo','gxSearch'])$(input).disabled=state.working;
- for(const btn of document.querySelectorAll('.gx-presets button'))btn.disabled=state.working;
- for(const input of document.querySelectorAll('input[name="gxFormat"]'))input.disabled=state.working;
+ for(const btn of ['gxSelectVisible','gxClear','settingsReconnect'])if($(btn))$(btn).disabled=locked;
+ for(const input of ['gxFrom','gxTo','gxSearch','gxResultFormat'])$(input).disabled=locked;
+ for(const btn of document.querySelectorAll('.gx-presets button'))btn.disabled=locked;
  // Date/configuration warnings shown only once user requests data, not at startup.
  const output=$('gxDownload');
  if(output){const ready=!$('downloadXlsx')?.disabled;
-  output.disabled=state.working||!ready||state.verifiedSnapshot!==snapshot();
+  output.disabled=locked||!ready||!canDownload();
   output.textContent=state.format==='xlsx'?'Download Excel ↓':'Download CSV files ↓';
  }
 }
@@ -134,7 +145,7 @@ function renderSections(){
    if(panel.panel)label.dataset.grafanaPanelId=String(panel.panel);
    const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.dataset.report=panel.report;
    if(panel.composite)checkbox.dataset.fields=panel.fields.join(',');else checkbox.dataset.field=panel.field;
-   const chosen=panelSelection(panel);checkbox.checked=chosen===panelFields(panel).length;checkbox.indeterminate=chosen>0&&!checkbox.checked;checkbox.disabled=state.working;
+   const chosen=panelSelection(panel);checkbox.checked=chosen===panelFields(panel).length;checkbox.indeterminate=chosen>0&&!checkbox.checked;checkbox.disabled=state.working||!!state.bridge?.isBusy();
    checkbox.setAttribute('aria-label',`Export ${panel.name}`);
    const icon=makePanelIcon(panel.icon);
    const copy=document.createElement('span');copy.className='gx-metric-copy';
@@ -158,16 +169,16 @@ function renderSections(){
  refreshActions();
 }
 async function updateSelection(next){
- if(!state.bridge?.ready||state.working)return;
+ if(!state.bridge?.ready||state.working||state.bridge.isBusy())return;
  const old=state.selection;
  let clean;
- try{clean=normalizeSelection(next,{allowEmpty:true});}catch(e){warn(e.message);return;}
+ try{clean=visibleSelection(next);}catch(e){warn(e.message);return;}
  state.selection=clean;state.verifiedSnapshot=null;updateChecks();clearWarn();
  // Serialize changes: fast consecutive checkbox clicks must not save out of order.
  const version=++state.saveVersion;
  const latest=state.saveQueue.catch(()=>{}).then(()=>state.bridge.setSelection(clean));
  state.saveQueue=latest;
- try{await latest;}
+ try{if(await latest===false)throw new Error('Your selection could not be saved. Try again.');}
  catch(e){if(version===state.saveVersion){state.selection=old;updateChecks();warn(`Selection could not be saved: ${e.message}`);}}
 }
 async function toggleMetric(id,fields,on){
@@ -223,11 +234,10 @@ function syncNavigation(){
   const on=nav.dataset.screen===view;nav.setAttribute('aria-pressed',String(on));
  }
  const builderFooter=document.querySelector('.gx-actionbar');if(builderFooter)builderFooter.hidden=view!=='build';
- const d=$('gxDownload');if(d){const ready=!$('downloadXlsx')?.disabled;d.disabled=state.working||!ready||state.verifiedSnapshot!==snapshot();}
+ const d=$('gxDownload');if(d)d.disabled=state.working||!canDownload();
  // Review dates remain globally visible. Do not clobber user-input in the middle of a request.
 }
 function setFormat(format){state.format=format;
- for(const el of document.querySelectorAll('input[name="gxFormat"]'))el.checked=el.value===format;
  $('gxResultFormat').value=format;
  chrome.storage.local.set({[OUTPUT_KEY]:format}).catch(()=>{});refreshActions();
 }
@@ -251,9 +261,9 @@ function bindEvents(){
   const num=b.dataset.range==='yesterday'?1:Number(b.dataset.range),r=datesForLastCompleteDays(num);setDates(r.from,r.to);
  });
  $('gxConnection').addEventListener('click',connectGrafana);
+ $('settingsReconnect')?.addEventListener('click',connectGrafana);
  $('gxBackGrafana').addEventListener('click',()=>state.bridge?.backGrafana());
  $('gxFetch').addEventListener('click',fetchData);
- for(const field of document.querySelectorAll('input[name="gxFormat"]'))field.addEventListener('change',e=>setFormat(e.target.value));
  $('gxResultFormat').addEventListener('change',e=>setFormat(e.target.value));
  $('gxDownload').addEventListener('click',async()=>{
   if($('gxDownload').disabled)return;
@@ -263,23 +273,41 @@ function bindEvents(){
  for(const b of document.querySelectorAll('.ps-navigation button'))b.addEventListener('click',()=>{
   state.bridge?.showView(b.dataset.screen);syncNavigation();refreshActions();
  });
+ const nav=[...document.querySelectorAll('.ps-navigation button')];
+ for(const button of nav){button.setAttribute('aria-controls','view-'+button.dataset.screen);button.addEventListener('keydown',event=>{
+  if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+  event.preventDefault();let index=nav.indexOf(button);
+  index=event.key==='Home'?0:event.key==='End'?nav.length-1:(index+(event.key==='ArrowRight'?1:-1)+nav.length)%nav.length;
+  nav[index].click();nav[index].focus();
+ });}
  for(const key of ['build','results','automation'])new MutationObserver(syncNavigation).observe($('view-'+key),{attributes:true,attributeFilter:['hidden']});
  // Legacy export readiness after fetching updates through disabled attribute.
  new MutationObserver(refreshActions).observe($('downloadXlsx'),{attributes:true,attributeFilter:['disabled']});
+ window.addEventListener('smart-export-busy',updateChecks);
+ window.addEventListener('smart-export-selection-changed',async event=>{
+  const clean=visibleSelection(event.detail.selection);
+  if(JSON.stringify(clean)===JSON.stringify(state.selection))return;
+  state.selection=clean;state.verifiedSnapshot=null;renderSections();syncNavigation();
+  if(JSON.stringify(clean)!==JSON.stringify(event.detail.selection)){
+   try{await state.bridge.setSelection(clean);}catch(e){warn(e.message);}
+  }
+ });
 }
 async function init(){
  const bridge=window.SmartExportBridge;
  if(!bridge?.ready||state.initialized)return;
  state.bridge=bridge;state.initialized=true;
- state.selection=normalizeSelection(bridge.getSelection(),{allowEmpty:true});
+ state.selection=visibleSelection(bridge.getSelection());
  const dates=bridge.getDates();state.source=bridge.getDashboardUrl()||'';
  bindEvents();const pref=await chrome.storage.local.get({[OUTPUT_KEY]:'xlsx',[DATE_KEY]:null});
+ if(JSON.stringify(state.selection)!==JSON.stringify(bridge.getSelection()))await bridge.setSelection(state.selection);
  setFormat(pref[OUTPUT_KEY]==='csvzip'?'csvzip':'xlsx');
  const saved=pref[DATE_KEY],range=saved&&validDate(saved.from)&&validDate(saved.to)&&saved.from<=saved.to&&saved.to<istToday()&&((Date.parse(saved.to)-Date.parse(saved.from))/86400000+1)<=31?saved:(dates.from&&dates.to?dates:datesForLastCompleteDays(7));
  setDates(range.from,range.to);renderSections();bridge.showView('build');syncNavigation();setConnected(false,'Checking Grafana…');
  await testConnection();
 }
-if(window.SmartExportBridge?.ready)init();else{
- window.addEventListener('smart-export-ready',init,{once:true});
+const start=()=>init().catch(e=>{state.initialized=false;warn(`Workspace could not load: ${e.message}. Reload the extension and reopen this tab.`);});
+if(window.SmartExportBridge?.ready)start();else{
+ window.addEventListener('smart-export-ready',start,{once:true});
  window.addEventListener('smart-export-error',()=>warn('Reporting engine could not load. Reload the extension.'),{once:true});
 }
