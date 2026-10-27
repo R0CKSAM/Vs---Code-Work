@@ -5,6 +5,7 @@ param(
     [string]$Python = (Join-Path $PSScriptRoot '..\venv\Scripts\python.exe'),
     [string]$PipelineState = (Join-Path $PSScriptRoot 'output\state\pipeline_last_run.json'),
     [string]$DailyStateDir = (Join-Path $PSScriptRoot 'output\state\daily_runs'),
+    [string]$IncidentStateDir = (Join-Path $PSScriptRoot 'output\state\cdn_incident_closeout'),
     [string]$ExportsDir = (Join-Path $PSScriptRoot 'output\exports'),
     [switch]$PlanOnly
 )
@@ -108,6 +109,25 @@ function Find-StreamPartition {
     return $null
 }
 
+function Test-ApprovedGap {
+    param([datetime]$TargetDate)
+    $key = $TargetDate.ToString('yyyy-MM-dd')
+    $receiptPath = Join-Path $IncidentStateDir "$key.json"
+    if (-not (Test-Path -LiteralPath $receiptPath -PathType Leaf)) { return $false }
+    $receipt = Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
+    if ($receipt.date -ne $key -or $receipt.status -ne 'processed_with_confirmed_source_gap' -or
+        $receipt.full_day_complete -ne $false -or $receipt.dashboard_eligible -ne $false) {
+        throw "Invalid source-gap receipt for $key; refusing to skip it."
+    }
+    $approval = Get-Content -LiteralPath $receipt.approval -Raw | ConvertFrom-Json
+    if ($approval.kind -ne 'operator_confirmed_cdn_loss' -or $key -notin $approval.dates -or
+        'stream' -notin $approval.sources -or $approval.dashboard_policy -ne 'exclude_partial_days' -or
+        -not $approval.reason -or -not $approval.confirmed_at) {
+        throw "Unapproved source gap for $key."
+    }
+    return $true
+}
+
 if (-not (Test-Path -LiteralPath $Python -PathType Leaf)) {
     throw "Python was not found at $Python. Expected the workspace environment at ..\venv\Scripts\python.exe."
 }
@@ -131,16 +151,34 @@ if ($etlDate -gt $completedDate) {
 if ($etlDate -gt (Get-Date).Date.AddDays(-1)) {
     throw "Refusing to publish incomplete/current date $($etlDate.ToString('yyyy-MM-dd'))."
 }
-if ($dashboardDate -ge $etlDate) {
-    Write-Host "VOD dashboard is already current through $($dashboardDate.ToString('yyyy-MM-dd')); completed ETL date is $($etlDate.ToString('yyyy-MM-dd'))."
-    exit 0
-}
-
 $refreshDates = [System.Collections.Generic.List[datetime]]::new()
+$excludedDates = [System.Collections.Generic.List[string]]::new()
+if (Test-Path -LiteralPath $IncidentStateDir) {
+    foreach ($receipt in (Get-ChildItem -LiteralPath $IncidentStateDir -Filter '*.json' -File)) {
+        if ($receipt.BaseName -notmatch '^\d{4}-\d{2}-\d{2}$') { continue }
+        $incidentDay = [datetime]::ParseExact($receipt.BaseName, 'yyyy-MM-dd', [cultureinfo]::InvariantCulture)
+        if ($incidentDay -le $etlDate -and (Test-ApprovedGap -TargetDate $incidentDay)) {
+            $excludedDates.Add($receipt.BaseName)
+        }
+    }
+}
+$publishedHtml = Get-Content -LiteralPath $dashboard -Raw
+$publishedIndex = ([regex]::Match($publishedHtml, '(?m)^const dashboardIndex=(.+);\r?$').Groups[1].Value | ConvertFrom-Json)
+# Backfill approved source-gap days even when later dates are already published.
+foreach ($gap in $excludedDates) {
+    if ($gap -notin $publishedIndex.dates) {
+        $refreshDates.Add([datetime]::ParseExact($gap, 'yyyy-MM-dd', [cultureinfo]::InvariantCulture))
+    }
+}
 for ($day = $dashboardDate.AddDays(1); $day -le $etlDate; $day = $day.AddDays(1)) {
+    if ($day.ToString('yyyy-MM-dd') -in $excludedDates) {
+        Write-Host "Including available data for approved CDN-gap day $($day.ToString('yyyy-MM-dd')); missing hours are not zero traffic."
+        continue
+    }
     Assert-CompletedDay -TargetDate $day
     $refreshDates.Add($day)
 }
+$refreshDates = @($refreshDates | Sort-Object -Unique)
 $dateLabels = ($refreshDates | ForEach-Object { $_.ToString('yyyy-MM-dd') }) -join ', '
 Write-Host "Dashboard through $($dashboardDate.ToString('yyyy-MM-dd')); completed ETL through $($etlDate.ToString('yyyy-MM-dd'))."
 Write-Host "Dates to append: $dateLabels"
@@ -150,8 +188,10 @@ if ($PlanOnly) {
 
 function Publish-DailyCsv {
     param([string]$Csv)
+    $gapArgs = @()
+    foreach ($excluded in $excludedDates) { $gapArgs += @('--partial-date', $excluded) }
     & $Python $builder --out $dashboard --davis-xlsx $davisWorkbook --data-dir $dataDir `
-        --data-url 'vod_stream_query_analysis_dashboard_data' --incremental --append $Csv
+        --data-url 'vod_stream_query_analysis_dashboard_data' --incremental --append $Csv @gapArgs
     if ($LASTEXITCODE -ne 0) {
         throw "VOD dashboard refresh failed for $Csv. Completed daily extracts were retained for retry."
     }

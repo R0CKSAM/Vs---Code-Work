@@ -89,3 +89,34 @@ def test_orphan_payload_does_not_count_as_published(plan):
     result = run()
     assert result.returncode == 0, result.stderr
     assert 'Dates to append: 2026-10-18, 2026-10-19' in result.stdout
+
+
+def test_approved_gap_is_included_without_blocking_later_day(plan):
+    run, checkpoints, _ = plan
+    (checkpoints / '2026-10-18.json').unlink()
+    incidents = checkpoints.parent / 'incidents'
+    incidents.mkdir()
+    approval = checkpoints.parent / 'approval.json'
+    approval.write_text(json.dumps(dict(kind='operator_confirmed_cdn_loss', dates=['2026-10-18'],
+        sources=['stream', 'fast'], dashboard_policy='exclude_partial_days', reason='Confirmed outage',
+        confirmed_at='2026-10-20')))
+    receipt = dict(date='2026-10-18', status='processed_with_confirmed_source_gap',
+                   full_day_complete=False, dashboard_eligible=False, approval=str(approval))
+    path = incidents / '2026-10-18.json'
+    path.write_text(json.dumps(receipt))
+    result = run('-IncidentStateDir', str(incidents))
+    assert result.returncode == 0, result.stderr
+    assert 'Dates to append: 2026-10-18, 2026-10-19' in result.stdout
+    assert 'missing hours are not zero traffic' in result.stdout
+    exports = checkpoints.parent / 'exports'
+    (exports / 'vod_stream_query_analysis_dashboard_data/2026-10-19.js').touch()
+    (exports / 'vod_stream_query_analysis_dashboard.html').write_text(
+        'const dashboardIndex={"dates":["2026-10-17","2026-10-19"]};\n')
+    result = run('-IncidentStateDir', str(incidents))
+    assert result.returncode == 0, result.stderr
+    assert 'Dates to append: 2026-10-18' in result.stdout
+    receipt['dashboard_eligible'] = True
+    path.write_text(json.dumps(receipt))
+    result = run('-IncidentStateDir', str(incidents))
+    assert result.returncode != 0
+    assert 'Invalid source-gap receipt' in result.stderr

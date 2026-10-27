@@ -124,7 +124,7 @@ def build_manifest_minute_table(con, args: argparse.Namespace) -> None:
             platform_name,
             candidate_id,
             channel_name,
-            any_value(reqHost ORDER BY reqHost) AS reqHost,
+            MIN(reqHost) AS reqHost,
             COUNT(DISTINCT reqHost)::BIGINT AS distinct_hosts,
             COUNT(*)::BIGINT AS m3u8_rows,
             COUNT(*) FILTER (WHERE statusCode = '200')::BIGINT AS status_200_m3u8_rows,

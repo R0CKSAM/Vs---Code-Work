@@ -7,6 +7,7 @@ import argparse
 import base64
 import csv
 import gzip
+import html
 import json
 import shutil
 from collections import defaultdict
@@ -1367,7 +1368,16 @@ main{max-width:1440px;margin:auto;padding:16px}.kpis{display:grid;grid-template-
 __SCRIPT__
 </body></html>"""
     return (
-        template.replace("__SCRIPT__", dashboard_script())
+        template.replace("<main>", "<main>" + (
+            '<p class="note" role="status">Excluded dates (confirmed CDN source gaps, not zero traffic): '
+            + html.escape(', '.join(index.get('excluded_dates', []))) + '.</p>'
+            if index.get('excluded_dates') else ''
+        ) + (
+            '<p class="note" role="status">Source coverage: '
+            + html.escape(', '.join(index.get('partial_dates', [])))
+            + ' include available records only due to a confirmed CDN source outage. Missing hours are not zero traffic.</p>'
+            if index.get('partial_dates') else ''
+        ), 1).replace("__SCRIPT__", dashboard_script())
         .replace("__DASHBOARD_INDEX__", script_json(index))
         .replace("__INLINE_PAYLOADS__", script_json(inline_payloads))
         .replace("__DATA_DIRECTORY__", script_json(data_directory))
@@ -1395,6 +1405,8 @@ def main() -> None:
     parser.add_argument("--out", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--davis-xlsx", type=Path)
     parser.add_argument("--data-dir", type=Path)
+    parser.add_argument('--excluded-date', action='append', default=[])
+    parser.add_argument('--partial-date', action='append', default=[])
     parser.add_argument(
         "--incremental",
         action="store_true",
@@ -1423,6 +1435,14 @@ def main() -> None:
         for date, day_rows in incoming_days.items():
             write_dashboard_day(data_dir, date, day_rows)
         index, davis_rows = summarize_dashboard_data(data_dir)
+        excluded = sorted({datetime.strptime(d, '%Y-%m-%d').date().isoformat() for d in args.excluded_date})
+        if set(excluded).intersection(index['dates']):
+            raise ValueError('Excluded source-gap dates already have payloads; review before publishing.')
+        index['excluded_dates'] = excluded
+        index['partial_dates'] = sorted({
+            datetime.strptime(d, '%Y-%m-%d').date().isoformat()
+            for d in args.partial_date
+        }.intersection(index['dates']))
         available_dates = list(index["dates"])
         write_davis_workbook_atomic(davis_xlsx, davis_rows, available_dates)
         write_text_atomic(

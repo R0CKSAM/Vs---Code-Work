@@ -165,6 +165,7 @@ function Get-DateCompletion {
         return [pscustomobject]@{ Complete = $false; Kind = 'accepted_source_gap'; Path = $incident; OverallStatus = 'PARTIAL' }
     }
     if (Test-Path -LiteralPath $marker) {
+        Assert-ReportingCompletion -Date $Date
         try {
             $payload = Get-Content -Raw -LiteralPath $marker | ConvertFrom-Json
             if ($payload.status -eq "complete" -and $payload.date -eq $iso) {
@@ -179,7 +180,15 @@ function Get-DateCompletion {
             Write-Warning "Ignoring unreadable daily checkpoint: $marker"
         }
     }
-    return Get-ValidationEvidence -Date $Date
+    $evidence = Get-ValidationEvidence -Date $Date
+    if ($evidence) { Assert-ReportingCompletion -Date $Date }
+    return $evidence
+}
+
+function Assert-ReportingCompletion {
+    param([datetime]$Date)
+    & $GuardPython (Join-Path $WorkspaceRoot 'src\tools\check_daily_run_completion.py') --etl-root $WorkspaceRoot --date $Date.ToString('yyyy-MM-dd')
+    if ($LASTEXITCODE -ne 0) { throw "Reporting failures remain for $($Date.ToString('yyyy-MM-dd')); refusing a completion checkpoint." }
 }
 
 function Save-RecoveryState {
@@ -217,6 +226,7 @@ function Save-DailyCheckpoint {
         [string]$AttemptId = ""
     )
 
+    Assert-ReportingCompletion -Date $Date
     $iso = $Date.ToString("yyyy-MM-dd")
     $marker = Join-Path $DailyStateDir "$iso.json"
     Write-JsonAtomic -Path $marker -Payload @{

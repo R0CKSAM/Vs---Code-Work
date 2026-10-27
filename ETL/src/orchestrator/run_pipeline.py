@@ -3031,7 +3031,11 @@ def main() -> None:
             str(output_root / "validation" / "daily_delivery" / "daily_delivery_validation_latest.json"),
             "--audit-dir",
             str(output_root / "cleanup"),
+            "--etl3-state",
+            str(base_root / ".etl_03_state.json"),
         ]
+        for archive_root in archive_lake_roots:
+            cleanup_cmd.extend(["--archive-lake", str(archive_root)])
         if args.cleanup_daily_intermediates and not args.dry_run:
             cleanup_cmd.append("--execute")
         cleanup_review_only = _cleanup_has_review_only(
