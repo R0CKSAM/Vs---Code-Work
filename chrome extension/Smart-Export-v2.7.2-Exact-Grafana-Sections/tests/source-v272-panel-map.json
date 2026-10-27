@@ -1,0 +1,183 @@
+[
+  {
+    "title": "Session and Users Stats",
+    "panels": [
+      {
+        "id": 2,
+        "title": "Total Users ( Based on Device ID - APP DATA) "
+      },
+      {
+        "id": 1,
+        "title": "Total Sessions (Based on Session ID in query String - APP DATA)"
+      },
+      {
+        "id": 8,
+        "title": "Total Users  (Based on Uniq IP)"
+      },
+      {
+        "id": 6,
+        "title": "Total New Users ( Based on Device ID - APP DATA) "
+      },
+      {
+        "id": 7,
+        "title": "Total Returning Users ( Based on Device ID - APP DATA) "
+      },
+      {
+        "id": 12,
+        "title": "Total Sessions  (Based on Uniq IP & UA)"
+      },
+      {
+        "id": 5,
+        "title": "Total Views (Total Master Manifest Requests)"
+      },
+      {
+        "id": 41,
+        "title": "Total Session Duration (Hours)"
+      },
+      {
+        "id": 49,
+        "title": "Avg Watch Time per user (Based on Unique IP)"
+      },
+      {
+        "id": 11,
+        "title": "Total Unique IPs & Session"
+      }
+    ]
+  },
+  {
+    "title": "Total Users ( Based on Device ID - APP DATA) - Time Series",
+    "panels": [
+      {
+        "id": 4,
+        "title": "Total Users ( Based on Device ID - APP DATA) - Per Minute"
+      },
+      {
+        "id": 67,
+        "title": "Total Users - Summation ( Based on Device ID - APP DATA) - Per 5 Minute"
+      }
+    ]
+  },
+  {
+    "title": "Total Sessions (Based on Session ID in query String - APP DATA) - Time Series",
+    "panels": [
+      {
+        "id": 39,
+        "title": "Total Sessions (Based on Session ID in query String - APP DATA) - Per Minute"
+      },
+      {
+        "id": 69,
+        "title": "Total Sessions (Based on Session ID in query String - APP DATA) - Per 5 Minute"
+      }
+    ]
+  },
+  {
+    "title": "Total Views (Total Master Manifest Requests) - Time Series",
+    "panels": [
+      {
+        "id": 3,
+        "title": "Total Views (Total Master Manifest Requests) - Per Minute"
+      },
+      {
+        "id": 70,
+        "title": "Total Views (Total Master Manifest Requests) - Per 5 Minute"
+      }
+    ]
+  },
+  {
+    "title": "Total Users (Based on Uniq IP) - Time Series",
+    "panels": [
+      {
+        "id": 9,
+        "title": "Total Users  (Based on Uniq IP) - Per Minute"
+      },
+      {
+        "id": 71,
+        "title": "Total Users  (Based on Uniq IP) - Per 5 Minute"
+      }
+    ]
+  },
+  {
+    "title": "Total Sessions (Based on Uniq IP & UA) - Time Series",
+    "panels": [
+      {
+        "id": 38,
+        "title": "Total Sessions  (Based on Uniq IP & UA) - Per Minute "
+      },
+      {
+        "id": 72,
+        "title": "Total Sessions  (Based on Uniq IP & UA) - Per 5 Minute"
+      }
+    ]
+  },
+  {
+    "title": "Viewership Trend",
+    "panels": [
+      {
+        "id": 13,
+        "title": "Total Viewership (Hours)"
+      },
+      {
+        "id": 22,
+        "title": "Avg Watch Time/User"
+      },
+      {
+        "id": 14,
+        "title": "Total Segments Played"
+      },
+      {
+        "id": 15,
+        "title": "Total Bandwidth (Video)"
+      },
+      {
+        "id": 17,
+        "title": "Viewership minutes "
+      },
+      {
+        "id": 34,
+        "title": "Playtime by Channel"
+      },
+      {
+        "id": 68,
+        "title": "Total Users (Based on Uniq IP) "
+      },
+      {
+        "id": 27,
+        "title": "Popular Content"
+      }
+    ]
+  },
+  {
+    "title": "Playtime",
+    "panels": [
+      {
+        "id": 20,
+        "title": "Playtime by GEO"
+      },
+      {
+        "id": 58,
+        "title": "Total Device ID by Platform"
+      },
+      {
+        "id": 55,
+        "title": "Total Device ID by OS"
+      }
+    ]
+  },
+  {
+    "title": "Playtime - IP",
+    "panels": [
+      {
+        "id": 53,
+        "title": "Unique Client IP by Geo"
+      },
+      {
+        "id": 33,
+        "title": "IP by Platform(sessions)"
+      },
+      {
+        "id": 37,
+        "title": "IP by OS(sessions)"
+      }
+    ]
+  }
+]

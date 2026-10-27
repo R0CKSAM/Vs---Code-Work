@@ -1,0 +1,28 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {sqlForReport,REPORTS} from '../reports.mjs';
+import {normalizeSelection,selectedColumns} from '../metric-catalog.mjs';
+import {buildPickedWorkbook} from '../multi-xlsx.mjs';
+import {selectedCsv} from '../picked-export.mjs';
+const sourceLayout=JSON.parse(fs.readFileSync(new URL('./source-kpi-layout.json',import.meta.url),'utf8'));
+assert.equal(sourceLayout.section,'Session and Users Stats');
+const expected=[[2,0,0],[1,8,0],[8,16,0],[6,0,159],[7,8,159],[12,16,159],[5,0,163],[41,8,163],[49,16,163],[11,0,167]];
+const source=expected.map(([id,x,y])=>{const el=sourceLayout.items.find(v=>v.id===id);assert(el,`Panel ${id} missing`);assert.equal(el.x,x);assert.equal(el.y,y);if(id===11)assert.equal(el.width,24);else assert.equal(el.width,8);return el.title;});
+const actual=['Total Users ( Based on Device ID - APP DATA)','Total Sessions (Based on Session ID in query String - APP DATA)','Total Users (Based on Uniq IP)','Total New Users ( Based on Device ID - APP DATA)','Total Returning Users ( Based on Device ID - APP DATA)','Total Sessions (Based on Uniq IP & UA)','Total Views (Total Master Manifest Requests)','Total Session Duration (Hours)','Avg Watch Time per user (Based on Unique IP)','Total Unique IPs & Session'];
+// Compare semantically normalized labels (Grafana source contains some doubled spaces).
+const normalize=s=>s.toLowerCase().replace(/\s+/g,' ').trim();
+for(let i=0;i<source.length;i++)assert.equal(normalize(source[i]),normalize(actual[i]),`Grafana label mismatch in KPI position ${i+1}`);
+const k=REPORTS.kpis;
+assert(expected.every(([id])=>k.sourceIds.includes(id)),'Every displayed original KPI panel must be validated against Grafana.');
+for(const f of ['new_users','returning_users','session_hours','avg_watch_minutes_per_user'])assert(k.metrics.includes(f),`Missing new KPI ${f}`);
+const sql=sqlForReport('kpis','2026-10-20','2026-10-26');
+for(const part of ['countIf(sessions_for_device = 1)','countIf(sessions_for_device > 1)','session_hours','avg_watch_minutes_per_user','uniq(cliIP, UA)'])assert(sql.includes(part),`Missing actual source logic ${part}`);
+const choice=normalizeSelection({kpis:['new_users','returning_users','session_hours','avg_watch_minutes_per_user','unique_ips','ip_ua_sessions']});
+assert.deepEqual(selectedColumns('kpis',choice).map(x=>x[0]),['date','unique_ips','new_users','returning_users','ip_ua_sessions','session_hours','avg_watch_minutes_per_user']);
+const records=[{date:'2026-10-20',new_users:67,returning_users:32,session_hours:10.45,avg_watch_minutes_per_user:2.50,unique_ips:109,ip_ua_sessions:145}];
+const csv=selectedCsv('kpis',records,{kpis:['new_users','session_hours']});assert.match(csv,/New users \(single session in day\)/);assert.match(csv,/67/);
+const workbook=buildPickedWorkbook({kpis:records},{selection:choice,from:'2026-10-20',to:'2026-10-20',perMetricSheets:true});
+const data=Buffer.from(await workbook.arrayBuffer());fs.writeFileSync('/mnt/data/Smart-Export-v2.7.1-KPI-Test.xlsx',data);assert(data.length>3000);
+assert.throws(()=>selectedCsv('kpis',[{date:'2026-10-20',new_users:1}],{kpis:['returning_users']}),/Click Get data to refresh/);
+assert.throws(()=>buildPickedWorkbook({kpis:[{date:'2026-10-20',new_users:1}]},{selection:{kpis:['returning_users']},from:'2026-10-20',to:'2026-10-20',perMetricSheets:true}),/Click Get data to refresh/);
+console.log('PASS source dashboard 3x3 + 1 panel order, titles, source mappings, KPI SQL, CSV/XLSX integrity, legacy refresh guard');

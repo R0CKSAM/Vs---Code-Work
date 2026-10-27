@@ -1,0 +1,2222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Haruko - Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;800&family=Noto+Serif+JP:wght@300;400;600;700&family=Noto+Sans+JP:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-void: #050507;
+      --card-surface: rgba(9, 10, 14, 0.84);
+      --card-border: rgba(255, 255, 255, 0.17);
+      --accent-main: #ffffff;
+      --accent-soft: rgba(255, 255, 255, 0.65);
+      --accent-glow: rgba(255, 255, 255, 0.22);
+      --hanko-red: #c92a35;
+      --text-primary: #f5f5f7;
+      --text-secondary: #8c8c96;
+    }
+
+    [data-palette="sakura"] {
+      --card-surface: rgba(16, 11, 16, 0.86);
+      --card-border: rgba(255, 205, 218, 0.2);
+      --accent-main: #ffdbe5;
+      --accent-soft: rgba(255, 219, 229, 0.75);
+      --accent-glow: rgba(255, 182, 203, 0.28);
+      --hanko-red: #df3646;
+      --text-primary: #fff5f8;
+      --text-secondary: #ad9aa3;
+    }
+
+    [data-palette="bloodmoon"] {
+      --card-surface: rgba(16, 8, 9, 0.87);
+      --card-border: rgba(230, 55, 65, 0.24);
+      --accent-main: #ff4d58;
+      --accent-soft: rgba(255, 175, 180, 0.75);
+      --accent-glow: rgba(230, 40, 55, 0.35);
+      --hanko-red: #ff1e2e;
+      --text-primary: #fff2f3;
+      --text-secondary: #a88588;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: var(--bg-void);
+      font-family: 'Noto Sans JP', sans-serif;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* ==========================================================================
+       16:9 WIDESCREEN CINEMA STAGE CONTAINER
+       Automatically scales to largest 16:9 rectangle fitting viewport,
+       or expands to 100% if Full-Bleed mode is toggled.
+       ========================================================================== */
+    #cinema-stage {
+      position: relative;
+      width: min(100vw, calc(100vh * (16 / 9)));
+      height: min(100vh, calc(100vw * (9 / 16)));
+      aspect-ratio: 16 / 9;
+      background: #08080b;
+      overflow: hidden;
+      box-shadow: 
+        0 0 0 1px rgba(255, 255, 255, 0.1),
+        0 35px 95px rgba(0, 0, 0, 0.95);
+      transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1), height 0.5s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.5s ease;
+    }
+
+    #cinema-stage.full-bleed {
+      width: 100vw;
+      height: 100vh;
+      aspect-ratio: auto;
+      box-shadow: none;
+    }
+
+    /* Subtle Widescreen Cinema Frame Inner Border */
+    .cinema-frame-border {
+      position: absolute;
+      inset: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      pointer-events: none;
+      z-index: 25;
+    }
+
+    /* Background & Foreground Interactive Canvases */
+    #vista-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      cursor: crosshair;
+    }
+
+    /* Keep foreground branches behind the login UI so they frame the panel
+       instead of drawing across the fields and buttons. */
+    #foreground-boughs-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 11;
+      pointer-events: none;
+    }
+
+    /* Cinematic Sumi-e Vignette & Rice-Paper Grain Overlay */
+    .sumi-vignette {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+      background: 
+        radial-gradient(ellipse at 32% 45%, transparent 40%, rgba(4, 4, 6, 0.68) 100%),
+        linear-gradient(90deg, rgba(6,6,8,0.15) 0%, rgba(6,6,8,0.0) 45%, rgba(6,6,9,0.58) 100%),
+        linear-gradient(180deg, rgba(4,4,6,0.5) 0%, transparent 15%, transparent 84%, rgba(4,4,6,0.75) 100%);
+    }
+
+    /* Asymmetric 16:9 Layout Grid */
+    .stage-grid {
+      position: relative;
+      z-index: 12;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1fr;
+      align-items: center;
+      padding: 2% 5.5%;
+      pointer-events: none;
+    }
+
+    @media (min-width: 768px) {
+      .stage-grid {
+        grid-template-columns: 60% 40%;
+      }
+    }
+
+    /* Left Poetic Haiku Callout on the 16:9 Vista */
+    .vista-caption {
+      pointer-events: none;
+      display: none;
+      flex-direction: column;
+      justify-content: flex-end;
+      height: 100%;
+      padding-bottom: 52px;
+      padding-left: 10px;
+    }
+
+    @media (min-width: 768px) {
+      .vista-caption {
+        display: flex;
+      }
+    }
+
+    .vertical-haiku {
+      writing-mode: vertical-rl;
+      text-orientation: upright;
+      font-family: 'Noto Serif JP', serif;
+      letter-spacing: 0.45em;
+      color: rgba(255, 255, 255, 0.36);
+      font-size: clamp(11px, 1.05vw, 14px);
+      line-height: 2.1;
+      border-right: 1px solid rgba(255, 255, 255, 0.14);
+      padding-right: 14px;
+      margin-bottom: 18px;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+    }
+
+    /* ==========================================================================
+       BESPOKE URUSHI & SHOJI ARCHITECTURAL LOGIN MONOLITH
+       ========================================================================== */
+    .login-monolith-wrap {
+      pointer-events: auto;
+      justify-self: center;
+      width: 100%;
+      max-width: 390px;
+      transition: all 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @media (min-width: 768px) {
+      .login-monolith-wrap {
+        justify-self: end;
+        margin-right: 2vw;
+      }
+    }
+
+    .login-container {
+      position: relative;
+      width: 100%;
+      padding: clamp(22px, 3vh, 34px) clamp(22px, 2.4vw, 32px);
+      background: var(--card-surface);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      background-image: linear-gradient(145deg, rgba(255,255,255,0.035), transparent 48%);
+      backdrop-filter: blur(24px) saturate(150%);
+      -webkit-backdrop-filter: blur(22px) saturate(140%);
+      box-shadow: 
+        0 30px 75px rgba(0, 0, 0, 0.88),
+        0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+        0 1px 0 rgba(255, 255, 255, 0.18) inset;
+      overflow: hidden;
+      transition: transform 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .login-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 15%;
+      right: 15%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent-main), transparent);
+      opacity: 0.45;
+    }
+
+    /* Kumiko Geometric SVG Corners */
+    .kumiko-corner {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      color: var(--accent-main);
+      opacity: 0.32;
+      pointer-events: none;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+    .login-container:hover .kumiko-corner {
+      opacity: 0.72;
+    }
+    .kc-tl { top: 8px; left: 8px; }
+    .kc-tr { top: 8px; right: 8px; transform: scaleX(-1); }
+    .kc-bl { bottom: 8px; left: 8px; transform: scaleY(-1); }
+    .kc-br { bottom: 8px; right: 8px; transform: scale(-1, -1); }
+
+    /* Original Kanji Accent Watermark + Authentic Red Hanko Seal */
+    .kanji-accent {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Noto Serif JP', serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.055);
+      user-select: none;
+      letter-spacing: 3.5px;
+      pointer-events: none;
+    }
+
+    .hanko-seal {
+      pointer-events: auto;
+      cursor: pointer;
+      width: 28px;
+      height: 28px;
+      border: 1.5px solid var(--hanko-red);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Noto Serif JP', serif;
+      font-size: 11px;
+      line-height: 1;
+      font-weight: 700;
+      color: var(--hanko-red);
+      background: rgba(201, 42, 53, 0.08);
+      box-shadow: 0 0 12px rgba(201, 42, 53, 0.22);
+      transform: rotate(-5deg);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      letter-spacing: 0;
+    }
+
+    .hanko-seal:hover, .hanko-seal.stamped {
+      background: var(--hanko-red);
+      color: #ffffff;
+      transform: rotate(0deg) scale(1.1);
+      box-shadow: 0 0 18px var(--hanko-red);
+    }
+
+    /* Subtle Vertical Calligraphy Spine along Left Edge */
+    .spine-watermark {
+      position: absolute;
+      top: 50%;
+      left: 10px;
+      transform: translateY(-50%);
+      writing-mode: vertical-rl;
+      text-orientation: upright;
+      font-family: 'Noto Serif JP', serif;
+      font-size: 10px;
+      letter-spacing: 5px;
+      color: rgba(255, 255, 255, 0.06);
+      pointer-events: none;
+    }
+
+    /* Interactive Ensō (Zen Brush Circle) Crest */
+    .enso-crest-wrap {
+      position: relative;
+      width: 54px;
+      height: 54px;
+      margin: 0 auto 10px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #enso-svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-30deg);
+      transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
+      filter: drop-shadow(0 0 8px var(--accent-glow));
+    }
+
+    .enso-path {
+      stroke-dasharray: 240;
+      stroke-dashoffset: 65;
+      transition: stroke-dashoffset 0.6s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.4s ease;
+    }
+
+    .header {
+      margin-bottom: clamp(18px, 2.6vh, 26px);
+      text-align: center;
+    }
+
+    .header h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(23px, 2.05vw, 28px);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: #ffffff;
+      margin-bottom: 4px;
+      font-weight: 700;
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    }
+
+    .header p {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      letter-spacing: 1.2px;
+    }
+
+    /* Sumi-e Brush-Stroke Inputs */
+    .input-group {
+      margin-bottom: clamp(14px, 2.2vh, 20px);
+      position: relative;
+    }
+
+    .input-group label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 10.5px;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: #a2a2ad;
+      margin-bottom: 7px;
+      font-weight: 500;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 12px 38px 12px 15px;
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 7px;
+      color: #fff;
+      font-size: 13.5px;
+      outline: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .input-group input::placeholder {
+      color: rgba(255, 255, 255, 0.22);
+    }
+
+    .input-group input:focus {
+      background: rgba(255, 255, 255, 0.075);
+      border-color: var(--accent-main);
+      box-shadow: 0 0 18px var(--accent-glow);
+    }
+
+    /* Animated Calligraphic Brush Stroke Underline on Input Focus */
+    .brush-underline {
+      position: absolute;
+      bottom: -1px;
+      left: 4%;
+      width: 92%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent-main), transparent);
+      transform: scaleX(0);
+      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    .input-group input:focus ~ .brush-underline {
+      transform: scaleX(1);
+    }
+
+    /* Options Row: Keep honor intact & Lost cipher? */
+    .options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: clamp(18px, 2.8vh, 25px);
+      font-size: 12px;
+      color: #a0a0a8;
+    }
+
+    .remember-me {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+
+    .remember-me:hover {
+      color: #ffffff;
+    }
+
+    /* Custom Diamond Samurai Crest Checkbox */
+    .diamond-check {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 13px;
+      height: 13px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      background: rgba(255, 255, 255, 0.04);
+      transform: rotate(45deg);
+      cursor: pointer;
+      position: relative;
+      transition: all 0.25s ease;
+    }
+
+    .diamond-check:checked {
+      background: var(--accent-main);
+      border-color: var(--accent-main);
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .diamond-check:checked::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      background: #060608;
+    }
+
+    .options a {
+      color: #d1d1d6;
+      text-decoration: none;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .options a:hover {
+      color: #ffffff;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.4);
+    }
+
+    /* Forged Tamahagane Blade Submit Button */
+    .btn-submit {
+      position: relative;
+      width: 100%;
+      padding: 13.5px;
+      background: var(--accent-main);
+      color: #050507;
+      border: 1px solid var(--accent-main);
+      border-radius: 7px;
+      font-family: 'Cinzel', serif;
+      font-size: 13.5px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    /* Katana Steel Glint Sweep on Hover */
+    .btn-submit::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -120%;
+      width: 65%;
+      height: 100%;
+      background: linear-gradient(115deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+      transition: left 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-submit:hover::before {
+      left: 130%;
+    }
+
+    .btn-submit:hover {
+      background: transparent;
+      color: var(--accent-main);
+      box-shadow: 0 0 24px var(--accent-glow), inset 0 0 12px var(--accent-glow);
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: clamp(16px, 2.4vh, 22px);
+      font-size: 12px;
+      color: #7c7c86;
+    }
+
+    .footer a {
+      color: var(--accent-main);
+      text-decoration: none;
+      font-weight: 500;
+      margin-left: 5px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+      padding-bottom: 1px;
+      transition: all 0.2s ease;
+    }
+
+    .footer a:hover {
+      border-bottom-color: var(--accent-main);
+      text-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    /* ==========================================================================
+       KATANA SLASH TRANSITION OVERLAY
+       ========================================================================== */
+    #katana-slash-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      pointer-events: none;
+      opacity: 0;
+      background: radial-gradient(circle, rgba(255,255,255,0.85) 0%, transparent 75%);
+      transition: opacity 0.45s ease;
+    }
+
+    .blade-beam {
+      position: absolute;
+      top: 52%;
+      left: -15%;
+      width: 130%;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #ffffff, #ffffff, transparent);
+      box-shadow: 0 0 35px 10px rgba(255, 255, 255, 0.95);
+      transform: rotate(-11deg) scaleX(0);
+      transform-origin: left center;
+      z-index: 51;
+    }
+
+    .slash-triggered .blade-beam {
+      animation: bladeStrike 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes bladeStrike {
+      0% { transform: rotate(-11deg) scaleX(0); opacity: 1; }
+      35% { transform: rotate(-11deg) scaleX(1); opacity: 1; height: 6px; }
+      100% { transform: rotate(-11deg) scaleX(1); opacity: 0; height: 0px; }
+    }
+
+    /* ==========================================================================
+       MINIMAL FLOATING ZEN BAR (BOTTOM-LEFT OF 16:9 STAGE)
+       ========================================================================== */
+    .zen-dock {
+      position: absolute;
+      bottom: 18px;
+      left: 22px;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 14px;
+      background: rgba(10, 10, 14, 0.68);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.7);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
+    }
+
+    .palette-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 1.5px solid rgba(255, 255, 255, 0.25);
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .palette-dot.active {
+      border-color: #ffffff;
+      transform: scale(1.18);
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+
+    /* Subtle View Transition Helper */
+    .portal-pane {
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .portal-pane.hidden-pane {
+      display: none;
+    }
+
+
+    /* Haruko redesign: calmer framing, stronger legibility, and usable mobile layout */
+    .login-container {
+      box-shadow:
+        0 28px 70px rgba(0, 0, 0, 0.72),
+        0 0 0 1px rgba(255, 255, 255, 0.045) inset,
+        0 1px 0 rgba(255, 255, 255, 0.16) inset;
+    }
+
+    .header p {
+      line-height: 1.6;
+      letter-spacing: 1px;
+    }
+
+    .input-group input {
+      min-height: 44px;
+      border-color: rgba(255, 255, 255, 0.13);
+    }
+
+    .btn-submit {
+      min-height: 46px;
+      border-radius: 8px;
+    }
+
+    @media (max-width: 767px) {
+      body {
+        width: 100%;
+        height: auto;
+        min-height: 100svh;
+        overflow-x: hidden;
+        overflow-y: auto;
+        align-items: flex-start;
+      }
+
+      #cinema-stage,
+      #cinema-stage.full-bleed {
+        width: 100vw;
+        height: max(100svh, 690px);
+        min-height: 690px;
+        aspect-ratio: auto;
+        box-shadow: none;
+      }
+
+      .stage-grid {
+        grid-template-columns: minmax(0, 1fr);
+        align-items: center;
+        padding: 58px 6% 92px;
+      }
+
+      .vista-caption {
+        display: none;
+      }
+
+      .login-monolith-wrap {
+        justify-self: center;
+        width: 100%;
+        max-width: 390px;
+        margin: 0;
+      }
+
+      .login-container {
+        padding: 26px 22px;
+      }
+
+      .enso-crest-wrap {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 8px;
+      }
+
+      .header {
+        margin-bottom: 20px;
+      }
+
+      .zen-dock {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 7px 10px;
+      }
+
+      .cinema-frame-border {
+        inset: 6px;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .login-container {
+        padding: 24px 18px;
+      }
+
+      .header h1 {
+        font-size: 22px;
+      }
+
+      .zen-dock {
+        font-size: 10px;
+      }
+    }
+
+  </style>
+</head>
+<body data-palette="monochrome">
+
+  <!-- ========================================================================
+       16:9 WIDESCREEN CINEMA STAGE
+       ======================================================================== -->
+  <div id="cinema-stage">
+    <!-- Subtle Widescreen Inner Framing Line -->
+    <div class="cinema-frame-border"></div>
+
+    <!-- Layer 1: Main 60FPS Widescreen Sumi-e Vista & Hero Sakura Tree Canvas -->
+    <canvas id="vista-canvas"></canvas>
+
+    <!-- Layer 2: Cinematic Vignette & Sumi-e Ink Wash Grading -->
+    <div class="sumi-vignette"></div>
+
+    <!-- Layer 3: Asymmetric 16:9 Content Grid -->
+    <div class="stage-grid">
+      
+      <!-- Left 56%: Poetic Widescreen Vista Space (Allows unobstructed view of Hero Sakura Tree, Moon & Samurai) -->
+      <div class="vista-caption">
+        <div class="vertical-haiku">
+          散る桜　残る桜も　散る桜
+        </div>
+        <div class="text-[10px] tracking-[0.28em] uppercase text-white/40 font-light">
+          Move cursor to stir the night wind • Click boughs to shake blossoms
+        </div>
+      </div>
+
+      <!-- Right 44%: The Bushido Gate Architectural Login Monolith -->
+      <div class="login-monolith-wrap" id="monolithWrap">
+        <div class="login-container">
+          <!-- Intricate SVG Kumiko Corner Ornaments -->
+          <svg class="kumiko-corner kc-tl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <path d="M1 23V1H23M1 1L12 12M1 8H8V1" />
+          </svg>
+          <svg class="kumiko-corner kc-tr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <path d="M1 23V1H23M1 1L12 12M1 8H8V1" />
+          </svg>
+          <svg class="kumiko-corner kc-bl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <path d="M1 23V1H23M1 1L12 12M1 8H8V1" />
+          </svg>
+          <svg class="kumiko-corner kc-br" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <path d="M1 23V1H23M1 1L12 12M1 8H8V1" />
+          </svg>
+
+          <!-- Vertical Spine Watermark -->
+          <div class="spine-watermark">武士道・桜の聖域</div>
+
+          <!-- Original Kanji Watermark + Interactive Red Hanko Seal -->
+          <div class="kanji-accent">
+            <span>侍 桜</span>
+            <div id="hankoStamp" onclick="triggerHankoRipple()" class="hanko-seal" title="Seal of Bushidō — Click to invoke wind">
+              武
+            </div>
+          </div>
+
+          <!-- Interactive Hand-Brushed Ensō (Zen Circle) Crest -->
+          <div class="enso-crest-wrap">
+            <svg id="enso-svg" viewBox="0 0 100 100" fill="none">
+              <circle
+                id="enso-circle"
+                class="enso-path"
+                cx="50"
+                cy="50"
+                r="38"
+                stroke="currentColor"
+                stroke-width="4.5"
+                stroke-linecap="round"
+                style="color: var(--accent-main); opacity: 0.85;"
+              />
+              <circle cx="50" cy="50" r="31" stroke="currentColor" stroke-width="0.7" stroke-dasharray="3 4" style="color: var(--accent-main); opacity: 0.3;" />
+            </svg>
+            <span class="absolute font-serif text-xs tracking-widest text-white/75" style="font-family: 'Noto Serif JP', serif;">道</span>
+          </div>
+
+          <!-- ================================================================
+               PANE 1: PURE BUSHIDO GATE LOGIN (NO TOP TAB BAR!)
+               ================================================================ -->
+          <div id="pane-login" class="portal-pane">
+            <div class="header">
+              <h1>Haruko</h1>
+              <p>A quiet place beneath the sakura</p>
+            </div>
+
+            <!-- Inline Feedback Scroll Banner -->
+            <div id="gateFeedback" class="hidden mb-4 px-3 py-2 rounded bg-white/10 border border-white/20 text-[11.5px] text-center text-white/90 tracking-wide"></div>
+
+            <form id="loginForm" onsubmit="handleSanctuaryEntry(event)">
+              <div class="input-group">
+                <label for="username">
+                  <span>Warrior ID / Email</span>
+                  <span onclick="fillMusashiDemo()" class="text-[9.5px] text-white/45 hover:text-white cursor-pointer tracking-widest transition" title="Inscribe Master Musashi's Seal">[Inscribe Seal]</span>
+                </label>
+                <div class="input-wrapper">
+                  <input
+                    type="text"
+                    id="username"
+                    placeholder="musashi@bushido.jp"
+                    required
+                    autocomplete="off"
+                    oninput="updateEnsoResonance()"
+                  />
+                  <div class="brush-underline"></div>
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label for="password">
+                  <span>Password</span>
+                  <span id="kiStateLabel" class="text-[9.5px] text-white/35 font-normal tracking-widest">気 • Stillness</span>
+                </label>
+                <div class="input-wrapper">
+                  <input
+                    type="password"
+                    id="password"
+                    placeholder="••••••••••••"
+                    required
+                    oninput="updateEnsoResonance()"
+                  />
+                  <button
+                    type="button"
+                    onclick="togglePasswordSight()"
+                    class="absolute right-3 text-white/40 hover:text-white transition"
+                    title="Toggle Inner Sight"
+                  >
+                    <svg id="eyeSvg" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  </button>
+                  <div class="brush-underline"></div>
+                </div>
+              </div>
+
+              <div class="options">
+                <label class="remember-me">
+                  <input type="checkbox" id="remember" class="diamond-check" checked />
+                  <span>Keep honor intact</span>
+                </label>
+                <a href="#forgot" onclick="switchPane('forgot', event)">Lost cipher?</a>
+              </div>
+
+              <button type="submit" class="btn-submit">
+                <span>Enter Gate</span>
+              </button>
+            </form>
+
+            <div class="footer">
+              <span>Not yet inducted?</span>
+              <a href="#join" onclick="switchPane('pledge', event)">Pledge Allegiance</a>
+            </div>
+          </div>
+
+          <!-- ================================================================
+               PANE 2: INLINE PLEDGE ALLEGIANCE SCROLL (Triggered from Footer)
+               ================================================================ -->
+          <div id="pane-pledge" class="portal-pane hidden-pane">
+            <div class="header">
+              <h1>Blood Oath</h1>
+              <p>Inscribe your name upon the clan scroll</p>
+            </div>
+
+            <form onsubmit="handlePledgeSubmit(event)">
+              <div class="input-group">
+                <label for="pledgeName">
+                  <span>Samurai Moniker</span>
+                  <span class="text-[9.5px] text-white/35">武芸者</span>
+                </label>
+                <div class="input-wrapper">
+                  <input type="text" id="pledgeName" placeholder="Miyamoto Musashi" required autocomplete="off" />
+                  <div class="brush-underline"></div>
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label for="pledgeEmail">
+                  <span>Warrior ID / Email</span>
+                  <span class="text-[9.5px] text-white/35">名簿</span>
+                </label>
+                <div class="input-wrapper">
+                  <input type="email" id="pledgeEmail" placeholder="musashi@bushido.jp" required autocomplete="off" />
+                  <div class="brush-underline"></div>
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label for="pledgePass">
+                  <span>Forge Cipher</span>
+                  <span class="text-[9.5px] text-white/35">暗号</span>
+                </label>
+                <div class="input-wrapper">
+                  <input type="password" id="pledgePass" placeholder="••••••••••••" required />
+                  <div class="brush-underline"></div>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-submit">
+                <span>Seal Allegiance</span>
+              </button>
+            </form>
+
+            <div class="footer">
+              <span>Already sworn to The Way?</span>
+              <a href="#login" onclick="switchPane('login', event)">Return to Gate</a>
+            </div>
+          </div>
+
+          <!-- ================================================================
+               PANE 3: INLINE LOST CIPHER RECOVERY (Triggered from Lost cipher?)
+               ================================================================ -->
+          <div id="pane-forgot" class="portal-pane hidden-pane">
+            <div class="header">
+              <h1>Lost Cipher</h1>
+              <p>Dispatch a messenger hawk to your province</p>
+            </div>
+
+            <form onsubmit="handleRecoverySubmit(event)">
+              <div class="input-group">
+                <label for="recoverEmail">
+                  <span>Warrior ID / Scroll Address</span>
+                  <span class="text-[9.5px] text-white/35">伝書鳩</span>
+                </label>
+                <div class="input-wrapper">
+                  <input type="text" id="recoverEmail" placeholder="musashi@bushido.jp" required autocomplete="off" />
+                  <div class="brush-underline"></div>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-submit">
+                <span>Send Messenger Hawk</span>
+              </button>
+            </form>
+
+            <div class="footer">
+              <span>Recalled your secret cipher?</span>
+              <a href="#login" onclick="switchPane('login', event)">Return to Gate</a>
+            </div>
+          </div>
+
+          <!-- ================================================================
+               PANE 4: INNER SANCTUARY CHAMBER (Revealed on "Enter Gate")
+               ================================================================ -->
+          <div id="pane-sanctuary" class="portal-pane hidden-pane text-center">
+            <div class="header" style="margin-bottom: 16px;">
+              <h1 id="sanctuaryWarriorTitle">Musashi</h1>
+              <p class="text-white/60 uppercase tracking-[0.22em] text-[10.5px]">Sanctuary of the Unfading Blossom</p>
+            </div>
+
+            <div class="p-3.5 rounded-lg bg-white/[0.04] border border-white/10 text-left mb-4">
+              <div class="flex justify-between items-center text-[10px] uppercase tracking-widest text-white/45 mb-1.5">
+                <span>Scroll of Contemplation</span>
+                <button type="button" onclick="cycleZenKoan()" class="text-white/75 hover:text-white transition">New Verse ↻</button>
+              </div>
+              <p id="koanKanji" class="text-xs text-white/90 font-serif mb-1" style="font-family: 'Noto Serif JP', serif;">
+                「花は桜木、人は武士」
+              </p>
+              <p id="koanText" class="text-[11.5px] text-white/65 italic leading-relaxed">
+                "Among blossoms, the cherry blossom; among men, the warrior. Stillness in the heart of the falling storm."
+              </p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5">
+              <button type="button" onclick="summonSakuraGale()" class="py-2.5 px-3 rounded border border-white/20 bg-white/5 hover:bg-white/15 text-[11px] font-semibold tracking-widest uppercase transition font-['Cinzel']">
+                Sakura Gale
+              </button>
+              <button type="button" onclick="switchPane('login', event)" class="py-2.5 px-3 rounded border border-white/20 bg-white/10 hover:bg-white/20 text-[11px] font-semibold tracking-widest uppercase transition font-['Cinzel']">
+                Leave Gate
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Layer 4: Foreground Overhanging Sakura Bough Framing Canvas -->
+    <canvas id="foreground-boughs-canvas"></canvas>
+
+    <!-- Layer 5: Katana Slash Screen Transition -->
+    <div id="katana-slash-layer">
+      <div class="blade-beam"></div>
+    </div>
+
+    <!-- Minimal Floating Bottom-Left Zen Control Bar -->
+    <div class="zen-dock">
+      <!-- Moon & Sakura Palette Dots -->
+      <div class="flex items-center gap-1.5 pr-2 border-r border-white/15" title="Switch Sumi-e Ink Palette">
+        <button onclick="setPalette('monochrome')" id="dot-monochrome" class="palette-dot active" style="background: linear-gradient(135deg, #ffffff, #52525b);" title="Sumi-e Monochrome"></button>
+        <button onclick="setPalette('sakura')" id="dot-sakura" class="palette-dot" style="background: linear-gradient(135deg, #ffd1dc, #831843);" title="Pale Sakura Blossom"></button>
+        <button onclick="setPalette('bloodmoon')" id="dot-bloodmoon" class="palette-dot" style="background: linear-gradient(135deg, #ff3b47, #450a0a);" title="Crimson Blood Moon"></button>
+      </div>
+
+      <!-- Wind Breeze Trigger -->
+      <button onclick="summonSakuraGale()" class="hover:text-white transition flex items-center gap-1 pr-2 border-r border-white/15" title="Summon Mountain Wind Gust">
+        <span style="font-family: 'Noto Serif JP', serif;">風</span>
+        <span class="hidden sm:inline uppercase tracking-wider text-[10px]">Gust</span>
+      </button>
+
+      <!-- Synthesized Zen Koto & Wind Audio Toggle -->
+      <button onclick="toggleZenSound()" id="soundBtn" class="hover:text-white transition flex items-center gap-1 pr-2 border-r border-white/15" title="Toggle Procedural Koto & Night Wind">
+        <span id="soundKanji" style="font-family: 'Noto Serif JP', serif;">音</span>
+        <span id="soundLabel" class="hidden sm:inline uppercase tracking-wider text-[10px] text-white/50">Off</span>
+      </button>
+
+      <!-- 16:9 Cinema Frame vs Full-Bleed Toggle -->
+      <button onclick="toggleAspectMode()" id="aspectBtn" class="hover:text-white transition uppercase tracking-wider text-[10px]" title="Toggle 16:9 Letterbox / Fullscreen">
+        16:9 Cinema
+      </button>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       1. PROCEDURAL WEB AUDIO SYNTHESIZER (ZEN KOTO PLUCKS & MOUNTAIN WIND)
+       ========================================================================== */
+    let audioCtx = null;
+    let soundEnabled = false;
+    let windGain = null;
+    let windFilter = null;
+    let kotoTimer = null;
+
+    // Japanese Hirajoshi Pentatonic Scale
+    const KOTO_NOTES = [196.00, 220.00, 233.08, 293.66, 311.13, 392.00, 440.00, 466.16, 587.33];
+
+    function ensureAudio() {
+      if (audioCtx) return;
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContext();
+
+      // Pink-noise mountain wind generator
+      const bufSize = 2 * audioCtx.sampleRate;
+      const buffer = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+      for (let i = 0; i < bufSize; i++) {
+        const w = Math.random() * 2 - 1;
+        b0 = 0.99886 * b0 + w * 0.0555179;
+        b1 = 0.99332 * b1 + w * 0.0750759;
+        b2 = 0.96900 * b2 + w * 0.1538520;
+        b3 = 0.86650 * b3 + w * 0.3104856;
+        b4 = 0.55000 * b4 + w * 0.5329522;
+        b5 = -0.7616 * b5 - w * 0.0168980;
+        data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + w * 0.5362) * 0.035;
+        b6 = w * 0.115926;
+      }
+
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      noise.loop = true;
+
+      windFilter = audioCtx.createBiquadFilter();
+      windFilter.type = 'bandpass';
+      windFilter.frequency.value = 320;
+      windFilter.Q.value = 3.0;
+
+      windGain = audioCtx.createGain();
+      windGain.gain.value = 0.001;
+
+      noise.connect(windFilter);
+      windFilter.connect(windGain);
+      windGain.connect(audioCtx.destination);
+      noise.start(0);
+    }
+
+    function pluckKoto(freq, vol = 0.07) {
+      if (!audioCtx || !soundEnabled) return;
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.007, now + 0.12);
+      osc.frequency.exponentialRampToValueAtTime(freq, now + 0.5);
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.linearRampToValueAtTime(vol, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0008, now + 3.2);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 3.3);
+    }
+
+    function playKatanaChime() {
+      if (!audioCtx) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1320, now);
+      osc.frequency.exponentialRampToValueAtTime(523.25, now + 0.38);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.3);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 1.35);
+    }
+
+    function toggleZenSound() {
+      ensureAudio();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      soundEnabled = !soundEnabled;
+      const label = document.getElementById('soundLabel');
+
+      if (soundEnabled) {
+        label.textContent = 'On';
+        label.classList.replace('text-white/50', 'text-white');
+        windGain.gain.setTargetAtTime(0.16, audioCtx.currentTime, 0.4);
+        pluckKoto(KOTO_NOTES[4], 0.08);
+        kotoTimer = setInterval(() => {
+          if (soundEnabled && Math.random() > 0.32) {
+            pluckKoto(KOTO_NOTES[Math.floor(Math.random() * KOTO_NOTES.length)], 0.045 + Math.random() * 0.035);
+          }
+        }, 2300);
+      } else {
+        label.textContent = 'Off';
+        label.classList.replace('text-white', 'text-white/50');
+        windGain.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.3);
+        clearInterval(kotoTimer);
+      }
+    }
+
+    /* ==========================================================================
+       2. MULTI-LAYER 16:9 WIDESCREEN SUMI-E SAKURA TREE & VISTA ENGINE
+       ========================================================================== */
+    const stageEl = document.getElementById('cinema-stage');
+    const vistaCanvas = document.getElementById('vista-canvas');
+    const vCtx = vistaCanvas.getContext('2d');
+    const fgCanvas = document.getElementById('foreground-boughs-canvas');
+    const fgCtx = fgCanvas.getContext('2d');
+
+    let W = 1280;
+    let H = 720;
+    let tick = 0;
+    let windBase = 0.85;
+    let windSurge = 0;
+
+    const PALETTES = {
+      monochrome: {
+        skyTop: '#040406',
+        skyMid: '#0d0d12',
+        skyBot: '#050508',
+        moonCore: '#ffffff',
+        moonEdge: '#dcdce6',
+        moonHalo: 'rgba(255, 255, 255, 0.20)',
+        mtnFar: '#14141b',
+        mtnMid: '#0c0c11',
+        cliffDark: '#060609',
+        barkFill: '#07070a',
+        barkRim: 'rgba(255, 255, 255, 0.18)',
+        petalBright: [255, 255, 255],
+        petalMid: [215, 218, 228],
+        petalDeep: [140, 145, 160],
+        stamen: '#ffffff',
+        lanternGlow: '#fff3d6'
+      },
+      sakura: {
+        skyTop: '#060409',
+        skyMid: '#150d1c',
+        skyBot: '#08050b',
+        moonCore: '#fff9fb',
+        moonEdge: '#ffd6e4',
+        moonHalo: 'rgba(255, 190, 212, 0.24)',
+        mtnFar: '#1d1224',
+        mtnMid: '#110a16',
+        cliffDark: '#08040b',
+        barkFill: '#0b0609',
+        barkRim: 'rgba(255, 210, 225, 0.19)',
+        petalBright: [255, 232, 240],
+        petalMid: [255, 182, 203],
+        petalDeep: [198, 118, 145],
+        stamen: '#ffe082',
+        lanternGlow: '#ffca62'
+      },
+      bloodmoon: {
+        skyTop: '#070203',
+        skyMid: '#1c0508',
+        skyBot: '#070203',
+        moonCore: '#ffd6d9',
+        moonEdge: '#e02434',
+        moonHalo: 'rgba(225, 35, 50, 0.32)',
+        mtnFar: '#21070b',
+        mtnMid: '#120306',
+        cliffDark: '#080203',
+        barkFill: '#090203',
+        barkRim: 'rgba(255, 95, 108, 0.22)',
+        petalBright: [255, 235, 238],
+        petalMid: [235, 52, 68],
+        petalDeep: [135, 18, 30],
+        stamen: '#ffd6d9',
+        lanternGlow: '#ff3b47'
+      }
+    };
+
+    let activePal = PALETTES.monochrome;
+
+    // Pointer state for Parallax & Silk Wind Ribbon
+    const mouse = {
+      x: 640,
+      y: 360,
+      vx: 0,
+      vy: 0,
+      nx: 0,
+      ny: 0,
+      px: 0,
+      py: 0,
+      ribbon: []
+    };
+
+    window.addEventListener('mousemove', (e) => {
+      const rect = stageEl.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+      mouse.vx = mx - mouse.x;
+      mouse.vy = my - mouse.y;
+      mouse.x = mx;
+      mouse.y = my;
+      mouse.nx = (mx / Math.max(1, rect.width) - 0.5) * 2;
+      mouse.ny = (my / Math.max(1, rect.height) - 0.5) * 2;
+
+      mouse.ribbon.push({ x: mx, y: my, life: 1.0 });
+      if (mouse.ribbon.length > 26) mouse.ribbon.shift();
+    });
+
+    const windRipples = [];
+    vistaCanvas.addEventListener('pointerdown', (e) => {
+      const rect = stageEl.getBoundingClientRect();
+      const cx = e.clientX - rect.left;
+      const cy = e.clientY - rect.top;
+      windRipples.push({ x: cx, y: cy, r: 6, maxR: 160, alpha: 0.65 });
+      spawnSakuraBurst(cx, cy, 26);
+      shakeAllTrees(0.09);
+      if (soundEnabled) {
+        pluckKoto(KOTO_NOTES[Math.floor(Math.random() * KOTO_NOTES.length)], 0.08);
+      }
+    });
+
+    /* --------------------------------------------------------------------------
+       PRE-RENDERED HIGH-DEFINITION 5-PETAL NOTCHED SAKURA BLOSSOM CLUSTERS
+       -------------------------------------------------------------------------- */
+    const blossomClusters = [];
+    const CLUSTER_COUNT = 6;
+    const CLUSTER_DIM = 112;
+
+    function drawNotchedSakuraFlower(ctx, x, y, rad, rot, rgb, stamenColor, alpha) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rot);
+
+      // 5 notched cherry blossom petals
+      for (let i = 0; i < 5; i++) {
+        ctx.save();
+        ctx.rotate((i * Math.PI * 2) / 5);
+        ctx.fillStyle = `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.bezierCurveTo(-rad * 0.55, -rad * 0.35, -rad * 0.68, -rad * 0.96, -rad * 0.19, -rad * 1.16);
+        ctx.lineTo(0, -rad * 0.94); // Authentic V-notch cleft at petal tip
+        ctx.lineTo(rad * 0.19, -rad * 1.16);
+        ctx.bezierCurveTo(rad * 0.68, -rad * 0.96, rad * 0.55, -rad * 0.35, 0, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Delicate Pistil & Stamens
+      ctx.fillStyle = stamenColor;
+      ctx.globalAlpha = alpha * 0.95;
+      ctx.beginPath();
+      ctx.arc(0, 0, rad * 0.17, 0, Math.PI * 2);
+      ctx.fill();
+
+      for (let s = 0; s < 5; s++) {
+        const a = (s * Math.PI * 2) / 5 + 0.3;
+        ctx.beginPath();
+        ctx.arc(Math.cos(a) * rad * 0.33, Math.sin(a) * rad * 0.33, rad * 0.065, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function generateBlossomClusterSprites() {
+      blossomClusters.length = 0;
+      const p = activePal;
+
+      for (let c = 0; c < CLUSTER_COUNT; c++) {
+        const off = document.createElement('canvas');
+        off.width = CLUSTER_DIM;
+        off.height = CLUSTER_DIM;
+        const oCtx = off.getContext('2d');
+        const mid = CLUSTER_DIM / 2;
+
+        // Soft sumi-e cloud glow behind blossom bunch
+        const glow = oCtx.createRadialGradient(mid, mid, 4, mid, mid, mid * 0.88);
+        glow.addColorStop(0, `rgba(${p.petalBright.join(',')}, 0.25)`);
+        glow.addColorStop(0.6, `rgba(${p.petalMid.join(',')}, 0.08)`);
+        glow.addColorStop(1, 'transparent');
+        oCtx.fillStyle = glow;
+        oCtx.beginPath();
+        oCtx.arc(mid, mid, mid * 0.88, 0, Math.PI * 2);
+        oCtx.fill();
+
+        // Layer 22 individual 5-petal flowers from deep shadow to bright rim highlights
+        for (let f = 0; f < 22; f++) {
+          const ang = Math.random() * Math.PI * 2;
+          const dist = Math.pow(Math.random(), 0.72) * (mid * 0.68);
+          const fx = mid + Math.cos(ang) * dist;
+          const fy = mid + Math.sin(ang) * dist;
+          const fRad = 4.8 + Math.random() * 6.8;
+          const fRot = Math.random() * Math.PI * 2;
+
+          const rgb = f < 6 ? p.petalDeep : (f < 15 ? p.petalMid : p.petalBright);
+          const alpha = f < 6 ? 0.55 : (0.68 + Math.random() * 0.3);
+          drawNotchedSakuraFlower(oCtx, fx, fy, fRad, fRot, rgb, p.stamen, alpha);
+        }
+
+        blossomClusters.push(off);
+      }
+    }
+
+    /* --------------------------------------------------------------------------
+       PROCEDURAL GNARLED SUMI-E SAKURA TREE CLASS (WITH WEEPING BLOSSOM TWIGS)
+       -------------------------------------------------------------------------- */
+    function pseudoRand(seed) {
+      const val = Math.sin(seed * 12.9898) * 43758.5453;
+      return val - Math.floor(val);
+    }
+
+    class GnarledSakuraTree {
+      constructor(config) {
+        this.config = config;
+        this.branches = [];
+        this.weepingTwigs = [];
+        this.blossoms = [];
+        this.shakeAngle = 0;
+        this.shakeVel = 0;
+        this.buildGeometry();
+      }
+
+      shake(impulse) {
+        this.shakeVel += impulse * (Math.random() > 0.5 ? 1 : -1);
+      }
+
+      buildGeometry() {
+        this.branches = [];
+        this.weepingTwigs = [];
+        this.blossoms = [];
+        let s = this.config.seed;
+        const nextRand = () => pseudoRand(s++);
+
+        const { startX, startY, startAngle, startLen, startThick, maxDepth } = this.config;
+
+        const branchOut = (x1, y1, angle, len, thick, depth) => {
+          if (depth > maxDepth || thick < 1.1) return;
+
+          // Organic gnarled curvature
+          const bend = (nextRand() - 0.48) * 0.34;
+          const endAngle = angle + bend;
+          const x2 = x1 + Math.cos(endAngle) * len;
+          const y2 = y1 + Math.sin(endAngle) * len;
+
+          const ctrlOffset = (nextRand() - 0.5) * len * 0.26;
+          const cx = (x1 + x2) * 0.5 + Math.cos(endAngle + Math.PI / 2) * ctrlOffset;
+          const cy = (y1 + y2) * 0.5 + Math.sin(endAngle + Math.PI / 2) * ctrlOffset;
+
+          this.branches.push({
+            x1, y1, cx, cy, x2, y2,
+            thick, depth,
+            phase: nextRand() * Math.PI * 2
+          });
+
+          // Add weeping blossom twigs & lush flower canopies on outer branches
+          if (depth >= 2) {
+            const clusterQty = depth >= 4 ? 3 : 2;
+            for (let k = 0; k < clusterQty; k++) {
+              const t = 0.4 + nextRand() * 0.6;
+              const bx = x1 + (x2 - x1) * t + (nextRand() - 0.5) * 22;
+              const by = y1 + (y2 - y1) * t + (nextRand() - 0.5) * 18;
+
+              this.blossoms.push({
+                x: bx,
+                y: by,
+                scale: (0.62 + nextRand() * 0.68) * (this.config.blossomScale || 1),
+                rot: nextRand() * Math.PI * 2,
+                spriteIdx: Math.floor(nextRand() * CLUSTER_COUNT),
+                depth,
+                phase: nextRand() * Math.PI * 2
+              });
+            }
+
+            // Delicate weeping sakura garlands hanging down from boughs
+            if (depth >= 3 && nextRand() > 0.35) {
+              const droopLen = 28 + nextRand() * 48;
+              this.weepingTwigs.push({
+                x: x2,
+                y: y2,
+                len: droopLen,
+                depth,
+                phase: nextRand() * Math.PI * 2,
+                spriteIdx: Math.floor(nextRand() * CLUSTER_COUNT)
+              });
+            }
+          }
+
+          // Bifurcate into gnarled sub-boughs
+          const count = depth === 0 ? 2 : (depth < 3 ? 2 : (nextRand() > 0.25 ? 2 : 1));
+          for (let i = 0; i < count; i++) {
+            const dir = i === 0 ? -1 : 1;
+            // Bias hero tree branches to arch gracefully across the 16:9 moon & vista
+            const archBias = this.config.archRight && depth < 4 ? 0.11 : 0;
+            const spread = dir * (0.24 + nextRand() * 0.32) + archBias;
+            const nLen = len * (0.70 + nextRand() * 0.16);
+            const nThick = thick * (0.65 + nextRand() * 0.10);
+            branchOut(x2, y2, endAngle + spread, nLen, nThick, depth + 1);
+          }
+        };
+
+        branchOut(startX, startY, startAngle, startLen, startThick, 0);
+      }
+
+      render(ctx, windForce, px, py) {
+        // Spring harmonic physics
+        this.shakeAngle += this.shakeVel;
+        this.shakeVel *= 0.89;
+        this.shakeVel -= this.shakeAngle * 0.11;
+
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        // 1. Draw Gnarled Sumi-e Trunk & Branches
+        for (const b of this.branches) {
+          const flex = Math.pow(b.depth, 1.4) * 1.65;
+          const swayX = Math.sin(tick * 0.02 + b.phase) * (windForce * flex) + (this.shakeAngle * b.depth * 14);
+          const swayY = Math.cos(tick * 0.018 + b.phase) * (windForce * flex * 0.35);
+
+          const x1 = b.x1 + (b.depth > 0 ? swayX * 0.55 : 0);
+          const y1 = b.y1 + (b.depth > 0 ? swayY * 0.55 : 0);
+          const cx = b.cx + swayX * 0.78;
+          const cy = b.cy + swayY * 0.78;
+          const x2 = b.x2 + swayX;
+          const y2 = b.y2 + swayY;
+
+          // Deep Sumi-e ink bark body
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.quadraticCurveTo(cx, cy, x2, y2);
+          ctx.strokeStyle = activePal.barkFill;
+          ctx.lineWidth = b.thick;
+          ctx.stroke();
+
+          // Crisp Moonlight Rim-Lighting on upper edge of branches
+          if (b.thick > 3.2) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1 - b.thick * 0.28);
+            ctx.quadraticCurveTo(cx, cy - b.thick * 0.28, x2, y2 - b.thick * 0.24);
+            ctx.strokeStyle = activePal.barkRim;
+            ctx.lineWidth = Math.max(1.0, b.thick * 0.17);
+            ctx.stroke();
+          }
+        }
+
+        // 2. Draw Weeping Sakura Garlands
+        for (const w of this.weepingTwigs) {
+          const sway = Math.sin(tick * 0.026 + w.phase) * (windForce * w.depth * 2.8) + (this.shakeAngle * 20);
+          const wx = w.x + sway * 0.6;
+          const wy = w.y;
+          const endX = wx + sway * 1.3 + windForce * 6;
+          const endY = wy + w.len;
+
+          ctx.beginPath();
+          ctx.moveTo(wx, wy);
+          ctx.quadraticCurveTo(wx + sway * 0.5, wy + w.len * 0.5, endX, endY);
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+          ctx.lineWidth = 1.1;
+          ctx.stroke();
+
+          // Tiny trailing blossoms along the weeping strand
+          const sprite = blossomClusters[w.spriteIdx];
+          if (sprite) {
+            ctx.drawImage(sprite, endX - 18, endY - 18, 36, 36);
+          }
+        }
+
+        // 3. Draw Lush 5-Petal Sakura Blossom Canopies
+        for (const node of this.blossoms) {
+          const sprite = blossomClusters[node.spriteIdx];
+          if (!sprite) continue;
+
+          const swayX = Math.sin(tick * 0.023 + node.phase) * (windForce * node.depth * 2.1) + (this.shakeAngle * node.depth * 15);
+          const swayY = Math.cos(tick * 0.02 + node.phase) * (windForce * node.depth * 0.85);
+          const rot = node.rot + Math.sin(tick * 0.016 + node.phase) * 0.07 * windForce + this.shakeAngle;
+
+          ctx.save();
+          ctx.translate(node.x + swayX, node.y + swayY);
+          ctx.rotate(rot);
+          const sz = CLUSTER_DIM * node.scale;
+          ctx.drawImage(sprite, -sz / 2, -sz / 2, sz, sz);
+          ctx.restore();
+        }
+
+        ctx.restore();
+      }
+    }
+
+    let heroTree = null;
+    let distantRidgeTree = null;
+    let fgTopRightBough = null;
+    let fgBottomRightBough = null;
+
+    function buildAllSakuraTrees() {
+      // 1. Smaller hero sakura tree on the left, framing the moon without dominating the scene
+      heroTree = new GnarledSakuraTree({
+        seed: 719,
+        startX: W * 0.045,
+        startY: H * 0.86,
+        startAngle: -1.12, // Curves up along the left edge of the moon
+        startLen: H * 0.18,
+        startThick: Math.max(15, W * 0.014),
+        maxDepth: 5,
+        archRight: true,
+        blossomScale: 0.70
+      });
+
+      // 2. Distant Silhouette Sakura Tree near the Torii Sanctuary Ridge
+      distantRidgeTree = new GnarledSakuraTree({
+        seed: 304,
+        startX: W * 0.40,
+        startY: H * 0.76,
+        startAngle: -1.45,
+        startLen: H * 0.075,
+        startThick: 6,
+        maxDepth: 3,
+        archRight: false,
+        blossomScale: 0.38
+      });
+
+      // 3. Foreground Top-Right Overhanging Bough (Frames the top of the Login Monolith)
+      fgTopRightBough = new GnarledSakuraTree({
+        seed: 912,
+        startX: W + 18,
+        startY: H * 0.08,
+        startAngle: Math.PI - 0.25,
+        startLen: W * 0.085,
+        startThick: 10,
+        maxDepth: 3,
+        archRight: false,
+        blossomScale: 0.50
+      });
+
+      // 4. Foreground Bottom-Right Bough (Frames the bottom corner of the 16:9 stage)
+      fgBottomRightBough = new GnarledSakuraTree({
+        seed: 518,
+        startX: W + 16,
+        startY: H * 0.98,
+        startAngle: -Math.PI + 0.45,
+        startLen: W * 0.07,
+        startThick: 9,
+        maxDepth: 3,
+        archRight: false,
+        blossomScale: 0.46
+      });
+    }
+
+    function shakeAllTrees(force = 0.09) {
+      if (heroTree) heroTree.shake(force);
+      if (distantRidgeTree) distantRidgeTree.shake(force * 0.7);
+      if (fgTopRightBough) fgTopRightBough.shake(force * 1.1);
+      if (fgBottomRightBough) fgBottomRightBough.shake(force * 1.1);
+    }
+
+    /* --------------------------------------------------------------------------
+       3D TUMBLING SAKURA PETALS & INTERACTIVE CURSOR BURSTS
+       -------------------------------------------------------------------------- */
+    class DriftingPetal {
+      constructor(isBurst = false, bx = 0, by = 0) {
+        this.isBurst = isBurst;
+        this.init(true, bx, by);
+      }
+
+      init(randomY = false, bx = null, by = null) {
+        this.z = Math.random(); // Depth: 0 = distant, 1 = close foreground
+        this.size = 3.5 + this.z * 7.5;
+
+        if (bx !== null && by !== null && this.isBurst) {
+          this.x = bx + (Math.random() - 0.5) * 36;
+          this.y = by + (Math.random() - 0.5) * 36;
+          this.vx = (Math.random() - 0.2) * 4.8;
+          this.vy = (Math.random() - 0.45) * 3.8;
+        } else {
+          // Spawn mostly from the Hero Tree canopy & top sky
+          this.x = randomY ? Math.random() * W : (Math.random() * W * 0.85 - W * 0.1);
+          this.y = randomY ? Math.random() * H : -25 - Math.random() * 60;
+          this.vx = (0.4 + Math.random() * 0.9) * (0.5 + this.z * 0.8);
+          this.vy = (0.6 + Math.random() * 0.85) * (0.5 + this.z * 0.7);
+        }
+
+        this.pitch = Math.random() * Math.PI * 2;
+        this.yaw = Math.random() * Math.PI * 2;
+        this.roll = Math.random() * Math.PI * 2;
+        this.vPitch = (Math.random() - 0.5) * 0.05;
+        this.vYaw = (Math.random() - 0.5) * 0.05;
+        this.vRoll = (Math.random() - 0.5) * 0.035;
+        this.shade = Math.random();
+        this.opacity = this.z > 0.86 ? 0.35 : (0.45 + Math.random() * 0.45);
+      }
+
+      step(windForce) {
+        // React to silk wind cursor ribbon
+        const dx = this.x - mouse.x;
+        const dy = this.y - mouse.y;
+        const dSq = dx * dx + dy * dy;
+        if (dSq < 16000) {
+          const factor = (1 - dSq / 16000) * 0.16;
+          this.vx += mouse.vx * factor + (dx / Math.sqrt(dSq + 1)) * 0.22;
+          this.vy += mouse.vy * factor + (dy / Math.sqrt(dSq + 1)) * 0.22;
+        }
+
+        const flutterX = Math.sin(tick * 0.032 + this.pitch) * 0.55;
+        const flutterY = Math.cos(tick * 0.026 + this.yaw) * 0.25;
+
+        this.x += this.vx + windForce * (0.55 + this.z * 0.95) + flutterX;
+        this.y += this.vy + flutterY;
+
+        this.vx *= 0.985;
+        if (this.vy < 0.65) this.vy += 0.035;
+
+        this.pitch += this.vPitch * (1 + windForce * 0.25);
+        this.yaw += this.vYaw * (1 + windForce * 0.25);
+        this.roll += this.vRoll;
+
+        if (this.y > H + 40 || this.x > W + 120 || this.x < -120) {
+          if (this.isBurst) return false;
+          this.init(false);
+        }
+        return true;
+      }
+
+      render(ctx) {
+        const rgb = this.shade > 0.45 ? activePal.petalBright : activePal.petalMid;
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.roll);
+        ctx.scale(Math.cos(this.yaw) * 0.82 + 0.18, Math.sin(this.pitch) * 0.82 + 0.18);
+
+        const s = this.size;
+        ctx.fillStyle = `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${this.opacity})`;
+        ctx.beginPath();
+        ctx.moveTo(0, s);
+        ctx.bezierCurveTo(-s * 0.85, s * 0.35, -s * 0.95, -s * 0.65, -s * 0.22, -s);
+        ctx.lineTo(0, -s * 0.75); // Cleft notch
+        ctx.lineTo(s * 0.22, -s);
+        ctx.bezierCurveTo(s * 0.95, -s * 0.65, s * 0.85, s * 0.35, 0, s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    const ambientPetals = Array.from({ length: 85 }, () => new DriftingPetal(false));
+    const burstPetals = [];
+
+    function spawnSakuraBurst(x, y, count = 24) {
+      for (let i = 0; i < count; i++) {
+        burstPetals.push(new DriftingPetal(true, x, y));
+      }
+    }
+
+    /* --------------------------------------------------------------------------
+       16:9 WIDESCREEN SUMI-E SCENERY: GIANT MOON, CLIFFSIDE SAMURAI, TORO & LAKE
+       -------------------------------------------------------------------------- */
+    function drawCliffsideSamuraiAndLantern(ctx, cliffX, cliffY, windForce) {
+      ctx.save();
+      ctx.translate(cliffX, cliffY);
+      const scale = H / 720;
+      ctx.scale(scale, scale);
+
+      // 1. Traditional Japanese Stone Lantern (Tōrō) on the Cliff Edge
+      ctx.save();
+      ctx.translate(-78, 8);
+      ctx.fillStyle = '#060609';
+      // Pedestal & Post
+      ctx.fillRect(-10, -18, 20, 18);
+      ctx.fillRect(-5, -48, 10, 30);
+      // Firebox chamber
+      ctx.fillRect(-11, -66, 22, 18);
+      // Curved Warabi-te Roof
+      ctx.beginPath();
+      ctx.moveTo(-22, -64);
+      ctx.quadraticCurveTo(0, -82, 22, -64);
+      ctx.lineTo(16, -60);
+      ctx.quadraticCurveTo(0, -70, -16, -60);
+      ctx.closePath();
+      ctx.fill();
+      // Top Finial (Hōju)
+      ctx.beginPath();
+      ctx.arc(0, -77, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Flickering Warm Candlelight inside Stone Lantern
+      const flicker = 0.72 + Math.sin(tick * 0.08) * 0.18 + Math.cos(tick * 0.19) * 0.08;
+      const lGlow = ctx.createRadialGradient(0, -57, 2, 0, -57, 46);
+      lGlow.addColorStop(0, activePal.lanternGlow);
+      lGlow.addColorStop(0.35, `rgba(${activePal.petalBright.join(',')}, ${0.22 * flicker})`);
+      lGlow.addColorStop(1, 'transparent');
+      ctx.fillStyle = lGlow;
+      ctx.beginPath();
+      ctx.arc(0, -57, 46, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = activePal.lanternGlow;
+      ctx.globalAlpha = flicker;
+      ctx.fillRect(-5, -62, 10, 10);
+      ctx.restore();
+
+      // 2. Lone Meditating Samurai Silhouette with Fluttering Haori Cloak & Katana
+      ctx.save();
+      ctx.translate(15, 4);
+      ctx.fillStyle = '#050508';
+
+      // Flowing Haori Cape billowing in the mountain wind
+      const capeWave1 = Math.sin(tick * 0.045) * (6 + windForce * 5);
+      const capeWave2 = Math.cos(tick * 0.038) * (8 + windForce * 6);
+      ctx.beginPath();
+      ctx.moveTo(-6, -54);
+      ctx.quadraticCurveTo(18 + capeWave1, -38, 34 + capeWave2, -12 + capeWave1 * 0.3);
+      ctx.quadraticCurveTo(16 + capeWave1 * 0.5, -6, -4, -10);
+      ctx.closePath();
+      ctx.fill();
+
+      // Samurai Hakama & Torso Silhouette
+      ctx.beginPath();
+      ctx.moveTo(-12, 0);
+      ctx.lineTo(-9, -32);
+      ctx.lineTo(-13, -54);
+      ctx.lineTo(5, -54);
+      ctx.lineTo(8, -30);
+      ctx.lineTo(11, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      // Conical Rōnin Kasa (Straw Hat) Silhouette with Rim Moonlight
+      ctx.beginPath();
+      ctx.moveTo(-26, -56);
+      ctx.quadraticCurveTo(-3, -73, 20, -56);
+      ctx.quadraticCurveTo(-3, -59, -26, -56);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = activePal.barkRim;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(-25, -56.5);
+      ctx.quadraticCurveTo(-3, -72, 19, -56.5);
+      ctx.stroke();
+
+      // Twin Katana Sheaths (Daishō) at Waist catching a glint of moonlight
+      ctx.strokeStyle = '#050508';
+      ctx.lineWidth = 3.2;
+      ctx.beginPath();
+      ctx.moveTo(-24, -40);
+      ctx.lineTo(22, -16);
+      ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+      ctx.lineWidth = 0.9;
+      ctx.beginPath();
+      ctx.moveTo(-24, -41);
+      ctx.lineTo(14, -21);
+      ctx.stroke();
+
+      ctx.restore();
+      ctx.restore();
+    }
+
+    function renderWidescreenVista(ctx, px, py, windForce) {
+      const p = activePal;
+
+      // 1. Deep 16:9 Atmospheric Sky Gradient
+      const sky = ctx.createLinearGradient(0, 0, 0, H);
+      sky.addColorStop(0, p.skyTop);
+      sky.addColorStop(0.62, p.skyMid);
+      sky.addColorStop(1, p.skyBot);
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, W, H);
+
+      // 2. Colossal Full Moon Positioned in Left-Center of 16:9 Frame behind the Hero Sakura Tree
+      const moonX = W * 0.28 + px * 0.22;
+      const moonY = H * 0.34 + py * 0.22;
+      const moonR = Math.min(W, H) * 0.22;
+
+      const halo = ctx.createRadialGradient(moonX, moonY, moonR * 0.75, moonX, moonY, moonR * 2.8);
+      halo.addColorStop(0, p.moonHalo);
+      halo.addColorStop(0.55, 'rgba(255, 255, 255, 0.03)');
+      halo.addColorStop(1, 'transparent');
+      ctx.fillStyle = halo;
+      ctx.beginPath();
+      ctx.arc(moonX, moonY, moonR * 2.8, 0, Math.PI * 2);
+      ctx.fill();
+
+      const disc = ctx.createRadialGradient(moonX - moonR * 0.25, moonY - moonR * 0.25, moonR * 0.1, moonX, moonY, moonR);
+      disc.addColorStop(0, p.moonCore);
+      disc.addColorStop(0.78, p.moonEdge);
+      disc.addColorStop(1, 'rgba(190, 190, 205, 0.9)');
+      ctx.fillStyle = disc;
+      ctx.beginPath();
+      ctx.arc(moonX, moonY, moonR, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Subtle Lunar Mare Ink Wash Details
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.055)';
+      ctx.beginPath();
+      ctx.arc(moonX - moonR * 0.28, moonY - moonR * 0.08, moonR * 0.27, 0, Math.PI * 2);
+      ctx.arc(moonX + moonR * 0.30, moonY + moonR * 0.20, moonR * 0.21, 0, Math.PI * 2);
+      ctx.arc(moonX + moonR * 0.10, moonY - moonR * 0.36, moonR * 0.15, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 3. Distant Sumi-e Mountain Ranges & Drifting Valley Mist
+      ctx.save();
+      ctx.translate(px * 0.4, py * 0.3);
+      ctx.fillStyle = p.mtnFar;
+      ctx.beginPath();
+      ctx.moveTo(-60, H * 0.80);
+      ctx.lineTo(W * 0.14, H * 0.54);
+      ctx.lineTo(W * 0.29, H * 0.67);
+      ctx.lineTo(W * 0.48, H * 0.48);
+      ctx.lineTo(W * 0.67, H * 0.66);
+      ctx.lineTo(W * 0.86, H * 0.52);
+      ctx.lineTo(W + 60, H * 0.76);
+      ctx.lineTo(W + 60, H);
+      ctx.lineTo(-60, H);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+
+      // 4. Mid-Ground Sanctuary Ridge, Distant Torii Gate & Silhouette Sakura Tree
+      ctx.save();
+      ctx.translate(px * 0.65, py * 0.45);
+      ctx.fillStyle = p.mtnMid;
+      ctx.beginPath();
+      ctx.moveTo(W * 0.25, H * 0.82);
+      ctx.quadraticCurveTo(W * 0.46, H * 0.66, W * 0.64, H * 0.80);
+      ctx.lineTo(W + 60, H * 0.82);
+      ctx.lineTo(W + 60, H);
+      ctx.lineTo(W * 0.25, H);
+      ctx.closePath();
+      ctx.fill();
+
+      // Distant Cliffside Torii Gate Silhouette
+      const tx = W * 0.44;
+      const ty = H * 0.725;
+      const ts = H / 820;
+      ctx.save();
+      ctx.translate(tx, ty);
+      ctx.scale(ts, ts);
+      ctx.fillStyle = '#07070a';
+      ctx.fillRect(-34, -78, 7, 80);
+      ctx.fillRect(27, -78, 7, 80);
+      ctx.beginPath();
+      ctx.moveTo(-54, -84);
+      ctx.quadraticCurveTo(0, -73, 54, -84);
+      ctx.lineTo(50, -75);
+      ctx.quadraticCurveTo(0, -66, -50, -75);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillRect(-42, -62, 84, 6);
+      ctx.restore();
+      ctx.restore();
+
+      if (distantRidgeTree) {
+        ctx.save();
+        ctx.globalAlpha = 0.68;
+        distantRidgeTree.render(ctx, windForce * 0.7, px * 0.65, py * 0.45);
+        ctx.restore();
+      }
+
+      // 5. Reflective Mountain Sanctuary Lake (Bottom 20% of 16:9 Vista)
+      const waterY = H * 0.80;
+      const lakeGrad = ctx.createLinearGradient(0, waterY, 0, H);
+      lakeGrad.addColorStop(0, 'rgba(7, 7, 11, 0.88)');
+      lakeGrad.addColorStop(1, '#030305');
+      ctx.fillStyle = lakeGrad;
+      ctx.fillRect(0, waterY, W, H - waterY);
+
+      // Broken Shimmering Moon Reflections on Water
+      for (let r = 0; r < 20; r++) {
+        const ratio = r / 20;
+        const ry = waterY + 5 + ratio * (H - waterY - 8);
+        const waveShift = Math.sin(tick * 0.035 + r * 0.85) * (10 + windForce * 5);
+        const rw = (1 - ratio * 0.5) * moonR * 1.25;
+        ctx.fillStyle = `rgba(${p.petalBright.join(',')}, ${0.09 * (1 - ratio * 0.5)})`;
+        ctx.fillRect(moonX + waveShift - rw / 2, ry, rw, 1.6);
+      }
+
+      // 6. Left Foreground Jagged Sumi-e Cliff Promontory (Anchors the Hero Sakura Tree & Samurai)
+      ctx.save();
+      ctx.translate(-px * 0.85, -py * 0.85);
+      ctx.fillStyle = p.cliffDark;
+      ctx.beginPath();
+      ctx.moveTo(-80, H + 40);
+      ctx.lineTo(-80, H * 0.73);
+      ctx.quadraticCurveTo(W * 0.08, H * 0.70, W * 0.19, H * 0.75);
+      ctx.lineTo(W * 0.27, H * 0.77);
+      ctx.quadraticCurveTo(W * 0.31, H * 0.82, W * 0.24, H * 0.87);
+      ctx.lineTo(W * 0.18, H + 40);
+      ctx.closePath();
+      ctx.fill();
+
+      // Rim highlight along the cliff ledge
+      ctx.strokeStyle = p.barkRim;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-40, H * 0.73);
+      ctx.quadraticCurveTo(W * 0.08, H * 0.70, W * 0.19, H * 0.75);
+      ctx.lineTo(W * 0.27, H * 0.77);
+      ctx.stroke();
+
+      // Render Stone Lantern & Lone Samurai on the Cliff Promontory
+      drawCliffsideSamuraiAndLantern(ctx, W * 0.215, H * 0.755, windForce);
+      ctx.restore();
+    }
+
+    /* --------------------------------------------------------------------------
+       MAIN 60FPS ANIMATION LOOP
+       -------------------------------------------------------------------------- */
+    function animateStage() {
+      tick++;
+
+      // Smooth Parallax Interpolation
+      mouse.px += (mouse.nx * 22 - mouse.px) * 0.05;
+      mouse.py += (mouse.ny * 14 - mouse.py) * 0.05;
+      mouse.vx *= 0.86;
+      mouse.vy *= 0.86;
+
+      if (windSurge > 0.01) windSurge *= 0.96;
+      const wind = windBase + windSurge + Math.sin(tick * 0.014) * 0.32;
+
+      if (soundEnabled && windFilter && audioCtx) {
+        windFilter.frequency.setTargetAtTime(240 + wind * 150, audioCtx.currentTime, 0.1);
+      }
+
+      // 1. Draw Widescreen Background Vista & Cliffside Samurai
+      renderWidescreenVista(vCtx, mouse.px, mouse.py, wind);
+
+      // 2. Draw Hero Ancient Sakura Tree on Left Cliff arching across the Moon
+      if (heroTree) {
+        heroTree.render(vCtx, wind, -mouse.px * 0.85, -mouse.py * 0.85);
+      }
+
+      // 3. Draw Mid-Ground Drifting Sakura Petals
+      for (const petal of ambientPetals) {
+        petal.step(wind);
+        if (petal.z <= 0.78) petal.render(vCtx);
+      }
+      for (let i = burstPetals.length - 1; i >= 0; i--) {
+        if (burstPetals[i].step(wind)) {
+          burstPetals[i].render(vCtx);
+        } else {
+          burstPetals.splice(i, 1);
+        }
+      }
+
+      // 4. Draw Click Wind Shockwave Ripples
+      for (let i = windRipples.length - 1; i >= 0; i--) {
+        const wr = windRipples[i];
+        wr.r += (wr.maxR - wr.r) * 0.12;
+        wr.alpha *= 0.92;
+        vCtx.strokeStyle = `rgba(${activePal.petalBright.join(',')}, ${wr.alpha})`;
+        vCtx.lineWidth = 1.4;
+        vCtx.beginPath();
+        vCtx.arc(wr.x, wr.y, wr.r, 0, Math.PI * 2);
+        vCtx.stroke();
+        if (wr.alpha < 0.02) windRipples.splice(i, 1);
+      }
+
+      // 5. Draw Calligraphic Silk Wind Trail on Cursor Movement
+      if (mouse.ribbon.length > 1) {
+        vCtx.save();
+        for (let i = 1; i < mouse.ribbon.length; i++) {
+          const p0 = mouse.ribbon[i - 1];
+          const p1 = mouse.ribbon[i];
+          p1.life -= 0.042;
+          if (p1.life > 0) {
+            vCtx.beginPath();
+            vCtx.moveTo(p0.x, p0.y);
+            vCtx.lineTo(p1.x, p1.y);
+            vCtx.strokeStyle = `rgba(${activePal.petalBright.join(',')}, ${p1.life * 0.25})`;
+            vCtx.lineWidth = p1.life * 2.2;
+            vCtx.lineCap = 'round';
+            vCtx.stroke();
+          }
+        }
+        mouse.ribbon = mouse.ribbon.filter(pt => pt.life > 0);
+        vCtx.restore();
+      }
+
+      // 6. Render Foreground Framing Boughs & Close-Up Petals on Top Layer
+      fgCtx.clearRect(0, 0, W, H);
+      if (fgTopRightBough) fgTopRightBough.render(fgCtx, wind * 1.15, -mouse.px * 1.25, -mouse.py * 1.25);
+      if (fgBottomRightBough) fgBottomRightBough.render(fgCtx, wind * 1.15, -mouse.px * 1.25, -mouse.py * 1.25);
+
+      for (const petal of ambientPetals) {
+        if (petal.z > 0.78) petal.render(fgCtx);
+      }
+
+      requestAnimationFrame(animateStage);
+    }
+
+    function syncStageSize() {
+      const rect = stageEl.getBoundingClientRect();
+      W = vistaCanvas.width = fgCanvas.width = Math.round(rect.width);
+      H = vistaCanvas.height = fgCanvas.height = Math.round(rect.height);
+      buildAllSakuraTrees();
+    }
+
+    window.addEventListener('resize', syncStageSize);
+
+    /* ==========================================================================
+       3. UI INTERACTIONS: ENSO RESONANCE, INLINE PANES & KATANA GATE TRANSITION
+       ========================================================================== */
+    function updateEnsoResonance() {
+      const u = document.getElementById('username').value;
+      const p = document.getElementById('password').value;
+      const ensoSvg = document.getElementById('enso-svg');
+      const ensoCircle = document.getElementById('enso-circle');
+      const kiLabel = document.getElementById('kiStateLabel');
+
+      const total = u.length + p.length;
+      const progress = Math.min(1, total / 18);
+      const offset = 65 - progress * 55;
+      ensoCircle.style.strokeDashoffset = offset;
+      ensoSvg.style.transform = `rotate(${-30 + total * 8}deg)`;
+
+      if (p.length === 0) {
+        kiLabel.textContent = '気 • Stillness';
+      } else if (p.length < 6) {
+        kiLabel.textContent = '気 • Awakening';
+      } else {
+        kiLabel.textContent = '剣聖 • Mastered';
+      }
+    }
+
+    function togglePasswordSight() {
+      const pass = document.getElementById('password');
+      pass.type = pass.type === 'password' ? 'text' : 'password';
+    }
+
+    function fillMusashiDemo() {
+      document.getElementById('username').value = 'musashi@bushido.jp';
+      document.getElementById('password').value = 'FiveRings1645';
+      updateEnsoResonance();
+      triggerHankoRipple();
+      showFeedback('Master Miyamoto Musashi’s cipher inscribed.');
+    }
+
+    function showFeedback(text) {
+      const el = document.getElementById('gateFeedback');
+      el.textContent = text;
+      el.classList.remove('hidden');
+    }
+
+    function triggerHankoRipple() {
+      const stamp = document.getElementById('hankoStamp');
+      stamp.classList.add('stamped');
+      setTimeout(() => stamp.classList.remove('stamped'), 650);
+      summonSakuraGale();
+    }
+
+    function summonSakuraGale() {
+      windSurge = 3.0;
+      shakeAllTrees(0.11);
+      spawnSakuraBurst(W * 0.25, H * 0.36, 28);
+      spawnSakuraBurst(W * 0.88, H * 0.18, 16);
+      if (soundEnabled) pluckKoto(KOTO_NOTES[6], 0.08);
+    }
+
+    function switchPane(paneId, e) {
+      if (e) e.preventDefault();
+      document.getElementById('gateFeedback').classList.add('hidden');
+      ['login', 'pledge', 'forgot', 'sanctuary'].forEach(id => {
+        const el = document.getElementById(`pane-${id}`);
+        if (id === paneId) {
+          el.classList.remove('hidden-pane');
+        } else {
+          el.classList.add('hidden-pane');
+        }
+      });
+      shakeAllTrees(0.06);
+      if (soundEnabled) pluckKoto(KOTO_NOTES[3], 0.06);
+    }
+
+    function playKatanaSlashTransition(callback) {
+      ensureAudio();
+      playKatanaChime();
+      const slashLayer = document.getElementById('katana-slash-layer');
+      stageEl.classList.add('slash-triggered');
+      slashLayer.style.opacity = '1';
+      summonSakuraGale();
+
+      setTimeout(() => {
+        slashLayer.style.opacity = '0';
+        if (callback) callback();
+      }, 260);
+
+      setTimeout(() => {
+        stageEl.classList.remove('slash-triggered');
+      }, 650);
+    }
+
+    function handleSanctuaryEntry(e) {
+      e.preventDefault();
+      const rawUser = document.getElementById('username').value.trim();
+      const namePart = rawUser.includes('@') ? rawUser.split('@')[0] : (rawUser || 'Musashi');
+      const formatted = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+
+      document.getElementById('sanctuaryWarriorTitle').textContent = `Lord ${formatted}`;
+      playKatanaSlashTransition(() => {
+        switchPane('sanctuary');
+      });
+    }
+
+    function handlePledgeSubmit(e) {
+      e.preventDefault();
+      const moniker = document.getElementById('pledgeName').value.trim() || 'Musashi';
+      document.getElementById('sanctuaryWarriorTitle').textContent = `Lord ${moniker}`;
+      playKatanaSlashTransition(() => {
+        switchPane('sanctuary');
+      });
+    }
+
+    function handleRecoverySubmit(e) {
+      e.preventDefault();
+      const addr = document.getElementById('recoverEmail').value.trim();
+      switchPane('login');
+      showFeedback(`A swift messenger hawk has been sent to ${addr}.`);
+    }
+
+    const ZEN_KOANS = [
+      {
+        kanji: '「花は桜木、人は武士」',
+        text: '"Among blossoms, the cherry blossom; among men, the warrior. Stillness in the heart of the falling storm."'
+      },
+      {
+        kanji: '「明鏡止水 — Meikyō Shisui」',
+        text: '"Clear mirror, still water. A mind free of cloud reflects the moon and anticipates the strike before it begins."'
+      },
+      {
+        kanji: '「一期一会 — Ichigo Ichie」',
+        text: '"One time, one meeting. Treasure every drifting petal, for this exact wind will never blow again."'
+      }
+    ];
+    let koanIdx = 0;
+
+    function cycleZenKoan() {
+      koanIdx = (koanIdx + 1) % ZEN_KOANS.length;
+      document.getElementById('koanKanji').textContent = ZEN_KOANS[koanIdx].kanji;
+      document.getElementById('koanText').textContent = ZEN_KOANS[koanIdx].text;
+      if (soundEnabled) pluckKoto(KOTO_NOTES[7], 0.06);
+    }
+
+    function setPalette(key) {
+      activePal = PALETTES[key];
+      document.body.setAttribute('data-palette', key);
+      ['monochrome', 'sakura', 'bloodmoon'].forEach(k => {
+        document.getElementById(`dot-${k}`).classList.toggle('active', k === key);
+      });
+      generateBlossomClusterSprites();
+      shakeAllTrees(0.06);
+    }
+
+    function toggleAspectMode() {
+      stageEl.classList.toggle('full-bleed');
+      const btn = document.getElementById('aspectBtn');
+      btn.textContent = stageEl.classList.contains('full-bleed') ? 'Full Bleed' : '16:9 Cinema';
+      setTimeout(syncStageSize, 520);
+      syncStageSize();
+    }
+
+    // Initialize 16:9 Stage & Start Animation
+    generateBlossomClusterSprites();
+    syncStageSize();
+    animateStage();
+  </script>
+</body>
+</html>
