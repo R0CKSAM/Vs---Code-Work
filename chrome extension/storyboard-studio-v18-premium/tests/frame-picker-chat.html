@@ -1,0 +1,5 @@
+<!doctype html><meta charset="utf-8"><div id="conversation"><div data-message-author-role="user" data-message-id="previous">Frame: Frame 037</div></div><form id="composer"><textarea id="prompt-textarea"></textarea><button type="submit" aria-label="Send">Send</button></form><div id="generation"></div>
+<script src="recovery-mock.js"></script><script>
+TEST.initial=()=>{const queueId='picker-'+Math.random();return {master:'Test master',prompts:Array.from({length:110},(_,i)=>`Frame ${String(i+1).padStart(3,'0')} || Synthetic scene`),index:37,phase:'paused',queueId,ownerTabId:7,autoDownload:false,frameHistory:Array.from({length:37},(_,index)=>({queueId,index,label:'Frame '+(index+1),status:'completed'})),pending:{queueId,state:'prepared',prompt:'Test master\n\nFrame: Frame 038\n\nScene: Synthetic scene\n\nGenerate exactly ONE individual 16:9 image, not a contact sheet.',baseline:[],clickedAt:0,sendReadyAt:0}};};
+TEST.data=TEST.initial();
+</script><script src="../content.js"></script>

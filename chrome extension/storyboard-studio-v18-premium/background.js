@@ -6,8 +6,8 @@ chrome.storage.onChanged.addListener(async(changes,area)=>{
  const tracked=['phase','index','error','pending'];if(!tracked.some(k=>changes[k]))return;
  const state=await chrome.storage.local.get(['diagnosticEvents','phase','index','error','pending']);
  const old=changes.pending?.oldValue,newp=changes.pending?.newValue;
- const event={time:new Date().toISOString(),phase:state.phase||'idle',index:state.index||0,pendingState:state.pending?.state||null,error:String(state.error||'').slice(0,300)};
- if(old?.state===newp?.state && !changes.phase && !changes.index && !changes.error)return;
+ const event={time:new Date().toISOString(),phase:state.phase||'idle',index:state.index||0,pendingState:state.pending?.state||null,restoreCount:state.pending?.restoreCount||0,restoring:!!state.pending?.restoreSince,error:String(state.error||'').slice(0,300)};
+ if(old?.state===newp?.state && old?.restoreCount===newp?.restoreCount && !!old?.restoreSince===!!newp?.restoreSince && !changes.phase && !changes.index && !changes.error)return;
  const events=(state.diagnosticEvents||[]).slice(-298);events.push(event);
  logWrite=true;try{await chrome.storage.local.set({diagnosticEvents:events})}finally{logWrite=false}
 });

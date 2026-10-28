@@ -1,0 +1,10 @@
+window.PICKER_TEST={messages:[],confirmations:[],answer:true,errors:[],interval:null};
+window.addEventListener('error',event=>PICKER_TEST.errors.push(event.message));
+window.addEventListener('unhandledrejection',event=>PICKER_TEST.errors.push(String(event.reason)));
+const frame=document.createElement('iframe');frame.style.cssText='position:fixed;left:-10000px;width:800px;height:600px';frame.src='tests/frame-picker-chat.html';
+PICKER_TEST.ready=new Promise(resolve=>frame.onload=()=>resolve(frame.contentWindow.TEST));document.body.append(frame);
+PICKER_TEST.queue=()=>frame.contentWindow.TEST;
+const getStore=async()=>{await PICKER_TEST.ready;return frame.contentWindow.chrome.storage.local;};
+window.setInterval=fn=>{PICKER_TEST.interval=fn;return 1;};
+window.confirm=message=>{PICKER_TEST.confirmations.push(message);if(PICKER_TEST.onConfirm)PICKER_TEST.onConfirm();return PICKER_TEST.answer;};
+window.chrome={storage:{local:{get:async keys=>(await getStore()).get(keys),set:async patch=>(await getStore()).set(patch)}},runtime:{getURL:path=>path,getManifest:()=>({version:'18.0.3'})},tabs:{query:async()=>[{id:7,url:'https://chatgpt.com/c/synthetic-storyboard'}],sendMessage:async(id,message)=>{PICKER_TEST.messages.push(message);const queue=await PICKER_TEST.ready;return new Promise(resolve=>queue.listener(message,{},resolve));}}};
