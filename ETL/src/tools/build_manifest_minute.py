@@ -169,6 +169,7 @@ def main() -> None:
     parser.add_argument("--end", default=None, help="IST lake date end, YYYY-MM-DD.")
     parser.add_argument("--threads", type=int, default=6)
     parser.add_argument("--memory-limit", default="16GB")
+    parser.add_argument("--max-temp-size", default=None, help="Optional DuckDB spill limit, e.g. 500GB.")
     parser.add_argument(
         "--temp-dir",
         type=Path,
@@ -186,6 +187,8 @@ def main() -> None:
     args.out_dir.mkdir(parents=True, exist_ok=True)
     con = connect(args)
     try:
+        if args.max_temp_size:
+            con.execute("SET max_temp_directory_size = ?", [args.max_temp_size])
         build_manifest_minute_table(con, args)
         new_rows = table_count(con, "manifest_minute_new")
         if new_rows <= 0:
