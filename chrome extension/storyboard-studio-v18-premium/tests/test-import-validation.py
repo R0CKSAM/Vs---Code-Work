@@ -53,6 +53,9 @@ fixtures = {
 actual = ROOT / 'AAROHAN_S2E1_110_Frames_Cast_Instrument_AUDITED_V6.xlsx'
 if actual.exists():
     fixtures['actual.xlsx'] = actual.read_bytes()
+aarohan11 = Path(r'Y:\Veto Logs Backup\Aarohan\Smart Flow Uploads\1.1_Smart_Flow_UPLOAD.xlsx')
+if aarohan11.exists():
+    fixtures['aarohan11.xlsx'] = aarohan11.read_bytes()
 
 CHECKS = r'''
 (async()=>{
@@ -82,6 +85,16 @@ const file=document.getElementById('file'),dt=new DataTransfer();dt.items.add(ne
 for(let i=0;importBusy&&i<100;i++)await pause();
 check(file.value===''&&!file.disabled,'File input must reset so the same file can be retried');
 const response=await fetch('/fixtures/actual.xlsx');if(response.ok){await importFile(new File([await response.arrayBuffer()],'actual.xlsx'));check(queue.data.prompts.length===110,'Actual AAROHAN workbook must still import 110 frames');}
+if(location.pathname.startsWith('/flow/')){
+ const response=await fetch('/fixtures/aarohan11.xlsx');if(response.ok){
+  await importFile(new File([await response.arrayBuffer()],'1.1_Smart_Flow_UPLOAD.xlsx'));
+  check(!document.getElementById('start').disabled,'Start must be immediately usable after workbook import');
+  document.getElementById('start').click();await queue.flush();await pause();await queue.flush();
+  check(queue.data.phase==='running'&&queue.data.pending?.state==='prepared','Actual uploaded 1.1 workbook must start and prepare Frame 001');
+  check(queue.editor().value.includes('STYLE LOCK: 3D ANIME ONLY')&&queue.editor().value.includes('Frame: Frame 001')&&queue.editor().value.includes('looking INTO the hall'),'Actual 3D/hall instructions must reach the ChatGPT composer');
+  check(queue.data.queueMode==='storyboard'&&queue.clicks===0,'Workbook start must use storyboard mode and not bypass Send stabilization');
+ }
+}
 check(!PICKER_TEST.errors.length,JSON.stringify(PICKER_TEST.errors));
 const result=document.createElement('pre');result.id='test-result';result.textContent=JSON.stringify({status:'PASS',checks,feature:'Excel validation and persistent popup upload notices'});document.body.append(result);
 })().catch(e=>{const result=document.createElement('pre');result.id='test-result';result.textContent=JSON.stringify({status:'FAIL',error:e.stack,errors:PICKER_TEST.errors});document.body.append(result);});

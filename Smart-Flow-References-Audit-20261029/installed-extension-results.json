@@ -1,0 +1,15 @@
+{
+  "status": "PASS",
+  "checks": 27,
+  "actualUserWorkbook": "Y:\\Veto Logs Backup\\Aarohan\\Smart Flow Uploads\\Aarohan_1.1_1.2_Character_Batches_Smart_Flow_WITH_REFERENCES.xlsx",
+  "realChromeDownloads": true,
+  "actualExtensionStorage": true,
+  "syntheticChatGPTOnly": true,
+  "liveImageCreditsUsed": 0,
+  "referenceRun": true,
+  "files": [
+    "smart-flow-complete.png",
+    "smart-flow-expanded.png",
+    "smart-flow-ready.png"
+  ]
+}

@@ -90,7 +90,7 @@ export const DEFINITIONS=[
  ['Device & OS','Platform and OS are classified from UA using CASE statements from the source dashboard, then grouped together.'],
  ['Content title','Raw content_title value extracted from the queryStr field of matching .m3u8 requests.'],
  ['Time zone','Date and hour grouping uses Asia/Kolkata. Only completed IST dates are queried.'],
- ['Filters','Grafana ad hoc filter variables must be empty in both saved URL and open Grafana tab; filtered exports are blocked.'],
+ ['Filters','Grafana Filter selections are passed to the Hydrolix datasource and applied before aggregation. Each filter selection has separate saved reports. Get data reconnects to the current Grafana tab.'],
  ['Per-minute charts','Each row reflects the corresponding source panel metric in a one-minute bucket; do not add distinct-user counts to calculate daily distinct users.'],
  ['Per-five-minute charts','These reproduce the source Grafana ranked fifth-minute cumulative SUM of five per-minute results, not five-minute distinct counts. Buckets missing a fifth minute are omitted, as in Grafana.'],
  ['Views per-five-minute caveat','Source Grafana panel 70 counts all requests in its cumulative five-minute query; panel 3 per-minute filters master manifests. Values are not directly equivalent.'],
@@ -140,12 +140,12 @@ const OS_CASE=String.raw`CASE
              AND UA NOT LIKE '%AFT%'                                        THEN 'Android'
         ELSE 'Others'
     END`;
-export function sqlForReport(report,from,to){
-  if(report==='geo')return buildGeoSql(from,to);
+export function sqlForReport(report,from,to,filters=[]){
+  if(report==='geo')return buildGeoSql(from,to,filters);
   if(!ALL_REPORT_ORDER.includes(report))throw new Error('Unknown report template.');
   assertDateRange(from,to);
   const lo=Math.floor(istMidnightMs(from)/1000),hi=Math.floor(istMidnightMs(addDays(to,1))/1000);
-  const range=`reqTimeSec >= toDateTime(${lo}, 'UTC') AND reqTimeSec < toDateTime(${hi}, 'UTC')`;
+  const range=`reqTimeSec >= toDateTime(${lo}, 'UTC') AND reqTimeSec < toDateTime(${hi}, 'UTC')${filters.length?' AND $__adHocFilter()':''}`;
   const prefix='FROM Veto_Streamin.logs';
   const setting='SETTINGS hdx_query_max_execution_time=60';
   const minute=SERIES_SOURCE.find(([id])=>id===report);

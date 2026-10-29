@@ -4,7 +4,7 @@ import {parseDashboardUrl, DEFAULT_DASHBOARD_URL, datesForLastCompleteDays, istM
 import {makeWorkbook} from '../xlsx.mjs';
 let cases=0;const test=(label,fn)=>{fn();cases++;console.log('PASS',label);};
 test('Grafana URL matches exact expected UID',()=>{const d=parseDashboardUrl(DEFAULT_DASHBOARD_URL);assert.equal(d.uid,'db7ce6f6-d689-4976-89e5-ddf0b5401f97');assert.equal(d.orgId,'743');});
-test('Active filter refuses unsupported export',()=>assert.throws(()=>parseDashboardUrl(DEFAULT_DASHBOARD_URL+'var-filter=status%3D200'),/filters are active/));
+test('Malformed filter refuses unsupported export',()=>assert.throws(()=>parseDashboardUrl(DEFAULT_DASHBOARD_URL+'&var-filter=status%3D200'),/Unsupported Grafana filter format/));
 test('Invalid host refused',()=>assert.throws(()=>parseDashboardUrl('https://evil.example/d/db7ce6f6-d689-4976-89e5-ddf0b5401f97/d'),/configured TrafficPeak/));
 test('Bad date refused',()=>assert.throws(()=>assertDateRange('2026-02-30','2026-03-01'),/valid start/));
 test('No future or ongoing day allowed',()=>assert.throws(()=>assertDateRange('2026-10-01','2026-10-26',new Date('2026-10-26T01:00:00Z')),/completed IST/));

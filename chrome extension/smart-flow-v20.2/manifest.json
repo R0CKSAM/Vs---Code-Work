@@ -1,13 +1,14 @@
 {
   "manifest_version": 3,
   "name": "Smart Flow",
-  "version": "20.2.1",
+  "version": "20.5.0",
   "description": "Smart Flow premium storyboard queue: aurora dashboard and color-coded controls.",
   "permissions": [
     "storage",
     "tabs",
     "downloads",
-    "notifications"
+    "notifications",
+    "unlimitedStorage"
   ],
   "host_permissions": [
     "https://chatgpt.com/*",

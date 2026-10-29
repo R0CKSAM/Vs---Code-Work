@@ -24,7 +24,7 @@ function findMatchingURL(url, uid){try{return new URL(url).pathname.split('/')[2
 async function findDashboardTab(spec){
   const tabs=await chrome.tabs.query({url:`${spec.origin}/*`});
   const matches=tabs.filter(t=>{try{return t.id&&parseDashboardUrl(t.url).datasetKey===spec.datasetKey;}catch{return false;}});
-  if(!matches.length)throw new Error('Open your saved Grafana dashboard in Chrome and sign in. Keep that tab open for daily exports.');
+  if(!matches.length)throw new Error('Open your saved Grafana dashboard with the same organization and filters. If you changed filters, choose Connect Grafana or Get data to select the current dashboard.');
   // Prefer the last active Grafana dashboard, otherwise keep the existing background tab.
   return matches.find(t=>t.active&&!t.discarded)||matches.find(t=>!t.discarded)||matches[0];
 }
@@ -33,11 +33,16 @@ async function fetchDailyViaGrafana(tabId, spec, sql, fromMs, toMs){
   // Runs INSIDE the logged-in Grafana origin. No cookie, password, token or data is sent elsewhere.
   const injected=await chrome.scripting.executeScript({
     target:{tabId},world:'MAIN',args:[{uid:spec.uid,orgId:spec.orgId,sql,fromMs,toMs,
-      fallbackDatasourceUid:FALLBACK_DATASOURCE_UID,panelName:PANEL_NAME}],
+      fallbackDatasourceUid:FALLBACK_DATASOURCE_UID,panelName:PANEL_NAME,filters:spec.filters,filterParams:spec.filterParams}],
     func:async params=>{
       try{
         if(location.origin!=='https://grafana-apj.trafficpeak.live')throw new Error('Incorrect Grafana origin.');
         if(!location.pathname.startsWith(`/d/${params.uid}/`))throw new Error('Grafana tab is not on the saved dashboard.');
+        const checkSource=()=>{
+          const live=new URL(location.href||location.origin+location.pathname);
+          const filters=[...new Set(live.searchParams.getAll('var-filter').filter(v=>v.trim()))].sort();
+          if((live.searchParams.get('orgId')||'743')!==params.orgId||JSON.stringify(filters)!==JSON.stringify(params.filterParams||[])||[...live.searchParams].some(([k,v])=>k.startsWith('var-')&&!['var-filter','var-hdx_query_errors'].includes(k)&&v.trim()))throw new Error('Grafana filters changed while fetching. Click Get data again to use the current selection.');
+        };checkSource();
         const dashResp=await fetch(`/api/dashboards/uid/${encodeURIComponent(params.uid)}`,{credentials:'same-origin',cache:'no-store',headers:{'X-Grafana-Org-Id':String(params.orgId)},signal:AbortSignal.timeout(15000)});
         if(!dashResp.ok)throw new Error(`Dashboard inspection failed (HTTP ${dashResp.status}); check Grafana login and permissions.`);
         const doc=await dashResp.json();
@@ -58,7 +63,8 @@ async function fetchDailyViaGrafana(tabId, spec, sql, fromMs, toMs){
         if(!ds)throw new Error('Could not resolve Hydrolix data source ID.');
         const headers={'Content-Type':'application/json','Accept':'application/json','X-Grafana-Org-Id':String(params.orgId)};
         const body={queries:[{datasource:{type:'hydrolix-hydrolix-datasource',uid:ds},refId:'A',format:1,
-          rawSql:params.sql,intervalMs:60000,maxDataPoints:100000}],from:String(params.fromMs),to:String(params.toMs)};
+          rawSql:params.sql,filters:params.filters||[],intervalMs:60000,maxDataPoints:100000}],from:String(params.fromMs),to:String(params.toMs)};
+        checkSource();
         const response=await fetch('/api/ds/query',{method:'POST',headers,credentials:'same-origin',body:JSON.stringify(body),signal:AbortSignal.timeout(90000)});
         const reply=await response.text();
         let data;try{data=JSON.parse(reply);}catch{throw new Error('Grafana query did not return JSON. Your session may have expired.');}
@@ -102,11 +108,14 @@ async function fetchV2ViaGrafana(tabId,spec,report,sql,fromMs,toMs){
   assertSourcePanels(report,result.panels);
   // Validate source SQL before issuing a query, not after consuming its response.
   const query=await chrome.scripting.executeScript({target:{tabId},world:'MAIN',args:[{
-    uid:spec.uid,orgId:spec.orgId,ds:result.ds,sql,fromMs,toMs
+    uid:spec.uid,orgId:spec.orgId,ds:result.ds,sql,fromMs,toMs,filters:spec.filters,filterParams:spec.filterParams
   }],func:async p=>{
     try{
       if(location.origin!=='https://grafana-apj.trafficpeak.live'||!location.pathname.startsWith(`/d/${p.uid}/`))throw new Error('Grafana navigated away from the selected dashboard.');
-      const body={queries:[{datasource:{type:'hydrolix-hydrolix-datasource',uid:p.ds},refId:'A',format:1,rawSql:p.sql,intervalMs:60000,maxDataPoints:100000}],from:String(p.fromMs),to:String(p.toMs)};
+      const live=new URL(location.href||location.origin+location.pathname);
+      const filters=[...new Set(live.searchParams.getAll('var-filter').filter(v=>v.trim()))].sort();
+      if((live.searchParams.get('orgId')||'743')!==p.orgId||JSON.stringify(filters)!==JSON.stringify(p.filterParams||[])||[...live.searchParams].some(([k,v])=>k.startsWith('var-')&&!['var-filter','var-hdx_query_errors'].includes(k)&&v.trim()))throw new Error('Grafana filters changed while fetching. Click Get data again to use the current selection.');
+      const body={queries:[{datasource:{type:'hydrolix-hydrolix-datasource',uid:p.ds},refId:'A',format:1,rawSql:p.sql,filters:p.filters||[],intervalMs:60000,maxDataPoints:100000}],from:String(p.fromMs),to:String(p.toMs)};
       const response=await fetch('/api/ds/query',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','Accept':'application/json','X-Grafana-Org-Id':String(p.orgId)},body:JSON.stringify(body),signal:AbortSignal.timeout(90000)});
       let data;try{data=await response.json();}catch{throw new Error('Grafana returned non-JSON data. Check sign-in and try a smaller date range.');}
       if(!response.ok)throw new Error(`Grafana query HTTP ${response.status}: ${data?.message||data?.error||'request failed'}`);
@@ -160,7 +169,7 @@ async function syncV2(from,to,report,{automatic=false,typesOverride=null}={}){
       if(Date.now()-started>180000)throw new Error('Request is taking too long. Choose fewer panels or a shorter date range. No saved data changed.');
       const id=types[i];
       await activity(`Reading ${i+1}/${types.length}: ${REPORTS[id].title}…`);
-      const sql=sqlForReport(id,from,to);
+      const sql=sqlForReport(id,from,to,spec.filters);
       const payload=await fetchV2ViaGrafana(tab.id,spec,id,sql,fromMs,toMs);
       const diagnostics={};
       const rows=parseReportFrames(payload,id,from,to,diagnostics);
@@ -243,7 +252,7 @@ async function doSync(from,to,{automatic=false}={}){
     // Reject it rather than silently exporting unfiltered data.
     const live=parseDashboardUrl(tab.url);
     if(live.datasetKey!==spec.datasetKey)throw new Error('The live Grafana tab has different organization/filter settings. Re-select or refresh the saved dashboard.');
-    const sql=buildGeoSql(from,to);
+    const sql=buildGeoSql(from,to,spec.filters);
     const fromMs=Date.parse(`${from}T00:00:00Z`)-19800000;
     const toMs=Date.parse(`${addDays(to,1)}T00:00:00Z`)-19800000;
     const {data,sourcePanelId}=await fetchDailyViaGrafana(tab.id,spec,sql,fromMs,toMs);
@@ -382,12 +391,13 @@ chrome.runtime.onMessage.addListener((msg,_sender,reply)=>{
         // A full-page workspace is itself the active tab. Find the signed-in
         // dashboard explicitly instead of accidentally inspecting the workspace.
         const active=(await chrome.tabs.query({active:true,lastFocusedWindow:true}))[0];
-        if(active?.url){try{parseDashboardUrl(active.url);return {url:active.url};}catch{}}
+        if(active?.url?.startsWith('https://grafana-apj.trafficpeak.live/')&&findMatchingURL(active.url,'db7ce6f6-d689-4976-89e5-ddf0b5401f97')){parseDashboardUrl(active.url);return {url:active.url};}
         const c=await config();const tabs=await chrome.tabs.query({url:'https://grafana-apj.trafficpeak.live/*'});
-        const dashboards=tabs.filter(t=>{try{parseDashboardUrl(t.url||'');return !!t.id&&!t.discarded;}catch{return false;}});
+        const dashboards=tabs.filter(t=>t.id&&!t.discarded&&t.url?.startsWith('https://grafana-apj.trafficpeak.live/')&&findMatchingURL(t.url,'db7ce6f6-d689-4976-89e5-ddf0b5401f97'));
         if(!dashboards.length)throw new Error('Open your Grafana dashboard in another tab and sign in, then try again.');
         const preferred=(await chrome.storage.local.get('smartExportReturnGrafanaTabId')).smartExportReturnGrafanaTabId;
         const chosen=dashboards.find(t=>t.id===preferred)||dashboards.find(t=>t.url===c.dashboardUrl)||dashboards[0];
+        parseDashboardUrl(chosen.url);
         await chrome.storage.local.set({smartExportReturnGrafanaTabId:chosen.id});
         return {url:chosen.url};
       }

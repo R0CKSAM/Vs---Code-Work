@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Smart Export \u2014 Grafana Workspace",
   "short_name": "Smart Export",
-  "version": "2.7.2",
+  "version": "2.7.3",
   "description": "Grafana-aligned panel picker with five 1-minute/5-minute groups, Viewership, Playtime, and Excel/CSV exports.",
   "permissions": [
     "storage",

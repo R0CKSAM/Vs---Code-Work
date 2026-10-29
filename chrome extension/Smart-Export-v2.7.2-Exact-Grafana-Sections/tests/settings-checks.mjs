@@ -62,7 +62,7 @@ async function run(){
  check($('settingsConnection').textContent==='Grafana tab detected','Settings reconnect must update its status');
  await click('logs');
  const log=JSON.parse(await UI_TEST.lastBlob.text());
- check(log.product==='Smart Export v2.7.2','Diagnostic export version must match the manifest');
+ check(log.product==='Smart Export v'+chrome.runtime.getManifest().version,'Diagnostic export version must match the manifest');
  check(UI_TEST.downloads.at(-1)==='Smart-Export-Errors.json','Diagnostic download must be generated');
  await nav('build');
  const geo=document.querySelector('.gx-metric input[data-report="geo"]');geo.click();await pause();
@@ -89,11 +89,18 @@ async function run(){
  await click('gxFetch');
  await until(()=>document.body.dataset.screen==='results'&&!$('gxDownload').disabled);
  check(requests('SYNC_PICKED').length===beforeFetch+1,'Get data must make one engine request');
+ await nav('build');
+ const filtered=new URL(UI_TEST.grafanaUrl);filtered.searchParams.set('var-filter','channel_name|=|India TV');UI_TEST.grafanaUrl=filtered.href;
+ const filteredRequests=requests('SYNC_PICKED').length;
+ await click('gxFetch');await until(()=>document.body.dataset.screen==='results'&&!$('gxDownload').disabled);
+ check(requests('SYNC_PICKED').length===filteredRequests+1,'Filtered Get data must query exactly once');
+ check(requests('SAVE_PICKER').at(-1).dashboardUrl===filtered.href,'Get data must use changed live filters without reopening workspace');
+ check($('gxConnection').textContent.includes('1 active filter'),'Connection badge must show active filter count');
  check(!visible(document.querySelector('.gx-actionbar')),'Builder footer must be hidden in Preview');
  change('gxResultFormat','csvzip');await pause();
  await click('gxDownload');
  check(UI_TEST.downloads.at(-1).endsWith('.zip'),'Individual CSV mode must produce a ZIP even for one metric');
- check(requests('SYNC_PICKED').length===beforeFetch+1,'Format changes and downloads must not fetch again');
+ check(requests('SYNC_PICKED').length===filteredRequests+1,'Format changes and downloads must not fetch again');
  await nav('automation');UI_TEST.confirm=false;
  document.querySelector('#view-automation .danger-zone').open=true;
  const clears=requests('CLEAR_V2').length;

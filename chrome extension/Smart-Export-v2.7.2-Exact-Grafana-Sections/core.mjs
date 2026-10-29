@@ -50,6 +50,27 @@ export function assertDateRange(from, to, now = new Date()) {
   if (count > 366) throw new Error('Maximum 366 days per sync; use smaller ranges for larger exports.');
   return count;
 }
+// Grafana serializes ad hoc filters as repeated var-filter=key|operator|value.
+// Values stay structured: Hydrolix expands its own macro, including escaping,
+// column types, wildcard rules, nulls and multi-value operators.
+export function parseAdHocFilters(values) {
+  const decode=s=>s.split(',')[0].replaceAll('__gfp__','|').replaceAll('__gfc__',',').replaceAll('__gfh__','#');
+  const filters=[];
+  for(const raw of values){
+    if(!raw.trim())continue;
+    if(raw.length>16000||filters.length>=64)throw new Error('Too many or oversized Grafana filters. Use a smaller filter selection.');
+    const [filter,...origin]=raw.split('#');
+    if(origin.length&&!(origin.length===2&&['scope','dashboard'].includes(origin[0])&&origin[1]==='restorable'))throw new Error('Unsupported Grafana filter URL. Reconnect after applying the filter in Grafana.');
+    const [key,operator,...parts]=filter.split('|').map(decode);
+    if(!key||!['=','!=','>','<','>=','<=','=~','!~','=|','!=|'].includes(operator)||!parts.length)
+      throw new Error('Unsupported Grafana filter format. Apply filters in Grafana using a field, operator and value, then reconnect.');
+    const multi=operator==='=|'||operator==='!=|';
+    if(!multi&&parts.length!==1)throw new Error('Unsupported Grafana filter value. Apply it again in Grafana, then reconnect.');
+    const selections=[...new Set(parts)].sort();
+    filters.push(multi?{key,operator,value:selections[0],values:selections}:{key,operator,value:parts[0]});
+  }
+  return [...new Map(filters.map(f=>[JSON.stringify(f),f])).entries()].sort(([a],[b])=>a<b?-1:a>b?1:0).map(([,f])=>f);
+}
 export function parseDashboardUrl(raw) {
   let u;
   try {u=new URL(raw)} catch {throw new Error('Enter a valid Grafana dashboard URL.');}
@@ -60,12 +81,15 @@ export function parseDashboardUrl(raw) {
   if (!/^\d{1,8}$/.test(orgId)) throw new Error('Invalid Grafana organization ID.');
   const vars=[];
   for (const [k,v] of u.searchParams.entries()) {
-    if (k.startsWith('var-') && k!=='var-hdx_query_errors' && v.trim()) vars.push(`${k}=${v}`);
+    if (k.startsWith('var-') && !['var-filter','var-hdx_query_errors'].includes(k) && v.trim()) vars.push(k);
   }
-  if (vars.length) throw new Error('Grafana dashboard filters are active. v1 cannot safely reproduce ad-hoc filters in the API query. Clear them before syncing: '+vars.join('; '));
-  return {origin:u.origin, uid:m[1], orgId, datasetKey:`${u.origin}|${m[1]}|org=${orgId}|filters=none`, url:u.toString()};
+  if (vars.length) throw new Error('Unsupported Grafana dashboard variable(s): '+vars.join(', ')+'. Smart Export supports the dashboard Filter control; other template overrides need a matching report template.');
+  const filterParams=[...new Set(u.searchParams.getAll('var-filter').filter(v=>v.trim()))].sort();
+  const filters=parseAdHocFilters(filterParams);
+  const filterKey=filters.length?encodeURIComponent(JSON.stringify(filters)):'none';
+  return {origin:u.origin, uid:m[1], orgId, filters, filterParams, datasetKey:`${u.origin}|${m[1]}|org=${orgId}|filters=${filterKey}`, url:u.toString()};
 }
-export function buildGeoSql(from, to) {
+export function buildGeoSql(from, to, filters=[]) {
   assertDateRange(from,to);
   const fromSec=Math.floor(istMidnightMs(from)/1000);
   const untilSec=Math.floor(istMidnightMs(addDays(to,1))/1000);
@@ -79,7 +103,7 @@ export function buildGeoSql(from, to) {
   round(count() * 6.0 / 60.0, 2) AS playtime_minutes
 FROM Veto_Streamin.logs
 WHERE reqTimeSec >= toDateTime(${fromSec}, 'UTC')
-  AND reqTimeSec < toDateTime(${untilSec}, 'UTC')
+  AND reqTimeSec < toDateTime(${untilSec}, 'UTC')${filters.length?'\n  AND $__adHocFilter()':''}
   AND reqPath LIKE '%.ts'
   AND statusCode IN (200, 206)
   AND state != ''

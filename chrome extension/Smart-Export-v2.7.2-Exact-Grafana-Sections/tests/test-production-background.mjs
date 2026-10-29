@@ -23,14 +23,14 @@ const ctx=vm.createContext({console,URL,Date:Clock,setTimeout,clearTimeout,Abort
    if(state.failKey&&Object.hasOwn(patch,state.failKey)){state.failKey=null;throw new Error('Synthetic storage failure');}
    Object.assign(state.local,structuredClone(patch));
   }}},tabs:{query:async()=>tabs},
-  scripting:{executeScript:async request=>{state.targets.push(request.target.tabId);return [{result:await request.func(...request.args)}];}}
+  scripting:{executeScript:async request=>{state.targets.push(request.target.tabId);const result=await request.func(...request.args);if(request.args[0]?.sourceIds&&state.changeAfterInspection)ctx.location.href=state.changeAfterInspection;return [{result}];}}
  },
- DB:{read:async()=>Object.fromEntries(ALL_REPORT_ORDER.map(id=>[id,[]])),put:async(key,from,to,rows)=>{state.commits.push(structuredClone(rows));if(state.failAfterCommit)state.failKey='smartExportConfig';return Object.values(rows).reduce((n,r)=>n+r.length,0);}},
+ DB:{read:async()=>Object.fromEntries(ALL_REPORT_ORDER.map(id=>[id,[]])),put:async(key,from,to,rows)=>{state.lastCommitKey=key;state.commits.push(structuredClone(rows));if(state.failAfterCommit)state.failKey='smartExportConfig';return Object.values(rows).reduce((n,r)=>n+r.length,0);}},
  fetch:async(url,options={})=>{
   assert.equal(options.headers?.['X-Grafana-Org-Id'],'743');
   assert(options.signal,'Every Grafana request must have a timeout signal');
   if(url.startsWith('/api/dashboards/'))return {ok:true,json:async()=>({dashboard:{panels:[{id:20,title:'Playtime by GEO',targets:[{datasource:{uid:'fixture-source'},rawSql:state.changedSource?'SELECT 1':'count() * 6 / 60.0 decodeURLComponent(country)'}]}]}})};
-  state.queries++;
+  state.queries++;state.lastQuery=JSON.parse(options.body);
   if(state.gate)await state.gate;
   if(state.queryFailure==='timeout'){const error=new Error('Timeout');error.name='TimeoutError';throw error;}
   if(state.queryFailure==='html')return {ok:true,json:async()=>{throw new Error('HTML');}};
@@ -75,4 +75,19 @@ await background.namespace.automaticCheck();check(state.queries===before+1,'Comp
 const diag={};const nullable={results:{A:{frames:[{schema:{fields:['report_date','country','state','city','playtime_minutes'].map(name=>({name}))},data:{values:[['2026-10-20'],['IN'],[null],[null],[null]]}}]}}};
 check(parseReportFrames(nullable,'geo','2026-10-20','2026-10-20',diag)[0].playtime_minutes===null&&diag.missingValues===1,'Missing metric must remain null, not become zero');
 check(parseDashboardUrl(DEFAULT_DASHBOARD_URL+'&var-hdx_query_errors=previous-timeout').orgId==='743','Hydrolix diagnostic metadata must not be mistaken for a data filter');
+const unfilteredKey=state.lastCommitKey;
+const filtered=new URL(DEFAULT_DASHBOARD_URL);filtered.searchParams.set('var-filter','channel_name|=|India TV');
+tabs=[{id:3,url:filtered.href,active:true}];ctx.location.href=filtered.href;
+response=await request('CURRENT_GRAFANA_TAB');check(response.ok&&response.data.url===filtered.href,'Filtered Grafana tab must be discoverable');
+response=await request('SAVE_PICKER',{dashboardUrl:filtered.href,reports:['geo']});check(response.ok&&!response.data.config.enabled,'Selecting filters must succeed and pause the previous schedule');
+response=await sync();check(response.ok,'Actual injected filtered query must succeed');
+check(state.lastQuery.queries[0].filters[0].key==='channel_name'&&state.lastQuery.queries[0].filters[0].value==='India TV','Filter values must reach native datasource query payload');
+check(state.lastQuery.queries[0].rawSql.includes('$__adHocFilter()')&&!state.lastQuery.queries[0].rawSql.includes('India TV'),'Filtered query must use native macro rather than concatenated values');
+check(state.lastCommitKey!==unfilteredKey&&state.lastCommitKey===parseDashboardUrl(filtered.href).datasetKey,'Filtered records must use their own dataset');
+before=state.queries;const countBeforeChange=state.commits.length;
+state.changeAfterInspection=DEFAULT_DASHBOARD_URL;
+response=await sync();check(!response.ok&&response.error.includes('filters changed')&&state.queries===before&&state.commits.length===countBeforeChange,'Changing filters during inspection must prevent a wrong-scope query and commit');
+state.changeAfterInspection=null;ctx.location.href=filtered.href;
+response=await sync();check(response.ok,'Filter-change rejection must release lock for retry');
+tabs=[{id:3,url:filtered.href+'&var-other=unrecognized',active:true}];response=await request('CURRENT_GRAFANA_TAB');check(!response.ok&&response.error.includes('Unsupported Grafana dashboard variable'),'Unsupported live variables must show specific error instead of pretending no dashboard exists');
 console.log(`PASS ${checks} production background checks: actual injected requests, storage failures, source validation, locks and daily scheduling`);

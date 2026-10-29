@@ -15,15 +15,28 @@ chrome.storage.onChanged.addListener(async(changes,area)=>{
 chrome.runtime.onMessage.addListener((msg,sender,sendResponse)=>{
  if(msg.action!=='SAVE_FRAME_IMAGE')return;
  (async()=>{
-  const s=await chrome.storage.local.get(['ownerTabId','autoDownload']);
+  const s=await chrome.storage.local.get(['ownerTabId','autoDownload','queueId','queueMode']);
   if(!s.autoDownload)throw Error('Automatic downloads disabled.');
   if(sender.tab?.id!==s.ownerTabId)throw Error('Download rejected: wrong ChatGPT tab.');
+  if(msg.queueId&&msg.queueId!==s.queueId)throw Error('Download rejected: the queue changed.');
   if(typeof msg.dataUrl!=='string'||!/^data:image\/(png|jpeg|webp);base64,/.test(msg.dataUrl)||msg.dataUrl.length>25_000_000)throw Error('Unsupported image data.');
   const name=String(msg.fileName||'Frame').replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,90);
   const mime=msg.dataUrl.match(/^data:image\/(png|jpeg|webp);base64,/)[1];
   const ext=mime==='jpeg'?'jpg':mime;
   return await chrome.downloads.download({url:msg.dataUrl,filename:`Storyboard Studio/${name}.${ext}`,conflictAction:'uniquify',saveAs:false});
  })().then(id=>sendResponse({ok:true,id})).catch(e=>sendResponse({ok:false,error:String(e.message||e)}));return true;
+});
+// Repeat mode observes Chrome's actual download state before advancing.
+chrome.runtime.onMessage.addListener((msg,sender,sendResponse)=>{
+ if(msg.action!=='FRAME_DOWNLOAD_STATUS')return;
+ (async()=>{
+  const s=await chrome.storage.local.get(['ownerTabId','pending','queueId']);
+  if(sender.tab?.id!==s.ownerTabId||msg.queueId!==s.queueId||msg.id!==s.pending?.downloadId)throw Error('Download check rejected: wrong tab or pending image.');
+  const [item]=await chrome.downloads.search({id:msg.id});
+  if(!item)return {state:'interrupted',error:'Download was removed from Chrome history.'};
+  if(item.state==='complete'&&item.exists===false)return {state:'interrupted',error:'The downloaded file was removed.'};
+  return {state:item.state,error:item.error||''};
+ })().then(result=>sendResponse({ok:true,...result})).catch(e=>sendResponse({ok:false,error:String(e.message||e)}));return true;
 });
 // Notify once on transition to done. No external service is used.
 chrome.storage.onChanged.addListener((changes,area)=>{

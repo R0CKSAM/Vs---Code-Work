@@ -1,4 +1,12 @@
-# Smart Export v2.7.2 — Grafana Panel Sections
+# Smart Export v2.7.3 — Grafana Panel Sections
+
+## Grafana filters — 29 October 2026
+
+Active dashboard **Filter** selections now connect and export. Get data re-selects the open Grafana tab so filters changed after opening the workspace are included. The connection badge shows the active filter count. Filtering is applied by the Hydrolix datasource before aggregation, including each base scan in the KPI reports. Different filters use separate local datasets; existing unfiltered reports keep their original storage keys.
+
+Reload this same folder in `chrome://extensions`, close the old Smart Export workspace, and reopen it. Apply the filters in Grafana, then choose **Connect Grafana** and **Get data**. Changing source/filter selections pauses an old daily schedule; re-enable it for the desired selection. Daily runs require an open tab with the saved organization/filter selection. Unsupported template-variable overrides show an explicit error.
+
+See [filter fix verification](FILTER-FIX-2026-10-29.md) for the cause, test coverage and live source-panel comparison.
 
 **Current release:** The panel picker now mirrors all nine Grafana dashboard sections and all 34 original panel IDs in order: the complete KPI matrix; five distinct Time Series sections, each with Per Minute and Per 5 Minute exports; Viewership Trend; Playtime; Playtime - IP.
 

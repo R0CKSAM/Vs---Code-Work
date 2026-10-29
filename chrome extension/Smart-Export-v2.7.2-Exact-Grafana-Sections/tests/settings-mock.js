@@ -1,6 +1,8 @@
 // Isolated browser fixture. All extension APIs use synthetic in-memory records.
+const RealDate=Date;
+window.Date=class extends RealDate{constructor(...args){super(...(args.length?args:['2026-10-27T04:00:00Z']));}static now(){return new RealDate('2026-10-27T04:00:00Z').getTime();}};
 const url='https://grafana-apj.trafficpeak.live/d/db7ce6f6-d689-4976-89e5-ddf0b5401f97/sessions-users-monitoring?orgId=743&from=now-7d&to=now&timezone=Asia%2FKolkata&var-filter=';
-window.UI_TEST={messages:[],errors:[],downloads:[],confirmations:[],confirm:true,failStorage:false,failSync:false,listeners:[],
+window.UI_TEST={messages:[],errors:[],downloads:[],confirmations:[],confirm:true,failStorage:false,failSync:false,listeners:[],grafanaUrl:url,
  rows:{geo:[{date:'2026-10-20',country:'IN',state:'Delhi',city:'',playtime_minutes:12}]},
  config:{dashboardUrl:url,enabled:true,v2Mode:true,autoReport:'geo',autoReports:[],lastSuccessAt:null,scheduleHourIST:8,autoRefreshDays:3},
  storage:{smartExportSmartPicker_v21:{geo:['playtime_minutes'],kpis:['bandwidth_bytes']},smartExportSavedViews_v21:{}}
@@ -11,11 +13,11 @@ window.confirm=message=>{UI_TEST.confirmations.push(message);return UI_TEST.conf
 const blobURL=URL.createObjectURL.bind(URL);
 URL.createObjectURL=blob=>{UI_TEST.lastBlob=blob;return blobURL(blob);};
 HTMLAnchorElement.prototype.click=function(){if(this.download)UI_TEST.downloads.push(this.download);};
-window.chrome={runtime:{lastError:null,getManifest:()=>({version:'2.7.2'}),getURL:p=>'/'+p,
+window.chrome={runtime:{lastError:null,getManifest:()=>({version:'2.7.3'}),getURL:p=>'/'+p,
  sendMessage(req,reply){UI_TEST.messages.push(req);queueMicrotask(()=>{
   const c=UI_TEST.config,out=data=>reply({ok:true,data});
   if(req.type==='STATE_V2')return out({config:{...c},summaries:Object.fromEntries(Object.entries(UI_TEST.rows).map(([id,rows])=>[id,{rows:rows.length,days:rows.length?1:0,from:rows[0]?.date,to:rows.at(-1)?.date}])),coverage:{}});
-  if(req.type==='CURRENT_GRAFANA_TAB')return out({url});
+  if(req.type==='CURRENT_GRAFANA_TAB')return out({url:UI_TEST.grafanaUrl});
   if(req.type==='SAVE_PICKER'||req.type==='SAVE_SETTINGS'){c.dashboardUrl=req.dashboardUrl;return out({config:{...c}});}
   if(req.type==='ENABLE_PICKED'){Object.assign(c,{enabled:req.enabled,v2Mode:true,autoReport:'picked',autoReports:req.reports});return out({config:{...c}});}
   if(req.type==='ENABLE'){c.enabled=req.enabled;return out({config:{...c}});}

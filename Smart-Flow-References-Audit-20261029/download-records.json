@@ -1,0 +1,23 @@
+[
+  {
+    "byExtensionId": "cifhfgahbomnendpejifklobaimpklkj",
+    "byExtensionName": "Smart Flow",
+    "bytesReceived": 67,
+    "canResume": false,
+    "danger": "safe",
+    "endTime": "2026-10-29T12:12:24.915Z",
+    "exists": true,
+    "fileSize": 67,
+    "filename": "D:\\Vs - Code Work\\Smart-Flow-References-Audit-20261029\\Storyboard Studio\\001_Frame_032 (1).png",
+    "finalUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6WQAAAABJRU5ErkJggg==",
+    "id": 2,
+    "incognito": false,
+    "mime": "image/png",
+    "paused": false,
+    "referrer": "",
+    "startTime": "2026-10-29T12:12:24.764Z",
+    "state": "complete",
+    "totalBytes": 67,
+    "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6WQAAAABJRU5ErkJggg=="
+  }
+]

@@ -4,7 +4,7 @@
 import {REPORT_ORDER, ALL_REPORT_ORDER, REPORTS} from './reports.mjs';
 import {DETAILS, normalizeSelection} from './metric-catalog.mjs';
 import {SECTIONS} from './grafana-panel-catalog.mjs';
-import {datesForLastCompleteDays, istToday, validYMD} from './core.mjs';
+import {datesForLastCompleteDays, istToday, validYMD, parseDashboardUrl} from './core.mjs';
 const $ = id => document.getElementById(id);
 // Exact Grafana panel naming where the current certified query returns the same measure.
 // Hourly and combined Platform/OS exports are explicitly labeled to avoid implying
@@ -56,6 +56,7 @@ function validate(){
  return '';
 }
 function setConnected(connected,message){state.connected=connected;
+ if(connected){try{const filters=parseDashboardUrl(state.source).filters;if(filters.length)message+=` · ${filters.length} active ${filters.length===1?'filter':'filters'}`;}catch{}}
  const target=$('gxConnection');target.textContent=(connected?'● ':'○ ')+message;
  target.classList.toggle('is-connected',connected);target.title=connected?'Grafana tab detected. Click to check again.':'Click to connect an open Grafana tab.';
  if($('settingsConnection'))$('settingsConnection').textContent=connected?'Grafana tab detected':'Open Grafana to connect';
@@ -222,6 +223,10 @@ async function fetchData(){
  state.working=true;clearWarn();updateChecks();
  try{
   await state.saveQueue;
+  // Grafana can change filters after the workspace opened. Re-select the live
+  // tab before saving/fetching so its data goes into the correct filter dataset.
+  state.source=await state.bridge.useGrafana();state.verifiedSnapshot=null;
+  setConnected(true,'Grafana connected');
   const success=await state.bridge.fetch();
   if(success){state.verifiedSnapshot=snapshot();state.bridge.showView('results');syncNavigation();refreshActions();}
   else warn($('feedback')?.textContent||'Grafana did not complete the request. Open Settings → Troubleshooting for details.');
