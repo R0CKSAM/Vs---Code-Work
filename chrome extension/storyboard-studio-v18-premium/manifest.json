@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Storyboard Studio",
-  "version": "18.0.3",
+  "version": "18.0.4",
   "description": "Premium storyboard queue with optional frame downloads, history and completion alerts.",
   "permissions": [
     "storage",

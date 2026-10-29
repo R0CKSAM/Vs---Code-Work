@@ -1,0 +1,81 @@
+{
+  "workbook": "D:\\Vs - Code Work\\chrome extension\\AAROHAN_S2E1_110_Frames_Cast_Instrument_AUDITED_V6.xlsx",
+  "extension": "D:\\Vs - Code Work\\chrome extension\\smart-flow-v20.2",
+  "workbookSHA256": "de763a49f96807a2a74bfad3b488cac46d9e4153858041d83765023b73ec5167",
+  "firstSheet": "110 Frames",
+  "ignoredSheets": [
+    "Continuity Register",
+    "Canon V5 Locks",
+    "Read Me",
+    "Change Log",
+    "Cast & Instrument Audit",
+    "Audit Summary",
+    "Full Cast Keyframe"
+  ],
+  "headers": [
+    "Frame",
+    "Master Prompt",
+    "Scene Prompt"
+  ],
+  "rows": 110,
+  "frameNumbersSequential": true,
+  "blankScenes": [],
+  "duplicateScenes": 0,
+  "distinctMasters": 1,
+  "firstSheetMergedCells": [],
+  "embeddedImages": 0,
+  "browserValidation": {
+    "status": "PASS",
+    "checks": [
+      {
+        "name": "Exactly 110 imported scene prompts",
+        "pass": true
+      },
+      {
+        "name": "First master prompt preserved exactly",
+        "pass": true
+      },
+      {
+        "name": "All frame labels, order, Unicode and scene text preserved exactly",
+        "pass": true
+      },
+      {
+        "name": "Every built prompt includes the master and complete scene",
+        "pass": true
+      },
+      {
+        "name": "Every built prompt requests one individual 16:9 image",
+        "pass": true
+      },
+      {
+        "name": "Popup text-editor save does not split scenes or change queue",
+        "pass": true
+      },
+      {
+        "name": "No image-queue delimiter appears inside scene text",
+        "pass": true
+      },
+      {
+        "name": "Mandatory ensemble and identity instructions preserved in frames 99,100,101,107",
+        "pass": true
+      }
+    ],
+    "importedCount": 110,
+    "masterCharacters": 2146,
+    "submittedPromptCharacters": {
+      "min": 3058,
+      "max": 7903
+    }
+  },
+  "limitations": [
+    "Only the first worksheet is imported; reference, audit and full-cast keyframe sheets are not submitted.",
+    "Only the first nonempty Master Prompt is retained globally; all 110 masters in this workbook are identical.",
+    "The extension imports text, not reference images or attachments. Supply approved character, costume and stage images in the same ChatGPT conversation before starting.",
+    "Long repeated identity and instrument blocks in ensemble scenes add prompt length. Import/build passes do not guarantee image fidelity.",
+    "Camera movement and multiple action beats describe motion, but each queue item generates a single still image.",
+    "No live image generation was performed; visual continuity must be reviewed in generated outputs.",
+    "Folder is named v20.2, manifest reports 20.1.0, and diagnostic export hardcodes 19.0.0.",
+    "Smart Flow content.js retains the older prepared-text-disappeared pause; Storyboard v18 recovery changes are not present in this separate extension."
+  ],
+  "sourceUnchanged": true
+}

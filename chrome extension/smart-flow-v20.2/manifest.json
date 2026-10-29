@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Smart Flow",
-  "version": "20.1.0",
+  "version": "20.2.1",
   "description": "Smart Flow premium storyboard queue: aurora dashboard and color-coded controls.",
   "permissions": [
     "storage",

@@ -1,5 +1,11 @@
 const $=id=>document.getElementById(id),parse=s=>s.split(/\r?\n/).map(x=>x.trim()).filter(Boolean),uid=()=>`${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const safe=s=>String(s||'').slice(0,700);
+let importBusy=false;
+function importNotice(title,message,error=false){
+ const box=$('importNotice'),heading=document.createElement('strong'),body=document.createElement('p');
+ heading.textContent=title;body.textContent=message;box.replaceChildren(heading,body);box.hidden=false;box.classList.toggle('import-error',error);box.setAttribute('role',error?'alert':'status');
+ if(error){box.scrollIntoView({block:'nearest'});box.focus({preventScroll:true});}
+}
 async function tab(){const [t]=await chrome.tabs.query({active:true,currentWindow:true});if(!t?.url||!/^https:\/\/(chatgpt\.com|chat\.openai\.com)\//.test(t.url))throw Error('Open your ChatGPT tab to start.');return t;}
 async function send(action){const t=await tab();const r=await chrome.tabs.sendMessage(t.id,{action,tabId:t.id});if(!r?.ok)throw Error(r?.error||'Could not contact ChatGPT tab. Refresh the page and try again.');}
 function renderHistory(items,queueId){const box=$('historyList');const rows=items.filter(x=>x.queueId===queueId).slice(-8).reverse();box.replaceChildren();if(!rows.length){box.textContent='No frame results yet.';return;}for(const x of rows){const item=document.createElement('div');item.className='history-item';const a=document.createElement('strong');a.textContent=x.label||`Row ${x.index+1}`;const b=document.createElement('span');b.className=x.status==='completed'?'good':'bad';b.textContent=x.status;item.append(a,b);box.append(item);}}
@@ -20,7 +26,22 @@ $('notifyDone').onchange=async e=>chrome.storage.local.set({completionNotificati
 $('exportHistory').onclick=async()=>{const d=await chrome.storage.local.get(['frameHistory','queueId']);const h=(d.frameHistory||[]).filter(x=>x.queueId===d.queueId);const esc=v=>'"'+String(v??'').replaceAll('"','""')+'"';const csv=[['Excel row','Frame','Status','Timestamp','Notes'],...h.map(x=>[x.index+1,x.label,x.status,x.at,x.note])].map(row=>row.map(esc).join(',')).join('\r\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='storyboard-frame-history.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),2500)};
 $('file').onclick=e=>e.stopPropagation();$('dropzone').onclick=()=>$('file').click();$('dropzone').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();$('file').click()}};
 for(const event of ['dragenter','dragover'])$('dropzone').addEventListener(event,e=>{e.preventDefault();$('dropzone').classList.add('drag')});for(const event of ['dragleave','drop'])$('dropzone').addEventListener(event,e=>{e.preventDefault();$('dropzone').classList.remove('drag')});$('dropzone').ondrop=e=>{const f=e.dataTransfer?.files?.[0];if(f)importFile(f)};
-async function importFile(f){try{const result=await StoryboardImport.read(f);const d=await chrome.storage.local.get(['master']);const master=result.master!==null?result.master:(d.master||'');if(!await replaceQueue(master,result.prompts,f.name))return;$('master').value=master;$('prompts').value=result.prompts.join('\n');$('fileTitle').textContent=f.name;$('fileSub').textContent=`${result.count} frames ready · Loaded successfully`;await refresh()}catch(e){showError(e)}}
+async function importFile(f){
+ if(importBusy)return;importBusy=true;let changed=false;
+ $('file').disabled=true;$('dropzone').setAttribute('aria-busy','true');
+ importNotice('Checking your file…','Checking the storyboard format before replacing your queue.');
+ try{
+  const result=await StoryboardImport.read(f),d=await chrome.storage.local.get(['master']);
+  const master=result.master!==null?result.master:(d.master||'');
+  if(!await replaceQueue(master,result.prompts,f.name)){importNotice('Upload cancelled','Your current queue was kept.');return;}
+  changed=true;$('master').value=master;$('prompts').value=result.prompts.join('\n');
+  $('fileTitle').textContent=f.name;$('fileSub').textContent=`${result.count} frames ready · Loaded successfully`;
+  await refresh();
+  importNotice(`Loaded ${result.count} frames`,(result.warnings||[]).join(' ')||'Your storyboard is ready. Choose a starting frame, then Start.');
+ }catch(e){
+  importNotice(changed?'Storyboard loaded; display could not refresh':'File not imported',safe(e?.message||e)+' '+(changed?'Reopen the popup to see the loaded queue.':'Your current queue was kept. For Excel / CSV, use Frame | Master Prompt | Scene Prompt headers on the first worksheet, one frame per row and one shared master prompt. Scene Prompt is required. Use Download example Excel below the upload box.'),true);
+ }finally{importBusy=false;$('file').disabled=false;$('file').value='';$('dropzone').removeAttribute('aria-busy');}
+}
 $('file').onchange=e=>{const f=e.target.files?.[0];if(f)importFile(f)};
 $('example').onclick=()=>{const a=document.createElement('a');a.href=chrome.runtime.getURL('storyboard-example.xlsx');a.download='storyboard-example.xlsx';a.click()};
 $('start').onclick=()=>op(()=>send('START'));$('pause').onclick=()=>op(()=>send('PAUSE'));$('resume').onclick=()=>op(()=>send('RESUME'));

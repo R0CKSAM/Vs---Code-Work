@@ -12,6 +12,7 @@ const StoryboardImport=(()=>{
      else if(c==='\n'||c==='\r'){if(c==='\r'&&text[i+1]==='\n')i++;row.push(field);if(row.some(v=>v.trim()))rows.push(row);row=[];field=''}
      else field+=c;
    }
+   if(quoted)throw Error('A CSV quote is not closed. Export the spreadsheet as XLSX or a valid CSV.');
    row.push(field);if(row.some(v=>v.trim()))rows.push(row);
    return rows;
  }
@@ -52,11 +53,12 @@ const StoryboardImport=(()=>{
    let path=target.startsWith('/')?target.slice(1):'xl/'+target;
    const parts=[];for(const p of path.split('/')){if(p==='..')parts.pop();else if(p!=='.')parts.push(p)}path=parts.join('/');
    const ws=xml(await extract(z,path));
-   return nodes(ws,'row').map(row=>{
-     const cells=[];
+   const result=nodes(ws,'row').map(row=>{
+     const cells=[];cells.excelRow=Number(row.getAttribute('r'))||0;cells.formulas=[];
      for(const c of nodes(row,'c')){
        const ref=c.getAttribute('r')||'',letters=/^[A-Z]+/.exec(ref)?.[0]||'A';let col=0;
        for(const ch of letters)col=col*26+ch.charCodeAt(0)-64;
+       if(nodes(c,'f').length)cells.formulas.push(col-1);
        const type=c.getAttribute('t');let value='';
        if(type==='inlineStr')value=nodes(c,'t').map(t=>t.textContent).join('');
        else {const v=nodes(c,'v')[0]?.textContent||'';value=type==='s'?shared[Number(v)]??'':v;}
@@ -64,27 +66,40 @@ const StoryboardImport=(()=>{
      }
      return cells;
    });
+   result.sheetNames=nodes(book,'sheet').map(s=>s.getAttribute('name'));
+   return result;
  }
  function normalize(rows){
    // The spreadsheet ROW ORDER is the execution order. Frame identifiers are display labels ONLY.
    const at=rows.findIndex(r=>r.some(v=>clean(v).toLowerCase().replace(/[^a-z0-9]/g,'')==='sceneprompt'));
-   if(at<0)throw Error('Missing Scene Prompt header.');
+   if(at<0)throw Error('The first worksheet must have a Scene Prompt column. Other worksheets are not imported.');
    const header=rows[at].map(v=>clean(v).toLowerCase().replace(/[^a-z0-9]/g,''));
    const frame=header.indexOf('frame'),master=header.indexOf('masterprompt'),scene=header.indexOf('sceneprompt');
-   const prompts=[];let masterValue='';
+   for(const name of ['frame','masterprompt','sceneprompt'])if(header.filter(x=>x===name).length>1)throw Error('Duplicate column header: '+name+'. Keep only one of each storyboard column.');
+   const prompts=[],warnings=[],invalid=[];let masterValue='';
+   if(rows.sheetNames)warnings.push('Imported first worksheet: '+rows.sheetNames[0]+'.'+(rows.sheetNames.length>1?' Other '+(rows.sheetNames.length-1)+' worksheet(s) are not imported.':''));
+   if(frame<0)warnings.push('No Frame column: spreadsheet row labels will be used.');
+   if(master<0)warnings.push('No Master Prompt column: no global style prompt will be used.');
+   const unused=header.filter(x=>x&&!['frame','masterprompt','sceneprompt'].includes(x));
+   if(unused.length)warnings.push('Only Frame, Master Prompt and Scene Prompt are imported; '+unused.length+' additional column(s) are not used.');
    for(let i=at+1;i<rows.length;i++){
-     const r=rows[i],description=clean(r[scene]);if(!description)continue;
+     const r=rows[i];if(!r.some(v=>clean(v))&&!(r.formulas||[]).length)continue;
+     const number=r.excelRow||i+1,description=clean(r[scene]);
+     if((r.formulas||[]).some(c=>[frame,master,scene].includes(c)))throw Error('Row '+number+' uses a formula in a storyboard column. Replace formulas with their text values before uploading.');
+     if(!description){invalid.push(number);continue;}
      const label=frame<0?'':clean(r[frame]);const m=master<0?'':clean(r[master]);
+     if(m&&masterValue&&m!==masterValue)throw Error('Row '+number+' has a different Master Prompt. Use one shared Master Prompt; put frame-specific instructions in Scene Prompt.');
      if(m&&!masterValue)masterValue=m;
      prompts.push(`${label||`Row ${i+1}`} || ${description}`);
    }
-   if(!prompts.length)throw Error('No scene prompts found.');
-   return {master:masterValue,prompts,count:prompts.length};
+   if(invalid.length)throw Error('Missing Scene Prompt in row(s) '+invalid.slice(0,8).join(', ')+(invalid.length>8?' and more':'')+'. Fill these scenes or delete the incomplete rows. No frames were imported.');
+   if(!prompts.length)throw Error('No scene prompts found. Add at least one nonempty Scene Prompt below the header.');
+   return {master:masterValue,prompts,count:prompts.length,warnings};
  }
  async function read(file){const ext=file.name.toLowerCase().split('.').pop();
    if(ext==='txt'){const lines=(await file.text()).split(/\r?\n/).map(x=>x.trim()).filter(Boolean);if(!lines.length)throw Error('TXT file is empty.');return {master:null,prompts:lines,count:lines.length}}
    if(ext==='csv')return normalize(csv(await file.text()));
-   if(ext==='xlsx')return normalize(await xlsx(file));
+   if(ext==='xlsx'){try{const rows=await xlsx(file);return normalize(rows);}catch(e){throw Error('Please check your Excel file is in a compatible format. '+e.message);}}
    throw Error('Upload a .txt, .csv or .xlsx file.');
  }
  return {read,csv,normalize};

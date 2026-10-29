@@ -1,5 +1,13 @@
 # Storyboard Studio v18
 
+## v18.0.4 — clear upload validation
+
+Uploads display a persistent notice beside the upload box. Incompatible files leave the current queue, pending frame and history intact and explain the format: first worksheet with a required **Scene Prompt** header, optional **Frame** and **Master Prompt** columns, one scene per row, and one shared master prompt. Use **Download example Excel** for a compatible template.
+
+Incomplete rows, duplicate storyboard headers, conflicting master prompts, formulas in storyboard columns, corrupt XLSX and malformed quoted CSV are rejected before queue replacement. Successful uploads show frame count and disclose unused worksheets/columns and missing optional headers. Entirely blank rows remain allowed. Retrying the same filename works after correcting the file. Reload the existing extension to apply this update.
+
+Browser coverage: `tests/test-import-validation.py` tests both this popup and Smart Flow against invalid and valid workbooks. Existing recovery and frame-selection tests remain separate.
+
 ## v18.0.3 — choose the starting frame on the main screen
 
 The main screen now has **Start / resume from frame**, an imported-position number input, and a preview of the actual frame label. The number defaults to the current frame and supports the full imported queue (for example, 1–110).
