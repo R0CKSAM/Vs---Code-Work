@@ -31,6 +31,7 @@
     [switch]$SkipWatch,
     [switch]$SkipOverview,
     [switch]$SkipUaProfile,
+    [switch]$LakeOnly,
     # Defer new UA decoding during catch-up; enable explicitly with -UaApiLimit.
     [int]$UaApiLimit = 0,
     [switch]$SkipUaMalformedApi,
@@ -421,6 +422,14 @@ try {
         Write-Host "[$(Get-Date -Format o)] Raw root    : $RawBaseRoot"
     }
 
+    $prefetchHold = Join-Path $WorkspaceRoot 'output\state\lake_parallel_prefetch.json'
+    while (Test-Path -LiteralPath $prefetchHold) {
+        $downloadOwner = Get-Content -LiteralPath $prefetchHold -Raw | ConvertFrom-Json
+        if ($downloadOwner.dates -notcontains $TargetDate.ToString('yyyy-MM-dd') -or $downloadOwner.status -ne 'running') { break }
+        if (-not (Get-Process -Id $downloadOwner.pid -ErrorAction SilentlyContinue)) { throw 'Parallel download coordinator stopped; inspect its log before retrying.' }
+        Write-Host 'Waiting for the existing parallel prefetch; avoiding duplicate source downloads.'
+        Start-Sleep -Seconds 15
+    }
     if ($SkipDownload) {
         if ($SingleSourceMode) { throw "-SkipDownload is not supported with -SingleSourceMode." }
         $downloadPrepared = Join-Path $WorkspaceRoot ("output\state\prepared_lake\{0}.json" -f $TargetDate.ToString("yyyy-MM-dd"))
@@ -521,7 +530,7 @@ try {
         $watchArgs += @("--skip-audience", "--skip-master")
         Write-Host "[$(Get-Date -Format o)] Intermediate recovery date: daily marts remain enabled; top-level dashboard rendering is deferred."
     }
-    if ($asrunPriority) {
+    if ($asrunPriority -or $LakeOnly) {
         $watchArgs += @(
             "--skip-watch",
             "--skip-overview",
@@ -553,6 +562,10 @@ try {
         # Retain it for the next run, but never publish it as a completed day.
         "--publish-through", $TargetDate.ToString("yyyy-MM-dd")
     )
+    if ($LakeOnly) {
+        $pipelineArgs += @('--state-name', 'lake_priority')
+        Write-Host 'Lake-only run: reporting deferred; full reporting checkpoints remain unchanged.'
+    }
     if (-not $SingleSourceMode) {
         $pipelineArgs += @(
             "--etl1-daily-date", $TargetDate.ToString("yyyy-MM-dd"),
@@ -586,7 +599,7 @@ try {
             Write-Host "Prepared lake retention: keeping inputs pending archived retention."
         } elseif ($asrunPriority) {
             Write-Host "[$(Get-Date -Format o)] ASRUN priority retention: keeping raw/stage until the normal post-priority cleanup run."
-        } elseif ($KeepProcessedInputs) {
+        } elseif ($KeepProcessedInputs -or $LakeOnly) {
             Write-Host "[$(Get-Date -Format o)] Retention: keeping raw and stage intermediates by request."
         } else {
             $pipelineArgs += "--cleanup-daily-intermediates"
@@ -620,7 +633,7 @@ try {
         "--content-memory", $ContentMemory
     )
     Write-Host "[$(Get-Date -Format o)] Performance: ETL1=$Etl1Workers workers; stages=$StageThreads threads/$StageMemory; profile=$DeepProfileThreads threads/$DeepProfileMemory; marts=$ConcurrencyThreads threads/$ConcurrencyMemory; spill=$DefaultDeepProfileTempDir (max $DeepProfileMaxTempSize)."
-    if (-not $SkipUaProfile -and -not $asrunPriority) {
+    if (-not $SkipUaProfile -and -not $asrunPriority -and -not $LakeOnly) {
         $pipelineArgs += @(
             "--run-ua-profile",
             "--ua-api-limit", $UaApiLimit.ToString()
@@ -638,7 +651,7 @@ try {
 
     Write-Host "[$(Get-Date -Format o)] Pipeline completed."
 
-    $isFinalAsrunPriorityDate = $asrunPriority -and -not $SkipWatch -and -not $SkipOverview
+    $isFinalAsrunPriorityDate = $asrunPriority -and -not $SkipWatch -and -not $SkipOverview -and -not $LakeOnly
     if ($isFinalAsrunPriorityDate) {
         $priorityStart = [string]$asrunPriority.start_date
         $priorityEnd = $TargetDate.ToString("yyyy-MM-dd")

@@ -35,6 +35,11 @@ $LogDir = Join-Path $WorkspaceRoot "output\logs"
 $GuardPython = Join-Path (Split-Path $WorkspaceRoot -Parent) 'venv\Scripts\python.exe'
 $CapacityGuard = Join-Path $WorkspaceRoot 'src\tools\recovery_capacity_guard.py'
 $RecoveryDependency = Join-Path $StateDir 'recovery_dependency.json'
+$LakePriorityHold = Join-Path $StateDir 'lake_priority_hold.json'
+if (Test-Path -LiteralPath $LakePriorityHold) {
+    Write-Host 'Full recovery is held by the lake-only priority request. Reporting remains deferred.'
+    exit 0
+}
 $TargetThroughDate = if ($ThroughDate) { $ThroughDate.Date } else { (Get-Date).Date.AddDays(-1) }
 if ($TargetThroughDate -ge (Get-Date).Date) {
     throw "Through date must be a completed day before today: $($TargetThroughDate.ToString('yyyy-MM-dd'))"

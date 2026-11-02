@@ -29,7 +29,13 @@ import pyarrow.parquet as pq
 IST = ZoneInfo("Asia/Kolkata")
 SCHEMA_VERSION = 1
 DEFAULT_ARCHIVE = Path(r"Z:\Veto Logs Backup\DO NOT DELETE")
-DEFAULT_EVENT_DRIVEN_CHANNELS = ("Veto Cricket Live",)
+GOVERNMENT_EVENT_CHANNELS = (
+    "UP Government Live", "UK Government Live", "MP Government Live",
+    "UP Gov Live", "UK Gov Live", "MP Gov Live",
+    "upgovlive", "ukgovlive", "mpgovlive",
+    "Uttarakhand Government Live", "Madhya Pradesh Government Live",
+)
+DEFAULT_EVENT_DRIVEN_CHANNELS = ("Veto Cricket Live", *GOVERNMENT_EVENT_CHANNELS)
 ARCHIVE_ENV_NAMES = (
     "VG_ETL_ARCHIVE_LAKE_ROOTS",
     "VG_ETL_ARCHIVE_LAKE_ROOT",
@@ -473,18 +479,21 @@ def channel_anomalies(
             continue
         pct = (target_rows / normal * 100) if normal else 0.0
         if pct <= threshold_pct:
-            if target_rows == 0 and channel.strip().casefold() in event_channel_keys:
+            channel_key = channel.strip().casefold()
+            government_event = channel_key in {name.casefold() for name in GOVERNMENT_EVENT_CHANNELS}
+            if channel_key in event_channel_keys and (target_rows == 0 or government_event):
                 if expected_inactive is not None:
                     expected_inactive.append({
                         "source": source,
                         "channel": channel,
                         "date": target.isoformat(),
-                        "target_raw_ts_chunks": 0,
+                        "target_raw_ts_chunks": int(target_rows),
                         "median_raw_ts_chunks": int(normal),
                         "baseline_nonzero_days": int(len(nonzero)),
                         "baseline_available_days": available_days,
                         "baseline_active_ratio": round(active_ratio, 4),
-                        "status": "EXPECTED_INACTIVE",
+                        "status": "EXPECTED_INACTIVE" if target_rows == 0 else "EXPECTED_LOW_ACTIVITY",
+                        "message": "Informational only: event-driven channel; activity depends on scheduled live events.",
                     })
                 continue
             anomalies.append({
@@ -599,7 +608,8 @@ def main() -> None:
         default=list(DEFAULT_EVENT_DRIVEN_CHANNELS),
         help=(
             "Repeatable channel name allowed to have a zero-volume day without being treated "
-            "as an outage. Defaults to Veto Cricket Live."
+            "as an outage. Defaults include cricket and UP/UK/MP government live channels; "
+            "government low-volume days are also informational only."
         ),
     )
     parser.add_argument("--reconcile-tolerance-pct", type=float, default=0.1)
@@ -726,6 +736,9 @@ def main() -> None:
     print(f"Channel anomalies: {len(anomalies)}")
     print(f"Operator-confirmed channel anomalies: {len(acknowledged_channels)}")
     print(f"Expected inactive event channels: {len(expected_inactive_channels)}")
+    for item in expected_inactive_channels:
+        print(f"[INFO] {item['source']} / {item['channel']}: {item['status']} "
+              f"({item['target_raw_ts_chunks']:,} chunks); event-driven activity, no processing hold.")
     print(f"Report: {latest_json}")
 
     if hard_failures or (args.fail_on_channel_anomaly and anomalies):

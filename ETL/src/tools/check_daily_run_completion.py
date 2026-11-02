@@ -2,6 +2,30 @@
 import argparse
 import json
 from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'orchestrator'))
+from run_pipeline import _cleanup_has_review_only
+
+
+def review_only_cleanup(root, run, latest, day):
+    """Recognize intentional retention, never an arbitrary cleanup failure."""
+    step = latest.get('daily_intermediate_cleanup', {})
+    if not step.get('allow_failure') or not run.get('finished_at'):
+        return False
+    log = Path(step.get('log_path', '')).resolve()
+    if not log.is_relative_to((root / 'output').resolve()) or not log.is_file():
+        return False
+    if 'Cleanup refused: a full PASS validation report is required.' not in log.read_text(encoding='utf-8', errors='replace'):
+        return False
+    reports = root / 'output/validation/daily_delivery'
+    for report in reports.glob(f'daily_delivery_validation_{day}_*.json'):
+        payload = json.loads(report.read_text(encoding='utf-8-sig'))
+        generated = payload.get('generated_at_ist', '')[:19]
+        if (run.get('started_at', '')[:19] <= generated <= run['finished_at'][:19]
+                and _cleanup_has_review_only(report, day, ['fast', 'stream'])):
+            return True
+    return False
 
 
 def check(root, day):
@@ -17,6 +41,12 @@ def check(root, day):
     latest = {step['step']: step for step in run.get('steps', [])}
     failed = {name for name, step in latest.items() if step.get('status') == 'failed'}
     if run.get('status') == 'complete' and not failed:
+        return
+    if (run.get('status') == 'complete_with_warnings'
+            and failed == {'daily_intermediate_cleanup'}
+            and all(step.get('status') in {'ok', 'skipped', 'failed'} for step in latest.values())
+            and review_only_cleanup(root, run, latest, day)):
+        print(f'{day}: reporting complete; channel REVIEW remains open, raw/stage inputs retained.')
         return
     receipt_path = state / 'reporting_repairs' / (day + '.json')
     if receipt_path.is_file() and run.get('finished_at') and failed:

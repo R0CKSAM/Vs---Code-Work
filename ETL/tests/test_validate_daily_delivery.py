@@ -221,6 +221,27 @@ class DailyDeliveryValidationTests(unittest.TestCase):
             self.assertEqual(len(anomalies), 1)
             self.assertEqual(anomalies[0]["channel"], "India TV")
 
+    def test_government_low_and_absent_activity_are_informational(self) -> None:
+        with tempfile.TemporaryDirectory(dir=TEST_TEMP_ROOT) as temp:
+            profile = Path(temp) / 'watch_hours/profile'
+            daily = profile.parent / 'daily_tables'
+            daily.mkdir(parents=True)
+            names = ['UP Government Live', 'UK Government Live', 'MP Government Live', 'India TV']
+            rows = [dict(log_date=f'2026-08-{day:02d}', source='stream', channel_name=name,
+                         raw_ts_chunks=10000) for day in range(1, 10) for name in names]
+            rows += [dict(log_date='2026-08-10', source='stream', channel_name=name,
+                          raw_ts_chunks=count) for name, count in zip(names, [0, 100, 200, 0])]
+            pd.DataFrame(rows).to_parquet(daily / 'channel_audience_daily.parquet', index=False)
+            flags = []
+            anomalies, warnings = validator.channel_anomalies(
+                profile, date(2026, 8, 10), ['stream'], baseline_days=28,
+                threshold_pct=5, min_baseline_days=3, min_median_rows=1000,
+                expected_inactive=flags)
+            self.assertFalse(warnings)
+            self.assertEqual([item['channel'] for item in anomalies], ['India TV'])
+            self.assertEqual(len(flags), 3)
+            self.assertEqual({item['status'] for item in flags}, {'EXPECTED_INACTIVE', 'EXPECTED_LOW_ACTIVITY'})
+
     def test_event_channel_is_not_treated_as_daily_outage(self) -> None:
         with tempfile.TemporaryDirectory(dir=TEST_TEMP_ROOT) as temp:
             profile = Path(temp) / "watch_hours" / "profile"
