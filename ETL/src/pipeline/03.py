@@ -27,7 +27,7 @@ if not _env_base:
         if candidate.exists():
             BASE_FOLDER = candidate
             break
-LAKE_FOLDER = BASE_FOLDER / "lake"
+LAKE_FOLDER = Path(os.environ.get("VG_ETL_LAKE_ROOT", str(BASE_FOLDER / "lake"))).expanduser().resolve()
 STATE_FILE = BASE_FOLDER / ".etl_03_state.json"
 
 # Daily partitioning is one source file at a time. Conservative limits keep the
@@ -100,9 +100,15 @@ def parquet_row_count(con: duckdb.DuckDBPyConnection, path: Path) -> int:
     return int(row[0] or 0)
 
 
+def lake_partition_files(pattern: str):
+    """Only canonical partitions, never sibling Temp/work directories."""
+    yield from LAKE_FOLDER.glob(f"source=*/year=*/month=*/day=*/{pattern}")
+    yield from LAKE_FOLDER.glob(f"year=*/month=*/day=*/{pattern}")
+
+
 def source_partition_row_count(con: duckdb.DuckDBPyConnection, file_prefix: str) -> int:
     total = 0
-    for path in LAKE_FOLDER.rglob(f"{file_prefix}_*.parquet"):
+    for path in lake_partition_files(f"{file_prefix}_*.parquet"):
         total += parquet_row_count(con, path)
     return total
 
@@ -206,7 +212,7 @@ def has_source_partitions(file_prefixes: set[str]) -> bool:
     if not LAKE_FOLDER.exists():
         return False
     for file_prefix in file_prefixes:
-        for path in LAKE_FOLDER.rglob(f"{file_prefix}_*.parquet"):
+        for path in lake_partition_files(f"{file_prefix}_*.parquet"):
             if path.stat().st_size > 0:
                 return True
     return False
@@ -217,7 +223,7 @@ def remove_previous_partitions(src_prefix: str) -> int:
         return 0
 
     removed = 0
-    for p in LAKE_FOLDER.rglob(f"{src_prefix}_*.parquet"):
+    for p in lake_partition_files(f"{src_prefix}_*.parquet"):
         try:
             p.unlink()
             removed += 1
@@ -251,7 +257,7 @@ def remove_date_partitions(day_value: str, source_prefixes: set[str] | None = No
 
 def promote_temp_partitions(temp_prefix: str, src_prefix: str) -> int:
     promoted = 0
-    for p in LAKE_FOLDER.rglob(f"{temp_prefix}_*.parquet"):
+    for p in lake_partition_files(f"{temp_prefix}_*.parquet"):
         target = p.with_name(p.name.replace(f"{temp_prefix}_", f"{src_prefix}_", 1))
         p.replace(target)
         promoted += 1
@@ -260,7 +266,7 @@ def promote_temp_partitions(temp_prefix: str, src_prefix: str) -> int:
 
 def move_partitions(from_prefix: str, to_prefix: str) -> int:
     moved = 0
-    for p in LAKE_FOLDER.rglob(f"{from_prefix}_*.parquet"):
+    for p in lake_partition_files(f"{from_prefix}_*.parquet"):
         target = p.with_name(p.name.replace(f"{from_prefix}_", f"{to_prefix}_", 1))
         p.replace(target)
         moved += 1
@@ -271,7 +277,8 @@ def prune_empty_dirs() -> int:
     if not LAKE_FOLDER.exists():
         return 0
     removed = 0
-    dirs = [p for p in LAKE_FOLDER.rglob("*") if p.is_dir()]
+    roots = [p for p in LAKE_FOLDER.iterdir() if p.is_dir() and (p.name.startswith("source=") or p.name.startswith("year="))]
+    dirs = roots + [p for root in roots for p in root.rglob("*") if p.is_dir()]
     for path in sorted(dirs, key=lambda p: len(p.parts), reverse=True):
         if path.exists() and not any(path.iterdir()):
             path.rmdir()

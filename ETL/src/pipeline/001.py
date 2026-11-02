@@ -576,6 +576,11 @@ def _convert_batch(task: dict) -> dict:
     keep_set  = set(keep_cols)   # empty = keep all
     filter_cols = bool(keep_set)
     compression_arg = None if str(compress).lower() == "none" else compress
+    # Isolated spillover builds may retain only a requested UTC epoch window.
+    row_start = float(os.environ["VG_ETL_ROW_START_EPOCH"]) if os.environ.get("VG_ETL_ROW_START_EPOCH") else None
+    row_end = float(os.environ["VG_ETL_ROW_END_EPOCH"]) if os.environ.get("VG_ETL_ROW_END_EPOCH") else None
+    if row_start is not None and row_end is not None and row_start >= row_end:
+        raise ValueError("Invalid spillover row window")
 
     rows_written = 0
     files_ok     = 0
@@ -635,6 +640,10 @@ def _convert_batch(task: dict) -> dict:
                             failed_files.append({"file": fpath, "error": "Not a JSON object", "stage": "parse"})
                             continue
 
+                        if row_start is not None or row_end is not None:
+                            epoch = float(obj["reqTimeSec"])
+                            if (row_start is not None and epoch < row_start) or (row_end is not None and epoch >= row_end):
+                                continue
                         row = {}
                         for k, v in obj.items():
                             # â”€â”€ column filter â”€â”€

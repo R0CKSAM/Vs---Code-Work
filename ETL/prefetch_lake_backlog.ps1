@@ -7,6 +7,7 @@ function Save-State {
 }
 Save-State
 try {
+    $global:LASTEXITCODE = 0
     & (Join-Path $PSScriptRoot 'prefetch_daily_sources.ps1') -Dates @([datetime]'2026-10-31',[datetime]'2026-11-01') -MaxParallelDownloads 4 -Transfers 16 -Checkers 32
     if ($LASTEXITCODE -ne 0) { throw "Prefetch failed: $LASTEXITCODE" }
     $state['status']='complete'

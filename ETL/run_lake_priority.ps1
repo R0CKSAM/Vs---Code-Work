@@ -1,9 +1,14 @@
 [CmdletBinding()]
 param(
     [datetime]$StartDate = '2026-10-30',
-    [datetime]$ThroughDate = '2026-11-01'
+    [datetime]$ThroughDate = '2026-11-01',
+    [switch]$SkipOctober31
 )
 $ErrorActionPreference = 'Stop'
+$archiveRoot = 'Z:\Veto Logs Backup\DO NOT DELETE'
+$workingRoot = Join-Path $archiveRoot 'Temp\VetoETL\data'
+$env:VG_ETL_LAKE_ROOT = $archiveRoot
+New-Item -ItemType Directory -Path $workingRoot -Force | Out-Null
 if ($StartDate -gt $ThroughDate -or $ThroughDate.Date -ge (Get-Date).Date) {
     throw 'Lake priority requires an ordered range of completed dates.'
 }
@@ -19,11 +24,16 @@ function Save-Progress {
 }
 try {
     for ($day=$StartDate.Date; $day -le $ThroughDate.Date; $day=$day.AddDays(1)) {
+        if ($SkipOctober31 -and $day.ToString('yyyy-MM-dd') -eq '2026-10-31') { continue }
         $state['current_date']=$day.ToString('yyyy-MM-dd')
         Save-Progress
-        & $python (Join-Path $PSScriptRoot 'src\tools\recovery_capacity_guard.py') --data (Join-Path $PSScriptRoot 'data') --archive 'Z:\Veto Logs Backup\DO NOT DELETE' --data-reserve-gib 20
+        if ($SkipOctober31 -and $day.ToString('yyyy-MM-dd') -eq '2026-11-01') {
+            & $python (Join-Path $PSScriptRoot 'src\tools\build_nov1_spillover.py')
+            if ($LASTEXITCODE -ne 0) { throw 'Required November 1 spillover build failed.' }
+        }
+        & $python (Join-Path $PSScriptRoot 'src\tools\recovery_capacity_guard.py') --data $workingRoot --archive $archiveRoot --data-reserve-gib 20
         if ($LASTEXITCODE -ne 0) { throw 'Insufficient storage reserve for the next lake date.' }
-        & (Join-Path $PSScriptRoot 'run_daily_pipeline.ps1') -Date $day -LakeOnly -StrictPipeline -SkipPostVerifyDelay
+        & (Join-Path $PSScriptRoot 'run_daily_pipeline.ps1') -Date $day -LakeOnly -StrictPipeline -SkipPostVerifyDelay -LocalRoot $workingRoot -RawRoot (Join-Path $PSScriptRoot 'data\raw\Veto Logs Backup') -OverviewLakeRoot $archiveRoot -SkipLakeArchive
         if ($LASTEXITCODE -ne 0) { throw "Lake-only pipeline failed for $day" }
         $run = Get-Content (Join-Path $PSScriptRoot 'output\state\lake_priority_last_run.json') -Raw | ConvertFrom-Json
         $validation = @($run.steps | Where-Object { $_.step -eq 'daily_delivery_structural_validation' -and $_.status -eq 'ok' })

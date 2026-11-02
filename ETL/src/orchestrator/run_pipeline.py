@@ -1433,7 +1433,7 @@ def main() -> None:
         if args.deep_profile_temp_dir
         else _default_duckdb_temp_dir(output_root)
     )
-    lake_root = base_root / "lake"
+    lake_root = Path(os.environ.get("VG_ETL_LAKE_ROOT", str(base_root / "lake"))).expanduser().resolve()
     archive_lake_roots: list[Path] = []
     for raw_archive in args.archive_lake:
         archive_lake_roots.extend(_split_path_list(raw_archive))

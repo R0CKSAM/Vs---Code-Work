@@ -64,7 +64,7 @@ def build_day(day, work, source="stream"):
             del env[key]
     env.pop("VG_ETL_REPLACE_DATES", None)
     env.update({
-        "VG_ETL_BASE": str(base), "VG_ETL_STAGE_JOBS": json.dumps([job]),
+        "VG_ETL_BASE": str(base), "VG_ETL_LAKE_ROOT": str(base / "lake"), "VG_ETL_STAGE_JOBS": json.dumps([job]),
         "VG_ETL_PROCESS_SOURCES": source_id, "VG_ETL_THREADS": "6",
         "VG_ETL_MEMORY": "8GB", "VG_ETL_DUCKDB_TEMP": str(base / "scratch"),
         "VG_ETL_DUCKDB_MAX_TEMP": "20GB", "VG_ETL_STAGE_COMPRESSION": "SNAPPY",
