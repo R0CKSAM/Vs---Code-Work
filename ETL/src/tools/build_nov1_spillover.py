@@ -20,7 +20,7 @@ def main():
         for source in ('stream', 'fast'):
             source_work = work / source
             source_work.mkdir(exist_ok=True)
-            lake = build_day(date(2026, 10, 31), source_work, source)
+            lake = build_day(date(2026, 10, 31), source_work, source, workers=12, threads=12, memory="24GB", max_temp="200GB")
             parts = list(lake.glob('source=*/year=*/month=*/day=*/part_*.parquet'))
             expected = Path(f'source={source}/year=2026/month=11/day=01')
             if not parts or any(part.relative_to(lake).parent != expected for part in parts):

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import gc
 import csv
 import html
 import json
@@ -495,7 +496,9 @@ def build_amagi_minute_mart(events: pd.DataFrame) -> dict[str, Any]:
     cached_source = pd.DataFrame()
     if unchanged and source_cache_path.is_file():
         try:
-            cached_source = pd.read_parquet(source_cache_path)
+            cached_source = pd.read_parquet(
+                source_cache_path, filters=[("source_file", "in", sorted(unchanged))]
+            )
             required_cache_columns = {
                 "channel_name",
                 "platform_name",
@@ -506,10 +509,6 @@ def build_amagi_minute_mart(events: pd.DataFrame) -> dict[str, Any]:
             if required_cache_columns.difference(cached_source.columns):
                 cached_source = pd.DataFrame()
                 unchanged.clear()
-            else:
-                cached_source = cached_source[
-                    cached_source["source_file"].isin(unchanged)
-                ].copy()
         except (OSError, ValueError, KeyError):
             cached_source = pd.DataFrame()
             unchanged.clear()
@@ -1702,11 +1701,12 @@ def build_youtube_marts() -> dict[str, Any]:
                 "full_end": old_manifest.get("full_end", ""),
             }
 
+    cached_readable_files = set(old_manifest.get("readable_files", []))
     unchanged = {
         name
         for name, fingerprint in fingerprints.items()
         if old_fingerprints.get(name) == fingerprint
-        and name in set(old_manifest.get("readable_files", []))
+        and name in cached_readable_files
     }
     cached_source = pd.DataFrame()
     if unchanged and source_cache_path.is_file():
@@ -1775,12 +1775,17 @@ def build_youtube_marts() -> dict[str, Any]:
         }
 
     youtube = pd.concat(source_parts, ignore_index=True)
+    # Release raw frames before normalizing millions of records. The source
+    # cache keeps complete provenance; calculations need only compact columns.
+    del source_parts, frames, cached_source
+    gc.collect()
     atomic_write_parquet(source_cache_path, youtube)
     youtube["timestamp_ist"] = pd.to_datetime(
         youtube["date"].astype("string") + " " + youtube["time"].astype("string"),
         format="%Y-%m-%d %H:%M:%S",
         errors="coerce",
     ).dt.floor("min")
+    youtube.drop(columns=["date", "time", "source_file"], inplace=True)
     youtube["youtube_collector_key"] = (
         youtube["youtube_collector_key"].fillna("unknown").astype("string").str.strip()
     )
@@ -1791,6 +1796,10 @@ def build_youtube_marts() -> dict[str, Any]:
     youtube["title"] = youtube["title"].fillna("").astype("string").str.strip()
     youtube["status"] = youtube["status"].fillna("").astype("string").str.strip().str.casefold()
     youtube["concurrent_viewers"] = pd.to_numeric(youtube["concurrent_viewers"], errors="coerce")
+    categorise_repeated_columns(
+        youtube, ("youtube_collector_key", "youtube_channel", "video_id", "title", "status")
+    )
+    LOGGER.info("YouTube normalized working table: %d rows, %.1f MiB", len(youtube), youtube.memory_usage(deep=True).sum() / 1024**2)
     youtube = youtube[
         youtube["timestamp_ist"].notna()
         & youtube["video_id"].ne("")
@@ -1803,7 +1812,7 @@ def build_youtube_marts() -> dict[str, Any]:
         ["timestamp_ist", "youtube_collector_key", "video_id"], keep="last"
     )
     collector_minute = (
-        youtube.groupby(["timestamp_ist", "youtube_channel"], as_index=False)
+        youtube.groupby(["timestamp_ist", "youtube_channel"], as_index=False, observed=True)
         .agg(
             collector_status=(
                 "status",
@@ -1876,7 +1885,7 @@ def build_youtube_marts() -> dict[str, Any]:
         .sort_values(["timestamp_ist", "youtube_channel", "video_id"])
     )
     video_daily = (
-        live.groupby(["log_date", "youtube_channel", "video_id"], as_index=False)
+        live.groupby(["log_date", "youtube_channel", "video_id"], as_index=False, observed=True)
         .agg(
             peak_concurrent_viewers=("concurrent_viewers", "max"),
             avg_concurrent_viewers=("concurrent_viewers", "mean"),
@@ -1899,6 +1908,7 @@ def build_youtube_marts() -> dict[str, Any]:
         video_5min.groupby(
             ["bucket_ist", "log_date", "youtube_channel", "video_id"],
             as_index=False,
+            observed=True,
         )
         .agg(
             avg_concurrent_viewers=("concurrent_viewers", "mean"),
@@ -8437,6 +8447,7 @@ buildMulti=function(id,items,kind,defaultValues,onChange){
   const menu=$(id+'Menu');
   const existing=[...menu.querySelectorAll('input[data-value]')];
   const selected=selectedMulti(id);
+  if(!existing.length&&items.length)multiInitialized.delete(id);
   if(existing.length&&selected.size===existing.length){
     menu.innerHTML='';
     multiInitialized.delete(id);

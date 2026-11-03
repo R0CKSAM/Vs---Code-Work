@@ -2,7 +2,8 @@
 param(
     [datetime]$StartDate = '2026-10-30',
     [datetime]$ThroughDate = '2026-11-01',
-    [switch]$SkipOctober31
+    [switch]$SkipOctober31,
+    [switch]$VerifiedFirst
 )
 $ErrorActionPreference = 'Stop'
 $archiveRoot = 'Z:\Veto Logs Backup\DO NOT DELETE'
@@ -23,14 +24,21 @@ function Save-Progress {
     Move-Item -LiteralPath "$statePath.tmp" -Destination $statePath -Force
 }
 try {
-    for ($day=$StartDate.Date; $day -le $ThroughDate.Date; $day=$day.AddDays(1)) {
+    $dates = @()
+    for ($candidate=$StartDate.Date; $candidate -le $ThroughDate.Date; $candidate=$candidate.AddDays(1)) { $dates += $candidate }
+    if ($VerifiedFirst) { $dates = @($dates | Sort-Object @{Expression={ if ($_.ToString('yyyy-MM-dd') -eq '2026-11-01') { 0 } else { 1 } }}, @{Expression={$_}}) }
+    foreach ($day in $dates) {
         if ($SkipOctober31 -and $day.ToString('yyyy-MM-dd') -eq '2026-10-31') { continue }
         $state['current_date']=$day.ToString('yyyy-MM-dd')
         Save-Progress
         if ($SkipOctober31 -and $day.ToString('yyyy-MM-dd') -eq '2026-11-01') {
+            $state['stage']='building_required_spillover'
+            Save-Progress
             & $python (Join-Path $PSScriptRoot 'src\tools\build_nov1_spillover.py')
             if ($LASTEXITCODE -ne 0) { throw 'Required November 1 spillover build failed.' }
         }
+        $state['stage']='daily_lake'
+        Save-Progress
         & $python (Join-Path $PSScriptRoot 'src\tools\recovery_capacity_guard.py') --data $workingRoot --archive $archiveRoot --data-reserve-gib 20
         if ($LASTEXITCODE -ne 0) { throw 'Insufficient storage reserve for the next lake date.' }
         & (Join-Path $PSScriptRoot 'run_daily_pipeline.ps1') -Date $day -LakeOnly -StrictPipeline -SkipPostVerifyDelay -LocalRoot $workingRoot -RawRoot (Join-Path $PSScriptRoot 'data\raw\Veto Logs Backup') -OverviewLakeRoot $archiveRoot -SkipLakeArchive

@@ -191,3 +191,6 @@ ETL/chatGPT-Bot/.chrome-profile/
 ETL/chatGPT-Bot/output/
 ETL/chatGPT-Bot/.progress.txt
 ETL/chatGPT-Bot/New Text Document.txt
+
+# Generated ASRUN publication backups remain local.
+ETL/asrun_demo/backups/

@@ -40,7 +40,7 @@ def stage(env, script, output):
     log(f"Finished {output.name}")
 
 
-def build_day(day, work, source="stream"):
+def build_day(day, work, source="stream", workers=6, threads=6, memory="8GB", max_temp="20GB"):
     if source not in {"stream", "fast"}:
         raise ValueError("Unsupported source")
     iso = day.isoformat()
@@ -65,12 +65,12 @@ def build_day(day, work, source="stream"):
     env.pop("VG_ETL_REPLACE_DATES", None)
     env.update({
         "VG_ETL_BASE": str(base), "VG_ETL_LAKE_ROOT": str(base / "lake"), "VG_ETL_STAGE_JOBS": json.dumps([job]),
-        "VG_ETL_PROCESS_SOURCES": source_id, "VG_ETL_THREADS": "6",
-        "VG_ETL_MEMORY": "8GB", "VG_ETL_DUCKDB_TEMP": str(base / "scratch"),
-        "VG_ETL_DUCKDB_MAX_TEMP": "20GB", "VG_ETL_STAGE_COMPRESSION": "SNAPPY",
+        "VG_ETL_PROCESS_SOURCES": source_id, "VG_ETL_THREADS": str(threads),
+        "VG_ETL_MEMORY": memory, "VG_ETL_DUCKDB_TEMP": str(base / "scratch"),
+        "VG_ETL_DUCKDB_MAX_TEMP": max_temp, "VG_ETL_STAGE_COMPRESSION": "SNAPPY",
         "VG_ETL_COMPRESSION": "ZSTD", "VG_ETL_001_MODE": "single",
         "VG_ETL_001_INPUT_DIR": str(raw), "VG_ETL_001_OUTPUT_DIR": job["parquet_dir"],
-        "VG_ETL_001_STREAMING_BATCHES": "1", "VG_ETL_001_WORKERS": "6",
+        "VG_ETL_001_STREAMING_BATCHES": "1", "VG_ETL_001_WORKERS": str(workers),
         "VG_ETL_001_COMPRESSION": "snappy",
         "VG_ETL_001_PREFS_FILE": str(ETL / "output" / "state" / "gz_parquet_prefs.json"),
         "PYTHONUNBUFFERED": "1",
