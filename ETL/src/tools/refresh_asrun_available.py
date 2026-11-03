@@ -42,7 +42,7 @@ def main():
             phase(f'refreshing_stream_{day}_audience')
             run([ETL / 'src/tools/build_identity_minute.py', '--lake', r'Z:\Veto Logs Backup\DO NOT DELETE',
                  '--out-dir', audience, '--source', 'stream', '--start', day, '--end', day,
-                 '--threads', '8', '--memory-limit', '12GB', '--temp-dir', work / 'scratch'], f'identity_stream_{day}')
+                 '--threads', '2', '--memory-limit', '8GB', '--temp-dir', work / 'scratch'], f'identity_stream_{day}')
         with duckdb.connect() as con:
             con.execute('SET threads=1')
             rows = con.execute("SELECT source,log_date,count(DISTINCT minute_ist) FROM read_parquet(?) GROUP BY ALL",
