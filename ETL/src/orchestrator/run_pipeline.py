@@ -372,7 +372,9 @@ def _lake_rows_for_source(lake_root: Path, source_id: str, source_key: str) -> i
     prefixes = {_lake_file_prefix(source_id, source_key), _lake_source_prefix(source_id)}
     files: set[Path] = set()
     for prefix in prefixes:
-        files.update(lake_root.rglob(f"{prefix}_*.parquet"))
+        # Archive roots also contain Temp/raw work. Reconcile only lake partitions.
+        for layout in ("source=*/year=*/month=*/day=*", "year=*/month=*/day=*"):
+            files.update(lake_root.glob(f"{layout}/{prefix}_*.parquet"))
     return sum(_parquet_rows(path) for path in files)
 
 
