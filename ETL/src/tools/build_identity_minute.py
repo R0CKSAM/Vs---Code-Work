@@ -57,12 +57,11 @@ def resolved_platform_key_sql(source: str) -> str:
     return platform_key_sql("reqHost")
 
 
-def build_identity_minute_table(
-    con,
+def identity_base_sql(
     args: argparse.Namespace,
     start: date | None = None,
     end: date | None = None,
-) -> None:
+) -> str:
     configured_start, configured_end = checked_dates(args)
     start = configured_start if start is None else start
     end = configured_end if end is None else end
@@ -72,10 +71,7 @@ def build_identity_minute_table(
     session_expr = normalized_identity_sql("session_id")
     device_expr = normalized_identity_sql("device_id")
 
-    con.execute(
-        f"""
-        CREATE OR REPLACE TEMP TABLE identity_minute_new AS
-        WITH base AS (
+    return f"""
             SELECT
                 COALESCE(CAST(source AS VARCHAR), '{args.source.lower()}') AS source,
                 strftime({minute_ist_sql("reqTimeSec")}, '%Y-%m-%d') AS log_date,
@@ -100,7 +96,16 @@ def build_identity_minute_table(
                   OR COALESCE(CAST(queryStr AS VARCHAR), '') LIKE '%device_id=%'
               )
               AND TRY_CAST(reqTimeSec AS DOUBLE) IS NOT NULL
-        ),
+        """
+
+
+def build_identity_minute_table(con, args, start=None, end=None, *, prepared_files=None):
+    base = (f"SELECT * FROM read_parquet({parquet_source_sql(prepared_files)}, hive_partitioning=false)"
+            if prepared_files else identity_base_sql(args, start, end))
+    con.execute(
+        f"""
+        CREATE OR REPLACE TEMP TABLE identity_minute_new AS
+        WITH base AS ({base}),
         resolved AS (
             SELECT
                 b.*,
@@ -144,6 +149,51 @@ def build_identity_minute_table(
     )
 
 
+def build_hourly_identity(con, args, start, end):
+    """Scan once, then aggregate disjoint hours with exact minute-level DISTINCTs."""
+    if start is None or end is None:
+        raise ValueError('--hourly-spool requires --start and --end')
+    import os
+    import shutil
+    spool = args.out_dir / 'identity_hourly_work'
+    spool.mkdir(exist_ok=True)
+    results = []
+    for day, _ in daily_ranges(start, end):
+        root = spool / f'{args.source}_{day.isoformat()}'
+        fingerprint = [(str(p), p.stat().st_size, p.stat().st_mtime_ns)
+                       for p in args.selected_lake_files]
+        signature = json.dumps(fingerprint)
+        ready = root / 'ready.json'
+        if not ready.exists():
+            # Only this task's incomplete scratch directory is replaceable.
+            if root.exists():
+                if root.resolve().parent != spool.resolve() or root.is_symlink():
+                    raise RuntimeError('Unsafe hourly scratch path')
+                shutil.rmtree(root)
+            root.mkdir()
+            print(f'Preparing hourly identity input for {day}', flush=True)
+            con.execute(f"""COPY (SELECT *, substr(minute_ist, 1, 13) AS hour_bucket
+                FROM ({identity_base_sql(args, day, day)})) TO '{q(root / 'input')}'
+                (FORMAT PARQUET, PARTITION_BY (hour_bucket), COMPRESSION SNAPPY)""")
+            ready.write_text(signature, encoding='utf-8')
+        elif ready.read_text(encoding='utf-8') != signature:
+            raise RuntimeError('Lake changed since hourly checkpoint; use a fresh output directory')
+        for bucket in sorted((root / 'input').glob('hour_bucket=*')):
+            result = root / (bucket.name + '.parquet')
+            if not result.exists():
+                build_identity_minute_table(con, args, prepared_files=sorted(bucket.glob('*.parquet')))
+                temporary = result.with_suffix('.parquet.tmp')
+                con.execute(f"COPY identity_minute_new TO '{q(temporary)}' (FORMAT PARQUET)")
+                os.replace(temporary, result)
+                con.execute('DROP TABLE identity_minute_new')
+            results.append(result)
+            print(f'Identity hour complete: {bucket.name}', flush=True)
+    if not results:
+        raise RuntimeError('No hourly identity inputs found')
+    con.execute(f"CREATE OR REPLACE TEMP TABLE identity_minute_all AS SELECT * FROM read_parquet({parquet_source_sql(results)}, hive_partitioning=false)")
+    return table_count(con, 'identity_minute_all')
+
+
 def daily_ranges(start: date | None, end: date | None) -> list[tuple[date | None, date | None]]:
     """Split bounded rebuilds into daily scans to cap DISTINCT aggregation memory."""
     if start is None or end is None:
@@ -185,6 +235,7 @@ def main() -> None:
     parser.add_argument("--end", default=None, help="IST lake date end, YYYY-MM-DD.")
     parser.add_argument("--threads", type=int, default=2)
     parser.add_argument("--memory-limit", default="16GB")
+    parser.add_argument("--hourly-spool", action="store_true", help="Use resumable hour-sized exact aggregations for large days.")
     parser.add_argument(
         "--temp-dir",
         type=Path,
@@ -204,7 +255,10 @@ def main() -> None:
     try:
         new_rows = 0
         has_accumulator = False
-        for chunk_start, chunk_end in daily_ranges(start, end):
+        if args.hourly_spool:
+            new_rows = build_hourly_identity(con, args, start, end)
+            has_accumulator = new_rows > 0
+        for chunk_start, chunk_end in ([] if args.hourly_spool else daily_ranges(start, end)):
             build_identity_minute_table(con, args, chunk_start, chunk_end)
             chunk_rows = table_count(con, "identity_minute_new")
             chunk_label = (

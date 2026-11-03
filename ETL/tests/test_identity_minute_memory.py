@@ -80,3 +80,32 @@ def test_fast_identity_pipeline_caps_parallel_aggregation():
     assert 'str(max(1, min(2, int(args.concurrency_threads))))' in command
     assert 'identity_minute_memory,' in command
     assert 'if (_parse_memory_limit_gb(identity_minute_memory) or 0) > 8:' in source
+
+
+def test_hourly_identity_matches_full_day_and_resumes(tmp_path, monkeypatch):
+    monkeypatch.syspath_prepend(str(TOOLS))
+    from build_identity_minute import build_identity_minute_table, build_hourly_identity
+    from build_concurrency import register_maps, q
+    from datetime import date
+    con = duckdb.connect(config={'threads': 2, 'memory_limit': '256MB'})
+    try:
+        register_maps(con)
+        source = tmp_path / 'input.parquet'
+        epoch = datetime(2026, 10, 30, 18, 30, tzinfo=timezone.utc).timestamp()
+        con.execute(f"""COPY (SELECT 'stream' AS source,2026 AS year,10 AS month,31 AS day,
+            {epoch}+i%86400 AS reqTimeSec,'example.test' AS reqHost,
+            CASE WHEN i%7=0 THEN '/example/index.m3u8' ELSE '/example/segment.ts' END AS reqPath,
+            'ip-' || CAST(i%13 AS VARCHAR) AS cliIP,'UA  test' AS UA,'200' AS statusCode,
+            'session_id=s' || CAST(i%19 AS VARCHAR) || '&device_id=d1' AS queryStr
+            FROM range(172800) t(i)) TO '{q(source)}' (FORMAT PARQUET)""")
+        args = Namespace(start='2026-10-31', end='2026-10-31', source='stream',
+                         selected_lake_files=[source], out_dir=tmp_path)
+        build_identity_minute_table(con, args)
+        expected = con.execute('SELECT * FROM identity_minute_new ORDER BY ALL').fetchall()
+        day = date(2026, 10, 31)
+        assert build_hourly_identity(con, args, day, day) == len(expected)
+        assert con.execute('SELECT * FROM identity_minute_all ORDER BY ALL').fetchall() == expected
+        assert build_hourly_identity(con, args, day, day) == len(expected)
+        assert con.execute('SELECT * FROM identity_minute_all ORDER BY ALL').fetchall() == expected
+    finally:
+        con.close()
