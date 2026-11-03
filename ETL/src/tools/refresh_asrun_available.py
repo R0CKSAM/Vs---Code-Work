@@ -16,6 +16,7 @@ from refresh_asrun_priority import publish
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--exclude-stream-date', action='append', default=[])
+    parser.add_argument('--baseline-work', type=Path, help='Reuse a completed refresh audience and parser cache.')
     options = parser.parse_args()
     excluded = {('stream', day) for day in options.exclude_stream_date}
     stamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -41,6 +42,8 @@ def main():
         audience = work / 'audience'
         audience.mkdir()
         baseline = Path(r'Z:\Veto Logs Backup\DO NOT DELETE\Temp\VetoETL\asrun_refresh\20261102_172035\audience\identity_minute.parquet')
+        if options.baseline_work:
+            baseline = options.baseline_work / 'audience/identity_minute.parquet'
         shutil.copy2(baseline, audience / 'identity_minute.parquet')
         archive = Path(r'Z:\Veto Logs Backup\DO NOT DELETE')
         with duckdb.connect() as con:
@@ -91,7 +94,7 @@ def main():
         demo = ETL / 'asrun_demo'
         phase('preparing_asrun')
         parsed = work / 'parsed'
-        shutil.copytree(demo / 'data/parsed', parsed)
+        shutil.copytree(options.baseline_work / 'parsed' if options.baseline_work else demo / 'data/parsed', parsed)
         output = work / 'dashboard'
         inputs = sorted(Path(r'Z:\Veto Logs Backup\DO NOT DELETE\source=AsRUN').glob('ASRUN-*.txt'))
         days = sorted({datetime.strptime(p.stem[6:], '%d%m%y').date().isoformat() for p in inputs})

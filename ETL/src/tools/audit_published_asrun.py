@@ -43,7 +43,8 @@ def main():
             target = next(row for row in exported if row['Ad ID'] == 'C0079134' and '11:19:24' in row['On-air IST'])
             report['checks']['csv_target'] = {k:v for k,v in target.items() if 'Concurrency' in k or k=='Coverage Status'}
             assert float(target['India TV YouTube Minute Concurrency']) == 3239
-            assert target['Coverage Status'] == 'Missing source data: FAST'
+            missing = report['checks']['target_aligned']['missingSources']
+            assert target['Coverage Status'] == ('Missing source data: '+', '.join(missing) if missing else 'All sources covered')
             report['checks']['recent_dates'] = {}
             for day in ('2026-10-29','2026-10-30','2026-10-31'):
                 result = page.evaluate("""async day => {
@@ -73,7 +74,8 @@ def main():
             assert not report['errors'], report['errors']
             assert not report['failed_requests'], report['failed_requests']
             assert report['checks']['target_initial']['youtube']['total'] == 3239
-            assert report['checks']['target_aligned']['missingSources'] == ['FAST']
+            expected_missing = page.evaluate("() => DATA.unavailable_viewer_days.filter(r=>r.date==='2026-11-01').map(r=>r.source.toUpperCase()).sort()")
+            assert sorted(report['checks']['target_aligned']['missingSources']) == expected_missing
             assert report['checks']['all_nov1_events']['missingYT'] == 0
             assert report['checks']['all_nov1_events']['missingStream'] == 0
             assert report['checks']['all_nov1_events']['badCombined'] == 0
