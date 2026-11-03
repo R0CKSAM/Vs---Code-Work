@@ -1,0 +1,20 @@
+{
+  "accessVerified": true,
+  "firstCompletedDate": "2026-09-30",
+  "firstCompletionSecondsIncludingStartup": 16.146,
+  "firstReport": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\stream_firestick_all_channels_2026-09-30_to_2026-09-30_daily_models_minutes.csv",
+  "firstDayMatchesPreviousExportExactly": true,
+  "columns": [
+    "date_ist",
+    "firestick_model",
+    "raw_watch_minutes_estimated",
+    "distinct_cliip",
+    "distinct_device_id"
+  ],
+  "completedDatesAtHandoff": 10,
+  "lastCompletedDateAtHandoff": "2026-10-09",
+  "statusAtHandoff": "running",
+  "progressFile": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\progress.json",
+  "logFile": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\run.log",
+  "automaticFinalValidation": true
+}

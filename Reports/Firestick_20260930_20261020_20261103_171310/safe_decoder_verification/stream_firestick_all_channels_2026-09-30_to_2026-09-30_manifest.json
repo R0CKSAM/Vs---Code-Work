@@ -1,0 +1,22 @@
+{
+  "source": "stream",
+  "channels": "all combined",
+  "start_ist": "2026-09-30",
+  "end_ist": "2026-09-30",
+  "classification": "Decoded model explicitly contains Fire TV Stick; conflicting family-only labels, generic Fire TV and unresolved models excluded.",
+  "watch_hours": "Estimated: all .ts requests * 6 / 3600; includes retries and errors. Not measured player watch time.",
+  "identities": "Distinct cliIP and non-empty/non-placeholder queryStr device_id on matching .ts requests; totals deduplicated across all days/channels.",
+  "lookup": "\\\\192.168.50.126\\Veto Logs Backup\\Vs - Code Work\\ETL\\output\\device_decode\\ua_decode_lookup_both_all.parquet",
+  "coverage": [
+    {
+      "date": "2026-09-30",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=09\\day=30\\part_stream_2026_09_29_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=09\\day=30\\part_stream_2026_09_30_0.parquet"
+      ],
+      "segment_requests": 2396064,
+      "distinct_cliip": 2958,
+      "distinct_device_id": 11
+    }
+  ]
+}

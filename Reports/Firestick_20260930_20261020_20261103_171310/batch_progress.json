@@ -1,0 +1,52 @@
+{
+  "status": "building_oct13_to_oct25_recovery",
+  "coordinatorPID": 30852,
+  "startedAt": "2026-11-03T17:48:07.310054+05:30",
+  "columns": [
+    "date_ist",
+    "firestick_model",
+    "raw_watch_minutes_estimated",
+    "distinct_cliip",
+    "distinct_device_id"
+  ],
+  "channels": "all STREAM channels",
+  "sharedLakeWrites": false,
+  "otherETLJobsStarted": false,
+  "acceptedExceptions": [
+    {
+      "date": "2026-10-21",
+      "issue": "Canonical source begins around 06:37 IST; earlier hours are not represented. No missing-hour values are invented.",
+      "userApproved": true
+    }
+  ],
+  "batches": [
+    {
+      "number": 1,
+      "startIST": "2026-09-30",
+      "endIST": "2026-10-25",
+      "status": "pending",
+      "file": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\Batch_1_2026-09-30_to_2026-10-25.csv"
+    },
+    {
+      "number": 2,
+      "startIST": "2026-10-26",
+      "endIST": "2026-11-01",
+      "status": "pending",
+      "file": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\Batch_2_2026-10-26_to_2026-11-01.csv"
+    }
+  ],
+  "recovery": {
+    "checkpointThrough": "2026-10-12",
+    "checkpointFile": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\stream_firestick_all_channels_2026-09-30_to_2026-10-12_daily_models_minutes.csv",
+    "checkpointSHA256": "f5154f6ec90d2799c43564e6c815ec201d78919aa11b15c03f11196a3be03210",
+    "resumeStart": "2026-10-13",
+    "reason": "Native DuckDB process crash; preserve completed daily results and bypass native URL decoding in a local adapter.",
+    "completedInputFilesUnchanged": true
+  },
+  "originalLastCompletedDate": "2026-10-12",
+  "updatedAt": "2026-11-03T17:56:28.908743+05:30",
+  "segmentPID": 6872,
+  "segmentProgress": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery\\progress.json",
+  "segmentLastCompletedDate": "2026-10-13",
+  "segmentCompletedDates": 1
+}

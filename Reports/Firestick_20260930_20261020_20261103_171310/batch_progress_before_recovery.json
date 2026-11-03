@@ -1,0 +1,43 @@
+{
+  "status": "failed",
+  "coordinatorPID": 28776,
+  "startedAt": "2026-11-03T17:25:23.042573+05:30",
+  "columns": [
+    "date_ist",
+    "firestick_model",
+    "raw_watch_minutes_estimated",
+    "distinct_cliip",
+    "distinct_device_id"
+  ],
+  "channels": "all STREAM channels",
+  "sharedLakeWrites": false,
+  "otherETLJobsStarted": false,
+  "acceptedExceptions": [
+    {
+      "date": "2026-10-21",
+      "issue": "Canonical source begins around 06:37 IST; earlier hours are not represented. No missing-hour values are invented.",
+      "userApproved": true
+    }
+  ],
+  "batches": [
+    {
+      "number": 1,
+      "startIST": "2026-09-30",
+      "endIST": "2026-10-25",
+      "status": "pending",
+      "file": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\Batch_1_2026-09-30_to_2026-10-25.csv"
+    },
+    {
+      "number": 2,
+      "startIST": "2026-10-26",
+      "endIST": "2026-11-01",
+      "status": "pending",
+      "file": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\Batch_2_2026-10-26_to_2026-11-01.csv"
+    }
+  ],
+  "updatedAt": "2026-11-03T17:30:11.362490+05:30",
+  "originalLastCompletedDate": "2026-10-12",
+  "originalCompletedDates": 13,
+  "error": "Original export worker stopped before completion",
+  "failedAt": "2026-11-03T17:30:11.362441+05:30"
+}

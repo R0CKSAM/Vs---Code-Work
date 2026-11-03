@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "firstDayByteIdentical": true,
+  "nativeCrash": "Windows Application Error 1000: _duckdb.cp314-win_amd64.pyd, c0000005 at 2026-11-03 17:30:08",
+  "decoderParityTests": 21,
+  "sharedFilesModified": false
+}

@@ -1,0 +1,49 @@
+{
+  "status": "complete",
+  "pid": 27068,
+  "startIST": "2026-09-30",
+  "endIST": "2026-09-30",
+  "completedDates": [
+    {
+      "date": "2026-09-30",
+      "path": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\safe_decoder_verification\\stream_firestick_all_channels_2026-09-30_to_2026-09-30_daily_models_minutes.csv",
+      "publishedAt": "2026-11-03T17:47:23.685284+05:30",
+      "processingSeconds": 38.143,
+      "validation": {
+        "rows": 8,
+        "dates": 1,
+        "models": 8,
+        "estimatedMinutes": "239606.4",
+        "header": [
+          "date_ist",
+          "firestick_model",
+          "raw_watch_minutes_estimated",
+          "distinct_cliip",
+          "distinct_device_id"
+        ]
+      }
+    }
+  ],
+  "startedAt": "2026-11-03T17:46:45.540185+05:30",
+  "work": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\safe_decoder_verification",
+  "decoderAdapter": "Local safe URL decoder; shared exporter and lookup unchanged",
+  "lastCompletedDate": "2026-09-30",
+  "latestDailyReport": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\safe_decoder_verification\\stream_firestick_all_channels_2026-09-30_to_2026-09-30_daily_models_minutes.csv",
+  "elapsedSeconds": 38.366,
+  "finishedAt": "2026-11-03T17:47:23.907719+05:30",
+  "finalReport": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\safe_decoder_verification\\stream_firestick_all_channels_2026-09-30_to_2026-09-30_daily_models_minutes.csv",
+  "validation": {
+    "rows": 8,
+    "dates": 1,
+    "models": 8,
+    "estimatedMinutes": "239606.4",
+    "header": [
+      "date_ist",
+      "firestick_model",
+      "raw_watch_minutes_estimated",
+      "distinct_cliip",
+      "distinct_device_id"
+    ]
+  },
+  "sharedInputsUnchanged": true
+}

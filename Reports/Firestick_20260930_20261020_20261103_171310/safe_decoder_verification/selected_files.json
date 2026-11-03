@@ -1,0 +1,16 @@
+[
+  {
+    "date": "2026-09-30",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=09\\day=30\\part_stream_2026_09_29_0.parquet",
+    "bytes": 51038370,
+    "mtime_ns": 1790732741974377100,
+    "rows": 1454619
+  },
+  {
+    "date": "2026-09-30",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=09\\day=30\\part_stream_2026_09_30_0.parquet",
+    "bytes": 561752818,
+    "mtime_ns": 1790818909179843300,
+    "rows": 14640574
+  }
+]

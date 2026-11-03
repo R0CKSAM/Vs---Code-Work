@@ -1,0 +1,551 @@
+{
+  "status": "PASS",
+  "lakeRoots": [
+    "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE"
+  ],
+  "exporter": "\\\\192.168.50.126\\Veto Logs Backup\\Vs - Code Work\\ETL\\src\\tools\\export_stream_firestick.py",
+  "exporterSHA256": "00d64b0bb545aa5df1cb87d506374d8a56dd390d8b849eadfe14ff688b9e5b96",
+  "lookup": "\\\\192.168.50.126\\Veto Logs Backup\\Vs - Code Work\\ETL\\output\\device_decode\\ua_decode_lookup_both_all.parquet",
+  "lookupSHA256": "25ef7d6256c8318eeef7d395940fd94d9f123db7bad21ffff55132e8baa2e0e1",
+  "lookupRows": 82967,
+  "firestickModels": [
+    [
+      "Fire TV Stick",
+      27
+    ],
+    [
+      "Fire TV Stick (Gen 3)",
+      74
+    ],
+    [
+      "Fire TV Stick 4K",
+      26
+    ],
+    [
+      "Fire TV Stick 4K (2023)",
+      56
+    ],
+    [
+      "Fire TV Stick 4K Max",
+      62
+    ],
+    [
+      "Fire TV Stick 4K Max (2023)",
+      60
+    ],
+    [
+      "Fire TV Stick 4K Plus",
+      39
+    ],
+    [
+      "Fire TV Stick 4K Select",
+      21
+    ],
+    [
+      "Fire TV Stick 4K Select (2025)",
+      2
+    ],
+    [
+      "Fire TV Stick HD (2026)",
+      3
+    ],
+    [
+      "Fire TV Stick Lite (Gen 1)",
+      61
+    ],
+    [
+      "Fire TV Stick Lite / Stick family",
+      15
+    ]
+  ],
+  "partitionCount": 21,
+  "fileCount": 51,
+  "totalGiB": 77.49,
+  "partitions": [
+    {
+      "date": "2026-09-30",
+      "files": 2,
+      "rows": 16095193,
+      "bytes": 612791188
+    },
+    {
+      "date": "2026-10-01",
+      "files": 2,
+      "rows": 17168631,
+      "bytes": 658661330
+    },
+    {
+      "date": "2026-10-02",
+      "files": 3,
+      "rows": 18345213,
+      "bytes": 700021585
+    },
+    {
+      "date": "2026-10-03",
+      "files": 2,
+      "rows": 14230508,
+      "bytes": 551614253
+    },
+    {
+      "date": "2026-10-04",
+      "files": 2,
+      "rows": 15619093,
+      "bytes": 613464985
+    },
+    {
+      "date": "2026-10-05",
+      "files": 2,
+      "rows": 17753589,
+      "bytes": 684873381
+    },
+    {
+      "date": "2026-10-06",
+      "files": 2,
+      "rows": 17761956,
+      "bytes": 680497635
+    },
+    {
+      "date": "2026-10-07",
+      "files": 3,
+      "rows": 18254889,
+      "bytes": 700056200
+    },
+    {
+      "date": "2026-10-08",
+      "files": 3,
+      "rows": 20481817,
+      "bytes": 792523922
+    },
+    {
+      "date": "2026-10-09",
+      "files": 2,
+      "rows": 145358410,
+      "bytes": 6036506508
+    },
+    {
+      "date": "2026-10-10",
+      "files": 2,
+      "rows": 25844760,
+      "bytes": 1009711175
+    },
+    {
+      "date": "2026-10-11",
+      "files": 3,
+      "rows": 151949047,
+      "bytes": 6282922765
+    },
+    {
+      "date": "2026-10-12",
+      "files": 3,
+      "rows": 23558680,
+      "bytes": 889150830
+    },
+    {
+      "date": "2026-10-13",
+      "files": 2,
+      "rows": 233997563,
+      "bytes": 10126930161
+    },
+    {
+      "date": "2026-10-14",
+      "files": 2,
+      "rows": 45312760,
+      "bytes": 1221707442
+    },
+    {
+      "date": "2026-10-15",
+      "files": 3,
+      "rows": 34530398,
+      "bytes": 1019787967
+    },
+    {
+      "date": "2026-10-16",
+      "files": 3,
+      "rows": 20638313,
+      "bytes": 807601183
+    },
+    {
+      "date": "2026-10-17",
+      "files": 3,
+      "rows": 17144608,
+      "bytes": 682262369
+    },
+    {
+      "date": "2026-10-18",
+      "files": 3,
+      "rows": 445879048,
+      "bytes": 20809526775
+    },
+    {
+      "date": "2026-10-19",
+      "files": 2,
+      "rows": 19765059,
+      "bytes": 789434032
+    },
+    {
+      "date": "2026-10-20",
+      "files": 2,
+      "rows": 543949965,
+      "bytes": 27531196964
+    }
+  ],
+  "files": [
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=09\\day=30\\part_stream_2026_09_29_0.parquet",
+      "bytes": 51038370,
+      "mtime_ns": 1790732741974377100,
+      "rows": 1454619,
+      "date": "2026-09-30"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=09\\day=30\\part_stream_2026_09_30_0.parquet",
+      "bytes": 561752818,
+      "mtime_ns": 1790818909179843300,
+      "rows": 14640574,
+      "date": "2026-09-30"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=01\\part_stream_2026_09_30_0.parquet",
+      "bytes": 47928260,
+      "mtime_ns": 1790818909274425900,
+      "rows": 1294735,
+      "date": "2026-10-01"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=01\\part_stream_2026_10_01_0.parquet",
+      "bytes": 610733070,
+      "mtime_ns": 1790905522527023100,
+      "rows": 15873896,
+      "date": "2026-10-01"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=02\\part_stream_2026_10_01_0.parquet",
+      "bytes": 50117136,
+      "mtime_ns": 1790905522669756400,
+      "rows": 1428159,
+      "date": "2026-10-02"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=02\\part_stream_2026_10_02_0.parquet",
+      "bytes": 649894412,
+      "mtime_ns": 1790991944746369400,
+      "rows": 16916994,
+      "date": "2026-10-02"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=02\\part_stream_2026_10_03_0.parquet",
+      "bytes": 10037,
+      "mtime_ns": 1791077969306325100,
+      "rows": 60,
+      "date": "2026-10-02"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=03\\part_stream_2026_10_02_0.parquet",
+      "bytes": 44363554,
+      "mtime_ns": 1790991945043351000,
+      "rows": 1268521,
+      "date": "2026-10-03"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=03\\part_stream_2026_10_03_0.parquet",
+      "bytes": 507250699,
+      "mtime_ns": 1791077969405535600,
+      "rows": 12961987,
+      "date": "2026-10-03"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=04\\part_stream_2026_10_03_0.parquet",
+      "bytes": 45432893,
+      "mtime_ns": 1791077969511537200,
+      "rows": 1222591,
+      "date": "2026-10-04"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=04\\part_stream_2026_10_04_0.parquet",
+      "bytes": 568032092,
+      "mtime_ns": 1791164430775601400,
+      "rows": 14396502,
+      "date": "2026-10-04"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=05\\part_stream_2026_10_04_0.parquet",
+      "bytes": 48845277,
+      "mtime_ns": 1791164430799857100,
+      "rows": 1309371,
+      "date": "2026-10-05"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=05\\part_stream_2026_10_05_0.parquet",
+      "bytes": 636028104,
+      "mtime_ns": 1791251008718964500,
+      "rows": 16444218,
+      "date": "2026-10-05"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=06\\part_stream_2026_10_05_0.parquet",
+      "bytes": 53847648,
+      "mtime_ns": 1791251009324313500,
+      "rows": 1493726,
+      "date": "2026-10-06"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=06\\part_stream_2026_10_06_0.parquet",
+      "bytes": 626649987,
+      "mtime_ns": 1791356969186043600,
+      "rows": 16268230,
+      "date": "2026-10-06"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=07\\part_stream_2026_10_06_0.parquet",
+      "bytes": 48611897,
+      "mtime_ns": 1791356969199861700,
+      "rows": 1363235,
+      "date": "2026-10-07"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=07\\part_stream_2026_10_07_0.parquet",
+      "bytes": 651387884,
+      "mtime_ns": 1791423307589181500,
+      "rows": 16890447,
+      "date": "2026-10-07"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=07\\part_stream_2026_10_08_0.parquet",
+      "bytes": 56419,
+      "mtime_ns": 1791529729573227700,
+      "rows": 1207,
+      "date": "2026-10-07"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=08\\part_stream_2026_10_07_0.parquet",
+      "bytes": 56422862,
+      "mtime_ns": 1791423308156096100,
+      "rows": 1573021,
+      "date": "2026-10-08"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=08\\part_stream_2026_10_08_0.parquet",
+      "bytes": 735965548,
+      "mtime_ns": 1791529729270922700,
+      "rows": 18905560,
+      "date": "2026-10-08"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=08\\part_stream_2026_10_09_0.parquet",
+      "bytes": 135512,
+      "mtime_ns": 1791787191744907800,
+      "rows": 3236,
+      "date": "2026-10-08"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=09\\part_stream_2026_10_08_0.parquet",
+      "bytes": 63784269,
+      "mtime_ns": 1791529729611062100,
+      "rows": 1728409,
+      "date": "2026-10-09"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=09\\part_stream_2026_10_09_0.parquet",
+      "bytes": 5972722239,
+      "mtime_ns": 1791787191338108800,
+      "rows": 143630001,
+      "date": "2026-10-09"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=10\\part_stream_2026_10_09_0.parquet",
+      "bytes": 89524364,
+      "mtime_ns": 1791787191637358200,
+      "rows": 2768678,
+      "date": "2026-10-10"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=10\\part_stream_2026_10_10_0.parquet",
+      "bytes": 920186811,
+      "mtime_ns": 1791802309271031000,
+      "rows": 23076082,
+      "date": "2026-10-10"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=11\\part_stream_2026_10_10_0.parquet",
+      "bytes": 64463725,
+      "mtime_ns": 1791802309398125800,
+      "rows": 1697514,
+      "date": "2026-10-11"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=11\\part_stream_2026_10_11_0.parquet",
+      "bytes": 6218442535,
+      "mtime_ns": 1791803970080056700,
+      "rows": 150251258,
+      "date": "2026-10-11"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=11\\part_stream_2026_10_12_0.parquet",
+      "bytes": 16505,
+      "mtime_ns": 1791856294387343700,
+      "rows": 275,
+      "date": "2026-10-11"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=12\\part_stream_2026_10_11_0.parquet",
+      "bytes": 85054990,
+      "mtime_ns": 1791803970191173900,
+      "rows": 2843402,
+      "date": "2026-10-12"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=12\\part_stream_2026_10_12_0.parquet",
+      "bytes": 804084027,
+      "mtime_ns": 1791856293972051800,
+      "rows": 20715209,
+      "date": "2026-10-12"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=12\\part_stream_2026_10_13_0.parquet",
+      "bytes": 11813,
+      "mtime_ns": 1791969247239175600,
+      "rows": 69,
+      "date": "2026-10-12"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=13\\part_stream_2026_10_12_0.parquet",
+      "bytes": 61340984,
+      "mtime_ns": 1791856294387343700,
+      "rows": 1641940,
+      "date": "2026-10-13"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=13\\part_stream_2026_10_13_0.parquet",
+      "bytes": 10065589177,
+      "mtime_ns": 1791969247054403200,
+      "rows": 232355623,
+      "date": "2026-10-13"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=14\\part_stream_2026_10_13_0.parquet",
+      "bytes": 85002711,
+      "mtime_ns": 1791969247213744300,
+      "rows": 2460587,
+      "date": "2026-10-14"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=14\\part_stream_2026_10_14_0.parquet",
+      "bytes": 1136704731,
+      "mtime_ns": 1792029159036962500,
+      "rows": 42852173,
+      "date": "2026-10-14"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=15\\part_stream_2026_10_14_0.parquet",
+      "bytes": 52366494,
+      "mtime_ns": 1792029159179257500,
+      "rows": 1386142,
+      "date": "2026-10-15"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=15\\part_stream_2026_10_15_0.parquet",
+      "bytes": 967398850,
+      "mtime_ns": 1792115681574357800,
+      "rows": 33143901,
+      "date": "2026-10-15"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=15\\part_stream_2026_10_27_0.parquet",
+      "bytes": 22623,
+      "mtime_ns": 1793152791454122900,
+      "rows": 355,
+      "date": "2026-10-15"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=16\\part_stream_2026_10_15_0.parquet",
+      "bytes": 65435678,
+      "mtime_ns": 1792115681645380000,
+      "rows": 1737162,
+      "date": "2026-10-16"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=16\\part_stream_2026_10_16_0.parquet",
+      "bytes": 742154945,
+      "mtime_ns": 1792201862832702800,
+      "rows": 18901091,
+      "date": "2026-10-16"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=16\\part_stream_2026_10_17_0.parquet",
+      "bytes": 10560,
+      "mtime_ns": 1792288089498504900,
+      "rows": 60,
+      "date": "2026-10-16"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=17\\part_stream_2026_10_16_0.parquet",
+      "bytes": 57683145,
+      "mtime_ns": 1792201862976914900,
+      "rows": 1538749,
+      "date": "2026-10-17"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=17\\part_stream_2026_10_17_0.parquet",
+      "bytes": 624463609,
+      "mtime_ns": 1792288089022826200,
+      "rows": 15603251,
+      "date": "2026-10-17"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=17\\part_stream_2026_10_18_0.parquet",
+      "bytes": 115615,
+      "mtime_ns": 1792401082052434100,
+      "rows": 2608,
+      "date": "2026-10-17"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=18\\part_stream_2026_10_17_0.parquet",
+      "bytes": 54485288,
+      "mtime_ns": 1792288089494753300,
+      "rows": 1443787,
+      "date": "2026-10-18"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=18\\part_stream_2026_10_18_0.parquet",
+      "bytes": 20734379333,
+      "mtime_ns": 1792401081814642400,
+      "rows": 443921798,
+      "date": "2026-10-18"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=18\\part_stream_2026_10_19_0.parquet",
+      "bytes": 20662154,
+      "mtime_ns": 1792460219330453100,
+      "rows": 513463,
+      "date": "2026-10-18"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=19\\part_stream_2026_10_18_0.parquet",
+      "bytes": 98392611,
+      "mtime_ns": 1792401076189642200,
+      "rows": 2597914,
+      "date": "2026-10-19"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=19\\part_stream_2026_10_19_0.parquet",
+      "bytes": 691041421,
+      "mtime_ns": 1792460219424828000,
+      "rows": 17167145,
+      "date": "2026-10-19"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=20\\part_stream_2026_10_19_0.parquet",
+      "bytes": 65244550,
+      "mtime_ns": 1792460219405678800,
+      "rows": 1741894,
+      "date": "2026-10-20"
+    },
+    {
+      "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=20\\part_stream_2026_10_20_0.parquet",
+      "bytes": 27465952414,
+      "mtime_ns": 1792574543162530500,
+      "rows": 542208071,
+      "date": "2026-10-20"
+    }
+  ]
+}

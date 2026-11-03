@@ -1,0 +1,33 @@
+{
+  "status": "running",
+  "pid": 21852,
+  "startIST": "2026-10-13",
+  "endIST": "2026-10-25",
+  "completedDates": [
+    {
+      "date": "2026-10-13",
+      "path": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery\\stream_firestick_all_channels_2026-10-13_to_2026-10-13_daily_models_minutes.csv",
+      "publishedAt": "2026-11-03T17:56:02.696221+05:30",
+      "processingSeconds": 475.026,
+      "validation": {
+        "rows": 10,
+        "dates": 1,
+        "models": 10,
+        "estimatedMinutes": "363261.6",
+        "header": [
+          "date_ist",
+          "firestick_model",
+          "raw_watch_minutes_estimated",
+          "distinct_cliip",
+          "distinct_device_id"
+        ]
+      }
+    }
+  ],
+  "startedAt": "2026-11-03T17:48:07.664020+05:30",
+  "work": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery",
+  "decoderAdapter": "Local safe URL decoder; shared exporter and lookup unchanged",
+  "lastCompletedDate": "2026-10-13",
+  "latestDailyReport": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery\\stream_firestick_all_channels_2026-10-13_to_2026-10-13_daily_models_minutes.csv",
+  "elapsedSeconds": 475.026
+}

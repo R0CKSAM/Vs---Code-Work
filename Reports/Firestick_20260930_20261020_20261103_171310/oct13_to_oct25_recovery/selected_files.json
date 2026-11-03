@@ -1,0 +1,205 @@
+[
+  {
+    "date": "2026-10-13",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=13\\part_stream_2026_10_12_0.parquet",
+    "bytes": 61340984,
+    "mtime_ns": 1791856294387343700,
+    "rows": 1641940
+  },
+  {
+    "date": "2026-10-13",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=13\\part_stream_2026_10_13_0.parquet",
+    "bytes": 10065589177,
+    "mtime_ns": 1791969247054403200,
+    "rows": 232355623
+  },
+  {
+    "date": "2026-10-14",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=14\\part_stream_2026_10_13_0.parquet",
+    "bytes": 85002711,
+    "mtime_ns": 1791969247213744300,
+    "rows": 2460587
+  },
+  {
+    "date": "2026-10-14",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=14\\part_stream_2026_10_14_0.parquet",
+    "bytes": 1136704731,
+    "mtime_ns": 1792029159036962500,
+    "rows": 42852173
+  },
+  {
+    "date": "2026-10-15",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=15\\part_stream_2026_10_14_0.parquet",
+    "bytes": 52366494,
+    "mtime_ns": 1792029159179257500,
+    "rows": 1386142
+  },
+  {
+    "date": "2026-10-15",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=15\\part_stream_2026_10_15_0.parquet",
+    "bytes": 967398850,
+    "mtime_ns": 1792115681574357800,
+    "rows": 33143901
+  },
+  {
+    "date": "2026-10-15",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=15\\part_stream_2026_10_27_0.parquet",
+    "bytes": 22623,
+    "mtime_ns": 1793152791454122900,
+    "rows": 355
+  },
+  {
+    "date": "2026-10-16",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=16\\part_stream_2026_10_15_0.parquet",
+    "bytes": 65435678,
+    "mtime_ns": 1792115681645380000,
+    "rows": 1737162
+  },
+  {
+    "date": "2026-10-16",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=16\\part_stream_2026_10_16_0.parquet",
+    "bytes": 742154945,
+    "mtime_ns": 1792201862832702800,
+    "rows": 18901091
+  },
+  {
+    "date": "2026-10-16",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=16\\part_stream_2026_10_17_0.parquet",
+    "bytes": 10560,
+    "mtime_ns": 1792288089498504900,
+    "rows": 60
+  },
+  {
+    "date": "2026-10-17",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=17\\part_stream_2026_10_16_0.parquet",
+    "bytes": 57683145,
+    "mtime_ns": 1792201862976914900,
+    "rows": 1538749
+  },
+  {
+    "date": "2026-10-17",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=17\\part_stream_2026_10_17_0.parquet",
+    "bytes": 624463609,
+    "mtime_ns": 1792288089022826200,
+    "rows": 15603251
+  },
+  {
+    "date": "2026-10-17",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=17\\part_stream_2026_10_18_0.parquet",
+    "bytes": 115615,
+    "mtime_ns": 1792401082052434100,
+    "rows": 2608
+  },
+  {
+    "date": "2026-10-18",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=18\\part_stream_2026_10_17_0.parquet",
+    "bytes": 54485288,
+    "mtime_ns": 1792288089494753300,
+    "rows": 1443787
+  },
+  {
+    "date": "2026-10-18",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=18\\part_stream_2026_10_18_0.parquet",
+    "bytes": 20734379333,
+    "mtime_ns": 1792401081814642400,
+    "rows": 443921798
+  },
+  {
+    "date": "2026-10-18",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=18\\part_stream_2026_10_19_0.parquet",
+    "bytes": 20662154,
+    "mtime_ns": 1792460219330453100,
+    "rows": 513463
+  },
+  {
+    "date": "2026-10-19",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=19\\part_stream_2026_10_18_0.parquet",
+    "bytes": 98392611,
+    "mtime_ns": 1792401076189642200,
+    "rows": 2597914
+  },
+  {
+    "date": "2026-10-19",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=19\\part_stream_2026_10_19_0.parquet",
+    "bytes": 691041421,
+    "mtime_ns": 1792460219424828000,
+    "rows": 17167145
+  },
+  {
+    "date": "2026-10-20",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=20\\part_stream_2026_10_19_0.parquet",
+    "bytes": 65244550,
+    "mtime_ns": 1792460219405678800,
+    "rows": 1741894
+  },
+  {
+    "date": "2026-10-20",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=20\\part_stream_2026_10_20_0.parquet",
+    "bytes": 27465952414,
+    "mtime_ns": 1792574543162530500,
+    "rows": 542208071
+  },
+  {
+    "date": "2026-10-21",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=21\\part_stream_2026_10_21_0.parquet",
+    "bytes": 435605170,
+    "mtime_ns": 1792708484338620300,
+    "rows": 11965024
+  },
+  {
+    "date": "2026-10-22",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=22\\part_stream_2026_10_21_0.parquet",
+    "bytes": 61280825,
+    "mtime_ns": 1792708484787739100,
+    "rows": 1593713
+  },
+  {
+    "date": "2026-10-22",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=22\\part_stream_2026_10_22_0.parquet",
+    "bytes": 16076053756,
+    "mtime_ns": 1792741781113580100,
+    "rows": 350827687
+  },
+  {
+    "date": "2026-10-23",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=23\\part_stream_2026_10_22_0.parquet",
+    "bytes": 126905848,
+    "mtime_ns": 1792741781584705600,
+    "rows": 4555064
+  },
+  {
+    "date": "2026-10-23",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=23\\part_stream_2026_10_23_0.parquet",
+    "bytes": 804611819,
+    "mtime_ns": 1792806256504051400,
+    "rows": 20387588
+  },
+  {
+    "date": "2026-10-24",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=24\\part_stream_2026_10_23_0.parquet",
+    "bytes": 59094840,
+    "mtime_ns": 1792806256266351400,
+    "rows": 1541453
+  },
+  {
+    "date": "2026-10-24",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=24\\part_stream_2026_10_24_0.parquet",
+    "bytes": 644080269,
+    "mtime_ns": 1792892519622416200,
+    "rows": 15214303
+  },
+  {
+    "date": "2026-10-25",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=25\\part_stream_2026_10_24_0.parquet",
+    "bytes": 50135718,
+    "mtime_ns": 1792892519659725800,
+    "rows": 1305224
+  },
+  {
+    "date": "2026-10-25",
+    "path": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=25\\part_stream_2026_10_25_0.parquet",
+    "bytes": 42173428193,
+    "mtime_ns": 1793011179553947200,
+    "rows": 937129475
+  }
+]
