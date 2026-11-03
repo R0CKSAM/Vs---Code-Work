@@ -4078,7 +4078,7 @@ function installDashboardPartition(name,date,value){
     AMAGI.minute.push(...(Array.isArray(value)?value:[]));
   }else if(name==='youtube'){
     const youtube=DATA.youtube||{};
-    for(const key of ['minute','video_daily','video_5min','video_minute']){
+    for(const key of ['collector_minute','minute','video_daily','video_5min','video_minute']){
       if(!Array.isArray(youtube[key]))youtube[key]=[];
       youtube[key].push(...(Array.isArray(value?.[key])?value[key]:[]));
     }
@@ -6150,17 +6150,13 @@ youtubeDeliveryDetails=function(event){
   const youtube=DATA.youtube||{},key=youtubeMinuteKey(event.on_air_start_ist);
   const eventDate=isoDatePart(event.on_air_start_ist);
   if(!dashboardSourceRangeLoaded('youtube',eventDate,eventDate)){
-    const selectedRange=youtubeDashboardRange();
-    const outsideSelection=eventDate<selectedRange.start||eventDate>selectedRange.end;
     return {
-    value:outsideSelection?'N/A':dashboardSourceError('youtube')||'Loading',
+    value:dashboardSourceError('youtube')||'Loading',
     total:null,
     live_videos:0,
     video_ids:'',
     video_titles:'',
-    scope:outsideSelection
-      ?'Outside selected YouTube range'
-      :'India TV YouTube is loading',
+    scope:'India TV YouTube event-date data is loading',
   };
   }
   const channels=new Set(indiaTvYoutubeChannels());
@@ -8220,10 +8216,12 @@ async function loadAudienceDashboardData(){
   }
   const promise=(async()=>{
     const alreadyLoaded=dashboardSourceRangeLoaded('viewer',range.start,range.end)
-      &&dashboardSourceRangeLoaded('amagi',range.start,range.end);
+      &&dashboardSourceRangeLoaded('amagi',range.start,range.end)
+      &&dashboardSourceRangeLoaded('youtube',range.start,range.end);
     await Promise.all([
       loadDashboardSourceRange('viewer',range.start,range.end),
       loadDashboardSourceRange('amagi',range.start,range.end),
+      loadDashboardSourceRange('youtube',range.start,range.end),
     ]);
     if(alreadyLoaded)return;
     resetNctAudienceCaches();
@@ -8351,6 +8349,7 @@ function dashboardPageNeedsLoading(page){
     const master=masterDashboardRange(),youtube=youtubeDashboardRange();
     return !dashboardSourceRangeLoaded('viewer',master.start,master.end)
       ||!dashboardSourceRangeLoaded('amagi',master.start,master.end)
+      ||!dashboardSourceRangeLoaded('youtube',master.start,master.end)
       ||!dashboardSourceRangeLoaded('youtube',youtube.start,youtube.end);
   }
   if(page==='delivery'){
@@ -8490,7 +8489,8 @@ function requestActiveDashboardPartitions(){
   if(activeDashboardPage!=='audience')return;
   const master=masterDashboardRange(),youtube=youtubeDashboardRange(),tasks=[];
   if(!dashboardSourceRangeLoaded('viewer',master.start,master.end)
-    ||!dashboardSourceRangeLoaded('amagi',master.start,master.end)){
+    ||!dashboardSourceRangeLoaded('amagi',master.start,master.end)
+    ||!dashboardSourceRangeLoaded('youtube',master.start,master.end)){
     tasks.push(loadAudienceDashboardData());
   }
   if(!dashboardSourceRangeLoaded('youtube',youtube.start,youtube.end)){

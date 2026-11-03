@@ -824,7 +824,9 @@ def test_render_dashboard_loads_viewer_and_youtube_by_selected_date_range(
     assert "if(activeDashboardPage!=='audience')return;" in html
     assert "dashboardSourceRangeLoaded('amagi',range.start,range.end)" in html
     assert "dashboardSourceRangeLoaded('youtube',loadedRange.start,loadedRange.end)" in html
-    assert "Outside selected YouTube range" in html
+    assert "India TV YouTube event-date data is loading" in html
+    assert "||!dashboardSourceRangeLoaded('youtube',master.start,master.end)" in html
+    assert "['collector_minute','minute','video_daily','video_5min','video_minute']" in html
 
 
 def test_render_dashboard_uses_one_visible_date_scope_per_page(
