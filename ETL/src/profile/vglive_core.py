@@ -44,10 +44,14 @@ HOST_MAP = {
 
 
 HOST_CANDIDATE_MAP = {
+    # Operator-approved full feed IDs; parenthesized prefixes are display labels only.
+    ("tennis-vod.akamaized.net", "693ac32e6ca0d700028320f5"): "Davis VOD (693ac)",
+    ("vetointv.akamaized.net", "dreamboat-ch01"): "Weightlifting (dreamboat-ch01)",
     # Host-specific approval: do not map staging vetostreams indiatv.
     ("vetostreams.akamaized.net", "indiatv"): "India TV",
     ("vetostreams.akamaized.net:443", "indiatv"): "India TV",
     ("vetostreams.akamaized.net", "upgovlive"): "UP Government Live",
+    ("vetostreams.akamaized.net", "ukgovlive"): "UK Government Live",
 }
 
 

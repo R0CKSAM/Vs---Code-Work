@@ -52,3 +52,28 @@ def test_report_sql_preserves_rows_and_totals(register):
 def test_existing_channels_unchanged():
     assert core.resolve_channel("veto.akamaized.net", "vglive-sk-274906") == "India TV"
     assert core.resolve_channel("veto-vod.akamaized.net", ASSETS[0]) == "Veto VOD"
+
+
+@pytest.mark.parametrize("register", [core._register_mapping_tables, build_concurrency.register_maps])
+def test_approved_vod_and_weightlifting_host_scope(register):
+    cases = [
+        ('tennis-vod.akamaized.net', '693ac32e6ca0d700028320f5', 'Davis VOD (693ac)'),
+        ('vetointv.akamaized.net', 'dreamboat-ch01', 'Weightlifting (dreamboat-ch01)'),
+        ('veto-vod.akamaized.net', '693ac32e6ca0d700028320f5', 'Veto VOD'),
+        ('tennis-vod.akamaized.net', '693ac', 'Other'),
+        ('vetointv.akamaized-staging.net', 'dreamboat-ch01', 'Other'),
+        ('vetostreams.akamaized.net', 'upgovlive', 'UP Government Live'),
+        ('vetostreams.akamaized.net', 'ukgovlive', 'UK Government Live'),
+        ('vetostreams.akamaized-staging.net', 'ukgovlive', 'Other'),
+    ]
+    with duckdb.connect() as con:
+        register(con)
+        for host, candidate, expected in cases:
+            assert core.resolve_channel(host.upper(), candidate.upper()) == expected
+            result = con.execute('''SELECT coalesce(hc.host_candidate_channel_name,
+                h.host_channel_name, p.path_channel_name, 'Other')
+                FROM (SELECT ? AS reqHost, ? AS candidate_id) r
+                LEFT JOIN host_candidate_map hc USING(reqHost,candidate_id)
+                LEFT JOIN host_map h USING(reqHost)
+                LEFT JOIN path_map p USING(candidate_id)''', [host, candidate]).fetchone()[0]
+            assert result == expected
