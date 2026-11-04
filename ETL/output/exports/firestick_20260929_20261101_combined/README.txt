@@ -1,0 +1,1 @@
+STREAM all channels, confirmed Fire TV Stick models. Daily model rows, September 29 to November 1 inclusive. September 29 reused from earlier completed report; other dates from current exports. Minutes estimated from TS requests times 6/60. Distinct counts are per date/model; do not sum for period-wide unique counts. Missing model/date combinations filled with zero.

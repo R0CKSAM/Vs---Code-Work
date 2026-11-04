@@ -3,6 +3,7 @@ import argparse
 import csv
 import datetime as dt
 import json
+import os
 from decimal import Decimal
 from pathlib import Path
 
@@ -11,6 +12,29 @@ import duckdb
 from build_concurrency import DEFAULT_LAKE_FOLDER, configure_lake_selection, parquet_source_sql
 from build_fast_platform_channel_ua_device import DEFAULT_LOOKUP, ensure_lookup_table, ua_norm_sql
 from build_identity_minute import normalized_identity_sql
+
+
+def publish_daily_models(con, out_dir, start, completed_end):
+    """Publish completed dates atomically, retaining the established five columns."""
+    days = [(dt.date.fromisoformat(start) + dt.timedelta(days=i)).isoformat()
+            for i in range((dt.date.fromisoformat(completed_end)-dt.date.fromisoformat(start)).days+1)]
+    result = con.execute("""SELECT d.day, d.model, coalesce(sum(requests),0),
+        count(distinct ip), count(distinct device)
+        FROM (SELECT dates.day, models.model FROM (SELECT unnest(?) AS day) dates
+              CROSS JOIN (SELECT DISTINCT model FROM matched) models) d
+        LEFT JOIN matched USING(day,model)
+        GROUP BY d.day,d.model ORDER BY d.day,coalesce(sum(requests),0) DESC,d.model""", [days])
+    destination = out_dir / f'stream_firestick_all_channels_{start}_to_{completed_end}_daily_models_minutes.csv'
+    temporary = destination.with_suffix('.csv.tmp')
+    with temporary.open('w', newline='', encoding='utf-8-sig') as handle:
+        writer = csv.writer(handle)
+        writer.writerow(['date_ist', 'firestick_model', 'raw_watch_minutes_estimated',
+                         'distinct_cliip', 'distinct_device_id'])
+        for day, model, requests, ips, devices in result.fetchall():
+            writer.writerow([day, model, str(Decimal(requests)/10), ips, devices])
+    os.replace(temporary, destination)
+    print('PUBLISHED', destination, flush=True)
+    return destination
 
 
 def write_daily_model_minutes(source: Path) -> Path:
@@ -33,6 +57,8 @@ def main():
     parser.add_argument('--start', required=True)
     parser.add_argument('--end', required=True)
     parser.add_argument('--out-dir', type=Path, required=True)
+    parser.add_argument('--publish-daily', action='store_true')
+    parser.add_argument('--lookup', type=Path, default=DEFAULT_LOOKUP)
     args = parser.parse_args()
     args.lake, args.source, args.archive_lake = DEFAULT_LAKE_FOLDER, 'stream', []
     configure_lake_selection(args)
@@ -45,7 +71,7 @@ def main():
     con.execute("SET threads=2")
     con.execute("SET memory_limit='2GB'")
     con.execute("SET temp_directory=?", [str(args.out_dir / 'scratch')])
-    ensure_lookup_table(con, DEFAULT_LOOKUP)
+    ensure_lookup_table(con, args.lookup)
     con.execute("""CREATE TEMP TABLE sticks AS SELECT ua_norm, model FROM ua_lookup
         WHERE lower(coalesce(model,'')) LIKE '%fire tv stick%'""")
     con.execute('CREATE TEMP TABLE matched(day VARCHAR, model VARCHAR, ip VARCHAR, device VARCHAR, requests BIGINT, ok BIGINT)')
@@ -72,6 +98,8 @@ def main():
         row = con.execute('SELECT coalesce(sum(requests),0),count(distinct ip),count(distinct device) FROM matched WHERE day=?', [part.date_text]).fetchone()
         audit.append({'date':part.date_text,'files':[str(p) for p in part.files], 'segment_requests':row[0], 'distinct_cliip':row[1], 'distinct_device_id':row[2]})
         print(part.date_text, row, flush=True)
+        if args.publish_daily:
+            publish_daily_models(con, args.out_dir, args.start, part.date_text)
     measures = """coalesce(sum(requests),0) AS ts_requests,
         coalesce(sum(requests),0)*6 AS raw_watch_seconds,
         round(coalesce(sum(requests),0)/600.0,6) AS raw_watch_hours_estimated,
@@ -101,7 +129,7 @@ def main():
         'classification':'Decoded model explicitly contains Fire TV Stick; conflicting family-only labels, generic Fire TV and unresolved models excluded.',
         'watch_hours':'Estimated: all .ts requests * 6 / 3600; includes retries and errors. Not measured player watch time.',
         'identities':'Distinct cliIP and non-empty/non-placeholder queryStr device_id on matching .ts requests; totals deduplicated across all days/channels.',
-        'lookup':str(DEFAULT_LOOKUP),'coverage':audit}
+        'lookup':str(args.lookup),'coverage':audit}
     (args.out_dir / (stem+'_manifest.json')).write_text(json.dumps(manifest,indent=2),encoding='utf-8')
     print('TOTAL', con.execute(f'SELECT {measures} FROM matched').fetchone(), flush=True)
 

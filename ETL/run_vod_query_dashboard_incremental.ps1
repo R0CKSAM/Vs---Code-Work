@@ -5,6 +5,7 @@ param(
     [string]$Python = (Join-Path $PSScriptRoot '..\venv\Scripts\python.exe'),
     [string]$PipelineState = (Join-Path $PSScriptRoot 'output\state\pipeline_last_run.json'),
     [string]$DailyStateDir = (Join-Path $PSScriptRoot 'output\state\daily_runs'),
+    [string]$ValidationRoot = (Join-Path $PSScriptRoot 'output\validation'),
     [string]$IncidentStateDir = (Join-Path $PSScriptRoot 'output\state\cdn_incident_closeout'),
     [string]$ExportsDir = (Join-Path $PSScriptRoot 'output\exports'),
     [switch]$PlanOnly
@@ -71,6 +72,14 @@ function Get-CompletedEtlDate {
     return ($completedDates | Sort-Object -Descending | Select-Object -First 1).Date
 }
 
+function Get-CanonicalFilePath {
+    param([System.IO.FileInfo]$File)
+    if ($File.PSDrive.DisplayRoot -and $File.FullName.StartsWith($File.PSDrive.Root, [StringComparison]::OrdinalIgnoreCase)) {
+        return Join-Path $File.PSDrive.DisplayRoot $File.FullName.Substring($File.PSDrive.Root.Length)
+    }
+    return $File.FullName
+}
+
 function Assert-CompletedDay {
     param([datetime]$TargetDate)
     $key = $TargetDate.ToString('yyyy-MM-dd')
@@ -86,6 +95,34 @@ function Assert-CompletedDay {
         $state = Get-Content -LiteralPath $PipelineState -Raw | ConvertFrom-Json
         if ($state.target_date -eq $key -and $state.status -in @('complete', 'complete_with_warnings')) {
             return
+        }
+    }
+    # Imported/repaired STREAM lakes can be complete without a full pipeline checkpoint.
+    # Accept only full-day validation for the exact files the extractor will read.
+    $partition = Find-StreamPartition -TargetDate $TargetDate
+    if ($partition -and (Test-Path -LiteralPath $ValidationRoot -PathType Container)) {
+        $files = @(Get-ChildItem -LiteralPath $partition -File -Filter 'part_*.parquet')
+        foreach ($reportFile in (Get-ChildItem -LiteralPath $ValidationRoot -Recurse -File -Filter "daily_delivery_validation_${key}_*.json")) {
+            $report = Get-Content -LiteralPath $reportFile.FullName -Raw | ConvertFrom-Json
+            if ($report.date -ne $key -or $report.overall_status -notin @('PASS', 'REVIEW') -or
+                -not $report.generated_at_ist) { continue }
+            $validatedAt = [datetimeoffset]::Parse($report.generated_at_ist)
+            foreach ($result in @($report.source_results)) {
+                if ($result.source -ne 'stream' -or $result.status -ne 'PASS' -or
+                    $result.hard_failure -ne $false -or $result.selected.full_day -ne $true -or
+                    $result.selected.date -ne $key) { continue }
+                $reportedPaths = @($result.selected.files | ForEach-Object {
+                    if (Test-Path -LiteralPath $_.path -PathType Leaf) {
+                        Get-CanonicalFilePath -File (Get-Item -LiteralPath $_.path)
+                    }
+                })
+                $actualPaths = @($files | ForEach-Object { Get-CanonicalFilePath -File $_ })
+                if ($reportedPaths.Count -ne $actualPaths.Count -or
+                    @(Compare-Object $reportedPaths $actualPaths).Count -gt 0 -or
+                    @($files | Where-Object { $_.LastWriteTimeUtc -gt $validatedAt.UtcDateTime }).Count -gt 0) { continue }
+                Write-Host "Validated STREAM lake accepted for ${key}: $($reportFile.FullName)"
+                return
+            }
         }
     }
     throw "No completed ETL evidence for $key. Dashboard was not refreshed beyond this date."

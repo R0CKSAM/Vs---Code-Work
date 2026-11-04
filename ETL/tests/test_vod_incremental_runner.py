@@ -31,10 +31,11 @@ def plan(tmp_path):
     pipeline.write_text(json.dumps(dict(status='failed', target_date='2026-10-20')))
 
     def run(*extra):
+        validation_args = [] if '-ValidationRoot' in extra else ['-ValidationRoot', str(tmp_path / 'no_validation')]
         return subprocess.run([
             shell, '-NoProfile', '-File', str(RUNNER), '-PlanOnly',
             '-Python', sys.executable, '-ExportsDir', str(exports),
-            '-DailyStateDir', str(checkpoints), '-PipelineState', str(pipeline), *extra,
+            '-DailyStateDir', str(checkpoints), '-PipelineState', str(pipeline), *validation_args, *extra,
         ], text=True, capture_output=True)
 
     return run, checkpoints, pipeline
@@ -120,3 +121,35 @@ def test_approved_gap_is_included_without_blocking_later_day(plan):
     result = run('-IncidentStateDir', str(incidents))
     assert result.returncode != 0
     assert 'Invalid source-gap receipt' in result.stderr
+
+
+@pytest.mark.parametrize('condition', ['valid', 'partial', 'wrong_source', 'changed_file', 'extra_file'])
+def test_imported_stream_validation_matches_current_partition(plan, condition):
+    from datetime import datetime, timezone, timedelta
+    run, checkpoints, _ = plan
+    (checkpoints / '2026-10-18.json').unlink()
+    root = checkpoints.parent
+    lake = root / 'stream'
+    partition = lake / 'year=2026/month=10/day=18'
+    partition.mkdir(parents=True)
+    part = partition / 'part_stream_2026_10_18_0.parquet'
+    part.write_bytes(b'test fixture: metadata is trusted from validator')
+    validation = root / 'validation'
+    validation.mkdir()
+    now = datetime.now(timezone.utc) + timedelta(minutes=1)
+    if condition == 'changed_file':
+        now -= timedelta(days=1)
+    report = dict(date='2026-10-18', overall_status='PASS', generated_at_ist=now.isoformat(),
+                  source_results=[dict(source='fast' if condition == 'wrong_source' else 'stream',
+                     status='PASS', hard_failure=False,
+                     selected=dict(date='2026-10-18', full_day=condition != 'partial', files=[dict(path=str(part))]))])
+    (validation / 'daily_delivery_validation_2026-10-18_test.json').write_text(json.dumps(report))
+    if condition == 'extra_file':
+        (partition / 'part_stream_extra.parquet').touch()
+    result = run('-ValidationRoot', str(validation), '-LakeRoot', str(lake), '-FallbackLakeRoot', str(root / 'absent'))
+    if condition == 'valid':
+        assert result.returncode == 0, result.stderr
+        assert 'Validated STREAM lake accepted for 2026-10-18' in result.stdout
+    else:
+        assert result.returncode != 0
+        assert 'No completed ETL evidence for 2026-10-18' in result.stderr
