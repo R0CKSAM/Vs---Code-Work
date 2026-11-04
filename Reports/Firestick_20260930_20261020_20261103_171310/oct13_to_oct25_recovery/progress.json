@@ -1,5 +1,5 @@
 {
-  "status": "running",
+  "status": "complete",
   "pid": 21852,
   "startIST": "2026-10-13",
   "endIST": "2026-10-25",
@@ -22,12 +22,273 @@
           "distinct_device_id"
         ]
       }
+    },
+    {
+      "date": "2026-10-14",
+      "path": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery\\stream_firestick_all_channels_2026-10-13_to_2026-10-14_daily_models_minutes.csv",
+      "publishedAt": "2026-11-03T17:57:00.896445+05:30",
+      "processingSeconds": 58.198,
+      "validation": {
+        "rows": 20,
+        "dates": 2,
+        "models": 10,
+        "estimatedMinutes": "670513.1",
+        "header": [
+          "date_ist",
+          "firestick_model",
+          "raw_watch_minutes_estimated",
+          "distinct_cliip",
+          "distinct_device_id"
+        ]
+      }
+    },
+    {
+      "date": "2026-10-15",
+      "path": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery\\stream_firestick_all_channels_2026-10-13_to_2026-10-15_daily_models_minutes.csv",
+      "publishedAt": "2026-11-03T17:58:16.854250+05:30",
+      "processingSeconds": 75.956,
+      "validation": {
+        "rows": 30,
+        "dates": 3,
+        "models": 10,
+        "estimatedMinutes": "986843.2",
+        "header": [
+          "date_ist",
+          "firestick_model",
+          "raw_watch_minutes_estimated",
+          "distinct_cliip",
+          "distinct_device_id"
+        ]
+      }
+    },
+    {
+      "date": "2026-10-16",
+      "path": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery\\stream_firestick_all_channels_2026-10-13_to_2026-10-16_daily_models_minutes.csv",
+      "publishedAt": "2026-11-03T17:58:47.821445+05:30",
+      "processingSeconds": 30.966,
+      "validation": {
+        "rows": 40,
+        "dates": 4,
+        "models": 10,
+        "estimatedMinutes": "1320669.0",
+        "header": [
+          "date_ist",
+          "firestick_model",
+          "raw_watch_minutes_estimated",
+          "distinct_cliip",
+          "distinct_device_id"
+        ]
+      }
+    },
+    {
+      "date": "2026-10-17",
+      "path": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery\\stream_firestick_all_channels_2026-10-13_to_2026-10-17_daily_models_minutes.csv",
+      "publishedAt": "2026-11-03T17:59:14.191189+05:30",
+      "processingSeconds": 26.368,
+      "validation": {
+        "rows": 50,
+        "dates": 5,
+        "models": 10,
+        "estimatedMinutes": "1597610.8",
+        "header": [
+          "date_ist",
+          "firestick_model",
+          "raw_watch_minutes_estimated",
+          "distinct_cliip",
+          "distinct_device_id"
+        ]
+      }
+    },
+    {
+      "date": "2026-10-18",
+      "path": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery\\stream_firestick_all_channels_2026-10-13_to_2026-10-18_daily_models_minutes.csv",
+      "publishedAt": "2026-11-03T18:11:31.379799+05:30",
+      "processingSeconds": 737.158,
+      "validation": {
+        "rows": 66,
+        "dates": 6,
+        "models": 11,
+        "estimatedMinutes": "1927739.3",
+        "header": [
+          "date_ist",
+          "firestick_model",
+          "raw_watch_minutes_estimated",
+          "distinct_cliip",
+          "distinct_device_id"
+        ]
+      }
+    },
+    {
+      "date": "2026-10-19",
+      "path": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery\\stream_firestick_all_channels_2026-10-13_to_2026-10-19_daily_models_minutes.csv",
+      "publishedAt": "2026-11-03T18:12:05.096207+05:30",
+      "processingSeconds": 33.714,
+      "validation": {
+        "rows": 77,
+        "dates": 7,
+        "models": 11,
+        "estimatedMinutes": "2223245.3",
+        "header": [
+          "date_ist",
+          "firestick_model",
+          "raw_watch_minutes_estimated",
+          "distinct_cliip",
+          "distinct_device_id"
+        ]
+      }
+    },
+    {
+      "date": "2026-10-20",
+      "path": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery\\stream_firestick_all_channels_2026-10-13_to_2026-10-20_daily_models_minutes.csv",
+      "publishedAt": "2026-11-03T18:26:28.563749+05:30",
+      "processingSeconds": 863.439,
+      "validation": {
+        "rows": 88,
+        "dates": 8,
+        "models": 11,
+        "estimatedMinutes": "2556331.0",
+        "header": [
+          "date_ist",
+          "firestick_model",
+          "raw_watch_minutes_estimated",
+          "distinct_cliip",
+          "distinct_device_id"
+        ]
+      }
+    },
+    {
+      "date": "2026-10-21",
+      "path": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery\\stream_firestick_all_channels_2026-10-13_to_2026-10-21_daily_models_minutes.csv",
+      "publishedAt": "2026-11-03T18:26:44.197294+05:30",
+      "processingSeconds": 15.632,
+      "validation": {
+        "rows": 99,
+        "dates": 9,
+        "models": 11,
+        "estimatedMinutes": "2697984.1",
+        "header": [
+          "date_ist",
+          "firestick_model",
+          "raw_watch_minutes_estimated",
+          "distinct_cliip",
+          "distinct_device_id"
+        ]
+      }
+    },
+    {
+      "date": "2026-10-22",
+      "path": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery\\stream_firestick_all_channels_2026-10-13_to_2026-10-22_daily_models_minutes.csv",
+      "publishedAt": "2026-11-03T18:38:19.127647+05:30",
+      "processingSeconds": 694.91,
+      "validation": {
+        "rows": 110,
+        "dates": 10,
+        "models": 11,
+        "estimatedMinutes": "3046514.0",
+        "header": [
+          "date_ist",
+          "firestick_model",
+          "raw_watch_minutes_estimated",
+          "distinct_cliip",
+          "distinct_device_id"
+        ]
+      }
+    },
+    {
+      "date": "2026-10-23",
+      "path": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery\\stream_firestick_all_channels_2026-10-13_to_2026-10-23_daily_models_minutes.csv",
+      "publishedAt": "2026-11-03T18:38:51.946181+05:30",
+      "processingSeconds": 32.816,
+      "validation": {
+        "rows": 121,
+        "dates": 11,
+        "models": 11,
+        "estimatedMinutes": "3327542.1",
+        "header": [
+          "date_ist",
+          "firestick_model",
+          "raw_watch_minutes_estimated",
+          "distinct_cliip",
+          "distinct_device_id"
+        ]
+      }
+    },
+    {
+      "date": "2026-10-24",
+      "path": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery\\stream_firestick_all_channels_2026-10-13_to_2026-10-24_daily_models_minutes.csv",
+      "publishedAt": "2026-11-03T18:39:13.753938+05:30",
+      "processingSeconds": 21.806,
+      "validation": {
+        "rows": 132,
+        "dates": 12,
+        "models": 11,
+        "estimatedMinutes": "3582972.6",
+        "header": [
+          "date_ist",
+          "firestick_model",
+          "raw_watch_minutes_estimated",
+          "distinct_cliip",
+          "distinct_device_id"
+        ]
+      }
+    },
+    {
+      "date": "2026-10-25",
+      "path": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery\\stream_firestick_all_channels_2026-10-13_to_2026-10-25_daily_models_minutes.csv",
+      "publishedAt": "2026-11-03T19:07:58.786793+05:30",
+      "processingSeconds": 1724.996,
+      "validation": {
+        "rows": 156,
+        "dates": 13,
+        "models": 12,
+        "estimatedMinutes": "4033623.7",
+        "header": [
+          "date_ist",
+          "firestick_model",
+          "raw_watch_minutes_estimated",
+          "distinct_cliip",
+          "distinct_device_id"
+        ]
+      }
     }
   ],
   "startedAt": "2026-11-03T17:48:07.664020+05:30",
   "work": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery",
   "decoderAdapter": "Local safe URL decoder; shared exporter and lookup unchanged",
-  "lastCompletedDate": "2026-10-13",
-  "latestDailyReport": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery\\stream_firestick_all_channels_2026-10-13_to_2026-10-13_daily_models_minutes.csv",
-  "elapsedSeconds": 475.026
+  "lastCompletedDate": "2026-10-25",
+  "latestDailyReport": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery\\stream_firestick_all_channels_2026-10-13_to_2026-10-25_daily_models_minutes.csv",
+  "elapsedSeconds": 4791.001,
+  "failedAt": "2026-11-03T19:08:00.022861+05:30",
+  "finalReport": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery\\stream_firestick_all_channels_2026-10-13_to_2026-10-25_daily_models_minutes.csv",
+  "validation": {
+    "rows": 156,
+    "dates": 13,
+    "models": 12,
+    "estimatedMinutes": "4033623.7",
+    "header": [
+      "date_ist",
+      "firestick_model",
+      "raw_watch_minutes_estimated",
+      "distinct_cliip",
+      "distinct_device_id"
+    ]
+  },
+  "lookupVerification": {
+    "status": "PASS",
+    "originalLookupSHA256": "25ef7d6256c8318eeef7d395940fd94d9f123db7bad21ffff55132e8baa2e0e1",
+    "pinnedLookup": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\pinned_inputs\\ua_lookup_snapshot.parquet",
+    "sharedCompletedReport": "Z:\\Vs - Code Work\\ETL\\output\\exports\\firestick_20260929_20261101_combined\\stream_firestick_all_channels_2026-09-29_to_2026-11-01_daily_models_minutes.csv",
+    "sharedCompletedReportSHA256": "6d250cd9067796ea8ca2d302059509f3c39edb2e0cefb7c6724e97edd0a6c060",
+    "localCompletedReport": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\pinned_inputs\\stream_firestick_all_channels_2026-09-29_to_2026-11-01_daily_models_minutes.csv",
+    "sourceManifests": [
+      "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\pinned_inputs\\stream_firestick_all_channels_2026-09-30_to_2026-10-30_manifest.json",
+      "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\pinned_inputs\\stream_firestick_all_channels_2026-10-31_to_2026-11-01_manifest.json"
+    ],
+    "canonicalFilesUnchanged": true,
+    "remainingDateRequestTotalsVerified": true,
+    "overlapRowsVerified": 299
+  },
+  "lookupChangeResolvedAt": "2026-11-04T10:39:18.676919+05:30",
+  "previousValidationError": "Lookup changed during the segment",
+  "sharedInputsUnchanged": true
 }

@@ -1,0 +1,330 @@
+{
+  "source": "stream",
+  "channels": "all combined",
+  "start_ist": "2026-09-30",
+  "end_ist": "2026-10-30",
+  "classification": "Decoded model explicitly contains Fire TV Stick; conflicting family-only labels, generic Fire TV and unresolved models excluded.",
+  "watch_hours": "Estimated: all .ts requests * 6 / 3600; includes retries and errors. Not measured player watch time.",
+  "identities": "Distinct cliIP and non-empty/non-placeholder queryStr device_id on matching .ts requests; totals deduplicated across all days/channels.",
+  "lookup": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\output\\device_decode\\ua_decode_lookup_both_all.parquet",
+  "coverage": [
+    {
+      "date": "2026-09-30",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=09\\day=30\\part_stream_2026_09_29_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=09\\day=30\\part_stream_2026_09_30_0.parquet"
+      ],
+      "segment_requests": 2396064,
+      "distinct_cliip": 2958,
+      "distinct_device_id": 11
+    },
+    {
+      "date": "2026-10-01",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=01\\part_stream_2026_09_30_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=01\\part_stream_2026_10_01_0.parquet"
+      ],
+      "segment_requests": 2654668,
+      "distinct_cliip": 3284,
+      "distinct_device_id": 19
+    },
+    {
+      "date": "2026-10-02",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=02\\part_stream_2026_10_01_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=02\\part_stream_2026_10_02_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=02\\part_stream_2026_10_03_0.parquet"
+      ],
+      "segment_requests": 2811274,
+      "distinct_cliip": 3380,
+      "distinct_device_id": 20
+    },
+    {
+      "date": "2026-10-03",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=03\\part_stream_2026_10_02_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=03\\part_stream_2026_10_03_0.parquet"
+      ],
+      "segment_requests": 2170845,
+      "distinct_cliip": 2945,
+      "distinct_device_id": 13
+    },
+    {
+      "date": "2026-10-04",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=04\\part_stream_2026_10_03_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=04\\part_stream_2026_10_04_0.parquet"
+      ],
+      "segment_requests": 2491320,
+      "distinct_cliip": 3077,
+      "distinct_device_id": 22
+    },
+    {
+      "date": "2026-10-05",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=05\\part_stream_2026_10_04_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=05\\part_stream_2026_10_05_0.parquet"
+      ],
+      "segment_requests": 2865236,
+      "distinct_cliip": 3408,
+      "distinct_device_id": 21
+    },
+    {
+      "date": "2026-10-06",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=06\\part_stream_2026_10_05_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=06\\part_stream_2026_10_06_0.parquet"
+      ],
+      "segment_requests": 2854188,
+      "distinct_cliip": 3363,
+      "distinct_device_id": 17
+    },
+    {
+      "date": "2026-10-07",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=07\\part_stream_2026_10_06_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=07\\part_stream_2026_10_07_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=07\\part_stream_2026_10_08_0.parquet"
+      ],
+      "segment_requests": 2896947,
+      "distinct_cliip": 3462,
+      "distinct_device_id": 20
+    },
+    {
+      "date": "2026-10-08",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=08\\part_stream_2026_10_07_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=08\\part_stream_2026_10_08_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=08\\part_stream_2026_10_09_0.parquet"
+      ],
+      "segment_requests": 3181604,
+      "distinct_cliip": 3806,
+      "distinct_device_id": 29
+    },
+    {
+      "date": "2026-10-09",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=09\\part_stream_2026_10_08_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=09\\part_stream_2026_10_09_0.parquet"
+      ],
+      "segment_requests": 3233371,
+      "distinct_cliip": 3711,
+      "distinct_device_id": 30
+    },
+    {
+      "date": "2026-10-10",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=10\\part_stream_2026_10_09_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=10\\part_stream_2026_10_10_0.parquet"
+      ],
+      "segment_requests": 3660125,
+      "distinct_cliip": 4529,
+      "distinct_device_id": 26
+    },
+    {
+      "date": "2026-10-11",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=11\\part_stream_2026_10_10_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=11\\part_stream_2026_10_11_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=11\\part_stream_2026_10_12_0.parquet"
+      ],
+      "segment_requests": 2949687,
+      "distinct_cliip": 3922,
+      "distinct_device_id": 45
+    },
+    {
+      "date": "2026-10-12",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=12\\part_stream_2026_10_11_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=12\\part_stream_2026_10_12_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=12\\part_stream_2026_10_13_0.parquet"
+      ],
+      "segment_requests": 3120676,
+      "distinct_cliip": 3806,
+      "distinct_device_id": 24
+    },
+    {
+      "date": "2026-10-13",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=13\\part_stream_2026_10_12_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=13\\part_stream_2026_10_13_0.parquet"
+      ],
+      "segment_requests": 3632616,
+      "distinct_cliip": 4023,
+      "distinct_device_id": 29
+    },
+    {
+      "date": "2026-10-14",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=14\\part_stream_2026_10_13_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=14\\part_stream_2026_10_14_0.parquet"
+      ],
+      "segment_requests": 3072515,
+      "distinct_cliip": 3527,
+      "distinct_device_id": 34
+    },
+    {
+      "date": "2026-10-15",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=15\\part_stream_2026_10_14_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=15\\part_stream_2026_10_15_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=15\\part_stream_2026_10_27_0.parquet"
+      ],
+      "segment_requests": 3163301,
+      "distinct_cliip": 3732,
+      "distinct_device_id": 19
+    },
+    {
+      "date": "2026-10-16",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=16\\part_stream_2026_10_15_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=16\\part_stream_2026_10_16_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=16\\part_stream_2026_10_17_0.parquet"
+      ],
+      "segment_requests": 3338258,
+      "distinct_cliip": 3708,
+      "distinct_device_id": 10
+    },
+    {
+      "date": "2026-10-17",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=17\\part_stream_2026_10_16_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=17\\part_stream_2026_10_17_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=17\\part_stream_2026_10_18_0.parquet"
+      ],
+      "segment_requests": 2769418,
+      "distinct_cliip": 3389,
+      "distinct_device_id": 20
+    },
+    {
+      "date": "2026-10-18",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=18\\part_stream_2026_10_17_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=18\\part_stream_2026_10_18_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=18\\part_stream_2026_10_19_0.parquet"
+      ],
+      "segment_requests": 3301285,
+      "distinct_cliip": 3963,
+      "distinct_device_id": 67
+    },
+    {
+      "date": "2026-10-19",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=19\\part_stream_2026_10_18_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=19\\part_stream_2026_10_19_0.parquet"
+      ],
+      "segment_requests": 2955060,
+      "distinct_cliip": 3215,
+      "distinct_device_id": 34
+    },
+    {
+      "date": "2026-10-20",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=20\\part_stream_2026_10_19_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=20\\part_stream_2026_10_20_0.parquet"
+      ],
+      "segment_requests": 3330857,
+      "distinct_cliip": 3642,
+      "distinct_device_id": 76
+    },
+    {
+      "date": "2026-10-21",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=21\\part_stream_2026_10_21_0.parquet"
+      ],
+      "segment_requests": 1416531,
+      "distinct_cliip": 2207,
+      "distinct_device_id": 12
+    },
+    {
+      "date": "2026-10-22",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=22\\part_stream_2026_10_21_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=22\\part_stream_2026_10_22_0.parquet"
+      ],
+      "segment_requests": 3485299,
+      "distinct_cliip": 4222,
+      "distinct_device_id": 95
+    },
+    {
+      "date": "2026-10-23",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=23\\part_stream_2026_10_22_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=23\\part_stream_2026_10_23_0.parquet"
+      ],
+      "segment_requests": 2810281,
+      "distinct_cliip": 3287,
+      "distinct_device_id": 65
+    },
+    {
+      "date": "2026-10-24",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=24\\part_stream_2026_10_23_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=24\\part_stream_2026_10_24_0.parquet"
+      ],
+      "segment_requests": 2554305,
+      "distinct_cliip": 3160,
+      "distinct_device_id": 36
+    },
+    {
+      "date": "2026-10-25",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=25\\part_stream_2026_10_24_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=25\\part_stream_2026_10_25_0.parquet"
+      ],
+      "segment_requests": 4506511,
+      "distinct_cliip": 4840,
+      "distinct_device_id": 83
+    },
+    {
+      "date": "2026-10-26",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=26\\part_stream_2026_10_25_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=26\\part_stream_2026_10_26_0.parquet"
+      ],
+      "segment_requests": 2918792,
+      "distinct_cliip": 3408,
+      "distinct_device_id": 25
+    },
+    {
+      "date": "2026-10-27",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=27\\part_stream_2026_10_26_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=27\\part_stream_2026_10_27_0.parquet"
+      ],
+      "segment_requests": 3353018,
+      "distinct_cliip": 4155,
+      "distinct_device_id": 174
+    },
+    {
+      "date": "2026-10-28",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=28\\part_stream_2026_10_27_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=28\\part_stream_2026_10_28_0.parquet"
+      ],
+      "segment_requests": 3064771,
+      "distinct_cliip": 3693,
+      "distinct_device_id": 38
+    },
+    {
+      "date": "2026-10-29",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=29\\part_stream_2026_10_28_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=29\\part_stream_2026_10_29_0.parquet"
+      ],
+      "segment_requests": 4402785,
+      "distinct_cliip": 5309,
+      "distinct_device_id": 95
+    },
+    {
+      "date": "2026-10-30",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=30\\part_stream_2026_10_29_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=30\\part_stream_2026_10_30_0.parquet"
+      ],
+      "segment_requests": 2999451,
+      "distinct_cliip": 3415,
+      "distinct_device_id": 49
+    }
+  ]
+}

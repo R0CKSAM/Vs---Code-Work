@@ -1,6 +1,6 @@
 {
-  "status": "building_oct13_to_oct25_recovery",
-  "coordinatorPID": 30852,
+  "status": "complete",
+  "coordinatorPID": null,
   "startedAt": "2026-11-03T17:48:07.310054+05:30",
   "columns": [
     "date_ist",
@@ -24,15 +24,47 @@
       "number": 1,
       "startIST": "2026-09-30",
       "endIST": "2026-10-25",
-      "status": "pending",
-      "file": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\Batch_1_2026-09-30_to_2026-10-25.csv"
+      "status": "complete",
+      "file": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\Batch_1_2026-09-30_to_2026-10-25.csv",
+      "completedAt": "2026-11-04T10:39:18.682247+05:30",
+      "validation": {
+        "rows": 312,
+        "dates": 26,
+        "models": 12,
+        "estimatedMinutes": "7762224.2",
+        "header": [
+          "date_ist",
+          "firestick_model",
+          "raw_watch_minutes_estimated",
+          "distinct_cliip",
+          "distinct_device_id"
+        ]
+      },
+      "deliveryFile": "D:\\Vs - Code Work\\Reports\\Firestick_Delivered_Batches_20261104\\Batch_1_2026-09-30_to_2026-10-25.csv",
+      "lookupSHA256": "25ef7d6256c8318eeef7d395940fd94d9f123db7bad21ffff55132e8baa2e0e1"
     },
     {
       "number": 2,
       "startIST": "2026-10-26",
       "endIST": "2026-11-01",
-      "status": "pending",
-      "file": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\Batch_2_2026-10-26_to_2026-11-01.csv"
+      "status": "complete",
+      "file": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\Batch_2_2026-10-26_to_2026-11-01.csv",
+      "completedAt": "2026-11-04T10:39:42.017068+05:30",
+      "validation": {
+        "rows": 84,
+        "dates": 7,
+        "models": 12,
+        "estimatedMinutes": "2505247.8",
+        "header": [
+          "date_ist",
+          "firestick_model",
+          "raw_watch_minutes_estimated",
+          "distinct_cliip",
+          "distinct_device_id"
+        ]
+      },
+      "deliveryFile": "D:\\Vs - Code Work\\Reports\\Firestick_Delivered_Batches_20261104\\Batch_2_2026-10-26_to_2026-11-01.csv",
+      "lookupSHA256": "25ef7d6256c8318eeef7d395940fd94d9f123db7bad21ffff55132e8baa2e0e1"
     }
   ],
   "recovery": {
@@ -44,9 +76,12 @@
     "completedInputFilesUnchanged": true
   },
   "originalLastCompletedDate": "2026-10-12",
-  "updatedAt": "2026-11-03T17:56:34.913490+05:30",
-  "segmentPID": 6872,
-  "segmentProgress": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery\\progress.json",
-  "segmentLastCompletedDate": "2026-10-13",
-  "segmentCompletedDates": 1
+  "updatedAt": "2026-11-04T10:39:42.169227+05:30",
+  "previousFailureRecordedIn": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\batch_progress_before_lookup_resolution.json",
+  "lookupChangeResolved": true,
+  "deliveryFolder": "D:\\Vs - Code Work\\Reports\\Firestick_Delivered_Batches_20261104",
+  "finishedAt": "2026-11-04T10:39:42.017090+05:30",
+  "latestCompletedDate": "2026-11-01",
+  "completedTotalDates": 33,
+  "resolution": "Completed through October 25 locally; released after original lookup snapshot verification. October 26-November 1 reused from completed shared export with the matching lookup and checked against source manifests."
 }

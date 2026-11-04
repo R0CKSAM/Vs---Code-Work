@@ -1,0 +1,45 @@
+{
+  "status": "complete",
+  "startIST": "2026-10-26",
+  "endIST": "2026-11-01",
+  "columns": [
+    "date_ist",
+    "firestick_model",
+    "raw_watch_minutes_estimated",
+    "distinct_cliip",
+    "distinct_device_id"
+  ],
+  "validation": {
+    "rows": 84,
+    "dates": 7,
+    "models": 12,
+    "estimatedMinutes": "2505247.8",
+    "header": [
+      "date_ist",
+      "firestick_model",
+      "raw_watch_minutes_estimated",
+      "distinct_cliip",
+      "distinct_device_id"
+    ]
+  },
+  "lookupProvenance": {
+    "status": "PASS",
+    "originalLookupSHA256": "25ef7d6256c8318eeef7d395940fd94d9f123db7bad21ffff55132e8baa2e0e1",
+    "pinnedLookup": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\pinned_inputs\\ua_lookup_snapshot.parquet",
+    "sharedCompletedReport": "Z:\\Vs - Code Work\\ETL\\output\\exports\\firestick_20260929_20261101_combined\\stream_firestick_all_channels_2026-09-29_to_2026-11-01_daily_models_minutes.csv",
+    "sharedCompletedReportSHA256": "6d250cd9067796ea8ca2d302059509f3c39edb2e0cefb7c6724e97edd0a6c060",
+    "localCompletedReport": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\pinned_inputs\\stream_firestick_all_channels_2026-09-29_to_2026-11-01_daily_models_minutes.csv",
+    "sourceManifests": [
+      "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\pinned_inputs\\stream_firestick_all_channels_2026-09-30_to_2026-10-30_manifest.json",
+      "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\pinned_inputs\\stream_firestick_all_channels_2026-10-31_to_2026-11-01_manifest.json"
+    ],
+    "canonicalFilesUnchanged": true,
+    "remainingDateRequestTotalsVerified": true
+  },
+  "acceptedExceptions": [],
+  "file": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\Batch_2_2026-10-26_to_2026-11-01.csv",
+  "deliveryFile": "D:\\Vs - Code Work\\Reports\\Firestick_Delivered_Batches_20261104\\Batch_2_2026-10-26_to_2026-11-01.csv",
+  "sha256": "0c3b5cb33d6f5346ff3f2fd0f46fce5d266fbbcb1f5ed5c51919fdd3c4c24066",
+  "sharedLakeWrites": false,
+  "otherETLJobsStarted": false
+}

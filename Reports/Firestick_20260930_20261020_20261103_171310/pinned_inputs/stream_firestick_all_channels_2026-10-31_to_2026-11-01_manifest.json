@@ -1,0 +1,32 @@
+{
+  "source": "stream",
+  "channels": "all combined",
+  "start_ist": "2026-10-31",
+  "end_ist": "2026-11-01",
+  "classification": "Decoded model explicitly contains Fire TV Stick; conflicting family-only labels, generic Fire TV and unresolved models excluded.",
+  "watch_hours": "Estimated: all .ts requests * 6 / 3600; includes retries and errors. Not measured player watch time.",
+  "identities": "Distinct cliIP and non-empty/non-placeholder queryStr device_id on matching .ts requests; totals deduplicated across all days/channels.",
+  "lookup": "D:\\Veto Logs Backup\\Vs - Code Work\\ETL\\output\\exports\\firestick_20260929_20261101_combined\\ua_lookup_snapshot.parquet",
+  "coverage": [
+    {
+      "date": "2026-10-31",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=31\\part_stream_2026_10_30_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=10\\day=31\\part_stream_2026_10_31_0.parquet"
+      ],
+      "segment_requests": 5292477,
+      "distinct_cliip": 5478,
+      "distinct_device_id": 109
+    },
+    {
+      "date": "2026-11-01",
+      "files": [
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=11\\day=01\\part_stream_2026_10_31_0.parquet",
+        "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=11\\day=01\\part_stream_2026_11_01_0.parquet"
+      ],
+      "segment_requests": 3021184,
+      "distinct_cliip": 3731,
+      "distinct_device_id": 36
+    }
+  ]
+}

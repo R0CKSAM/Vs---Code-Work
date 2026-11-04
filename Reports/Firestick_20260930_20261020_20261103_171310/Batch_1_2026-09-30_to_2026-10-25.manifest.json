@@ -1,0 +1,52 @@
+{
+  "status": "complete",
+  "startIST": "2026-09-30",
+  "endIST": "2026-10-25",
+  "columns": [
+    "date_ist",
+    "firestick_model",
+    "raw_watch_minutes_estimated",
+    "distinct_cliip",
+    "distinct_device_id"
+  ],
+  "validation": {
+    "rows": 312,
+    "dates": 26,
+    "models": 12,
+    "estimatedMinutes": "7762224.2",
+    "header": [
+      "date_ist",
+      "firestick_model",
+      "raw_watch_minutes_estimated",
+      "distinct_cliip",
+      "distinct_device_id"
+    ]
+  },
+  "lookupProvenance": {
+    "status": "PASS",
+    "originalLookupSHA256": "25ef7d6256c8318eeef7d395940fd94d9f123db7bad21ffff55132e8baa2e0e1",
+    "pinnedLookup": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\pinned_inputs\\ua_lookup_snapshot.parquet",
+    "sharedCompletedReport": "Z:\\Vs - Code Work\\ETL\\output\\exports\\firestick_20260929_20261101_combined\\stream_firestick_all_channels_2026-09-29_to_2026-11-01_daily_models_minutes.csv",
+    "sharedCompletedReportSHA256": "6d250cd9067796ea8ca2d302059509f3c39edb2e0cefb7c6724e97edd0a6c060",
+    "localCompletedReport": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\pinned_inputs\\stream_firestick_all_channels_2026-09-29_to_2026-11-01_daily_models_minutes.csv",
+    "sourceManifests": [
+      "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\pinned_inputs\\stream_firestick_all_channels_2026-09-30_to_2026-10-30_manifest.json",
+      "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\pinned_inputs\\stream_firestick_all_channels_2026-10-31_to_2026-11-01_manifest.json"
+    ],
+    "canonicalFilesUnchanged": true,
+    "remainingDateRequestTotalsVerified": true,
+    "overlapRowsVerified": 299
+  },
+  "acceptedExceptions": [
+    {
+      "date": "2026-10-21",
+      "issue": "Canonical source begins around 06:37 IST; earlier hours are not represented. No missing-hour values are invented.",
+      "userApproved": true
+    }
+  ],
+  "file": "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\Batch_1_2026-09-30_to_2026-10-25.csv",
+  "deliveryFile": "D:\\Vs - Code Work\\Reports\\Firestick_Delivered_Batches_20261104\\Batch_1_2026-09-30_to_2026-10-25.csv",
+  "sha256": "e70c47afd4ad963b1eb48a5614cb53f164141127c3306d347da5d4c01c7ca332",
+  "sharedLakeWrites": false,
+  "otherETLJobsStarted": false
+}

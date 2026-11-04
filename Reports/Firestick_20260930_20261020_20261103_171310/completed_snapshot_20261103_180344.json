@@ -1,0 +1,27 @@
+{
+  "createdAt": "2026-11-03T18:03:44.332747+05:30",
+  "file": "D:\\Vs - Code Work\\Reports\\Firestick_Completed_Through_2026-10-17\\Firestick_2026-09-30_to_2026-10-17.csv",
+  "folder": "D:\\Vs - Code Work\\Reports\\Firestick_Completed_Through_2026-10-17",
+  "start": "2026-09-30",
+  "end": "2026-10-17",
+  "validation": {
+    "rows": 198,
+    "dates": 18,
+    "models": 11,
+    "estimatedMinutes": "5326211.3",
+    "header": [
+      "date_ist",
+      "firestick_model",
+      "raw_watch_minutes_estimated",
+      "distinct_cliip",
+      "distinct_device_id"
+    ]
+  },
+  "sourceMetricValuesPreserved": true,
+  "sources": [
+    "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\stream_firestick_all_channels_2026-09-30_to_2026-10-12_daily_models_minutes.csv",
+    "D:\\Vs - Code Work\\Reports\\Firestick_20260930_20261020_20261103_171310\\oct13_to_oct25_recovery\\stream_firestick_all_channels_2026-10-13_to_2026-10-17_daily_models_minutes.csv"
+  ],
+  "SHA256": "5cbd50e947369dbb252b765ff090c37b49a00d59e10dc582f975d71417f94e09",
+  "runningExportsInterrupted": false
+}
