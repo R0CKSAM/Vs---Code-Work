@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "checks": [
+    "Audience basis moved from master filters to average metric beside chart",
+    "Two control rows at 1440",
+    "Two control rows at 1920",
+    "Two control rows at 1280",
+    "Local basis Apply updates results",
+    "Search dropdown and saved-view menu accessible",
+    "No overflow 768",
+    "No overflow 390",
+    "No overflow 320"
+  ]
+}

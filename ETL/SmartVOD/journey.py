@@ -16,13 +16,16 @@ def build_sessions(rows, filters, gap_minutes=30):
         if new:
             sessions.append(dict(index=len(sessions),video_key=row['video_key'],title=row['title'],host=row['req_host'],
                                  start=row['request_ist'],end=row['last_request_ist'],session_id=row['session_id'],
-                                 hours=0,segments=0,matched=False,identity_sources=[],overlap=False))
+                                 hours=0,segments=0,matched=False,identity_sources=[],identity_confidences=[],title_statuses=[],overlap=False))
         s=sessions[-1]
         if not s['session_id'] and row['session_id']:
             s['session_id']=row['session_id']
         s['hours']+=row['hours'];s['segments']+=row['segments'];s['matched']|=matched
         if row['last_request_ist']>s['end']:s['end']=row['last_request_ist']
         if row['identity_source'] not in s['identity_sources']:s['identity_sources'].append(row['identity_source'])
+        for field,dest in [('identity_confidence','identity_confidences'),('title_status','title_statuses')]:
+            value=row.get(field,'Unverified')
+            if value not in s[dest]:s[dest].append(value)
         if s['title']=='Unknown' and row['title']!='Unknown':s['title']=row['title']
         if len(sessions)>1 and start<datetime.fromisoformat(sessions[-2]['end']):
             s['overlap']=True;sessions[-2]['overlap']=True

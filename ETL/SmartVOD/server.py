@@ -13,16 +13,20 @@ from journey import build_sessions, CONTENT_FIELDS
 ROOT = Path(__file__).resolve().parent
 FIELDS = {'title': 'Titles', 'category': 'Categories', 'video_key': 'Video keys',
           'device_id': 'Device ID', 'cli_ip': 'Client IP', 'os': 'Operating system',
-          'region': 'Region', 'isp': 'ISP / ASN', 'device_type': 'Device type'}
+          'region': 'Region', 'isp': 'ISP / ASN', 'device_type': 'Device type',
+          'identity_confidence':'Identity confidence','title_status':'Title quality'}
 
 
 def connection():
-    con = sqlite3.connect(f"file:{(ROOT/'data/smartvod.sqlite').as_posix()}?mode=ro", uri=True)
+    meta=json.loads((ROOT/'data/manifest.json').read_text())
+    database=ROOT/'data'/meta.get('database','smartvod.sqlite')
+    con = sqlite3.connect(f"file:{database.as_posix()}?mode=ro", uri=True)
     con.row_factory = sqlite3.Row
     return con
 
 
 def where(body, omit=None):
+    identity_basis(body)
     clauses, params = [], []
     filters = body.get('filters', {})
     if not isinstance(filters, dict):
@@ -47,24 +51,63 @@ def where(body, omit=None):
         raise ValueError('Use HH:MM time')
     clauses.append('(clock BETWEEN ? AND ?)' if lo <= hi else '(clock >= ? OR clock <= ?)')
     params.extend([lo, hi])
-    return ' WHERE ' + ' AND '.join(clauses), params
+    # Broad, skewed values (Unknown/title quality/OS) otherwise scan all history.
+    # Known device/IP lookups stay selective; other filters start from the date slice.
+    index='idx_day'
+    if omit!='device_id' and filters.get('device_id') and 'Unknown' not in filters['device_id']:
+        index='idx_device_day'
+    elif omit!='cli_ip' and filters.get('cli_ip') and 'Unknown' not in filters['cli_ip']:
+        index='idx_cli_ip'
+    return ' INDEXED BY '+index+' WHERE ' + ' AND '.join(clauses), params
 
 
 def query(body):
+    basis=identity_basis(body)
+    avg=f"sum(CASE WHEN {basis}!='Unknown' THEN hours*60 ELSE 0 END)/nullif(count(DISTINCT nullif({basis},'Unknown')),0)"
     w, p = where(body)
     with connection() as con:
         kpi = dict(con.execute('SELECT count(*) records, coalesce(sum(hours),0) hours, '
             'coalesce(sum(delivered),0) delivered, coalesce(sum(segments),0) segments, '
             "count(DISTINCT nullif(cli_ip,'Unknown')) ips, count(DISTINCT nullif(device_id,'Unknown')) devices, "
             "count(DISTINCT nullif(video_key,'Unknown')) videos FROM events" + w, p).fetchone())
+        kpi['average_watch_minutes']=con.execute('SELECT '+avg+' FROM events'+w,p).fetchone()[0]
         hourly = [dict(r) for r in con.execute('SELECT substr(clock,1,2) hour,sum(hours) hours FROM events'+w+' GROUP BY 1 ORDER BY 1', p)]
         breakdown = {}
         for field in ('device_type', 'os', 'region', 'isp'):
             breakdown[field] = [dict(r) for r in con.execute(f'SELECT {field} label,sum(hours) hours FROM events'+w+' GROUP BY 1 ORDER BY 2 DESC,1 LIMIT 5', p)]
-        table = [dict(r) for r in con.execute('SELECT video_key,title,sum(hours) hours,sum(delivered) delivered,'
+        table = [dict(r) for r in con.execute('SELECT '+avg+' average_watch_minutes,video_key,title,req_host,title_status,sum(hours) hours,sum(delivered) delivered,'
             "count(DISTINCT nullif(cli_ip,'Unknown')) ips,count(DISTINCT nullif(device_id,'Unknown')) devices "
-            'FROM events'+w+' GROUP BY video_key,title ORDER BY hours DESC,video_key,title LIMIT 100', p)]
-    return dict(kpi=kpi, hourly=hourly, breakdown=breakdown, table=table)
+            'FROM events'+w+' GROUP BY video_key,title,req_host,title_status ORDER BY hours DESC,video_key,title LIMIT 100', p)]
+        devices=[dict(r) for r in con.execute(f"SELECT {basis} identity_value,sum(hours) hours,count(DISTINCT video_key) videos,group_concat(DISTINCT identity_confidence) confidence FROM events"+w+f" AND {basis}!='Unknown' GROUP BY {basis} ORDER BY hours DESC,{basis} LIMIT 20",p)]
+    return dict(kpi=kpi, hourly=hourly, breakdown=breakdown, table=table,devices=devices,identity_basis=basis)
+
+
+def identity_basis(body):
+    value=body.get('identity_basis','device_id')
+    if value not in ('device_id','cli_ip'):raise ValueError('Choose Device ID or Client IP as identity basis')
+    return value
+
+
+def journey_data(body):
+    where(body)
+    basis=identity_basis(body)
+    label='Device ID' if basis=='device_id' else 'Client IP'
+    devices=body.get('filters',{}).get(basis,[])
+    if len(devices)!=1 or devices[0]=='Unknown':
+        return {'sessions':[], 'identity_basis':basis,'message':f'Select exactly one known {label} and apply filters to explore its journey.'}
+    scope={**body,'filters':{k:v for k,v in body['filters'].items() if k not in CONTENT_FIELDS}}
+    w,p=where(scope)
+    with connection() as con:rows=[dict(r) for r in con.execute('SELECT * FROM events'+w,p)]
+    sessions=build_sessions(rows,body['filters'])
+    return {basis:devices[0],'identity_value':devices[0],'identity_basis':basis,'sessions':sessions,'matching_sessions':sum(s['matched'] for s in sessions),
+            'message':('Client IP activity may combine multiple viewers behind a shared address. ' if basis=='cli_ip' else '')+'Observed request sequence in the applied filters. Content filters highlight matches; surrounding titles remain visible.'}
+
+
+def csv_bytes(headers,rows):
+    output=io.StringIO(newline='');writer=csv.writer(output);writer.writerow(headers)
+    for row in rows:
+        writer.writerow([("'"+v if isinstance(v,str) and v.startswith(('=','+','-','@','\t','\r')) else v) for v in row])
+    return output.getvalue().encode('utf-8-sig')
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -85,7 +128,10 @@ class Handler(BaseHTTPRequestHandler):
         path = urlsplit(self.path).path
         if path == '/api/meta':
             return self.send(json.loads((ROOT/'data/manifest.json').read_text()))
-        files = {'/journey.js': ('journey.js', 'text/javascript'), '/': ('index.html', 'text/html; charset=utf-8'), '/app.js': ('app.js', 'text/javascript'), '/style.css': ('style.css', 'text/css')}
+        if path == '/api/title-review':
+            meta=json.loads((ROOT/'data/manifest.json').read_text())
+            return self.send((ROOT/'data'/meta['title_review']).read_bytes(),filename='smartvod_title_review.json')
+        files = {'/workspace.js': ('workspace.js','text/javascript'), '/journey.js': ('journey.js', 'text/javascript'), '/': ('index.html', 'text/html; charset=utf-8'), '/app.js': ('app.js', 'text/javascript'), '/style.css': ('style.css', 'text/css')}
         if path not in files:
             return self.send({'error': 'Not found'}, code=404)
         name, mime = files[path]
@@ -100,18 +146,14 @@ class Handler(BaseHTTPRequestHandler):
             path = urlsplit(self.path).path
             if path == '/api/query':
                 return self.send(query(body))
+            if path == '/api/journey-export':
+                data=journey_data(body)
+                if not data.get('identity_value'):raise ValueError(data['message'])
+                headers=['identity_basis','identity_value','session','video_key','title','host','first_request_ist','last_request_ist','watch_minutes_estimated','segments','identity_confidence','title_quality','content_match','overlapping_activity']
+                rows=[[data['identity_basis'],data['identity_value'],s['index']+1,s['video_key'],s['title'],s['host'],s['start'],s['end'],round(s['hours']*60,6),s['segments'],'; '.join(s['identity_confidences']),'; '.join(s['title_statuses']),s['matched'],s['overlap']] for s in data['sessions']]
+                return self.send(csv_bytes(headers,rows),'text/csv; charset=utf-8',filename='smartvod_viewer_journey.csv')
             if path == '/api/journey':
-                where(body)  # Validate the complete request before changing content scope.
-                devices=body.get('filters',{}).get('device_id',[])
-                if len(devices)!=1 or devices[0]=='Unknown':
-                    return self.send({'sessions':[], 'message':'Select exactly one known Device ID and apply filters to explore its journey.'})
-                scope={**body,'filters':{k:v for k,v in body['filters'].items() if k not in CONTENT_FIELDS}}
-                w,p=where(scope)
-                with connection() as con:
-                    rows=[dict(r) for r in con.execute('SELECT * FROM events'+w,p)]
-                sessions=build_sessions(rows,body['filters'])
-                return self.send({'device_id':devices[0],'sessions':sessions,'matching_sessions':sum(s['matched'] for s in sessions),
-                                  'message':'Observed request sequence in the applied date/time and audience filters. Content filters highlight matching sessions; surrounding titles remain visible.'})
+                return self.send(journey_data(body))
             if path == '/api/facet':
                 field = body.get('field')
                 if field not in FIELDS:
@@ -121,18 +163,22 @@ class Handler(BaseHTTPRequestHandler):
                 w += f' AND instr(lower({field}),lower(?)) > 0'
                 p.append(search)
                 offset = max(0, int(body.get('offset', 0)))
+                sorts={'segments':'segments DESC,value DESC','hours':'hours DESC,value DESC','alpha_asc':'value COLLATE NOCASE ASC,value ASC','alpha_desc':'value COLLATE NOCASE DESC,value DESC'}
+                order=sorts.get(body.get('sort','segments'))
+                if not order:raise ValueError('Unknown sort mode')
                 with connection() as con:
-                    rows = [dict(r) for r in con.execute(f'SELECT {field} value,count(*) records,sum(segments) segments FROM events'+w+' GROUP BY 1 ORDER BY segments DESC,value DESC LIMIT 101 OFFSET ?', [*p, offset])]
+                    rows = [dict(r) for r in con.execute(f'SELECT {field} value,count(*) records,sum(segments) segments,sum(hours) hours FROM events'+w+f' GROUP BY 1 ORDER BY {order} LIMIT 101 OFFSET ?', [*p, offset])]
                 return self.send({'options': rows[:100], 'more': len(rows)>100})
             if path == '/api/export':
+                basis=identity_basis(body)
                 w, p = where(body)
                 output = io.StringIO(newline='')
                 writer = csv.writer(output)
                 with connection() as con:
-                    cur = con.execute('SELECT day date_ist,video_key,title,category,device_type,os,region,isp,'
+                    cur = con.execute(f"SELECT '{basis}' identity_basis,sum(CASE WHEN {basis}!='Unknown' THEN hours*60 ELSE 0 END)/nullif(count(DISTINCT nullif({basis},'Unknown')),0) average_watch_minutes,day date_ist,video_key,title,req_host,title_status,identity_confidence,category,device_type,os,region,isp,"
                         "sum(hours) watch_hours_estimated,sum(delivered) delivered_hours_estimated,count(DISTINCT nullif(cli_ip,'Unknown')) distinct_cliip,"
                         "count(DISTINCT nullif(device_id,'Unknown')) distinct_device_id FROM events"+w+
-                        ' GROUP BY day,video_key,title,category,device_type,os,region,isp ORDER BY day,video_key',p)
+                        ' GROUP BY day,video_key,title,req_host,title_status,identity_confidence,category,device_type,os,region,isp ORDER BY day,video_key',p)
                     writer.writerow([c[0] for c in cur.description])
                     for row in cur:
                         writer.writerow([("'"+v if isinstance(v,str) and v.startswith(('=','+','-','@','\t','\r')) else v) for v in row])

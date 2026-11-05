@@ -6,3 +6,58 @@
 .option small{margin-left:auto;white-space:nowrap;color:var(--muted);font-size:10px}.option span{flex:1}
 
 .journey-panel{margin-bottom:18px}.journey-body{padding:0 20px 20px}.journey-body>p{overflow-wrap:anywhere}.journey-note{font-size:11px}.journey-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:20px 0;font-size:12px}.journey-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px}.journey-cards article{min-width:0}.journey-cards h3{font-size:12px;color:var(--muted);font-weight:500}.journey-entry{display:block;width:100%;text-align:left;margin-bottom:8px;padding:12px;overflow-wrap:anywhere}.journey-entry b,.journey-entry span,.journey-entry small{display:block}.journey-entry b{font-size:12px;margin:5px 0}.journey-entry span{font-size:11px;color:var(--green)}.journey-entry small{font-size:10px;color:var(--muted)}.journey-entry.chosen{border-color:var(--green);background:#162b21}.journey-timeline{max-height:360px;overflow:auto;margin-top:12px}summary{cursor:pointer;color:var(--green);font-size:12px;margin-top:16px}@media(max-width:650px){.journey-cards{grid-template-columns:1fr}.journey-toolbar{flex-wrap:wrap}.journey-body{padding:0 14px 14px}}
+
+.saved-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:14px 20px;border-top:1px solid var(--line)}.saved-toolbar input{width:250px;max-width:100%}.saved-toolbar button{font-size:12px}.saved-toolbar span{font-size:11px;color:var(--green)}.sort-label{display:flex;gap:10px;align-items:center;font-size:11px;color:var(--muted);margin-top:10px}.sort-label select{flex:1;width:100%;font-size:11px;padding:6px}.devices-panel{margin-bottom:18px}.device-explorer{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:0 20px 20px;max-height:240px;overflow:auto}.device-card{text-align:left;overflow-wrap:anywhere}.device-card b,.device-card span,.device-card small{display:block}.device-card b{color:var(--green);font-size:12px;font-weight:500}.device-card span{font-size:11px;margin:5px 0}.device-card small{font-size:10px;color:var(--muted)}.quality-note{padding-top:20px;font-size:11px;display:flex;gap:15px;flex-wrap:wrap;color:var(--muted)}.quality-note a{color:var(--green)}@media(max-width:900px){.device-explorer{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:450px){.device-explorer{grid-template-columns:1fr}.saved-toolbar{padding:14px}.saved-toolbar input{width:100%}}
+
+.basis-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 20px;border-top:1px solid var(--line)}.basis-bar label{color:var(--green);font-size:12px}.basis-bar span{font-size:11px;color:var(--muted)}.average-panel{padding:16px 20px;margin-bottom:18px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}.average-panel strong{font-size:28px;color:var(--green)}.average-panel small{color:var(--muted);font-size:11px}
+
+/* Slightly brighter dark palette: clearer surfaces and secondary text. */
+:root{--bg:#111b25;--line:#3b4d5d;--muted:#afc0ce}
+body{background:radial-gradient(ellipse at 85% 0,#28584055,transparent 45%),var(--bg);color:#f0f5f8}
+header{background:#14212be8}
+.panel{background:linear-gradient(125deg,#202f3c,#192630)}
+button,input,select{background:#192833}
+button:hover{background:#2a4036;border-color:#89ac98}
+.primary{background:var(--green);color:#092014}
+.primary:hover{background:#b4ffca}
+.quiet{background:none}
+.kpis article{background:linear-gradient(130deg,#263845,#1b2a35)}
+.kpis article:first-child{background:linear-gradient(130deg,#294b36,#20372f);border-color:#638e73}
+.filter-trigger.active,.journey-entry.chosen{background:#254334}
+.pill{background:#2a3e4b;color:#d0e1e9;border-color:#4b6272}
+th{background:#20313e}
+td{border-top-color:#354957}
+tbody tr:hover{background:#2b404a}
+#picker{background:#213440;border-color:#71947f}
+.option{border-bottom-color:#3a5060}
+.option:hover{background:#304c3d}
+.bar-track,.meter{background:#3b5060}
+footer{color:#a1b8c7}
+
+/* Compact master header; audience basis lives with its derived metric. */
+.master-filters>.panel-heading{padding:12px 16px;justify-content:flex-start;gap:18px}
+.master-filters>.panel-heading>strong{margin-right:auto}
+.master-filters .filter-grid{grid-template-columns:repeat(8,minmax(0,1fr));gap:10px;padding:0 16px 14px;align-items:end}
+.master-filters .filter-trigger{height:38px;padding:8px;font-size:12px}
+.master-filters .time-row,.master-filters .date-fields{display:contents}
+.master-filters .date-fields label{font-size:11px;min-width:0}
+.master-filters .date-fields input{height:38px;padding:6px;font-size:11px;margin-top:5px}
+.master-filters .time-row>small{display:none}
+.master-filters #apply{height:38px;padding:7px;font-size:12px;width:100%}
+.saved-menu{position:relative}
+.saved-menu>summary{margin:0;font-size:12px;white-space:nowrap}
+.saved-menu .saved-toolbar{position:absolute;right:0;top:28px;z-index:15;width:420px;max-width:calc(100vw - 44px);padding:16px;border:1px solid var(--line);border-radius:10px;background:#213440;box-shadow:0 15px 40px #0008}
+.saved-menu .saved-toolbar input{width:100%}
+.average-panel{gap:14px 22px;align-items:center}
+.average-panel .basis-bar{padding:0;border:0;gap:10px;flex-basis:100%;display:flex}
+.average-panel .basis-bar select{padding:7px 10px;font-size:12px}
+.average-panel .basis-bar button{padding:7px 14px;font-size:12px}
+.average-panel .basis-bar span{flex:1;min-width:200px}
+@media(max-width:1199px){.master-filters .filter-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:650px){.master-filters .filter-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:0 13px 14px}.master-filters>.panel-heading{gap:12px;padding:12px 13px}.master-filters>.panel-heading>strong{font-size:12px}.saved-menu .saved-toolbar{position:fixed;left:14px;right:14px;top:100px;width:auto;max-width:none}.average-panel .basis-bar span{flex-basis:100%;min-width:0}.average-panel{padding:14px}.average-panel #averageLabel{font-size:12px}}
+
+/* Filters are the first workspace element and use the full viewport width. */
+main{max-width:none;padding:18px 20px 28px}
+.master-filters{width:100%}
+.master-filters>.panel-heading #export{font-size:12px;padding:7px 12px}
+@media(max-width:650px){main{padding:12px 10px 22px}.master-filters>.panel-heading{flex-wrap:wrap}.master-filters>.panel-heading>strong{flex:1 1 100%}.master-filters>.panel-heading #export{margin-right:auto}}

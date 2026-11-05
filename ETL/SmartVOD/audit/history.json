@@ -1,0 +1,185 @@
+{
+  "passed": true,
+  "days": [
+    {
+      "date": "2026-10-06",
+      "records": 63361,
+      "watch_hours": 621.035,
+      "segments": 372621
+    },
+    {
+      "date": "2026-10-07",
+      "records": 74990,
+      "watch_hours": 740.9066666666666,
+      "segments": 444544
+    },
+    {
+      "date": "2026-10-08",
+      "records": 86124,
+      "watch_hours": 843.7,
+      "segments": 506220
+    },
+    {
+      "date": "2026-10-09",
+      "records": 107984,
+      "watch_hours": 1234.37,
+      "segments": 740622
+    },
+    {
+      "date": "2026-10-10",
+      "records": 129420,
+      "watch_hours": 1325.7566666666667,
+      "segments": 795454
+    },
+    {
+      "date": "2026-10-11",
+      "records": 126267,
+      "watch_hours": 1495.2299999999998,
+      "segments": 897138
+    },
+    {
+      "date": "2026-10-12",
+      "records": 109389,
+      "watch_hours": 1086.5033333333333,
+      "segments": 651902
+    },
+    {
+      "date": "2026-10-13",
+      "records": 142524,
+      "watch_hours": 1594.8616666666667,
+      "segments": 956917
+    },
+    {
+      "date": "2026-10-14",
+      "records": 135179,
+      "watch_hours": 1343.915,
+      "segments": 806349
+    },
+    {
+      "date": "2026-10-15",
+      "records": 134687,
+      "watch_hours": 1216.8766666666666,
+      "segments": 730126
+    },
+    {
+      "date": "2026-10-16",
+      "records": 121630,
+      "watch_hours": 1115.1816666666666,
+      "segments": 669109
+    },
+    {
+      "date": "2026-10-17",
+      "records": 99964,
+      "watch_hours": 1074.615,
+      "segments": 644769
+    },
+    {
+      "date": "2026-10-18",
+      "records": 169141,
+      "watch_hours": 1749.0249999999999,
+      "segments": 1049415
+    },
+    {
+      "date": "2026-10-19",
+      "records": 105807,
+      "watch_hours": 1103.6683333333333,
+      "segments": 662201
+    },
+    {
+      "date": "2026-10-20",
+      "records": 120607,
+      "watch_hours": 1410.2633333333333,
+      "segments": 846158
+    },
+    {
+      "date": "2026-10-21",
+      "records": 81003,
+      "watch_hours": 1073.5283333333332,
+      "segments": 644117
+    },
+    {
+      "date": "2026-10-22",
+      "records": 253566,
+      "watch_hours": 4133.9,
+      "segments": 2480340
+    },
+    {
+      "date": "2026-10-23",
+      "records": 210145,
+      "watch_hours": 3365.678333333333,
+      "segments": 2019407
+    },
+    {
+      "date": "2026-10-24",
+      "records": 201159,
+      "watch_hours": 2919.845,
+      "segments": 1751907
+    },
+    {
+      "date": "2026-10-25",
+      "records": 341919,
+      "watch_hours": 4609.423333333333,
+      "segments": 2765654
+    },
+    {
+      "date": "2026-10-26",
+      "records": 303328,
+      "watch_hours": 4584.8933333333325,
+      "segments": 2750936
+    },
+    {
+      "date": "2026-10-27",
+      "records": 475141,
+      "watch_hours": 7980.421666666666,
+      "segments": 4788253
+    },
+    {
+      "date": "2026-10-28",
+      "records": 241699,
+      "watch_hours": 2823.325,
+      "segments": 1693995
+    },
+    {
+      "date": "2026-10-29",
+      "records": 363128,
+      "watch_hours": 5218.7683333333325,
+      "segments": 3131261
+    },
+    {
+      "date": "2026-10-30",
+      "records": 263743,
+      "watch_hours": 3493.3883333333333,
+      "segments": 2096033
+    },
+    {
+      "date": "2026-10-31",
+      "records": 313360,
+      "watch_hours": 4489.87,
+      "segments": 2693922
+    },
+    {
+      "date": "2026-11-01",
+      "records": 288504,
+      "watch_hours": 4369.033333333333,
+      "segments": 2621420
+    },
+    {
+      "date": "2026-11-02",
+      "records": 209737,
+      "watch_hours": 2772.3433333333332,
+      "segments": 1663406
+    },
+    {
+      "date": "2026-11-03",
+      "records": 213578,
+      "watch_hours": 2800.4649999999997,
+      "segments": 1680279
+    },
+    {
+      "date": "2026-11-04",
+      "records": 217250,
+      "watch_hours": 3030.555,
+      "segments": 1818333
+    }
+  ]
+}
