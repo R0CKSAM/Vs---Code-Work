@@ -481,7 +481,10 @@ def channel_anomalies(
         if pct <= threshold_pct:
             channel_key = channel.strip().casefold()
             government_event = channel_key in {name.casefold() for name in GOVERNMENT_EVENT_CHANNELS}
-            if channel_key in event_channel_keys and (target_rows == 0 or government_event):
+            # Operator confirmed the event ended: residual STREAM traffic is expected.
+            ended_davis_event = (source == "stream" and channel_key == "davis cup (f98c8)"
+                                 and target >= date(2026, 11, 4))
+            if ended_davis_event or (channel_key in event_channel_keys and (target_rows == 0 or government_event)):
                 if expected_inactive is not None:
                     expected_inactive.append({
                         "source": source,

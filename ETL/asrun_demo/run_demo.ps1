@@ -3,6 +3,7 @@ param(
     [string]$Channel,
     [string[]]$Input = @(),
     [string]$RawRoot = "",
+    [string]$IdentityMinute = "",
     [switch]$DetailedLogs
 )
 
@@ -36,6 +37,29 @@ if ($Input.Count -eq 0) {
 }
 
 $BuilderArgs = @($Builder, "--channel", $Channel, "--input") + $Input
+# The scheduled audience mart can lag the repaired ASRUN snapshot. Reuse only
+# a completed refresh, including its explicitly recorded unavailable days.
+$RefreshState = Join-Path $Root "output\state\asrun_available_refresh.json"
+if (-not $IdentityMinute -and (Test-Path -LiteralPath $RefreshState)) {
+    $Refresh = Get-Content -LiteralPath $RefreshState -Raw | ConvertFrom-Json
+    if ($Refresh.status -eq "complete") {
+        $Snapshot = Join-Path $Refresh.work "audience\identity_minute.parquet"
+        if (-not (Test-Path -LiteralPath $Snapshot -PathType Leaf)) {
+            throw "Completed ASRUN audience snapshot is missing: $Snapshot"
+        }
+        $IdentityMinute = $Snapshot
+        foreach ($Day in $Refresh.unavailable_viewer_days) {
+            $BuilderArgs += @("--unavailable-viewer-day", ("{0}:{1}" -f $Day[0], $Day[1]))
+        }
+    }
+}
+if ($IdentityMinute) {
+    if (-not (Test-Path -LiteralPath $IdentityMinute -PathType Leaf)) {
+        throw "Identity-minute file not found: $IdentityMinute"
+    }
+    Write-Host "Using ASRUN audience: $IdentityMinute"
+    $BuilderArgs += @("--identity-minute", $IdentityMinute)
+}
 if ($DetailedLogs) {
     $BuilderArgs += "--verbose"
 }

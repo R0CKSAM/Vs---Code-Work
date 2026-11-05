@@ -221,6 +221,28 @@ class DailyDeliveryValidationTests(unittest.TestCase):
             self.assertEqual(len(anomalies), 1)
             self.assertEqual(anomalies[0]["channel"], "India TV")
 
+    def test_ended_davis_event_is_scoped_to_stream_and_effective_date(self) -> None:
+        with tempfile.TemporaryDirectory(dir=TEST_TEMP_ROOT) as temp:
+            profile = Path(temp) / 'watch_hours/profile'
+            daily = profile.parent / 'daily_tables'
+            daily.mkdir(parents=True)
+            rows = [dict(log_date=f'2026-10-{day:02d}', source=source,
+                         channel_name='Davis Cup (f98c8)', raw_ts_chunks=233274)
+                    for day in range(25, 32) for source in ('stream', 'fast')]
+            rows += [dict(log_date=day, source=source, channel_name='Davis Cup (f98c8)',
+                          raw_ts_chunks=2994)
+                     for day in ('2026-11-03', '2026-11-04') for source in ('stream', 'fast')]
+            pd.DataFrame(rows).to_parquet(daily / 'channel_audience_daily.parquet', index=False)
+            for target in (date(2026, 11, 3), date(2026, 11, 4)):
+                flags = []
+                anomalies, _ = validator.channel_anomalies(
+                    profile, target, ['stream', 'fast'], baseline_days=28,
+                    threshold_pct=5, min_baseline_days=3, min_median_rows=1000,
+                    expected_inactive=flags)
+                self.assertEqual({r['source'] for r in anomalies},
+                                 {'fast', 'stream'} if target.day == 3 else {'fast'})
+                self.assertEqual(len(flags), 0 if target.day == 3 else 1)
+
     def test_government_low_and_absent_activity_are_informational(self) -> None:
         with tempfile.TemporaryDirectory(dir=TEST_TEMP_ROOT) as temp:
             profile = Path(temp) / 'watch_hours/profile'

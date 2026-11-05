@@ -1,0 +1,4 @@
+data/
+audit/*.png
+*.log
+__pycache__/

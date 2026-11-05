@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "cases": 686,
+  "groups": {
+    "all_nonempty_dimension_subsets": 511,
+    "all_multiselect_field_pairs": 36,
+    "random_multiselect_and_time": 80,
+    "unknown_values": 9,
+    "absent_and_literal_sql_values": 9,
+    "time_boundaries": 5,
+    "date_coverage": 3
+  },
+  "failures": [],
+  "started": "2026-11-05T15:03:59",
+  "finished": "2026-11-05T15:06:04"
+}

@@ -1,0 +1,25 @@
+{
+  "passed": true,
+  "checks": [
+    "Exactly 30 minute gap groups; longer gap splits",
+    "Repeat title after different content stays separate",
+    "Host and known session changes split",
+    "Session hours reconcile",
+    "Content filtering highlights without dropping neighbors",
+    "Overlapping content activity is flagged",
+    "Real device returns chronological sessions",
+    "Real journey hours reconcile",
+    "Real journey segments reconcile",
+    "No blended or missing-device journey {}",
+    "No blended or missing-device journey {'device_id': ['Unknown']}",
+    "No blended or missing-device journey {'device_id': ['b4c5033cecdd273a', 'other']}",
+    "Real content filter preserves adjacent sessions",
+    "Browser journey follows applied device",
+    "Next session navigation",
+    "Previous session navigation",
+    "Journey fits mobile width",
+    "Reset clears prior device journey",
+    "No journey JavaScript errors"
+  ],
+  "session_count": 7
+}

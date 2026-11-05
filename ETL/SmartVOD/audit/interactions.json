@@ -1,0 +1,28 @@
+{
+  "checks": [
+    "Browser cumulative combination video_key",
+    "Browser cumulative combination title",
+    "Browser cumulative combination category",
+    "Browser cumulative combination os",
+    "Browser cumulative combination isp",
+    "Browser cumulative combination region",
+    "Browser cumulative combination device_type",
+    "Browser cumulative combination cli_ip",
+    "Browser cumulative combination device_id",
+    "Selected item persists on reopen",
+    "Clear current field only",
+    "Escape restores trigger focus",
+    "Reset clears all selections",
+    "Initial high-cardinality page has 100 options",
+    "Load-more has no duplicate labels",
+    "Select shown selects all loaded options",
+    "Searching preserves hidden selections",
+    "Export uses applied filters, not unapplied draft",
+    "Newer draft remains marked pending after slow query",
+    "Modal traps forward keyboard focus",
+    "Modal traps backward keyboard focus",
+    "No JavaScript errors"
+  ],
+  "errors": [],
+  "passed": true
+}
