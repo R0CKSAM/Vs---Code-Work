@@ -7,8 +7,10 @@ import {spawn} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
 const referenceRun=process.argv.includes('--references');
+const mappedRun=process.argv.includes('--mapped-pack');
+const autoRun=process.argv.includes('--auto-references');
 const root=fileURLToPath(new URL('../',import.meta.url));
-const out=path.resolve(root,referenceRun?'../../Smart-Flow-References-Audit-20261029':'../../Smart-Flow-Audit-20261029');fs.mkdirSync(out,{recursive:true});
+const out=path.resolve(root,autoRun?'../../Smart-Flow-Auto-References-Audit-20261106':mappedRun?'../../Smart-Flow-Mapped-Pack-Audit-20261106':referenceRun?'../../Smart-Flow-References-Audit-20261029':'../../Smart-Flow-Audit-20261029');fs.mkdirSync(out,{recursive:true});
 const profile=fs.mkdtempSync(path.join(os.tmpdir(),'smart-flow-installed-'));
 fs.mkdirSync(path.join(profile,'Default'));fs.writeFileSync(path.join(profile,'Default','Preferences'),JSON.stringify({download:{default_directory:out,prompt_for_download:false,directory_upgrade:true}}));
 const chrome=spawn('C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',['--headless=new','--disable-gpu','--no-first-run','--enable-unsafe-extension-debugging','--enable-automation','--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{stdio:'ignore',windowsHide:true});
@@ -28,7 +30,7 @@ try{
  const chatTarget=await call('Target.createTarget',{url:'about:blank'}),chat=await attach(chatTarget.targetId);
  const pixel='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6WQAAAABJRU5ErkJggg==';
  const fixture=`<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none';script-src 'unsafe-inline';style-src 'unsafe-inline';img-src data:;connect-src data:"><style>body{font:16px sans-serif;margin:40px}textarea{width:700px;height:200px}button{padding:15px}img{width:64px;height:64px}form{padding:15px}</style></head><body><h1>Local Smart Flow acceptance fixture</h1><div id="conversation"></div><form><input id="chat-files" type="file" accept="image/*" multiple><div id="attachments"></div><textarea id="prompt-textarea"></textarea><button type="submit" aria-label="Send">Send</button></form><div id="generation"></div><script>
- window.sent=[];window.outputs=0;window.uploads=[];document.getElementById('chat-files').addEventListener('change',e=>{uploads.push([...e.target.files].map(f=>({name:f.name,size:f.size,type:f.type})));document.getElementById('attachments').textContent=uploads.at(-1).map(f=>f.name).join(' | ');});document.querySelector('form').addEventListener('submit',e=>{e.preventDefault();const editor=document.querySelector('textarea'),text=editor.value;if(!text)return;sent.push(text);const user=document.createElement('div');user.dataset.messageAuthorRole='user';user.dataset.messageId='user-'+sent.length;user.textContent=text;document.querySelector('#conversation').append(user);editor.value='';document.querySelector('#generation').innerHTML='<button aria-label="Stop generating">Stop</button>';setTimeout(()=>{document.querySelector('#generation').replaceChildren();outputs++;const a=document.createElement('div');a.dataset.messageAuthorRole='assistant';a.dataset.messageId='assistant-'+outputs;const b=document.createElement('button');b.type='button';b.dataset.testid='generated-image-preview';b.setAttribute('aria-label','Generated image '+outputs);const img=document.createElement('img');img.src=${JSON.stringify(pixel)}+'#output-'+outputs;b.append(img);a.append(b);document.querySelector('#conversation').append(a);},1200);});</script></body></html>`;
+ window.sent=[];window.outputs=0;window.uploads=[];document.getElementById('chat-files').addEventListener('change',e=>{uploads.push([...e.target.files].map(f=>({name:f.name,size:f.size,type:f.type})));const cards=document.getElementById('attachments');cards.replaceChildren();const progress=document.createElement('span');progress.setAttribute('role','progressbar');progress.textContent='Uploading';cards.append(progress);for(const f of e.target.files){const img=document.createElement('img');img.alt=f.name;img.src=${JSON.stringify(pixel)}+'#reference-'+f.name;cards.append(img);}setTimeout(()=>progress.remove(),300);});document.querySelector('form').addEventListener('submit',e=>{e.preventDefault();const editor=document.querySelector('textarea'),text=editor.value;if(!text)return;sent.push(text);const user=document.createElement('div');user.dataset.messageAuthorRole='user';user.dataset.messageId='user-'+sent.length;user.textContent=text;document.querySelector('#conversation').append(user);editor.value='';document.getElementById('attachments').replaceChildren();document.getElementById('chat-files').value='';document.querySelector('#generation').innerHTML='<button aria-label="Stop generating">Stop</button>';setTimeout(()=>{document.querySelector('#generation').replaceChildren();outputs++;const a=document.createElement('div');a.dataset.messageAuthorRole='assistant';a.dataset.messageId='assistant-'+outputs;const b=document.createElement('button');b.type='button';b.dataset.testid='generated-image-preview';b.setAttribute('aria-label','Generated image '+outputs);const img=document.createElement('img');img.src=${JSON.stringify(pixel)}+'#output-'+outputs;b.append(img);a.append(b);document.querySelector('#conversation').append(a);},1200);});</script></body></html>`;
  await call('Fetch.enable',{patterns:[{urlPattern:'https://chatgpt.com/c/smart-flow-local-audit*',resourceType:'Document',requestStage:'Request'}]},chat);
  events.push(m=>{if(m.sessionId===chat&&m.method==='Fetch.requestPaused')call('Fetch.fulfillRequest',{requestId:m.params.requestId,responseCode:200,responseHeaders:[{name:'Content-Type',value:'text/html; charset=utf-8'}],body:Buffer.from(fixture).toString('base64')},chat).catch(console.error);});
  await call('Page.navigate',{url:'https://chatgpt.com/c/smart-flow-local-audit'},chat);
@@ -40,6 +42,53 @@ try{
  await call('Emulation.setDeviceMetricsOverride',{width:370,height:570,deviceScaleFactor:1,mobile:false},popup);
  await evaluate(popup,'document.getElementById("checkConnection").click()');
  await until(()=>evaluate(popup,'document.getElementById("connectionStatus").textContent.includes("Connected")'),'actual content-script handshake');check(true,'Actual popup connects to actual isolated content script');
+ if(mappedRun){
+  await evaluate(popup,'chrome.storage.local.set({autoReferences:'+autoRun+'})');
+  const pack=process.argv[process.argv.indexOf('--mapped-pack')+1];
+  if(!pack||!fs.existsSync(pack))throw Error('Pass the reference pack directory after --mapped-pack.');
+  const setFiles=async(selector,files)=>{const {root:doc}=await call('DOM.getDocument',{},popup);const {nodeId}=await call('DOM.querySelector',{nodeId:doc.nodeId,selector},popup);await call('DOM.setFileInputFiles',{nodeId,files},popup);await evaluate(popup,'document.querySelector('+JSON.stringify(selector)+').dispatchEvent(new Event("change"))');};
+  await setFiles('#file',[path.join(pack,'S01_First_5_Test.csv')]);
+  await until(()=>evaluate(popup,'!importBusy&&chrome.storage.local.get("mappedPack").then(s=>s.mappedPack)'),'mapped CSV import');
+  // Headless CDP does not enumerate webkitdirectory inputs. Use real OS-backed
+  // Files through the ordinary input and emulate only directory-relative metadata.
+  await evaluate(popup,'{const input=document.getElementById("referencePackFolder");window.packChange=input.onchange;input.onchange=null;input.removeAttribute("webkitdirectory");}');
+  await setFiles('#referencePackFolder',fs.readdirSync(pack,{recursive:true}).map(n=>path.join(pack,n)).filter(n=>fs.statSync(n).isFile()));
+  await evaluate(popup,'{const input=document.getElementById("referencePackFolder");for(const f of input.files)Object.defineProperty(f,"webkitRelativePath",{value:"Aarohan_Reference_Pack/"+(f.name.endsWith(".png")?"references/":"")+f.name});input.onchange=window.packChange;input.dispatchEvent(new Event("change"));}');
+  try{await until(()=>evaluate(popup,'!operationBusy&&chrome.storage.local.get("frameReferences").then(s=>s.frameReferences?.length===5)'),'actual directory input and mapping');}catch(e){console.log(await evaluate(popup,'({alert:document.getElementById("alert").textContent,busy:operationBusy,files:[...document.getElementById("referencePackFolder").files].map(f=>({name:f.name,path:f.webkitRelativePath,type:f.type}))})'));throw e;}
+  const stored=await evaluate(popup,'chrome.storage.local.get(["referencePackAssets","frameReferences"]).then(s=>({names:Object.keys(s.referencePackAssets),first:s.frameReferences[0]}))');
+  check(stored.names.length===3&&stored.first.files[0]==='LOC_FESTIVAL.png','Actual folder input saves the three needed originals');
+  if(autoRun){
+   await evaluate(popup,'refresh()');
+   check(await evaluate(popup,'document.getElementById("autoReferences").checked'),'Automatic references enabled in UI');
+   await evaluate(popup,'document.getElementById("allowReferenceGaps").click()');await until(()=>evaluate(popup,'!operationBusy'),'gap preference');
+   await evaluate(popup,'document.getElementById("autoDownload").click();document.getElementById("start").click()');
+   try{await until(()=>evaluate(popup,'chrome.storage.local.get("phase").then(s=>s.phase==="done")'),'five automatic scenes and downloads',90000);}catch(e){console.log(await evaluate(popup,'chrome.storage.local.get(["phase","error","activity","index","referenceSession","pending"])'));throw e;}
+   const uploads=await evaluate(chat,'uploads'),sent=await evaluate(chat,'sent');
+   check(sent.length===5&&sent.every((text,i)=>text.includes('Frame: S01_F00'+(i+1))&&text.includes('REFERENCE GUIDE:')),'All five scene prompts send in original order with reference instructions');
+   check(uploads.length===4&&uploads[0].length===1&&uploads[1].length===3&&uploads[2].length===1&&uploads[3].length===1,'Reference changes upload automatically; unchanged set is reused');
+   check(uploads.flat().every(f=>f.size===fs.statSync(path.join(pack,'references',f.name)).size),'All automatically uploaded files preserve full source size');
+   const state=await evaluate(popup,'chrome.storage.local.get(["index","frameHistory","pending"])');check(state.index===5&&state.pending===null&&state.frameHistory.filter(f=>f.status==="completed").length===5,'Five automatic downloads complete with history');
+   const files=fs.readdirSync(out,{recursive:true}).filter(n=>/S01_F00[1-5].*\.png$/.test(n));check(files.length>=5&&files.every(f=>fs.statSync(path.join(out,f)).size>0),'All five downloaded images exist on disk');
+  }else{
+  await evaluate(popup,'document.getElementById("attachReferences").click()');
+  await until(()=>evaluate(chat,'uploads.length===1'),'first actual reference upload');
+  const uploaded=await evaluate(chat,'uploads[0]');check(uploaded.length===1&&uploaded[0].name==='LOC_FESTIVAL.png'&&uploaded[0].size===fs.statSync(path.join(pack,'references','LOC_FESTIVAL.png')).size,'Actual File matches full-resolution mapped reference');
+  await until(()=>evaluate(popup,'!operationBusy'),'attachment finishes');
+  await evaluate(popup,'document.getElementById("confirmReferences").click()');await until(()=>evaluate(popup,'!operationBusy'),'confirmation finishes');
+  await evaluate(popup,'document.getElementById("autoDownload").click();document.getElementById("start").click()');
+  await until(()=>evaluate(popup,'chrome.storage.local.get(["phase","index"]).then(s=>s.phase==="paused"&&s.index===1)'),'first frame saved and reference-change pause',35000);
+  check(await evaluate(chat,'sent.length===1&&sent[0].includes("Frame: S01_F001")&&sent[0].includes("LOC_FESTIVAL.png")'),'Only first frame sent before reference-change pause');
+  const files=fs.readdirSync(out,{recursive:true}).filter(n=>n.endsWith('.png')&&n.includes('S01_F001'));check(files.length>0&&files.some(f=>fs.statSync(path.join(out,f)).size>0),'Actual Chrome image download completed');
+  await evaluate(popup,'refresh()');
+  await evaluate(popup,'document.getElementById("attachReferences").click()');await until(()=>evaluate(chat,'uploads.length===2'),'second mapped reference upload');
+  const second=await evaluate(chat,'uploads[1]');check(second.length===3&&second.every(f=>f.size===fs.statSync(path.join(pack,'references',f.name)).size),'Second frame receives exact character, location and prop originals');
+  await evaluate(popup,'refresh()');
+  }
+  const width=await evaluate(popup,'({body:document.body.scrollWidth,app:document.querySelector(".app").scrollWidth})');check(width.body<=370&&width.app<=370,'Mapped reference UI fits popup');
+  const {data}=await call('Page.captureScreenshot',{format:'png'},popup);fs.writeFileSync(path.join(out,'mapped-pack-paused.png'),Buffer.from(data,'base64'));
+  const report={status:'PASS',checks,realUnpackedExtension:true,realOSFiles:true,directoryRelativeMetadataEmulated:true,fullResolutionFiles:true,actualChromeDownload:true,syntheticChatGPTOnly:true,liveImageCreditsUsed:0,automaticReferenceRun:autoRun};
+  fs.writeFileSync(path.join(out,'installed-mapped-pack-results.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report));
+ }else{
  const oldWorkbook='Y:\\Veto Logs Backup\\Aarohan\\Smart Flow Uploads\\1.1_Smart_Flow_UPLOAD.xlsx';
  const workbook=referenceRun?path.join(path.dirname(oldWorkbook),'Aarohan_1.1_1.2_Character_Batches_Smart_Flow_WITH_REFERENCES.xlsx'):oldWorkbook;
  if(!fs.existsSync(workbook))throw Error('User workbook unavailable for acceptance');
@@ -107,6 +156,7 @@ try{
  await screenshot('smart-flow-expanded.png');
  const report={status:'PASS',checks,actualUserWorkbook:workbook,realChromeDownloads:true,actualExtensionStorage:true,syntheticChatGPTOnly:true,liveImageCreditsUsed:0,referenceRun,files:fs.readdirSync(out).filter(n=>n.endsWith('.png'))};
  fs.writeFileSync(path.join(out,'installed-extension-results.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report));
+ }
  await call('Browser.close');
 }finally{
  socket?.close();if(chrome.exitCode===null){await new Promise(r=>{const t=setTimeout(()=>{chrome.kill();r();},3000);chrome.once('exit',()=>{clearTimeout(t);r();});});}

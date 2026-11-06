@@ -1,3 +1,49 @@
+# Smart Flow v20.7.0 - automatic mapped references and scenes
+
+Reload this extension folder in Chrome Extensions and refresh ChatGPT after the
+current generation finishes. Import `S01_First_5_Test.csv`, then choose **Load
+Aarohan reference pack folder** and select the entire pack. Leave **Automatically
+upload references** enabled and choose **Start generating**. No Attach or Confirm
+click is required for successfully detected uploads in this mode.
+
+Smart Flow selects each frame's character, location and prop images from
+`Attachment_Manifest.csv`, uploads the exact original files when the mapping
+changes, and waits for loaded composer thumbnails, no upload indicators and a
+stable attachment set. It then prepares the scene prompt and clicks the enabled
+Send button once. Every mapped scene names the references to use and instructs
+ChatGPT to render that scene rather than a reference board. Consecutive frames
+with identical mappings reuse their references in the same conversation.
+
+Enable **Save completed images automatically** to wait for each completed Chrome
+download before the next frame. Missing files, upload errors, extra attachments,
+manual drafts, changed conversations and unverifiable uploads pause the queue.
+Resume observes an existing upload rather than requesting it again. Detection
+requires composer image thumbnails; unsupported site layouts pause for manual
+review instead of assuming an upload succeeded. After reviewing the attachments,
+the manual confirmation button can override automatic upload verification.
+
+**Continue with listed reference gaps** is off by default. Enable it if you want
+to use the pack's available mapped images even where its manifest flags a missing
+exact setup. It never substitutes another image or permits missing image files.
+With this setting off, use the manual Attach button to review a flagged frame.
+Disable automatic references to retain the v20.6 manual attachment workflow.
+The older five-character workbook and Repeat modes retain their existing setup.
+
+Original pack CSVs import directly as `Frame ID, Prompt`; original text, row order
+and tracking IDs are preserved. After the five-frame trial, use a scene CSV or
+`Aarohan_Mapped_Prompts.csv` for all 1,444 frames and load the pack folder again.
+No source CSV, manifest or reference PNG is modified.
+
+Validation uses the actual pack and isolated Chrome with a local conversation
+fixture. It covers automatic reference changes, delayed and failed uploads,
+missing/extra files, timeout, gap preferences, pause during dispatch, downloads
+and no duplicate requests. The original OS image files and real extension storage
+are used; directory-relative metadata is emulated because headless CDP does not
+operate the folder picker. No live image generation is performed. Live ChatGPT
+layout compatibility and artistic consistency require the user's trial.
+
+The following sections describe earlier releases.
+
 ## v20.5.0 - attach character references before generation
 
 Reload this same `smart-flow-v20.2` folder in Chrome Extensions, then refresh ChatGPT. Under **Character references**, select **Use Aarohan references (5)** to load exact local copies of Anaya, Arjun, Mehak, Trisha and Veer from the user's `Downloads/Storyboard Studio` folder. **Choose other images** supports 1-8 PNG/JPG/WebP files (10 MB each, 40 MB combined). Full-resolution images remain in extension-local storage until **Attach all to ChatGPT** is selected. `unlimitedStorage` accommodates these original-size images without the normal 10 MB local-storage cap. This copy includes the user's five reference assets; remove/replace those assets before distributing a generic release.

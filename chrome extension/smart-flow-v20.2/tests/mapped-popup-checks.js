@@ -1,0 +1,36 @@
+(async()=>{
+ const $=id=>document.getElementById(id),test=await POPUP_TEST.ready;
+ const fixture=await(await fetch('/pack-fixture.json')).json();test.data.autoReferences=false;let checks=0;
+ const check=(ok,message)=>{if(!ok)throw Error(message);checks++;};
+ const settle=async()=>{for(let i=0;i<200&&(operationBusy||importBusy);i++)await new Promise(r=>setTimeout(r,10));await test.flush();};
+ await importFile(new File([fixture.csv],'S01_First_5_Test.csv',{type:'text/csv'}));
+ check(test.data.prompts.length===5&&test.data.mappedPack,'Direct original CSV loads five mapped frames');
+ let result=await test.send('START');check(!result.ok&&test.clicks===0,'Start blocked until manifest loaded');
+ const pixel=await(await fetch('/pixel.png')).blob();
+ const folderFiles=[new File([fixture.manifest],'Attachment_Manifest.csv',{type:'text/csv'}),...fixture.names.map(name=>{const f=new File([pixel],name,{type:'image/png'});Object.defineProperty(f,'webkitRelativePath',{value:'Aarohan_Reference_Pack/references/'+name});return f;})];
+ $('referencePackFolder').onchange({target:{files:folderFiles,value:''}});await settle();
+ check(test.data.frameReferences?.length===5&&Object.keys(test.data.referencePackAssets||{}).length===3,'Folder maps exact three required images for first five frames');
+ check(test.data.frameReferences[0].files.join()==='LOC_FESTIVAL.png','First frame location image mapped');
+ check(test.data.frameReferences[1].files.length===3,'Second frame character, location and prop images mapped');
+ let pasted=0;test.editor().addEventListener('paste',e=>pasted+=e.clipboardData.files.length);
+ $('attachReferences').click();await settle();
+ check(pasted===1&&test.data.referenceSummary.names[0]==='LOC_FESTIVAL.png'&&test.clicks===0,'Attach uploads current location only without sending');
+ check(test.data.referenceSession?.state==='attached','Upload request remains unconfirmed');
+ $('confirmReferences').click();await settle();check(test.data.referenceSession.state==='ready','Explicit confirmation unlocks current set');
+ test.data.index=1;test.data.referenceSession.state='sent';await refresh();
+ result=await test.send('START');check(!result.ok&&test.clicks===0,'Next frame blocked with stale image set');
+ $('attachReferences').click();await settle();check(pasted===4&&test.data.referenceSummary.names.length===3,'Next frame uploads three matching images');
+ test.data.referenceSession.state='sent';test.data.index=4;await refresh();POPUP_TEST.answer=false;
+ const revision=test.data.referenceSummary.revision;$('attachReferences').click();await settle();
+ check(test.data.referenceSummary.revision===revision,'Declining reference gap preserves current image set');
+ check(POPUP_TEST.confirmations.at(-1).includes('recurring crew'),'Missing setup note is shown before upload');
+ // A missing file must fail before replacing the existing mapping or assets.
+ $('referencePackFolder').onchange({target:{files:folderFiles.filter(f=>f.name!=='PROP_BOARD.png'),value:''}});await settle();
+ check(test.data.referenceSummary.revision===revision&&$('alert').textContent.includes('PROP_BOARD.png'),'Missing image is visible and prior state preserved');
+ $('autoReferences').click();await settle();check(test.data.autoReferences===true,'Automatic reference preference is saved');
+ $('allowReferenceGaps').click();await settle();check(test.data.allowReferenceGaps===true,'Gap preference is explicit and saved');
+ test.data.phase='running';await refresh();check($('autoReferences').disabled&&$('allowReferenceGaps').disabled,'Reference automation preferences are locked while running');
+ test.data.phase='done';test.data.index=5;await refresh();check($('referenceStatus').textContent.includes('All mapped scenes completed')&&!$('referenceStatus').textContent.includes('Load the reference pack'),'Completed queue has accurate reference status');
+ check(!POPUP_TEST.errors.length&&!test.errors.length,'No uncaught UI or content errors');
+ const resultEl=document.createElement('pre');resultEl.id='test-result';resultEl.textContent=JSON.stringify({status:'PASS',checks,feature:'mapped reference folder and UI'});document.body.append(resultEl);
+})().catch(e=>{const el=document.createElement('pre');el.id='test-result';el.textContent=JSON.stringify({status:'FAIL',error:e.stack});document.body.append(el);});

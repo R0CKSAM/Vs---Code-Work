@@ -70,6 +70,21 @@ const StoryboardImport=(()=>{
    return result;
  }
  function normalize(rows){
+   const mapped=rows.findIndex(r=>r.some(v=>clean(v)==='Frame ID')&&r.some(v=>clean(v)==='Prompt'));
+   if(mapped>=0){
+     const h=rows[mapped],fi=h.indexOf('Frame ID'),pi=h.indexOf('Prompt'),ri=h.indexOf('Reference Files'),gi=h.indexOf('Reference Gap');
+     if(h.filter(v=>v==='Frame ID').length!==1||h.filter(v=>v==='Prompt').length!==1)throw Error('Duplicate Frame ID or Prompt column.');
+     const prompts=[],frameReferences=[],seen=new Set();
+     for(const r of rows.slice(mapped+1)){
+       if(!r.some(v=>clean(v)))continue;
+       const id=clean(r[fi]),prompt=clean(r[pi]);
+       if(!id||!prompt||seen.has(id))throw Error('Every mapped row needs a unique Frame ID and a nonempty Prompt.');
+       seen.add(id);prompts.push(id+' || '+prompt);
+       if(ri>=0)frameReferences.push({files:clean(r[ri]).split(';').map(clean).filter(Boolean),gap:gi>=0?clean(r[gi]):''});
+     }
+     if(!prompts.length)throw Error('No mapped prompts found.');
+     return {master:'',prompts,count:prompts.length,frameReferences:ri>=0?frameReferences:null,mapped:true,warnings:[ri>=0?'Frame references are mapped. Load the reference pack folder, leave automatic references on, then Start.':'Load the Aarohan reference pack folder, leave automatic references on, then Start to upload matching images and send scenes.']};
+   }
    // The spreadsheet ROW ORDER is the execution order. Frame identifiers are display labels ONLY.
    const at=rows.findIndex(r=>r.some(v=>clean(v).toLowerCase().replace(/[^a-z0-9]/g,'')==='sceneprompt'));
    if(at<0)throw Error('The first worksheet must have a Scene Prompt column. Other worksheets are not imported.');

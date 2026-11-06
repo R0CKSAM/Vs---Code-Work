@@ -3,7 +3,7 @@
  if(window.__storyboardV16)return;window.__storyboardV16=true;
  const TICK=700, READY_MS=900, FINISH_MS=2500, UNCERTAIN_MS=15000, MAX_WAIT=18*60*1000;
  let ticker=null,busy=false,positioning=false,composerMissingAt=0;
- const keys=['master','prompts','index','phase','pending','error','activity','ownerTabId','ownerConversation','queueId','frameHistory','autoDownload','queueMode','repeatLine','referenceSummary','referenceSession'];
+ const keys=['master','prompts','index','phase','pending','error','activity','ownerTabId','ownerConversation','queueId','frameHistory','autoDownload','queueMode','repeatLine','referenceSummary','referenceSession','frameReferences','mappedPack','autoReferences','allowReferenceGaps'];
  const get=()=>chrome.storage.local.get(keys),put=o=>chrome.storage.local.set(o);
  const qs=(s,r=document)=>[...r.querySelectorAll(s)];
  const visible=e=>!!(e&&e.isConnected&&e.getClientRects().length&&getComputedStyle(e).visibility!=='hidden');
@@ -50,17 +50,92 @@
  const userEvidence=()=>{const users=qs('[data-message-author-role="user"]'),last=users.at(-1);return {count:users.length,id:messageId(last),text:norm(last?.innerText||last?.textContent||'')};};
  const sameUser=(a,b)=>a&&b&&a.text===b.text&&(a.id&&b.id?a.id===b.id:a.count===b.count);
  const referencesRequired=s=>/REFERENCE SET REQUIRED:/.test(s.master||'');
+ const automaticReferences=s=>s.autoReferences!==false&&s.mappedPack&&!!s.frameReferences&&s.queueMode!=='repeat';
+ const composerImages=()=>{const scope=editorScope(edit());return scope?qs('img',scope).filter(visible):[];};
+ function referenceUploadState(s){
+   const scope=editorScope(edit()),session=s.referenceSession,names=s.referenceSummary?.names||[];
+   if(!scope)return {ready:false};
+   const errors=qs('[role="alert"],[data-state="error"],[data-testid*="error"]',scope).filter(visible);
+   if(errors.some(e=>/upload|file|image|failed|error|retry|too large|unsupported/i.test(e.innerText||e.textContent||'')))return {error:'ChatGPT reported an attachment error. Fix the upload, then Resume; no scene was sent.'};
+   const active=qs('[role="progressbar"],progress,[aria-busy="true"],[data-state="uploading"],[data-state="loading"],[data-testid*="uploading"],[aria-label*="Uploading" i],.animate-spin',scope).some(visible);
+   if(active)return {ready:false};
+   // An input FileList alone proves only a request, not a completed upload.
+   const images=composerImages();
+   if(images.length>names.length)return {error:'Unexpected extra composer images. Check the attachments before resuming. Your files were kept.'};
+   if(images.length!==names.length||images.some(img=>!img.complete||!img.naturalWidth))return {ready:false};
+   const listed=qs('input[type="file"]',scope).flatMap(input=>[...(input.files||[])].map(f=>f.name));
+   if(listed.length&&(listed.length!==names.length||listed.some(name=>!names.includes(name))))return {error:'The selected reference files changed during upload. Check the attachments before resuming.'};
+   const labels=qs('[title],[aria-label],img[alt]',scope).flatMap(e=>[e.getAttribute('title'),e.getAttribute('aria-label'),e.getAttribute('alt')]).filter(Boolean);
+   const fileLabels=labels.filter(label=>/\.(png|jpe?g|webp)$/i.test(label.trim()));
+   if(fileLabels.some(label=>!names.includes(label.trim())))return {error:'An unexpected image filename appeared in the composer. Check its references before resuming.'};
+   const signature=images.map(img=>(img.currentSrc||img.src)+'|'+img.naturalWidth+'x'+img.naturalHeight).join(';');
+   return {ready:!!names.length,signature,session};
+ }
+ async function ensureAutomaticReferences(s,tabId){
+   const mapping=s.frameReferences?.[s.index||0];
+   if(!mapping)throw Error('No reference mapping for this frame. Load the reference pack again.');
+   const key=JSON.stringify(mapping),session=s.referenceSession,matching=s.referenceSummary?.mappingKey===key;
+   if(!matching){
+     if(s.pending)throw Error('References changed during a pending frame. Inspect this frame before continuing.');
+     if(mapping.gap&&!s.allowReferenceGaps)throw Error('Reference gap: '+mapping.gap+' Review this frame using Attach frame references, or enable Continue with listed reference gaps.');
+     const e=edit();if(!e)return false;
+     if(!idle())return false;
+     if(value(e))throw Error('Unsent text exists in composer. Your draft was kept; clear it after checking before Resume.');
+     if(composerImages().length)throw Error('Existing composer attachments were kept. Send or remove them yourself before starting automatic references.');
+     const {referencePackAssets:assets}=await chrome.storage.local.get('referencePackAssets');
+     const images=mapping.files.map(name=>{const image=assets?.[name];if(!image)throw Error('Missing reference image: '+name+'. Load the pack folder again.');return image;});
+     if(images.length>8)throw Error('Too many references for one frame. Review its manifest.');
+     const live=await get();if(live.phase!=='running'||live.queueId!==s.queueId||live.index!==s.index||live.pending)return false;
+     const summary={revision:'auto-'+Date.now()+'-'+Math.random().toString(36).slice(2),names:mapping.files,mappingKey:key};
+     await put({referenceSummary:summary,referenceImages:images,referenceSession:null,activity:'Preparing mapped references for '+s.prompts[s.index||0].split('||')[0].trim()+'.'});
+     if(!images.length)return false;
+     await attachReferences({...s,referenceSummary:summary,referenceSession:null},tabId,{automatic:true,images});return false;
+   }
+   if(!mapping.files.length)return true;
+   if(!session||session.revision!==s.referenceSummary.revision){
+     if(s.pending)throw Error('Reference confirmation was lost during this frame. Inspect the conversation before resuming.');
+     const {referencePackAssets:assets}=await chrome.storage.local.get('referencePackAssets');
+     const images=mapping.files.map(name=>{if(!assets?.[name])throw Error('Missing reference image: '+name);return assets[name];});
+     if(composerImages().length)throw Error('Composer attachments already exist. Check them and use manual confirmation before resuming.');
+     await attachReferences(s,tabId,{automatic:true,images});return false;
+   }
+   if(session.tabId!==tabId||session.conversation!==location.pathname)throw Error('Reference upload belongs to another conversation. Return to its ChatGPT tab before Resume.');
+   if(session.state==='sent')return true;
+   if(!session.automatic){
+     if(session.state==='ready')return true;
+     await put({referenceSession:{...session,automatic:true,requestedAt:Date.now(),userBaseline:userEvidence()}});return false;
+   }
+   if(!sameUser(session.userBaseline,userEvidence()))throw Error('The conversation changed during reference upload. Inspect it before retrying; no automatic duplicate was sent.');
+   const state=referenceUploadState(s);if(state.error)throw Error(state.error);
+   if(!state.ready){
+     if(Date.now()-session.requestedAt>120000)throw Error('Reference upload could not be verified within two minutes. Check the thumbnails and finish the uploads, then Resume or confirm manually. No upload was repeated.');
+     if(session.stableSince)await put({referenceSession:{...session,stableSince:0,signature:''}});
+     await put({activity:'Uploading '+mapping.files.length+' mapped references. Waiting for loaded thumbnails and no upload indicators.'});return false;
+   }
+   if(!session.stableSince||session.signature!==state.signature){await put({referenceSession:{...session,stableSince:Date.now(),signature:state.signature}});return false;}
+   if(Date.now()-session.stableSince<1800)return false;
+   if(session.state!=='ready'){await put({referenceSession:{...session,state:'ready'},activity:'References loaded. Preparing the scene prompt automatically.'});return false;}
+   return true;
+ }
  function checkReferences(s,tabId){
    const summary=s.referenceSummary,session=s.referenceSession;
+   if(s.mappedPack&&!s.frameReferences)throw Error('Load the Aarohan reference pack folder to map this CSV before Start.');
+   const mapping=s.frameReferences?.[s.index||0];
+   if(mapping){
+     const key=JSON.stringify(mapping);
+     if(summary?.mappingKey!==key)throw Error('This frame needs a different reference set. Open Smart Flow, choose Attach frame references, review uploads and any reference gap, then Resume.');
+     if(!mapping.files.length)return;
+   }
    if(referencesRequired(s)&&!summary?.names?.length)throw Error('This workbook requires character images. Choose Use Aarohan references (5), attach them, then confirm the uploads before Start.');
    if(!summary?.names?.length)return;
    if(referencesRequired(s)&&['Anaya','Arjun','Mehak','Trisha','Veer'].some(name=>!summary.names.some(file=>file.toLowerCase().includes(name.toLowerCase()))))throw Error('This Aarohan workbook requires references for Anaya, Arjun, Mehak, Trisha and Veer. Load the full five-image set.');
    if(session?.revision!==summary.revision||session.tabId!==tabId||session.conversation!==location.pathname||!['ready','sent'].includes(session.state))throw Error('Attach the saved character references to this ChatGPT conversation, wait for all uploads, then confirm them in Smart Flow before Start.');
  }
- async function attachReferences(s,tabId){
-   if(busy||positioning||s.phase==='running'||s.pending)throw Error('Finish or reset the pending frame before attaching references.');
+ async function attachReferences(s,tabId,options={}){
+   const automatic=!!options.automatic;
+   if((busy&&!automatic)||positioning||(s.phase==='running'&&!automatic)||s.pending)throw Error('Finish or reset the pending frame before attaching references.');
    const e=edit();if(!e||!idle()||value(e))throw Error('Open an idle ChatGPT conversation with an empty message box before attaching references.');
-   const {referenceImages:images}=await chrome.storage.local.get('referenceImages');
+   const images=options.images||(await chrome.storage.local.get('referenceImages')).referenceImages;
    if(!images?.length||!s.referenceSummary?.names?.length)throw Error('Load character reference images first.');
    const prior=s.referenceSession;
    if(prior?.revision===s.referenceSummary.revision&&prior.tabId===tabId&&prior.conversation===location.pathname)throw Error('References were already attached here. Check ChatGPT before confirming; no duplicate upload was requested. To replace them, clear and load your reference set again.');
@@ -71,13 +146,14 @@
        if(!/^data:image\/(png|jpeg|webp);base64,/.test(image.dataUrl||''))throw Error('Invalid reference image. Choose your images again.');
        const blob=await(await fetch(image.dataUrl)).blob();dt.items.add(new File([blob],image.name,{type:blob.type}));
      }
-     const live=await get();if(live.phase==='running'||live.pending||live.referenceSummary?.revision!==s.referenceSummary.revision||!idle()||edit()!==e||value(e))throw Error('The queue or composer changed. References were not uploaded.');
+     const live=await get();if((automatic?live.phase!=='running'||live.queueId!==s.queueId||live.index!==s.index:live.phase==='running')||live.pending||live.referenceSummary?.revision!==s.referenceSummary.revision||!idle()||edit()!==e||value(e))throw Error('The queue or composer changed. References were not uploaded.');
      const inputs=qs('input[type="file"]').filter(input=>!input.disabled&&(!input.accept||/image|\.png|\.jpg|\.jpeg|\.webp/i.test(input.accept))&&(images.length===1||input.multiple));
      const scope=editorScope(e),input=inputs.find(input=>scope?.contains(input))||inputs[0];
-     const referenceSession={revision:s.referenceSummary.revision,tabId,conversation:location.pathname,state:'attached'};
+     const referenceSession={revision:s.referenceSummary.revision,tabId,conversation:location.pathname,state:'attached',...(automatic?{automatic:true,requestedAt:Date.now(),userBaseline:userEvidence(),queueId:s.queueId,index:s.index||0}: {})};
      // A request is not proof that the site's upload completed. The employee
      // checks the attachments before an explicit confirmation permits Start.
      await put({referenceSession,error:'',activity:'Reference upload requested. Check all attachments in ChatGPT, wait for uploads to finish, then confirm them in Smart Flow.'});
+     if(automatic){const current=await get();if(current.phase!=='running'||current.queueId!==s.queueId||current.index!==s.index){if(current.queueId===s.queueId)await put({referenceSession:null});return;}}
      try{
        if(input){input.files=dt.files;input.dispatchEvent(new Event('change',{bubbles:true}));}
        else e.dispatchEvent(new ClipboardEvent('paste',{clipboardData:dt,bubbles:true,cancelable:true}));
@@ -178,7 +254,13 @@
      }
      await pause('The ChatGPT conversation changed. Return to the original conversation before resuming this frame.');return;
    }
-   if(s.referenceSummary?.names?.length||referencesRequired(s)){const owner=await chrome.runtime.sendMessage({action:'MY_TAB_ID'});checkReferences(s,owner?.tabId);}
+   if(s.mappedPack||s.frameReferences||s.referenceSummary?.names?.length||referencesRequired(s)){
+     const owner=await chrome.runtime.sendMessage({action:'MY_TAB_ID'});
+     if(automaticReferences(s)&&(!s.pending||s.pending.state==='prepared')){
+       if(!await ensureAutomaticReferences(s,owner?.tabId))return;
+     }
+     checkReferences(s,owner?.tabId);
+   }
    if(s.pending?.state==='saving'){if(s.pending.queueId!==s.queueId){await pause('Queue was replaced during a pending image download.');return;}await observeDownload(s,s.pending);return;}
    const e=edit();if(!e){if(!composerMissingAt)composerMissingAt=Date.now();if(Date.now()-composerMissingAt<10000){await put({activity:'Waiting for the ChatGPT composer to finish loading…'});return;}await pause('Composer not found. Open a ChatGPT conversation, check sign-in, and refresh the page.');return;}composerMissingAt=0;
    const now=Date.now();let p=s.pending;
@@ -189,9 +271,9 @@
         repeatAssets:previews().map(imageAsset).filter(Boolean),repeatAssistants:assistantIds(),userBaseline:userEvidence(),restoreCount:0,
         preparedAt:now,sendReadyAt:0,clickedAt:0,editorEmptied:false,sawBusy:false,sawPreviewDisappear:false,sawPreviewReturn:false,
         sawNewPreview:false,completeSince:0};
-     if(s.referenceSession?.state==='ready'){
-       p.referenceRevision=s.referenceSummary.revision;
-       if(s.queueMode!=='repeat')p.prompt+='\n\nCHARACTER REFERENCE GUIDE: The attached files are identity references: '+s.referenceSummary.names.join('; ')+'. Match each named character to their own reference. Use only the cast visible in this frame. Follow the storyboard master art style; do not reproduce the reference-sheet layout or include all characters in every frame.';
+     if(s.referenceSession?.state==='ready'||s.frameReferences&&s.referenceSummary?.names?.length){
+       if(s.referenceSession?.state==='ready')p.referenceRevision=s.referenceSummary.revision;
+       if(s.queueMode!=='repeat')p.prompt+=(s.frameReferences?'\n\nREFERENCE GUIDE:':'\n\nCHARACTER REFERENCE GUIDE:')+' Use the following character, location or prop reference images supplied in this conversation for the current scene: '+s.referenceSummary.names.join('; ')+'. Match characters to CHAR sheets, sets to LOC boards and props to PROP boards. Use only what this frame requests. Never reproduce labels, panels or reference-sheet layouts. Render only the current Scene above. Follow its art style; never regenerate the reference boards or include all characters in every frame.';
      }
      await put({pending:p,error:'',activity:`Row ${i+1}: pasting prompt.`});
      const live=await get();if(live.phase!=='running'||live.queueId!==s.queueId||live.index!==s.index)return;
@@ -260,7 +342,7 @@
      if(busy||positioning||s.phase==='running'||s.pending||!edit()||!idle()||value(edit()))throw Error('Keep ChatGPT idle with an empty message box while confirming its attachments.');
      const session=s.referenceSession;
      if(!session||session.state!=='attached'||session.revision!==s.referenceSummary?.revision||session.tabId!==msg.tabId||session.conversation!==location.pathname)throw Error('Attach the references to this conversation first.');
-     await put({referenceSession:{...session,state:'ready'},error:'',activity:'Character references confirmed. Start will send them with your first frame prompt.'});break;
+     await put({referenceSession:{...session,state:'ready',automatic:false},error:'',activity:'References confirmed. Start will send them with your next frame prompt.'});break;
    }
    case 'SELECT_FRAME':{
      if(busy||positioning||s.phase==='running')throw Error('Pause and wait for the current action to finish before changing frames.');
@@ -281,7 +363,7 @@
    case 'START':case 'RESUME':{
      if(positioning)throw Error('Wait for the reference upload request to finish.');
      if(!s.prompts?.length)throw Error('Import or save prompts first.');
-     checkReferences(s,msg.tabId);
+     if(!automaticReferences(s))checkReferences(s,msg.tabId);
      if(s.phase==='done')throw Error('Queue complete; import new file or Reset.');
      if(s.pending&&s.ownerTabId!=null&&s.ownerTabId!==msg.tabId)throw Error('Pending frame belongs to another ChatGPT tab.');
      if(s.pending&&s.ownerConversation&&s.ownerConversation!==location.pathname)throw Error('The pending image belongs to the original ChatGPT conversation. Return to that conversation before resuming.');

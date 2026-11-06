@@ -61,5 +61,61 @@
  await test('Storyboard references provide named guidance only on first submission',async()=>{referenceSetup();TEST.data.queueMode='storyboard';TEST.data.prompts=['Frame 032 || Anaya alone','Frame 033 || Anaya smiles'];TEST.data.autoDownload=false;await submitted();check(TEST.sends[0].includes('CHARACTER REFERENCE GUIDE')&&TEST.sends[0].includes('Trisha.png'),'First frame names all reference files');await TEST.step();check(TEST.data.referenceSession.state==='sent','Submission, rather than mere paste, consumes reference setup');await imageReady();for(let i=0;i<6;i++)await TEST.step();check(TEST.clicks===2&&!TEST.sends[1].includes('CHARACTER REFERENCE GUIDE'),'Next frame reuses conversation references without another upload or guide');});
  await test('Reference upload falls back to composer paste with no file input',async()=>{referenceSetup();TEST.data.referenceSession=null;TEST.data.referenceImages=[{name:'Anaya.png',dataUrl:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6WQAAAABJRU5ErkJggg=='}];let count=0;TEST.editor().addEventListener('paste',e=>{count=e.clipboardData.files.length;},{once:true});const r=await TEST.send('ATTACH_REFERENCES');check(r.ok&&count===1&&TEST.clicks===0,'Fallback pastes files without submitting');check(TEST.data.referenceSession.state==='attached','Paste request still requires employee upload review');});
  await test('New-chat route is adopted only after exact observed first message',async()=>{const original=location.pathname;history.pushState({},'','/');referenceSetup();await submitted();history.pushState({},'','/c/new-chat-id');await TEST.step();check(TEST.data.ownerConversation==='/c/new-chat-id'&&TEST.data.referenceSession.conversation==='/c/new-chat-id'&&TEST.data.referenceSession.state==='sent','New conversation ID keeps confirmed references with the observed first submission');history.pushState({},'','/c/unrelated');await TEST.step();check(TEST.data.phase==='paused'&&TEST.clicks===1,'Later navigation still pauses rather than sending in another chat');history.pushState({},'',original);});
+ await test('Mapped pack cannot start without manifest or current image set',async()=>{TEST.data.mappedPack=true;let r=await TEST.send('START');check(!r.ok&&TEST.clicks===0,'Missing manifest must block Send');TEST.data.frameReferences=[{files:['LOC_FESTIVAL.png'],gap:''}];r=await TEST.send('START');check(!r.ok&&r.error.includes('different reference set'),'Missing active images must block Send');});
+ await test('Mapped reference changes pause without submitting next frame',async()=>{TEST.data.queueMode='storyboard';TEST.data.autoDownload=false;TEST.data.mappedPack=true;TEST.data.frameReferences=[{files:['LOC_FESTIVAL.png'],gap:''},{files:['CHAR_ANAYA.png','LOC_FESTIVAL.png'],gap:''}];TEST.data.referenceSummary={revision:'mapped',names:['LOC_FESTIVAL.png'],mappingKey:JSON.stringify(TEST.data.frameReferences[0])};TEST.data.referenceSession={revision:'mapped',tabId:7,conversation:location.pathname,state:'ready'};await submitted();check(TEST.sends[0].includes('REFERENCE GUIDE:')&&TEST.sends[0].includes('LOC_FESTIVAL.png'),'Mapped guide names location reference');await TEST.step();await imageReady();for(let i=0;i<8;i++)await TEST.step();check(TEST.data.index===1&&TEST.data.phase==='paused'&&TEST.clicks===1,'New reference set pauses before next prompt');});
+ await test('Zero-image mapped frame requires explicit mapping review',async()=>{TEST.data.queueMode='storyboard';TEST.data.mappedPack=true;TEST.data.frameReferences=[{files:[],gap:'Missing exact setup'}];let r=await TEST.send('START');check(!r.ok&&TEST.clicks===0,'Zero-image gap cannot silently run');TEST.data.referenceSummary={revision:'zero',names:[],mappingKey:JSON.stringify(TEST.data.frameReferences[0])};r=await TEST.send('START');await TEST.flush();check(r.ok&&TEST.data.pending?.state==='prepared','Reviewed zero-image frame may prepare');});
+
+ const setupAuto=()=>{
+  TEST.data.queueMode='storyboard';TEST.data.master='';TEST.data.autoReferences=true;TEST.data.mappedPack=true;
+  TEST.data.prompts=['S01_F001 || Festival courtyard','S01_F002 || Anaya plays','S01_F003 || Anaya smiles'];
+  TEST.data.frameReferences=[{files:['LOC_FESTIVAL.png'],gap:''},{files:['CHAR_ANAYA.png','LOC_FESTIVAL.png','PROP_BOARD.png'],gap:''},{files:['CHAR_ANAYA.png','LOC_FESTIVAL.png','PROP_BOARD.png'],gap:''}];
+  const pixel='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6WQAAAABJRU5ErkJggg==';
+  TEST.data.referencePackAssets=Object.fromEntries(['LOC_FESTIVAL.png','CHAR_ANAYA.png','PROP_BOARD.png'].map(name=>[name,{name,type:'image/png',dataUrl:pixel}]));
+  const input=document.createElement('input');input.id='auto-reference-input';input.type='file';input.accept='image/*';input.multiple=true;
+  const cards=document.createElement('div');cards.id='auto-reference-cards';document.getElementById('composer').prepend(input,cards);
+  const uploads=[];input.onchange=()=>{uploads.push([...input.files].map(f=>f.name));cards.replaceChildren();for(const file of input.files){const img=document.createElement('img');img.alt=file.name;img.src='/pixel.png?reference='+encodeURIComponent(file.name);cards.append(img);}};
+  return {input,cards,uploads};
+ };
+ const autoUntil=async(fn,label)=>{for(let n=0;n<35&&!fn()&&TEST.data.phase==='running';n++)await TEST.step();check(fn(),label+'; '+TEST.data.phase+': '+TEST.data.error);};
+ await test('Automatic mapped queue uploads, waits, sends scenes, downloads and changes references without confirmation',async()=>{
+  const a=setupAuto();await TEST.send('START');await TEST.flush();
+  await autoUntil(()=>TEST.clicks===1,'First automatic scene sends');check(a.uploads.length===1&&a.uploads[0].join()==='LOC_FESTIVAL.png','First scene uploads matching location only');
+  await imageReady('auto-first');TEST.downloadStates[1]={state:'complete'};await TEST.step();
+  await autoUntil(()=>TEST.clicks===2,'Second automatic scene sends');check(a.uploads.length===2&&a.uploads[1].length===3,'Reference change automatically uploads new exact set');
+  await imageReady('auto-second');TEST.downloadStates[2]={state:'complete'};await TEST.step();
+  await autoUntil(()=>TEST.clicks===3,'Third automatic scene sends');check(a.uploads.length===2,'Unchanged mapping reuses sent references');
+  check(TEST.sends[2].includes('REFERENCE GUIDE:')&&TEST.sends[2].includes('PROP_BOARD.png'),'Every mapped scene names its references even when reused');
+  await imageReady('auto-third');TEST.downloadStates[3]={state:'complete'};await TEST.step();await TEST.step();check(TEST.data.phase==='done'&&TEST.downloads.length===3,'Automatic queue completes after all downloads');
+ });
+ await test('Enabled Send and loaded thumbnails cannot bypass an upload progress indicator',async()=>{
+  const a=setupAuto();await TEST.send('START');await TEST.flush();const progress=document.createElement('span');progress.setAttribute('role','progressbar');progress.textContent='Uploading';a.cards.append(progress);
+  for(let n=0;n<9;n++)await TEST.step();check(TEST.clicks===0&&!TEST.data.pending&&a.uploads.length===1,'No prompt or duplicate upload while still uploading');
+  progress.remove();await autoUntil(()=>TEST.clicks===1,'Finished upload sends automatically after stable thumbnails');
+ });
+ await test('Automatic reference failures pause and Resume observes the existing upload without repeating it',async()=>{
+  const a=setupAuto();await TEST.send('START');await TEST.flush();const error=document.createElement('div');error.setAttribute('role','alert');error.textContent='Image upload failed';a.cards.append(error);await TEST.step();
+  check(TEST.data.phase==='paused'&&TEST.clicks===0&&a.uploads.length===1,'Failed upload cannot send');error.remove();await TEST.send('RESUME');await TEST.flush();await autoUntil(()=>TEST.clicks===1,'Resume observes repaired upload');check(a.uploads.length===1,'Resume does not repeat the upload');
+ });
+ await test('Missing automatic reference file stops before any upload or scene',async()=>{
+  const a=setupAuto();delete TEST.data.referencePackAssets['LOC_FESTIVAL.png'];await TEST.send('START');await TEST.flush();check(TEST.data.phase==='paused'&&TEST.clicks===0&&a.uploads.length===0,'Missing asset is never substituted');
+ });
+ await test('Existing composer images and manual drafts are preserved by automatic references',async()=>{
+  const a=setupAuto();const img=document.createElement('img');img.src='/pixel.png?manual';a.cards.append(img);await img.decode();await TEST.send('START');await TEST.flush();check(TEST.data.phase==='paused'&&a.cards.contains(img)&&a.uploads.length===0,'Existing attachment is not removed or sent');
+ });
+ await test('Pause at automatic upload commit prevents dispatch and permits one upload after Resume',async()=>{
+  const a=setupAuto();TEST.afterSet=patch=>{if(patch.referenceSession?.automatic){TEST.data.phase='paused';TEST.afterSet=null;}};await TEST.send('START');await TEST.flush();check(TEST.clicks===0&&a.uploads.length===0&&TEST.data.referenceSession===null,'Pause before dispatch causes no upload');await TEST.send('RESUME');await TEST.flush();await autoUntil(()=>TEST.clicks===1,'Resume uploads and sends once');check(a.uploads.length===1,'Exactly one upload after Resume');
+ });
+ await test('Reference gaps pause by default and explicit gap preference permits mapped files',async()=>{
+  const a=setupAuto();TEST.data.frameReferences[0].gap='Missing exact courtyard setup';await TEST.send('START');await TEST.flush();check(TEST.data.phase==='paused'&&a.uploads.length===0&&TEST.clicks===0,'Gap blocks before upload');TEST.data.allowReferenceGaps=true;await TEST.send('RESUME');await TEST.flush();await autoUntil(()=>TEST.clicks===1,'Explicit gap preference allows original mapped files');
+ });
+ await test('An extra attachment appearing during automatic upload pauses without deleting files',async()=>{
+  const a=setupAuto();await TEST.send('START');await TEST.flush();const img=document.createElement('img');img.src='/pixel.png?extra';a.cards.append(img);await img.decode();await TEST.step();check(TEST.data.phase==='paused'&&TEST.clicks===0&&a.cards.contains(img),'Extra attachment is preserved and cannot be sent automatically');
+ });
+ await test('Automatic upload timeout pauses without repeated file requests',async()=>{
+  const a=setupAuto();await TEST.send('START');await TEST.flush();a.cards.replaceChildren();await TEST.step(121000);check(TEST.data.phase==='paused'&&TEST.clicks===0&&a.uploads.length===1,'Unverifiable upload times out without a duplicate');
+ });
+ await test('Manual review overrides an unrecognizable automatic attachment layout',async()=>{
+  const a=setupAuto();await TEST.send('START');await TEST.flush();a.cards.replaceChildren();await TEST.step(121000);check(TEST.data.phase==='paused','Unknown layout first pauses');let r=await TEST.send('CONFIRM_REFERENCES');check(r.ok&&TEST.data.referenceSession.automatic===false,'Manual confirmation is retained as explicit review');await TEST.send('RESUME');await TEST.flush();await autoUntil(()=>TEST.clicks===1,'Manually reviewed references can resume without repeated uploads');check(a.uploads.length===1,'Manual fallback does not upload again');
+ });
  check(!TEST.errors.length,JSON.stringify(TEST.errors));document.getElementById('test-result').textContent=JSON.stringify({status:'PASS',checks:TEST.checks,cases:TEST.cases});
 })().catch(e=>document.getElementById('test-result').textContent=JSON.stringify({status:'FAIL',error:e.stack,checks:TEST.checks,cases:TEST.cases,errors:TEST.errors}));
