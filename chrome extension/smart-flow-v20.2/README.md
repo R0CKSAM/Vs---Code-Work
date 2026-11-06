@@ -1,3 +1,20 @@
+# v20.8.6 - timestamped upload aliases
+
+Frame 16 stopped before Send because ChatGPT displayed a valid location upload as
+`LOC_FESTIVAL(20261106-062938).png`. Its Anaya and prop uploads used numeric suffixes.
+The shared filename matcher now canonicalizes numeric and YYYYMMDD-HHMMSS /
+YYYYMMDD_HHMMSS timestamp suffixes, including repeated suffixes. Upload verification
+and requested-reference lookup use the same canonicalization. The expected file
+stem must still match; unrelated files remain blocked. Hidden stale composer
+controls are ignored, and a true mismatch identifies the unexpected/expected names.
+
+175 queue/recovery checks, 36 popup checks and 38 reference-matcher checks cover
+this behavior, including the observed timestamp, stacked suffixes, hidden stale
+labels and unrelated timestamped files. The update was installed in existing
+Chrome. Frame 16 uploaded all three references, automatically approved and sent
+its scene without resending completed Frames 9-15. See the latest production
+check artifact for saving/advance verification.
+
 # v20.8.5 - live upload filename verification
 
 Live ChatGPT uploads were renamed to `LOC_FESTIVAL(7).png` and

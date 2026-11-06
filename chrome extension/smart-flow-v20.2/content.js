@@ -83,17 +83,19 @@
    const images=composerImages();
    if(images.length>names.length)return {error:'Unexpected extra composer images. Check the attachments before resuming. Your files were kept.'};
    const listed=qs('input[type="file"]',scope).flatMap(input=>[...(input.files||[])].map(f=>f.name));
-   if(listed.length&&(listed.length!==names.length||listed.some(name=>!names.includes(name))))return {error:'The selected reference files changed during upload. Check the attachments before resuming.'};
-   const labels=qs('[title],[aria-label],img[alt]',scope).flatMap(e=>[e.getAttribute('title'),e.getAttribute('aria-label'),e.getAttribute('alt')]).filter(Boolean);
+   const canonicalName=globalThis.SmartFlowReferenceMatcher.canonicalFilename;
+   if(listed.length&&(listed.length!==names.length||listed.some(name=>!names.some(expected=>canonicalName(expected)===canonicalName(name)))))return {error:'The selected reference files changed during upload. Check the attachments before resuming.'};
+   const labels=qs('[title],[aria-label],img[alt]',scope).filter(visible).flatMap(e=>[e.getAttribute('title'),e.getAttribute('aria-label'),e.getAttribute('alt')]).filter(Boolean);
    const fileLabels=labels.filter(label=>/\.(png|jpe?g|webp)$/i.test(label.trim()));
    const namesMatch=label=>names.some(name=>{
-     const text=label.trim().toLowerCase().replace(/\s*\(\d+\)(?=\.(?:png|jpe?g|webp)$)/i,''),file=name.toLowerCase();
+     const text=canonicalName(label),file=canonicalName(name);
      if(text===file)return true;
      if(!text.endsWith(file))return false;
      const prefix=text.slice(0,-file.length);
      return /[\s:/'"\\]$/.test(prefix);
    });
-   if(fileLabels.some(label=>!namesMatch(label)))return {error:'An unexpected image filename appeared in the composer. Check its references before resuming.'};
+   const unmatched=fileLabels.find(label=>!namesMatch(label));
+   if(unmatched)return {error:'Could not confirm uploaded reference "'+unmatched.slice(0,140)+'". Expected: '+names.join('; ')+'. No scene was sent.'};
    if(images.length!==names.length||images.some(img=>!img.complete||!img.naturalWidth))return {ready:false,blocked:images.length>0};
    const signature=images.map(img=>(img.currentSrc||img.src)+'|'+img.naturalWidth+'x'+img.naturalHeight).join(';');
    return {ready:!!names.length,signature,session};

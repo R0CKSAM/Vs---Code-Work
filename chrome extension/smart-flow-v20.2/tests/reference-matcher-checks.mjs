@@ -22,4 +22,6 @@ assert.throws(()=>matcher.catalog(names,{version:1,entries:[{file:'no-such-file.
 assert.equal(data.entries.length,14);checks++;
 const full=matcher.catalog(names,JSON.parse(fs.readFileSync(path.join(pack,'Reference_Catalog.json'),'utf8')));
 for(const text of ['Stagehand','Young Volunteer','Volunteer','Please attach Aarohan technical crew reference board.png']){const result=matcher.resolve(text,full);assert.deepEqual(result.files,['Aarohan technical crew reference board.png']);assert.deepEqual(result.missing,[]);checks+=2;}
+for(const variant of ['LOC_FESTIVAL(7).png','LOC_FESTIVAL(20261106-062938).png','LOC_FESTIVAL(20261106_062938)(2)(3).png']){assert.equal(matcher.canonicalFilename(variant),'loc_festival.png');assert.deepEqual(matcher.resolve(variant,full).files,['LOC_FESTIVAL.png']);checks+=2;}
+assert.equal(matcher.canonicalFilename('UNRELATED(20261106-062938).png'),'unrelated.png');checks++;
 console.log(JSON.stringify({status:'PASS',checks,indexedFiles:full.entries.length,verifiedNamedCharacters:15,unmapped:[]}));

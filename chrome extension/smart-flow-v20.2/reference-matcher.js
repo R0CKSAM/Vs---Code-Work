@@ -1,6 +1,7 @@
 // Local catalog: filenames and verified character labels, never guessed identities.
 globalThis.SmartFlowReferenceMatcher=(()=>{
- const normalize=s=>String(s||'').toLowerCase().replace(/\s*\(\d+\)(?=\.(?:png|jpe?g|webp)\b)/gi,'').replace(/[^a-z0-9]+/g,' ').trim();
+ const canonicalFilename=s=>String(s||'').toLowerCase().replace(/(?:\s*\((?:\d+|\d{8}[-_]\d{6}(?:[-_]\d+)?)\))+(?=\.(?:png|jpe?g|webp)\b)/gi,'').trim();
+ const normalize=s=>canonicalFilename(s).replace(/[^a-z0-9]+/g,' ').trim();
  const known={
   'CHAR_ANAYA.png':['Anaya'], 'CHAR_ARJUN.png':['Arjun'], 'CHAR_MEHAK.png':['Mehak'],
   'CHAR_TRISHA.png':['Trisha'], 'CHAR_VEER.png':['Veer'],
@@ -51,5 +52,5 @@ globalThis.SmartFlowReferenceMatcher=(()=>{
   const cast=/CURRENT VISIBLE CAST\s*\/\s*CROP:\s*([^\n\r]+)/i.exec(prompt)?.[1]||'';
   return resolve(cast,data).files;
  }
- return {catalog,resolve,request,castFiles};
+ return {catalog,resolve,request,castFiles,canonicalFilename};
 })();

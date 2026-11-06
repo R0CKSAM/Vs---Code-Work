@@ -1,0 +1,39 @@
+{
+  "checkedAt": "2026-11-06T12:11:20.092517+05:30",
+  "installedVersion": "20.8.6",
+  "stoppedAt": "S01_F016",
+  "cause": "Live location upload was renamed LOC_FESTIVAL(20261106-062938).png; numeric-only normalization rejected the timestamp.",
+  "observedReferences": [
+    "CHAR_ANAYA(1).png",
+    "LOC_FESTIVAL(20261106-062938).png",
+    "PROP_BOARD(1).png"
+  ],
+  "fixes": [
+    "Shared numeric/timestamp/repeated suffix canonicalization for upload checks and reference lookup",
+    "Visible composer labels only; hidden stale controls ignored",
+    "True mismatch identifies actual and expected filenames"
+  ],
+  "verified": {
+    "threeReferencesUploaded": true,
+    "automaticApproval": true,
+    "currentSceneSentOnce": true,
+    "frame16Downloaded": "C:\\Users\\Intern\\Downloads\\Storyboard Studio\\016_S01_F016.png",
+    "frame16Bytes": 2237677,
+    "frame16SHA256": "f5c16eba425144fcd59b199a8773df49f6d4111b65fe9653dd0c958867c69097",
+    "differentFromPreviousFrames": true,
+    "nextFrameSeenInLiveAccessibilityTree": "S01_F017",
+    "queueLeftRunning": true,
+    "completedEarlierFramesResent": false,
+    "frame17Downloaded": "C:\\Users\\Intern\\Downloads\\Storyboard Studio\\017_S01_F017.png",
+    "frame17SHA256": "cbdb242c1de0e6734354c1d8bdb9aaf83d6e4e7099507cb6553f7a74fbc23121",
+    "frame17Unique": true
+  },
+  "tests": {
+    "queueAndRecovery": 175,
+    "popup": 36,
+    "referenceMatcher": 38,
+    "background": 17,
+    "catalogUI": 22
+  },
+  "limits": "Verified automatic uploads, approval, saving of Frames 16 and 17, and continuation. Full queue completion not claimed."
+}

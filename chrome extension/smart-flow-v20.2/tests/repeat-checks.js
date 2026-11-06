@@ -192,5 +192,15 @@
  await test('Numbered names belonging to another file still stop the queue',async()=>{
   const a=setupAuto();await TEST.send('START');await TEST.flush();a.cards.querySelector('img').alt='UNRELATED(7).png';await TEST.step();check(TEST.data.phase==='paused'&&TEST.clicks===0,'Only numeric variants of expected filenames are accepted');
  });
+
+ await test('Timestamped and repeatedly numbered live upload filenames continue without manual approval',async()=>{
+  const a=setupAuto();await TEST.send('START');await TEST.flush();a.cards.querySelector('img').alt='LOC_FESTIVAL(20261106-062938)(2).png';const remove=document.createElement('button');remove.type='button';remove.setAttribute('aria-label','Remove LOC_FESTIVAL(20261106-062938)(2).png');a.cards.append(remove);await autoUntil(()=>TEST.clicks===1,'Timestamped live file name is accepted');check(a.uploads.length===1,'Timestamp alias requires no repeated upload');
+ });
+ await test('Hidden stale attachment labels do not block a new valid upload set',async()=>{
+  const a=setupAuto();await TEST.send('START');await TEST.flush();const stale=document.createElement('button');stale.type='button';stale.style.display='none';stale.setAttribute('aria-label','Remove OLD_REFERENCE.png');a.cards.append(stale);await autoUntil(()=>TEST.clicks===1,'Hidden historical attachment label is ignored');
+ });
+ await test('Timestamped unrelated filenames remain blocked with an actionable message',async()=>{
+  const a=setupAuto();await TEST.send('START');await TEST.flush();a.cards.querySelector('img').alt='UNRELATED(20261106-062938).png';await TEST.step();check(TEST.data.phase==='paused'&&TEST.clicks===0&&TEST.data.error.includes('UNRELATED')&&TEST.data.error.includes('LOC_FESTIVAL.png'),'Unknown file is still rejected and identifies the mismatch');
+ });
  check(!TEST.errors.length,JSON.stringify(TEST.errors));document.getElementById('test-result').textContent=JSON.stringify({status:'PASS',checks:TEST.checks,cases:TEST.cases});
 })().catch(e=>document.getElementById('test-result').textContent=JSON.stringify({status:'FAIL',error:e.stack,checks:TEST.checks,cases:TEST.cases,errors:TEST.errors}));
