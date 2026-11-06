@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Smart Flow",
-  "version": "20.7.0",
+  "version": "20.8.5",
   "description": "Smart Flow premium storyboard queue: aurora dashboard and color-coded controls.",
   "permissions": [
     "storage",
@@ -34,6 +34,7 @@
         "https://chat.openai.com/*"
       ],
       "js": [
+        "reference-matcher.js",
         "content.js"
       ],
       "run_at": "document_idle"

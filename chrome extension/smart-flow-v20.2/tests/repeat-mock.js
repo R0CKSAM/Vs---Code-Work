@@ -12,16 +12,16 @@ TEST.send=action=>new Promise(resolve=>TEST.listener({action,tabId:7},{},resolve
 TEST.step=async(ms=700)=>{TEST.now+=ms;if(TEST.ticker)await TEST.ticker();await TEST.flush();};
 document.getElementById('composer').addEventListener('submit',e=>{
  e.preventDefault();TEST.clicks++;const editor=TEST.editor(),text=editor.value??editor.innerText;TEST.sends.push(text);
- const user=document.createElement('div');user.dataset.messageAuthorRole='user';user.dataset.messageId='user-'+TEST.clicks;user.textContent=text;document.getElementById('conversation').append(user);
+ const user=document.createElement('div');user.dataset.messageAuthorRole='user';user.dataset.messageId='user-'+TEST.clicks;user.textContent=text;if(TEST.modernDOM){user.removeAttribute('data-message-author-role');user.removeAttribute('data-message-id');user.dataset.chatgptSearchUnitKey='fallback-turn-'+TEST.clicks+':0:user';user.dataset.chatgptSearchMessageIds='modern-user-'+TEST.clicks;}document.getElementById('conversation').append(user);
  if(editor.tagName==='TEXTAREA')editor.value='';else editor.textContent='';document.getElementById('auto-reference-cards')?.replaceChildren();const referenceInput=document.getElementById('auto-reference-input');if(referenceInput)referenceInput.value='';document.getElementById('generation').innerHTML='<button aria-label="Stop generating">Stop</button>';
 });
 TEST.preview=async(asset,owner='assistant-'+asset)=>{
- const parent=document.createElement('div');parent.dataset.messageAuthorRole='assistant';parent.dataset.messageId=owner;
+ const parent=document.createElement('div');parent.dataset.messageAuthorRole='assistant';parent.dataset.messageId=owner;if(TEST.modernDOM){parent.removeAttribute('data-message-author-role');parent.removeAttribute('data-message-id');parent.dataset.chatgptSearchMessageIds=owner;}
  const button=document.createElement('button');button.type='button';button.dataset.testid='generated-image-preview';button.setAttribute('aria-label','Generated image '+asset);
  const img=document.createElement('img');img.src='/pixel.png?asset='+encodeURIComponent(asset)+'&sig=one';button.append(img);parent.append(button);document.getElementById('conversation').append(parent);await img.decode();return {parent,button,img};
 };
 TEST.reset=async patch=>{
- if(TEST.listener)await TEST.send('PAUSE');await TEST.flush();TEST.now+=10000;TEST.clicks=0;TEST.sends=[];TEST.downloads=[];TEST.downloadStates={};TEST.nextId=1;TEST.failDownload=false;TEST.afterSet=null;
+ if(TEST.listener)await TEST.send('PAUSE');await TEST.flush();TEST.now+=10000;TEST.clicks=0;TEST.sends=[];TEST.downloads=[];TEST.downloadStates={};TEST.nextId=1;TEST.failDownload=false;TEST.afterSet=null;TEST.modernDOM=false;
  TEST.data={master:'Must not be appended',prompts:['Repeat 001 || Next','Repeat 002 || Next'],repeatLine:'Next',queueMode:'repeat',index:0,phase:'paused',pending:null,queueId:'repeat-'+TEST.now,ownerTabId:7,frameHistory:[],autoDownload:true,autoReferences:false,...patch};
  document.getElementById('auto-reference-input')?.remove();document.getElementById('auto-reference-cards')?.remove();document.getElementById('conversation').replaceChildren();document.getElementById('generation').replaceChildren();TEST.editor().value='';
 };

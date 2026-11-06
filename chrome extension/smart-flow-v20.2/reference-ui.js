@@ -22,15 +22,17 @@
   const locked=operationBusy||importBusy||s.phase==='running'||!!s.pending;
   el('autoReferences').checked=s.autoReferences!==false;
   el('allowReferenceGaps').checked=!!s.allowReferenceGaps;
+  el('referenceApproval').value=s.referenceApproval==='manual'?'manual':'automatic';
+  el('referenceApproval').disabled=locked;
   for(const id of ['autoReferences','allowReferenceGaps'])el(id).disabled=locked;
   for(const id of ['autoReferences','allowReferenceGaps'])el(id).closest('label').hidden=!(s.mappedPack||s.frameReferences);
   for(const id of ['aarohanReferences','chooseReferences','referenceFiles','clearReferences'])el(id).disabled=locked;
   el('attachReferences').disabled=locked||!n;
   el('confirmReferences').hidden=!n||session?.state!=='attached';
-  el('confirmReferences').disabled=locked;
+  el('confirmReferences').disabled=operationBusy||importBusy||!!s.pending&&s.pending.state!=='reference-upload'||(s.phase==='running'&&!session?.automatic);
   el('clearReferences').hidden=!n;
   el('referencePanel').classList.toggle('reference-required',required(s)&&!n);
-  el('chooseReferencePack').disabled=locked;
+  el('chooseReferencePack').disabled=operationBusy||importBusy||s.phase==='running';
   for(const id of ['aarohanReferences','chooseReferences'])el(id).hidden=!!(s.mappedPack||s.frameReferences);
   if(s.mappedPack||s.frameReferences){
    el('referencePanel').querySelector('.caption-muted').textContent=s.autoReferences!==false?'AUTOMATIC':'MANUAL';
@@ -41,7 +43,7 @@
    el('attachReferences').disabled=locked||!mapping;
    if(!ready)el('nextStep').textContent=el('referenceStatus').textContent;
    if(s.autoReferences!==false&&mapping){
-    el('referenceStatus').textContent=s.phase==='running'?(s.activity||'Uploading references and generating scenes automatically.'):'Automatic references ready. Choose Start or Resume; matching images will upload before the scene prompt.';
+    el('referenceStatus').textContent=s.phase==='running'?(s.activity||'Uploading references and generating scenes automatically.'):s.referenceApproval==='manual'?'Manual approval: references upload automatically, then wait for your confirmation.':'Automatic approval: references upload, wait 10 seconds, then continue. Choose Start or Resume.';
     if(mapping.gap&&!s.allowReferenceGaps)el('referenceStatus').textContent+=' This frame has a reference gap to review: '+mapping.gap;
     el('nextStep').textContent=el('referenceStatus').textContent;
    }
@@ -61,11 +63,15 @@
   const s=await chrome.storage.local.get(['phase','pending']);if(s.phase==='running'||s.pending)throw Error('Pause and finish the pending frame before changing reference automation.');
   await chrome.storage.local.set({[id]:checked});
  });};
+ el('referenceApproval').onchange=e=>{const mode=e.target.value;op(async()=>{
+  const s=await chrome.storage.local.get(['phase','pending']);if(s.phase==='running'||s.pending)throw Error('Pause and finish the current action before changing approval mode.');
+  await chrome.storage.local.set({referenceApproval:mode==='manual'?'manual':'automatic'});
+ });};
  el('referenceFiles').onchange=e=>{const files=[...e.target.files];e.target.value='';if(files.length)op(()=>save(files));};
  el('chooseReferencePack').onclick=()=>el('referencePackFolder').click();
  el('referencePackFolder').onchange=e=>{const files=[...e.target.files];e.target.value='';if(files.length)op(async()=>{
-  const s=await chrome.storage.local.get(['phase','pending','prompts','mappedPack']);
-  if(s.phase==='running'||s.pending)throw Error('Pause and finish the pending frame before loading a reference pack.');
+  const s=await chrome.storage.local.get(['phase','pending','prompts','mappedPack','index','queueId','frameReferences']);
+  if(s.phase==='running')throw Error('Pause the queue before loading or updating its reference catalog.');
   if(!s.mappedPack||!s.prompts?.length)throw Error('Import one of the pack’s Frame ID / Prompt CSV files first.');
   const manifest=files.filter(f=>f.name==='Attachment_Manifest.csv');
   if(manifest.length!==1)throw Error('Choose the complete Aarohan_Reference_Pack folder, including Attachment_Manifest.csv and references.');
@@ -74,7 +80,14 @@
   const mapped=new Map();
   for(const row of rows){if(mapped.has(row[id]))throw Error('Duplicate frame in attachment manifest: '+row[id]);mapped.set(row[id],{files:(row[refs]||'').split(';').map(x=>x.trim()).filter(Boolean),gap:row[gap]||''});}
   const frameReferences=s.prompts.map(line=>{const label=line.split('||')[0].trim(),m=mapped.get(label);if(!m)throw Error('No attachment mapping for '+label);if(m.files.length>8||new Set(m.files).size!==m.files.length)throw Error('Invalid reference count for '+label);return m;});
-  const needed=[...new Set(frameReferences.flatMap(m=>m.files))],assets={};
+  const allNames=files.filter(f=>/\/references\//.test('/'+f.webkitRelativePath)&&/\.(png|jpe?g|webp)$/i.test(f.name)).map(f=>f.name);
+  const customFiles=files.filter(f=>f.name==='Reference_Catalog.json');
+  if(customFiles.length>1)throw Error('Choose a folder with only one Reference_Catalog.json.');
+  const referenceCatalog=SmartFlowReferenceMatcher.catalog(allNames,customFiles.length?JSON.parse(await customFiles[0].text()):null);
+  for(let i=0;i<frameReferences.length;i++)frameReferences[i].files=[...new Set([...frameReferences[i].files,...SmartFlowReferenceMatcher.castFiles(s.prompts[i],referenceCatalog)])];
+  if(s.pending&&s.frameReferences?.[s.index||0])frameReferences[s.index||0]=s.frameReferences[s.index||0];
+  for(const m of frameReferences)if(m.files.length>8)throw Error('A frame needs more than eight reference images. Review its mapping.');
+  const needed=[...new Set([...frameReferences.flatMap(m=>m.files),...allNames])],assets={};
   for(const name of needed){
    if(!/^[\w -]+\.(png|jpg|jpeg|webp)$/i.test(name))throw Error('Invalid reference filename: '+name);
    const matches=files.filter(f=>f.name===name&&/\/references\//.test('/'+f.webkitRelativePath));
@@ -82,9 +95,9 @@
    assets[name]=await read(matches[0]);
   }
   for(const m of frameReferences)if(m.files.reduce((n,name)=>n+files.find(f=>f.name===name).size,0)>40_000_000)throw Error('A frame exceeds the 40 MB reference limit.');
-  const live=await chrome.storage.local.get(['phase','pending','prompts']);
-  if(live.phase==='running'||live.pending||JSON.stringify(live.prompts)!==JSON.stringify(s.prompts))throw Error('Queue changed while loading. Try again.');
-  await chrome.storage.local.set({frameReferences,referencePackAssets:assets,referenceImages:[],referenceSummary:null,referenceSession:null,error:'',activity:`Mapped ${frameReferences.length} frames to ${needed.length} local reference images. Attach the current frame’s references before Start.`});
+  const live=await chrome.storage.local.get(['phase','pending','prompts','queueId']);
+  if(live.phase==='running'||live.queueId!==s.queueId||JSON.stringify(live.pending)!==JSON.stringify(s.pending)||JSON.stringify(live.prompts)!==JSON.stringify(s.prompts))throw Error('Queue changed while loading. Try again.');
+  await chrome.storage.local.set({frameReferences,referenceCatalog,referencePackAssets:assets,...(s.pending?{}:{referenceImages:[],referenceSummary:null,referenceSession:null}),error:'',activity:`Mapped ${frameReferences.length} frames. ${needed.length} reference images indexed for automatic requests. ${s.pending?'Pending frame preserved; choose Resume.':'Choose Start to continue.'}`});
  });};
  el('attachReferences').onclick=()=>op(async()=>{
   const s=await chrome.storage.local.get(['frameReferences','index','referenceSummary','referencePackAssets','phase','pending']);

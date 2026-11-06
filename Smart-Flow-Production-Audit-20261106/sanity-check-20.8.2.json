@@ -1,0 +1,91 @@
+{
+  "checkedAt": "2026-11-06T11:21:25.553743+05:30",
+  "installedVersion": "20.8.2",
+  "finding": "Live ChatGPT uses search-unit/message-ID attributes, while old selectors returned no user or assistant messages.",
+  "fix": "Support both author-role and search-unit layouts, including separate generated-image tool blocks. Keep submitted-user ownership and hash guards.",
+  "liveEvidence": [
+    {
+      "version": "20.8.1",
+      "status": {
+        "phase": "paused",
+        "index": 9,
+        "total": 191,
+        "mode": "storyboard",
+        "pendingState": "waiting",
+        "lastError": "Output not confirmed after 18 minutes. If image is complete, use Mark frame complete.",
+        "lastActivity": "Paused safely; inspect this frame before continuing."
+      },
+      "diagnostics": {
+        "phase": "paused",
+        "index": 9,
+        "pendingState": "waiting",
+        "userId": "",
+        "baselineUserId": null,
+        "submittedUserId": null,
+        "promptMatches": false,
+        "promptPrefixAt": -1,
+        "userTextLength": 0,
+        "promptLength": 5632,
+        "anchorId": null,
+        "candidateImages": 0,
+        "lastAssistantId": "",
+        "lastAssistantWasBaseline": false,
+        "catalogFiles": 14
+      }
+    },
+    {
+      "version": "20.8.2",
+      "status": {
+        "phase": "paused",
+        "index": 9,
+        "total": 191,
+        "mode": "storyboard",
+        "pendingState": "waiting",
+        "lastError": "Output not confirmed after 18 minutes. If image is complete, use Mark frame complete.",
+        "lastActivity": "Paused safely; inspect this frame before continuing."
+      },
+      "diagnostics": {
+        "phase": "paused",
+        "index": 9,
+        "pendingState": "waiting",
+        "userId": "3037d84a-ec8c-4c54-b0fa-d0c2eee07ba0",
+        "baselineUserId": null,
+        "submittedUserId": null,
+        "promptMatches": true,
+        "promptPrefixAt": 0,
+        "userTextLength": 5639,
+        "promptLength": 5632,
+        "anchorId": "3037d84a-ec8c-4c54-b0fa-d0c2eee07ba0",
+        "candidateImages": 0,
+        "lastAssistantId": "c0b1f31c-6001-5ac5-b3f2-4dcd04d67691",
+        "lastAssistantWasBaseline": false,
+        "catalogFiles": 14
+      }
+    }
+  ],
+  "verifiedAfterResume": {
+    "pendingFrame": "S01_F010",
+    "queuePosition": 10,
+    "queueTotal": 191,
+    "result": "Paused with missing Stagehand/Young Volunteer references within seconds",
+    "originalSceneResent": false,
+    "olderImageSaved": false,
+    "currentSceneMarkedComplete": false
+  },
+  "composer": {
+    "restoredUnsentReference": "CAST_SUPPORT.png",
+    "sent": false
+  },
+  "checks": {
+    "queueAndRecovery": 165,
+    "popup": 36,
+    "background": 17,
+    "catalogUI": 22,
+    "matcher": 23
+  },
+  "remaining": [
+    "Frame 9 existing PNG is a duplicate of Frame 5 and needs regeneration.",
+    "Stagehand and Young Volunteer designs remain absent from inspected reference images."
+  ],
+  "notClaimed": "A completed 191-frame unattended production run."
+}

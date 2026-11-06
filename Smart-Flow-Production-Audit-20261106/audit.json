@@ -1,0 +1,58 @@
+{
+  "auditedAt": "2026-11-06T11:02:02.608274+05:30",
+  "installedVersion": "20.8.1",
+  "scope": [
+    "Existing production Chrome queue state and assistant replies",
+    "Downloaded frame hashes",
+    "Start/resume, reference matching and recovery, image ownership and saving",
+    "Isolated actual-extension acceptance against a mock conversation"
+  ],
+  "findings": [
+    {
+      "severity": "critical",
+      "finding": "Frame 9 saved an older image while the assistant requested missing references",
+      "evidence": "009_S01_F009.png and 005_S01_F005.png have identical SHA-256",
+      "sha256": "410bd23130923bf92b9ef13fe366406b9eaf002c8ddb75454ab8d1712f90cbc1",
+      "fix": "Assistant image must follow the current submitted user turn; saved-image hash ledger blocks cross-frame duplicates",
+      "existingFileAction": "Preserved; flagged invalid in saved-image-audit.csv"
+    },
+    {
+      "severity": "blocking input",
+      "finding": "Frames 9/10 request Stagehand and Young Volunteer designs not present in the inspected pack",
+      "fix": "Clear missing-reference handling, no identity substitution",
+      "requires": "Supply the actual character references before regenerating these frames"
+    }
+  ],
+  "lastConfirmedProductionState": {
+    "phase": "paused",
+    "pendingFrame": "S01_F010",
+    "queueFrames": 191,
+    "noQueueReset": true,
+    "extensionReloaded": true,
+    "chatTabRefreshed": true,
+    "catalogFolderSelectedAgain": true,
+    "note": "Live UI interaction stopped after foreground switched to File Explorer. Do not infer that the full 191-frame run completed."
+  },
+  "validation": {
+    "queueAndRecoveryChecks": 154,
+    "popupChecks": 36,
+    "mappedFolderChecks": 22,
+    "backgroundDownloadChecks": 17,
+    "catalogChecks": 23,
+    "installedAcceptance": {
+      "status": "PASS",
+      "checks": 12,
+      "realUnpackedExtension": true,
+      "realOSFiles": true,
+      "directoryRelativeMetadataEmulated": true,
+      "fullResolutionFiles": true,
+      "actualChromeDownload": true,
+      "syntheticChatGPTOnly": true,
+      "liveImageCreditsUsed": 0,
+      "automaticReferenceRun": true,
+      "requestedReferenceRecovery": true
+    }
+  },
+  "productionReadyForUnattendedRun": false,
+  "reason": "Missing required crew identities and existing invalid Frame 9 require correction."
+}

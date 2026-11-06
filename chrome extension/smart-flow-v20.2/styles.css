@@ -118,3 +118,5 @@ body{width:370px;max-width:100%;overflow-x:hidden;overflow-y:auto}
 .actions{right:0;width:auto;max-width:370px}
 
 .reference-panel{border:1px solid #bfd8d1;border-radius:12px;padding:11px;margin:10px 0;background:#f4faf7;color:#244b44}.reference-panel .section-heading{font-size:12px}.reference-panel p{font-size:11px;line-height:1.45;margin:8px 0;overflow-wrap:anywhere}.reference-panel .reference-names{font-size:10px;color:#526b65;max-height:48px;overflow:auto}.reference-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.reference-panel button{font-size:11px;padding:9px 7px}.reference-panel #confirmReferences{width:100%;margin-top:8px;border-color:#1b8d73;color:#17624f}.reference-panel .reference-help{font-size:10px;color:#526b65}.reference-required{border-color:#b68a35;background:#fff8e9}
+
+#referenceApproval{display:block;width:100%;min-width:0;box-sizing:border-box;margin:6px 0 12px;padding:9px;border:1px solid #cbdedb;border-radius:8px;background:#fff;color:#163c40;font:inherit;}

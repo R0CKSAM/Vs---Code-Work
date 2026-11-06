@@ -9,7 +9,7 @@
  const pixel=await(await fetch('/pixel.png')).blob();
  const folderFiles=[new File([fixture.manifest],'Attachment_Manifest.csv',{type:'text/csv'}),...fixture.names.map(name=>{const f=new File([pixel],name,{type:'image/png'});Object.defineProperty(f,'webkitRelativePath',{value:'Aarohan_Reference_Pack/references/'+name});return f;})];
  $('referencePackFolder').onchange({target:{files:folderFiles,value:''}});await settle();
- check(test.data.frameReferences?.length===5&&Object.keys(test.data.referencePackAssets||{}).length===3,'Folder maps exact three required images for first five frames');
+ check(test.data.frameReferences?.length===5&&Object.keys(test.data.referencePackAssets||{}).length===fixture.names.length,'Folder indexes all fourteen images, including references outside the first five frames');
  check(test.data.frameReferences[0].files.join()==='LOC_FESTIVAL.png','First frame location image mapped');
  check(test.data.frameReferences[1].files.length===3,'Second frame character, location and prop images mapped');
  let pasted=0;test.editor().addEventListener('paste',e=>pasted+=e.clipboardData.files.length);
@@ -27,8 +27,12 @@
  // A missing file must fail before replacing the existing mapping or assets.
  $('referencePackFolder').onchange({target:{files:folderFiles.filter(f=>f.name!=='PROP_BOARD.png'),value:''}});await settle();
  check(test.data.referenceSummary.revision===revision&&$('alert').textContent.includes('PROP_BOARD.png'),'Missing image is visible and prior state preserved');
+ test.data.pending={state:'waiting',queueId:test.data.queueId,prompt:'Existing pending scene'};const savedPending=JSON.stringify(test.data.pending),savedSummary=JSON.stringify(test.data.referenceSummary);
+ $('referencePackFolder').onchange({target:{files:folderFiles,value:''}});await settle();check(JSON.stringify(test.data.pending)===savedPending&&JSON.stringify(test.data.referenceSummary)===savedSummary,'Catalog refresh preserves pending frame and active reference set');check(test.data.referenceCatalog.entries.length===fixture.names.length,'Paused pending frame can index the complete reference catalog');test.data.pending=null;await refresh();
  $('autoReferences').click();await settle();check(test.data.autoReferences===true,'Automatic reference preference is saved');
  $('allowReferenceGaps').click();await settle();check(test.data.allowReferenceGaps===true,'Gap preference is explicit and saved');
+ $('referenceApproval').value='manual';$('referenceApproval').dispatchEvent(new Event('change'));await settle();check(test.data.referenceApproval==='manual','Manual approval selector persists');
+ $('referenceApproval').value='automatic';$('referenceApproval').dispatchEvent(new Event('change'));await settle();check(test.data.referenceApproval==='automatic','Automatic ten-second selector persists');
  test.data.phase='running';await refresh();check($('autoReferences').disabled&&$('allowReferenceGaps').disabled,'Reference automation preferences are locked while running');
  test.data.phase='done';test.data.index=5;await refresh();check($('referenceStatus').textContent.includes('All mapped scenes completed')&&!$('referenceStatus').textContent.includes('Load the reference pack'),'Completed queue has accurate reference status');
  check(!POPUP_TEST.errors.length&&!test.errors.length,'No uncaught UI or content errors');

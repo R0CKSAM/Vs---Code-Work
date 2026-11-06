@@ -1,0 +1,36 @@
+{
+  "checkedAt": "2026-11-06T10:34:28.611411+05:30",
+  "extensionVersion": "20.7.1",
+  "environment": "Existing signed-in production Chrome window",
+  "method": "Windows accessibility and screenshots; no browser restart or queue modification",
+  "observedQueueFrames": 191,
+  "automaticReferences": true,
+  "approvalMode": "automatic_10_seconds",
+  "continueWithListedReferenceGaps": true,
+  "completedFrame": {
+    "id": "S01_F007",
+    "file": "C:\\Users\\Intern\\Downloads\\Storyboard Studio\\007_S01_F007.png",
+    "bytes": 2544053,
+    "savedAt": "2026-11-06T10:33:56.343015+05:30"
+  },
+  "nextFrameObservedGenerating": "S01_F008",
+  "approvalOrResumeClicked": false,
+  "additionalGenerationStartedByTester": false,
+  "productionQueueLeftRunning": true,
+  "limits": [
+    "Observed one live frame completion and automatic advance; did not validate all 191 frames.",
+    "Reference-set changes separately passed the isolated five-frame test."
+  ],
+  "isolatedTest": {
+    "status": "PASS",
+    "checks": 10,
+    "realUnpackedExtension": true,
+    "realOSFiles": true,
+    "directoryRelativeMetadataEmulated": true,
+    "fullResolutionFiles": true,
+    "actualChromeDownload": true,
+    "syntheticChatGPTOnly": true,
+    "liveImageCreditsUsed": 0,
+    "automaticReferenceRun": true
+  }
+}

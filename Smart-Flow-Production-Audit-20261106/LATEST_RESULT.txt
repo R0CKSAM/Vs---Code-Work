@@ -1,0 +1,15 @@
+LIVE TEST PASSED - Smart Flow v20.8.5
+
+Corrected Frame 9:
+C:\Users\Intern\Downloads\Storyboard Studio\009_S01_F009 (1).png
+
+The new image is visually consistent with the supplied crew reference board and
+has different bytes from both the old Frame 9 and Frame 5. The old file remains
+preserved and is still the earlier invalid duplicate. Use the (1) file.
+
+After the final Start, reference images uploaded, approval continued automatically,
+Frame 9 generated and downloaded, and Frame 10 started without an approval or
+Resume click. The Smart Flow queue was left running. The old Storyboard Studio
+queue was observed stopped and was not started.
+
+Full 191-frame completion has not been verified. See live-test-20.8.5.json.

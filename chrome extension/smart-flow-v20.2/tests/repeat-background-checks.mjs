@@ -1,9 +1,10 @@
 import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
+import {webcrypto} from 'node:crypto';
 const listeners=[],state={ownerTabId:7,autoDownload:true,queueId:'repeat-test',pending:{state:'saving',downloadId:12}},items=new Map([[12,{id:12,state:'complete',exists:true}]]);
 let downloadOptions,checks=0;
-const context=vm.createContext({console,Date,chrome:{runtime:{onMessage:{addListener:fn=>listeners.push(fn)}},storage:{onChanged:{addListener(){}},local:{get:async keys=>Object.fromEntries(keys.map(k=>[k,state[k]])),set:async()=>{}}},downloads:{download:async options=>{downloadOptions=options;return 12;},search:async({id})=>items.has(id)?[items.get(id)]:[]},notifications:{create:async()=>{}}}});
+const context=vm.createContext({console,Date,Uint8Array,atob,crypto:webcrypto,chrome:{runtime:{onMessage:{addListener:fn=>listeners.push(fn)}},storage:{onChanged:{addListener(){}},local:{get:async keys=>Object.fromEntries(keys.map(k=>[k,state[k]])),set:async patch=>Object.assign(state,patch)}},downloads:{download:async options=>{downloadOptions=options;return 12;},search:async({id})=>items.has(id)?[items.get(id)]:[]},notifications:{create:async()=>{}}}});
 vm.runInContext(fs.readFileSync(new URL('../background.js',import.meta.url),'utf8'),context);
 const request=(msg,tabId=7)=>new Promise((resolve,reject)=>{let handled=false;for(const fn of listeners){const result=fn(msg,{tab:{id:tabId}},resolve);if(result===true)handled=true;}if(!handled)reject(Error('Unhandled action'));});
 const check=(ok,message)=>{assert(ok,message);checks++;};
@@ -23,4 +24,5 @@ items.delete(12);result=await request(status);check(result.state==='interrupted'
 result=await request({...status,id:99});check(!result.ok,'Status check must be tied to current pending download');
 result=await request(status,99);check(!result.ok,'Wrong tab must not inspect a download');
 result=await request({...status,queueId:'other'});check(!result.ok,'Status check must be tied to current queue');
+items.set(12,{id:12,state:'complete',exists:true});state.index=1;result=await request(image);check(!result.ok&&result.error.includes('frame position 1'),'Byte-identical output from an earlier frame must be blocked');state.index=0;result=await request(image);check(result.ok,'Same-frame download retry remains allowed');state.index=1;result=await request({...image,dataUrl:'data:image/png;base64,AQ=='});check(result.ok,'Different image bytes are accepted for a later frame');
 console.log(`PASS ${checks} actual background handler checks for downloads and ownership`);

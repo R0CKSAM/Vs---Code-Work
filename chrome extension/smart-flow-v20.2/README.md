@@ -1,3 +1,136 @@
+# v20.8.5 - live upload filename verification
+
+Live ChatGPT uploads were renamed to `LOC_FESTIVAL(7).png` and
+`Aarohan technical crew reference board(2).png`. Composer labels also include
+controls such as `Remove LOC_FESTIVAL(7).png`. The old literal filename guard
+incorrectly rejected these successfully uploaded reference images.
+
+Approval now recognizes numeric duplicate-name suffixes before the extension,
+case differences and removal-control prefixes for the expected source files.
+Unrelated filenames and unexpected extra images still block the run. Reference
+matching also recognizes numbered upload-name variants. Version 20.8.4 added
+control-label matching; 20.8.5 covers the inspected server-numbering behavior.
+Regression checks cover expected and unrelated numbered filenames.
+
+The live test restarted from S01_F009, preserving the existing PNG with Chrome's
+unique-filename behavior. Both location and crew references uploaded, automatic
+approval completed, and the current scene was sent without a confirmation click.
+See the production audit artifacts for the final download/advance result.
+
+# v20.8.3 - technical crew catalog and filenames with spaces
+
+The user-supplied `Aarohan technical crew reference board.png` is verified as
+Stagehand (left) and Young Volunteer (right). Both identities and Volunteer /
+technical crew aliases map to that original image in the pack catalog. The pack
+now has 15 images and 15 mapped named identities. Reload the pack folder once to
+store the new image in Chrome. Existing source frames and image pixels are kept.
+Filename matching now recognizes complete catalog filenames containing spaces;
+it does not incorrectly report the final `board.png` token as a missing file.
+The provided scene generation was left untouched while metadata was prepared.
+
+# v20.8.2 - live ChatGPT search-unit layout
+
+Live page inspection showed that current user and assistant turns use
+`data-chatgpt-search-unit-key` and `data-chatgpt-search-message-ids`, without the
+older `data-message-author-role` markers. Generated images can be separate tool
+blocks with their own message IDs. Smart Flow now supports both layouts and
+normalizes repeated message IDs, while still requiring each image owner to
+follow the submitted current user turn. Historical previews remain rejected.
+
+Live diagnostics verified the previously missing user/assistant IDs and current
+prompt anchor. Resuming pending Frame 10 reported its missing crew references
+within seconds, instead of waiting 18 minutes or crediting an older image.
+The scene was not resent and no new image was saved. Queue progress was retained.
+The user's supporting-cast image was restored to the composer and left unsent.
+
+Tests reproduce the inspected search-unit structure for normal tool images,
+reference follow-ups, missing-character text replies and upgraded pending frames
+that had no old author-role baseline. Production remains blocked on the two
+missing crew designs; Frame 9's duplicate output is still invalid.
+
+# v20.8.1 - production audit: current-message image ownership
+
+The live audit found `009_S01_F009.png` byte-identical to Frame 5 while Frame 9's
+assistant response requested references. A previously unseen historical preview
+could be accepted when conversation history hydrated after the baseline snapshot.
+The audit paused the extension queue while preserving pending Frame 10.
+
+Every saved output must now belong to an identified assistant turn after the
+current submitted user message. Missing owners, historical turns and a later
+unrelated user prompt cannot produce a successful frame. Collapsed long prompts
+are matched using their initial text plus the frame label. Reference follow-ups
+reset the submitted-message anchor for the same pending frame.
+
+A second safeguard hashes each download. Reusing the same image bytes for another
+frame in the same queue blocks the download and frame advancement. Retrying a
+save for the same frame remains supported. Old files are not deleted or replaced.
+Frame 9's existing PNG must be treated as invalid and needs regeneration once its
+missing supporting-character references are supplied.
+
+The popup version now comes from Chrome's loaded manifest so editing files alone
+does not misleadingly display a version that has not been reloaded. Regression
+checks cover hydrated older images with unseen IDs, unowned previews, collapsed
+prompts, changed user messages, historical reference questions and image hashes.
+
+# v20.8.0 - complete reference catalog and requested-image recovery
+
+The pack loader now stores every image in the selected `references` folder,
+including files not listed for the imported scene. `Reference_Catalog.json` maps
+character names and aliases to original image filenames. The known Aarohan pack
+indexes 14 images and 13 named character identities, including all eight named
+people on `CAST_SUPPORT.png`. The folder's `Reference_Mapping_Report.csv` lists
+these matches. Image pixels and source prompts remain unchanged.
+
+Cast names in a frame's CURRENT VISIBLE CAST / CROP field add matching reference
+images before generation. If a new ChatGPT response asks for a known reference
+instead of producing an image, Smart Flow attaches the matching local file,
+uses the configured upload approval mode, and sends a follow-up asking to finish
+only that pending scene. It does not resend the original scene prompt or advance
+the frame before its image is generated and saved. Old assistant messages are
+ignored; at most two reference follow-ups are allowed for a frame.
+
+Reload Smart Flow and refresh ChatGPT after updating. Pause the queue and load the
+complete pack folder again to index every file. Catalog reload is allowed with a
+paused pending frame: its progress, prompt and current reference set are kept.
+Resume checks a text-only reference request before the normal output timeout.
+Adding a new named image such as `CHAR_STAGEHAND.png` makes its name searchable
+on the next folder load. A custom catalog can add explicit aliases as version 1:
+`{"version":1,"entries":[{"file":"CHAR_STAGEHAND.png","aliases":["Stagehand"]}]}`.
+
+A catalog does not invent an identity. The currently inspected pack and ZIP have
+no Stagehand or Young Volunteer reference; neither appears on CAST_SUPPORT.
+These roles are recorded as unmapped instead of being assigned to another person.
+Their request produces a clear missing-reference message, not an unrelated upload
+or an 18-minute silent wait. Add their actual images and reload the folder to
+recover that pending frame automatically. Unreviewed generated storyboard images
+are not silently promoted to character references.
+
+Tests cover all verified names, possessive aliases, filenames, missing roles,
+reference-request recovery, same-frame download tracking, historical requests,
+manual/automatic approval, pause/resume and the finite retry budget. Installed
+Chrome acceptance uses real original OS files and extension storage with a local
+conversation fixture. No new live generation is submitted by these tests.
+
+# v20.7.1 - reference approval choice
+
+Under Frame references, **Reference upload approval** now offers:
+- **Automatic - wait 10 seconds, then continue** (default). You may approve early.
+  After ten seconds, unrecognized thumbnail markup no longer requires a manual
+  confirmation. Visible upload progress, partially loaded images, extra files,
+  changed filenames and upload errors still block continuation.
+- **Manual - wait for my approval**. Images upload, then the queue pauses until
+  you confirm the attachments and Resume.
+
+Keep **Automatically upload references** enabled for this workflow. Approval mode
+can be changed while the queue is paused and has no pending frame. The countdown
+is saved with the upload request and does not repeat that request after Resume.
+It is a timed continuation choice, not proof that the server finished an upload.
+Reload Smart Flow and refresh ChatGPT after updating.
+
+Browser regression checks cover both choices, no send before ten seconds, early
+approval, blocked progress, upload errors, and no duplicate uploads. The sections
+below describe earlier releases.
+
 # Smart Flow v20.7.0 - automatic mapped references and scenes
 
 Reload this extension folder in Chrome Extensions and refresh ChatGPT after the

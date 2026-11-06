@@ -15,15 +15,26 @@ chrome.storage.onChanged.addListener(async(changes,area)=>{
 chrome.runtime.onMessage.addListener((msg,sender,sendResponse)=>{
  if(msg.action!=='SAVE_FRAME_IMAGE')return;
  (async()=>{
-  const s=await chrome.storage.local.get(['ownerTabId','autoDownload','queueId','queueMode']);
+  const s=await chrome.storage.local.get(['ownerTabId','autoDownload','queueId','queueMode','index','imageLedger']);
   if(!s.autoDownload)throw Error('Automatic downloads disabled.');
   if(sender.tab?.id!==s.ownerTabId)throw Error('Download rejected: wrong ChatGPT tab.');
   if(msg.queueId&&msg.queueId!==s.queueId)throw Error('Download rejected: the queue changed.');
   if(typeof msg.dataUrl!=='string'||!/^data:image\/(png|jpeg|webp);base64,/.test(msg.dataUrl)||msg.dataUrl.length>25_000_000)throw Error('Unsupported image data.');
+  const bytes=Uint8Array.from(atob(msg.dataUrl.slice(msg.dataUrl.indexOf(',')+1)),c=>c.charCodeAt(0));
+  const digest=[...new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))].map(b=>b.toString(16).padStart(2,'0')).join('');
+  const index=s.index||0,ledger=s.imageLedger||[];
+  for(const old of ledger.filter(item=>item.queueId===s.queueId&&item.index!==index&&item.sha256===digest)){
+   const [record]=await chrome.downloads.search({id:old.downloadId});
+   if(record?.state!=='interrupted')throw Error('This image matches the file saved for frame position '+(old.index+1)+'. The current frame was not saved or advanced.');
+  }
+  const live=await chrome.storage.local.get(['queueId','index','ownerTabId']);
+  if(live.queueId!==s.queueId||(live.index||0)!==index||live.ownerTabId!==sender.tab?.id)throw Error('Queue changed before the image download.');
   const name=String(msg.fileName||'Frame').replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,90);
   const mime=msg.dataUrl.match(/^data:image\/(png|jpeg|webp);base64,/)[1];
   const ext=mime==='jpeg'?'jpg':mime;
-  return await chrome.downloads.download({url:msg.dataUrl,filename:`Storyboard Studio/${name}.${ext}`,conflictAction:'uniquify',saveAs:false});
+  const id=await chrome.downloads.download({url:msg.dataUrl,filename:`Storyboard Studio/${name}.${ext}`,conflictAction:'uniquify',saveAs:false});
+  await chrome.storage.local.set({imageLedger:[...ledger,{queueId:s.queueId,index,sha256:digest,downloadId:id,fileName:name}].slice(-5000)});
+  return id;
  })().then(id=>sendResponse({ok:true,id})).catch(e=>sendResponse({ok:false,error:String(e.message||e)}));return true;
 });
 // Repeat mode observes Chrome's actual download state before advancing.

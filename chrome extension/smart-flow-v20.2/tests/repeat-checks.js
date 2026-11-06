@@ -76,7 +76,7 @@
   const uploads=[];input.onchange=()=>{uploads.push([...input.files].map(f=>f.name));cards.replaceChildren();for(const file of input.files){const img=document.createElement('img');img.alt=file.name;img.src='/pixel.png?reference='+encodeURIComponent(file.name);cards.append(img);}};
   return {input,cards,uploads};
  };
- const autoUntil=async(fn,label)=>{for(let n=0;n<35&&!fn()&&TEST.data.phase==='running';n++)await TEST.step();check(fn(),label+'; '+TEST.data.phase+': '+TEST.data.error);};
+ const autoUntil=async(fn,label)=>{for(let n=0;n<55&&!fn()&&TEST.data.phase==='running';n++)await TEST.step();check(fn(),label+'; '+TEST.data.phase+': '+TEST.data.error);};
  await test('Automatic mapped queue uploads, waits, sends scenes, downloads and changes references without confirmation',async()=>{
   const a=setupAuto();await TEST.send('START');await TEST.flush();
   await autoUntil(()=>TEST.clicks===1,'First automatic scene sends');check(a.uploads.length===1&&a.uploads[0].join()==='LOC_FESTIVAL.png','First scene uploads matching location only');
@@ -112,10 +112,85 @@
   const a=setupAuto();await TEST.send('START');await TEST.flush();const img=document.createElement('img');img.src='/pixel.png?extra';a.cards.append(img);await img.decode();await TEST.step();check(TEST.data.phase==='paused'&&TEST.clicks===0&&a.cards.contains(img),'Extra attachment is preserved and cannot be sent automatically');
  });
  await test('Automatic upload timeout pauses without repeated file requests',async()=>{
-  const a=setupAuto();await TEST.send('START');await TEST.flush();a.cards.replaceChildren();await TEST.step(121000);check(TEST.data.phase==='paused'&&TEST.clicks===0&&a.uploads.length===1,'Unverifiable upload times out without a duplicate');
+  const a=setupAuto();await TEST.send('START');await TEST.flush();a.cards.replaceChildren();const progress=document.createElement('span');progress.setAttribute('role','progressbar');a.cards.append(progress);await TEST.step(121000);check(TEST.data.phase==='paused'&&TEST.clicks===0&&a.uploads.length===1,'Unverifiable upload times out without a duplicate');
  });
  await test('Manual review overrides an unrecognizable automatic attachment layout',async()=>{
-  const a=setupAuto();await TEST.send('START');await TEST.flush();a.cards.replaceChildren();await TEST.step(121000);check(TEST.data.phase==='paused','Unknown layout first pauses');let r=await TEST.send('CONFIRM_REFERENCES');check(r.ok&&TEST.data.referenceSession.automatic===false,'Manual confirmation is retained as explicit review');await TEST.send('RESUME');await TEST.flush();await autoUntil(()=>TEST.clicks===1,'Manually reviewed references can resume without repeated uploads');check(a.uploads.length===1,'Manual fallback does not upload again');
+  const a=setupAuto();await TEST.send('START');await TEST.flush();a.cards.replaceChildren();const progress=document.createElement('span');progress.setAttribute('role','progressbar');a.cards.append(progress);await TEST.step(121000);check(TEST.data.phase==='paused','Unknown layout first pauses');let r=await TEST.send('CONFIRM_REFERENCES');check(r.ok&&TEST.data.referenceSession.automatic===false,'Manual confirmation is retained as explicit review');await TEST.send('RESUME');await TEST.flush();await autoUntil(()=>TEST.clicks===1,'Manually reviewed references can resume without repeated uploads');check(a.uploads.length===1,'Manual fallback does not upload again');
+ });
+ await test('Timed approval waits ten seconds then continues when thumbnail markup is unrecognized',async()=>{
+  const a=setupAuto();await TEST.send('START');await TEST.flush();a.cards.replaceChildren();for(let n=0;n<12;n++)await TEST.step();check(TEST.clicks===0&&!TEST.data.pending,'No scene before ten seconds');await autoUntil(()=>TEST.clicks===1,'Timed fallback continues without a confirmation click');check(a.uploads.length===1,'Timed fallback never requests files twice');
+ });
+ await test('Manual approval mode never advances on its own',async()=>{
+  const a=setupAuto();TEST.data.referenceApproval='manual';await TEST.send('START');await TEST.flush();await TEST.step(20000);check(TEST.data.phase==='paused'&&TEST.clicks===0&&a.uploads.length===1,'Manual mode waits for review even after twenty seconds');const result=await TEST.send('CONFIRM_REFERENCES');check(result.ok,'Manual mode accepts explicit confirmation');await TEST.send('RESUME');await TEST.flush();await autoUntil(()=>TEST.clicks===1,'Manual approval then Resume continues');
+ });
+ await test('Early approval can continue during the automatic countdown',async()=>{
+  const a=setupAuto();await TEST.send('START');await TEST.flush();const result=await TEST.send('CONFIRM_REFERENCES');check(result.ok&&TEST.data.phase==='running','Approval is accepted without pausing the countdown');await autoUntil(()=>TEST.clicks===1,'Early manual approval continues without Resume');check(a.uploads.length===1,'Early approval keeps one upload');
+ });
+
+ const referenceReply=async text=>{await TEST.step();document.getElementById('generation').replaceChildren();const reply=document.createElement('div');reply.dataset.messageAuthorRole='assistant';reply.dataset.messageId='request-'+TEST.now;reply.textContent=text;document.getElementById('conversation').append(reply);for(let n=0;n<24&&TEST.data.pending?.state==='waiting'&&TEST.data.phase==='running';n++)await TEST.step();};
+ const addCatalog=a=>{TEST.data.referencePackAssets['CAST_SUPPORT.png']={...TEST.data.referencePackAssets['LOC_FESTIVAL.png'],name:'CAST_SUPPORT.png'};TEST.data.referenceCatalog=SmartFlowReferenceMatcher.catalog(Object.keys(TEST.data.referencePackAssets));};
+ await test('Requested supporting character automatically uploads the board and continues the same frame once',async()=>{
+  const a=setupAuto();addCatalog(a);await TEST.send('START');await TEST.flush();await autoUntil(()=>TEST.clicks===1,'First scene submits');await referenceReply('Please attach the Rhea reference image. I already have the festival location reference.');check(TEST.data.pending?.state==='reference-upload'&&TEST.data.index===0,'Request becomes reference recovery without advancing');await autoUntil(()=>TEST.clicks===2,'Reference follow-up submits');check(a.uploads.length===2&&a.uploads[1].join()==='CAST_SUPPORT.png','Rhea gets the supporting-cast image only');check(TEST.sends[1].includes('Continue ONLY the pending S01_F001')&&!TEST.sends[1].includes('Festival courtyard'),'Follow-up continues current scene without resending original scene text');
+  await imageReady('request-recovered');TEST.downloadStates[1]={state:'complete'};await TEST.step();check(TEST.data.index===1&&TEST.downloads.length===1,'Recovered output completes exactly the original frame');
+ });
+ await test('Unmapped requested people pause clearly and never receive another character board',async()=>{
+  const a=setupAuto();addCatalog(a);await TEST.send('START');await TEST.flush();await autoUntil(()=>TEST.clicks===1,'Scene submits');await referenceReply('Please attach Stagehand and Young Volunteer reference images.');check(TEST.data.phase==='paused'&&TEST.clicks===1&&a.uploads.length===1,'Unknown identities cannot trigger an unrelated upload');check(TEST.data.error.includes('Stagehand')&&TEST.data.error.includes('Young Volunteer'),'Error names the actual missing characters');
+ });
+ await test('Historical reference requests do not trigger recovery of a later frame',async()=>{
+  const a=setupAuto();addCatalog(a);const reply=document.createElement('div');reply.dataset.messageAuthorRole='assistant';reply.dataset.messageId='old-reference-request';reply.textContent='Please attach Rhea reference images';document.getElementById('conversation').append(reply);await TEST.send('START');await TEST.flush();await autoUntil(()=>TEST.clicks===1,'New scene submits');await TEST.step(12000);check(TEST.clicks===1&&a.uploads.length===1&&TEST.data.pending.state==='waiting','Only a new assistant request can recover references');
+ });
+ await test('Pause before reference follow-up submission prevents a duplicate scene',async()=>{
+  const a=setupAuto();addCatalog(a);await TEST.send('START');await TEST.flush();await autoUntil(()=>TEST.clicks===1,'Initial scene submits');await referenceReply('Please attach Kavita reference image');await autoUntil(()=>TEST.data.pending?.referenceRecovery&&TEST.data.pending?.state==='prepared','Recovery prepares follow-up');await TEST.send('PAUSE');for(let n=0;n<5;n++)await TEST.step();check(TEST.clicks===1,'Paused recovery cannot click Send');await TEST.send('RESUME');await TEST.flush();await autoUntil(()=>TEST.clicks===2,'Resume sends the follow-up once');check(a.uploads.length===2,'Resume does not repeat a recovered reference upload');
+ });
+
+ await test('Reference recovery respects manual approval for the requested files',async()=>{
+  const a=setupAuto();addCatalog(a);await TEST.send('START');await TEST.flush();await autoUntil(()=>TEST.clicks===1,'Original scene submits');await referenceReply('Please attach the Kavita reference image');TEST.data.referenceApproval='manual';await TEST.step();await TEST.step();check(TEST.data.phase==='paused'&&TEST.data.pending?.state==='reference-upload','Requested files wait for manual approval');const r=await TEST.send('CONFIRM_REFERENCES');check(r.ok,'Manual confirmation accepts the reference-recovery upload');await TEST.send('RESUME');await TEST.flush();await autoUntil(()=>TEST.clicks===2,'Reviewed recovery continues');check(a.uploads.length===2,'Manual recovery preserves one upload per set');
+ });
+ await test('Repeated reference requests have a finite follow-up budget',async()=>{
+  const a=setupAuto();addCatalog(a);await TEST.send('START');await TEST.flush();await autoUntil(()=>TEST.clicks===1,'Original scene submits');TEST.data.pending.referenceRecoveryCount=2;await referenceReply('Please attach the Rhea reference image');check(TEST.data.phase==='paused'&&TEST.clicks===1&&a.uploads.length===1,'Exhausted request budget cannot submit another follow-up');
+ });
+
+ await test('History hydrated without baseline IDs cannot masquerade as the current output',async()=>{
+  TEST.data.queueMode='storyboard';await submitted();await TEST.step();document.getElementById('generation').replaceChildren();const old=await TEST.preview('hydrated-frame-five','unknown-historical-id');const user=document.querySelector('[data-message-author-role="user"]');user.before(old.parent);for(let n=0;n<10;n++)await TEST.step();check(TEST.downloads.length===0&&TEST.data.index===0,'An unseen older message before current user must not save or advance');
+ });
+ await test('Unowned image after current user cannot count as generated output',async()=>{
+  TEST.data.queueMode='storyboard';await submitted();await TEST.step();document.getElementById('generation').replaceChildren();const image=await TEST.preview('unowned','temporary-owner');image.parent.replaceWith(image.button);for(let n=0;n<8;n++)await TEST.step();check(TEST.downloads.length===0&&TEST.data.index===0,'A preview without an assistant owner is never downloaded');
+ });
+ await test('Collapsed long user prompts still bind the correct new image',async()=>{
+  TEST.data.queueMode='storyboard';TEST.data.master='';TEST.data.prompts=['S01_F010 || '+('A detailed anime scene with cast, camera and lighting. '.repeat(50))];await submitted();const user=document.querySelector('[data-message-author-role="user"]');user.textContent=TEST.sends[0].slice(0,260)+' ... Show more';await imageReady('collapsed-current-frame');check(TEST.downloads.length===1&&TEST.data.pending.state==='saving','A collapsed current prompt can save its own new assistant image');
+ });
+ await test('A later unrelated user message prevents saving an image for the prior prompt',async()=>{
+  TEST.data.queueMode='storyboard';await submitted();const other=document.createElement('div');other.dataset.messageAuthorRole='user';other.dataset.messageId='unrelated-user';other.textContent='Different request';document.getElementById('conversation').append(other);await imageReady('unrelated-response');check(TEST.downloads.length===0&&TEST.data.index===0,'Changed user message cannot credit another response to the pending frame');
+ });
+ await test('Hydrated historical reference question cannot trigger a new upload',async()=>{
+  const a=setupAuto();addCatalog(a);await TEST.send('START');await TEST.flush();await autoUntil(()=>TEST.clicks===1,'Current scene submits');document.getElementById('generation').replaceChildren();const old=document.createElement('div');old.dataset.messageAuthorRole='assistant';old.dataset.messageId='hydrated-old-question';old.textContent='Please attach Rhea reference images';document.querySelector('[data-message-author-role="user"]').before(old);for(let n=0;n<20;n++)await TEST.step();check(a.uploads.length===1&&TEST.clicks===1,'Older questions before submitted user are ignored');
+ });
+
+ await test('Live search-unit layout binds user prompts to separate generated-image tool blocks',async()=>{
+  TEST.modernDOM=true;TEST.data.queueMode='storyboard';await submitted();await imageReady('modern-tool-output');check(TEST.downloads.length===1&&TEST.data.pending.state==='saving','New tool output after a live-layout user is saved');check(TEST.data.pending.submittedUserId==='modern-user-1','Live message IDs bind the submitted user');
+ });
+ await test('Live search-unit reference request recovers using named supporting cast',async()=>{
+  const a=setupAuto();addCatalog(a);TEST.modernDOM=true;await TEST.send('START');await TEST.flush();await autoUntil(()=>TEST.clicks===1,'Live-layout scene submits');document.getElementById('generation').replaceChildren();const reply=document.createElement('div');reply.dataset.chatgptSearchUnitKey='fallback-turn-1:1:assistant';reply.dataset.chatgptSearchMessageIds='modern-request modern-request';reply.textContent='Please attach the Rhea reference image';document.getElementById('conversation').append(reply);await autoUntil(()=>TEST.clicks===2,'Live-layout reference follow-up submits');check(a.uploads[1].join()==='CAST_SUPPORT.png','Live-layout request attaches the correct support board');
+ });
+ await test('Live search-unit missing character response pauses before old output timeout',async()=>{
+  const a=setupAuto();addCatalog(a);TEST.modernDOM=true;await TEST.send('START');await TEST.flush();await autoUntil(()=>TEST.clicks===1,'Live-layout scene submits');document.getElementById('generation').replaceChildren();const reply=document.createElement('div');reply.dataset.chatgptSearchUnitKey='fallback-turn-1:1:assistant';reply.dataset.chatgptSearchMessageIds='missing-modern missing-modern';reply.textContent='S01_F010 needs the same Young Volunteer reference missing from F009. Please attach it.';document.getElementById('conversation').append(reply);for(let n=0;n<25&&TEST.data.phase==='running';n++)await TEST.step();check(TEST.data.phase==='paused'&&TEST.data.error.includes('Young Volunteer')&&!TEST.data.error.includes('18 minutes'),'Missing live-layout reference has a clear immediate error');check(TEST.downloads.length===0&&TEST.clicks===1,'Missing reference cannot save an old image or resend the scene');
+ });
+ await test('Legacy pending baseline without old message IDs can resume in live search-unit layout',async()=>{
+  TEST.modernDOM=true;TEST.data.queueMode='storyboard';await submitted();await TEST.send('PAUSE');TEST.data.pending.userBaseline={id:'',count:0,text:''};TEST.data.pending.submittedUserId=null;await TEST.send('RESUME');await TEST.flush();await imageReady('modern-legacy-pending');check(TEST.downloads.length===1,'Upgraded pending frame can bind its actual live user message');
+ });
+
+ await test('Attachment control labels containing the expected filename do not block automatic uploads',async()=>{
+  const a=setupAuto();await TEST.send('START');await TEST.flush();const remove=document.createElement('button');remove.type='button';remove.setAttribute('aria-label','Remove file: LOC_FESTIVAL.png');a.cards.append(remove);await autoUntil(()=>TEST.clicks===1,'Named removal control is accepted');check(a.uploads.length===1,'Control labels do not cause a duplicate upload');
+ });
+ await test('Attachment control naming another file still blocks automatic uploads',async()=>{
+  const a=setupAuto();await TEST.send('START');await TEST.flush();const remove=document.createElement('button');remove.type='button';remove.setAttribute('aria-label','Remove file: UNRELATED.png');a.cards.append(remove);await TEST.step();check(TEST.data.phase==='paused'&&TEST.clicks===0,'An unrelated attachment name remains rejected');
+ });
+
+ await test('Live ChatGPT numbered duplicate-upload names are accepted for the expected references',async()=>{
+  const a=setupAuto();await TEST.send('START');await TEST.flush();a.cards.querySelector('img').alt='LOC_FESTIVAL(7).png';const chip=document.createElement('div');chip.setAttribute('aria-label','LOC_FESTIVAL(7).png');const remove=document.createElement('button');remove.type='button';remove.setAttribute('aria-label','Remove LOC_FESTIVAL(7).png');a.cards.append(chip,remove);await autoUntil(()=>TEST.clicks===1,'Server numbered upload aliases continue automatically');check(a.uploads.length===1,'Numbered names do not cause repeated uploads');
+ });
+ await test('Numbered names belonging to another file still stop the queue',async()=>{
+  const a=setupAuto();await TEST.send('START');await TEST.flush();a.cards.querySelector('img').alt='UNRELATED(7).png';await TEST.step();check(TEST.data.phase==='paused'&&TEST.clicks===0,'Only numeric variants of expected filenames are accepted');
  });
  check(!TEST.errors.length,JSON.stringify(TEST.errors));document.getElementById('test-result').textContent=JSON.stringify({status:'PASS',checks:TEST.checks,cases:TEST.cases});
 })().catch(e=>document.getElementById('test-result').textContent=JSON.stringify({status:'FAIL',error:e.stack,checks:TEST.checks,cases:TEST.cases,errors:TEST.errors}));

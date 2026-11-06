@@ -1,0 +1,13 @@
+{
+  "status": "PASS",
+  "checks": 12,
+  "realUnpackedExtension": true,
+  "realOSFiles": true,
+  "directoryRelativeMetadataEmulated": true,
+  "fullResolutionFiles": true,
+  "actualChromeDownload": true,
+  "syntheticChatGPTOnly": true,
+  "liveImageCreditsUsed": 0,
+  "automaticReferenceRun": true,
+  "requestedReferenceRecovery": true
+}

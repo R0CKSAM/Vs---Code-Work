@@ -1,0 +1,38 @@
+{
+  "checkedAt": "2026-11-06T11:45:33.403895+05:30",
+  "installedVersion": "20.8.5",
+  "environment": "Existing signed-in production Chrome",
+  "testStartFrame": "S01_F009",
+  "referenceCatalog": {
+    "files": 15,
+    "crewBoard": "Aarohan technical crew reference board.png",
+    "aliases": [
+      "Stagehand",
+      "Young Volunteer",
+      "Volunteer"
+    ]
+  },
+  "productionIssueFixed": "ChatGPT numbers duplicate uploads, e.g. LOC_FESTIVAL(7).png and crew reference board(2).png; the filename guard now recognizes expected numbered variants and removal-control labels.",
+  "verified": {
+    "locationAndCrewUploaded": true,
+    "automaticApprovalAfterWait": true,
+    "manualApprovalAfterFinalStart": false,
+    "completedFrame": "S01_F009",
+    "download": "C:\\Users\\Intern\\Downloads\\Storyboard Studio\\009_S01_F009 (1).png",
+    "downloadBytes": 2301811,
+    "downloadSHA256": "b331f915305b131c8b6b6201c25083084581e660f3bdb99ab3e25770f0fdd8ee",
+    "differentFromOldFrame9": true,
+    "differentFromFrame5": true,
+    "imageVisuallyChecked": "Stagehand on left with cable cover; Young Volunteer on right holding cable coil; anime style and technical-route location",
+    "oldFilePreserved": true,
+    "nextFrameAutomaticallySubmitted": "S01_F010",
+    "queueLeftRunning": true
+  },
+  "tests": {
+    "queueAndRecoveryChecks": 171,
+    "popupChecks": 36,
+    "catalogMatchingChecks": 31,
+    "backgroundChecks": 17
+  },
+  "limits": "Verified one corrected live frame, reference uploads, saving and automatic next-frame submission. Full 191-frame completion is not claimed."
+}
