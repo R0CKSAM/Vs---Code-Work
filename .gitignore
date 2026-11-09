@@ -50,3 +50,6 @@ Raj/P3-chrome report/output/
 /Raj/P4 - Distribution details/processed/channel_weekly.json
 /Raj/downloading/chrome_report_dashboard (1).html
 /Raj/downloading/chrome_report_dashboard.html
+
+# Local FFmpeg binary; reverse_video.py also supports imageio-ffmpeg
+/FLIPvIDEO/tools/ffmpeg.exe

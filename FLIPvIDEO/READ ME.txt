@@ -1,0 +1,9 @@
+﻿Double-click Reverse Video.lnk. Close an older open window and reopen the shortcut after updates.
+Default: MP4 lossless (H.264 CRF 0). Exact decoded video frames, larger files; use VLC if your player cannot decode it.
+Choose MP4 compatible for standard editors/players: H.264 CRF 16, AAC audio; high quality, not mathematically lossless.
+MKV lossless remains optional.
+Outputs are saved beside the original as *_BACKWARDS.mp4 (or .mkv), with numbered names if already present.
+Originals are never overwritten. Resolution and frame rate are retained; audio is reversed when present.
+Only the first video and audio tracks are included; subtitle/extra tracks are omitted.
+Scratch is saved locally, even for network inputs. Progress is visible.
+Validation on the supplied Anaya MP4: all 125 frames matched exactly in reverse order, 832x464, 24 fps.
