@@ -4,6 +4,10 @@ import csv
 import io
 import json
 import sqlite3
+from collections import OrderedDict
+from copy import deepcopy
+from threading import Lock
+from contextlib import contextmanager
 from datetime import date, time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -11,18 +15,25 @@ from urllib.parse import urlsplit
 from journey import build_sessions, CONTENT_FIELDS
 
 ROOT = Path(__file__).resolve().parent
+QUERY_CACHE = OrderedDict()
+QUERY_CACHE_LOCK = Lock()
+QUERY_CACHE_LIMIT = 8
 FIELDS = {'title': 'Titles', 'category': 'Categories', 'video_key': 'Video keys',
           'device_id': 'Device ID', 'cli_ip': 'Client IP', 'os': 'Operating system',
           'region': 'Region', 'isp': 'ISP / ASN', 'device_type': 'Device type',
           'identity_confidence':'Identity confidence','title_status':'Title quality'}
 
 
+@contextmanager
 def connection():
     meta=json.loads((ROOT/'data/manifest.json').read_text())
     database=ROOT/'data'/meta.get('database','smartvod.sqlite')
     con = sqlite3.connect(f"file:{database.as_posix()}?mode=ro", uri=True)
     con.row_factory = sqlite3.Row
-    return con
+    try:
+        yield con
+    finally:
+        con.close()
 
 
 def where(body, omit=None):
@@ -34,14 +45,14 @@ def where(body, omit=None):
     for field, values in filters.items():
         if field not in FIELDS or not isinstance(values, list) or len(values) > 1000:
             raise ValueError('Invalid filter selection')
-        if field == omit or not values:
-            continue
         if any(not isinstance(v, str) for v in values):
             raise ValueError('Filter values must be text')
+        if field == omit or not values:
+            continue
         clauses.append(f'{field} IN ({",".join("?" for _ in values)})')
         params.extend(values)
     start, end = body.get('start'), body.get('end')
-    if not start or not end or date.fromisoformat(start) > date.fromisoformat(end):
+    if not isinstance(start,str) or not isinstance(end,str) or len(start)!=10 or len(end)!=10 or date.fromisoformat(start) > date.fromisoformat(end):
         raise ValueError('Choose a valid date range')
     clauses.append('day BETWEEN ? AND ?')
     params.extend([start, end])
@@ -64,22 +75,37 @@ def where(body, omit=None):
 def query(body):
     basis=identity_basis(body)
     avg=f"sum(CASE WHEN {basis}!='Unknown' THEN hours*60 ELSE 0 END)/nullif(count(DISTINCT nullif({basis},'Unknown')),0)"
+    averages=','.join(f"sum(CASE WHEN {field}!='Unknown' THEN hours*60 ELSE 0 END)/nullif(count(DISTINCT nullif({field},'Unknown')),0) average_{label}_minutes" for field,label in [('device_id','device'),('cli_ip','ip')])
     w, p = where(body)
     with connection() as con:
+        database=Path(con.execute('PRAGMA database_list').fetchone()[2])
+        stat=database.stat()
+        cache_key=(str(database),stat.st_size,stat.st_mtime_ns,json.dumps(body,sort_keys=True))
+        with QUERY_CACHE_LOCK:
+            if cache_key in QUERY_CACHE:
+                QUERY_CACHE.move_to_end(cache_key)
+                return deepcopy(QUERY_CACHE[cache_key])
         kpi = dict(con.execute('SELECT count(*) records, coalesce(sum(hours),0) hours, '
             'coalesce(sum(delivered),0) delivered, coalesce(sum(segments),0) segments, '
             "count(DISTINCT nullif(cli_ip,'Unknown')) ips, count(DISTINCT nullif(device_id,'Unknown')) devices, "
             "count(DISTINCT nullif(video_key,'Unknown')) videos FROM events" + w, p).fetchone())
-        kpi['average_watch_minutes']=con.execute('SELECT '+avg+' FROM events'+w,p).fetchone()[0]
+        kpi.update(dict(con.execute('SELECT '+averages+' FROM events'+w,p).fetchone()))
+        kpi['average_watch_minutes']=kpi['average_device_minutes' if basis=='device_id' else 'average_ip_minutes']
         hourly = [dict(r) for r in con.execute('SELECT substr(clock,1,2) hour,sum(hours) hours FROM events'+w+' GROUP BY 1 ORDER BY 1', p)]
         breakdown = {}
         for field in ('device_type', 'os', 'region', 'isp'):
             breakdown[field] = [dict(r) for r in con.execute(f'SELECT {field} label,sum(hours) hours FROM events'+w+' GROUP BY 1 ORDER BY 2 DESC,1 LIMIT 5', p)]
-        table = [dict(r) for r in con.execute('SELECT '+avg+' average_watch_minutes,video_key,title,req_host,title_status,sum(hours) hours,sum(delivered) delivered,'
+        table = [dict(r) for r in con.execute('SELECT '+avg+' average_watch_minutes,'+averages+',video_key,title,req_host,title_status,sum(hours) hours,sum(delivered) delivered,'
             "count(DISTINCT nullif(cli_ip,'Unknown')) ips,count(DISTINCT nullif(device_id,'Unknown')) devices "
             'FROM events'+w+' GROUP BY video_key,title,req_host,title_status ORDER BY hours DESC,video_key,title LIMIT 100', p)]
-        devices=[dict(r) for r in con.execute(f"SELECT {basis} identity_value,sum(hours) hours,count(DISTINCT video_key) videos,group_concat(DISTINCT identity_confidence) confidence FROM events"+w+f" AND {basis}!='Unknown' GROUP BY {basis} ORDER BY hours DESC,{basis} LIMIT 20",p)]
-    return dict(kpi=kpi, hourly=hourly, breakdown=breakdown, table=table,devices=devices,identity_basis=basis)
+        explorers={field:[dict(r) for r in con.execute(f"SELECT {field} identity_value,sum(hours) hours,count(DISTINCT video_key) videos,group_concat(DISTINCT identity_confidence) confidence FROM events"+w+f" AND {field}!='Unknown' GROUP BY {field} ORDER BY hours DESC,{field} LIMIT 20",p)] for field in ('device_id','cli_ip')}
+    result=dict(kpi=kpi, hourly=hourly, breakdown=breakdown, table=table,devices=explorers[basis],explorers=explorers,identity_basis=basis)
+    with QUERY_CACHE_LOCK:
+        QUERY_CACHE[cache_key]=deepcopy(result)
+        QUERY_CACHE.move_to_end(cache_key)
+        while len(QUERY_CACHE)>QUERY_CACHE_LIMIT:
+            QUERY_CACHE.popitem(last=False)
+    return result
 
 
 def identity_basis(body):
@@ -131,7 +157,7 @@ class Handler(BaseHTTPRequestHandler):
         if path == '/api/title-review':
             meta=json.loads((ROOT/'data/manifest.json').read_text())
             return self.send((ROOT/'data'/meta['title_review']).read_bytes(),filename='smartvod_title_review.json')
-        files = {'/workspace.js': ('workspace.js','text/javascript'), '/journey.js': ('journey.js', 'text/javascript'), '/': ('index.html', 'text/html; charset=utf-8'), '/app.js': ('app.js', 'text/javascript'), '/style.css': ('style.css', 'text/css')}
+        files = {'/date-range.js': ('date-range.js','text/javascript'), '/flatpickr.min.js': ('flatpickr.min.js','text/javascript'), '/flatpickr.min.css': ('flatpickr.min.css','text/css'), '/workspace.js': ('workspace.js','text/javascript'), '/journey.js': ('journey.js', 'text/javascript'), '/': ('index.html', 'text/html; charset=utf-8'), '/app.js': ('app.js', 'text/javascript'), '/style.css': ('style.css', 'text/css')}
         if path not in files:
             return self.send({'error': 'Not found'}, code=404)
         name, mime = files[path]
@@ -143,6 +169,8 @@ class Handler(BaseHTTPRequestHandler):
             if not 0 < length <= 1000000:
                 raise ValueError('Invalid request size')
             body = json.loads(self.rfile.read(length))
+            if not isinstance(body,dict):
+                raise ValueError('Request must be a JSON object')
             path = urlsplit(self.path).path
             if path == '/api/query':
                 return self.send(query(body))
@@ -175,7 +203,10 @@ class Handler(BaseHTTPRequestHandler):
                 output = io.StringIO(newline='')
                 writer = csv.writer(output)
                 with connection() as con:
-                    cur = con.execute(f"SELECT '{basis}' identity_basis,sum(CASE WHEN {basis}!='Unknown' THEN hours*60 ELSE 0 END)/nullif(count(DISTINCT nullif({basis},'Unknown')),0) average_watch_minutes,day date_ist,video_key,title,req_host,title_status,identity_confidence,category,device_type,os,region,isp,"
+                    cur = con.execute(f"SELECT '{basis}' identity_basis,sum(CASE WHEN {basis}!='Unknown' THEN hours*60 ELSE 0 END)/nullif(count(DISTINCT nullif({basis},'Unknown')),0) average_watch_minutes,"
+                        "sum(CASE WHEN device_id!='Unknown' THEN hours*60 ELSE 0 END)/nullif(count(DISTINCT nullif(device_id,'Unknown')),0) average_device_minutes,"
+                        "sum(CASE WHEN cli_ip!='Unknown' THEN hours*60 ELSE 0 END)/nullif(count(DISTINCT nullif(cli_ip,'Unknown')),0) average_ip_minutes,"
+                        "day date_ist,video_key,title,req_host,title_status,identity_confidence,category,device_type,os,region,isp,"
                         "sum(hours) watch_hours_estimated,sum(delivered) delivered_hours_estimated,count(DISTINCT nullif(cli_ip,'Unknown')) distinct_cliip,"
                         "count(DISTINCT nullif(device_id,'Unknown')) distinct_device_id FROM events"+w+
                         ' GROUP BY day,video_key,title,req_host,title_status,identity_confidence,category,device_type,os,region,isp ORDER BY day,video_key',p)

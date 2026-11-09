@@ -1,0 +1,105 @@
+﻿"""Normal-click UX walkthrough, real timings and deliberately slow/error responses."""
+import datetime,json,time,math
+from pathlib import Path
+from playwright.sync_api import sync_playwright
+ROOT=Path(__file__).resolve().parent;checks=[];errors=[];timings=[]
+def check(n,ok):
+ assert ok,n
+ checks.append(n)
+with sync_playwright() as p:
+ b=p.chromium.launch(channel='msedge',headless=True);page=b.new_page(viewport={'width':1440,'height':1000},accept_downloads=True)
+ page.on('pageerror',lambda e:errors.append(str(e)))
+ def ready():page.wait_for_function("applied!==null&&!document.getElementById('apply').disabled",timeout=90000)
+ def finish(name,start):ready();timings.append({'action':name,'seconds':round(time.perf_counter()-start,2)})
+ def drawer():
+  if page.locator('#advancedDrawer').get_attribute('aria-hidden')=='true':page.locator('#advancedToggle').click();page.wait_for_timeout(250)
+ def close():
+  if page.locator('#advancedDrawer').get_attribute('aria-hidden')=='false':page.locator('#closeAdvanced').click();page.wait_for_timeout(250)
+ t=time.perf_counter();page.goto('http://127.0.0.1:8766');ready();finish('Open dashboard',t)
+ check('Success feedback visible',page.locator('#activityFeedback').get_attribute('data-state')=='success')
+ check('Results unlocked after update',not page.locator('#results').evaluate('(e)=>e.inert'))
+ page.screenshot(path=str(ROOT/'audit/ux_after_desktop.png'))
+ for name in ['Change date','Return to latest day']:
+  page.locator('#rangeTitle').click()
+  if name=='Change date':
+   dt=datetime.date.fromisoformat(page.evaluate('meta.dates.at(-2)'));label=dt.strftime('%B')+' '+str(dt.day)+', '+str(dt.year)
+   page.locator('.flatpickr-day[aria-label="'+label+'"]').click()
+  else:page.locator('#latestDateRange').click()
+  t=time.perf_counter();page.locator('#applyDateRange').click();finish(name,t)
+ page.locator('#filter-title').click();page.locator('#search').fill('Sri')
+ page.locator('#options .option').filter(has_text='Sri').first.locator('input').check()
+ check('Title picker gives explicit guidance','Apply title' in page.locator('#pickerHelp').inner_text() and page.locator('#cancelPicker').is_visible())
+ t=time.perf_counter();page.locator('#done').click();finish('Apply title',t)
+ check('Clicked title matches intended search',page.evaluate("applied.filters.title[0].includes('Sri')"))
+ drawer();page.locator('#filter-region').click();page.locator('#search').fill('Maharashtra');page.locator('#options .option').filter(has_text='Maharashtra').first.locator('input').check();page.locator('#done').click()
+ check('Drawer explains pending changes','not applied' in page.locator('#drawerApplyNote').inner_text())
+ close();check('Pending filters obvious outside drawer',page.locator('#advancedPending').is_visible())
+ drawer();t=time.perf_counter();page.locator('#apply').click();finish('Apply region',t)
+ page.wait_for_function("document.getElementById('advancedDrawer').getAttribute('aria-hidden')==='true'")
+ check('Pending hint clears after apply',page.locator('#advancedPending').is_hidden())
+ drawer();page.locator('.saved-menu summary').click();page.locator('#savedName').fill('UX walkthrough');page.locator('#saveView').click()
+ check('Saved view confirms action','saved' in page.locator('#viewMessage').inner_text())
+ page.locator('#reset').click();ready();close()
+ # Delayed update: visible progress, previous results protected, no unexplained wait.
+ held=[];page.route('**/api/query',lambda r:held.append(r))
+ page.locator('#rangeTitle').click();page.locator('#latestDateRange').click();page.locator('#applyDateRange').click()
+ page.wait_for_function("document.getElementById('activityFeedback').dataset.state==='loading'")
+ check('Updating feedback visible without opening menu',page.locator('#activityFeedback').is_visible())
+ check('Previous results protected during update',page.locator('#results').evaluate('(e)=>e.inert') and page.locator('#results').get_attribute('aria-busy')=='true')
+ page.wait_for_timeout(4200)
+ check('Slow query receives explanatory feedback','Still updating' in page.locator('#activityText').inner_text())
+ held[0].continue_();page.unroute('**/api/query');ready()
+ check('Success clears loading state',page.locator('#activityFeedback').get_attribute('data-state')=='success' and not page.locator('#results').evaluate('(e)=>e.inert'))
+ # Connection failure and a normal user's Retry click.
+ page.route('**/api/query',lambda r:r.abort('failed'))
+ page.locator('#rangeTitle').click();page.locator('#latestDateRange').click();page.locator('#applyDateRange').click();ready()
+ check('Connection failure has plain language','Connection lost' in page.locator('#activityText').inner_text())
+ check('Failure offers a visible Retry',page.locator('#retryResults').is_visible())
+ check('Failure leaves previous results usable',not page.locator('#results').evaluate('(e)=>e.inert'))
+ page.unroute('**/api/query');page.locator('#retryResults').click();ready()
+ check('Retry recovers cleanly',page.locator('#error').is_hidden() and page.locator('#activityFeedback').get_attribute('data-state')=='success')
+ # Picker cancellation stays responsive even while its lookup is pending.
+ held=[];page.route('**/api/facet',lambda r:held.append(r));page.locator('#filter-title').click()
+ page.wait_for_function("document.getElementById('options').getAttribute('aria-busy')==='true'")
+ check('Option search displays loading text','Searching' in page.locator('#facetFeedback').inner_text())
+ check('Select shown disabled until options arrive',page.locator('#selectVisible').is_disabled())
+ page.locator('#cancelPicker').click();check('Cancel works during search',page.locator('#picker').is_hidden())
+ held[0].continue_();page.unroute('**/api/facet');page.wait_for_timeout(300)
+ check('Late search cannot reopen a cancelled picker',page.locator('#picker').is_hidden())
+ drawer();page.locator('#filter-video_key').click();page.locator('#options input').first.wait_for()
+ held=[];page.route('**/api/facet',lambda r:held.append(r));page.locator('#loadMore').click()
+ check('Load more shows progress and disables repeated clicks',page.locator('#loadMore').is_disabled() and page.locator('#loadMore').inner_text()=='Loading...')
+ page.locator('#loadMore').evaluate('(e)=>{e.click();e.click()}');page.wait_for_timeout(100)
+ check('Repeated clicks issue only one page request',len(held)==1)
+ held[0].continue_();page.unroute('**/api/facet');page.wait_for_function("document.querySelectorAll('#options input').length===200")
+ check('Load more completes with clear count','200' in page.locator('#facetFeedback').inner_text())
+ page.locator('#cancelPicker').click();close()
+ # Normal device exploration keeps the toolbar and destination heading visible.
+ card=page.locator('#deviceExplorer .device-card').first;card.scroll_into_view_if_needed();r1=card.bounding_box();card.hover();page.wait_for_timeout(180);r2=card.bounding_box()
+ check('Hover does not move click targets',abs(r1['x']-r2['x'])<.1 and abs(r1['y']-r2['y'])<.1)
+ card.click();page.locator('#journeyContent').wait_for(state='visible',timeout=60000);page.wait_for_timeout(650)
+ bar=page.locator('.master-filters').bounding_box();heading=page.locator('#journeyPanel').bounding_box()
+ check('Toolbar stays reachable while exploring',0<=bar['y']<=14)
+ check('Journey heading not hidden by toolbar',heading['y']>=bar['y']+bar['height']-2)
+ if not page.locator('#journeyNextMatch').is_disabled():
+  before=page.locator('#journeyPosition').inner_text();page.locator('#journeyNextMatch').click();check('Journey navigation responds immediately',page.locator('#journeyPosition').inner_text()!=before)
+ with page.expect_download() as dl:page.locator('#journeyExport').click()
+ check('Journey export starts from normal click',dl.value.suggested_filename.endswith('.csv'))
+ # Contrast of functional text against its actual flat background.
+ contrast=page.evaluate('''()=>{const lum=c=>{const a=c.match(/[\\d.]+/g).slice(0,3).map(Number).map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4});return .2126*a[0]+.7152*a[1]+.0722*a[2]};const ratio=(a,b)=>{const x=lum(a),y=lum(b);return(Math.max(x,y)+.05)/(Math.min(x,y)+.05)};const primary=getComputedStyle(document.getElementById('apply'));return{primary:ratio(primary.color,primary.backgroundColor),heading:ratio(getComputedStyle(document.querySelector('.panel-heading strong')).color,'rgb(255,255,255)'),muted:ratio(getComputedStyle(document.querySelector('.average-card small')).color,'rgb(255,255,255)')}}''')
+ for k,v in contrast.items():check(k+' text contrast >= 4.5',v>=4.5)
+ check('Panels have subtle shadow',page.locator('.average-card').first.evaluate('(e)=>getComputedStyle(e).boxShadow')!='none')
+ drawer();page.locator('#reset').click();ready();close();page.evaluate('scrollTo(0,0)');page.wait_for_timeout(200)
+ for width,height in [(1920,1000),(1440,1000),(768,900),(390,844),(320,640),(844,390)]:
+  page.set_viewport_size({'width':width,'height':height});page.wait_for_timeout(150)
+  check(f'{width}x{height} no page overflow',page.evaluate('document.documentElement.scrollWidth<=innerWidth'))
+  page.locator('#filter-title').click();page.locator('#options input').first.wait_for();rect=page.locator('#picker').bounding_box()
+  check(f'{width}x{height} picker contained',rect['x']>=0 and rect['y']>=0 and rect['x']+rect['width']<=width+1 and rect['y']+rect['height']<=height+1)
+  button=page.locator('#done').bounding_box()
+  check(f'{width}x{height} apply action reachable',button['y']>=0 and button['y']+button['height']<=height+1)
+  if (width,height)==(844,390):page.screenshot(path=str(ROOT/'audit/ux_landscape_picker.png'))
+  page.locator('#cancelPicker').click()
+  if width in [1440,390]:page.screenshot(path=str(ROOT/f'audit/ux_after_{width}.png'))
+ check('No browser JavaScript errors',not errors);b.close()
+report={'passed':True,'checks':checks,'timings':timings,'contrast':contrast,'errors':errors}
+(ROOT/'audit/ux_walkthrough.json').write_text(json.dumps(report,indent=2));print('PASS',len(checks),'UX checks');print(json.dumps(timings,indent=2))

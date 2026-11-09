@@ -1,0 +1,22 @@
+[
+  {
+    "action": "Open dashboard",
+    "seconds": 2.91
+  },
+  {
+    "action": "Change date",
+    "seconds": 3.2
+  },
+  {
+    "action": "Return to latest day",
+    "seconds": 3.11
+  },
+  {
+    "action": "Apply title",
+    "seconds": 0.99
+  },
+  {
+    "action": "Apply region",
+    "seconds": 0.81
+  }
+]

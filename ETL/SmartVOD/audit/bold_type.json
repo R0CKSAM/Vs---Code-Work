@@ -1,0 +1,33 @@
+{
+  "passed": true,
+  "checks": [
+    "KPI numbers large and bold",
+    "Average figures bold",
+    "1920 no horizontal overflow",
+    "1920 KPI text contained",
+    "1920 header text contained",
+    "1920 picker action reachable",
+    "1440 no horizontal overflow",
+    "1440 KPI text contained",
+    "1440 header text contained",
+    "1440 picker action reachable",
+    "768 no horizontal overflow",
+    "768 KPI text contained",
+    "768 header text contained",
+    "768 picker action reachable",
+    "390 no horizontal overflow",
+    "390 KPI text contained",
+    "390 header text contained",
+    "390 picker action reachable",
+    "320 no horizontal overflow",
+    "320 KPI text contained",
+    "320 header text contained",
+    "320 picker action reachable",
+    "844 no horizontal overflow",
+    "844 KPI text contained",
+    "844 header text contained",
+    "844 picker action reachable",
+    "No browser errors"
+  ],
+  "errors": []
+}

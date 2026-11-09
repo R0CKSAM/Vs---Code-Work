@@ -1,0 +1,1046 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SmartVOD UX review and audit</title><style>body{max-width:1120px;margin:32px auto;padding:0 20px;font:15px/1.6 system-ui;color:#193d2a;background:#f4f7f3}h1{font-size:28px}h2{font-size:20px}.card{background:#fff;border:1px solid #b5d9c2;border-radius:12px;padding:22px;margin:20px 0;box-shadow:0 5px 20px #173b2509}strong{color:#087e52}li{margin:7px 0}summary{cursor:pointer;font-weight:650}table{border-collapse:collapse;width:100%}td,th{text-align:left;padding:10px;border-bottom:1px solid #dfece2}.images{display:grid;grid-template-columns:1fr 1fr;gap:14px}img{width:100%;border:1px solid #b5d9c2;border-radius:8px}a{color:#087e52}@media(max-width:700px){.images{grid-template-columns:1fr}.card{padding:15px}}</style>
+<h1>SmartVOD: browser walkthrough and UX improvements</h1><p><strong>1017 checks passed</strong> | 2026-11-09T17:55:36.070957+05:30</p>
+<section class="card"><h2>What improved</h2><ul>
+<li>Visible loading, success and retry feedback, with a longer-wait message after four seconds.</li>
+<li>Previous results protected from clicks while new results are loading.</li>
+<li>Unapplied changes clearly labelled on More filters and its Apply action.</li>
+<li>Explicit Cancel, clearer option counts and guarded Load more prevent ambiguous/repeated clicks.</li>
+<li>Sticky controls and scroll offsets keep journey headings reachable.</li>
+<li>Green heading hierarchy, readable text contrast, subtle shadows and stable hover targets.</li>
+<li>Short landscape dialogs keep Cancel and Apply actions reachable.</li>
+<li>Eight-view version-aware cache makes revisiting recent views faster.</li>
+</ul></section><section class="card"><h2>Observed click-to-result timings</h2><p>Recorded on this machine in one normal-click walkthrough. New uncached views still take processing time; the cache speeds up revisiting the same view.</p><table><tr><th>Action</th><th>Before</th><th>After</th></tr>
+<tr><td>Open dashboard</td><td>2.91 s</td><td>3.22 s</td></tr>
+<tr><td>Change date</td><td>3.20 s</td><td>2.42 s</td></tr>
+<tr><td>Return to latest day</td><td>3.11 s</td><td>0.08 s</td></tr>
+<tr><td>Apply title</td><td>0.99 s</td><td>0.87 s</td></tr>
+<tr><td>Apply region</td><td>0.81 s</td><td>0.71 s</td></tr>
+</table></section><section class="card"><h2>Visual review</h2><div class="images"><div><h3>Before</h3><img src="ux_before_desktop.png" alt="Dashboard before UX refinements"></div><div><h3>After</h3><img src="ux_after_desktop.png" alt="Dashboard with clearer headings and shading"></div></div><p><a href="ux_after_mobile.png">Mobile view</a> | <a href="ux_landscape_picker.png">Short landscape picker</a></p></section>
+<section class="card"><h2>Correctness and regression coverage</h2><p>All 11 fields, all 55 filter pairs, multi-select, sorting, pagination, date/time windows, both averages and journeys, CSV exports, saved/shared views, request races and connection errors. Loaded snapshot through 2026-11-04.</p></section>
+<details class="card"><summary>comprehensive api - 885 passed</summary><ol>
+<li>Baseline records</li>
+<li>Baseline hours</li>
+<li>Baseline delivered</li>
+<li>Baseline segments</li>
+<li>Baseline devices</li>
+<li>Baseline ips</li>
+<li>Baseline videos</li>
+<li>Baseline average_device_minutes</li>
+<li>Baseline average_ip_minutes</li>
+<li>Baseline hourly sum</li>
+<li>Source CSV record reconciliation</li>
+<li>Source CSV hours reconciliation</li>
+<li>title segments ordering</li>
+<li>title segments pagination flag</li>
+<li>title second page no duplicates</li>
+<li>title second page ordering</li>
+<li>title hours ordering</li>
+<li>title hours pagination flag</li>
+<li>title alpha_asc ordering</li>
+<li>title alpha_asc pagination flag</li>
+<li>title alpha_desc ordering</li>
+<li>title alpha_desc pagination flag</li>
+<li>title self exclusion and cross-filtering</li>
+<li>title literal search %</li>
+<li>title literal search _</li>
+<li>title multiselect OR records</li>
+<li>title multiselect OR hours</li>
+<li>title multiselect OR delivered</li>
+<li>title multiselect OR segments</li>
+<li>title multiselect OR devices</li>
+<li>title multiselect OR ips</li>
+<li>title multiselect OR videos</li>
+<li>title multiselect OR average_device_minutes</li>
+<li>title multiselect OR average_ip_minutes</li>
+<li>title multiselect OR hourly sum</li>
+<li>category segments ordering</li>
+<li>category segments pagination flag</li>
+<li>category second page no duplicates</li>
+<li>category second page ordering</li>
+<li>category hours ordering</li>
+<li>category hours pagination flag</li>
+<li>category alpha_asc ordering</li>
+<li>category alpha_asc pagination flag</li>
+<li>category alpha_desc ordering</li>
+<li>category alpha_desc pagination flag</li>
+<li>category self exclusion and cross-filtering</li>
+<li>category literal search %</li>
+<li>category literal search _</li>
+<li>category multiselect OR records</li>
+<li>category multiselect OR hours</li>
+<li>category multiselect OR delivered</li>
+<li>category multiselect OR segments</li>
+<li>category multiselect OR devices</li>
+<li>category multiselect OR ips</li>
+<li>category multiselect OR videos</li>
+<li>category multiselect OR average_device_minutes</li>
+<li>category multiselect OR average_ip_minutes</li>
+<li>category multiselect OR hourly sum</li>
+<li>video_key segments ordering</li>
+<li>video_key segments pagination flag</li>
+<li>video_key second page no duplicates</li>
+<li>video_key second page ordering</li>
+<li>video_key hours ordering</li>
+<li>video_key hours pagination flag</li>
+<li>video_key alpha_asc ordering</li>
+<li>video_key alpha_asc pagination flag</li>
+<li>video_key alpha_desc ordering</li>
+<li>video_key alpha_desc pagination flag</li>
+<li>video_key self exclusion and cross-filtering</li>
+<li>video_key literal search %</li>
+<li>video_key literal search _</li>
+<li>video_key multiselect OR records</li>
+<li>video_key multiselect OR hours</li>
+<li>video_key multiselect OR delivered</li>
+<li>video_key multiselect OR segments</li>
+<li>video_key multiselect OR devices</li>
+<li>video_key multiselect OR ips</li>
+<li>video_key multiselect OR videos</li>
+<li>video_key multiselect OR average_device_minutes</li>
+<li>video_key multiselect OR average_ip_minutes</li>
+<li>video_key multiselect OR hourly sum</li>
+<li>device_id segments ordering</li>
+<li>device_id segments pagination flag</li>
+<li>device_id second page no duplicates</li>
+<li>device_id second page ordering</li>
+<li>device_id hours ordering</li>
+<li>device_id hours pagination flag</li>
+<li>device_id alpha_asc ordering</li>
+<li>device_id alpha_asc pagination flag</li>
+<li>device_id alpha_desc ordering</li>
+<li>device_id alpha_desc pagination flag</li>
+<li>device_id self exclusion and cross-filtering</li>
+<li>device_id literal search %</li>
+<li>device_id literal search _</li>
+<li>device_id multiselect OR records</li>
+<li>device_id multiselect OR hours</li>
+<li>device_id multiselect OR delivered</li>
+<li>device_id multiselect OR segments</li>
+<li>device_id multiselect OR devices</li>
+<li>device_id multiselect OR ips</li>
+<li>device_id multiselect OR videos</li>
+<li>device_id multiselect OR average_device_minutes</li>
+<li>device_id multiselect OR average_ip_minutes</li>
+<li>device_id multiselect OR hourly sum</li>
+<li>cli_ip segments ordering</li>
+<li>cli_ip segments pagination flag</li>
+<li>cli_ip second page no duplicates</li>
+<li>cli_ip second page ordering</li>
+<li>cli_ip hours ordering</li>
+<li>cli_ip hours pagination flag</li>
+<li>cli_ip alpha_asc ordering</li>
+<li>cli_ip alpha_asc pagination flag</li>
+<li>cli_ip alpha_desc ordering</li>
+<li>cli_ip alpha_desc pagination flag</li>
+<li>cli_ip self exclusion and cross-filtering</li>
+<li>cli_ip literal search %</li>
+<li>cli_ip literal search _</li>
+<li>cli_ip multiselect OR records</li>
+<li>cli_ip multiselect OR hours</li>
+<li>cli_ip multiselect OR delivered</li>
+<li>cli_ip multiselect OR segments</li>
+<li>cli_ip multiselect OR devices</li>
+<li>cli_ip multiselect OR ips</li>
+<li>cli_ip multiselect OR videos</li>
+<li>cli_ip multiselect OR average_device_minutes</li>
+<li>cli_ip multiselect OR average_ip_minutes</li>
+<li>cli_ip multiselect OR hourly sum</li>
+<li>os segments ordering</li>
+<li>os segments pagination flag</li>
+<li>os hours ordering</li>
+<li>os hours pagination flag</li>
+<li>os alpha_asc ordering</li>
+<li>os alpha_asc pagination flag</li>
+<li>os alpha_desc ordering</li>
+<li>os alpha_desc pagination flag</li>
+<li>os self exclusion and cross-filtering</li>
+<li>os literal search %</li>
+<li>os literal search _</li>
+<li>os multiselect OR records</li>
+<li>os multiselect OR hours</li>
+<li>os multiselect OR delivered</li>
+<li>os multiselect OR segments</li>
+<li>os multiselect OR devices</li>
+<li>os multiselect OR ips</li>
+<li>os multiselect OR videos</li>
+<li>os multiselect OR average_device_minutes</li>
+<li>os multiselect OR average_ip_minutes</li>
+<li>os multiselect OR hourly sum</li>
+<li>region segments ordering</li>
+<li>region segments pagination flag</li>
+<li>region second page no duplicates</li>
+<li>region second page ordering</li>
+<li>region hours ordering</li>
+<li>region hours pagination flag</li>
+<li>region alpha_asc ordering</li>
+<li>region alpha_asc pagination flag</li>
+<li>region alpha_desc ordering</li>
+<li>region alpha_desc pagination flag</li>
+<li>region self exclusion and cross-filtering</li>
+<li>region literal search %</li>
+<li>region literal search _</li>
+<li>region multiselect OR records</li>
+<li>region multiselect OR hours</li>
+<li>region multiselect OR delivered</li>
+<li>region multiselect OR segments</li>
+<li>region multiselect OR devices</li>
+<li>region multiselect OR ips</li>
+<li>region multiselect OR videos</li>
+<li>region multiselect OR average_device_minutes</li>
+<li>region multiselect OR average_ip_minutes</li>
+<li>region multiselect OR hourly sum</li>
+<li>isp segments ordering</li>
+<li>isp segments pagination flag</li>
+<li>isp second page no duplicates</li>
+<li>isp second page ordering</li>
+<li>isp hours ordering</li>
+<li>isp hours pagination flag</li>
+<li>isp alpha_asc ordering</li>
+<li>isp alpha_asc pagination flag</li>
+<li>isp alpha_desc ordering</li>
+<li>isp alpha_desc pagination flag</li>
+<li>isp self exclusion and cross-filtering</li>
+<li>isp literal search %</li>
+<li>isp literal search _</li>
+<li>isp multiselect OR records</li>
+<li>isp multiselect OR hours</li>
+<li>isp multiselect OR delivered</li>
+<li>isp multiselect OR segments</li>
+<li>isp multiselect OR devices</li>
+<li>isp multiselect OR ips</li>
+<li>isp multiselect OR videos</li>
+<li>isp multiselect OR average_device_minutes</li>
+<li>isp multiselect OR average_ip_minutes</li>
+<li>isp multiselect OR hourly sum</li>
+<li>device_type segments ordering</li>
+<li>device_type segments pagination flag</li>
+<li>device_type hours ordering</li>
+<li>device_type hours pagination flag</li>
+<li>device_type alpha_asc ordering</li>
+<li>device_type alpha_asc pagination flag</li>
+<li>device_type alpha_desc ordering</li>
+<li>device_type alpha_desc pagination flag</li>
+<li>device_type self exclusion and cross-filtering</li>
+<li>device_type literal search %</li>
+<li>device_type literal search _</li>
+<li>device_type multiselect OR records</li>
+<li>device_type multiselect OR hours</li>
+<li>device_type multiselect OR delivered</li>
+<li>device_type multiselect OR segments</li>
+<li>device_type multiselect OR devices</li>
+<li>device_type multiselect OR ips</li>
+<li>device_type multiselect OR videos</li>
+<li>device_type multiselect OR average_device_minutes</li>
+<li>device_type multiselect OR average_ip_minutes</li>
+<li>device_type multiselect OR hourly sum</li>
+<li>identity_confidence segments ordering</li>
+<li>identity_confidence segments pagination flag</li>
+<li>identity_confidence hours ordering</li>
+<li>identity_confidence hours pagination flag</li>
+<li>identity_confidence alpha_asc ordering</li>
+<li>identity_confidence alpha_asc pagination flag</li>
+<li>identity_confidence alpha_desc ordering</li>
+<li>identity_confidence alpha_desc pagination flag</li>
+<li>identity_confidence self exclusion and cross-filtering</li>
+<li>identity_confidence literal search %</li>
+<li>identity_confidence literal search _</li>
+<li>identity_confidence multiselect OR records</li>
+<li>identity_confidence multiselect OR hours</li>
+<li>identity_confidence multiselect OR delivered</li>
+<li>identity_confidence multiselect OR segments</li>
+<li>identity_confidence multiselect OR devices</li>
+<li>identity_confidence multiselect OR ips</li>
+<li>identity_confidence multiselect OR videos</li>
+<li>identity_confidence multiselect OR average_device_minutes</li>
+<li>identity_confidence multiselect OR average_ip_minutes</li>
+<li>identity_confidence multiselect OR hourly sum</li>
+<li>title_status segments ordering</li>
+<li>title_status segments pagination flag</li>
+<li>title_status hours ordering</li>
+<li>title_status hours pagination flag</li>
+<li>title_status alpha_asc ordering</li>
+<li>title_status alpha_asc pagination flag</li>
+<li>title_status alpha_desc ordering</li>
+<li>title_status alpha_desc pagination flag</li>
+<li>title_status self exclusion and cross-filtering</li>
+<li>title_status literal search %</li>
+<li>title_status literal search _</li>
+<li>title_status multiselect OR records</li>
+<li>title_status multiselect OR hours</li>
+<li>title_status multiselect OR delivered</li>
+<li>title_status multiselect OR segments</li>
+<li>title_status multiselect OR devices</li>
+<li>title_status multiselect OR ips</li>
+<li>title_status multiselect OR videos</li>
+<li>title_status multiselect OR average_device_minutes</li>
+<li>title_status multiselect OR average_ip_minutes</li>
+<li>title_status multiselect OR hourly sum</li>
+<li>Pair title/category records</li>
+<li>Pair title/category hours</li>
+<li>Pair title/category delivered</li>
+<li>Pair title/category segments</li>
+<li>Pair title/category devices</li>
+<li>Pair title/category ips</li>
+<li>Pair title/category videos</li>
+<li>Pair title/category average_device_minutes</li>
+<li>Pair title/category average_ip_minutes</li>
+<li>Pair title/category hourly sum</li>
+<li>Pair title/video_key records</li>
+<li>Pair title/video_key hours</li>
+<li>Pair title/video_key delivered</li>
+<li>Pair title/video_key segments</li>
+<li>Pair title/video_key devices</li>
+<li>Pair title/video_key ips</li>
+<li>Pair title/video_key videos</li>
+<li>Pair title/video_key average_device_minutes</li>
+<li>Pair title/video_key average_ip_minutes</li>
+<li>Pair title/video_key hourly sum</li>
+<li>Pair title/device_id records</li>
+<li>Pair title/device_id hours</li>
+<li>Pair title/device_id delivered</li>
+<li>Pair title/device_id segments</li>
+<li>Pair title/device_id devices</li>
+<li>Pair title/device_id ips</li>
+<li>Pair title/device_id videos</li>
+<li>Pair title/device_id average_device_minutes</li>
+<li>Pair title/device_id average_ip_minutes</li>
+<li>Pair title/device_id hourly sum</li>
+<li>Pair title/cli_ip records</li>
+<li>Pair title/cli_ip hours</li>
+<li>Pair title/cli_ip delivered</li>
+<li>Pair title/cli_ip segments</li>
+<li>Pair title/cli_ip devices</li>
+<li>Pair title/cli_ip ips</li>
+<li>Pair title/cli_ip videos</li>
+<li>Pair title/cli_ip average_device_minutes</li>
+<li>Pair title/cli_ip average_ip_minutes</li>
+<li>Pair title/cli_ip hourly sum</li>
+<li>Pair title/os records</li>
+<li>Pair title/os hours</li>
+<li>Pair title/os delivered</li>
+<li>Pair title/os segments</li>
+<li>Pair title/os devices</li>
+<li>Pair title/os ips</li>
+<li>Pair title/os videos</li>
+<li>Pair title/os average_device_minutes</li>
+<li>Pair title/os average_ip_minutes</li>
+<li>Pair title/os hourly sum</li>
+<li>Pair title/region records</li>
+<li>Pair title/region hours</li>
+<li>Pair title/region delivered</li>
+<li>Pair title/region segments</li>
+<li>Pair title/region devices</li>
+<li>Pair title/region ips</li>
+<li>Pair title/region videos</li>
+<li>Pair title/region average_device_minutes</li>
+<li>Pair title/region average_ip_minutes</li>
+<li>Pair title/region hourly sum</li>
+<li>Pair title/isp records</li>
+<li>Pair title/isp hours</li>
+<li>Pair title/isp delivered</li>
+<li>Pair title/isp segments</li>
+<li>Pair title/isp devices</li>
+<li>Pair title/isp ips</li>
+<li>Pair title/isp videos</li>
+<li>Pair title/isp average_device_minutes</li>
+<li>Pair title/isp average_ip_minutes</li>
+<li>Pair title/isp hourly sum</li>
+<li>Pair title/device_type records</li>
+<li>Pair title/device_type hours</li>
+<li>Pair title/device_type delivered</li>
+<li>Pair title/device_type segments</li>
+<li>Pair title/device_type devices</li>
+<li>Pair title/device_type ips</li>
+<li>Pair title/device_type videos</li>
+<li>Pair title/device_type average_device_minutes</li>
+<li>Pair title/device_type average_ip_minutes</li>
+<li>Pair title/device_type hourly sum</li>
+<li>Pair title/identity_confidence records</li>
+<li>Pair title/identity_confidence hours</li>
+<li>Pair title/identity_confidence delivered</li>
+<li>Pair title/identity_confidence segments</li>
+<li>Pair title/identity_confidence devices</li>
+<li>Pair title/identity_confidence ips</li>
+<li>Pair title/identity_confidence videos</li>
+<li>Pair title/identity_confidence average_device_minutes</li>
+<li>Pair title/identity_confidence average_ip_minutes</li>
+<li>Pair title/identity_confidence hourly sum</li>
+<li>Pair title/title_status records</li>
+<li>Pair title/title_status hours</li>
+<li>Pair title/title_status delivered</li>
+<li>Pair title/title_status segments</li>
+<li>Pair title/title_status devices</li>
+<li>Pair title/title_status ips</li>
+<li>Pair title/title_status videos</li>
+<li>Pair title/title_status average_device_minutes</li>
+<li>Pair title/title_status average_ip_minutes</li>
+<li>Pair title/title_status hourly sum</li>
+<li>Pair category/video_key records</li>
+<li>Pair category/video_key hours</li>
+<li>Pair category/video_key delivered</li>
+<li>Pair category/video_key segments</li>
+<li>Pair category/video_key devices</li>
+<li>Pair category/video_key ips</li>
+<li>Pair category/video_key videos</li>
+<li>Pair category/video_key average_device_minutes</li>
+<li>Pair category/video_key average_ip_minutes</li>
+<li>Pair category/video_key hourly sum</li>
+<li>Pair category/device_id records</li>
+<li>Pair category/device_id hours</li>
+<li>Pair category/device_id delivered</li>
+<li>Pair category/device_id segments</li>
+<li>Pair category/device_id devices</li>
+<li>Pair category/device_id ips</li>
+<li>Pair category/device_id videos</li>
+<li>Pair category/device_id average_device_minutes</li>
+<li>Pair category/device_id average_ip_minutes</li>
+<li>Pair category/device_id hourly sum</li>
+<li>Pair category/cli_ip records</li>
+<li>Pair category/cli_ip hours</li>
+<li>Pair category/cli_ip delivered</li>
+<li>Pair category/cli_ip segments</li>
+<li>Pair category/cli_ip devices</li>
+<li>Pair category/cli_ip ips</li>
+<li>Pair category/cli_ip videos</li>
+<li>Pair category/cli_ip average_device_minutes</li>
+<li>Pair category/cli_ip average_ip_minutes</li>
+<li>Pair category/cli_ip hourly sum</li>
+<li>Pair category/os records</li>
+<li>Pair category/os hours</li>
+<li>Pair category/os delivered</li>
+<li>Pair category/os segments</li>
+<li>Pair category/os devices</li>
+<li>Pair category/os ips</li>
+<li>Pair category/os videos</li>
+<li>Pair category/os average_device_minutes</li>
+<li>Pair category/os average_ip_minutes</li>
+<li>Pair category/os hourly sum</li>
+<li>Pair category/region records</li>
+<li>Pair category/region hours</li>
+<li>Pair category/region delivered</li>
+<li>Pair category/region segments</li>
+<li>Pair category/region devices</li>
+<li>Pair category/region ips</li>
+<li>Pair category/region videos</li>
+<li>Pair category/region average_device_minutes</li>
+<li>Pair category/region average_ip_minutes</li>
+<li>Pair category/region hourly sum</li>
+<li>Pair category/isp records</li>
+<li>Pair category/isp hours</li>
+<li>Pair category/isp delivered</li>
+<li>Pair category/isp segments</li>
+<li>Pair category/isp devices</li>
+<li>Pair category/isp ips</li>
+<li>Pair category/isp videos</li>
+<li>Pair category/isp average_device_minutes</li>
+<li>Pair category/isp average_ip_minutes</li>
+<li>Pair category/isp hourly sum</li>
+<li>Pair category/device_type records</li>
+<li>Pair category/device_type hours</li>
+<li>Pair category/device_type delivered</li>
+<li>Pair category/device_type segments</li>
+<li>Pair category/device_type devices</li>
+<li>Pair category/device_type ips</li>
+<li>Pair category/device_type videos</li>
+<li>Pair category/device_type average_device_minutes</li>
+<li>Pair category/device_type average_ip_minutes</li>
+<li>Pair category/device_type hourly sum</li>
+<li>Pair category/identity_confidence records</li>
+<li>Pair category/identity_confidence hours</li>
+<li>Pair category/identity_confidence delivered</li>
+<li>Pair category/identity_confidence segments</li>
+<li>Pair category/identity_confidence devices</li>
+<li>Pair category/identity_confidence ips</li>
+<li>Pair category/identity_confidence videos</li>
+<li>Pair category/identity_confidence average_device_minutes</li>
+<li>Pair category/identity_confidence average_ip_minutes</li>
+<li>Pair category/identity_confidence hourly sum</li>
+<li>Pair category/title_status records</li>
+<li>Pair category/title_status hours</li>
+<li>Pair category/title_status delivered</li>
+<li>Pair category/title_status segments</li>
+<li>Pair category/title_status devices</li>
+<li>Pair category/title_status ips</li>
+<li>Pair category/title_status videos</li>
+<li>Pair category/title_status average_device_minutes</li>
+<li>Pair category/title_status average_ip_minutes</li>
+<li>Pair category/title_status hourly sum</li>
+<li>Pair video_key/device_id records</li>
+<li>Pair video_key/device_id hours</li>
+<li>Pair video_key/device_id delivered</li>
+<li>Pair video_key/device_id segments</li>
+<li>Pair video_key/device_id devices</li>
+<li>Pair video_key/device_id ips</li>
+<li>Pair video_key/device_id videos</li>
+<li>Pair video_key/device_id average_device_minutes</li>
+<li>Pair video_key/device_id average_ip_minutes</li>
+<li>Pair video_key/device_id hourly sum</li>
+<li>Pair video_key/cli_ip records</li>
+<li>Pair video_key/cli_ip hours</li>
+<li>Pair video_key/cli_ip delivered</li>
+<li>Pair video_key/cli_ip segments</li>
+<li>Pair video_key/cli_ip devices</li>
+<li>Pair video_key/cli_ip ips</li>
+<li>Pair video_key/cli_ip videos</li>
+<li>Pair video_key/cli_ip average_device_minutes</li>
+<li>Pair video_key/cli_ip average_ip_minutes</li>
+<li>Pair video_key/cli_ip hourly sum</li>
+<li>Pair video_key/os records</li>
+<li>Pair video_key/os hours</li>
+<li>Pair video_key/os delivered</li>
+<li>Pair video_key/os segments</li>
+<li>Pair video_key/os devices</li>
+<li>Pair video_key/os ips</li>
+<li>Pair video_key/os videos</li>
+<li>Pair video_key/os average_device_minutes</li>
+<li>Pair video_key/os average_ip_minutes</li>
+<li>Pair video_key/os hourly sum</li>
+<li>Pair video_key/region records</li>
+<li>Pair video_key/region hours</li>
+<li>Pair video_key/region delivered</li>
+<li>Pair video_key/region segments</li>
+<li>Pair video_key/region devices</li>
+<li>Pair video_key/region ips</li>
+<li>Pair video_key/region videos</li>
+<li>Pair video_key/region average_device_minutes</li>
+<li>Pair video_key/region average_ip_minutes</li>
+<li>Pair video_key/region hourly sum</li>
+<li>Pair video_key/isp records</li>
+<li>Pair video_key/isp hours</li>
+<li>Pair video_key/isp delivered</li>
+<li>Pair video_key/isp segments</li>
+<li>Pair video_key/isp devices</li>
+<li>Pair video_key/isp ips</li>
+<li>Pair video_key/isp videos</li>
+<li>Pair video_key/isp average_device_minutes</li>
+<li>Pair video_key/isp average_ip_minutes</li>
+<li>Pair video_key/isp hourly sum</li>
+<li>Pair video_key/device_type records</li>
+<li>Pair video_key/device_type hours</li>
+<li>Pair video_key/device_type delivered</li>
+<li>Pair video_key/device_type segments</li>
+<li>Pair video_key/device_type devices</li>
+<li>Pair video_key/device_type ips</li>
+<li>Pair video_key/device_type videos</li>
+<li>Pair video_key/device_type average_device_minutes</li>
+<li>Pair video_key/device_type average_ip_minutes</li>
+<li>Pair video_key/device_type hourly sum</li>
+<li>Pair video_key/identity_confidence records</li>
+<li>Pair video_key/identity_confidence hours</li>
+<li>Pair video_key/identity_confidence delivered</li>
+<li>Pair video_key/identity_confidence segments</li>
+<li>Pair video_key/identity_confidence devices</li>
+<li>Pair video_key/identity_confidence ips</li>
+<li>Pair video_key/identity_confidence videos</li>
+<li>Pair video_key/identity_confidence average_device_minutes</li>
+<li>Pair video_key/identity_confidence average_ip_minutes</li>
+<li>Pair video_key/identity_confidence hourly sum</li>
+<li>Pair video_key/title_status records</li>
+<li>Pair video_key/title_status hours</li>
+<li>Pair video_key/title_status delivered</li>
+<li>Pair video_key/title_status segments</li>
+<li>Pair video_key/title_status devices</li>
+<li>Pair video_key/title_status ips</li>
+<li>Pair video_key/title_status videos</li>
+<li>Pair video_key/title_status average_device_minutes</li>
+<li>Pair video_key/title_status average_ip_minutes</li>
+<li>Pair video_key/title_status hourly sum</li>
+<li>Pair device_id/cli_ip records</li>
+<li>Pair device_id/cli_ip hours</li>
+<li>Pair device_id/cli_ip delivered</li>
+<li>Pair device_id/cli_ip segments</li>
+<li>Pair device_id/cli_ip devices</li>
+<li>Pair device_id/cli_ip ips</li>
+<li>Pair device_id/cli_ip videos</li>
+<li>Pair device_id/cli_ip average_device_minutes</li>
+<li>Pair device_id/cli_ip average_ip_minutes</li>
+<li>Pair device_id/cli_ip hourly sum</li>
+<li>Pair device_id/os records</li>
+<li>Pair device_id/os hours</li>
+<li>Pair device_id/os delivered</li>
+<li>Pair device_id/os segments</li>
+<li>Pair device_id/os devices</li>
+<li>Pair device_id/os ips</li>
+<li>Pair device_id/os videos</li>
+<li>Pair device_id/os average_device_minutes</li>
+<li>Pair device_id/os average_ip_minutes</li>
+<li>Pair device_id/os hourly sum</li>
+<li>Pair device_id/region records</li>
+<li>Pair device_id/region hours</li>
+<li>Pair device_id/region delivered</li>
+<li>Pair device_id/region segments</li>
+<li>Pair device_id/region devices</li>
+<li>Pair device_id/region ips</li>
+<li>Pair device_id/region videos</li>
+<li>Pair device_id/region average_device_minutes</li>
+<li>Pair device_id/region average_ip_minutes</li>
+<li>Pair device_id/region hourly sum</li>
+<li>Pair device_id/isp records</li>
+<li>Pair device_id/isp hours</li>
+<li>Pair device_id/isp delivered</li>
+<li>Pair device_id/isp segments</li>
+<li>Pair device_id/isp devices</li>
+<li>Pair device_id/isp ips</li>
+<li>Pair device_id/isp videos</li>
+<li>Pair device_id/isp average_device_minutes</li>
+<li>Pair device_id/isp average_ip_minutes</li>
+<li>Pair device_id/isp hourly sum</li>
+<li>Pair device_id/device_type records</li>
+<li>Pair device_id/device_type hours</li>
+<li>Pair device_id/device_type delivered</li>
+<li>Pair device_id/device_type segments</li>
+<li>Pair device_id/device_type devices</li>
+<li>Pair device_id/device_type ips</li>
+<li>Pair device_id/device_type videos</li>
+<li>Pair device_id/device_type average_device_minutes</li>
+<li>Pair device_id/device_type average_ip_minutes</li>
+<li>Pair device_id/device_type hourly sum</li>
+<li>Pair device_id/identity_confidence records</li>
+<li>Pair device_id/identity_confidence hours</li>
+<li>Pair device_id/identity_confidence delivered</li>
+<li>Pair device_id/identity_confidence segments</li>
+<li>Pair device_id/identity_confidence devices</li>
+<li>Pair device_id/identity_confidence ips</li>
+<li>Pair device_id/identity_confidence videos</li>
+<li>Pair device_id/identity_confidence average_device_minutes</li>
+<li>Pair device_id/identity_confidence average_ip_minutes</li>
+<li>Pair device_id/identity_confidence hourly sum</li>
+<li>Pair device_id/title_status records</li>
+<li>Pair device_id/title_status hours</li>
+<li>Pair device_id/title_status delivered</li>
+<li>Pair device_id/title_status segments</li>
+<li>Pair device_id/title_status devices</li>
+<li>Pair device_id/title_status ips</li>
+<li>Pair device_id/title_status videos</li>
+<li>Pair device_id/title_status average_device_minutes</li>
+<li>Pair device_id/title_status average_ip_minutes</li>
+<li>Pair device_id/title_status hourly sum</li>
+<li>Pair cli_ip/os records</li>
+<li>Pair cli_ip/os hours</li>
+<li>Pair cli_ip/os delivered</li>
+<li>Pair cli_ip/os segments</li>
+<li>Pair cli_ip/os devices</li>
+<li>Pair cli_ip/os ips</li>
+<li>Pair cli_ip/os videos</li>
+<li>Pair cli_ip/os average_device_minutes</li>
+<li>Pair cli_ip/os average_ip_minutes</li>
+<li>Pair cli_ip/os hourly sum</li>
+<li>Pair cli_ip/region records</li>
+<li>Pair cli_ip/region hours</li>
+<li>Pair cli_ip/region delivered</li>
+<li>Pair cli_ip/region segments</li>
+<li>Pair cli_ip/region devices</li>
+<li>Pair cli_ip/region ips</li>
+<li>Pair cli_ip/region videos</li>
+<li>Pair cli_ip/region average_device_minutes</li>
+<li>Pair cli_ip/region average_ip_minutes</li>
+<li>Pair cli_ip/region hourly sum</li>
+<li>Pair cli_ip/isp records</li>
+<li>Pair cli_ip/isp hours</li>
+<li>Pair cli_ip/isp delivered</li>
+<li>Pair cli_ip/isp segments</li>
+<li>Pair cli_ip/isp devices</li>
+<li>Pair cli_ip/isp ips</li>
+<li>Pair cli_ip/isp videos</li>
+<li>Pair cli_ip/isp average_device_minutes</li>
+<li>Pair cli_ip/isp average_ip_minutes</li>
+<li>Pair cli_ip/isp hourly sum</li>
+<li>Pair cli_ip/device_type records</li>
+<li>Pair cli_ip/device_type hours</li>
+<li>Pair cli_ip/device_type delivered</li>
+<li>Pair cli_ip/device_type segments</li>
+<li>Pair cli_ip/device_type devices</li>
+<li>Pair cli_ip/device_type ips</li>
+<li>Pair cli_ip/device_type videos</li>
+<li>Pair cli_ip/device_type average_device_minutes</li>
+<li>Pair cli_ip/device_type average_ip_minutes</li>
+<li>Pair cli_ip/device_type hourly sum</li>
+<li>Pair cli_ip/identity_confidence records</li>
+<li>Pair cli_ip/identity_confidence hours</li>
+<li>Pair cli_ip/identity_confidence delivered</li>
+<li>Pair cli_ip/identity_confidence segments</li>
+<li>Pair cli_ip/identity_confidence devices</li>
+<li>Pair cli_ip/identity_confidence ips</li>
+<li>Pair cli_ip/identity_confidence videos</li>
+<li>Pair cli_ip/identity_confidence average_device_minutes</li>
+<li>Pair cli_ip/identity_confidence average_ip_minutes</li>
+<li>Pair cli_ip/identity_confidence hourly sum</li>
+<li>Pair cli_ip/title_status records</li>
+<li>Pair cli_ip/title_status hours</li>
+<li>Pair cli_ip/title_status delivered</li>
+<li>Pair cli_ip/title_status segments</li>
+<li>Pair cli_ip/title_status devices</li>
+<li>Pair cli_ip/title_status ips</li>
+<li>Pair cli_ip/title_status videos</li>
+<li>Pair cli_ip/title_status average_device_minutes</li>
+<li>Pair cli_ip/title_status average_ip_minutes</li>
+<li>Pair cli_ip/title_status hourly sum</li>
+<li>Pair os/region records</li>
+<li>Pair os/region hours</li>
+<li>Pair os/region delivered</li>
+<li>Pair os/region segments</li>
+<li>Pair os/region devices</li>
+<li>Pair os/region ips</li>
+<li>Pair os/region videos</li>
+<li>Pair os/region average_device_minutes</li>
+<li>Pair os/region average_ip_minutes</li>
+<li>Pair os/region hourly sum</li>
+<li>Pair os/isp records</li>
+<li>Pair os/isp hours</li>
+<li>Pair os/isp delivered</li>
+<li>Pair os/isp segments</li>
+<li>Pair os/isp devices</li>
+<li>Pair os/isp ips</li>
+<li>Pair os/isp videos</li>
+<li>Pair os/isp average_device_minutes</li>
+<li>Pair os/isp average_ip_minutes</li>
+<li>Pair os/isp hourly sum</li>
+<li>Pair os/device_type records</li>
+<li>Pair os/device_type hours</li>
+<li>Pair os/device_type delivered</li>
+<li>Pair os/device_type segments</li>
+<li>Pair os/device_type devices</li>
+<li>Pair os/device_type ips</li>
+<li>Pair os/device_type videos</li>
+<li>Pair os/device_type average_device_minutes</li>
+<li>Pair os/device_type average_ip_minutes</li>
+<li>Pair os/device_type hourly sum</li>
+<li>Pair os/identity_confidence records</li>
+<li>Pair os/identity_confidence hours</li>
+<li>Pair os/identity_confidence delivered</li>
+<li>Pair os/identity_confidence segments</li>
+<li>Pair os/identity_confidence devices</li>
+<li>Pair os/identity_confidence ips</li>
+<li>Pair os/identity_confidence videos</li>
+<li>Pair os/identity_confidence average_device_minutes</li>
+<li>Pair os/identity_confidence average_ip_minutes</li>
+<li>Pair os/identity_confidence hourly sum</li>
+<li>Pair os/title_status records</li>
+<li>Pair os/title_status hours</li>
+<li>Pair os/title_status delivered</li>
+<li>Pair os/title_status segments</li>
+<li>Pair os/title_status devices</li>
+<li>Pair os/title_status ips</li>
+<li>Pair os/title_status videos</li>
+<li>Pair os/title_status average_device_minutes</li>
+<li>Pair os/title_status average_ip_minutes</li>
+<li>Pair os/title_status hourly sum</li>
+<li>Pair region/isp records</li>
+<li>Pair region/isp hours</li>
+<li>Pair region/isp delivered</li>
+<li>Pair region/isp segments</li>
+<li>Pair region/isp devices</li>
+<li>Pair region/isp ips</li>
+<li>Pair region/isp videos</li>
+<li>Pair region/isp average_device_minutes</li>
+<li>Pair region/isp average_ip_minutes</li>
+<li>Pair region/isp hourly sum</li>
+<li>Pair region/device_type records</li>
+<li>Pair region/device_type hours</li>
+<li>Pair region/device_type delivered</li>
+<li>Pair region/device_type segments</li>
+<li>Pair region/device_type devices</li>
+<li>Pair region/device_type ips</li>
+<li>Pair region/device_type videos</li>
+<li>Pair region/device_type average_device_minutes</li>
+<li>Pair region/device_type average_ip_minutes</li>
+<li>Pair region/device_type hourly sum</li>
+<li>Pair region/identity_confidence records</li>
+<li>Pair region/identity_confidence hours</li>
+<li>Pair region/identity_confidence delivered</li>
+<li>Pair region/identity_confidence segments</li>
+<li>Pair region/identity_confidence devices</li>
+<li>Pair region/identity_confidence ips</li>
+<li>Pair region/identity_confidence videos</li>
+<li>Pair region/identity_confidence average_device_minutes</li>
+<li>Pair region/identity_confidence average_ip_minutes</li>
+<li>Pair region/identity_confidence hourly sum</li>
+<li>Pair region/title_status records</li>
+<li>Pair region/title_status hours</li>
+<li>Pair region/title_status delivered</li>
+<li>Pair region/title_status segments</li>
+<li>Pair region/title_status devices</li>
+<li>Pair region/title_status ips</li>
+<li>Pair region/title_status videos</li>
+<li>Pair region/title_status average_device_minutes</li>
+<li>Pair region/title_status average_ip_minutes</li>
+<li>Pair region/title_status hourly sum</li>
+<li>Pair isp/device_type records</li>
+<li>Pair isp/device_type hours</li>
+<li>Pair isp/device_type delivered</li>
+<li>Pair isp/device_type segments</li>
+<li>Pair isp/device_type devices</li>
+<li>Pair isp/device_type ips</li>
+<li>Pair isp/device_type videos</li>
+<li>Pair isp/device_type average_device_minutes</li>
+<li>Pair isp/device_type average_ip_minutes</li>
+<li>Pair isp/device_type hourly sum</li>
+<li>Pair isp/identity_confidence records</li>
+<li>Pair isp/identity_confidence hours</li>
+<li>Pair isp/identity_confidence delivered</li>
+<li>Pair isp/identity_confidence segments</li>
+<li>Pair isp/identity_confidence devices</li>
+<li>Pair isp/identity_confidence ips</li>
+<li>Pair isp/identity_confidence videos</li>
+<li>Pair isp/identity_confidence average_device_minutes</li>
+<li>Pair isp/identity_confidence average_ip_minutes</li>
+<li>Pair isp/identity_confidence hourly sum</li>
+<li>Pair isp/title_status records</li>
+<li>Pair isp/title_status hours</li>
+<li>Pair isp/title_status delivered</li>
+<li>Pair isp/title_status segments</li>
+<li>Pair isp/title_status devices</li>
+<li>Pair isp/title_status ips</li>
+<li>Pair isp/title_status videos</li>
+<li>Pair isp/title_status average_device_minutes</li>
+<li>Pair isp/title_status average_ip_minutes</li>
+<li>Pair isp/title_status hourly sum</li>
+<li>Pair device_type/identity_confidence records</li>
+<li>Pair device_type/identity_confidence hours</li>
+<li>Pair device_type/identity_confidence delivered</li>
+<li>Pair device_type/identity_confidence segments</li>
+<li>Pair device_type/identity_confidence devices</li>
+<li>Pair device_type/identity_confidence ips</li>
+<li>Pair device_type/identity_confidence videos</li>
+<li>Pair device_type/identity_confidence average_device_minutes</li>
+<li>Pair device_type/identity_confidence average_ip_minutes</li>
+<li>Pair device_type/identity_confidence hourly sum</li>
+<li>Pair device_type/title_status records</li>
+<li>Pair device_type/title_status hours</li>
+<li>Pair device_type/title_status delivered</li>
+<li>Pair device_type/title_status segments</li>
+<li>Pair device_type/title_status devices</li>
+<li>Pair device_type/title_status ips</li>
+<li>Pair device_type/title_status videos</li>
+<li>Pair device_type/title_status average_device_minutes</li>
+<li>Pair device_type/title_status average_ip_minutes</li>
+<li>Pair device_type/title_status hourly sum</li>
+<li>Pair identity_confidence/title_status records</li>
+<li>Pair identity_confidence/title_status hours</li>
+<li>Pair identity_confidence/title_status delivered</li>
+<li>Pair identity_confidence/title_status segments</li>
+<li>Pair identity_confidence/title_status devices</li>
+<li>Pair identity_confidence/title_status ips</li>
+<li>Pair identity_confidence/title_status videos</li>
+<li>Pair identity_confidence/title_status average_device_minutes</li>
+<li>Pair identity_confidence/title_status average_ip_minutes</li>
+<li>Pair identity_confidence/title_status hourly sum</li>
+<li>All eleven together records</li>
+<li>All eleven together hours</li>
+<li>All eleven together delivered</li>
+<li>All eleven together segments</li>
+<li>All eleven together devices</li>
+<li>All eleven together ips</li>
+<li>All eleven together videos</li>
+<li>All eleven together average_device_minutes</li>
+<li>All eleven together average_ip_minutes</li>
+<li>All eleven together hourly sum</li>
+<li>Zero result records</li>
+<li>Zero result hours</li>
+<li>Zero result delivered</li>
+<li>Zero result segments</li>
+<li>Zero result devices</li>
+<li>Zero result ips</li>
+<li>Zero result videos</li>
+<li>Zero result average_device_minutes</li>
+<li>Zero result average_ip_minutes</li>
+<li>Zero result hourly sum</li>
+<li>One inclusive minute records</li>
+<li>One inclusive minute hours</li>
+<li>One inclusive minute delivered</li>
+<li>One inclusive minute segments</li>
+<li>One inclusive minute devices</li>
+<li>One inclusive minute ips</li>
+<li>One inclusive minute videos</li>
+<li>One inclusive minute average_device_minutes</li>
+<li>One inclusive minute average_ip_minutes</li>
+<li>One inclusive minute hourly sum</li>
+<li>Overnight window records</li>
+<li>Overnight window hours</li>
+<li>Overnight window delivered</li>
+<li>Overnight window segments</li>
+<li>Overnight window devices</li>
+<li>Overnight window ips</li>
+<li>Overnight window videos</li>
+<li>Overnight window average_device_minutes</li>
+<li>Overnight window average_ip_minutes</li>
+<li>Overnight window hourly sum</li>
+<li>Two dates records</li>
+<li>Two dates hours</li>
+<li>Two dates delivered</li>
+<li>Two dates segments</li>
+<li>Two dates devices</li>
+<li>Two dates ips</li>
+<li>Two dates videos</li>
+<li>Two dates average_device_minutes</li>
+<li>Two dates average_ip_minutes</li>
+<li>Two dates hourly sum</li>
+<li>device_id legacy average compatibility</li>
+<li>device_id journey sum</li>
+<li>device_id journey export identity</li>
+<li>device_id journey export minutes</li>
+<li>device_id invalid/multiple identifiers not blended 2</li>
+<li>device_id invalid/multiple identifiers not blended 1</li>
+<li>device_id invalid/multiple identifiers not blended 0</li>
+<li>cli_ip legacy average compatibility</li>
+<li>cli_ip journey sum</li>
+<li>cli_ip journey export identity</li>
+<li>cli_ip journey export minutes</li>
+<li>cli_ip invalid/multiple identifiers not blended 2</li>
+<li>cli_ip invalid/multiple identifiers not blended 1</li>
+<li>cli_ip invalid/multiple identifiers not blended 0</li>
+<li>Content CSV hours reconcile</li>
+<li>Content CSV both average columns</li>
+<li>CSV formula escaping</li>
+<li>Invalid request 0 returns 400</li>
+<li>Invalid request 1 returns 400</li>
+<li>Invalid request 2 returns 400</li>
+<li>Invalid request 3 returns 400</li>
+<li>Invalid request 4 returns 400</li>
+<li>Invalid request 5 returns 400</li>
+<li>Invalid request 6 returns 400</li>
+<li>Invalid request 7 returns 400</li>
+<li>Invalid request 8 returns 400</li>
+<li>Invalid own-facet values rejected</li>
+<li>Database connection closes deterministically</li>
+</ol></details>
+<details class="card"><summary>comprehensive ui - 65 passed</summary><ol>
+<li>Controls inert before metadata available</li>
+<li>Metadata request intercepted</li>
+<li>Metadata unlocks controls</li>
+<li>No duplicate DOM ids</li>
+<li>Default view latest loaded day</li>
+<li>Cancel restores prior title selection</li>
+<li>Cancel restores applied status</li>
+<li>Cancel re-enables export</li>
+<li>Title multi-select applies directly</li>
+<li>Title apply needs no drawer</li>
+<li>Equivalent selection order does not create pending changes</li>
+<li>Clear title applies directly</li>
+<li>Date change applies directly</li>
+<li>Cancel date preserves selection</li>
+<li>Latest date applies directly</li>
+<li>Older failed query cannot overwrite newer success</li>
+<li>Older success cannot erase newer failure</li>
+<li>Successful refresh clears drawer error</li>
+<li>Pending edits during request stay pending</li>
+<li>Pending query does not close drawer</li>
+<li>Pending edits disable export</li>
+<li>Drawer animation does not steal picker focus</li>
+<li>Picker background is inert</li>
+<li>Picker reverse Tab wraps</li>
+<li>Picker Tab wraps</li>
+<li>Nested Escape keeps drawer open</li>
+<li>Drawer Escape restores focus</li>
+<li>Load more preserves checked selection</li>
+<li>Pagination presents 200 options</li>
+<li>Sort refreshes options</li>
+<li>Empty search is explicit</li>
+<li>Cancel pagination restores original selection</li>
+<li>Save persists applied view</li>
+<li>Load restores device filter</li>
+<li>Shared URL restores filters</li>
+<li>Shared view keeps both audiences</li>
+<li>Explicit Reset clears shared hash</li>
+<li>bad date saved view rejected without mutation</li>
+<li>bad time saved view rejected without mutation</li>
+<li>bad field saved view rejected without mutation</li>
+<li>Corrupt saved storage handled</li>
+<li>Delete removes saved view</li>
+<li>Export failure visible in drawer</li>
+<li>Reset clears stale errors</li>
+<li>Zero results display N/A averages</li>
+<li>Zero results show clear content message</li>
+<li>1920 no page overflow</li>
+<li>1920 calendar fits</li>
+<li>1920 filter picker fits</li>
+<li>1440 no page overflow</li>
+<li>1440 calendar fits</li>
+<li>1440 filter picker fits</li>
+<li>1024 no page overflow</li>
+<li>1024 calendar fits</li>
+<li>1024 filter picker fits</li>
+<li>768 no page overflow</li>
+<li>768 calendar fits</li>
+<li>768 filter picker fits</li>
+<li>390 no page overflow</li>
+<li>390 calendar fits</li>
+<li>390 filter picker fits</li>
+<li>320 no page overflow</li>
+<li>320 calendar fits</li>
+<li>320 filter picker fits</li>
+<li>No JavaScript exceptions</li>
+</ol></details>
+<details class="card"><summary>final journeys - 9 passed</summary><ol>
+<li>Record note separators readable</li>
+<li>Device drill-down succeeds with guarded apply</li>
+<li>Both journeys visible</li>
+<li>Both ID filters stay active</li>
+<li>Device navigation changes selected session</li>
+<li>Device navigation does not alter IP journey</li>
+<li>device_id export correct basis and identifier</li>
+<li>cli_ip export correct basis and identifier</li>
+<li>No journey browser errors</li>
+</ol></details>
+<details class="card"><summary>ux walkthrough - 51 passed</summary><ol>
+<li>Success feedback visible</li>
+<li>Results unlocked after update</li>
+<li>Title picker gives explicit guidance</li>
+<li>Clicked title matches intended search</li>
+<li>Drawer explains pending changes</li>
+<li>Pending filters obvious outside drawer</li>
+<li>Pending hint clears after apply</li>
+<li>Saved view confirms action</li>
+<li>Updating feedback visible without opening menu</li>
+<li>Previous results protected during update</li>
+<li>Slow query receives explanatory feedback</li>
+<li>Success clears loading state</li>
+<li>Connection failure has plain language</li>
+<li>Failure offers a visible Retry</li>
+<li>Failure leaves previous results usable</li>
+<li>Retry recovers cleanly</li>
+<li>Option search displays loading text</li>
+<li>Select shown disabled until options arrive</li>
+<li>Cancel works during search</li>
+<li>Late search cannot reopen a cancelled picker</li>
+<li>Load more shows progress and disables repeated clicks</li>
+<li>Repeated clicks issue only one page request</li>
+<li>Load more completes with clear count</li>
+<li>Hover does not move click targets</li>
+<li>Toolbar stays reachable while exploring</li>
+<li>Journey heading not hidden by toolbar</li>
+<li>Journey navigation responds immediately</li>
+<li>Journey export starts from normal click</li>
+<li>primary text contrast &gt;= 4.5</li>
+<li>heading text contrast &gt;= 4.5</li>
+<li>muted text contrast &gt;= 4.5</li>
+<li>Panels have subtle shadow</li>
+<li>1920x1000 no page overflow</li>
+<li>1920x1000 picker contained</li>
+<li>1920x1000 apply action reachable</li>
+<li>1440x1000 no page overflow</li>
+<li>1440x1000 picker contained</li>
+<li>1440x1000 apply action reachable</li>
+<li>768x900 no page overflow</li>
+<li>768x900 picker contained</li>
+<li>768x900 apply action reachable</li>
+<li>390x844 no page overflow</li>
+<li>390x844 picker contained</li>
+<li>390x844 apply action reachable</li>
+<li>320x640 no page overflow</li>
+<li>320x640 picker contained</li>
+<li>320x640 apply action reachable</li>
+<li>844x390 no page overflow</li>
+<li>844x390 picker contained</li>
+<li>844x390 apply action reachable</li>
+<li>No browser JavaScript errors</li>
+</ol></details>
+<details class="card"><summary>ux cache - 7 passed</summary><ol>
+<li>Cold result correct</li>
+<li>Cached response cannot be mutated by callers</li>
+<li>Warm query avoids event scans</li>
+<li>Cache keys isolate filters</li>
+<li>New snapshot invalidates old cache</li>
+<li>Changed file fingerprint invalidates cache</li>
+<li>Cache remains bounded</li>
+</ol></details>

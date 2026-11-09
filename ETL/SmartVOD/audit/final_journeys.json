@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "checks": [
+    "Record note separators readable",
+    "Device drill-down succeeds with guarded apply",
+    "Both journeys visible",
+    "Both ID filters stay active",
+    "Device navigation changes selected session",
+    "Device navigation does not alter IP journey",
+    "device_id export correct basis and identifier",
+    "cli_ip export correct basis and identifier",
+    "No journey browser errors"
+  ],
+  "errors": []
+}

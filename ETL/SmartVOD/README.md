@@ -1,5 +1,28 @@
 # SmartVOD
 
+The current full audit is saved in `audit/audit_report.html` and
+`audit/audit_summary.json`. Repeat it with the workspace venv interpreter:
+`audit_comprehensive_api.py`, `audit_comprehensive_ui.py`, then
+`audit_final_journeys.py` (all under `ETL/SmartVOD`, with the server running).
+These cover source/SQL reconciliation, all filter pairs, sorting, time windows,
+both audience views, exports, saved/shared views, responsive layouts and error
+handling. Closing a filter picker cancels its staged edits; its action button
+commits them. Pending edits disable CSV export. Older query responses cannot
+replace newer results or errors.
+
+`audit_ux_walkthrough.py` exercises normal clicks, deliberate delays, connection
+failure/Retry, pagination, sticky controls, contrast and short landscape screens.
+`audit_ux_cache.py` verifies result-cache isolation and invalidation with
+disposable database fixtures. The in-memory cache holds at most eight completed
+views and is keyed by the actual database path, size, modification timestamp
+and request. New data snapshots invalidate old cached results.
+
+Queries show visible progress and completion feedback. After four seconds the
+message confirms that processing is still underway; failed requests offer
+Retry. Query requests time out after two minutes rather than waiting forever.
+Previous results cannot be clicked during an update. Pending advanced changes
+are labelled on More filters, and the filter bar stays reachable while scrolling.
+
 Local VOD audience explorer, loaded with 6 October–4 November 2026 (30 days, including 31 October). Open http://127.0.0.1:8766 while the server is running. Initial view/reset selects the latest loaded day; use the date inputs to explore history.
 
 From the workspace root:
@@ -66,13 +89,24 @@ The interaction audit checks cumulative browser filters, reopen/clear/reset, 200
 
 ## Viewer journey
 
+Each journey has **Back to device list** or **Back to IP list**. Explorer
+drill-downs remember the previously applied filters, list scroll positions and
+clicked identifier. Back restores that view and keyboard focus. Nested device/IP
+drill-downs return one step at a time. If there is no navigation history (for
+example, an identifier was selected directly), Back clears that identifier while
+retaining the other applied filters. Reset or loading a saved view clears the
+old explorer history. `audit_explorer_return.py` covers these flows and failed
+return recovery.
+
 ### Device ID / Client IP basis
 
-Use **Audience basis** above saved views, then Apply. The basis controls the explorer cards, journey selection, average estimated watch minutes and CSV basis labels. Device ID remains the default. IP mode represents activity at an address and can combine viewers behind NAT/shared networks or split a viewer across changing addresses; it is not a person-level journey. Other explicit filters, including Device ID and identity confidence, remain in force when switching basis.
+Both Device ID and Client IP views are visible by default: separate averages, explorer lists, content-table averages and independent journeys. There is no audience-basis selector. Both views keep all explicit audience/date/time filters active. IP activity can combine viewers behind NAT/shared networks or split a viewer across changing addresses; it is not a person-level journey.
 
-Average minutes = estimated watch minutes on rows with a known selected-basis identifier / distinct known identifiers on those same rows. Missing identifiers are excluded from both numerator and denominator; an empty denominator displays N/A. The content table computes this per host/video/title group; it is not average session duration. Saved views and local view links preserve the basis. Journey CSV uses `identity_basis` and `identity_value`; standard CSV also includes the basis and group-level average minutes. Group averages are not additive.
+The top bar contains SmartVOD, date range, title and More filters. **Apply dates** and **Apply title** update results directly without opening the drawer. More filters contains the remaining filters, time window, saved views, Reset, Export CSV and Apply. Matched-record counts and date/time notes appear at the bottom of its scroll area.
 
-`audit_identity_basis.py` verifies both bases against SQL, missing-only selections, per-content averages, scoped journeys, exports, saved-state restoration and mobile layout.
+Average minutes = estimated watch minutes on rows with a known identifier / distinct known identifiers on those same rows, computed independently for each basis. Missing identifiers are excluded from both numerator and denominator; an empty denominator displays N/A. The content table computes this per host/video/title group; it is not average session duration. Saved views and local view links preserve filters, while both audience views remain visible. Each journey CSV uses its own `identity_basis` and `identity_value`; standard CSV includes `average_device_minutes` and `average_ip_minutes` alongside the legacy basis-specific columns. Group averages are not additive.
+
+`audit_both_audiences.py` verifies the current dual-view UI against SQL, missing-only selections, per-content averages, independent journeys/exports, direct date/title application and mobile alignment. Older UI audits target the previous basis-selector layout.
 
 Select exactly one known Device ID, choose the date/time range and click Apply. Viewer Journey shows the observed sequence with previous-five and next-five sessions around the selected session. Click a session card or the full timeline to change the center; Previous/Next match moves between content-filter matches.
 

@@ -1,0 +1,84 @@
+{
+  "passed": true,
+  "checks": [
+    "Success feedback visible",
+    "Results unlocked after update",
+    "Title picker gives explicit guidance",
+    "Clicked title matches intended search",
+    "Drawer explains pending changes",
+    "Pending filters obvious outside drawer",
+    "Pending hint clears after apply",
+    "Saved view confirms action",
+    "Updating feedback visible without opening menu",
+    "Previous results protected during update",
+    "Slow query receives explanatory feedback",
+    "Success clears loading state",
+    "Connection failure has plain language",
+    "Failure offers a visible Retry",
+    "Failure leaves previous results usable",
+    "Retry recovers cleanly",
+    "Option search displays loading text",
+    "Select shown disabled until options arrive",
+    "Cancel works during search",
+    "Late search cannot reopen a cancelled picker",
+    "Load more shows progress and disables repeated clicks",
+    "Repeated clicks issue only one page request",
+    "Load more completes with clear count",
+    "Hover does not move click targets",
+    "Toolbar stays reachable while exploring",
+    "Journey heading not hidden by toolbar",
+    "Journey navigation responds immediately",
+    "Journey export starts from normal click",
+    "primary text contrast >= 4.5",
+    "heading text contrast >= 4.5",
+    "muted text contrast >= 4.5",
+    "Panels have subtle shadow",
+    "1920x1000 no page overflow",
+    "1920x1000 picker contained",
+    "1920x1000 apply action reachable",
+    "1440x1000 no page overflow",
+    "1440x1000 picker contained",
+    "1440x1000 apply action reachable",
+    "768x900 no page overflow",
+    "768x900 picker contained",
+    "768x900 apply action reachable",
+    "390x844 no page overflow",
+    "390x844 picker contained",
+    "390x844 apply action reachable",
+    "320x640 no page overflow",
+    "320x640 picker contained",
+    "320x640 apply action reachable",
+    "844x390 no page overflow",
+    "844x390 picker contained",
+    "844x390 apply action reachable",
+    "No browser JavaScript errors"
+  ],
+  "timings": [
+    {
+      "action": "Open dashboard",
+      "seconds": 3.22
+    },
+    {
+      "action": "Change date",
+      "seconds": 2.42
+    },
+    {
+      "action": "Return to latest day",
+      "seconds": 0.08
+    },
+    {
+      "action": "Apply title",
+      "seconds": 0.87
+    },
+    {
+      "action": "Apply region",
+      "seconds": 0.71
+    }
+  ],
+  "contrast": {
+    "primary": 5.101413905232668,
+    "heading": 10.168523569382968,
+    "muted": 5.588011208645477
+  },
+  "errors": []
+}

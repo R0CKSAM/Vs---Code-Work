@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "checks": [
+    "Cold result correct",
+    "Cached response cannot be mutated by callers",
+    "Warm query avoids event scans",
+    "Cache keys isolate filters",
+    "New snapshot invalidates old cache",
+    "Changed file fingerprint invalidates cache",
+    "Cache remains bounded"
+  ]
+}

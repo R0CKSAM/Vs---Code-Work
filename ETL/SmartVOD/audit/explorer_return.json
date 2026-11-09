@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "checks": [
+    "Journey offers Back to device list",
+    "Drill-down narrows device list",
+    "Back restores original filters",
+    "Back restores full previous device list",
+    "Back restores list scroll position",
+    "Back restores focus to selected card",
+    "Explorer heading remains below toolbar",
+    "Nested journey has both selected IDs",
+    "IP Back restores device-scoped explorer",
+    "Device Back completes nested return",
+    "Failed Back keeps current applied view",
+    "Failed Back can be retried without losing history",
+    "Direct-filter Back clears only the identifier",
+    "Mobile return controls fit",
+    "Mobile Back is a usable touch target",
+    "No browser errors"
+  ],
+  "errors": []
+}

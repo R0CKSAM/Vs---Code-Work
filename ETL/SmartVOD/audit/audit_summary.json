@@ -1,0 +1,91 @@
+{
+  "passed": true,
+  "checked_at_ist": "2026-11-09T17:55:36.070957+05:30",
+  "total_checks": 1017,
+  "counts": {
+    "comprehensive_api": 885,
+    "comprehensive_ui": 65,
+    "final_journeys": 9,
+    "ux_walkthrough": 51,
+    "ux_cache": 7
+  },
+  "data_coverage": {
+    "from": "2026-10-06",
+    "through": "2026-11-04",
+    "dates": 30,
+    "pairwise_combinations": 55,
+    "fields": 11
+  },
+  "fixes": [
+    "Closing or cancelling a filter picker restores the prior selection; Apply title commits title changes.",
+    "Older failed or successful requests cannot overwrite newer results or errors.",
+    "Export is disabled while changes are pending; export and query errors appear in the active drawer.",
+    "Reset clears stale errors and removes an obsolete shared-view hash.",
+    "Saved views validate real dates, time bounds and allowed fields before changing the current selection; corrupt saved storage is handled.",
+    "Picker background controls remain inert and keyboard focus stays in the active dialog, including during drawer animation.",
+    "The filter bar waits for metadata before accepting input; equivalent selection ordering does not create false pending changes.",
+    "Malformed API input returns a validation error; SQLite connections close deterministically.",
+    "Formatting and placeholder separators display correctly; failed drill-downs do not scroll to stale journeys."
+  ],
+  "reports": [
+    "comprehensive_api",
+    "comprehensive_ui",
+    "final_journeys",
+    "ux_walkthrough",
+    "ux_cache"
+  ],
+  "ux_improvements": [
+    "Visible loading, success and retry feedback, with a longer-wait message after four seconds.",
+    "Previous results protected from clicks while new results are loading.",
+    "Unapplied changes clearly labelled on More filters and its Apply action.",
+    "Explicit Cancel, clearer option counts and guarded Load more prevent ambiguous/repeated clicks.",
+    "Sticky controls and scroll offsets keep journey headings reachable.",
+    "Green heading hierarchy, readable text contrast, subtle shadows and stable hover targets.",
+    "Short landscape dialogs keep Cancel and Apply actions reachable.",
+    "Eight-view version-aware cache makes revisiting recent views faster."
+  ],
+  "observed_timings_before": [
+    {
+      "action": "Open dashboard",
+      "seconds": 2.91
+    },
+    {
+      "action": "Change date",
+      "seconds": 3.2
+    },
+    {
+      "action": "Return to latest day",
+      "seconds": 3.11
+    },
+    {
+      "action": "Apply title",
+      "seconds": 0.99
+    },
+    {
+      "action": "Apply region",
+      "seconds": 0.81
+    }
+  ],
+  "observed_timings_after": [
+    {
+      "action": "Open dashboard",
+      "seconds": 3.22
+    },
+    {
+      "action": "Change date",
+      "seconds": 2.42
+    },
+    {
+      "action": "Return to latest day",
+      "seconds": 0.08
+    },
+    {
+      "action": "Apply title",
+      "seconds": 0.87
+    },
+    {
+      "action": "Apply region",
+      "seconds": 0.71
+    }
+  ]
+}
