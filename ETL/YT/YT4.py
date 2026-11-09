@@ -130,6 +130,38 @@ class YouTubeApiError(RuntimeError):
         self.reason = reason
 
 
+def retry_delay(failures: int) -> int:
+    """Retry indefinitely without an ever-growing delay or a busy loop."""
+    return min(60, 5 * 2 ** min(max(failures - 1, 0), 4))
+
+
+def run_with_recovery(operation, once: bool = False) -> None:
+    """Keep the instance lock while waiting for network/storage recovery."""
+    failures = 0
+    while True:
+        try:
+            operation()
+            if failures:
+                emit("Collection completed after connectivity/storage recovery.")
+            return
+        except (YouTubeApiError, OSError) as exc:
+            if once or (
+                isinstance(exc, YouTubeApiError)
+                and exc.status_code is not None
+                and exc.status_code < 500
+                and exc.status_code not in {408, 429}
+            ):
+                raise
+            failures += 1
+            delay = retry_delay(failures)
+            emit(
+                f"Connectivity/storage unavailable: {exc}. Waiting {delay}s "
+                f"before retry {failures}; collector remains running.",
+                error=True,
+            )
+            time.sleep(delay)
+
+
 @dataclass(frozen=True)
 class VideoLookup:
     video_id: str
@@ -493,6 +525,9 @@ class HybridYouTubeApi(YouTubeApiV3):
             "skip_download": True,
             "extract_flat": True,
             "playlistend": limit,
+            "socket_timeout": self.timeout,
+            "retries": 1,
+            "extractor_retries": 1,
         }
         try:
             if self.request_gate is not None:
@@ -932,6 +967,9 @@ def poll_channel(
             candidates = api.list_live_videos(channel_id, scan_limit)
         except YouTubeApiError as exc:
             discovery_error = str(exc)
+            # Retry discovery on the very next poll, including when we have
+            # never discovered an active stream. Do not wait 15 more polls.
+            state.poll_number = 0
             emit(
                 f"{now_ist:%Y-%m-%d %H:%M:%S} IST  Channel discovery error: {exc}",
                 log_prefix,
@@ -1235,6 +1273,7 @@ def track_many(
         emit(f"Writing active segment to: {runtime.logger.partial_path}", prefix)
 
     source_worker_count = min(len(runtimes), max_workers)
+    failed_cycles = 0
     try:
         with ThreadPoolExecutor(
             max_workers=source_worker_count, thread_name_prefix="yt-api-source"
@@ -1245,6 +1284,7 @@ def track_many(
                     break
 
                 cycle_started = time.perf_counter()
+                all_sources_failed = True
                 future_map = {
                     source_executor.submit(
                         poll_source,
@@ -1275,6 +1315,9 @@ def track_many(
                         )
 
                     completed_path = runtime.logger.add_rows(outcome.rows)
+                    if any(row[-1] not in {"lookup_error", "channel_discovery_error", "source_error"}
+                           for row in outcome.rows):
+                        all_sources_failed = False
                     if completed_path:
                         emit(f"Parquet segment saved: {completed_path}", prefix)
                         emit(f"Writing active segment to: {runtime.logger.partial_path}", prefix)
@@ -1308,6 +1351,16 @@ def track_many(
                     )
                 if once:
                     break
+                if all_sources_failed:
+                    failed_cycles += 1
+                    delay = retry_delay(failed_cycles)
+                    emit(f"All source lookups failed; waiting {delay}s before retry. "
+                         "Missing viewers remain unknown, not zero.", error=True)
+                    time.sleep(delay)
+                    continue
+                if failed_cycles:
+                    emit("YouTube connectivity recovered; normal polling resumed.")
+                    failed_cycles = 0
                 sleep_until_next_boundary(interval_sec)
     except KeyboardInterrupt:
         emit("Stopped by user.")
@@ -1505,7 +1558,7 @@ def main() -> None:
         parser.error(f"could not read URL file: {exc}")
 
     try:
-        track_many(
+        run_with_recovery(lambda: track_many(
             urls,
             api_key,
             args.interval_sec_override or args.interval_sec,
@@ -1519,7 +1572,7 @@ def main() -> None:
             args.once,
             args.request_timeout,
             measurement_mode=args.measurement_mode,
-        )
+        ), once=args.once)
     except (ValueError, YouTubeApiError, OSError) as exc:
         emit(f"Collector stopped: {exc}", error=True)
         parser.error(str(exc))
