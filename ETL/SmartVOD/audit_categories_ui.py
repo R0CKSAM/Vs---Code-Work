@@ -1,0 +1,60 @@
+"""Exercise category trends, allocation drilldown, navigation and export in Edge."""
+from pathlib import Path
+import csv,io,json,math,urllib.request
+from playwright.sync_api import sync_playwright
+
+ROOT=Path(__file__).resolve().parent;OUT=ROOT/'audit';OUT.mkdir(exist_ok=True)
+checks=[]
+def check(name,ok):
+    assert ok,name
+    checks.append(name)
+def api(body,path='/api/category-insights'):
+    return json.load(urllib.request.urlopen(urllib.request.Request('http://127.0.0.1:8766'+path,data=json.dumps(body).encode(),headers={'Content-Type':'application/json'}),timeout=120))
+body=dict(start='2026-11-03',end='2026-11-09',filters={},timeStart='00:00',timeEnd='23:59')
+d=api(body);cats={r['category_key']:r for r in d['categories']}
+check('Real category totals reconcile',math.isclose(sum(r['hours'] for r in d['categories']),d['summary']['current'],abs_tol=1e-6))
+check('Real daily series reconcile',all(math.isclose(sum(p['value'] or 0 for p in s['points']),cats[s['key']]['hours'],abs_tol=1e-6) for s in d['series']))
+(OUT/'category_weekly_evidence.json').write_text(json.dumps(d,indent=2))
+with sync_playwright() as p:
+    b=p.chromium.launch(channel='msedge',headless=True);page=b.new_page(viewport={'width':1440,'height':1000});errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+    page.goto('http://127.0.0.1:8766/');page.wait_for_function("typeof applied!=='undefined'&&applied!==null&&!document.getElementById('apply').disabled",timeout=120000)
+    page.locator('#insightsPage').click();page.wait_for_function("!document.getElementById('insightExport').disabled",timeout=120000)
+    page.locator('#insightTab-categories').click();page.locator('#categoryWeek').wait_for(timeout=120000)
+    with page.expect_response(lambda r:'/api/category-insights' in r.url and r.request.method=='POST',timeout=120000):page.locator('#categoryWeek').click()
+    page.wait_for_function("!document.getElementById('apply').disabled&&!document.getElementById('insightExport').disabled",timeout=120000)
+    check('Week shortcut applies correct dates',page.evaluate("applied.start==='2026-11-03'&&applied.end==='2026-11-09'"))
+    check('Four category KPIs visible',page.locator('.category-kpis .insight-card').count()==4)
+    check('Five comparison lines shown by default',page.locator('.category-chart svg path').count()==5)
+    page.locator('.category-series-picker summary').click();page.locator('#categoryClearLines').click();check('Clear lines gives explicit prompt','Choose at least one' in page.locator('.category-chart').inner_text())
+    page.locator('#categoryLineSearch').fill('kids');check('Line search filters categories',page.locator('.category-line-options label').count()>0 and all('kids' in t.lower() for t in page.locator('.category-line-options label').all_inner_texts()))
+    page.locator('.category-line-options input[value="kids"]').check();check('Selecting a category draws its line',page.locator('.category-chart svg path').count()==1)
+    page.locator('#categoryExpand').click();check('Chart expands',page.locator('.category-dialog').is_visible());page.keyboard.press('Escape');check('Expanded chart closes',page.locator('.category-dialog').count()==0)
+    page.locator('#categoryTop5').click();page.locator('.category-series-picker summary').click()
+    page.locator('.category-trend').screenshot(path=str(OUT/'category_trend_chart.png'))
+    page.locator('#categoryRanking').select_option('rises');check('Increase sorting changes category table',page.locator('.category-ranking tbody tr').count()>0 and 'odi pak-sl-eng 2026' in page.locator('.category-ranking tbody tr').first.inner_text())
+    page.locator('#categoryRanking').select_option('hours')
+    with page.expect_response(lambda r:r.url.endswith('/api/category-insights'),timeout=120000):page.locator('[data-focus-category="sports"]').click()
+    page.wait_for_function("document.getElementById('insightContent').getAttribute('aria-busy')==='false'",timeout=120000)
+    check('Category opens its titles',page.locator('#categoryFocus').input_value()=='sports' and page.locator('.category-memberships tbody tr').count()>0)
+    check('Category focus preserves total-hour scope','21,648.99' in page.locator('.category-kpis').inner_text())
+    button=page.locator('[data-category-asset-host]').first;host=button.get_attribute('data-category-asset-host');key=button.get_attribute('data-category-asset-key')
+    with page.expect_response(lambda r:r.url.endswith('/api/category-insights'),timeout=120000):button.click()
+    page.wait_for_function("document.getElementById('insightContent').getAttribute('aria-busy')==='false'",timeout=120000)
+    check('Multi-category split is visible',page.locator('#categoryAssetSplit tbody tr').count()>1)
+    focused=api({**body,'category_focus':'sports','category_asset_host':host,'category_asset_key':key})['asset_focus'];check('Asset category hours reconcile to one asset total',math.isclose(sum(r['hours'] for r in focused),focused[0]['asset_hours'],abs_tol=1e-6))
+    page.screenshot(path=str(OUT/'category_comparison_desktop.png'),full_page=True)
+    page.locator('#categoryFocus').select_option('');page.locator('#categoryTitleSearch').fill(key)
+    with page.expect_response(lambda r:r.url.endswith('/api/category-insights'),timeout=120000):page.locator('.category-title-controls button[type=submit]').click()
+    page.wait_for_function("document.getElementById('insightContent').getAttribute('aria-busy')==='false'",timeout=120000)
+    check('Search includes all categories for a key',page.locator('.category-memberships tbody tr').count()==len(focused))
+    with page.expect_download(timeout=120000) as download:page.locator('#insightExport').click()
+    file=download.value.path();rows=list(csv.DictReader(Path(file).read_text(encoding='utf-8-sig').splitlines()));check('Export contains summary daily and membership sections',{r['section'] for r in rows}=={'category_summary','category_daily','asset_category'})
+    download.value.save_as(str(OUT/'category_comparison_export.csv'))
+    with page.expect_response(lambda r:r.url.endswith('/api/category-insights'),timeout=120000):page.locator('[data-category-asset-host]').first.click()
+    page.wait_for_function("document.getElementById('insightContent').getAttribute('aria-busy')==='false'",timeout=120000)
+    page.locator('#categoryOpenAsset').click();page.locator('#contentFocus').wait_for(timeout=120000);check('Category split opens stable content asset',host in page.locator('#contentFocus').inner_text() and key in page.locator('#contentFocus').inner_text())
+    page.locator('#insightTab-categories').click();page.locator('#categoryWeek').wait_for(timeout=120000)
+    page.set_viewport_size({'width':390,'height':844});check('Mobile no page overflow',page.evaluate('document.documentElement.scrollWidth<=innerWidth'));page.screenshot(path=str(OUT/'category_comparison_mobile.png'),full_page=True)
+    page.locator('#insightTab-brief').click();page.wait_for_function("!document.getElementById('insightExport').disabled",timeout=120000);check('Audience view still works',page.locator('.insight-card-grid').count()==1)
+    check('No browser errors',not errors);b.close()
+(OUT/'category_ui_audit.json').write_text(json.dumps({'passed':len(checks),'checks':checks},indent=2));print(json.dumps({'passed':len(checks),'checks':checks}))

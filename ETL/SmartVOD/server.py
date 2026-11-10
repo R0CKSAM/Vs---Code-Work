@@ -15,6 +15,7 @@ from urllib.parse import urlsplit
 from journey import build_sessions, CONTENT_FIELDS
 from insights import analyze
 from content_insights import analyze_content
+from category_insights import analyze_categories
 
 ROOT = Path(__file__).resolve().parent
 QUERY_CACHE = OrderedDict()
@@ -170,6 +171,7 @@ class Handler(BaseHTTPRequestHandler):
         files['/layout.js']=('layout.js','text/javascript')
         files['/trends.js']=('trends.js','text/javascript')
         files['/insights.js']=('insights.js','text/javascript')
+        files['/categories.js']=('categories.js','text/javascript')
         if path not in files:
             return self.send({'error': 'Not found'}, code=404)
         name, mime = files[path]
@@ -184,6 +186,15 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(body,dict):
                 raise ValueError('Request must be a JSON object')
             path = urlsplit(self.path).path
+            if path == '/api/category-insights':
+                return self.send(analyze_categories(body,connection,where))
+            if path == '/api/category-insights-export':
+                data=analyze_categories(body,connection,where,export=True)
+                headers=['section','category','host','video_key','title','date','hours_estimated','previous_hours','change_hours','change_pct','asset_hours_all_categories','asset_category_share_pct','asset_category_count']
+                rows=[['category_summary',r['label'],'','','','',r['hours'],r['previous'],r['delta'],r['pct'],'','',''] for r in data['categories']]
+                rows += [['category_daily',s['label'],'','','',p['day'],p['value'],'','','','','',''] for s in data['series'] for p in s['points']]
+                rows += [['asset_category',r['category_label'],r['host'],r['video_key'],r['title'],'',r['hours'],'','','',r['asset_hours'],r['asset_category_share_pct'],r['category_count']] for r in data['memberships']]
+                return self.send(csv_bytes(headers,rows),'text/csv; charset=utf-8',filename='smartvod_category_comparison.csv')
             if path == '/api/content-insights':
                 return self.send(analyze_content(body,connection,where))
             if path == '/api/content-insights-export':

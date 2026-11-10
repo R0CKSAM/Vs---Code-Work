@@ -1,0 +1,26 @@
+{
+  "passed": 21,
+  "checks": [
+    "Real category totals reconcile",
+    "Real daily series reconcile",
+    "Week shortcut applies correct dates",
+    "Four category KPIs visible",
+    "Five comparison lines shown by default",
+    "Clear lines gives explicit prompt",
+    "Line search filters categories",
+    "Selecting a category draws its line",
+    "Chart expands",
+    "Expanded chart closes",
+    "Increase sorting changes category table",
+    "Category opens its titles",
+    "Category focus preserves total-hour scope",
+    "Multi-category split is visible",
+    "Asset category hours reconcile to one asset total",
+    "Search includes all categories for a key",
+    "Export contains summary daily and membership sections",
+    "Category split opens stable content asset",
+    "Mobile no page overflow",
+    "Audience view still works",
+    "No browser errors"
+  ]
+}
