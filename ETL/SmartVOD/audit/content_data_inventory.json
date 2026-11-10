@@ -1,0 +1,309 @@
+{
+  "coverage": [
+    {
+      "first_day": "2026-10-06",
+      "last_day": "2026-11-09",
+      "records": 6780267,
+      "hours": 91439.31166700242,
+      "video_keys": 3152,
+      "titles": 2508,
+      "devices": 276907,
+      "ips": 854561
+    }
+  ],
+  "quality": [
+    {
+      "title_status": "Conflicting log titles",
+      "keys": 960,
+      "hours": 58268.71833378523
+    },
+    {
+      "title_status": "Unknown title",
+      "keys": 565,
+      "hours": 26473.434999876354
+    },
+    {
+      "title_status": "Consistent log title",
+      "keys": 1631,
+      "hours": 6697.158333355084
+    }
+  ],
+  "categories": [
+    {
+      "category": "Unknown",
+      "keys": 2525,
+      "hours": 44521.16500061263
+    },
+    {
+      "category": "sports",
+      "keys": 348,
+      "hours": 16471.988333357534
+    },
+    {
+      "category": "category_top_banner-1",
+      "keys": 6,
+      "hours": 4538.900000012828
+    },
+    {
+      "category": "top_banner-4",
+      "keys": 3,
+      "hours": 2504.980000000137
+    },
+    {
+      "category": "kids",
+      "keys": 465,
+      "hours": 2020.6316666655873
+    },
+    {
+      "category": "top_banner-2",
+      "keys": 2,
+      "hours": 1987.6433333325174
+    },
+    {
+      "category": "odi_pak-sl-eng_2026",
+      "keys": 6,
+      "hours": 1892.6633333324203
+    },
+    {
+      "category": "trending_now",
+      "keys": 132,
+      "hours": 1460.7733333330211
+    },
+    {
+      "category": "top_banner-1",
+      "keys": 2,
+      "hours": 1344.374999999579
+    },
+    {
+      "category": "banner",
+      "keys": 73,
+      "hours": 1206.5399999998613
+    },
+    {
+      "category": "ind_vs_nz_match_1_t20_preview-2",
+      "keys": 1,
+      "hours": 1184.2933333330532
+    },
+    {
+      "category": "podcast",
+      "keys": 142,
+      "hours": 1148.4633333329198
+    },
+    {
+      "category": "entertainment",
+      "keys": 61,
+      "hours": 794.9599999997738
+    },
+    {
+      "category": "music",
+      "keys": 41,
+      "hours": 681.0216666665744
+    },
+    {
+      "category": "documentaries",
+      "keys": 36,
+      "hours": 669.5166666665837
+    }
+  ],
+  "identities": [
+    {
+      "identity_confidence": "Manifest-inferred Device ID",
+      "hours": 46528.40500018832
+    },
+    {
+      "identity_confidence": "Missing Device ID",
+      "hours": 44910.900000779686
+    },
+    {
+      "identity_confidence": "Direct Device ID",
+      "hours": 0.006666666666666667
+    }
+  ],
+  "unknowns": [
+    {
+      "key_unknown_hours": 0.0,
+      "title_unknown_hours": 26473.434999876223,
+      "category_unknown_hours": 44521.165000613866
+    }
+  ],
+  "content": [
+    {
+      "video_key": "nghn1tag",
+      "title": "ENG vs SL Highlights",
+      "title_status": "Conflicting log titles",
+      "hours": 6537.705000007492,
+      "devices": 64047,
+      "ips": 87101,
+      "active_days": 12
+    },
+    {
+      "video_key": "rhw0v3uf",
+      "title": "ENGLAND vs PAKISTAN  | MATCH HIGHLIGHTS",
+      "title_status": "Conflicting log titles",
+      "hours": 5788.218333339544,
+      "devices": 61880,
+      "ips": 77599,
+      "active_days": 6
+    },
+    {
+      "video_key": "758imfs5",
+      "title": "Uttarakhand",
+      "title_status": "Consistent log title",
+      "hours": 5414.280000017195,
+      "devices": 58,
+      "ips": 164180,
+      "active_days": 28
+    },
+    {
+      "video_key": "695mjnfl",
+      "title": "Srilanka vs Pakistan | Final ODI Highlights",
+      "title_status": "Conflicting log titles",
+      "hours": 5141.27000000502,
+      "devices": 21258,
+      "ips": 38924,
+      "active_days": 9
+    },
+    {
+      "video_key": "shvrz97a",
+      "title": "India vs New Zealand 1st T20 Who Has the Edge? | Match Preview | Samip Rajguru",
+      "title_status": "Conflicting log titles",
+      "hours": 3060.6866666675533,
+      "devices": 39639,
+      "ips": 52641,
+      "active_days": 20
+    },
+    {
+      "video_key": "aitu0rax",
+      "title": "SAFF CHAMPIONSHIP",
+      "title_status": "Conflicting log titles",
+      "hours": 2513.6883333331384,
+      "devices": 37176,
+      "ips": 43703,
+      "active_days": 4
+    },
+    {
+      "video_key": "2vifkli4",
+      "title": "Unknown",
+      "title_status": "Unknown title",
+      "hours": 2042.808333331931,
+      "devices": 0,
+      "ips": 81233,
+      "active_days": 18
+    },
+    {
+      "video_key": "a9mij3fw",
+      "title": "Unknown",
+      "title_status": "Unknown title",
+      "hours": 1937.3133333317803,
+      "devices": 0,
+      "ips": 115184,
+      "active_days": 35
+    },
+    {
+      "video_key": "4ls8mlca",
+      "title": "India vs New Zealand | 3rd T20 Mein Hoga Asli Muqabla | Samip Rajguru",
+      "title_status": "Conflicting log titles",
+      "hours": 1779.313333332545,
+      "devices": 27399,
+      "ips": 39809,
+      "active_days": 15
+    },
+    {
+      "video_key": "nghn1tag",
+      "title": "SRI LANKA vs ENGLAND | MATCH HIGHLIGHTS",
+      "title_status": "Conflicting log titles",
+      "hours": 1728.5966666659165,
+      "devices": 10893,
+      "ips": 15624,
+      "active_days": 11
+    },
+    {
+      "video_key": "l5dg2c0q",
+      "title": "Unknown",
+      "title_status": "Unknown title",
+      "hours": 1702.2599999987583,
+      "devices": 0,
+      "ips": 60047,
+      "active_days": 18
+    },
+    {
+      "video_key": "ez74c4tw",
+      "title": "Unknown",
+      "title_status": "Unknown title",
+      "hours": 1488.0116666657032,
+      "devices": 0,
+      "ips": 42240,
+      "active_days": 19
+    },
+    {
+      "video_key": "0buf3ru9",
+      "title": "IND vs NZ 5th T20: Kya Team India Karegi Dhamakedar Finish?",
+      "title_status": "Conflicting log titles",
+      "hours": 1437.6449999994861,
+      "devices": 24194,
+      "ips": 33787,
+      "active_days": 11
+    },
+    {
+      "video_key": "1gb5wvmw",
+      "title": "Unknown",
+      "title_status": "Unknown title",
+      "hours": 1401.2216666656755,
+      "devices": 0,
+      "ips": 42700,
+      "active_days": 7
+    },
+    {
+      "video_key": "i1e3z1e6",
+      "title": "TECNO SAFF 2026 PAK VS IND HIGHLIGHTS",
+      "title_status": "Conflicting log titles",
+      "hours": 1377.3133333329133,
+      "devices": 17025,
+      "ips": 24868,
+      "active_days": 4
+    }
+  ],
+  "key_titles": [
+    {
+      "video_key": "nghn1tag",
+      "variants": 2,
+      "hours": 8266.301666677171
+    },
+    {
+      "video_key": "rhw0v3uf",
+      "variants": 2,
+      "hours": 5833.556666672972
+    },
+    {
+      "video_key": "eleu5vox",
+      "variants": 2,
+      "hours": 37.05166666666705
+    },
+    {
+      "video_key": "45l97dm5",
+      "variants": 2,
+      "hours": 21.50000000000022
+    },
+    {
+      "video_key": "2h5x41zk",
+      "variants": 2,
+      "hours": 0.7799999999999999
+    }
+  ],
+  "asset_identity": {
+    "host_key_assets": 3163
+  },
+  "readiness_pct": {
+    "key_unknown_hours": 0.0,
+    "title_unknown_hours": 28.95,
+    "category_unknown_hours": 48.69
+  },
+  "sources_reviewed": [
+    "SmartVOD schema-4 asset snapshot and source VOD event export",
+    "Host/key title mapping table and empty title override CSV",
+    "Existing content_daily mart: longer title-level history and approximate sessions, but no host/key identity for a reliable asset join",
+    "Existing Hotstar catalogues: unrelated external inventory, not an authoritative Veto content catalogue"
+  ],
+  "title_history_interpretation": "Legacy conflicting-title status is normal title/SEO history, not a quality failure.",
+  "corrected_missing_unverified_title_pct": 28.95191851015798
+}

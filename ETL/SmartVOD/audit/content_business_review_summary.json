@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "total_checks": 187,
+  "assets": 3163,
+  "quality": {
+    "Conflicting log titles": 63.72392494158788,
+    "Unknown title": 28.95191850993536,
+    "Consistent log title": 7.324156548492347
+  },
+  "weekly_change_pct": -30.494491470329933,
+  "seo_title_aliases_are_normal": true,
+  "corrected_missing_unverified_title_pct": 28.95191851015798
+}

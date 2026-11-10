@@ -45,7 +45,12 @@ def _publish(dates,incremental,folder):
     asn=ETL/'data/asn/asnDecoded.csv';asn_sig=dict(size=asn.stat().st_size,mtime_ns=asn.stat().st_mtime_ns)
     overrides=ROOT/'title_overrides.csv';override_rows=list(csv.DictReader(io.StringIO(overrides.read_text(encoding='utf-8-sig')))) if overrides.exists() else [];override_text=json.dumps(override_rows,sort_keys=True) if override_rows else ''
     if compatible and not changed and prev.get('asn_signature')==asn_sig and prev.get('overrides')==override_text:
-        print('No changed completed exports; snapshot retained.',flush=True);return prev
+        print('No changed completed exports; snapshot retained.',flush=True)
+        try:
+            from insight_store import build
+            build(ROOT)
+        except Exception as exc:print('Analysis acceleration was not refreshed:',str(exc),flush=True)
+        return prev
     stamp=datetime.now().strftime('%Y%m%d_%H%M%S_%f');db=folder/f'smartvod_{stamp}.sqlite'
     if compatible:shutil.copy2(folder/prev['database'],db)
     con=sqlite3.connect(db);con.execute('PRAGMA journal_mode=OFF');con.execute('PRAGMA synchronous=OFF')
@@ -74,7 +79,7 @@ def _publish(dates,incremental,folder):
     review=[]
     for (host,key),values in groups.items():
         ranked=sorted(values,key=lambda v:(v[2]>0,v[1],v[0]),reverse=True)
-        status='Conflicting log titles' if len(values)>1 else 'Consistent log title' if ranked[0][2]>0 else 'Unverified log title'
+        status='Title history / SEO aliases' if len(values)>1 else 'Consistent log title' if ranked[0][2]>0 else 'Unverified log title'
         con.execute('INSERT INTO titles VALUES (?,?,?,?,?)',[host,key,ranked[0][0],status,len(values)])
         if status!='Consistent log title':review.append(dict(host=host,video_key=key,selected_title=ranked[0][0],status=status,variants=values))
     if overrides.exists():

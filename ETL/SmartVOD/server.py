@@ -14,6 +14,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 from journey import build_sessions, CONTENT_FIELDS
 from insights import analyze
+from content_insights import analyze_content
 
 ROOT = Path(__file__).resolve().parent
 QUERY_CACHE = OrderedDict()
@@ -183,6 +184,13 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(body,dict):
                 raise ValueError('Request must be a JSON object')
             path = urlsplit(self.path).path
+            if path == '/api/content-insights':
+                return self.send(analyze_content(body,connection,where))
+            if path == '/api/content-insights-export':
+                data=analyze_content(body,connection,where)
+                headers=['host','video_key','log_title','title_quality','next_step','reason','hours_estimated','previous_hours','change_hours','change_pct','known_device_ids','client_ips','known_id_hour_coverage_pct','estimated_minutes_per_known_id','ids_active_on_2_or_more_dates','repeat_id_pct','delivered_hours','delivery_share_pct','active_dates','first_observed_in_selection','current_start','current_end','previous_start','previous_end','comparison_available']
+                rows=[[r['host'],r['video_key'],r['title'],r['title_status'],r['action'],r['reason'],r['hours'],r['previous_hours'],r['delta_hours'],r['pct_hours'],r['devices'],r['ips'],r['identity_coverage_pct'],r['avg_device_minutes'],r['repeat_ids'],r['repeat_id_pct'],r['delivered'],r['delivery_pct'],r['active_days'],r['first_observed'],data['period']['start'],data['period']['end'],data['previous_period']['start'],data['previous_period']['end'],data['comparison_available']] for r in data['assets']]
+                return self.send(csv_bytes(headers,rows),'text/csv; charset=utf-8',filename='smartvod_content_decisions.csv')
             if path == '/api/insights':
                 return self.send(analyze(body,connection,where))
             if path == '/api/insights-export':
@@ -212,8 +220,12 @@ class Handler(BaseHTTPRequestHandler):
                     raise ValueError('Unknown filter')
                 w, p = where(body, omit=field)
                 search = str(body.get('search', ''))
-                w += f' AND instr(lower({field}),lower(?)) > 0'
-                p.append(search)
+                if field=='title_status':
+                    w+=" AND (instr(lower(title_status),lower(?))>0 OR instr(lower(CASE WHEN title_status IN ('Conflicting log titles','Multiple canonical log labels') THEN 'Title history / SEO aliases' ELSE title_status END),lower(?))>0)"
+                    p.extend([search,search])
+                else:
+                    w += f' AND instr(lower({field}),lower(?)) > 0'
+                    p.append(search)
                 offset = max(0, int(body.get('offset', 0)))
                 sorts={'segments':'segments DESC,value DESC','hours':'hours DESC,value DESC','alpha_asc':'value COLLATE NOCASE ASC,value ASC','alpha_desc':'value COLLATE NOCASE DESC,value DESC'}
                 order=sorts.get(body.get('sort','segments'))

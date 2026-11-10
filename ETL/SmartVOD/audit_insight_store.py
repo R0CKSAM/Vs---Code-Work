@@ -11,8 +11,8 @@ def check(name,ok):
 with tempfile.TemporaryDirectory(prefix='smartvod_store_') as temp:
     root=Path(temp);folder=root/'data';folder.mkdir();source=folder/'fixture.sqlite'
     con=sqlite3.connect(source);columns=insight_store.COLUMNS
-    con.execute('CREATE TABLE events('+','.join(c+(' REAL' if c=='hours' else ' INTEGER' if c=='segments' else ' TEXT') for c in columns)+')')
-    row={c:'Unknown' for c in columns};row.update(day='2026-11-09',clock='12:00',hours=3.0,segments=1800,region='IN / A / City',device_id='one')
+    con.execute('CREATE TABLE events('+','.join(c+(' REAL' if c in {'hours','delivered'} else ' INTEGER' if c=='segments' else ' TEXT') for c in columns)+')')
+    row={c:'Unknown' for c in columns};row.update(day='2026-11-09',clock='12:00',hours=3.0,delivered=3.0,segments=1800,region='IN / A / City',device_id='one')
     con.execute('INSERT INTO events VALUES('+','.join('?' for _ in columns)+')',[row[c] for c in columns]);con.execute('CREATE INDEX idx_day ON events(day)');con.commit();con.close()
     (folder/'manifest.json').write_text(json.dumps(dict(database=source.name,records=1,hours=3,segments=1800)))
     info=insight_store.build(root);check('Projection contains expected rows',info['records']==1)

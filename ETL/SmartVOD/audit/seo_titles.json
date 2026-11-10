@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "checks": [
+    "Asset grouping unchanged across names",
+    "SEO history has multiple observed names",
+    "Latest selected request title displayed",
+    "Historical conflict label becomes normal SEO history",
+    "Renaming does not trigger label verification",
+    "Renaming does not contribute to quality failure",
+    "Only missing/unverified labels remain in review hours",
+    "SEO labels can be searched in status picker",
+    "Misleading label-review headline removed",
+    "SEO names do not split one host/key into multiple rows",
+    "Title history is visible",
+    "Observation timestamps are not claimed as edit timestamps",
+    "No JavaScript errors"
+  ]
+}

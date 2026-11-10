@@ -6,7 +6,8 @@ from datetime import datetime
 import json,os,re,sqlite3
 
 ROOT=Path(__file__).resolve().parent
-COLUMNS=['day','clock','title','category','video_key','device_id','cli_ip','os','region','isp','device_type','identity_confidence','title_status','hours','segments']
+COLUMNS=['day','clock','title','category','video_key','device_id','cli_ip','os','region','isp','device_type','identity_confidence','title_status','hours','segments','req_host','delivered','raw_title','request_ist']
+SCHEMA=3
 def fingerprint(path):
     stat=path.stat();return dict(path=str(path.resolve()),size=stat.st_size,mtime_ns=stat.st_mtime_ns)
 class Row(Mapping):
@@ -32,7 +33,7 @@ def analytical_connection(factory):
         manifest=ROOT/'data/insight_store.json'
         try:
             info=json.loads(manifest.read_text());database=ROOT/'data'/info['database']
-            valid=info['source']==fingerprint(source) and database.is_file()
+            valid=info.get('schema')==SCHEMA and info['source']==fingerprint(source) and database.is_file()
         except (OSError,ValueError,KeyError):valid=False
         if not valid:yield original;return
         import duckdb
@@ -57,13 +58,13 @@ def _build(root):
     manifest=folder/'insight_store.json'
     if manifest.exists():
         old=json.loads(manifest.read_text())
-        if old.get('source')==signature and (folder/old['database']).is_file():print('Analysis store is current.',flush=True);return old
+        if old.get('schema')==SCHEMA and old.get('source')==signature and (folder/old['database']).is_file():print('Analysis store is current.',flush=True);return old
     stamp=datetime.now().strftime('%Y%m%d_%H%M%S_%f');output=folder/f'insights_{stamp}.duckdb'
     original=sqlite3.connect(f'file:{source.as_posix()}?mode=ro',uri=True)
     con=duckdb.connect(str(output),config={'threads':2,'memory_limit':'1GB'});count=0;complete=False
     try:
         cursor=original.execute('SELECT '+','.join(COLUMNS)+' FROM events')
-        types=[pa.float64() if name=='hours' else pa.int64() if name=='segments' else pa.string() for name in COLUMNS]
+        types=[pa.float64() if name in {'hours','delivered'} else pa.int64() if name=='segments' else pa.string() for name in COLUMNS]
         while True:
             rows=cursor.fetchmany(25000)
             if not rows:break
@@ -84,7 +85,7 @@ def _build(root):
         if not complete:
             try:output.unlink()
             except OSError:pass
-    info=dict(database=output.name,source=signature,records=count,built_at=datetime.now().isoformat(),hours=check[1],segments=check[2])
+    info=dict(schema=SCHEMA,database=output.name,source=signature,records=count,built_at=datetime.now().isoformat(),hours=check[1],segments=check[2])
     pending=manifest.with_suffix('.pending.json');pending.write_text(json.dumps(info,indent=2));pending.replace(manifest)
     versions=sorted(folder.glob('insights_*.duckdb'),key=lambda p:p.stat().st_mtime,reverse=True)
     for old in versions[2:]:

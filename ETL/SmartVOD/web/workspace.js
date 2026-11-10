@@ -17,7 +17,7 @@ function restore(value){
     renderFilters();apply();
 }
 window.restoreSharedView=()=>{
-    el('qualitySummary').textContent=`Title labels are log-derived; conflicting or unverified names remain flagged. Snapshot built ${meta.built_at.slice(0,16).replace('T',' ')}.`;
+    el('qualitySummary').textContent=`Title labels are log-derived; historical title aliases are retained; missing or unverified labels are identified. Snapshot built ${meta.built_at.slice(0,16).replace('T',' ')}.`;
     if(!location.hash.startsWith('#view='))return false;
     try{restore(JSON.parse(decodeURIComponent(location.hash.slice(6))));message('Shared filters restored; updating results');return true}catch(e){message(e.message);return false}
 };
