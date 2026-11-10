@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "total_checks": 287,
+  "benchmark_before": {
+    "seconds": 131.72,
+    "days": 35,
+    "hours": 91439.31166666666,
+    "comparison_available": false,
+    "region_count": 299
+  },
+  "benchmark_after": {
+    "seconds": 5.25,
+    "days": 35,
+    "hours": 91439.3116669993,
+    "comparison_available": false,
+    "region_count": 299,
+    "backend": "columnar"
+  },
+  "browser_seconds": 5.28
+}

@@ -8,11 +8,12 @@ from collections import OrderedDict
 from copy import deepcopy
 from threading import Lock
 from contextlib import contextmanager
-from datetime import date, time
+from datetime import date, time, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit
 from journey import build_sessions, CONTENT_FIELDS
+from insights import analyze
 
 ROOT = Path(__file__).resolve().parent
 QUERY_CACHE = OrderedDict()
@@ -91,15 +92,22 @@ def query(body):
             "count(DISTINCT nullif(video_key,'Unknown')) videos FROM events" + w, p).fetchone())
         kpi.update(dict(con.execute('SELECT '+averages+' FROM events'+w,p).fetchone()))
         kpi['average_watch_minutes']=kpi['average_device_minutes' if basis=='device_id' else 'average_ip_minutes']
+        has_status=any(r[1]=='status_code' for r in con.execute('PRAGMA table_info(events)'))
+        delivery_statuses=[dict(r) for r in con.execute('SELECT status_code code,sum(segments) requests,sum(hours) hours FROM events'+w+' GROUP BY status_code ORDER BY requests DESC,code DESC',p)] if has_status else []
         hourly = [dict(r) for r in con.execute('SELECT substr(clock,1,2) hour,sum(hours) hours FROM events'+w+' GROUP BY 1 ORDER BY 1', p)]
+        trend_dates=[r[0] for r in con.execute('SELECT DISTINCT day FROM events INDEXED BY idx_day WHERE day BETWEEN ? AND ? ORDER BY day',[body['start'],body['end']])]
+        hourly_by_day=[dict(r) for r in con.execute('SELECT day,substr(clock,1,2) hour,sum(hours) hours FROM events'+w+' GROUP BY 1,2 ORDER BY 1,2',p)]
         breakdown = {}
+        breakdown_trends={}
         for field in ('device_type', 'os', 'region', 'isp'):
             breakdown[field] = [dict(r) for r in con.execute(f'SELECT {field} label,sum(hours) hours FROM events'+w+' GROUP BY 1 ORDER BY 2 DESC,1 LIMIT 5', p)]
+            labels=[row['label'] for row in breakdown[field]]
+            breakdown_trends[field]=[dict(r) for r in con.execute(f'SELECT day,substr(clock,1,2) hour,{field} label,sum(hours) hours FROM events'+w+f' AND {field} IN ({",".join("?" for _ in labels)}) GROUP BY 1,2,3 ORDER BY 1,2,3',p+labels)] if labels else []
         table = [dict(r) for r in con.execute('SELECT '+avg+' average_watch_minutes,'+averages+',video_key,title,req_host,title_status,sum(hours) hours,sum(delivered) delivered,'
             "count(DISTINCT nullif(cli_ip,'Unknown')) ips,count(DISTINCT nullif(device_id,'Unknown')) devices "
             'FROM events'+w+' GROUP BY video_key,title,req_host,title_status ORDER BY hours DESC,video_key,title LIMIT 100', p)]
         explorers={field:[dict(r) for r in con.execute(f"SELECT {field} identity_value,sum(hours) hours,count(DISTINCT video_key) videos,group_concat(DISTINCT identity_confidence) confidence FROM events"+w+f" AND {field}!='Unknown' GROUP BY {field} ORDER BY hours DESC,{field} LIMIT 20",p)] for field in ('device_id','cli_ip')}
-    result=dict(kpi=kpi, hourly=hourly, breakdown=breakdown, table=table,devices=explorers[basis],explorers=explorers,identity_basis=basis)
+    result=dict(trend_dates=trend_dates,hourly_by_day=hourly_by_day,breakdown_trends=breakdown_trends,delivery_statuses=delivery_statuses,delivery_status_available=has_status,kpi=kpi, hourly=hourly, breakdown=breakdown, table=table,devices=explorers[basis],explorers=explorers,identity_basis=basis)
     with QUERY_CACHE_LOCK:
         QUERY_CACHE[cache_key]=deepcopy(result)
         QUERY_CACHE.move_to_end(cache_key)
@@ -158,6 +166,9 @@ class Handler(BaseHTTPRequestHandler):
             meta=json.loads((ROOT/'data/manifest.json').read_text())
             return self.send((ROOT/'data'/meta['title_review']).read_bytes(),filename='smartvod_title_review.json')
         files = {'/date-range.js': ('date-range.js','text/javascript'), '/flatpickr.min.js': ('flatpickr.min.js','text/javascript'), '/flatpickr.min.css': ('flatpickr.min.css','text/css'), '/workspace.js': ('workspace.js','text/javascript'), '/journey.js': ('journey.js', 'text/javascript'), '/': ('index.html', 'text/html; charset=utf-8'), '/app.js': ('app.js', 'text/javascript'), '/style.css': ('style.css', 'text/css')}
+        files['/layout.js']=('layout.js','text/javascript')
+        files['/trends.js']=('trends.js','text/javascript')
+        files['/insights.js']=('insights.js','text/javascript')
         if path not in files:
             return self.send({'error': 'Not found'}, code=404)
         name, mime = files[path]
@@ -172,6 +183,19 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(body,dict):
                 raise ValueError('Request must be a JSON object')
             path = urlsplit(self.path).path
+            if path == '/api/insights':
+                return self.send(analyze(body,connection,where))
+            if path == '/api/insights-export':
+                data=analyze(body,connection,where)
+                headers=['section','label','metric','current','previous','change','change_pct','current_start','current_end','previous_start','previous_end','comparison_available','baseline_kind','baseline_loaded_days']
+                summary=data['summary']
+                rows=[['summary','All applied filters',data['metric'],summary['current'],summary['previous'],summary['delta'],summary['pct'],data['period']['start'],data['period']['end'],data['previous_period']['start'],data['previous_period']['end'],data['comparison_available'],'previous_equal_calendar_period',data['previous_period']['loaded_days']]]
+                for section in ['regions','movers','alerts','drivers']:
+                    for r in data[section]:
+                        alert=section=='alerts';target=date.fromisoformat(data['period']['end'])
+                        rows.append([section,r['label'],data['metric'],r['current'],r['previous'],r['delta'],r['pct'],r['day'] if alert else data['period']['start'],data['period']['end'],(target-timedelta(days=7)).isoformat() if alert else data['previous_period']['start'],(target-timedelta(days=1)).isoformat() if alert else data['previous_period']['end'],True if alert else data['comparison_available'],'prior_7_loaded_dates_median' if alert else 'previous_equal_calendar_period',r['baseline_days'] if alert else data['previous_period']['loaded_days']])
+                for r in data['leaders']:rows.append(['top_'+data['viewer_basis'],r['identifier'],'hours',r['hours'],None,None,None,data['period']['start'],data['period']['end'],None,None,False,'not_applicable',None])
+                return self.send(csv_bytes(headers,rows),'text/csv; charset=utf-8',filename='smartvod_insights.csv')
             if path == '/api/query':
                 return self.send(query(body))
             if path == '/api/journey-export':

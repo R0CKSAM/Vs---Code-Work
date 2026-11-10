@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "checks": [
+    "All loaded dates applied through real date picker",
+    "Analysis does not query dashboard graphs",
+    "Correct 35-day coverage shown",
+    "Full-history hours reconcile",
+    "Inactive dashboard remains hidden",
+    "Missing comparison shows Unavailable instead of zero",
+    "No browser errors"
+  ],
+  "seconds": 5.28
+}

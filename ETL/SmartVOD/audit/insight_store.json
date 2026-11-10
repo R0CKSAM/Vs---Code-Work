@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "checks": [
+    "Projection contains expected rows",
+    "Projection hours reconcile",
+    "Projection segments reconcile",
+    "Exact source fingerprint recorded",
+    "Current projection reused",
+    "Matching source uses columnar backend",
+    "Adapter supports index-clause removal and parameters",
+    "Adapter supports numeric row indexing",
+    "Adapter rows convert to dictionaries",
+    "Changed source rejects stale projection",
+    "Fallback reads updated source, not stale values"
+  ]
+}

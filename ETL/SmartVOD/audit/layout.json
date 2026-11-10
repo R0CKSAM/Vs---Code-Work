@@ -1,0 +1,31 @@
+{
+  "passed": true,
+  "checks": [
+    "All 17 panels editable",
+    "Handles hidden by default",
+    "Edit mode visible",
+    "Keyboard resize saved",
+    "Keyboard move saved",
+    "Reload restores width",
+    "Reload restores order",
+    "Reload starts locked",
+    "Pointer resize width",
+    "Pointer resize height",
+    "Pointer move saved",
+    "Query redraw keeps all panels",
+    "Breakdown stays editable after redraw",
+    "Resized breakdown survives redraw",
+    "Filters unchanged",
+    "Metrics unchanged",
+    "1920 no horizontal overflow",
+    "1024 no horizontal overflow",
+    "768 no horizontal overflow",
+    "390 no horizontal overflow",
+    "320 no horizontal overflow",
+    "Reset clears stored layout",
+    "Reset restores widths and automatic heights",
+    "Done locks layout",
+    "Invalid saved values fall back safely",
+    "No browser errors"
+  ]
+}

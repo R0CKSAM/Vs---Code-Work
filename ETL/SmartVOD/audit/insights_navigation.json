@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "checks": [
+    "Insight refresh avoids dashboard query",
+    "Stale insight content cannot be used",
+    "Dashboard navigation explains pending selection",
+    "Dashboard remains hidden during pending analysis",
+    "Dashboard query deferred until return",
+    "Fresh dashboard becomes visible",
+    "Applied day is the requested new day",
+    "Insights match applied dashboard selection",
+    "Unmatched location is not substituted",
+    "Question chooses matching breakdown",
+    "Increase question activates positive movement filter",
+    "No JavaScript errors []"
+  ]
+}

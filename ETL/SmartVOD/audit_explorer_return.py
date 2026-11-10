@@ -46,6 +46,8 @@ with sync_playwright() as p:
  page.locator('#backToDevices').click();ready()
  check('Direct-filter Back clears only the identifier',page.evaluate('JSON.stringify(applied)')==baseline)
  page.set_viewport_size({'width':390,'height':844})
+ page.locator('#deviceExplorer .device-card').first.click();ready()
+ page.locator('#journeyPanel').wait_for(state='visible')
  check('Mobile return controls fit',page.evaluate('document.documentElement.scrollWidth<=innerWidth'))
  check('Mobile Back is a usable touch target',page.locator('#backToDevices').bounding_box()['height']>=40)
  page.screenshot(path=str(ROOT/'audit/explorer_return_mobile.png'))

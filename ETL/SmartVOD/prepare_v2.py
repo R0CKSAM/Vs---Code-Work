@@ -5,7 +5,14 @@ from pathlib import Path
 from urllib.parse import parse_qs
 ROOT=Path(__file__).resolve().parent
 ETL=ROOT.parent
-SCHEMA=3
+SCHEMA=4
+
+def status_code(value):
+    try:
+        number=float(str(value or '').strip())
+        if number.is_integer() and 100<=number<=599:return str(int(number))
+    except ValueError:pass
+    return 'Unknown'
 def clean(v):
     v=(v or '').strip()
     return v if v.lower() not in ('','null','undefined','unknown','unknown / na','unknown / unmarked','na','n/a') else 'Unknown'
@@ -42,16 +49,16 @@ def _publish(dates,incremental,folder):
     stamp=datetime.now().strftime('%Y%m%d_%H%M%S_%f');db=folder/f'smartvod_{stamp}.sqlite'
     if compatible:shutil.copy2(folder/prev['database'],db)
     con=sqlite3.connect(db);con.execute('PRAGMA journal_mode=OFF');con.execute('PRAGMA synchronous=OFF')
-    if not compatible:con.execute('CREATE TABLE events(day TEXT,clock TEXT,title TEXT,category TEXT,video_key TEXT,device_id TEXT,cli_ip TEXT,os TEXT,region TEXT,isp TEXT,device_type TEXT,hours REAL,delivered REAL,segments INTEGER,request_ist TEXT,last_request_ist TEXT,req_host TEXT,session_id TEXT,identity_source TEXT,identity_confidence TEXT,raw_title TEXT,title_status TEXT,asn TEXT,mapping_evidence INTEGER)')
+    if not compatible:con.execute('CREATE TABLE events(day TEXT,clock TEXT,title TEXT,category TEXT,video_key TEXT,device_id TEXT,cli_ip TEXT,os TEXT,region TEXT,isp TEXT,device_type TEXT,hours REAL,delivered REAL,segments INTEGER,request_ist TEXT,last_request_ist TEXT,req_host TEXT,session_id TEXT,identity_source TEXT,identity_confidence TEXT,raw_title TEXT,title_status TEXT,asn TEXT,mapping_evidence INTEGER,status_code TEXT)')
     for day in changed:
         con.execute('DELETE FROM events WHERE day=?',[day]);before=paths[day].stat();batch=[]
         with paths[day].open(encoding='utf-8-sig',newline='') as f:
             for r in csv.DictReader(f):
                 if r['log_date']!=day:raise ValueError('Source date mismatch')
                 title=clean(r['content_title'])
-                batch.append((day,r['minute_ist'][11:16],title,clean(r['category_name']),clean(r['content_code']),clean(r['device_id']),clean(r['cli_ip']),clean(r['decoded_os']),' / '.join(clean(r.get(k)) for k in ('country','state','city')),'Unknown',clean(r['decoded_form_factor']).lower(),float(r.get('request_watch_hours') or 0),float(r.get('delivered_watch_hours') or 0),int(r.get('segment_count') or 1),r['request_ist'],r.get('last_request_ist') or r['request_ist'],r['req_host'].lower(),r.get('session_id',''),r.get('identity_source','unavailable'),identity(r),title,'Pending',clean(r.get('asn')),int(r.get('content_mapping_evidence') or 0)))
-                if len(batch)==5000:con.executemany('INSERT INTO events VALUES ('+','.join(['?']*24)+')',batch);batch=[]
-            if batch:con.executemany('INSERT INTO events VALUES ('+','.join(['?']*24)+')',batch)
+                batch.append((day,r['minute_ist'][11:16],title,clean(r['category_name']),clean(r['content_code']),clean(r['device_id']),clean(r['cli_ip']),clean(r['decoded_os']),' / '.join(clean(r.get(k)) for k in ('country','state','city')),'Unknown',clean(r['decoded_form_factor']).lower(),float(r.get('request_watch_hours') or 0),float(r.get('delivered_watch_hours') or 0),int(r.get('segment_count') or 1),r['request_ist'],r.get('last_request_ist') or r['request_ist'],r['req_host'].lower(),r.get('session_id',''),r.get('identity_source','unavailable'),identity(r),title,'Pending',clean(r.get('asn')),int(r.get('content_mapping_evidence') or 0),status_code(r.get('status_code'))))
+                if len(batch)==5000:con.executemany('INSERT INTO events VALUES ('+','.join(['?']*25)+')',batch);batch=[]
+            if batch:con.executemany('INSERT INTO events VALUES ('+','.join(['?']*25)+')',batch)
         after=paths[day].stat()
         if (before.st_size,before.st_mtime_ns)!=(after.st_size,after.st_mtime_ns):raise RuntimeError('Source changed during import')
         con.commit();print('Imported',day,flush=True)
@@ -93,7 +100,12 @@ def _publish(dates,incremental,folder):
         if old.name==db.name:continue
         try:old.unlink()
         except OSError:pass
-    print('Published',len(dates),'days',stats[0],'records',flush=True);return manifest
+    print('Published',len(dates),'days',stats[0],'records',flush=True)
+    try:
+        from insight_store import build
+        build(ROOT)
+    except Exception as exc:print('Analysis acceleration was not refreshed:',str(exc),flush=True)
+    return manifest
 def main():
     p=argparse.ArgumentParser();p.add_argument('--date',action='append');p.add_argument('--history-days',type=int);p.add_argument('--incremental',action='store_true');a=p.parse_args();dates=sorted(set(a.date or []))
     if a.history_days:

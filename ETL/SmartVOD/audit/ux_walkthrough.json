@@ -56,23 +56,23 @@
   "timings": [
     {
       "action": "Open dashboard",
-      "seconds": 3.22
+      "seconds": 0.42
     },
     {
       "action": "Change date",
-      "seconds": 2.42
+      "seconds": 5.88
     },
     {
       "action": "Return to latest day",
-      "seconds": 0.08
+      "seconds": 0.11
     },
     {
       "action": "Apply title",
-      "seconds": 0.87
+      "seconds": 1.63
     },
     {
       "action": "Apply region",
-      "seconds": 0.71
+      "seconds": 1.4
     }
   ],
   "contrast": {
