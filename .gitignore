@@ -53,3 +53,14 @@ Raj/P3-chrome report/output/
 
 # Local FFmpeg binary; reverse_video.py also supports imageio-ffmpeg
 /FLIPvIDEO/tools/ffmpeg.exe
+
+# Sports PDF watcher runtime files (may be locked while processing)
+/SPORTS-PDF/watcher.lock
+/SPORTS-PDF/watcher.log
+/SPORTS-PDF/watch_state.json
+/SPORTS-PDF/watch_state.tmp
+/SPORTS-PDF/watch_status.json
+/SPORTS-PDF/watch_status.tmp
+/SPORTS-PDF/STOP_WATCHER.txt
+/SPORTS-PDF/__pycache__/
+/chrome extension/InduPaper-Date-Downloader.zip

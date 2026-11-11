@@ -1,0 +1,8 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>InduPaper Downloads</title><link rel="stylesheet" href="style.css"><body>
+<h1>Newspapers, by date</h1><p class="muted">Times of India · InduPaper</p>
+<p id="connection">Connecting to your newspaper tab…</p>
+<fieldset id="settings"><label>City<select id="city"></select></label><div class="dates"><label>From<input type="date" id="start"></label><label>Through<input type="date" id="end"></label></div></fieldset>
+<button id="startBatch" class="primary">Download date range</button>
+<section><strong id="status">Ready</strong><progress id="progress" value="0" max="1"></progress><p id="detail">Choose your city and dates to begin.</p><p id="error" role="alert"></p><div class="actions"><button id="pause">Pause</button><button id="resume">Resume / retry</button><button id="skip">Skip date</button></div><p id="history"></p></section>
+<p class="muted">Saved in Chrome’s Downloads folder. Keep the newspaper tab open. Pause takes effect after the current PDF finishes.</p>
+<p class="muted">For unattended saving, turn off “Ask where to save each file” in Chrome Downloads settings. Existing filenames are given a numbered suffix.</p><script src="popup.js"></script></body></html>

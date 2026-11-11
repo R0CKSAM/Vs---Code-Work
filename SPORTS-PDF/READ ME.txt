@@ -1,0 +1,29 @@
+Double-click Extract Sports.lnk, select one or more downloaded newspaper PDFs, and wait.
+Progress appears in the console. Output goes into SPORTS_ONLY beside each input PDF.
+Originals are untouched. Existing output filenames are numbered instead of overwritten.
+
+Image-only scans are supported using local OCR. It checks section headings in the top 11.5% of each page.
+Only pages headed SPORTS / TIMES SPORT / TIMES SPORTS are included; sports articles on the front page are excluded.
+OCR can miss unusual/unclear headings. A per-page scan CSV is saved for review.
+If no headings match, no empty PDF is created. Use --pages to select known pages manually.
+Original page images and layout are copied, not re-rendered. No additional image quality loss.
+
+Run an entire folder (does not scan subfolders):
+"D:\Vs - Code Work\venv\Scripts\python.exe" -u "D:\Vs - Code Work\SPORTS-PDF\extract_sports.py" "C:\Users\Intern\Downloads\Storyboard Studio\InduPaper\delhi"
+
+Manual page selection example:
+"D:\Vs - Code Work\venv\Scripts\python.exe" -u "D:\Vs - Code Work\SPORTS-PDF\extract_sports.py" "C:\path\paper.pdf" --pages 21,22
+
+Python packages: pymupdf, rapidocr_onnxruntime (installed in the workspace venv).
+
+AUTOMATIC WATCHER
+Start Watcher.lnk processes existing and incoming PDFs in all edition subfolders under:
+C:\Users\Intern\Downloads\Storyboard Studio\InduPaper
+It skips SPORTS_ONLY and recognizes already extracted outputs.
+New PDFs must remain stable for 20 seconds and have a valid PDF end marker before processing.
+One paper is processed at a time at below-normal Windows priority.
+Progress: watch_status.json (current file and counts) and watcher.log (page-by-page detail).
+Stop: close the watcher's terminal with Ctrl+C, or create STOP_WATCHER.txt beside this script.
+The stop file takes effect after the current PDF finishes. The next manual start clears it.
+The watcher must remain running for incoming files. It is not installed as a Windows startup task.
+OCR failures/no matching Sports heading are recorded for review, not retried indefinitely.
