@@ -27,3 +27,13 @@ Stop: close the watcher's terminal with Ctrl+C, or create STOP_WATCHER.txt besid
 The stop file takes effect after the current PDF finishes. The next manual start clears it.
 The watcher must remain running for incoming files. It is not installed as a Windows startup task.
 OCR failures/no matching Sports heading are recorded for review, not retried indefinitely.
+
+MERGE IN DATE ORDER
+Double-click Merge PDFs by Date.lnk and select either the delhi folder (full papers) or SPORTS_ONLY (sports pages).
+Reads YYYY-MM-DD from filenames, sorts oldest first, and includes all pages of each PDF.
+One folder only, non-recursive. Output is saved under its MERGED subfolder.
+Adds a bookmark per date, a CSV page index, and a JSON report listing missing dates.
+Existing files are preserved. Duplicate dates stop with a clear message; use one edition/copy per date.
+This merges the files currently present; it does not automatically append incoming files. Run again after downloads finish.
+Command:
+"D:\Vs - Code Work\venv\Scripts\python.exe" -X utf8 -u "D:\Vs - Code Work\SPORTS-PDF\merge_pdfs_by_date.py" "C:\Users\Intern\Downloads\Storyboard Studio\InduPaper\delhi\SPORTS_ONLY"

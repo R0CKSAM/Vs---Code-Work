@@ -10,20 +10,23 @@ function datesBetween(start,end){
 }
 // Runs in the website's own context; calls exactly its existing PDF function.
 async function sitePDF(date,city){
+ try{
  const d=document.getElementById('TOIDate'),c=document.getElementById('TOICity'),b=document.querySelector('#TOIForm .btn-download');
  if(!d||!c||!b||typeof window.downloadTOIV3PDF!=='function')throw Error('Open the Times of India page and wait for it to load.');
  if(window.__induBatchBusy||b.disabled)throw Error('The website is already preparing a PDF. Wait before retrying.');
  if(![...c.options].some(o=>o.value===city))throw Error('City is no longer available.');
  window.__induBatchBusy=true;
- const original=window.alert;let issue='';
+ const original=window.alert,originalError=console.error;let issue='',detail='';
  window.alert=text=>{issue=String(text);console.warn('InduPaper download:',text);};
+ console.error=(...args)=>{detail=args.map(x=>x?.message||String(x)).join(' ').slice(0,400);originalError.apply(console,args);};
  try{
   d.value=date;c.value=city;
   d.dispatchEvent(new Event('change',{bubbles:true}));c.dispatchEvent(new Event('change',{bubbles:true}));
   await window.downloadTOIV3PDF();
-  if(issue)throw Error(issue);
-  return true;
- }finally{window.alert=original;window.__induBatchBusy=false;}
+  if(issue)throw Error(issue+(detail?' '+detail:''));
+  return {ok:true};
+ }finally{window.alert=original;console.error=originalError;window.__induBatchBusy=false;}
+ }catch(error){return {ok:false,error:error.message||String(error)};}
 }
 async function step(){
  const j=await get();if(!j||j.phase!=='queued')return;
@@ -32,7 +35,8 @@ async function step(){
   const tab=await chrome.tabs.get(j.tabId);
   if(!/^https:\/\/(www\.)?indupaper\.com\/times-of-india\.html(?:[?#]|$)/.test(tab.url||''))throw Error('Return the original tab to the Times of India page.');
   const result=await chrome.scripting.executeScript({target:{tabId:j.tabId},world:'MAIN',func:sitePDF,args:[current(j),j.city]});
-  if(!result[0]?.result)throw Error(result[0]?.error?.message||'Website did not finish preparing the PDF.');
+  const answer=result[0]?.result;
+  if(!answer?.ok)throw Error(answer?.error||result[0]?.error?.message||'Website execution ended before PDF creation completed. Inspect the newspaper tab before retrying.');
   // Download events can arrive before executeScript resolves. Never overwrite newer state.
   const live=await get();if(live?.id!==j.id||live.index!==j.index)return;
   if(live.phase==='preparing'){live.phase='waiting';live.since=Date.now();await put(live);}
