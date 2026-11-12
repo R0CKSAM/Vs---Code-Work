@@ -59,3 +59,21 @@ RELIABILITY UPDATE 2026-11-12
 - Compact merge command: python merge_pdfs_by_date.py "folder" --compact
 - Tests: python tests/test_merge.py
 - Dependencies are listed in requirements.txt for this Python environment.
+
+AI-READABLE OCR DOCUMENTS
+Double-click Create AI OCR PDFs.lnk and choose an original merged newspaper scan.
+The tool creates three documents in AI_OCR beside the source:
+1. *_SEARCHABLE.pdf: newspaper images with an invisible, searchable OCR text layer.
+2. *_AI_TEXT.pdf: small text-only PDF with the same page layout and date bookmarks; suited to AI uploads.
+3. *_AI_TEXT.txt: UTF-8 transcription with dates, merged-page numbers and original newspaper-page numbers where known.
+
+Libraries: PyMuPDF for PDF handling; Windows.Media.Ocr for local English OCR, called through windows_ocr.ps1.
+Windows OCR is built into this PC. No document is uploaded to an OCR service.
+OCR reads the original-quality PDF at 240 DPI. When a matching *_COMPACT.pdf exists, its images are used in the searchable output to keep file size down.
+OCR may misread small text, names, scores and column order. Compare important facts against the image PDF.
+Images/charts are retained in SEARCHABLE.pdf; AI_TEXT.pdf/TXT contain recognized text, not the pictures.
+Progress: ocr_status.json, and AI_OCR\progress.json beside the source.
+Completed pages are cached; rerun the same command to resume after an interruption.
+Cache contents are local OCR text/word coordinates. Keep them for resuming.
+English Windows OCR language support must be installed. Input/output PDFs and other original files are preserved.
+Tests: python tests/test_ocr.py

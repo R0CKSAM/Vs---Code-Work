@@ -29,7 +29,7 @@ def signature(path):
 
 def candidates(root):
     return sorted((p for p in root.rglob('*.pdf')
-                   if not {'SPORTS_ONLY', 'MERGED'}.intersection(part.upper() for part in p.parts)
+                   if not {'SPORTS_ONLY', 'MERGED', 'AI_OCR'}.intersection(part.upper() for part in p.parts)
                    and not p.stem.upper().startswith('MERGED_') and not p.stem.endswith('_SPORTS')),
                   key=lambda p: (p.name, str(p)))
 

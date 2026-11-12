@@ -62,5 +62,7 @@ Raj/P3-chrome report/output/
 /SPORTS-PDF/watch_status.json
 /SPORTS-PDF/watch_status.tmp
 /SPORTS-PDF/STOP_WATCHER.txt
+/SPORTS-PDF/ocr_status.json
+/SPORTS-PDF/.ocr_status.json.*.tmp
 /SPORTS-PDF/__pycache__/
 /chrome extension/InduPaper-Date-Downloader.zip
