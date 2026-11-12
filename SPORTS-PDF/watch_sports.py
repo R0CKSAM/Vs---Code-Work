@@ -147,7 +147,10 @@ def watch(root, poll=10, settle=20):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('folder', nargs='?', default=r'C:\Users\Intern\Downloads\Storyboard Studio\InduPaper')
+    parser.add_argument('--auto-start', action='store_true', help='Sign-in startup mode; respects STOP_WATCHER.txt.')
     args = parser.parse_args()
+    if args.auto_start and STOP.exists():
+        raise SystemExit(0)
     # A persistent log remains readable without opening the process window.
     import sys
     class Tee:

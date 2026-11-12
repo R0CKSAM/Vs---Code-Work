@@ -10,6 +10,50 @@ import sys
 import tempfile
 import time
 import pymupdf as pdf
+import io
+import math
+from PIL import Image
+
+
+def compact_images(document, dpi=180, quality=85):
+    """Resize images from their displayed page size, then replace only if smaller."""
+    images = {}
+    for page in document:
+        page.clean_contents(sanitize=True)
+        for item in page.get_images(full=True):
+            xref, mask, width, height = item[:4]
+            if mask or item[4] == 1:  # Preserve transparent and monochrome line-art images.
+                continue
+            placements = page.get_image_rects(xref, transform=True)
+            if not placements:
+                continue
+            entry = images.setdefault(xref, {'page': page, 'width': width, 'height': height, 'scale': 0})
+            for rect, matrix in placements:
+                # Matrix vectors account for rotation without changing image aspect ratio.
+                across = math.hypot(matrix.a, matrix.b)
+                down = math.hypot(matrix.c, matrix.d)
+                entry['scale'] = max(entry['scale'], across * dpi / 72 / width, down * dpi / 72 / height)
+    replaced = 0
+    for n, (xref, info) in enumerate(images.items(), 1):
+        raw = document.extract_image(xref)['image']
+        with Image.open(io.BytesIO(raw)) as source:
+            image = source.convert('RGB')
+            factor = min(1, info['scale'])
+            size = (max(1, round(image.width * factor)), max(1, round(image.height * factor)))
+            if size != image.size:
+                image = image.resize(size, Image.Resampling.LANCZOS)
+            stream = io.BytesIO()
+            image.save(stream, format='JPEG', quality=quality, optimize=True)
+            encoded = stream.getvalue()
+        if len(encoded) < len(raw):
+            info['page'].replace_image(xref, stream=encoded)
+            replaced += 1
+        if n % 10 == 0 or n == len(images):
+            print(f'  Optimized {n}/{len(images)} images', flush=True)
+    # replace_image adds a temporary resource reference. Remove unused copies before saving.
+    for page in document:
+        page.clean_contents(sanitize=True)
+    return replaced
 
 
 def collect(folder):
@@ -31,12 +75,13 @@ def collect(folder):
     return sorted(items), ignored
 
 
-def merge(folder, requested_output=None):
+def merge(folder, requested_output=None, compact=False):
     folder = Path(folder).resolve()
     if not folder.is_dir():
         raise ValueError(f'Folder not found: {folder}')
     items, ignored = collect(folder)
-    requested = Path(requested_output).resolve() if requested_output else folder / 'MERGED' / f'MERGED_{items[0][0]}_to_{items[-1][0]}.pdf'
+    suffix = '_COMPACT' if compact else ''
+    requested = Path(requested_output).resolve() if requested_output else folder / 'MERGED' / f'MERGED_{items[0][0]}_to_{items[-1][0]}{suffix}.pdf'
     if requested.suffix.lower() != '.pdf':
         raise ValueError('Output filename must end in .pdf.')
     if any(requested == p.resolve() for _, p in items):
@@ -75,6 +120,9 @@ def merge(folder, requested_output=None):
                     raise ValueError(f'{path.name} changed during merging. Wait for processing to finish.')
             output.set_toc(toc)
             output.set_metadata({'title': f'Newspapers {items[0][0]} to {items[-1][0]}', 'subject': 'Merged in ascending filename date order'})
+            if compact:
+                print('Creating smaller viewing copy (180 DPI, JPEG quality 85). Original files are unchanged.', flush=True)
+                compact_images(output)
             fd, name = tempfile.mkstemp(prefix='.merging_', suffix='.pdf', dir=target.parent)
             os.close(fd)
             temp = Path(name)
@@ -90,7 +138,7 @@ def merge(folder, requested_output=None):
             writer.writerows(rows)
         days = {d for d, _ in items}
         missing = [str(items[0][0] + timedelta(days=i)) for i in range((items[-1][0] - items[0][0]).days + 1) if items[0][0] + timedelta(days=i) not in days]
-        target.with_suffix('.json').write_text(json.dumps({'files': len(items), 'pages': sum(r['pages'] for r in rows), 'missing_dates_between_first_and_last': missing, 'ignored_undated_files': ignored, 'seconds': round(time.monotonic()-started, 1)}, indent=2), encoding='utf-8')
+        target.with_suffix('.json').write_text(json.dumps({'files': len(items), 'pages': sum(r['pages'] for r in rows), 'missing_dates_between_first_and_last': missing, 'ignored_undated_files': ignored, 'compact': compact, 'image_dpi': 180 if compact else None, 'jpeg_quality': 85 if compact else None, 'output_bytes': target.stat().st_size, 'seconds': round(time.monotonic()-started, 1)}, indent=2), encoding='utf-8')
         print(f'SAVED: {target}\n{len(items)} PDFs merged, {sum(r["pages"] for r in rows)} pages.', flush=True)
         if missing:
             print('Missing dates (not included): ' + ', '.join(missing), flush=True)
@@ -108,6 +156,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('folder', nargs='?')
     parser.add_argument('--output', type=Path)
+    parser.add_argument('--compact', action='store_true', help='Create a smaller 180-DPI JPEG viewing copy; originals stay unchanged.')
     args = parser.parse_args()
     interactive = not args.folder
     if interactive:
@@ -121,7 +170,7 @@ def main():
             return 0
     result = 0
     try:
-        merge(args.folder, args.output)
+        merge(args.folder, args.output, compact=args.compact)
     except Exception as error:
         print(f'ERROR: {error}', flush=True)
         result = 1

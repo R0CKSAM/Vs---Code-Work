@@ -1,30 +1,40 @@
-﻿INSTALL / UPDATE
-Open chrome://extensions and click Reload on InduPaper Date Downloader (version 1.1.1).
-For a new installation: Developer mode > Load unpacked > select this folder.
-Return to your chosen InduPaper newspaper page and reopen the extension.
+INDUPAPER DATE DOWNLOADER 1.2.0
 
-USE
-The newspaper title, date control, and city/edition selectors are detected from the page.
-Hindustan Times includes City and Sub City. Changing City refreshes available Sub City options.
-Choose the edition, From date and Through date, then Download date range.
-The chosen edition is reapplied for each date. The batch stays bound to its original newspaper tab.
-Files save under Chrome Downloads\InduPaper\NEWSPAPER\EDITION.
-Old Times of India batches keep their original naming/location and can still resume.
+Open the newspaper you want on InduPaper, then open the extension.
+Choose City and Sub City/edition where provided, then your From and Through dates.
+Choose Download date range. One date is processed at a time.
 
-The extension uses the site's existing PDF generator. No access restrictions are bypassed.
-Pages need one date form with a PDF button whose handler is available to the browser.
-HT and TOI forms were checked with 21 real-browser checks; other matching forms are detected dynamically.
-Live HT validation on 2026-11-12: Delhi / Delhi, 2026-09-01 saved as 24 pages (59.2 MB); queue advanced automatically to 2026-09-02. Unsupported pages show a clear message.
-Some other newspaper pages may use different button code or filenames and need an adapter.
+FIXES
+- Skip date records the omission and continues automatically.
+- Temporary network, HTTP 429 and server failures retry at most three times, after 15/45/120 seconds.
+- Missing editions and access errors pause for review. Skip explicitly to continue without that date.
+- A retry countdown, saved count and skipped count are shown in the popup.
+- Manual pauses and canceled downloads stay paused.
+- Chrome restart/update recovery restores a unique newspaper tab and checks download history before generating another PDF.
+- Existing completed downloads are adopted; interrupted transfers are resumed where Chrome allows it.
+- An uncertain PDF-save outcome pauses for inspection instead of automatically sending again.
+- Downloads without progress for ten minutes pause for inspection.
+- Saved batches persist when the browser closes. Chrome must be open for downloading.
 
-Downloads proceed sequentially with a five-second gap after completion.
-Keep Chrome and the original newspaper tab open. The popup can close.
-For unattended use, turn off Ask where to save each file in Chrome Downloads settings.
-Existing filenames get numbered suffixes. PDFs retain the site's rendering/image quality.
-Pause finishes the current operation first. Check downloads before retrying an uncertain result.
-Missing dates/site errors pause the queue. Skip date explicitly records a skipped date.
-A ten-minute watchdog pauses long-running attempts for inspection.
+FILES
+Chrome Downloads\InduPaper\NEWSPAPER\EDITION
+Old Times of India batches retain their original location/names.
+Existing files are preserved using numbered filenames.
+For unattended saving, turn off Ask where to save each file in Chrome Downloads settings.
+PDF page rendering/quality comes from the newspaper site's PDF generator.
 
+INSTALL / UPDATE
+Open chrome://extensions, enable Developer mode and Load unpacked (this folder).
+For an existing installation, click Reload on InduPaper Date Downloader.
+A version mismatch displays Update pending and disables batch controls until Reload.
 
-1.1.1: only newspaper API HTTP failures pause a batch; unrelated opaque ad responses are ignored. A page error cannot override an already tracked PDF download.
+SUPPORT
+HT and TOI form flows are tested. Other pages with matching date/edition/PDF controls are detected dynamically.
+Different button code or filenames may need an adapter. No login/CAPTCHA/access controls are bypassed.
+If several restored tabs show the same newspaper, close the extra copies before Resume.
 
+VALIDATION
+Node 22+: node tests/worker-checks.cjs (retry/recovery/skip/state tests).
+Node 22+ and Chrome on Windows: node tests/browser-checks.cjs (isolated form/PDF/popup fixtures).
+Live HT Delhi PDFs and edition-specific filenames were verified on this PC.
+No PC reboot or account sign-in was required for automated recovery tests.

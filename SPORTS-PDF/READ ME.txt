@@ -45,3 +45,17 @@ Tiny navigation references to Sport are excluded by OCR text height.
 Watcher excludes MERGED folders and restores missing previously generated Sports PDFs.
 Live HT 2026-09-01 validation: Sports pages 21 and 22 copied with pixel-identical rendering.
 Watcher restarted on the complete InduPaper folder, including new newspaper/edition subfolders.
+
+RELIABILITY UPDATE 2026-11-12
+- Merge PDFs - Smaller.lnk creates a separate viewing copy at 180 DPI / JPEG quality 85.
+  The original-quality shortcut and source PDFs are unchanged. Small text loses some fine detail in compact mode.
+  All pages, date order and date bookmarks are retained.
+  Existing TOI merged PDF: 418.8 MB original / 183.4 MB compact; 139 pages, 70 dates.
+- Sports PDF Watcher.lnk is installed in this user's Windows Startup folder.
+  The watcher starts silently at sign-in and skips already completed papers.
+- Stop Watcher.lnk stops after the current file and leaves STOP_WATCHER.txt, preventing sign-in auto-start.
+  Start Watcher.lnk starts manually and clears that stop marker. The file lock prevents duplicate workers.
+- The watcher currently running is left in place. New startup behavior applies at the next sign-in.
+- Compact merge command: python merge_pdfs_by_date.py "folder" --compact
+- Tests: python tests/test_merge.py
+- Dependencies are listed in requirements.txt for this Python environment.
