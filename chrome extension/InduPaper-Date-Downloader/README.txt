@@ -1,21 +1,27 @@
-﻿INSTALL
-1. Open chrome://extensions in Chrome.
-2. Turn on Developer mode (top right).
-3. Click Load unpacked and select this InduPaper-Date-Downloader folder.
-4. Open https://www.indupaper.com/times-of-india.html and wait for city options.
-5. Open this extension from Chrome's puzzle icon; pin it if desired.
-6. Choose city, From and Through dates, then Download date range.
+﻿INSTALL / UPDATE
+Open chrome://extensions and click Reload on InduPaper Date Downloader (version 1.1.0).
+For a new installation: Developer mode > Load unpacked > select this folder.
+Return to your chosen InduPaper newspaper page and reopen the extension.
 
-Uses the site's existing PDF generator; does not bypass login, CAPTCHA or access restrictions.
-One date is processed at a time, with a five-second gap after a confirmed completed download.
-Keep Chrome and the original newspaper tab open. The popup can be closed.
-Files go to Chrome Downloads\InduPaper\CITY. Turn off Ask where to save each file for unattended use.
-The site names files toi-CITY-YYYY-MM-DD.pdf. Chrome normally adds numbers for existing names.
-Pause finishes the current operation first. Resume/retry can duplicate a file if its prior outcome is uncertain; check Downloads.
+USE
+The newspaper title, date control, and city/edition selectors are detected from the page.
+Hindustan Times includes City and Sub City. Changing City refreshes available Sub City options.
+Choose the edition, From date and Through date, then Download date range.
+The chosen edition is reapplied for each date. The batch stays bound to its original newspaper tab.
+Files save under Chrome Downloads\InduPaper\NEWSPAPER\EDITION.
+Old Times of India batches keep their original naming/location and can still resume.
+
+The extension uses the site's existing PDF generator. No access restrictions are bypassed.
+Pages need one date form with a PDF button whose handler is available to the browser.
+HT and TOI forms were checked with 21 real-browser checks; other matching forms are detected dynamically.
+Live HT validation on 2026-11-12: Delhi / Delhi, 2026-09-01 saved as 24 pages (59.2 MB); queue advanced automatically to 2026-09-02. Unsupported pages show a clear message.
+Some other newspaper pages may use different button code or filenames and need an adapter.
+
+Downloads proceed sequentially with a five-second gap after completion.
+Keep Chrome and the original newspaper tab open. The popup can close.
+For unattended use, turn off Ask where to save each file in Chrome Downloads settings.
+Existing filenames get numbered suffixes. PDFs retain the site's rendering/image quality.
+Pause finishes the current operation first. Check downloads before retrying an uncertain result.
 Missing dates/site errors pause the queue. Skip date explicitly records a skipped date.
-The watchdog pauses after ten minutes without completion. Browser restart/tab closure may require a retry.
-Supports this Times of India page only; PDFs retain the site's own rendering and image quality.
-
-Implementation checked against the live page and TOI.js on 2026-11-11.
-No live batch has been started automatically: choose your own dates and city.
+A ten-minute watchdog pauses long-running attempts for inspection.
 

@@ -1,3 +1,4 @@
+importScripts('page.js');
 const get=async()=> (await chrome.storage.local.get('job')).job;
 const put=job=>chrome.storage.local.set({job});
 const current=j=>j.dates[j.index];
@@ -8,33 +9,15 @@ function datesBetween(start,end){
  if(n<1||n>366)throw Error('Choose a range of 1–366 days.');
  return Array.from({length:n},(_,i)=>new Date(+a+i*86400000).toISOString().slice(0,10));
 }
-// Runs in the website's own context; calls exactly its existing PDF function.
-async function sitePDF(date,city){
- try{
- const d=document.getElementById('TOIDate'),c=document.getElementById('TOICity'),b=document.querySelector('#TOIForm .btn-download');
- if(!d||!c||!b||typeof window.downloadTOIV3PDF!=='function')throw Error('Open the Times of India page and wait for it to load.');
- if(window.__induBatchBusy||b.disabled)throw Error('The website is already preparing a PDF. Wait before retrying.');
- if(![...c.options].some(o=>o.value===city))throw Error('City is no longer available.');
- window.__induBatchBusy=true;
- const original=window.alert,originalError=console.error;let issue='',detail='';
- window.alert=text=>{issue=String(text);console.warn('InduPaper download:',text);};
- console.error=(...args)=>{detail=args.map(x=>x?.message||String(x)).join(' ').slice(0,400);originalError.apply(console,args);};
- try{
-  d.value=date;c.value=city;
-  d.dispatchEvent(new Event('change',{bubbles:true}));c.dispatchEvent(new Event('change',{bubbles:true}));
-  await window.downloadTOIV3PDF();
-  if(issue)throw Error(issue+(detail?' '+detail:''));
-  return {ok:true};
- }finally{window.alert=original;console.error=originalError;window.__induBatchBusy=false;}
- }catch(error){return {ok:false,error:error.message||String(error)};}
-}
 async function step(){
  const j=await get();if(!j||j.phase!=='queued')return;
  j.phase='preparing';j.error='';j.downloadId=null;j.since=Date.now();await put(j);
  try{
   const tab=await chrome.tabs.get(j.tabId);
-  if(!/^https:\/\/(www\.)?indupaper\.com\/times-of-india\.html(?:[?#]|$)/.test(tab.url||''))throw Error('Return the original tab to the Times of India page.');
-  const result=await chrome.scripting.executeScript({target:{tabId:j.tabId},world:'MAIN',func:sitePDF,args:[current(j),j.city]});
+  const url=new URL(tab.url);if(!/^https:$/.test(url.protocol)||!['indupaper.com','www.indupaper.com'].includes(url.hostname)||url.pathname!==(j.paper?.path||'/times-of-india.html'))throw Error('Return the original tab to the batch?s newspaper page.');
+  const paper=j.paper||{path:'/times-of-india.html',dateId:'TOIDate',functionName:'downloadTOIV3PDF'};
+  const selections=j.selections||[{id:'TOICity',value:j.city}];
+  const result=await chrome.scripting.executeScript({target:{tabId:j.tabId},world:'MAIN',func:induPage,args:['download',{date:current(j),paper,selections}]});
   const answer=result[0]?.result;
   if(!answer?.ok)throw Error(answer?.error||result[0]?.error?.message||'Website execution ended before PDF creation completed. Inspect the newspaper tab before retrying.');
   // Download events can arrive before executeScript resolves. Never overwrite newer state.
@@ -44,12 +27,14 @@ async function step(){
 }
 async function bindDownload(item,suggest){
  const j=await get();if(!j||!['preparing','waiting'].includes(j.phase))return;
- const expected=`toi-${j.city}-${current(j)}.pdf`;
+ const legacy=!j.paper;
+ const expected=legacy?`toi-${j.city}-${current(j)}.pdf`:`${j.paper.slug}-${j.editionSlug}-${current(j)}.pdf`;
+ const leaf=item.filename.replace(/\\/g,'/').split('/').pop();
  if(item.byExtensionId&&item.byExtensionId!==chrome.runtime.id)return;
- if(item.filename.replace(/\\/g,'/').split('/').pop()!==expected)return;
- if(item.referrer&&!/^https:\/\/(www\.)?indupaper\.com\//.test(item.referrer))return;
+ if(legacy?leaf!==expected:!leaf.toLowerCase().endsWith('.pdf')||!leaf.includes(current(j)))return;
+ if(item.referrer){try{const ref=new URL(item.referrer);if(!['indupaper.com','www.indupaper.com'].includes(ref.hostname)||ref.pathname!==(j.paper?.path||'/times-of-india.html'))return;}catch{return;}}
  j.downloadId=item.id;j.phase='downloading';j.since=Date.now();await put(j);
- suggest({filename:`InduPaper/${j.city}/${expected}`,conflictAction:'uniquify'});
+ suggest({filename:legacy?`InduPaper/${j.city}/${expected}`:`InduPaper/${j.paper.slug}/${j.editionSlug}/${expected}`,conflictAction:'uniquify'});
  // A small PDF may already be complete before listener storage finishes.
  const [actual]=await chrome.downloads.search({id:item.id});if(actual?.state==='complete')await finish(item.id);
 }
@@ -88,8 +73,16 @@ chrome.runtime.onMessage.addListener((m,s,reply)=>{
   if(m.action==='start'){
    if(j&&['queued','preparing','waiting','downloading'].includes(j.phase))throw Error('A batch is already active.');
    if(j&&j.phase==='paused'&&j.downloadId!==null)throw Error('Resolve the paused download before replacing this batch.');
-   j={id:crypto.randomUUID(),tabId:m.tabId,city:m.city,dates:datesBetween(m.start,m.end),index:0,phase:'queued',downloadId:null,history:[],error:''};
-   if(!/^[a-z0-9-]+$/i.test(j.city))throw Error('Choose a city.');await put(j);await schedule();
+   const tab=await chrome.tabs.get(m.tabId),url=new URL(tab.url);
+   if(url.protocol!=='https:'||!['indupaper.com','www.indupaper.com'].includes(url.hostname))throw Error('Open an InduPaper newspaper page.');
+   const [inspection]=await chrome.scripting.executeScript({target:{tabId:m.tabId},world:'MAIN',func:induPage,args:['inspect']});
+   if(!inspection?.result?.ok)throw Error(inspection?.result?.error||'Cannot read newspaper selectors.');
+   const paper=inspection.result.paper;
+   const selections=paper.fields.map(f=>{const value=m.selections?.find(s=>s.id===f.id)?.value;if(!value||!f.options.some(o=>o.value===value&&!o.disabled))throw Error('Choose a valid '+f.label+'.');return {id:f.id,value};});
+   const edition=paper.fields.map(f=>f.options.find(o=>o.value===selections.find(s=>s.id===f.id).value).text).join(' / ')||'Main edition';
+   const editionSlug=edition.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,100)||'main';
+   j={id:crypto.randomUUID(),tabId:m.tabId,paper,selections,edition,editionSlug,city:edition,dates:datesBetween(m.start,m.end),index:0,phase:'queued',downloadId:null,history:[],error:''};
+   await put(j);await schedule();
   }else if(m.action==='pause'&&j){
    if(j.phase==='queued')j.phase='paused';else if(['preparing','waiting','downloading'].includes(j.phase))j.pauseRequested=true;await put(j);
   }else if(m.action==='resume'&&j&&j.phase==='paused'){
