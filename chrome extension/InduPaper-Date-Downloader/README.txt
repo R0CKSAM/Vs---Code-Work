@@ -1,40 +1,37 @@
-INDUPAPER DATE DOWNLOADER 1.2.0
+INDUPAPER DATE DOWNLOADER 1.3.2
 
-Open the newspaper you want on InduPaper, then open the extension.
-Choose City and Sub City/edition where provided, then your From and Through dates.
-Choose Download date range. One date is processed at a time.
+UNATTENDED USE
+Open your chosen InduPaper newspaper page, open the extension, select edition and dates, and leave Unattended mode checked.
+Temporary errors retry three times after 15, 45 and 120 seconds. If a date still fails, it is recorded as missed and the next date starts automatically.
+Missing-date responses are recorded without an endless retry loop. The batch finishes even when every requested date is unavailable.
+A date is marked saved only after Chrome confirms a completed download.
 
-FIXES
-- Skip date records the omission and continues automatically.
-- Temporary network, HTTP 429 and server failures retry at most three times, after 15/45/120 seconds.
-- Missing editions and access errors pause for review. Skip explicitly to continue without that date.
-- A retry countdown, saved count and skipped count are shown in the popup.
-- Manual pauses and canceled downloads stay paused.
-- Chrome restart/update recovery restores a unique newspaper tab and checks download history before generating another PDF.
-- Existing completed downloads are adopted; interrupted transfers are resumed where Chrome allows it.
-- An uncertain PDF-save outcome pauses for inspection instead of automatically sending again.
-- Downloads without progress for ten minutes pause for inspection.
-- Saved batches persist when the browser closes. Chrome must be open for downloading.
+A final CSV batch report is saved beside the PDFs, listing saved, missed and skipped dates, reasons and attempt counts.
+Download report creates a clearly named PARTIAL report while a batch is running.
+Retry missed dates starts a focused batch containing only missed/skipped dates; saved dates are not repeated.
+Uncheck Unattended mode to pause on date errors instead.
+
+POWER / RECOVERY
+Uses Chrome's power API to prevent automatic idle sleep during an active batch; the screen can still turn off.
+The keep-awake request is released when done or manually paused. Chrome must remain running.
+A deliberate PC sleep, shutdown or closing Chrome can stop execution; saved state recovers when Chrome runs again.
+Chrome restart recovery checks download history, adopts completed files and resumes interrupted transfers where possible.
+Manual pauses and user-canceled transfers stay paused.
+Access/login errors, a changed/ambiguous newspaper tab, or an uncertain PDF-save result still require review; no access restriction is bypassed.
 
 FILES
 Chrome Downloads\InduPaper\NEWSPAPER\EDITION
-Old Times of India batches retain their original location/names.
-Existing files are preserved using numbered filenames.
-For unattended saving, turn off Ask where to save each file in Chrome Downloads settings.
-PDF page rendering/quality comes from the newspaper site's PDF generator.
+Existing names receive numbered suffixes. Turn off Ask where to save each file in Chrome Downloads settings for unattended use.
+PDF page rendering/quality comes from the site's PDF generator. The extension cannot create editions the website does not provide.
+HT/TOI form flows are tested; other matching newspaper forms are detected dynamically.
 
 INSTALL / UPDATE
-Open chrome://extensions, enable Developer mode and Load unpacked (this folder).
-For an existing installation, click Reload on InduPaper Date Downloader.
-A version mismatch displays Update pending and disables batch controls until Reload.
+chrome://extensions > Developer mode > Load unpacked (this folder).
+For updates, Reload InduPaper Date Downloader. The UI checks its loaded version.
+The power permission is used only for active-batch keep-awake behavior.
 
-SUPPORT
-HT and TOI form flows are tested. Other pages with matching date/edition/PDF controls are detected dynamically.
-Different button code or filenames may need an adapter. No login/CAPTCHA/access controls are bypassed.
-If several restored tabs show the same newspaper, close the extra copies before Resume.
-
-VALIDATION
-Node 22+: node tests/worker-checks.cjs (retry/recovery/skip/state tests).
-Node 22+ and Chrome on Windows: node tests/browser-checks.cjs (isolated form/PDF/popup fixtures).
-Live HT Delhi PDFs and edition-specific filenames were verified on this PC.
-No PC reboot or account sign-in was required for automated recovery tests.
+TESTS (Node 22+, Windows Chrome for browser tests)
+node tests/worker-checks.cjs
+node tests/browser-checks.cjs
+The queue tests include an entire 31-day HTTP-500 failure simulation that finishes with a missed-date report and never waits for manual Resume.
+Power API reference: https://developer.chrome.com/docs/extensions/reference/api/power

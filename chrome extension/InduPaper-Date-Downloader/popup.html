@@ -1,9 +1,9 @@
 <!doctype html><html lang="en"><meta charset="utf-8"><title>InduPaper Downloads</title><link rel="stylesheet" href="style.css"><body>
 <h1>Newspapers, by date</h1><p id="paperName" class="muted">Choose a newspaper on InduPaper</p>
 <p id="connection">Connecting to your newspaper tab…</p>
-<fieldset id="settings"><div id="editions"></div><div class="dates"><label>From<input type="date" id="start"></label><label>Through<input type="date" id="end"></label></div></fieldset>
+<fieldset id="settings"><div id="editions"></div><div class="dates"><label>From<input type="date" id="start"></label><label>Through<input type="date" id="end"></label></div><label class="policy"><input id="continueOnError" type="checkbox" checked><span>Unattended mode: continue if a date still fails after retries</span></label></fieldset>
 <button id="startBatch" class="primary">Download date range</button>
-<section><strong id="status">Ready</strong><progress id="progress" value="0" max="1"></progress><p id="detail">Choose your city and dates to begin.</p><p id="error" role="alert"></p><div class="actions"><button id="pause">Pause</button><button id="resume">Resume / retry</button><button id="skip">Skip date</button></div><p id="history"></p></section>
-<p class="muted">Temporary failures retry up to 3 times. Skip continues to the next date. Saved batches recover when Chrome reopens; a manual pause stays paused.</p>
-<p class="muted">Saved in Chrome’s Downloads folder. Keep Chrome open to download. Pause takes effect after the current PDF finishes.</p>
+<section><strong id="status">Ready</strong><progress id="progress" value="0" max="1"></progress><p id="detail">Choose your city and dates to begin.</p><p id="error" role="alert"></p><div class="actions"><button id="pause">Pause</button><button id="resume">Resume / retry</button><button id="skip">Skip date</button></div><p id="history"></p><div class="actions"><button id="report" disabled>Download report</button><button id="retryMissed" disabled>Retry missed dates</button></div></section>
+<p class="muted">Unattended mode retries temporary failures up to 3 times, then records the missed date and continues. A CSV report is saved when the batch finishes. Manual pauses stay paused.</p>
+<p class="muted">Keeps the PC awake while a batch is active; the screen can turn off. Keep Chrome running. Pause takes effect after the current PDF finishes.</p>
 <p class="muted">For unattended saving, turn off “Ask where to save each file” in Chrome Downloads settings. Existing filenames are given a numbered suffix.</p><script src="page.js"></script><script src="popup.js"></script></body></html>
