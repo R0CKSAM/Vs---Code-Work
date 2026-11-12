@@ -75,6 +75,8 @@ input[type="date"]:focus,select:focus{border-color:var(--brand2);box-shadow:0 0 
 .stakeholder-kpis .kpi b{font-size:9px;overflow-wrap:anywhere;word-break:break-word}
 .stakeholder-kpis .kpi span{font-size:clamp(14px,1.15vw,20px)}
 .stakeholder-kpis .kpi small{font-size:10px;overflow-wrap:anywhere}
+#allRequestIpCard{grid-template-columns:minmax(0,1fr)}
+#allRequestIpCard .kpi{min-height:0;border-left:4px solid #12805c}
 .identity-guide{margin:0 0 12px}
 .identity-guide .panel-head{margin-bottom:10px}
 .identity-guide-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
@@ -268,6 +270,7 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
   </div>
 
   <div class="stakeholder-kpis" id="stakeholderKpis"></div>
+  <div class="stakeholder-kpis" id="allRequestIpCard" aria-live="polite"></div>
 
   <section class="panel identity-guide" id="identityGuideSection">
     <div class="panel-head"><div class="panel-title">Identity Count Guide<small>How device, session, IP, UA, and IP + UA values are calculated</small></div></div>
@@ -346,7 +349,7 @@ th,td{white-space:normal!important;overflow-wrap:anywhere;word-break:break-word}
         <div id="playOsTable"></div>
       </div>
       <div class="panel">
-        <div class="panel-head"><div class="panel-title">Unique Client IP by GEO<small>Approx IPs by country / state / city</small></div><button class="btn" onclick="expandChart('ipGeoChart','Unique Client IP by GEO')">Expand</button></div>
+        <div class="panel-head"><div class="panel-title">Client IPs by GEO — TS requests<small>TS-only counts; all-request counts are in the region and city tables below</small></div><button class="btn" onclick="expandChart('ipGeoChart','Client IPs by GEO — TS requests')">Expand</button></div>
         <div class="chart-box compact"><canvas id="ipGeoChart"></canvas></div>
         <div id="ipGeoTable"></div>
       </div>
@@ -761,7 +764,7 @@ function sum(rows,col){return rows.reduce(function(a,r){return a+n(r[col])},0)}
 function max(rows,col){return rows.reduce(function(a,r){return Math.max(a,n(r[col]))},0)}
 function weightedAvg(rows,val,weight){const w=sum(rows,weight);return w?rows.reduce(function(a,r){return a+n(r[val])*n(r[weight])},0)/w:0}
 function uniq(rows,col){return Array.from(new Set((rows||[]).map(function(r){return r[col]}).filter(function(v){return v!==undefined&&v!==null&&String(v)!==""}))).sort()}
-function groupSum(rows,keyFn,metrics){const m=new Map();rows.forEach(function(r){const k=keyFn(r);if(!m.has(k))m.set(k,{key:k});const o=m.get(k);metrics.forEach(function(c){o[c]=(o[c]||0)+n(r[c])});if(!o.sample)o.sample=r});return Array.from(m.values())}
+function groupSum(rows,keyFn,metrics){const uniqueMetrics=Array.from(new Set(metrics));const m=new Map();rows.forEach(function(r){const k=keyFn(r);if(!m.has(k))m.set(k,{key:k});const o=m.get(k);uniqueMetrics.forEach(function(c){o[c]=(o[c]||0)+n(r[c])});if(!o.sample)o.sample=r});return Array.from(m.values())}
 function topBy(rows,keyFn,metric,limit){return groupSum(rows,keyFn,[metric,"raw_watch_hours","status_200_watch_hours","approx_unique_ips","rows","raw_ts_rows","status_200_ts_rows"]).sort(function(a,b){return n(b[metric])-n(a[metric])}).slice(0,limit)}
 function rollupTop(rows,keyFn,metric,limit){
   const m=new Map();
@@ -1476,7 +1479,35 @@ function amagiMinuteRows(){
   return filterRows(DATA.concurrency_minute||[],{dateKey:"log_date",channel:true})
     .filter(function(row){return String(row.source||"").toLowerCase()==="amagi"});
 }
+const allRequestIpCache=new Map();
+function exactAllRequestIps(payload,source,start,end,channels){
+  if(source!=="stream"&&source!=="fast")return {value:null,note:"Available for STREAM and FAST only."};
+  if(!start||!end||start>end)return {value:null,note:"Select a valid date range."};
+  if(start<(payload.start_date||"2026-11-11"))return {value:null,note:"Available from 11 November 2026. Select dates on or after that date."};
+  const coverage=new Set((payload.coverage||[]).filter(r=>r[0]===source).map(r=>r[1]));
+  for(let day=start;day<=end;day=addIsoDays(day,1)){
+    if(!coverage.has(day))return {value:null,note:"All-request IP data is not yet complete for "+day+". No partial total shown."};
+  }
+  const selected=new Set(channels),ids=new Set();
+  (payload.groups||[]).forEach(function(group){
+    if(group[0]!==source||group[1]<start||group[1]>end||(selected.size&&!selected.has(group[2])))return;
+    const binary=atob(group[3]);
+    for(let i=0;i<binary.length;i+=4)ids.add((binary.charCodeAt(i)|(binary.charCodeAt(i+1)<<8)|(binary.charCodeAt(i+2)<<16)|(binary.charCodeAt(i+3)<<24))>>>0);
+  });
+  return {value:ids.size,note:"Exact distinct trimmed cliIP across selected source, dates and channels. All paths and HTTP statuses; blank IPs excluded. Platform/status filters do not affect this metric. Shared IPs count once, not as individual people."};
+}
+function renderAllRequestIps(){
+  const channels=selectedFilterValues(state.channel);
+  const key=JSON.stringify([state.source,state.start,state.end,channels.slice().sort()]);
+  if(!allRequestIpCache.has(key)){
+    if(allRequestIpCache.size>50)allRequestIpCache.clear();
+    allRequestIpCache.set(key,exactAllRequestIps(DATA.all_request_ip_membership||{},state.source,state.start,state.end,channels));
+  }
+  const metric=allRequestIpCache.get(key);
+  el("allRequestIpCard").innerHTML=stakeholderKpi("Unique client IPs — All requests",metric.value==null?"Not Available":fmtInt(metric.value),metric.note,metric.value==null?"wip-box":"gold");
+}
 function renderAmagiKpis(){
+  renderAllRequestIps();
   const rows=amagiMinuteRows();
   const minutes=new Map();
   rows.forEach(function(row){
@@ -1510,6 +1541,7 @@ function updateSourceLayout(){
   if(amagiExport)amagiExport.style.display=amagi?"":"none";
 }
 function renderStakeholderKpis(){
+  renderAllRequestIps();
   const rows=scopedWatchRows();
   const views=scopedManifestViews();
   const canUseDailyScope=state.platform==="all"&&state.channel==="all";
@@ -1657,8 +1689,8 @@ function renderKpis(){
   const cache=sum(latency,"rows")?sum(latency,"cache_hit_rows")*100/sum(latency,"rows"):0;
   const sourcePeak=max(conc,"peak_unique_viewers");
   el("kpis").innerHTML=[
-    kpi("Request Hours",fmt(reqHours,1)+" h","Selected range watch hours",""),
-    kpi("Status 200 Hours",fmt(okHours,1)+" h","Successful playback hours","green"),
+    kpi("Request Hours",fmt(reqHours,1)+" h","All HTTP TS requests × assumed 6 seconds; includes repeats and failures",""),
+    kpi("Status 200 Hours",fmt(okHours,1)+" h","HTTP 200 TS requests × 6 seconds; repeats included, not confirmed playback","green"),
     kpi(peakAudience.label,peakAudience.value?fmtInt(peakAudience.value):"Not Available",peakAudience.note,"gold"),
     kpi("Manifest Requests",manifest!=null?fmtInt(manifest):"Not Available",manifest!=null?"Playback start requests":"Not available for this selection","violet"),
     kpi("Non-200 Response Rate",pct(non200),"HTTP rows outside status 200",non200>5?"red":""),
@@ -1951,6 +1983,68 @@ function renderPlatforms(){
 function geoLabel(r){
   return [r.country||"Unknown",r.state||"",r.city||""].filter(function(x){return String(x).trim()!==""}).join(" / ");
 }
+function geoIpGroups(rows,keyFn){
+  const grouped=new Map();
+  rows.forEach(function(r){const key=keyFn(r);if(!grouped.has(key))grouped.set(key,[]);grouped.get(key).push(r)});
+  return grouped;
+}
+function geoIpValue(rows){
+  // Aggregate counts cannot establish the union across dates, cities or sources.
+  if(rows.length!==1)return {value:null,label:"Unavailable: overlapping groups"};
+  const r=rows[0];
+  if(r.exact_unique_ips!=null&&Number.isFinite(Number(r.exact_unique_ips)))return {value:Number(r.exact_unique_ips),label:fmtInt(r.exact_unique_ips)+" (exact)"};
+  return {value:n(r.approx_unique_ips),label:fmtInt(r.approx_unique_ips)+" (approx.)"};
+}
+function geoIpText(rows,keyFn,key){return geoIpValue(geoIpGroups(rows,keyFn).get(key)||[]).label}
+const regionalAllIpCache=new Map();
+function exactRegionalAllRequestIps(payload,source,start,end,channels){
+  const guard=exactAllRequestIps({...payload,groups:[]},source,start,end,channels);
+  if(guard.value==null)return {available:false,note:guard.note,regions:new Map(),cities:new Map()};
+  const regions=new Map(),cities=new Map(),selected=new Set(channels);
+  (payload.groups||[]).forEach(function(g){
+    if(g[0]!==source||g[1]<start||g[1]>end||(selected.size&&!selected.has(g[2])))return;
+    const region=[g[3]||"Unknown",g[4]||"Unknown"].join(" / ");
+    const city=[g[3]||"Unknown",g[4]||"Unknown",g[5]||"Unknown / NA"].join(" / ");
+    if(!regions.has(region))regions.set(region,new Set());
+    if(!cities.has(city))cities.set(city,new Set());
+    const binary=atob(g[6]),r=regions.get(region),c=cities.get(city);
+    for(let i=0;i<binary.length;i+=4){const id=(binary.charCodeAt(i)|(binary.charCodeAt(i+1)<<8)|(binary.charCodeAt(i+2)<<16)|(binary.charCodeAt(i+3)<<24))>>>0;r.add(id);c.add(id)}
+  });
+  return {available:true,note:"",regions:new Map(Array.from(regions,([key,ids])=>[key,ids.size])),cities:new Map(Array.from(cities,([key,ids])=>[key,ids.size]))};
+}
+function regionalAllRequestIps(){
+  const channels=selectedFilterValues(state.channel),key=JSON.stringify([state.source,state.start,state.end,channels.slice().sort()]);
+  if(!regionalAllIpCache.has(key)){
+    if(regionalAllIpCache.size>20)regionalAllIpCache.clear();
+    regionalAllIpCache.set(key,exactRegionalAllRequestIps(DATA.all_request_geo_membership||{},state.source,state.start,state.end,channels));
+  }
+  return regionalAllIpCache.get(key);
+}
+function renderRegionalIpTables(geo,scopeLabel){
+  const all=regionalAllRequestIps();
+  const regionKey=r=>[r.country||"Unknown",r.state||"Unknown"].join(" / ");
+  const cityKey=r=>[r.country||"Unknown",r.state||"Unknown",r.city||"Unknown / NA"].join(" / ");
+  [["geoTable","Country / State",regionKey,all.regions],["cityTable","Country / State / City",cityKey,all.cities]].forEach(function(spec){
+    const [table,label,keyFn,counts]=spec,groups=geoIpGroups(geo,keyFn);
+    const rows=topBy(geo,keyFn,"raw_watch_hours",Infinity),keys=new Set(rows.map(r=>r.key));
+    counts.forEach(function(count,key){if(!keys.has(key))rows.push({key,raw_watch_hours:0,status_200_watch_hours:0})});
+    rows.sort((a,b)=>n(b.raw_watch_hours)-n(a.raw_watch_hours)||(counts.get(b.key)||0)-(counts.get(a.key)||0));
+    renderTable(table,[label,"TS scope","All HTTP TS Hours","HTTP 200 TS Hours","Unique client IPs — TS requests","Unique client IPs — All requests"],rows.map(function(r){
+      const tsRows=groups.get(r.key)||[];
+      const ts=tsRows.length?geoIpValue(tsRows).label:"0 (no TS rows)";
+      return [r.key,scopeLabel,fmt(r.raw_watch_hours,1),fmt(r.status_200_watch_hours,1),ts,all.available?fmtInt(counts.get(r.key)||0)+" (exact)":"Not Available"];
+    }),[2,3]);
+    renderPieNote(table,"All-request IPs: exact within each location across selected source, dates and channels, including playlists and all HTTP statuses; platform filters ignored. Do not sum locations: the same IP can appear in several. Tables include locations without TS requests. Hours are TS requests × assumed 6 seconds, not measured viewing."+(all.available?"":" "+all.note));
+  });
+}
+function renderGeoIps(rows){
+  const items=Array.from(geoIpGroups(rows,geoLabel),function(entry){return {key:entry[0],ip:geoIpValue(entry[1])}});
+  const ranked=items.filter(function(r){return r.ip.value!=null}).sort(function(a,b){return b.ip.value-a.ip.value}).slice(0,20);
+  if(ranked.length)draw("ipGeoChart",barConfig(ranked.map(function(r){return r.key}),ranked.map(function(r){return r.ip.value}),"Client IPs (basis in table)",COLORS[2],"y"));
+  else clearChart("ipGeoChart","Exact IP union unavailable for this date/source selection");
+  renderTable("ipGeoTable",["Geography","Client IPs / basis"],items.sort(function(a,b){return (b.ip.value||0)-(a.ip.value||0)}).slice(0,20).map(function(r){return [r.key,r.ip.label]}),[]);
+  renderPieNote("ipGeoTable","IP counts overlap across locations and dates; no summed total or percentage is shown. Exact counts are available for rebuilt dates; older estimates are labelled.");
+}
 function stateRegionLabel(r){
   return [r.country||"Unknown",r.state||"Unknown / NA"].filter(function(x){return String(x).trim()!==""}).join(" / ");
 }
@@ -2052,7 +2146,7 @@ function renderPlaytimePies(){
   const geo=state.channel==="all"
     ?filterRows(DATA.geo_daily||[],{channel:false,platform:false})
     :filterRows(DATA.channel_geo_daily||[],{channel:true,platform:false});
-  renderPieWithTable("ipGeoChart","ipGeoTable",geo,geoLabel,"approx_unique_ips","Approx IPs",0);
+  renderGeoIps(geo);
   if(state.channel!=="all"){
     const channelDevices=channelDeviceTypeRows();
     const regionDevices=regionChannelDeviceRows();
@@ -2169,8 +2263,7 @@ function renderGeoDevice(){
       draw("geoChart",barConfig(ranked.map(function(r){return r.key}),ranked.map(function(r){return n(r.raw_watch_hours)}),"Request Hours",COLORS[2],"y"));
       draw("cityChart",barConfig(cityRanked.map(function(r){return r.key}),cityRanked.map(function(r){return n(r.raw_watch_hours)}),"Request Hours",COLORS[3],"y"));
       const scopeLabel=filterLabel(state.platform,"All Platforms")+" / "+filterLabel(state.channel,"All Channels");
-      renderTable("geoTable",["Country / State","Scope","Raw Hours","Status 200 Hours","Approx IPs","Rows"],ranked.map(function(r){return [r.key,scopeLabel,fmt(r.raw_watch_hours,1),fmt(r.status_200_watch_hours,1),fmtInt(r.approx_unique_ips),fmtInt(r.raw_ts_rows)]}),[2,3,4,5]);
-      renderTable("cityTable",["Country / State / City","Scope","Raw Hours","Status 200 Hours","Approx IPs","Rows"],cityRanked.map(function(r){return [r.key,scopeLabel,fmt(r.raw_watch_hours,1),fmt(r.status_200_watch_hours,1),fmtInt(r.approx_unique_ips),fmtInt(r.raw_ts_rows)]}),[2,3,4,5]);
+      renderRegionalIpTables(fastGeo,scopeLabel);
       const fastDevices=fastPlatformChannelUaDeviceRows();
       const deviceRank=topBy(fastDevices,fastDeviceIdentityLabel,"raw_watch_hours",20);
       const samples=new Map();
@@ -2210,8 +2303,7 @@ function renderGeoDevice(){
   draw("geoChart",barConfig(ranked.map(function(r){return r.key}),ranked.map(function(r){return n(r.raw_watch_hours)}),"Request Hours",COLORS[2],"y"));
   draw("cityChart",barConfig(cityRanked.map(function(r){return r.key}),cityRanked.map(function(r){return n(r.raw_watch_hours)}),"Request Hours",COLORS[3],"y"));
   const scopeLabel=state.channel==="all"?"All channels":"Channel: "+state.channel;
-  renderTable("geoTable",["Country / State","Scope","Raw Hours","Status 200 Hours","Approx IPs"],ranked.map(function(r){return [r.key,scopeLabel,fmt(r.raw_watch_hours,1),fmt(r.status_200_watch_hours,1),fmtInt(r.approx_unique_ips)]}),[2,3,4]);
-  renderTable("cityTable",["Country / State / City","Scope","Raw Hours","Status 200 Hours","Approx IPs"],cityRanked.map(function(r){return [r.key,scopeLabel,fmt(r.raw_watch_hours,1),fmt(r.status_200_watch_hours,1),fmtInt(r.approx_unique_ips)]}),[2,3,4]);
+  renderRegionalIpTables(geo,scopeLabel);
   if(state.channel!=="all"){
     const channelDevices=channelDeviceTypeRows();
     const deviceRank=topBy(channelDevices,function(r){return r.device_type||"Unknown / NA"}, "raw_watch_hours", 15);

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import importlib.util
 import os
@@ -42,6 +43,34 @@ HOURS_PER_TS_SEGMENT = 6 / 3600
 
 class DashboardDataError(RuntimeError):
     """Raised when an input required to build a trustworthy dashboard is invalid."""
+
+
+def build_all_request_ip_membership(watch_dir: Path, max_date: str, geography: bool = False) -> dict:
+    """Collision-free integer membership; never send raw IP addresses to the HTML."""
+    frame = read_parquet(watch_dir / 'channel_ip_all_requests_daily.parquet')
+    result = {'start_date': '2026-11-11', 'coverage': [], 'groups': []}
+    if frame.empty:
+        return result
+    frame = frame.copy()
+    if geography:
+        if 'geo_membership_version' not in frame.columns:
+            return result
+        frame = frame[frame.geo_membership_version == 1].copy()
+        for column in ['country', 'state', 'city']:
+            frame[column] = frame[column].fillna('')
+    frame['log_date'] = date_string(frame['log_date'])
+    frame = frame[(frame.log_date >= result['start_date']) & (frame.log_date <= str(max_date))]
+    result['coverage'] = frame[['source', 'log_date']].drop_duplicates().values.tolist()
+    frame['cliIP'] = frame['cliIP'].astype('string').str.strip().replace('', pd.NA)
+    codes, identifiers = pd.factorize(frame['cliIP'], sort=False)
+    if len(identifiers) >= 2**32:
+        raise DashboardDataError('Exact IP membership exceeds its 32-bit identifier capacity')
+    frame['_ip_id'] = codes
+    dimensions = ['source', 'log_date', 'channel_name'] + (['country', 'state', 'city'] if geography else [])
+    for keys, group in frame.groupby(dimensions, dropna=False):
+        ids = group.loc[group._ip_id >= 0, '_ip_id'].drop_duplicates().to_numpy(dtype='<u4')
+        result['groups'].append([*keys, base64.b64encode(ids.tobytes()).decode('ascii')])
+    return result
 
 
 class ParquetReadError(DashboardDataError):
@@ -1802,8 +1831,10 @@ def build_data(args: argparse.Namespace) -> dict[str, Any]:
             "daily": records(daily, 5000),
             "overview_daily": records(overview_daily, 5000),
             "channel_daily": records(channel, 6000),
-            "geo_daily_schema": compact_schema(geo, 25000),
-            "geo_daily": compact_records(geo, 25000),
+            "all_request_ip_membership": build_all_request_ip_membership(watch_dir, max_date.isoformat()),
+            "all_request_geo_membership": build_all_request_ip_membership(watch_dir, max_date.isoformat(), geography=True),
+            "geo_daily_schema": compact_schema(geo),
+            "geo_daily": compact_records(geo),
             "channel_geo_daily_schema": compact_schema(channel_geo),
             "channel_geo_daily": compact_records(channel_geo),
             "channel_device_type_daily_schema": compact_schema(channel_device_type),

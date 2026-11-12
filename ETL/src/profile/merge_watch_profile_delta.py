@@ -14,6 +14,7 @@ import pandas as pd
 CHUNK_DURATION_HOURS = 6 / 3600.0
 
 DAILY_TABLE_NAMES = [
+    "channel_ip_all_requests_daily",
     "daily_volume",
     "status_codes_daily",
     "extensions_daily",
@@ -145,6 +146,10 @@ def normalize_for_parquet(df: pd.DataFrame) -> pd.DataFrame:
         sample = out["sample_queryStr"].astype("string").fillna("")
         out["sample_queryStr"] = sample.where(sample.str.strip() == "", "[queryStr sample hidden]").astype(str)
     for column in out.columns:
+        if column == "exact_unique_ips":
+            # Historical rows without a rebuilt exact count are unknown, not zero.
+            out[column] = pd.to_numeric(out[column], errors="coerce").astype("Int64")
+            continue
         if column in STRING_COLUMN_EXACT:
             out[column] = out[column].astype("string").fillna("").astype(str)
             continue

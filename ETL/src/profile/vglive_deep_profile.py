@@ -278,7 +278,7 @@ def refresh_artifact(mode: str, out_file: Path, columns: list[str]) -> bool:
     return False
 
 
-def channel_base_cte(where_sql: str) -> str:
+def channel_base_cte(where_sql: str, all_requests: bool = False) -> str:
     candidate_expr = channel_candidate_sql("reqPath")
     return f"""
 WITH base AS (
@@ -303,7 +303,7 @@ WITH base AS (
         {query_param_sql("session_id")} AS session_id,
         {query_param_sql("device_id")} AS device_id
     FROM lake_rows
-    WHERE reqPath LIKE '%.ts'
+    WHERE {"TRUE" if all_requests else "reqPath LIKE '%.ts'"}
       AND {where_sql}
 ),
 resolved AS (
@@ -410,7 +410,8 @@ def write_daily_tables(
                 COUNT(*) FILTER (WHERE statusCode = '200') AS status_200_ts_rows,
                 COUNT(*) * {CHUNK_DURATION_HOURS} AS raw_watch_hours,
                 COUNT(*) FILTER (WHERE statusCode = '200') * {CHUNK_DURATION_HOURS} AS status_200_watch_hours,
-                approx_count_distinct(cliIP) AS approx_unique_ips
+                approx_count_distinct(cliIP) AS approx_unique_ips,
+                count(DISTINCT nullif(trim(cliIP), '')) AS exact_unique_ips
             FROM lake_rows
             WHERE reqPath LIKE '%.ts' AND {where_sql}
             GROUP BY 1, 2, 3, 4, 5
@@ -429,7 +430,8 @@ def write_daily_tables(
                 COUNT(*) FILTER (WHERE statusCode = '200') AS status_200_ts_rows,
                 COUNT(*) * {CHUNK_DURATION_HOURS} AS raw_watch_hours,
                 COUNT(*) FILTER (WHERE statusCode = '200') * {CHUNK_DURATION_HOURS} AS status_200_watch_hours,
-                approx_count_distinct(cliIP) AS approx_unique_ips
+                approx_count_distinct(cliIP) AS approx_unique_ips,
+                count(DISTINCT nullif(trim(cliIP), '')) AS exact_unique_ips
             FROM resolved
             GROUP BY 1, 2, 3, 4, 5, 6
             ORDER BY 1, 2, raw_ts_rows DESC
@@ -875,6 +877,17 @@ def write_daily_tables(
             ORDER BY 1, 2, raw_ts_chunks DESC
         """,
     }
+
+    # Membership, not pre-summed counts: downstream can union IPs across channels/days.
+    queries['channel_ip_all_requests_daily'] = f"""
+        {channel_base_cte(where_sql, all_requests=True)}
+        SELECT DISTINCT
+            printf('%04d-%02d-%02d', year, CAST(month AS INTEGER), CAST(day AS INTEGER)) AS log_date,
+            source, channel_name, nullif(trim(cliIP), '') AS cliIP,
+            country, state, city, 1 AS geo_membership_version
+        FROM resolved
+        WHERE printf('%04d-%02d-%02d', year, CAST(month AS INTEGER), CAST(day AS INTEGER)) >= '2026-11-11'
+    """
 
     if not include_forensic_query_keys:
         if only_tables is not None and "query_param_keys_daily" in only_tables:
