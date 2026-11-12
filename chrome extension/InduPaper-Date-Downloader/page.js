@@ -39,7 +39,15 @@ globalThis.induPage = async function(action='inspect',payload={}){
   let issue='',detail='',http='';
   window.alert=text=>{issue=String(text);};
   console.error=(...args)=>{detail=args.map(x=>x?.message||String(x)).join(' ').slice(0,400);errorBefore.apply(console,args);};
-  window.fetch=async(...args)=>{const response=await fetchBefore.apply(window,args);if(!response.ok)http='Website returned HTTP '+response.status;return response;};
+  window.fetch=async(...args)=>{
+   const response=await fetchBefore.apply(window,args);
+   // Ads/analytics can legitimately return opaque status 0. Only the paper API matters.
+   try{const url=new URL(args[0]?.url||String(args[0]),location.href);
+    const paperApi=(url.hostname===location.hostname||url.hostname==='d3i9pcxc8oepjn.cloudfront.net')&&/\/(?:download|cities)(?:\/|$)/i.test(url.pathname);
+    if(paperApi&&response.type!=='opaque'&&response.status>=400)http='Newspaper server returned HTTP '+response.status;
+   }catch{}
+   return response;
+  };
   try{
    date.value=payload.date;date.dispatchEvent(new Event('change',{bubbles:true}));await wait(350);
    for(const field of selects){const selected=payload.selections.find(s=>s.id===field.id);if(!selected)throw Error('Choose every required edition selector.');await choose(field,selected.value);}

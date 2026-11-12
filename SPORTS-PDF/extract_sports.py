@@ -10,7 +10,8 @@ import pymupdf as pdf
 
 def sports_heading(text):
     words = re.sub(r'[^A-Z]', '', text.upper())
-    return words in {'SPORT', 'SPORTS', 'TIMESSPORT', 'TIMESSPORTS', 'TOISPORTS'}
+    return words in {'SPORT', 'SPORTS', 'TIMESSPORT', 'TIMESSPORTS', 'TOISPORTS',
+                     'HINDUSTANTIMESSPORT', 'HINDUSTANTIMESSPORTS', 'HTSPORT', 'HTSPORTS'}
 
 
 def extract(path, engine, output=None, pages=None):
@@ -33,12 +34,16 @@ def extract(path, engine, output=None, pages=None):
                 lines = page.get_text('blocks', clip=clip)
                 found = [str(block[4]).strip() for block in lines if sports_heading(str(block[4]).strip())]
                 snippets = [str(block[4]).strip() for block in lines]
-                if not snippets:
+                # A watermark/text overlay does not mean the scanned heading is searchable.
+                if not found:
                     scale = 1700 / page.rect.width
                     pix = page.get_pixmap(matrix=pdf.Matrix(scale, scale), clip=clip, alpha=False)
                     results, _ = engine(pix.tobytes('png'))
-                    snippets = [r[1] for r in results or []]
-                    found = [r[1] for r in results or [] if float(r[2]) >= .65 and sports_heading(r[1])]
+                    snippets += [r[1] for r in results or []]
+                    minimum_height = max(14, page.rect.height * scale * .006)
+                    found = [r[1] for r in results or [] if float(r[2]) >= .65
+                             and sports_heading(r[1])
+                             and max(point[1] for point in r[0]) - min(point[1] for point in r[0]) >= minimum_height]
                 match = bool(found)
                 if match:
                     selected.append(i + 1)

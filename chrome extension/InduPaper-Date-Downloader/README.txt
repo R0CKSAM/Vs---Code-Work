@@ -1,5 +1,5 @@
 ﻿INSTALL / UPDATE
-Open chrome://extensions and click Reload on InduPaper Date Downloader (version 1.1.0).
+Open chrome://extensions and click Reload on InduPaper Date Downloader (version 1.1.1).
 For a new installation: Developer mode > Load unpacked > select this folder.
 Return to your chosen InduPaper newspaper page and reopen the extension.
 
@@ -24,4 +24,7 @@ Existing filenames get numbered suffixes. PDFs retain the site's rendering/image
 Pause finishes the current operation first. Check downloads before retrying an uncertain result.
 Missing dates/site errors pause the queue. Skip date explicitly records a skipped date.
 A ten-minute watchdog pauses long-running attempts for inspection.
+
+
+1.1.1: only newspaper API HTTP failures pause a batch; unrelated opaque ad responses are ignored. A page error cannot override an already tracked PDF download.
 

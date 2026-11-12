@@ -31,7 +31,7 @@ async function command(action){try{
  const r=await chrome.runtime.sendMessage({action,tabId,selections,start:$('start').value,end:$('end').value});if(!r.ok)throw Error(r.error);await render();
 }catch(e){$('error').textContent=e.message;}}
 async function init(){
- if(chrome.runtime.getManifest().version!=='1.1.0'){
+ if(chrome.runtime.getManifest().version!=='1.1.1'){
   $('connection').textContent='Update pending: open chrome://extensions and Reload InduPaper Date Downloader, then reopen this popup.';
   $('settings').disabled=true;for(const id of ['startBatch','pause','resume','skip'])$(id).disabled=true;return;
  }

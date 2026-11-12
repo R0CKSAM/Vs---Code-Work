@@ -37,3 +37,11 @@ Existing files are preserved. Duplicate dates stop with a clear message; use one
 This merges the files currently present; it does not automatically append incoming files. Run again after downloads finish.
 Command:
 "D:\Vs - Code Work\venv\Scripts\python.exe" -X utf8 -u "D:\Vs - Code Work\SPORTS-PDF\merge_pdfs_by_date.py" "C:\Users\Intern\Downloads\Storyboard Studio\InduPaper\delhi\SPORTS_ONLY"
+
+HT UPDATE (2026-11-12)
+Recognizes Sport/Sports, Times Sport/Sports and Hindustan Times/HT Sport/Sports headings.
+Runs OCR even when a scanned page contains an unrelated searchable text overlay.
+Tiny navigation references to Sport are excluded by OCR text height.
+Watcher excludes MERGED folders and restores missing previously generated Sports PDFs.
+Live HT 2026-09-01 validation: Sports pages 21 and 22 copied with pixel-identical rendering.
+Watcher restarted on the complete InduPaper folder, including new newspaper/edition subfolders.

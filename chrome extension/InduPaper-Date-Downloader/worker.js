@@ -23,7 +23,7 @@ async function step(){
   // Download events can arrive before executeScript resolves. Never overwrite newer state.
   const live=await get();if(live?.id!==j.id||live.index!==j.index)return;
   if(live.phase==='preparing'){live.phase='waiting';live.since=Date.now();await put(live);}
- }catch(e){const live=await get();if(live?.id===j.id&&live.index===j.index&&!['paused','done'].includes(live.phase)){live.phase='paused';live.error=String(e.message||e);await put(live);}}
+ }catch(e){const live=await get();if(live?.id===j.id&&live.index===j.index&&['preparing','waiting'].includes(live.phase)){live.phase='paused';live.error=String(e.message||e);await put(live);}}
 }
 async function bindDownload(item,suggest){
  const j=await get();if(!j||!['preparing','waiting'].includes(j.phase))return;

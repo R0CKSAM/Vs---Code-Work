@@ -29,7 +29,8 @@ def signature(path):
 
 def candidates(root):
     return sorted((p for p in root.rglob('*.pdf')
-                   if 'SPORTS_ONLY' not in p.parts and not p.stem.endswith('_SPORTS')),
+                   if not {'SPORTS_ONLY', 'MERGED'}.intersection(part.upper() for part in p.parts)
+                   and not p.stem.upper().startswith('MERGED_') and not p.stem.endswith('_SPORTS')),
                   key=lambda p: (p.name, str(p)))
 
 
@@ -83,7 +84,8 @@ def watch(root, poll=10, settle=20):
 
     def status(phase, current='', error=''):
         counts = {key: sum(v.get('result') == key for v in state.values())
-                  for key in ['saved', 'needs_review', 'error']}
+                  for key in ['saved', 'needs_review']}
+        counts['failed'] = sum(v.get('result') == 'error' for v in state.values())
         save(STATUS, {'phase': phase, 'current_file': current, 'updated': datetime.now().astimezone().isoformat(),
                       'watch_folder': str(root), **counts, 'error': error, 'pid': os.getpid()})
 
@@ -97,7 +99,7 @@ def watch(root, poll=10, settle=20):
                 try:
                     sig = signature(path)
                     old = state.get(key, {})
-                    if old.get('signature') == sig:
+                    if old.get('signature') == sig and (old.get('result') != 'saved' or Path(old.get('output') or '').is_file()):
                         continue
                     prior = prior_output(path)
                     if prior:
@@ -126,7 +128,11 @@ def watch(root, poll=10, settle=20):
                     status('watching')
                 except Exception as error:
                     print(f'ERROR: {path}: {error}\n{traceback.format_exc()}', flush=True)
-                    state[key] = {'signature': locals().get('sig', ''), 'result': 'error', 'error': str(error)}
+                    try:
+                        failed_signature = signature(path)
+                    except OSError:
+                        failed_signature = ''
+                    state[key] = {'signature': failed_signature, 'result': 'error', 'error': str(error)}
                     save(STATE, state)
                     status('watching', error=str(error))
             status('watching')
