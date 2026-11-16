@@ -1,0 +1,222 @@
+{
+  "date": "2026-09-18",
+  "timezone": "Asia/Kolkata",
+  "mappings": [
+    {
+      "ist_date": "2026-09-18",
+      "host_key": "daviscup-veto.akamaized.net",
+      "match_name": "Davis Cup",
+      "event_name": "Davis Cup"
+    }
+  ],
+  "input_files": [
+    "Z:\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=09\\day=18\\part_stream_2026_09_17_0.parquet",
+    "Z:\\Veto Logs Backup\\DO NOT DELETE\\source=stream\\year=2026\\month=09\\day=18\\part_stream_2026_09_18_0.parquet"
+  ],
+  "statistics": {
+    "requests": 12899629,
+    "ts_requests": 2764748,
+    "playlist_requests": 8111862,
+    "distinct_client_ips": 23660,
+    "distinct_devices": 3737,
+    "first_request_ist": "2026-09-18 00:00:00.712000",
+    "last_request_ist": "2026-09-18 23:59:59.967000"
+  },
+  "summary_rows": 30195,
+  "original_columns_preserved": [
+    "UA",
+    "asn",
+    "billingRegion",
+    "bytes",
+    "cacheStatus",
+    "cacheable",
+    "city",
+    "cliIP",
+    "cmcd",
+    "country",
+    "errorCode",
+    "fileSizeBucket",
+    "lastByte",
+    "maxAgeSec",
+    "objSize",
+    "overheadBytes",
+    "queryStr",
+    "reqEndTimeMSec",
+    "reqHost",
+    "reqId",
+    "reqPath",
+    "reqTimeSec",
+    "rspContentLen",
+    "rspContentType",
+    "serverCountry",
+    "startupError",
+    "state",
+    "statusCode",
+    "throughput",
+    "timeToFirstByte",
+    "tlsOverheadTimeMSec",
+    "tlsVersion",
+    "totalBytes",
+    "transferTimeMSec",
+    "turnAroundTimeMSec",
+    "uncompressedSize",
+    "version"
+  ],
+  "enriched_columns": [
+    "UA",
+    "asn",
+    "billingRegion",
+    "bytes",
+    "cacheStatus",
+    "cacheable",
+    "city",
+    "cliIP",
+    "cmcd",
+    "country",
+    "errorCode",
+    "fileSizeBucket",
+    "lastByte",
+    "maxAgeSec",
+    "objSize",
+    "overheadBytes",
+    "queryStr",
+    "reqEndTimeMSec",
+    "reqHost",
+    "reqId",
+    "reqPath",
+    "reqTimeSec",
+    "rspContentLen",
+    "rspContentType",
+    "serverCountry",
+    "startupError",
+    "state",
+    "statusCode",
+    "throughput",
+    "timeToFirstByte",
+    "tlsOverheadTimeMSec",
+    "tlsVersion",
+    "totalBytes",
+    "transferTimeMSec",
+    "turnAroundTimeMSec",
+    "uncompressedSize",
+    "version",
+    "filename",
+    "source_lake_file",
+    "request_ist",
+    "ist_date",
+    "match_name",
+    "event_name",
+    "source",
+    "device_id",
+    "session_id",
+    "query_content_title",
+    "query_category_name",
+    "query_platform",
+    "query_device",
+    "query_channel_name",
+    "cli_ip",
+    "is_ts_request",
+    "is_playlist_request",
+    "http_status",
+    "normalized_ua",
+    "ua_decoded_UA",
+    "ua_decoded_ua_norm",
+    "ua_decoded_ua_hash",
+    "ua_decoded_decode_status",
+    "ua_decoded_decoder_method",
+    "ua_decoded_confidence",
+    "ua_decoded_device_type",
+    "ua_decoded_form_factor",
+    "ua_decoded_brand",
+    "ua_decoded_model",
+    "ua_decoded_model_code",
+    "ua_decoded_product_family",
+    "ua_decoded_generation",
+    "ua_decoded_os_name",
+    "ua_decoded_os_version",
+    "ua_decoded_os_family",
+    "ua_decoded_browser_name",
+    "ua_decoded_browser_version",
+    "ua_decoded_browser_engine",
+    "ua_decoded_app_player",
+    "ua_decoded_is_bot",
+    "ua_decoded_is_malformed",
+    "ua_decoded_api_device_type",
+    "ua_decoded_api_brand",
+    "ua_decoded_api_model",
+    "ua_decoded_api_os_name",
+    "ua_decoded_api_os_version",
+    "ua_decoded_api_browser_name",
+    "ua_decoded_api_browser_version",
+    "ua_decoded_api_error",
+    "ua_decoded_notes",
+    "ua_decoded_decoded_at_utc",
+    "asn_decoded_as_country",
+    "asn_decoded_as_domain",
+    "asn_decoded_as_name",
+    "asn_decoded_as_number",
+    "asn_decoded_asn_type",
+    "asn_decoded_lookup_source",
+    "asn_decoded_status",
+    "asn_decoded_total_ipv4_ips",
+    "asn_decoded_total_ipv6_ips",
+    "asn_decoded_updated_at",
+    "ua_lookup_status",
+    "asn_lookup_status"
+  ],
+  "ua_status_counts": [
+    [
+      "decoded_api",
+      12899205
+    ],
+    [
+      "decoded_local",
+      424
+    ]
+  ],
+  "asn_status_counts": [
+    [
+      "not_in_lookup",
+      224
+    ],
+    [
+      "ok",
+      12899404
+    ],
+    [
+      "unknown",
+      1
+    ]
+  ],
+  "status_codes": [
+    [
+      "200",
+      12801060
+    ],
+    [
+      "403",
+      64825
+    ],
+    [
+      "206",
+      33154
+    ],
+    [
+      "503",
+      296
+    ],
+    [
+      "504",
+      272
+    ],
+    [
+      "404",
+      21
+    ],
+    [
+      "301",
+      1
+    ]
+  ],
+  "validation": "PASS"
+}
