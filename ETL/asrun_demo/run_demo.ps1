@@ -37,8 +37,8 @@ if ($Input.Count -eq 0) {
 }
 
 $BuilderArgs = @($Builder, "--channel", $Channel, "--input") + $Input
-# The scheduled audience mart can lag the repaired ASRUN snapshot. Reuse only
-# a completed refresh, including its explicitly recorded unavailable days.
+# Preserve repaired history and explicit unavailable days, then incorporate
+# complete source-days from the scheduled mart so this snapshot cannot go stale.
 $RefreshState = Join-Path $Root "output\state\asrun_available_refresh.json"
 if (-not $IdentityMinute -and (Test-Path -LiteralPath $RefreshState)) {
     $Refresh = Get-Content -LiteralPath $RefreshState -Raw | ConvertFrom-Json
@@ -47,7 +47,18 @@ if (-not $IdentityMinute -and (Test-Path -LiteralPath $RefreshState)) {
         if (-not (Test-Path -LiteralPath $Snapshot -PathType Leaf)) {
             throw "Completed ASRUN audience snapshot is missing: $Snapshot"
         }
-        $IdentityMinute = $Snapshot
+        $CurrentMart = Join-Path $Root "output\watch_hours\concurrency\identity_minute.parquet"
+        if (Test-Path -LiteralPath $CurrentMart -PathType Leaf) {
+            $IdentityMinute = Join-Path $PSScriptRoot "data\prepared_audience\identity_minute.parquet"
+            $Prepare = Join-Path $Root "src\tools\prepare_asrun_audience.py"
+            Write-Host "Combining repaired ASRUN history with completed daily audience data..."
+            & $Python $Prepare --baseline $Snapshot --current $CurrentMart --output $IdentityMinute
+            if ($LASTEXITCODE -ne 0) {
+                throw "ASRUN audience preparation failed with Python exit code $LASTEXITCODE."
+            }
+        } else {
+            $IdentityMinute = $Snapshot
+        }
         foreach ($Day in $Refresh.unavailable_viewer_days) {
             $BuilderArgs += @("--unavailable-viewer-day", ("{0}:{1}" -f $Day[0], $Day[1]))
         }

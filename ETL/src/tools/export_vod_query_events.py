@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import threading
+import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -78,6 +80,19 @@ def main() -> None:
         "memory_limit": args.memory_limit, "threads": args.threads,
         "temp_directory": workspace.name, "max_temp_directory_size": "8GB",
     })
+    progress_stop = threading.Event()
+    started = time.monotonic()
+    phase = "Discovering VOD hosts"
+
+    def report_progress():
+        while not progress_stop.wait(30):
+            elapsed = int(time.monotonic() - started)
+            print(f"[{args.date}] {phase}; elapsed {elapsed // 60}m {elapsed % 60}s. "
+                  "Still processing; dashboard publication waits for a complete extract.", flush=True)
+
+    progress_thread = threading.Thread(target=report_progress, daemon=True)
+    progress_thread.start()
+    print(f"[{args.date}] Reading {len(source_files)} Parquet file(s); discovering VOD hosts.", flush=True)
     try:
         # A segment qualifies via its own VOD query, a same-host manifest, or a
         # VOD hostname. Host discovery can be date-independent: the final source
@@ -162,6 +177,8 @@ def main() -> None:
                     1 AS segment_count
                 FROM mapped_segments
             """
+        phase = "Extracting, mapping and aggregating VOD activity"
+        print(f"[{args.date}] {phase}. Network archive scans may take several minutes.", flush=True)
         connection.execute(
             f"""
             COPY (
@@ -382,8 +399,17 @@ def main() -> None:
             """,
             [source_files, args.date, str(args.ua_lookup)],
         )
+        phase = "Validating the completed daily CSV"
         count = connection.execute("SELECT count(*) FROM read_csv_auto(?)", [str(args.out)]).fetchone()[0]
+    except BaseException as exc:
+        if isinstance(exc, (KeyboardInterrupt, duckdb.InterruptException)) or isinstance(exc.__cause__, KeyboardInterrupt):
+            print(f"[{args.date}] Extraction interrupted; this run did not publish the dashboard. "
+                  "Rerun run_vod_query_dashboard_incremental.ps1 to retry the pending date.", flush=True)
+            raise SystemExit(130) from None
+        raise
     finally:
+        progress_stop.set()
+        progress_thread.join(timeout=1)
         connection.close()
         workspace.cleanup()
     grain = "minute activity" if args.compact else "request"
