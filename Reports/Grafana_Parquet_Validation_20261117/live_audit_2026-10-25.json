@@ -1,0 +1,89 @@
+{
+  "options": {
+    "scopeId": "portfolio",
+    "from": "2026-10-25",
+    "to": "2026-10-25",
+    "tolerance": 1,
+    "scopeConfirmed": false,
+    "rulesConfirmed": false
+  },
+  "referenceSource": {
+    "name": "sports_all_dates_12_columns.parquet",
+    "bytes": 165177544,
+    "modifiedNs": 1794825957527089000
+  },
+  "snapshot": {
+    "schema": "smart-export-validation-snapshot/v1",
+    "mode": "live",
+    "capturedAt": "2026-11-17T06:35:02.674Z",
+    "source": {
+      "url": "https://grafana-apj.trafficpeak.live/d/db7ce6f6-d689-4976-89e5-ddf0b5401f97/6ea3fc9?orgId=743&from=now-7d&to=now&timezone=Asia%2FKolkata&var-filter=",
+      "datasetKey": "https://grafana-apj.trafficpeak.live|db7ce6f6-d689-4976-89e5-ddf0b5401f97|org=743|filters=none",
+      "filters": [],
+      "orgId": "743",
+      "timezone": "Asia/Kolkata"
+    },
+    "from": "2026-10-25",
+    "to": "2026-10-25",
+    "queries": {
+      "viewership_stats": "SELECT toDate(toTimeZone(reqTimeSec, 'Asia/Kolkata')) AS report_date,\n round(countIf(reqPath LIKE '%.ts' AND reqPath NOT LIKE '%.m3u8' AND statusCode IN (200, 206) AND extract(reqPath, '[-_](\\\\d+)\\\\.ts$') != '')*6.0/3600.0,2) AS viewership_hours,\n if(uniqIf(cliIP, (reqPath LIKE '%.ts' AND reqPath NOT LIKE '%.m3u8' AND statusCode IN (200, 206) AND extract(reqPath, '[-_](\\\\d+)\\\\.ts$') != '') AND channel_name != '')=0,0,\n round(countIf((reqPath LIKE '%.ts' AND reqPath NOT LIKE '%.m3u8' AND statusCode IN (200, 206) AND extract(reqPath, '[-_](\\\\d+)\\\\.ts$') != '') AND channel_name != '')*6.0/60.0/\n nullIf(uniqIf(cliIP, (reqPath LIKE '%.ts' AND reqPath NOT LIKE '%.m3u8' AND statusCode IN (200, 206) AND extract(reqPath, '[-_](\\\\d+)\\\\.ts$') != '') AND channel_name != ''),0),2)) AS avg_watch_minutes,\n countIf(reqPath LIKE '%.ts' AND statusCode IN (200,206) AND extract(reqPath,'[-_](\\d+)\\.ts$') != '') AS total_segments,\n sumIf(bytes, reqPath LIKE '%.ts' AND statusCode IN (200, 206)) AS bandwidth_bytes\n FROM Veto_Streamin.logs WHERE reqTimeSec >= toDateTime(1792866600, 'UTC') AND reqTimeSec < toDateTime(1792953000, 'UTC') GROUP BY report_date ORDER BY report_date SETTINGS hdx_query_max_execution_time=60"
+    },
+    "diagnostics": {
+      "duplicatesSkipped": 0,
+      "frameCount": 1,
+      "missingValues": 0
+    },
+    "datasets": {
+      "viewership_stats": [
+        {
+          "date": "2026-10-25",
+          "viewership_hours": 380732.14,
+          "avg_watch_minutes": 36.63,
+          "total_segments": 228439282,
+          "bandwidth_bytes": 559419429205139
+        }
+      ]
+    }
+  },
+  "results": [
+    {
+      "date": "2026-10-25",
+      "dimension": "",
+      "metric": "TS request counts",
+      "parquet": 220183658,
+      "grafana": 228439282,
+      "difference": 8255624,
+      "percent": 3.749426308468361,
+      "ratio": 1.0374942630846835,
+      "status": "Scope / rules unverified",
+      "detail": "Grafana segments require HTTP 200/206 and a matching TS filename. Local status/path rules are not in Parquet.",
+      "remoteAt": ""
+    },
+    {
+      "date": "2026-10-25",
+      "dimension": "",
+      "metric": "Watch hours — viewership at 6 seconds",
+      "parquet": 366972.7633333333,
+      "grafana": 380732.14,
+      "difference": 13759.376666666707,
+      "percent": 3.749427216800996,
+      "ratio": 1.03749427216801,
+      "status": "Scope / rules unverified",
+      "detail": "Same multiplier, but Grafana segment filters must match the local TS definition.",
+      "remoteAt": ""
+    },
+    {
+      "date": "2026-10-25",
+      "dimension": "",
+      "metric": "Watch hours — segment count at 0.6 seconds",
+      "parquet": 36697.276333333335,
+      "grafana": 38073.21366666666,
+      "difference": 1375.9373333333278,
+      "percent": 3.7494263084683457,
+      "ratio": 1.0374942630846835,
+      "status": "Scope / rules unverified",
+      "detail": "Grafana total_segments converted with the deck formula; count filters may differ from Grafana viewership_hours.",
+      "remoteAt": ""
+    }
+  ]
+}

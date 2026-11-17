@@ -1,0 +1,601 @@
+{
+  "overall": [
+    {
+      "row_count": 8152086,
+      "first_date": "2026-09-18",
+      "finish": "2026-11-14",
+      "day_count": 31,
+      "events": 6,
+      "matches": 11,
+      "ips": 3950608,
+      "devices": 546923,
+      "requests": 1204891915,
+      "positive_rows": 4226934,
+      "negative_rows": 0,
+      "missing_ips": 0,
+      "missing_devices": 5094230
+    }
+  ],
+  "events": [
+    {
+      "event_label": "ODI Tri Series",
+      "row_count": 5992455,
+      "matches": 4,
+      "first_date": "2026-10-18",
+      "finish": "2026-10-31",
+      "day_count": 7,
+      "ips": 2785160,
+      "devices": 453787,
+      "requests": 985460604,
+      "active_devices": 1
+    },
+    {
+      "event_label": "SAFF Championship",
+      "row_count": 1281293,
+      "matches": 1,
+      "first_date": "2026-11-05",
+      "finish": "2026-11-14",
+      "day_count": 4,
+      "ips": 817185,
+      "devices": 110273,
+      "requests": 96395170,
+      "active_devices": 0
+    },
+    {
+      "event_label": "Pak-Sl T20 Series",
+      "row_count": 672666,
+      "matches": 3,
+      "first_date": "2026-10-09",
+      "finish": "2026-10-13",
+      "day_count": 3,
+      "ips": 336435,
+      "devices": 98159,
+      "requests": 115772301,
+      "active_devices": 0
+    },
+    {
+      "event_label": "Weightlifting",
+      "row_count": 104830,
+      "matches": 1,
+      "first_date": "2026-10-27",
+      "finish": "2026-11-08",
+      "day_count": 13,
+      "ips": 61247,
+      "devices": 36603,
+      "requests": 1495062,
+      "active_devices": 0
+    },
+    {
+      "event_label": "Davis Cup",
+      "row_count": 70091,
+      "matches": 1,
+      "first_date": "2026-09-18",
+      "finish": "2026-09-21",
+      "day_count": 4,
+      "ips": 55393,
+      "devices": 5575,
+      "requests": 4990501,
+      "active_devices": 0
+    },
+    {
+      "event_label": "BJKC 2026",
+      "row_count": 30751,
+      "matches": 1,
+      "first_date": "2026-09-23",
+      "finish": "2026-09-27",
+      "day_count": 5,
+      "ips": 27952,
+      "devices": 944,
+      "requests": 778277,
+      "active_devices": 0
+    }
+  ],
+  "devices": [
+    {
+      "category": "desktop",
+      "devices": 387803,
+      "row_count": 3598176,
+      "requests": 593991774
+    },
+    {
+      "category": "smartphone",
+      "devices": 191668,
+      "row_count": 3340382,
+      "requests": 386984408
+    },
+    {
+      "category": "smart_tv",
+      "devices": 73892,
+      "row_count": 915208,
+      "requests": 182954827
+    },
+    {
+      "category": "phablet",
+      "devices": 11627,
+      "row_count": 166848,
+      "requests": 23344920
+    },
+    {
+      "category": "tablet",
+      "devices": 6265,
+      "row_count": 52514,
+      "requests": 14086256
+    },
+    {
+      "category": null,
+      "devices": 2846,
+      "row_count": 15774,
+      "requests": 2078744
+    },
+    {
+      "category": "smart speaker",
+      "devices": 142,
+      "row_count": 431,
+      "requests": 73692
+    },
+    {
+      "category": "car browser",
+      "devices": 12,
+      "row_count": 79,
+      "requests": 7976
+    },
+    {
+      "category": "streaming_device",
+      "devices": 6,
+      "row_count": 60,
+      "requests": 9300
+    },
+    {
+      "category": "",
+      "devices": 4,
+      "row_count": 62570,
+      "requests": 1358902
+    },
+    {
+      "category": "peripheral",
+      "devices": 1,
+      "row_count": 4,
+      "requests": 1116
+    },
+    {
+      "category": "bot",
+      "devices": 0,
+      "row_count": 40,
+      "requests": 0
+    }
+  ],
+  "countries": [
+    {
+      "category": "IN",
+      "devices": 536991,
+      "ips": 3500336
+    },
+    {
+      "category": "BD",
+      "devices": 1640,
+      "ips": 266510
+    },
+    {
+      "category": "GB",
+      "devices": 1145,
+      "ips": 5577
+    },
+    {
+      "category": "US",
+      "devices": 958,
+      "ips": 5231
+    },
+    {
+      "category": "SA",
+      "devices": 744,
+      "ips": 44066
+    },
+    {
+      "category": "AU",
+      "devices": 717,
+      "ips": 1525
+    },
+    {
+      "category": "AE",
+      "devices": 699,
+      "ips": 16726
+    },
+    {
+      "category": "LK",
+      "devices": 661,
+      "ips": 1553
+    },
+    {
+      "category": "BT",
+      "devices": 483,
+      "ips": 732
+    },
+    {
+      "category": "SG",
+      "devices": 446,
+      "ips": 6524
+    },
+    {
+      "category": "PK",
+      "devices": 433,
+      "ips": 6153
+    },
+    {
+      "category": "DE",
+      "devices": 384,
+      "ips": 3328
+    },
+    {
+      "category": "MY",
+      "devices": 348,
+      "ips": 23993
+    },
+    {
+      "category": "IT",
+      "devices": 318,
+      "ips": 7402
+    },
+    {
+      "category": "CA",
+      "devices": 302,
+      "ips": 986
+    }
+  ],
+  "states": [
+    {
+      "category": "Uttar%20Pradesh",
+      "devices": 105990
+    },
+    {
+      "category": "Jammu%20&%20Kashmir",
+      "devices": 101354
+    },
+    {
+      "category": "Maharashtra",
+      "devices": 73125
+    },
+    {
+      "category": "Delhi",
+      "devices": 68828
+    },
+    {
+      "category": "Karnataka",
+      "devices": 48849
+    },
+    {
+      "category": "West%20Bengal",
+      "devices": 39310
+    },
+    {
+      "category": "Chandigarh",
+      "devices": 38297
+    },
+    {
+      "category": "Tamil%20Nadu",
+      "devices": 33958
+    },
+    {
+      "category": "Bihar",
+      "devices": 27330
+    },
+    {
+      "category": "Telangana",
+      "devices": 26966
+    },
+    {
+      "category": "Andhra%20Pradesh",
+      "devices": 24711
+    },
+    {
+      "category": "Madhya%20Pradesh",
+      "devices": 20987
+    },
+    {
+      "category": "Gujarat",
+      "devices": 20791
+    },
+    {
+      "category": "Rajasthan",
+      "devices": 20149
+    },
+    {
+      "category": "Punjab",
+      "devices": 14364
+    }
+  ],
+  "daily": [
+    {
+      "date_label": "2026-09-18",
+      "devices": 3737,
+      "ips": 23660,
+      "requests": 2764748
+    },
+    {
+      "date_label": "2026-09-19",
+      "devices": 3167,
+      "ips": 22829,
+      "requests": 1649458
+    },
+    {
+      "date_label": "2026-09-20",
+      "devices": 836,
+      "ips": 10749,
+      "requests": 573096
+    },
+    {
+      "date_label": "2026-09-21",
+      "devices": 22,
+      "ips": 172,
+      "requests": 3199
+    },
+    {
+      "date_label": "2026-09-23",
+      "devices": 227,
+      "ips": 6260,
+      "requests": 135120
+    },
+    {
+      "date_label": "2026-09-24",
+      "devices": 417,
+      "ips": 13763,
+      "requests": 377062
+    },
+    {
+      "date_label": "2026-09-25",
+      "devices": 240,
+      "ips": 7373,
+      "requests": 117513
+    },
+    {
+      "date_label": "2026-09-26",
+      "devices": 179,
+      "ips": 548,
+      "requests": 59874
+    },
+    {
+      "date_label": "2026-09-27",
+      "devices": 227,
+      "ips": 628,
+      "requests": 88708
+    },
+    {
+      "date_label": "2026-10-09",
+      "devices": 45708,
+      "ips": 93175,
+      "requests": 31134120
+    },
+    {
+      "date_label": "2026-10-11",
+      "devices": 52272,
+      "ips": 102281,
+      "requests": 32945619
+    },
+    {
+      "date_label": "2026-10-13",
+      "devices": 76094,
+      "ips": 163318,
+      "requests": 51692562
+    },
+    {
+      "date_label": "2026-10-18",
+      "devices": 101819,
+      "ips": 307421,
+      "requests": 97115650
+    },
+    {
+      "date_label": "2026-10-20",
+      "devices": 126692,
+      "ips": 337152,
+      "requests": 107708339
+    },
+    {
+      "date_label": "2026-10-22",
+      "devices": 135366,
+      "ips": 338498,
+      "requests": 80119573
+    },
+    {
+      "date_label": "2026-10-25",
+      "devices": 229148,
+      "ips": 647980,
+      "requests": 220183658
+    },
+    {
+      "date_label": "2026-10-27",
+      "devices": 112096,
+      "ips": 207980,
+      "requests": 39714085
+    },
+    {
+      "date_label": "2026-10-28",
+      "devices": 949,
+      "ips": 3657,
+      "requests": 124251
+    },
+    {
+      "date_label": "2026-10-29",
+      "devices": 183462,
+      "ips": 478308,
+      "requests": 125337179
+    },
+    {
+      "date_label": "2026-10-30",
+      "devices": 2087,
+      "ips": 3452,
+      "requests": 110280
+    },
+    {
+      "date_label": "2026-10-31",
+      "devices": 297468,
+      "ips": 804474,
+      "requests": 315825283
+    },
+    {
+      "date_label": "2026-11-01",
+      "devices": 2883,
+      "ips": 5406,
+      "requests": 123413
+    },
+    {
+      "date_label": "2026-11-02",
+      "devices": 606,
+      "ips": 1387,
+      "requests": 95917
+    },
+    {
+      "date_label": "2026-11-03",
+      "devices": 927,
+      "ips": 1676,
+      "requests": 94198
+    },
+    {
+      "date_label": "2026-11-04",
+      "devices": 1251,
+      "ips": 2749,
+      "requests": 82386
+    },
+    {
+      "date_label": "2026-11-05",
+      "devices": 62701,
+      "ips": 126031,
+      "requests": 17840847
+    },
+    {
+      "date_label": "2026-11-06",
+      "devices": 628,
+      "ips": 1366,
+      "requests": 84917
+    },
+    {
+      "date_label": "2026-11-07",
+      "devices": 701,
+      "ips": 1568,
+      "requests": 68377
+    },
+    {
+      "date_label": "2026-11-08",
+      "devices": 15604,
+      "ips": 25328,
+      "requests": 1308853
+    },
+    {
+      "date_label": "2026-11-11",
+      "devices": 33021,
+      "ips": 269968,
+      "requests": 42635832
+    },
+    {
+      "date_label": "2026-11-14",
+      "devices": 48331,
+      "ips": 474604,
+      "requests": 34777798
+    }
+  ],
+  "matches": [
+    {
+      "event_label": "ODI Tri Series",
+      "match_label": "Pak-Sl",
+      "devices": 343724
+    },
+    {
+      "event_label": "ODI Tri Series",
+      "match_label": "Eng-Sl",
+      "devices": 244878
+    },
+    {
+      "event_label": "ODI Tri Series",
+      "match_label": "Eng-Pak",
+      "devices": 229148
+    },
+    {
+      "event_label": "ODI Tri Series",
+      "match_label": "Pak-Eng",
+      "devices": 126692
+    },
+    {
+      "event_label": "SAFF Championship",
+      "match_label": "SAFF",
+      "devices": 110273
+    },
+    {
+      "event_label": "Pak-Sl T20 Series",
+      "match_label": "Pak-Sl 3rd T20",
+      "devices": 76094
+    },
+    {
+      "event_label": "Pak-Sl T20 Series",
+      "match_label": "Pak-Sl 2nd T20",
+      "devices": 52272
+    },
+    {
+      "event_label": "Pak-Sl T20 Series",
+      "match_label": "Pak-Sl 1st T20",
+      "devices": 45708
+    },
+    {
+      "event_label": "Weightlifting",
+      "match_label": "Weightlifting",
+      "devices": 36603
+    },
+    {
+      "event_label": "Davis Cup",
+      "match_label": "Davis Cup",
+      "devices": 5575
+    },
+    {
+      "event_label": "BJKC 2026",
+      "match_label": "BJKC 2026",
+      "devices": 944
+    }
+  ],
+  "engagement": [
+    {
+      "devices": 546923,
+      "repeat_devices": 323855,
+      "cross_event_devices": 133596,
+      "avg_days": 2.8136794393360676
+    }
+  ],
+  "quality": [
+    {
+      "country": "IN",
+      "row_count": 7468401
+    },
+    {
+      "country": "BD",
+      "row_count": 474140
+    },
+    {
+      "country": "SA",
+      "row_count": 48385
+    },
+    {
+      "country": "MY",
+      "row_count": 25065
+    },
+    {
+      "country": "AE",
+      "row_count": 19998
+    },
+    {
+      "country": "QA",
+      "row_count": 9214
+    },
+    {
+      "country": "SG",
+      "row_count": 8362
+    },
+    {
+      "country": "IT",
+      "row_count": 8203
+    },
+    {
+      "country": "OM",
+      "row_count": 8079
+    },
+    {
+      "country": "PK",
+      "row_count": 6746
+    }
+  ]
+}

@@ -1,0 +1,934 @@
+{
+  "overall": {
+    "users": 3422658,
+    "requests": 1204891915,
+    "watch_hours": 200815.31916666665,
+    "recorded_dates": 31,
+    "first_date": "2026-09-18",
+    "last_date": "2026-11-14"
+  },
+  "events": [
+    {
+      "property": "ODI Tri Series",
+      "users": 2627242,
+      "watch_hours": 164243.434,
+      "recorded_dates": 7,
+      "first_date": "2026-10-18",
+      "last_date": "2026-10-31"
+    },
+    {
+      "property": "Pak-Sl T20 Series",
+      "users": 314338,
+      "watch_hours": 19295.3835,
+      "recorded_dates": 3,
+      "first_date": "2026-10-09",
+      "last_date": "2026-10-13"
+    },
+    {
+      "property": "SAFF Championship",
+      "users": 470168,
+      "watch_hours": 16065.861666666666,
+      "recorded_dates": 4,
+      "first_date": "2026-11-05",
+      "last_date": "2026-11-14"
+    },
+    {
+      "property": "Davis Cup",
+      "users": 49927,
+      "watch_hours": 831.7501666666667,
+      "recorded_dates": 4,
+      "first_date": "2026-09-18",
+      "last_date": "2026-09-21"
+    },
+    {
+      "property": "Weightlifting",
+      "users": 46651,
+      "watch_hours": 249.177,
+      "recorded_dates": 13,
+      "first_date": "2026-10-27",
+      "last_date": "2026-11-08"
+    },
+    {
+      "property": "BJKC 2026",
+      "users": 18379,
+      "watch_hours": 129.71283333333332,
+      "recorded_dates": 5,
+      "first_date": "2026-09-23",
+      "last_date": "2026-09-27"
+    }
+  ],
+  "daily": [
+    {
+      "dt": "2026-09-18",
+      "users": 21587,
+      "watch_hours": 460.79133333333334
+    },
+    {
+      "dt": "2026-09-19",
+      "users": 19615,
+      "watch_hours": 274.9096666666667
+    },
+    {
+      "dt": "2026-09-20",
+      "users": 10332,
+      "watch_hours": 95.516
+    },
+    {
+      "dt": "2026-09-21",
+      "users": 152,
+      "watch_hours": 0.5331666666666667
+    },
+    {
+      "dt": "2026-09-23",
+      "users": 4411,
+      "watch_hours": 22.52
+    },
+    {
+      "dt": "2026-09-24",
+      "users": 10340,
+      "watch_hours": 62.843666666666664
+    },
+    {
+      "dt": "2026-09-25",
+      "users": 3116,
+      "watch_hours": 19.5855
+    },
+    {
+      "dt": "2026-09-26",
+      "users": 346,
+      "watch_hours": 9.979
+    },
+    {
+      "dt": "2026-09-27",
+      "users": 477,
+      "watch_hours": 14.784666666666666
+    },
+    {
+      "dt": "2026-10-09",
+      "users": 87203,
+      "watch_hours": 5189.02
+    },
+    {
+      "dt": "2026-10-11",
+      "users": 96055,
+      "watch_hours": 5490.9365
+    },
+    {
+      "dt": "2026-10-13",
+      "users": 151425,
+      "watch_hours": 8615.427
+    },
+    {
+      "dt": "2026-10-18",
+      "users": 283490,
+      "watch_hours": 16185.941666666668
+    },
+    {
+      "dt": "2026-10-20",
+      "users": 313734,
+      "watch_hours": 17951.389833333335
+    },
+    {
+      "dt": "2026-10-22",
+      "users": 312408,
+      "watch_hours": 13353.262166666667
+    },
+    {
+      "dt": "2026-10-25",
+      "users": 603446,
+      "watch_hours": 36697.276333333335
+    },
+    {
+      "dt": "2026-10-27",
+      "users": 192624,
+      "watch_hours": 6619.014166666667
+    },
+    {
+      "dt": "2026-10-28",
+      "users": 2934,
+      "watch_hours": 20.7085
+    },
+    {
+      "dt": "2026-10-29",
+      "users": 446205,
+      "watch_hours": 20889.529833333334
+    },
+    {
+      "dt": "2026-10-30",
+      "users": 2844,
+      "watch_hours": 18.38
+    },
+    {
+      "dt": "2026-10-31",
+      "users": 755965,
+      "watch_hours": 52637.54716666666
+    },
+    {
+      "dt": "2026-11-01",
+      "users": 4608,
+      "watch_hours": 20.568833333333334
+    },
+    {
+      "dt": "2026-11-02",
+      "users": 1143,
+      "watch_hours": 15.986166666666668
+    },
+    {
+      "dt": "2026-11-03",
+      "users": 1332,
+      "watch_hours": 15.699666666666667
+    },
+    {
+      "dt": "2026-11-04",
+      "users": 2302,
+      "watch_hours": 13.731
+    },
+    {
+      "dt": "2026-11-05",
+      "users": 113100,
+      "watch_hours": 2973.4745
+    },
+    {
+      "dt": "2026-11-06",
+      "users": 1070,
+      "watch_hours": 14.152833333333334
+    },
+    {
+      "dt": "2026-11-07",
+      "users": 1233,
+      "watch_hours": 11.396166666666666
+    },
+    {
+      "dt": "2026-11-08",
+      "users": 22698,
+      "watch_hours": 218.14216666666667
+    },
+    {
+      "dt": "2026-11-11",
+      "users": 223781,
+      "watch_hours": 7105.972
+    },
+    {
+      "dt": "2026-11-14",
+      "users": 126888,
+      "watch_hours": 5796.299666666667
+    }
+  ],
+  "states": [
+    {
+      "region": "Jammu%20&%20Kashmir",
+      "users": 457098,
+      "watch_hours": 48190.89033333334
+    },
+    {
+      "region": "Uttar%20Pradesh",
+      "users": 561052,
+      "watch_hours": 28901.792
+    },
+    {
+      "region": "Maharashtra",
+      "users": 330099,
+      "watch_hours": 17704.91866666667
+    },
+    {
+      "region": "Delhi",
+      "users": 296660,
+      "watch_hours": 17221.6885
+    },
+    {
+      "region": "Karnataka",
+      "users": 235063,
+      "watch_hours": 12115.246166666666
+    },
+    {
+      "region": "West%20Bengal",
+      "users": 220780,
+      "watch_hours": 11627.812833333333
+    },
+    {
+      "region": "Bihar",
+      "users": 171968,
+      "watch_hours": 8266.580666666667
+    },
+    {
+      "region": "Gujarat",
+      "users": 129915,
+      "watch_hours": 6639.310666666666
+    },
+    {
+      "region": "Madhya%20Pradesh",
+      "users": 128224,
+      "watch_hours": 6337.544833333333
+    },
+    {
+      "region": "Telangana",
+      "users": 107528,
+      "watch_hours": 6224.877666666666
+    }
+  ],
+  "devices": [
+    {
+      "category": "desktop",
+      "users": 1596874,
+      "watch_hours": 98998.629
+    },
+    {
+      "category": "smartphone",
+      "users": 1468110,
+      "watch_hours": 64497.401333333335
+    },
+    {
+      "category": "smart_tv",
+      "users": 415872,
+      "watch_hours": 30492.471166666666
+    },
+    {
+      "category": "phablet",
+      "users": 75763,
+      "watch_hours": 3890.82
+    },
+    {
+      "category": "tablet",
+      "users": 26613,
+      "watch_hours": 2347.7093333333332
+    },
+    {
+      "category": null,
+      "users": 8228,
+      "watch_hours": 346.45733333333334
+    },
+    {
+      "category": "",
+      "users": 15973,
+      "watch_hours": 226.48366666666666
+    },
+    {
+      "category": "smart speaker",
+      "users": 188,
+      "watch_hours": 12.282
+    },
+    {
+      "category": "streaming_device",
+      "users": 32,
+      "watch_hours": 1.55
+    },
+    {
+      "category": "car browser",
+      "users": 38,
+      "watch_hours": 1.3293333333333333
+    },
+    {
+      "category": "peripheral",
+      "users": 2,
+      "watch_hours": 0.186
+    }
+  ],
+  "countries": [
+    {
+      "category": "IN",
+      "users": 3313909,
+      "watch_hours": 198493.3465
+    },
+    {
+      "category": "BD",
+      "users": 63505,
+      "watch_hours": 1456.828
+    },
+    {
+      "category": "SA",
+      "users": 12274,
+      "watch_hours": 217.7565
+    },
+    {
+      "category": "AE",
+      "users": 5974,
+      "watch_hours": 159.10966666666667
+    },
+    {
+      "category": "MY",
+      "users": 4665,
+      "watch_hours": 81.81516666666667
+    },
+    {
+      "category": "OM",
+      "users": 1499,
+      "watch_hours": 32.68633333333333
+    },
+    {
+      "category": "MV",
+      "users": 914,
+      "watch_hours": 31.595333333333333
+    },
+    {
+      "category": "QA",
+      "users": 1487,
+      "watch_hours": 29.896333333333335
+    },
+    {
+      "category": "KW",
+      "users": 1354,
+      "watch_hours": 29.263
+    },
+    {
+      "category": "GB",
+      "users": 843,
+      "watch_hours": 20.484166666666667
+    },
+    {
+      "category": "SG",
+      "users": 1111,
+      "watch_hours": 18.830166666666667
+    },
+    {
+      "category": "KE",
+      "users": 707,
+      "watch_hours": 15.661333333333333
+    }
+  ],
+  "repeat": [
+    {
+      "cohort": "One recorded date",
+      "users": 3221361,
+      "watch_hours": 157165.86883333334
+    },
+    {
+      "cohort": "Returning across dates",
+      "users": 201297,
+      "watch_hours": 43649.450333333334
+    }
+  ],
+  "sports_overlap": [
+    {
+      "cricket": true,
+      "noncricket": true,
+      "users": 54957,
+      "watch_hours": 21136.290166666666
+    },
+    {
+      "cricket": true,
+      "noncricket": false,
+      "users": 2845156,
+      "watch_hours": 163511.45533333335
+    },
+    {
+      "cricket": false,
+      "noncricket": true,
+      "users": 522545,
+      "watch_hours": 16167.573666666667
+    }
+  ],
+  "exclusive": [
+    {
+      "property": "ODI Tri Series",
+      "users": 2543227
+    },
+    {
+      "property": "SAFF Championship",
+      "users": 438151
+    },
+    {
+      "property": "Pak-Sl T20 Series",
+      "users": 271544
+    },
+    {
+      "property": "Davis Cup",
+      "users": 45615
+    },
+    {
+      "property": "Weightlifting",
+      "users": 18506
+    },
+    {
+      "property": "BJKC 2026",
+      "users": 16497
+    }
+  ],
+  "overlap": [
+    {
+      "property_a": "ODI Tri Series",
+      "property_b": "Pak-Sl T20 Series",
+      "users": 41467
+    },
+    {
+      "property_a": "ODI Tri Series",
+      "property_b": "SAFF Championship",
+      "users": 27670
+    },
+    {
+      "property_a": "ODI Tri Series",
+      "property_b": "Weightlifting",
+      "users": 25077
+    },
+    {
+      "property_a": "Pak-Sl T20 Series",
+      "property_b": "SAFF Championship",
+      "users": 10489
+    },
+    {
+      "property_a": "SAFF Championship",
+      "property_b": "Weightlifting",
+      "users": 6039
+    },
+    {
+      "property_a": "Pak-Sl T20 Series",
+      "property_b": "Weightlifting",
+      "users": 3676
+    },
+    {
+      "property_a": "Davis Cup",
+      "property_b": "ODI Tri Series",
+      "users": 3385
+    },
+    {
+      "property_a": "BJKC 2026",
+      "property_b": "ODI Tri Series",
+      "users": 1275
+    },
+    {
+      "property_a": "Davis Cup",
+      "property_b": "SAFF Championship",
+      "users": 687
+    },
+    {
+      "property_a": "Davis Cup",
+      "property_b": "Pak-Sl T20 Series",
+      "users": 650
+    },
+    {
+      "property_a": "BJKC 2026",
+      "property_b": "Davis Cup",
+      "users": 503
+    },
+    {
+      "property_a": "BJKC 2026",
+      "property_b": "Pak-Sl T20 Series",
+      "users": 280
+    },
+    {
+      "property_a": "BJKC 2026",
+      "property_b": "SAFF Championship",
+      "users": 258
+    },
+    {
+      "property_a": "Davis Cup",
+      "property_b": "Weightlifting",
+      "users": 162
+    },
+    {
+      "property_a": "BJKC 2026",
+      "property_b": "Weightlifting",
+      "users": 95
+    }
+  ],
+  "matches": [
+    {
+      "property": "ODI Tri Series",
+      "match_label": "Pak-Sl",
+      "dt": "2026-10-31",
+      "users": 755521,
+      "watch_hours": 52609.674666666666
+    },
+    {
+      "property": "ODI Tri Series",
+      "match_label": "Eng-Pak",
+      "dt": "2026-10-25",
+      "users": 603446,
+      "watch_hours": 36697.276333333335
+    },
+    {
+      "property": "ODI Tri Series",
+      "match_label": "Eng-Sl",
+      "dt": "2026-10-29",
+      "users": 444280,
+      "watch_hours": 20850.602666666666
+    },
+    {
+      "property": "ODI Tri Series",
+      "match_label": "Pak-Eng",
+      "dt": "2026-10-20",
+      "users": 313734,
+      "watch_hours": 17951.389833333335
+    },
+    {
+      "property": "ODI Tri Series",
+      "match_label": "Pak-Sl",
+      "dt": "2026-10-18",
+      "users": 283490,
+      "watch_hours": 16185.941666666668
+    },
+    {
+      "property": "ODI Tri Series",
+      "match_label": "Eng-Sl",
+      "dt": "2026-10-22",
+      "users": 312408,
+      "watch_hours": 13353.262166666667
+    },
+    {
+      "property": "Pak-Sl T20 Series",
+      "match_label": "Pak-Sl 3rd T20",
+      "dt": "2026-10-13",
+      "users": 151425,
+      "watch_hours": 8615.427
+    },
+    {
+      "property": "SAFF Championship",
+      "match_label": "SAFF",
+      "dt": "2026-11-11",
+      "users": 223781,
+      "watch_hours": 7105.972
+    },
+    {
+      "property": "ODI Tri Series",
+      "match_label": "Pak-Sl",
+      "dt": "2026-10-27",
+      "users": 190985,
+      "watch_hours": 6595.286666666667
+    },
+    {
+      "property": "SAFF Championship",
+      "match_label": "SAFF",
+      "dt": "2026-11-14",
+      "users": 126888,
+      "watch_hours": 5796.299666666667
+    },
+    {
+      "property": "Pak-Sl T20 Series",
+      "match_label": "Pak-Sl 2nd T20",
+      "dt": "2026-10-11",
+      "users": 96055,
+      "watch_hours": 5490.9365
+    },
+    {
+      "property": "Pak-Sl T20 Series",
+      "match_label": "Pak-Sl 1st T20",
+      "dt": "2026-10-09",
+      "users": 87203,
+      "watch_hours": 5189.02
+    },
+    {
+      "property": "SAFF Championship",
+      "match_label": "SAFF",
+      "dt": "2026-11-05",
+      "users": 111864,
+      "watch_hours": 2956.958833333333
+    },
+    {
+      "property": "Davis Cup",
+      "match_label": "Davis Cup",
+      "dt": "2026-09-18",
+      "users": 21587,
+      "watch_hours": 460.79133333333334
+    },
+    {
+      "property": "Davis Cup",
+      "match_label": "Davis Cup",
+      "dt": "2026-09-19",
+      "users": 19615,
+      "watch_hours": 274.9096666666667
+    },
+    {
+      "property": "SAFF Championship",
+      "match_label": "SAFF",
+      "dt": "2026-11-08",
+      "users": 21702,
+      "watch_hours": 206.63116666666667
+    },
+    {
+      "property": "Davis Cup",
+      "match_label": "Davis Cup",
+      "dt": "2026-09-20",
+      "users": 10332,
+      "watch_hours": 95.516
+    },
+    {
+      "property": "BJKC 2026",
+      "match_label": "BJKC 2026",
+      "dt": "2026-09-24",
+      "users": 10340,
+      "watch_hours": 62.843666666666664
+    },
+    {
+      "property": "Weightlifting",
+      "match_label": "Weightlifting",
+      "dt": "2026-10-29",
+      "users": 9109,
+      "watch_hours": 38.927166666666665
+    },
+    {
+      "property": "Weightlifting",
+      "match_label": "Weightlifting",
+      "dt": "2026-10-31",
+      "users": 10684,
+      "watch_hours": 27.8725
+    },
+    {
+      "property": "Weightlifting",
+      "match_label": "Weightlifting",
+      "dt": "2026-10-27",
+      "users": 5577,
+      "watch_hours": 23.7275
+    },
+    {
+      "property": "BJKC 2026",
+      "match_label": "BJKC 2026",
+      "dt": "2026-09-23",
+      "users": 4411,
+      "watch_hours": 22.52
+    },
+    {
+      "property": "Weightlifting",
+      "match_label": "Weightlifting",
+      "dt": "2026-10-28",
+      "users": 2934,
+      "watch_hours": 20.7085
+    },
+    {
+      "property": "Weightlifting",
+      "match_label": "Weightlifting",
+      "dt": "2026-11-01",
+      "users": 4608,
+      "watch_hours": 20.568833333333334
+    },
+    {
+      "property": "BJKC 2026",
+      "match_label": "BJKC 2026",
+      "dt": "2026-09-25",
+      "users": 3116,
+      "watch_hours": 19.5855
+    },
+    {
+      "property": "Weightlifting",
+      "match_label": "Weightlifting",
+      "dt": "2026-10-30",
+      "users": 2844,
+      "watch_hours": 18.38
+    },
+    {
+      "property": "Weightlifting",
+      "match_label": "Weightlifting",
+      "dt": "2026-11-05",
+      "users": 3988,
+      "watch_hours": 16.515666666666668
+    },
+    {
+      "property": "Weightlifting",
+      "match_label": "Weightlifting",
+      "dt": "2026-11-02",
+      "users": 1143,
+      "watch_hours": 15.986166666666668
+    },
+    {
+      "property": "Weightlifting",
+      "match_label": "Weightlifting",
+      "dt": "2026-11-03",
+      "users": 1332,
+      "watch_hours": 15.699666666666667
+    },
+    {
+      "property": "BJKC 2026",
+      "match_label": "BJKC 2026",
+      "dt": "2026-09-27",
+      "users": 477,
+      "watch_hours": 14.784666666666666
+    },
+    {
+      "property": "Weightlifting",
+      "match_label": "Weightlifting",
+      "dt": "2026-11-06",
+      "users": 1070,
+      "watch_hours": 14.152833333333334
+    },
+    {
+      "property": "Weightlifting",
+      "match_label": "Weightlifting",
+      "dt": "2026-11-04",
+      "users": 2302,
+      "watch_hours": 13.731
+    },
+    {
+      "property": "Weightlifting",
+      "match_label": "Weightlifting",
+      "dt": "2026-11-08",
+      "users": 1265,
+      "watch_hours": 11.511
+    },
+    {
+      "property": "Weightlifting",
+      "match_label": "Weightlifting",
+      "dt": "2026-11-07",
+      "users": 1233,
+      "watch_hours": 11.396166666666666
+    },
+    {
+      "property": "BJKC 2026",
+      "match_label": "BJKC 2026",
+      "dt": "2026-09-26",
+      "users": 346,
+      "watch_hours": 9.979
+    },
+    {
+      "property": "Davis Cup",
+      "match_label": "Davis Cup",
+      "dt": "2026-09-21",
+      "users": 152,
+      "watch_hours": 0.5331666666666667
+    }
+  ],
+  "new_by_date": [
+    {
+      "dt": "2026-09-18",
+      "users": 21587,
+      "first_observed_users": 21587
+    },
+    {
+      "dt": "2026-09-19",
+      "users": 19615,
+      "first_observed_users": 18578
+    },
+    {
+      "dt": "2026-09-20",
+      "users": 10332,
+      "first_observed_users": 9642
+    },
+    {
+      "dt": "2026-09-21",
+      "users": 152,
+      "first_observed_users": 120
+    },
+    {
+      "dt": "2026-09-23",
+      "users": 4411,
+      "first_observed_users": 4253
+    },
+    {
+      "dt": "2026-09-24",
+      "users": 10340,
+      "first_observed_users": 9930
+    },
+    {
+      "dt": "2026-09-25",
+      "users": 3116,
+      "first_observed_users": 2933
+    },
+    {
+      "dt": "2026-09-26",
+      "users": 346,
+      "first_observed_users": 321
+    },
+    {
+      "dt": "2026-09-27",
+      "users": 477,
+      "first_observed_users": 439
+    },
+    {
+      "dt": "2026-10-09",
+      "users": 87203,
+      "first_observed_users": 86881
+    },
+    {
+      "dt": "2026-10-11",
+      "users": 96055,
+      "first_observed_users": 88386
+    },
+    {
+      "dt": "2026-10-13",
+      "users": 151425,
+      "first_observed_users": 138175
+    },
+    {
+      "dt": "2026-10-18",
+      "users": 283490,
+      "first_observed_users": 263866
+    },
+    {
+      "dt": "2026-10-20",
+      "users": 313734,
+      "first_observed_users": 281358
+    },
+    {
+      "dt": "2026-10-22",
+      "users": 312408,
+      "first_observed_users": 277625
+    },
+    {
+      "dt": "2026-10-25",
+      "users": 603446,
+      "first_observed_users": 546170
+    },
+    {
+      "dt": "2026-10-27",
+      "users": 192624,
+      "first_observed_users": 160354
+    },
+    {
+      "dt": "2026-10-28",
+      "users": 2934,
+      "first_observed_users": 2242
+    },
+    {
+      "dt": "2026-10-29",
+      "users": 446205,
+      "first_observed_users": 392172
+    },
+    {
+      "dt": "2026-10-30",
+      "users": 2844,
+      "first_observed_users": 2191
+    },
+    {
+      "dt": "2026-10-31",
+      "users": 755965,
+      "first_observed_users": 663592
+    },
+    {
+      "dt": "2026-11-01",
+      "users": 4608,
+      "first_observed_users": 3408
+    },
+    {
+      "dt": "2026-11-02",
+      "users": 1143,
+      "first_observed_users": 917
+    },
+    {
+      "dt": "2026-11-03",
+      "users": 1332,
+      "first_observed_users": 1085
+    },
+    {
+      "dt": "2026-11-04",
+      "users": 2302,
+      "first_observed_users": 1900
+    },
+    {
+      "dt": "2026-11-05",
+      "users": 113100,
+      "first_observed_users": 98450
+    },
+    {
+      "dt": "2026-11-06",
+      "users": 1070,
+      "first_observed_users": 838
+    },
+    {
+      "dt": "2026-11-07",
+      "users": 1233,
+      "first_observed_users": 998
+    },
+    {
+      "dt": "2026-11-08",
+      "users": 22698,
+      "first_observed_users": 18203
+    },
+    {
+      "dt": "2026-11-11",
+      "users": 223781,
+      "first_observed_users": 213763
+    },
+    {
+      "dt": "2026-11-14",
+      "users": 126888,
+      "first_observed_users": 112281
+    }
+  ]
+}

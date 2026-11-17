@@ -1,0 +1,240 @@
+[
+  {
+    "host": "veto.akamaized.net",
+    "raw_rows": 11595031,
+    "distinct_lines": 11591159,
+    "ts_eligible": 4600369,
+    "distinct_eligible_lines": 4598759
+  },
+  {
+    "host": "mbgthz-veto.akamaized.net",
+    "raw_rows": 2740471,
+    "distinct_lines": 2739481,
+    "ts_eligible": 24236,
+    "distinct_eligible_lines": 24236
+  },
+  {
+    "host": "veto-vod.akamaized.net",
+    "raw_rows": 1368401,
+    "distinct_lines": 1368063,
+    "ts_eligible": 852737,
+    "distinct_eligible_lines": 852476
+  },
+  {
+    "host": "ndtv-veto.akamaized.net",
+    "raw_rows": 872858,
+    "distinct_lines": 872202,
+    "ts_eligible": 324633,
+    "distinct_eligible_lines": 324394
+  },
+  {
+    "host": "nn-veto.akamaized.net",
+    "raw_rows": 487382,
+    "distinct_lines": 487287,
+    "ts_eligible": 184355,
+    "distinct_eligible_lines": 184308
+  },
+  {
+    "host": "tennis-vod.akamaized.net",
+    "raw_rows": 409215,
+    "distinct_lines": 409087,
+    "ts_eligible": 367401,
+    "distinct_eligible_lines": 367281
+  },
+  {
+    "host": "veto-staging.akamaized.net",
+    "raw_rows": 363574,
+    "distinct_lines": 363479,
+    "ts_eligible": 144604,
+    "distinct_eligible_lines": 144568
+  },
+  {
+    "host": "b4u-veto-m.akamaized.net",
+    "raw_rows": 219529,
+    "distinct_lines": 219475,
+    "ts_eligible": 107586,
+    "distinct_eligible_lines": 107563
+  },
+  {
+    "host": "sanskar-live-indiatvnews.akamaized.net",
+    "raw_rows": 215828,
+    "distinct_lines": 215810,
+    "ts_eligible": 90197,
+    "distinct_eligible_lines": 90187
+  },
+  {
+    "host": "xind-live-indiatvnews.akamaized.net",
+    "raw_rows": 166721,
+    "distinct_lines": 166653,
+    "ts_eligible": 63936,
+    "distinct_eligible_lines": 63915
+  },
+  {
+    "host": "b4u-veto-music.akamaized.net",
+    "raw_rows": 158354,
+    "distinct_lines": 158321,
+    "ts_eligible": 82769,
+    "distinct_eligible_lines": 82751
+  },
+  {
+    "host": "vetostreams.akamaized.net",
+    "raw_rows": 99676,
+    "distinct_lines": 99648,
+    "ts_eligible": 42469,
+    "distinct_eligible_lines": 42452
+  },
+  {
+    "host": "yrf-veto.akamaized.net",
+    "raw_rows": 90997,
+    "distinct_lines": 90931,
+    "ts_eligible": 27834,
+    "distinct_eligible_lines": 27813
+  },
+  {
+    "host": "b4u-veto-kadak.akamaized.net",
+    "raw_rows": 86330,
+    "distinct_lines": 86275,
+    "ts_eligible": 33079,
+    "distinct_eligible_lines": 33057
+  },
+  {
+    "host": "manorama-veto.akamaized.net",
+    "raw_rows": 74396,
+    "distinct_lines": 74357,
+    "ts_eligible": 44934,
+    "distinct_eligible_lines": 44907
+  },
+  {
+    "host": "epic-bharat-veto.akamaized-staging.net",
+    "raw_rows": 71989,
+    "distinct_lines": 71989,
+    "ts_eligible": 44290,
+    "distinct_eligible_lines": 44290
+  },
+  {
+    "host": "epic-tv-veto.akamaized-staging.net",
+    "raw_rows": 71985,
+    "distinct_lines": 71985,
+    "ts_eligible": 44228,
+    "distinct_eligible_lines": 44228
+  },
+  {
+    "host": "vetointv.akamaized.net",
+    "raw_rows": 52773,
+    "distinct_lines": 52753,
+    "ts_eligible": 3483,
+    "distinct_eligible_lines": 3481
+  },
+  {
+    "host": "vetocricket.akamaized.net",
+    "raw_rows": 45678,
+    "distinct_lines": 45676,
+    "ts_eligible": 3273,
+    "distinct_eligible_lines": 3273
+  },
+  {
+    "host": "ndtvprofit-veto.akamaized.net",
+    "raw_rows": 36895,
+    "distinct_lines": 36886,
+    "ts_eligible": 11238,
+    "distinct_eligible_lines": 11233
+  },
+  {
+    "host": "epic-music-veto.akamaized.net",
+    "raw_rows": 31175,
+    "distinct_lines": 31167,
+    "ts_eligible": 11049,
+    "distinct_eligible_lines": 11044
+  },
+  {
+    "host": "gtc-veto.akamaized.net",
+    "raw_rows": 24194,
+    "distinct_lines": 24173,
+    "ts_eligible": 2136,
+    "distinct_eligible_lines": 2122
+  },
+  {
+    "host": "epic-bharat-veto.akamaized.net",
+    "raw_rows": 23123,
+    "distinct_lines": 23123,
+    "ts_eligible": 9016,
+    "distinct_eligible_lines": 9016
+  },
+  {
+    "host": "b4u-veto.akamaized.net",
+    "raw_rows": 21156,
+    "distinct_lines": 21152,
+    "ts_eligible": 5586,
+    "distinct_eligible_lines": 5586
+  },
+  {
+    "host": "epic-tv-veto.akamaized.net",
+    "raw_rows": 8698,
+    "distinct_lines": 8698,
+    "ts_eligible": 3913,
+    "distinct_eligible_lines": 3913
+  },
+  {
+    "host": "bmasala-live.akamaized.net",
+    "raw_rows": 7903,
+    "distinct_lines": 7903,
+    "ts_eligible": 632,
+    "distinct_eligible_lines": 632
+  },
+  {
+    "host": "indiatv-intvcricket.akamaized.net",
+    "raw_rows": 5549,
+    "distinct_lines": 5546,
+    "ts_eligible": 0,
+    "distinct_eligible_lines": 0
+  },
+  {
+    "host": "epic-kid-veto.akamaized-staging.net",
+    "raw_rows": 5535,
+    "distinct_lines": 5535,
+    "ts_eligible": 0,
+    "distinct_eligible_lines": 0
+  },
+  {
+    "host": "epic-veto.akamaized-staging.net",
+    "raw_rows": 5533,
+    "distinct_lines": 5533,
+    "ts_eligible": 0,
+    "distinct_eligible_lines": 0
+  },
+  {
+    "host": "epic-music-veto.akamaized-staging.net",
+    "raw_rows": 5514,
+    "distinct_lines": 5514,
+    "ts_eligible": 0,
+    "distinct_eligible_lines": 0
+  },
+  {
+    "host": "epic-kid-veto.akamaized.net",
+    "raw_rows": 4794,
+    "distinct_lines": 4788,
+    "ts_eligible": 1893,
+    "distinct_eligible_lines": 1893
+  },
+  {
+    "host": "epic-veto.akamaized.net",
+    "raw_rows": 4608,
+    "distinct_lines": 4608,
+    "ts_eligible": 1872,
+    "distinct_eligible_lines": 1872
+  },
+  {
+    "host": "veto-test.akamaized.net",
+    "raw_rows": 1,
+    "distinct_lines": 1,
+    "ts_eligible": 0,
+    "distinct_eligible_lines": 0
+  },
+  {
+    "host": "manorama-veto.akamaized-staging.net",
+    "raw_rows": 1,
+    "distinct_lines": 1,
+    "ts_eligible": 0,
+    "distinct_eligible_lines": 0
+  }
+]

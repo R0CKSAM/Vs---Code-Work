@@ -1,0 +1,591 @@
+{
+  "createdAt": "2026-11-17T09:39:02.360956+00:00",
+  "dateIST": "2026-11-16",
+  "definitions": {
+    "hours": "Eligible TS requests * seconds / 3600; 0.6s and 6s both reported.",
+    "eligible_ts": "reqPath ends .ts, status 200/206, regex [-_](digits).ts at end; raw path is not URL-decoded.",
+    "identifiers": "Device/session query parameters decoded once; counts with and without blanks provided. Grafana uniq() is approximate; these local counts are exact.",
+    "duplicates": "Exact repeated NDJSON lines are detected but NOT removed.",
+    "master": "Request path contains one of the master-manifest names in the existing exporter."
+  },
+  "windows": {
+    "target_full_ist_day": {
+      "fromUtc": "2026-11-15T18:30:00+00:00",
+      "toUtcExclusive": "2026-11-16T18:30:00+00:00",
+      "metrics": {
+        "raw_rows": 19375867,
+        "distinct_raw_lines": 19369259,
+        "users_including_blank": 23383,
+        "users_nonblank": 23383,
+        "users_all_ts": 20626,
+        "users_eligible_ts": 20623,
+        "device_ids_including_blank": 11158,
+        "device_ids_nonblank": 11156,
+        "session_ids_including_blank": 13652,
+        "session_ids_nonblank": 13650,
+        "ip_ua_pairs": 30898,
+        "master_manifest_requests": 719840,
+        "ts_all_status": 7135148,
+        "ts_eligible": 7133748,
+        "hours_0_6": 1188.9579999999999,
+        "hours_6": 11889.58,
+        "video_bytes": 23105953693520,
+        "min_us": 1794767400005000,
+        "max_us": 1794853799992000
+      }
+    },
+    "covered_ist_day_from_utc_midnight": {
+      "fromUtc": "2026-11-16T00:00:00+00:00",
+      "toUtcExclusive": "2026-11-16T18:30:00+00:00",
+      "metrics": {
+        "raw_rows": 18117417,
+        "distinct_raw_lines": 18111037,
+        "users_including_blank": 22472,
+        "users_nonblank": 22472,
+        "users_all_ts": 19966,
+        "users_eligible_ts": 19963,
+        "device_ids_including_blank": 10869,
+        "device_ids_nonblank": 10867,
+        "session_ids_including_blank": 13254,
+        "session_ids_nonblank": 13252,
+        "ip_ua_pairs": 29836,
+        "master_manifest_requests": 652734,
+        "ts_all_status": 6666689,
+        "ts_eligible": 6665303,
+        "hours_0_6": 1110.8838333333333,
+        "hours_6": 11108.838333333333,
+        "video_bytes": 21806951241548,
+        "min_us": 1794787200004000,
+        "max_us": 1794853799992000
+      }
+    },
+    "utc_day": {
+      "fromUtc": "2026-11-16T00:00:00+00:00",
+      "toUtcExclusive": "2026-11-17T00:00:00+00:00",
+      "metrics": {
+        "raw_rows": 19483411,
+        "distinct_raw_lines": 19476772,
+        "users_including_blank": 23198,
+        "users_nonblank": 23198,
+        "users_all_ts": 20480,
+        "users_eligible_ts": 20477,
+        "device_ids_including_blank": 11152,
+        "device_ids_nonblank": 11150,
+        "session_ids_including_blank": 13626,
+        "session_ids_nonblank": 13624,
+        "ip_ua_pairs": 30670,
+        "master_manifest_requests": 695359,
+        "ts_all_status": 7242833,
+        "ts_eligible": 7241413,
+        "hours_0_6": 1206.9021666666665,
+        "hours_6": 12069.021666666667,
+        "video_bytes": 23501464025535,
+        "min_us": 1794787200004000,
+        "max_us": 1794873594999000
+      }
+    }
+  },
+  "hourly_utc": [
+    {
+      "hour_utc": "2026-11-14T23:00:00Z",
+      "requests": 7714,
+      "ts_eligible": 1226
+    },
+    {
+      "hour_utc": "2026-11-15T00:00:00Z",
+      "requests": 616062,
+      "ts_eligible": 105282
+    },
+    {
+      "hour_utc": "2026-11-15T01:00:00Z",
+      "requests": 596527,
+      "ts_eligible": 197884
+    },
+    {
+      "hour_utc": "2026-11-15T02:00:00Z",
+      "requests": 983502,
+      "ts_eligible": 415470
+    },
+    {
+      "hour_utc": "2026-11-15T03:00:00Z",
+      "requests": 906942,
+      "ts_eligible": 364128
+    },
+    {
+      "hour_utc": "2026-11-15T04:00:00Z",
+      "requests": 927967,
+      "ts_eligible": 289565
+    },
+    {
+      "hour_utc": "2026-11-15T05:00:00Z",
+      "requests": 690961,
+      "ts_eligible": 284616
+    },
+    {
+      "hour_utc": "2026-11-15T06:00:00Z",
+      "requests": 601941,
+      "ts_eligible": 253018
+    },
+    {
+      "hour_utc": "2026-11-15T07:00:00Z",
+      "requests": 745751,
+      "ts_eligible": 290323
+    },
+    {
+      "hour_utc": "2026-11-15T08:00:00Z",
+      "requests": 1051530,
+      "ts_eligible": 396158
+    },
+    {
+      "hour_utc": "2026-11-15T09:00:00Z",
+      "requests": 706995,
+      "ts_eligible": 318886
+    },
+    {
+      "hour_utc": "2026-11-15T10:00:00Z",
+      "requests": 597860,
+      "ts_eligible": 220599
+    },
+    {
+      "hour_utc": "2026-11-15T11:00:00Z",
+      "requests": 726165,
+      "ts_eligible": 223963
+    },
+    {
+      "hour_utc": "2026-11-15T12:00:00Z",
+      "requests": 833110,
+      "ts_eligible": 278632
+    },
+    {
+      "hour_utc": "2026-11-15T13:00:00Z",
+      "requests": 1064950,
+      "ts_eligible": 376679
+    },
+    {
+      "hour_utc": "2026-11-15T14:00:00Z",
+      "requests": 1209680,
+      "ts_eligible": 431084
+    },
+    {
+      "hour_utc": "2026-11-15T15:00:00Z",
+      "requests": 1515349,
+      "ts_eligible": 563721
+    },
+    {
+      "hour_utc": "2026-11-15T16:00:00Z",
+      "requests": 1101853,
+      "ts_eligible": 383955
+    },
+    {
+      "hour_utc": "2026-11-15T17:00:00Z",
+      "requests": 707308,
+      "ts_eligible": 214167
+    },
+    {
+      "hour_utc": "2026-11-15T18:00:00Z",
+      "requests": 543760,
+      "ts_eligible": 142091
+    },
+    {
+      "hour_utc": "2026-11-15T19:00:00Z",
+      "requests": 235270,
+      "ts_eligible": 96543
+    },
+    {
+      "hour_utc": "2026-11-15T20:00:00Z",
+      "requests": 208770,
+      "ts_eligible": 84257
+    },
+    {
+      "hour_utc": "2026-11-15T21:00:00Z",
+      "requests": 199006,
+      "ts_eligible": 78825
+    },
+    {
+      "hour_utc": "2026-11-15T22:00:00Z",
+      "requests": 191308,
+      "ts_eligible": 76455
+    },
+    {
+      "hour_utc": "2026-11-15T23:00:00Z",
+      "requests": 186576,
+      "ts_eligible": 72994
+    },
+    {
+      "hour_utc": "2026-11-16T00:00:00Z",
+      "requests": 238636,
+      "ts_eligible": 96762
+    },
+    {
+      "hour_utc": "2026-11-16T01:00:00Z",
+      "requests": 473253,
+      "ts_eligible": 205915
+    },
+    {
+      "hour_utc": "2026-11-16T02:00:00Z",
+      "requests": 904812,
+      "ts_eligible": 397115
+    },
+    {
+      "hour_utc": "2026-11-16T03:00:00Z",
+      "requests": 797123,
+      "ts_eligible": 351374
+    },
+    {
+      "hour_utc": "2026-11-16T04:00:00Z",
+      "requests": 717597,
+      "ts_eligible": 286979
+    },
+    {
+      "hour_utc": "2026-11-16T05:00:00Z",
+      "requests": 702231,
+      "ts_eligible": 261130
+    },
+    {
+      "hour_utc": "2026-11-16T06:00:00Z",
+      "requests": 753513,
+      "ts_eligible": 241724
+    },
+    {
+      "hour_utc": "2026-11-16T07:00:00Z",
+      "requests": 950810,
+      "ts_eligible": 328067
+    },
+    {
+      "hour_utc": "2026-11-16T08:00:00Z",
+      "requests": 1217431,
+      "ts_eligible": 438331
+    },
+    {
+      "hour_utc": "2026-11-16T09:00:00Z",
+      "requests": 970426,
+      "ts_eligible": 327916
+    },
+    {
+      "hour_utc": "2026-11-16T10:00:00Z",
+      "requests": 763327,
+      "ts_eligible": 247693
+    },
+    {
+      "hour_utc": "2026-11-16T11:00:00Z",
+      "requests": 769397,
+      "ts_eligible": 245573
+    },
+    {
+      "hour_utc": "2026-11-16T12:00:00Z",
+      "requests": 930886,
+      "ts_eligible": 311108
+    },
+    {
+      "hour_utc": "2026-11-16T13:00:00Z",
+      "requests": 1284562,
+      "ts_eligible": 473035
+    },
+    {
+      "hour_utc": "2026-11-16T14:00:00Z",
+      "requests": 1300804,
+      "ts_eligible": 488310
+    },
+    {
+      "hour_utc": "2026-11-16T15:00:00Z",
+      "requests": 2367121,
+      "ts_eligible": 923822
+    },
+    {
+      "hour_utc": "2026-11-16T16:00:00Z",
+      "requests": 1751698,
+      "ts_eligible": 635933
+    },
+    {
+      "hour_utc": "2026-11-16T17:00:00Z",
+      "requests": 867730,
+      "ts_eligible": 290136
+    },
+    {
+      "hour_utc": "2026-11-16T18:00:00Z",
+      "requests": 565716,
+      "ts_eligible": 200203
+    },
+    {
+      "hour_utc": "2026-11-16T19:00:00Z",
+      "requests": 279151,
+      "ts_eligible": 123064
+    },
+    {
+      "hour_utc": "2026-11-16T20:00:00Z",
+      "requests": 235067,
+      "ts_eligible": 101170
+    },
+    {
+      "hour_utc": "2026-11-16T21:00:00Z",
+      "requests": 217854,
+      "ts_eligible": 91475
+    },
+    {
+      "hour_utc": "2026-11-16T22:00:00Z",
+      "requests": 207892,
+      "ts_eligible": 84847
+    },
+    {
+      "hour_utc": "2026-11-16T23:00:00Z",
+      "requests": 216374,
+      "ts_eligible": 89731
+    }
+  ],
+  "hosts": [
+    {
+      "host": "veto.akamaized.net",
+      "requests": 11595031,
+      "users": 9325,
+      "ts_eligible": 4600369
+    },
+    {
+      "host": "mbgthz-veto.akamaized.net",
+      "requests": 2740471,
+      "users": 1186,
+      "ts_eligible": 24236
+    },
+    {
+      "host": "veto-vod.akamaized.net",
+      "requests": 1368401,
+      "users": 12469,
+      "ts_eligible": 852737
+    },
+    {
+      "host": "ndtv-veto.akamaized.net",
+      "requests": 872858,
+      "users": 2702,
+      "ts_eligible": 324633
+    },
+    {
+      "host": "nn-veto.akamaized.net",
+      "requests": 487382,
+      "users": 2431,
+      "ts_eligible": 184355
+    },
+    {
+      "host": "tennis-vod.akamaized.net",
+      "requests": 409215,
+      "users": 5633,
+      "ts_eligible": 367401
+    },
+    {
+      "host": "veto-staging.akamaized.net",
+      "requests": 363574,
+      "users": 875,
+      "ts_eligible": 144604
+    },
+    {
+      "host": "b4u-veto-m.akamaized.net",
+      "requests": 219529,
+      "users": 1374,
+      "ts_eligible": 107586
+    },
+    {
+      "host": "sanskar-live-indiatvnews.akamaized.net",
+      "requests": 215828,
+      "users": 769,
+      "ts_eligible": 90197
+    },
+    {
+      "host": "xind-live-indiatvnews.akamaized.net",
+      "requests": 166721,
+      "users": 801,
+      "ts_eligible": 63936
+    },
+    {
+      "host": "b4u-veto-music.akamaized.net",
+      "requests": 158354,
+      "users": 704,
+      "ts_eligible": 82769
+    },
+    {
+      "host": "vetostreams.akamaized.net",
+      "requests": 99676,
+      "users": 1085,
+      "ts_eligible": 42469
+    },
+    {
+      "host": "yrf-veto.akamaized.net",
+      "requests": 90997,
+      "users": 964,
+      "ts_eligible": 27834
+    },
+    {
+      "host": "b4u-veto-kadak.akamaized.net",
+      "requests": 86330,
+      "users": 1980,
+      "ts_eligible": 33079
+    },
+    {
+      "host": "manorama-veto.akamaized.net",
+      "requests": 74396,
+      "users": 126,
+      "ts_eligible": 44934
+    },
+    {
+      "host": "epic-bharat-veto.akamaized-staging.net",
+      "requests": 71989,
+      "users": 1,
+      "ts_eligible": 44290
+    },
+    {
+      "host": "epic-tv-veto.akamaized-staging.net",
+      "requests": 71985,
+      "users": 1,
+      "ts_eligible": 44228
+    },
+    {
+      "host": "vetointv.akamaized.net",
+      "requests": 52773,
+      "users": 289,
+      "ts_eligible": 3483
+    },
+    {
+      "host": "vetocricket.akamaized.net",
+      "requests": 45678,
+      "users": 451,
+      "ts_eligible": 3273
+    },
+    {
+      "host": "ndtvprofit-veto.akamaized.net",
+      "requests": 36895,
+      "users": 2064,
+      "ts_eligible": 11238
+    },
+    {
+      "host": "epic-music-veto.akamaized.net",
+      "requests": 31175,
+      "users": 314,
+      "ts_eligible": 11049
+    },
+    {
+      "host": "gtc-veto.akamaized.net",
+      "requests": 24194,
+      "users": 285,
+      "ts_eligible": 2136
+    },
+    {
+      "host": "epic-bharat-veto.akamaized.net",
+      "requests": 23123,
+      "users": 412,
+      "ts_eligible": 9016
+    },
+    {
+      "host": "b4u-veto.akamaized.net",
+      "requests": 21156,
+      "users": 134,
+      "ts_eligible": 5586
+    },
+    {
+      "host": "epic-tv-veto.akamaized.net",
+      "requests": 8698,
+      "users": 70,
+      "ts_eligible": 3913
+    },
+    {
+      "host": "bmasala-live.akamaized.net",
+      "requests": 7903,
+      "users": 108,
+      "ts_eligible": 632
+    },
+    {
+      "host": "indiatv-intvcricket.akamaized.net",
+      "requests": 5549,
+      "users": 1,
+      "ts_eligible": 0
+    },
+    {
+      "host": "epic-kid-veto.akamaized-staging.net",
+      "requests": 5535,
+      "users": 1,
+      "ts_eligible": 0
+    },
+    {
+      "host": "epic-veto.akamaized-staging.net",
+      "requests": 5533,
+      "users": 1,
+      "ts_eligible": 0
+    },
+    {
+      "host": "epic-music-veto.akamaized-staging.net",
+      "requests": 5514,
+      "users": 1,
+      "ts_eligible": 0
+    },
+    {
+      "host": "epic-kid-veto.akamaized.net",
+      "requests": 4794,
+      "users": 162,
+      "ts_eligible": 1893
+    },
+    {
+      "host": "epic-veto.akamaized.net",
+      "requests": 4608,
+      "users": 93,
+      "ts_eligible": 1872
+    },
+    {
+      "host": "veto-test.akamaized.net",
+      "requests": 1,
+      "users": 1,
+      "ts_eligible": 0
+    },
+    {
+      "host": "manorama-veto.akamaized-staging.net",
+      "requests": 1,
+      "users": 1,
+      "ts_eligible": 0
+    }
+  ],
+  "http_status": [
+    {
+      "status": 200,
+      "requests": 35183471
+    },
+    {
+      "status": 206,
+      "requests": 1036739
+    },
+    {
+      "status": 302,
+      "requests": 14
+    },
+    {
+      "status": 304,
+      "requests": 14142
+    },
+    {
+      "status": 400,
+      "requests": 11
+    },
+    {
+      "status": 401,
+      "requests": 53
+    },
+    {
+      "status": 403,
+      "requests": 233473
+    },
+    {
+      "status": 404,
+      "requests": 170884
+    },
+    {
+      "status": 500,
+      "requests": 1
+    },
+    {
+      "status": 502,
+      "requests": 6
+    },
+    {
+      "status": 503,
+      "requests": 855
+    },
+    {
+      "status": 504,
+      "requests": 619
+    }
+  ]
+}

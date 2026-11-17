@@ -1,0 +1,47 @@
+{
+  "missing_host": {
+    "host": "ott-indiatv.akamaized.net",
+    "local": 0,
+    "grafana": 676820,
+    "difference": 676820,
+    "ts_difference": 106164
+  },
+  "common_hosts": {
+    "local_requests": 19375867,
+    "grafana_requests": 19364609,
+    "extra_local_requests": 11258,
+    "extra_local_eligible_ts": 4280
+  },
+  "exact_repeated_local_rows": 6608,
+  "exact_repeated_local_eligible_ts": 2498,
+  "finding": "The extra Grafana host accounts for the gross positive request and TS gap. Smaller negative residual on shared hosts remains. Upstream S3 prefix/bucket coverage is not yet inspected.",
+  "missing_host_metrics": {
+    "missing_host_users": 6106,
+    "common_host_users": 23378,
+    "missing_host_requests": 676820,
+    "common_host_requests": 19364609,
+    "missing_host_segments": 106164,
+    "missing_host_video_bytes": 175734291204
+  },
+  "shared_host_users": {
+    "local": 23383,
+    "grafana": 23378,
+    "difference_local_minus_grafana": 5
+  },
+  "net_gap_arithmetic": {
+    "requests": "676,820 missing-host requests minus 11,258 extra local common-host requests = 665,562 net Grafana extra requests",
+    "eligible_ts": "106,164 missing-host TS requests minus 4,280 extra local common-host TS requests = 101,884 net Grafana extra TS requests"
+  },
+  "limitations": [
+    "S3 bucket/prefix and upstream export configuration were not inspected; exact delivery route for the missing host remains unconfirmed.",
+    "6,608 exact repeated raw lines account for part, not all, of the 11,258 shared-host difference.",
+    "Repeated-line detection alone does not prove whether Grafana deduplicates, transforms, filters or ingests a slightly different set of source records.",
+    "IP+UA discrepancies remain separate; do not describe them as missing verified users or matching sessions."
+  ],
+  "missing_feed_identifier": {
+    "field": "cp",
+    "value": 1880711,
+    "host": "ott-indiatv.akamaized.net",
+    "grafana_requests": 676820
+  }
+}

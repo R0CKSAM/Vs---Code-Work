@@ -1,0 +1,166 @@
+﻿{
+    "full":  {
+                 "ok":  true,
+                 "data":  {
+                              "schema":  "smart-export-validation-snapshot/v1",
+                              "mode":  "live",
+                              "capturedAt":  "2026-11-17T08:16:45.780Z",
+                              "source":  {
+                                             "url":  "https://grafana-apj.trafficpeak.live/d/db7ce6f6-d689-4976-89e5-ddf0b5401f97/6ea3fc9?orgId=743\u0026from=now-7d\u0026to=now\u0026timezone=Asia%2FKolkata\u0026var-filter=",
+                                             "datasetKey":  "https://grafana-apj.trafficpeak.live|db7ce6f6-d689-4976-89e5-ddf0b5401f97|org=743|filters=none",
+                                             "filters":  [
+
+                                                         ],
+                                             "orgId":  "743",
+                                             "timezone":  "Asia/Kolkata"
+                                         },
+                              "from":  "2026-11-16",
+                              "to":  "2026-11-16",
+                              "queries":  {
+                                              "viewership_stats":  "SELECT toDate(toTimeZone(reqTimeSec, \u0027Asia/Kolkata\u0027)) AS report_date,\n round(countIf(reqPath LIKE \u0027%.ts\u0027 AND reqPath NOT LIKE \u0027%.m3u8\u0027 AND statusCode IN (200, 206) AND extract(reqPath, \u0027[-_](\\\\d+)\\\\.ts$\u0027) != \u0027\u0027)*6.0/3600.0,2) AS viewership_hours,\n if(uniqIf(cliIP, (reqPath LIKE \u0027%.ts\u0027 AND reqPath NOT LIKE \u0027%.m3u8\u0027 AND statusCode IN (200, 206) AND extract(reqPath, \u0027[-_](\\\\d+)\\\\.ts$\u0027) != \u0027\u0027) AND channel_name != \u0027\u0027)=0,0,\n round(countIf((reqPath LIKE \u0027%.ts\u0027 AND reqPath NOT LIKE \u0027%.m3u8\u0027 AND statusCode IN (200, 206) AND extract(reqPath, \u0027[-_](\\\\d+)\\\\.ts$\u0027) != \u0027\u0027) AND channel_name != \u0027\u0027)*6.0/60.0/\n nullIf(uniqIf(cliIP, (reqPath LIKE \u0027%.ts\u0027 AND reqPath NOT LIKE \u0027%.m3u8\u0027 AND statusCode IN (200, 206) AND extract(reqPath, \u0027[-_](\\\\d+)\\\\.ts$\u0027) != \u0027\u0027) AND channel_name != \u0027\u0027),0),2)) AS avg_watch_minutes,\n countIf(reqPath LIKE \u0027%.ts\u0027 AND statusCode IN (200,206) AND extract(reqPath,\u0027[-_](\\d+)\\.ts$\u0027) != \u0027\u0027) AS total_segments,\n sumIf(bytes, reqPath LIKE \u0027%.ts\u0027 AND statusCode IN (200, 206)) AS bandwidth_bytes\n FROM Veto_Streamin.logs WHERE reqTimeSec \u003e= toDateTime(1794767400, \u0027UTC\u0027) AND reqTimeSec \u003c toDateTime(1794853800, \u0027UTC\u0027) GROUP BY report_date ORDER BY report_date SETTINGS hdx_query_max_execution_time=60"
+                                          },
+                              "diagnostics":  {
+                                                  "duplicatesSkipped":  0,
+                                                  "frameCount":  1,
+                                                  "missingValues":  0
+                                              },
+                              "datasets":  {
+                                               "viewership_stats":  [
+                                                                        {
+                                                                            "date":  "2026-11-16",
+                                                                            "viewership_hours":  12059.39,
+                                                                            "avg_watch_minutes":  43.05,
+                                                                            "total_segments":  7235632,
+                                                                            "bandwidth_bytes":  23268293091145
+                                                                        }
+                                                                    ]
+                                           }
+                          }
+             },
+    "covered":  {
+                    "schema":  "veto-raw-grafana-window/v1",
+                    "capturedAt":  "2026-11-17T08:18:11.790Z",
+                    "window":  {
+                                   "fromUtc":  "2026-11-16T00:00:00.000Z",
+                                   "toUtcExclusive":  "2026-11-16T18:30:00.000Z",
+                                   "label":  "16 Nov IST, covered 05:30–24:00 only"
+                               },
+                    "sql":  "SELECT count() AS raw_rows,uniqExact(cliIP) AS users_including_blank,uniq(device_id) AS unique_devices_approx,uniq(session_id) AS session_ids_approx,uniq(cliIP,UA) AS ip_ua_approx,countIf(reqPath LIKE \u0027%.ts\u0027) AS ts_all_status,countIf(reqPath LIKE \u0027%.ts\u0027 AND statusCode IN (200,206) AND extract(reqPath,\u0027[-_](\\d+)\\.ts$\u0027) != \u0027\u0027) AS ts_eligible,sumIf(bytes,reqPath LIKE \u0027%.ts\u0027 AND statusCode IN (200,206)) AS video_bytes FROM Veto_Streamin.logs WHERE reqTimeSec \u003e= toDateTime(1794787200, \u0027UTC\u0027) AND reqTimeSec \u003c toDateTime(1794853800, \u0027UTC\u0027) SETTINGS hdx_query_max_execution_time=60",
+                    "filters":  [
+
+                                ],
+                    "response":  {
+                                     "data":  {
+                                                  "results":  {
+                                                                  "A":  {
+                                                                            "frames":  [
+                                                                                           {
+                                                                                               "data":  {
+                                                                                                            "values":  [
+                                                                                                                           [
+                                                                                                                               18781600
+                                                                                                                           ],
+                                                                                                                           [
+                                                                                                                               23287
+                                                                                                                           ],
+                                                                                                                           [
+                                                                                                                               10889
+                                                                                                                           ],
+                                                                                                                           [
+                                                                                                                               13289
+                                                                                                                           ],
+                                                                                                                           [
+                                                                                                                               69741
+                                                                                                                           ],
+                                                                                                                           [
+                                                                                                                               6768497
+                                                                                                                           ],
+                                                                                                                           [
+                                                                                                                               6767111
+                                                                                                                           ],
+                                                                                                                           [
+                                                                                                                               21969153000642
+                                                                                                                           ]
+                                                                                                                       ]
+                                                                                                        },
+                                                                                               "schema":  {
+                                                                                                              "fields":  [
+                                                                                                                             {
+                                                                                                                                 "name":  "raw_rows",
+                                                                                                                                 "type":  "number",
+                                                                                                                                 "typeInfo":  {
+                                                                                                                                                  "frame":  "uint64"
+                                                                                                                                              }
+                                                                                                                             },
+                                                                                                                             {
+                                                                                                                                 "name":  "users_including_blank",
+                                                                                                                                 "type":  "number",
+                                                                                                                                 "typeInfo":  {
+                                                                                                                                                  "frame":  "uint64"
+                                                                                                                                              }
+                                                                                                                             },
+                                                                                                                             {
+                                                                                                                                 "name":  "unique_devices_approx",
+                                                                                                                                 "type":  "number",
+                                                                                                                                 "typeInfo":  {
+                                                                                                                                                  "frame":  "uint64"
+                                                                                                                                              }
+                                                                                                                             },
+                                                                                                                             {
+                                                                                                                                 "name":  "session_ids_approx",
+                                                                                                                                 "type":  "number",
+                                                                                                                                 "typeInfo":  {
+                                                                                                                                                  "frame":  "uint64"
+                                                                                                                                              }
+                                                                                                                             },
+                                                                                                                             {
+                                                                                                                                 "name":  "ip_ua_approx",
+                                                                                                                                 "type":  "number",
+                                                                                                                                 "typeInfo":  {
+                                                                                                                                                  "frame":  "uint64"
+                                                                                                                                              }
+                                                                                                                             },
+                                                                                                                             {
+                                                                                                                                 "name":  "ts_all_status",
+                                                                                                                                 "type":  "number",
+                                                                                                                                 "typeInfo":  {
+                                                                                                                                                  "frame":  "uint64"
+                                                                                                                                              }
+                                                                                                                             },
+                                                                                                                             {
+                                                                                                                                 "name":  "ts_eligible",
+                                                                                                                                 "type":  "number",
+                                                                                                                                 "typeInfo":  {
+                                                                                                                                                  "frame":  "uint64"
+                                                                                                                                              }
+                                                                                                                             },
+                                                                                                                             {
+                                                                                                                                 "name":  "video_bytes",
+                                                                                                                                 "type":  "number",
+                                                                                                                                 "typeInfo":  {
+                                                                                                                                                  "frame":  "uint64",
+                                                                                                                                                  "nullable":  true
+                                                                                                                                              }
+                                                                                                                             }
+                                                                                                                         ],
+                                                                                                              "meta":  {
+                                                                                                                           "executedQueryString":  "SELECT count() AS raw_rows,uniqExact(cliIP) AS users_including_blank,uniq(device_id) AS unique_devices_approx,uniq(session_id) AS session_ids_approx,uniq(cliIP,UA) AS ip_ua_approx,countIf(reqPath LIKE \u0027%.ts\u0027) AS ts_all_status,countIf(reqPath LIKE \u0027%.ts\u0027 AND statusCode IN (200,206) AND extract(reqPath,\u0027[-_](\\d+)\\.ts$\u0027) != \u0027\u0027) AS ts_eligible,sumIf(bytes,reqPath LIKE \u0027%.ts\u0027 AND statusCode IN (200,206)) AS video_bytes FROM Veto_Streamin.logs WHERE reqTimeSec \u003e= toDateTime(1794787200, \u0027UTC\u0027) AND reqTimeSec \u003c toDateTime(1794853800, \u0027UTC\u0027) SETTINGS hdx_query_max_execution_time=60",
+                                                                                                                           "preferredVisualisationType":  "table",
+                                                                                                                           "typeVersion":  [
+                                                                                                                                               0,
+                                                                                                                                               0
+                                                                                                                                           ]
+                                                                                                                       },
+                                                                                                              "name":  "A",
+                                                                                                              "refId":  "A"
+                                                                                                          }
+                                                                                           }
+                                                                                       ],
+                                                                            "status":  200
+                                                                        }
+                                                              }
+                                              },
+                                     "ok":  true
+                                 }
+                }
+}

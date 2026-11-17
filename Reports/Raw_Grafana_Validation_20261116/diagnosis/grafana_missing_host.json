@@ -1,0 +1,106 @@
+﻿{
+    "schema":  "veto-raw-grafana-window/v1",
+    "capturedAt":  "2026-11-17T09:43:08.067Z",
+    "window":  {
+                   "fromUtc":  "2026-11-15T18:30:00.000Z",
+                   "toUtcExclusive":  "2026-11-16T18:30:00.000Z",
+                   "label":  "16 Nov full IST day"
+               },
+    "sql":  "SELECT uniqExactIf(cliIP,reqHost=\u0027ott-indiatv.akamaized.net\u0027) AS missing_host_users,uniqExactIf(cliIP,reqHost!=\u0027ott-indiatv.akamaized.net\u0027) AS common_host_users,countIf(reqHost=\u0027ott-indiatv.akamaized.net\u0027) AS missing_host_requests,countIf(reqHost!=\u0027ott-indiatv.akamaized.net\u0027) AS common_host_requests,countIf(reqHost=\u0027ott-indiatv.akamaized.net\u0027 AND reqPath LIKE \u0027%.ts\u0027 AND statusCode IN (200,206) AND extract(reqPath,\u0027[-_](\\\\d+)\\\\.ts$\u0027) != \u0027\u0027) AS missing_host_segments,sumIf(bytes,reqHost=\u0027ott-indiatv.akamaized.net\u0027 AND reqPath LIKE \u0027%.ts\u0027 AND statusCode IN (200,206)) AS missing_host_video_bytes FROM Veto_Streamin.logs WHERE reqTimeSec \u003e= toDateTime(1794767400,\u0027UTC\u0027) AND reqTimeSec \u003c toDateTime(1794853800,\u0027UTC\u0027) SETTINGS hdx_query_max_execution_time=60",
+    "filters":  [
+
+                ],
+    "response":  {
+                     "data":  {
+                                  "results":  {
+                                                  "A":  {
+                                                            "frames":  [
+                                                                           {
+                                                                               "data":  {
+                                                                                            "values":  [
+                                                                                                           [
+                                                                                                               6106
+                                                                                                           ],
+                                                                                                           [
+                                                                                                               23378
+                                                                                                           ],
+                                                                                                           [
+                                                                                                               676820
+                                                                                                           ],
+                                                                                                           [
+                                                                                                               19364609
+                                                                                                           ],
+                                                                                                           [
+                                                                                                               106164
+                                                                                                           ],
+                                                                                                           [
+                                                                                                               175734291204
+                                                                                                           ]
+                                                                                                       ]
+                                                                                        },
+                                                                               "schema":  {
+                                                                                              "fields":  [
+                                                                                                             {
+                                                                                                                 "name":  "missing_host_users",
+                                                                                                                 "type":  "number",
+                                                                                                                 "typeInfo":  {
+                                                                                                                                  "frame":  "uint64"
+                                                                                                                              }
+                                                                                                             },
+                                                                                                             {
+                                                                                                                 "name":  "common_host_users",
+                                                                                                                 "type":  "number",
+                                                                                                                 "typeInfo":  {
+                                                                                                                                  "frame":  "uint64"
+                                                                                                                              }
+                                                                                                             },
+                                                                                                             {
+                                                                                                                 "name":  "missing_host_requests",
+                                                                                                                 "type":  "number",
+                                                                                                                 "typeInfo":  {
+                                                                                                                                  "frame":  "uint64"
+                                                                                                                              }
+                                                                                                             },
+                                                                                                             {
+                                                                                                                 "name":  "common_host_requests",
+                                                                                                                 "type":  "number",
+                                                                                                                 "typeInfo":  {
+                                                                                                                                  "frame":  "uint64"
+                                                                                                                              }
+                                                                                                             },
+                                                                                                             {
+                                                                                                                 "name":  "missing_host_segments",
+                                                                                                                 "type":  "number",
+                                                                                                                 "typeInfo":  {
+                                                                                                                                  "frame":  "uint64"
+                                                                                                                              }
+                                                                                                             },
+                                                                                                             {
+                                                                                                                 "name":  "missing_host_video_bytes",
+                                                                                                                 "type":  "number",
+                                                                                                                 "typeInfo":  {
+                                                                                                                                  "frame":  "uint64",
+                                                                                                                                  "nullable":  true
+                                                                                                                              }
+                                                                                                             }
+                                                                                                         ],
+                                                                                              "meta":  {
+                                                                                                           "executedQueryString":  "SELECT uniqExactIf(cliIP,reqHost=\u0027ott-indiatv.akamaized.net\u0027) AS missing_host_users,uniqExactIf(cliIP,reqHost!=\u0027ott-indiatv.akamaized.net\u0027) AS common_host_users,countIf(reqHost=\u0027ott-indiatv.akamaized.net\u0027) AS missing_host_requests,countIf(reqHost!=\u0027ott-indiatv.akamaized.net\u0027) AS common_host_requests,countIf(reqHost=\u0027ott-indiatv.akamaized.net\u0027 AND reqPath LIKE \u0027%.ts\u0027 AND statusCode IN (200,206) AND extract(reqPath,\u0027[-_](\\\\d+)\\\\.ts$\u0027) != \u0027\u0027) AS missing_host_segments,sumIf(bytes,reqHost=\u0027ott-indiatv.akamaized.net\u0027 AND reqPath LIKE \u0027%.ts\u0027 AND statusCode IN (200,206)) AS missing_host_video_bytes FROM Veto_Streamin.logs WHERE reqTimeSec \u003e= toDateTime(1794767400,\u0027UTC\u0027) AND reqTimeSec \u003c toDateTime(1794853800,\u0027UTC\u0027) SETTINGS hdx_query_max_execution_time=60",
+                                                                                                           "preferredVisualisationType":  "table",
+                                                                                                           "typeVersion":  [
+                                                                                                                               0,
+                                                                                                                               0
+                                                                                                                           ]
+                                                                                                       },
+                                                                                              "name":  "A",
+                                                                                              "refId":  "A"
+                                                                                          }
+                                                                           }
+                                                                       ],
+                                                            "status":  200
+                                                        }
+                                              }
+                              },
+                     "ok":  true
+                 }
+}

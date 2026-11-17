@@ -1,0 +1,34 @@
+VETO PARQUET / GRAFANA VALIDATION - 17 NOVEMBER 2026
+
+The validator is installed in the existing Smart Export extension, version 2.7.4.
+Open Validate Parquet from the workspace toolbar.
+
+Evidence captured:
+- Saved daily KPIs: 30 dates from 27 Sep through 26 Oct 2026.
+- Saved GEO reports: 3,066 rows over the same date range.
+- Fresh live Viewership Summary query: 25 Oct 2026, captured 17 Nov 2026.
+- No raw IPs/device IDs or credentials were exported.
+- No saved Grafana report master or shared Parquet files were changed.
+
+25 OCTOBER LIVE RESULT
+Parquet raw TS count: 220,183,658
+Grafana total segments: 228,439,282
+Difference: Grafana higher by 8,255,624 / 3.7494%.
+At 0.6 seconds: Parquet 36,697.2763h; Grafana count-derived 38,073.2137h.
+At 6 seconds: Parquet 366,972.7633h; Grafana viewership 380,732.14h (rounded).
+
+This is not a completed parity certification. Grafana was unfiltered, while the
+Parquet contains selected sports properties/dates. Local HTTP/path conditions
+cannot be verified from this file. These must be aligned before calling the
+3.75% gap a data defect. Current reports deliberately leave scope unverified.
+
+FILES
+live_comparison_2026-10-25.csv: fresh query comparison.
+live_audit_2026-10-25.json: snapshot, exact query, time, scope and results.
+daily_sample.csv: selected saved daily KPI comparisons.
+comparison_all_saved_dates.csv: all metric/date/region comparisons, including missing groups.
+audit_saved_reports.json: historical saved snapshot plus comparison results.
+parquet_reference.json: private aggregate reference with 7 selectable scopes.
+
+Daily unique IP counts are NOT summed to compare with the deck's period 3.42M.
+There is no period-distinct Grafana result in the current saved snapshots.

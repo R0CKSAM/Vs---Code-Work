@@ -1,0 +1,144 @@
+{
+  "createdAt": "2026-11-17T09:39:20.174969+00:00",
+  "window": {
+    "fromUtc": "2026-11-15T18:30:00+00:00",
+    "toUtcExclusive": "2026-11-16T18:30:00+00:00",
+    "metrics": {
+      "raw_rows": 19375867,
+      "distinct_raw_lines": 19369259,
+      "users_including_blank": 23383,
+      "users_nonblank": 23383,
+      "users_all_ts": 20626,
+      "users_eligible_ts": 20623,
+      "device_ids_including_blank": 11158,
+      "device_ids_nonblank": 11156,
+      "session_ids_including_blank": 13652,
+      "session_ids_nonblank": 13650,
+      "ip_ua_pairs": 30898,
+      "master_manifest_requests": 719840,
+      "ts_all_status": 7135148,
+      "ts_eligible": 7133748,
+      "hours_0_6": 1188.9579999999999,
+      "hours_6": 11889.58,
+      "video_bytes": 23105953693520,
+      "min_us": 1794767400005000,
+      "max_us": 1794853799992000
+    }
+  },
+  "input_batches": [
+    {
+      "phase": "complete_local",
+      "updatedAt": "2026-11-17T09:38:59.967841+00:00",
+      "pid": 34396,
+      "files_completed": 427981,
+      "files_total": 427981,
+      "rows_parsed": 17154319,
+      "elapsed_seconds": 139.1,
+      "errors": 0,
+      "bad_rows": 0,
+      "percent": 100.0,
+      "missing_hour_bins_for_ist_day": true,
+      "coverage_note": "Hourly presence and min/max are boundary checks only, not proof every source delivery file is present.",
+      "source_files_unchanged": true
+    },
+    {
+      "phase": "complete_local",
+      "updatedAt": "2026-11-17T08:19:05.760596+00:00",
+      "pid": 34144,
+      "files_completed": 429107,
+      "files_total": 429107,
+      "rows_parsed": 19485949,
+      "elapsed_seconds": 174.5,
+      "errors": 0,
+      "bad_rows": 0,
+      "percent": 100.0,
+      "missing_hour_bins_for_ist_day": true,
+      "coverage_note": "Hourly presence and min/max are boundary checks only, not proof every source delivery file is present.",
+      "source_files_unchanged": true
+    }
+  ],
+  "results": [
+    {
+      "metric": "Eligible TS requests",
+      "raw_local": 7133748,
+      "grafana": 7235632,
+      "difference_grafana_minus_local": 101884,
+      "percent_vs_local": 1.4281973515184443,
+      "interpretation": "Same window and request conditions; source ingestion coverage may differ."
+    },
+    {
+      "metric": "Estimated hours at 0.6 seconds",
+      "raw_local": 1188.9579999999999,
+      "grafana": 1205.9386666666667,
+      "difference_grafana_minus_local": 16.98066666666682,
+      "percent_vs_local": 1.4281973515184576,
+      "interpretation": "Same window and request conditions; source ingestion coverage may differ."
+    },
+    {
+      "metric": "Estimated hours at 6 seconds",
+      "raw_local": 11889.58,
+      "grafana": 12059.39,
+      "difference_grafana_minus_local": 169.8099999999995,
+      "percent_vs_local": 1.4282253872718758,
+      "interpretation": "Grafana hours rounded to two decimals; both use six-second eligible TS estimate."
+    },
+    {
+      "metric": "Successful TS video bytes",
+      "raw_local": 23105953693520,
+      "grafana": 23268293091145,
+      "difference_grafana_minus_local": 162339397625,
+      "percent_vs_local": 0.7025868734019303,
+      "interpretation": "Same window and request conditions; source ingestion coverage may differ."
+    },
+    {
+      "metric": "raw_rows",
+      "raw_local": 19375867,
+      "grafana": 20041429,
+      "difference_grafana_minus_local": 665562,
+      "percent_vs_local": 3.435004998744056,
+      "interpretation": "Local raw values vs Grafana ingested values; transformations and delivery coverage need review."
+    },
+    {
+      "metric": "users_including_blank",
+      "raw_local": 23383,
+      "grafana": 24275,
+      "difference_grafana_minus_local": 892,
+      "percent_vs_local": 3.814737202240944,
+      "interpretation": "Local raw values vs Grafana ingested values; transformations and delivery coverage need review."
+    },
+    {
+      "metric": "ts_all_status",
+      "raw_local": 7135148,
+      "grafana": 7237032,
+      "difference_grafana_minus_local": 101884,
+      "percent_vs_local": 1.427917122391855,
+      "interpretation": "Local raw values vs Grafana ingested values; transformations and delivery coverage need review."
+    },
+    {
+      "metric": "unique_devices_approx",
+      "raw_local": 11158,
+      "grafana": 11179,
+      "difference_grafana_minus_local": 21,
+      "percent_vs_local": 0.18820577164366373,
+      "interpretation": "Diagnostic only: local exact/raw parsing vs Grafana approximate and transformed identifiers; not an exact-equivalence test."
+    },
+    {
+      "metric": "session_ids_approx",
+      "raw_local": 13652,
+      "grafana": 13688,
+      "difference_grafana_minus_local": 36,
+      "percent_vs_local": 0.2636976267213595,
+      "interpretation": "Diagnostic only: local exact/raw parsing vs Grafana approximate and transformed identifiers; not an exact-equivalence test."
+    },
+    {
+      "metric": "ip_ua_approx",
+      "raw_local": 30898,
+      "grafana": 70979,
+      "difference_grafana_minus_local": 40081,
+      "percent_vs_local": 129.72037025050165,
+      "interpretation": "Diagnostic only: local exact/raw parsing vs Grafana approximate and transformed identifiers; not an exact-equivalence test."
+    }
+  ],
+  "coverage_note": "Both supplied UTC-date folders used. A complete local file inventory does not certify the upstream download inventory. Exact repeated lines detected and retained.",
+  "duplicates_extra_rows": 6608
+}

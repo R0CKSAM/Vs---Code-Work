@@ -1,0 +1,220 @@
+{
+  "identity_quality": [
+    {
+      "sentinel_rows": 3,
+      "positive_ips": 3422658,
+      "positive_devs": 1,
+      "positive_without_device": 4226931,
+      "null_requests": 0
+    }
+  ],
+  "positive_identity_forms": [
+    {
+      "kind": "nonempty",
+      "n": 3
+    },
+    {
+      "kind": "blank",
+      "n": 4226931
+    }
+  ],
+  "country_reqs": [
+    {
+      "category": "IN",
+      "requests": 1190960079,
+      "ips": 3500336
+    },
+    {
+      "category": "BD",
+      "requests": 8740968,
+      "ips": 266510
+    },
+    {
+      "category": "SA",
+      "requests": 1306539,
+      "ips": 44066
+    },
+    {
+      "category": "AE",
+      "requests": 954658,
+      "ips": 16726
+    },
+    {
+      "category": "MY",
+      "requests": 490891,
+      "ips": 23993
+    },
+    {
+      "category": "OM",
+      "requests": 196118,
+      "ips": 7115
+    },
+    {
+      "category": "MV",
+      "requests": 189572,
+      "ips": 2735
+    },
+    {
+      "category": "QA",
+      "requests": 179378,
+      "ips": 7938
+    },
+    {
+      "category": "KW",
+      "requests": 175578,
+      "ips": 5738
+    },
+    {
+      "category": "GB",
+      "requests": 122905,
+      "ips": 5577
+    },
+    {
+      "category": "SG",
+      "requests": 112981,
+      "ips": 6524
+    },
+    {
+      "category": "KE",
+      "requests": 93968,
+      "ips": 1126
+    }
+  ],
+  "state_reqs": [
+    {
+      "category": "Jammu%20&%20Kashmir",
+      "requests": 289145342,
+      "ips": 470473
+    },
+    {
+      "category": "Uttar%20Pradesh",
+      "requests": 173410752,
+      "ips": 593081
+    },
+    {
+      "category": "Maharashtra",
+      "requests": 106229512,
+      "ips": 350561
+    },
+    {
+      "category": "Delhi",
+      "requests": 103330131,
+      "ips": 314801
+    },
+    {
+      "category": "Karnataka",
+      "requests": 72691477,
+      "ips": 251498
+    },
+    {
+      "category": "West%20Bengal",
+      "requests": 69766877,
+      "ips": 231293
+    },
+    {
+      "category": "Bihar",
+      "requests": 49599484,
+      "ips": 181822
+    },
+    {
+      "category": "Gujarat",
+      "requests": 39835864,
+      "ips": 137915
+    },
+    {
+      "category": "Madhya%20Pradesh",
+      "requests": 38025269,
+      "ips": 136292
+    },
+    {
+      "category": "Telangana",
+      "requests": 37349266,
+      "ips": 113723
+    }
+  ],
+  "hosts": [
+    {
+      "event_label": "ODI Tri Series",
+      "host": "daviscup-veto.akamaized.net",
+      "n": 3472926
+    },
+    {
+      "event_label": "ODI Tri Series",
+      "host": "kvms-veto.akamaized.net",
+      "n": 1627267
+    },
+    {
+      "event_label": "SAFF Championship",
+      "host": "vetointv.akamaized.net",
+      "n": 1029196
+    },
+    {
+      "event_label": "ODI Tri Series",
+      "host": "qwrvdz-veto.akamaized.net",
+      "n": 892262
+    },
+    {
+      "event_label": "Pak-Sl T20 Series",
+      "host": "daviscup-veto.akamaized.net",
+      "n": 672666
+    },
+    {
+      "event_label": "SAFF Championship",
+      "host": "irgjlk-veto.akamaized.net",
+      "n": 252097
+    },
+    {
+      "event_label": "Weightlifting",
+      "host": "vetointv.akamaized.net",
+      "n": 103394
+    },
+    {
+      "event_label": "Davis Cup",
+      "host": "daviscup-veto.akamaized.net",
+      "n": 70091
+    },
+    {
+      "event_label": "BJKC 2026",
+      "host": "daviscup-veto.akamaized.net",
+      "n": 30751
+    },
+    {
+      "event_label": "Weightlifting",
+      "host": "mcvdz-veto.akamaized.net",
+      "n": 1436
+    }
+  ],
+  "ip_engagement": [
+    {
+      "ips": 3950608,
+      "repeat_ips": 299765,
+      "cross_ips": 115043
+    }
+  ],
+  "ip_event_positive": [
+    {
+      "event_label": "BJKC 2026",
+      "active_ips": 18379
+    },
+    {
+      "event_label": "ODI Tri Series",
+      "active_ips": 2627242
+    },
+    {
+      "event_label": "Davis Cup",
+      "active_ips": 49927
+    },
+    {
+      "event_label": "Pak-Sl T20 Series",
+      "active_ips": 314338
+    },
+    {
+      "event_label": "Weightlifting",
+      "active_ips": 46651
+    },
+    {
+      "event_label": "SAFF Championship",
+      "active_ips": 470168
+    }
+  ]
+}

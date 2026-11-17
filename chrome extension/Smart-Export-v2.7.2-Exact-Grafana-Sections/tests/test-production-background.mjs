@@ -90,4 +90,16 @@ response=await sync();check(!response.ok&&response.error.includes('filters chang
 state.changeAfterInspection=null;ctx.location.href=filtered.href;
 response=await sync();check(response.ok,'Filter-change rejection must release lock for retry');
 tabs=[{id:3,url:filtered.href+'&var-other=unrecognized',active:true}];response=await request('CURRENT_GRAFANA_TAB');check(!response.ok&&response.error.includes('Unsupported Grafana dashboard variable'),'Unsupported live variables must show specific error instead of pretending no dashboard exists');
-console.log(`PASS ${checks} production background checks: actual injected requests, storage failures, source validation, locks and daily scheduling`);
+tabs=[{id:1,url:DEFAULT_DASHBOARD_URL,active:true}];state.local.smartExportConfig.dashboardUrl=DEFAULT_DASHBOARD_URL;ctx.location.href=DEFAULT_DASHBOARD_URL;
+before=state.commits.length;
+response=await request('VALIDATOR_CAPTURE',{report:'geo',from:'2026-10-20',to:'2026-10-20'});
+check(response.ok&&response.data.datasets.geo.length===1&&response.data.mode==='live','Validator returns an aggregate live snapshot');
+check(state.commits.length===before,'Validator must never update the saved report master');
+check(response.data.queries.geo.includes('Veto_Streamin.logs'),'Validator includes its fixed query for audit');
+const queryBefore=state.queries;
+response=await request('VALIDATOR_CAPTURE',{report:'geo',from:'2026-10-01',to:'2026-10-20'});
+check(!response.ok&&state.queries===queryBefore,'Long validator ranges rejected before querying');
+response=await request('VALIDATOR_CAPTURE',{report:'arbitrary',from:'2026-10-20',to:'2026-10-20'});
+check(!response.ok&&state.queries===queryBefore,'Validator cannot run arbitrary reports or SQL');
+response=await sync();check(response.ok,'Validator failures must leave the export lock released');
+console.log(`PASS ${checks} production background checks: requests, locks, filters and read-only validator`);

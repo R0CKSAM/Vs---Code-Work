@@ -1,0 +1,240 @@
+{
+  "daily_active": [
+    {
+      "date_label": "2026-09-18",
+      "ips": 21587,
+      "requests": 2764748
+    },
+    {
+      "date_label": "2026-09-19",
+      "ips": 19615,
+      "requests": 1649458
+    },
+    {
+      "date_label": "2026-09-20",
+      "ips": 10332,
+      "requests": 573096
+    },
+    {
+      "date_label": "2026-09-21",
+      "ips": 152,
+      "requests": 3199
+    },
+    {
+      "date_label": "2026-09-23",
+      "ips": 4411,
+      "requests": 135120
+    },
+    {
+      "date_label": "2026-09-24",
+      "ips": 10340,
+      "requests": 377062
+    },
+    {
+      "date_label": "2026-09-25",
+      "ips": 3116,
+      "requests": 117513
+    },
+    {
+      "date_label": "2026-09-26",
+      "ips": 346,
+      "requests": 59874
+    },
+    {
+      "date_label": "2026-09-27",
+      "ips": 477,
+      "requests": 88708
+    },
+    {
+      "date_label": "2026-10-09",
+      "ips": 87203,
+      "requests": 31134120
+    },
+    {
+      "date_label": "2026-10-11",
+      "ips": 96055,
+      "requests": 32945619
+    },
+    {
+      "date_label": "2026-10-13",
+      "ips": 151425,
+      "requests": 51692562
+    },
+    {
+      "date_label": "2026-10-18",
+      "ips": 283490,
+      "requests": 97115650
+    },
+    {
+      "date_label": "2026-10-20",
+      "ips": 313734,
+      "requests": 107708339
+    },
+    {
+      "date_label": "2026-10-22",
+      "ips": 312408,
+      "requests": 80119573
+    },
+    {
+      "date_label": "2026-10-25",
+      "ips": 603446,
+      "requests": 220183658
+    },
+    {
+      "date_label": "2026-10-27",
+      "ips": 192624,
+      "requests": 39714085
+    },
+    {
+      "date_label": "2026-10-28",
+      "ips": 2934,
+      "requests": 124251
+    },
+    {
+      "date_label": "2026-10-29",
+      "ips": 446205,
+      "requests": 125337179
+    },
+    {
+      "date_label": "2026-10-30",
+      "ips": 2844,
+      "requests": 110280
+    },
+    {
+      "date_label": "2026-10-31",
+      "ips": 755965,
+      "requests": 315825283
+    },
+    {
+      "date_label": "2026-11-01",
+      "ips": 4608,
+      "requests": 123413
+    },
+    {
+      "date_label": "2026-11-02",
+      "ips": 1143,
+      "requests": 95917
+    },
+    {
+      "date_label": "2026-11-03",
+      "ips": 1332,
+      "requests": 94198
+    },
+    {
+      "date_label": "2026-11-04",
+      "ips": 2302,
+      "requests": 82386
+    },
+    {
+      "date_label": "2026-11-05",
+      "ips": 113100,
+      "requests": 17840847
+    },
+    {
+      "date_label": "2026-11-06",
+      "ips": 1070,
+      "requests": 84917
+    },
+    {
+      "date_label": "2026-11-07",
+      "ips": 1233,
+      "requests": 68377
+    },
+    {
+      "date_label": "2026-11-08",
+      "ips": 22698,
+      "requests": 1308853
+    },
+    {
+      "date_label": "2026-11-11",
+      "ips": 223781,
+      "requests": 42635832
+    },
+    {
+      "date_label": "2026-11-14",
+      "ips": 126888,
+      "requests": 34777798
+    }
+  ],
+  "active_repeat": [
+    {
+      "ips": 3422658,
+      "repeat_ips": 201297,
+      "cross_ips": 89118
+    }
+  ],
+  "country_active": [
+    {
+      "countries": 187,
+      "outside_india": 186
+    }
+  ],
+  "positive_matches": [
+    {
+      "event_label": "ODI Tri Series",
+      "match_label": "Pak-Sl",
+      "ips": 1179511,
+      "requests": 452345418
+    },
+    {
+      "event_label": "ODI Tri Series",
+      "match_label": "Eng-Sl",
+      "ips": 737160,
+      "requests": 205223189
+    },
+    {
+      "event_label": "ODI Tri Series",
+      "match_label": "Eng-Pak",
+      "ips": 603446,
+      "requests": 220183658
+    },
+    {
+      "event_label": "SAFF Championship",
+      "match_label": "SAFF",
+      "ips": 470168,
+      "requests": 96395170
+    },
+    {
+      "event_label": "ODI Tri Series",
+      "match_label": "Pak-Eng",
+      "ips": 313734,
+      "requests": 107708339
+    },
+    {
+      "event_label": "Pak-Sl T20 Series",
+      "match_label": "Pak-Sl 3rd T20",
+      "ips": 151425,
+      "requests": 51692562
+    },
+    {
+      "event_label": "Pak-Sl T20 Series",
+      "match_label": "Pak-Sl 2nd T20",
+      "ips": 96055,
+      "requests": 32945619
+    },
+    {
+      "event_label": "Pak-Sl T20 Series",
+      "match_label": "Pak-Sl 1st T20",
+      "ips": 87203,
+      "requests": 31134120
+    },
+    {
+      "event_label": "Davis Cup",
+      "match_label": "Davis Cup",
+      "ips": 49927,
+      "requests": 4990501
+    },
+    {
+      "event_label": "Weightlifting",
+      "match_label": "Weightlifting",
+      "ips": 46651,
+      "requests": 1495062
+    },
+    {
+      "event_label": "BJKC 2026",
+      "match_label": "BJKC 2026",
+      "ips": 18379,
+      "requests": 778277
+    }
+  ]
+}

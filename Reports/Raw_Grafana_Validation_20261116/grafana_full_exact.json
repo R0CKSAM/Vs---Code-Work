@@ -1,0 +1,126 @@
+﻿{
+    "schema":  "veto-raw-grafana-window/v1",
+    "capturedAt":  "2026-11-17T09:37:17.478Z",
+    "window":  {
+                   "fromUtc":  "2026-11-15T18:30:00.000Z",
+                   "toUtcExclusive":  "2026-11-16T18:30:00.000Z",
+                   "label":  "16 Nov full IST day"
+               },
+    "sql":  "SELECT count() AS raw_rows,uniqExact(cliIP) AS users_including_blank,uniq(device_id) AS unique_devices_approx,uniq(session_id) AS session_ids_approx,uniq(cliIP,UA) AS ip_ua_approx,countIf(reqPath LIKE \u0027%.ts\u0027) AS ts_all_status,countIf(reqPath LIKE \u0027%.ts\u0027 AND statusCode IN (200,206) AND extract(reqPath,\u0027[-_](\\d+)\\.ts$\u0027) != \u0027\u0027) AS ts_eligible,sumIf(bytes,reqPath LIKE \u0027%.ts\u0027 AND statusCode IN (200,206)) AS video_bytes FROM Veto_Streamin.logs WHERE reqTimeSec \u003e= toDateTime(1794767400, \u0027UTC\u0027) AND reqTimeSec \u003c toDateTime(1794853800, \u0027UTC\u0027) SETTINGS hdx_query_max_execution_time=60",
+    "filters":  [
+
+                ],
+    "response":  {
+                     "data":  {
+                                  "results":  {
+                                                  "A":  {
+                                                            "frames":  [
+                                                                           {
+                                                                               "data":  {
+                                                                                            "values":  [
+                                                                                                           [
+                                                                                                               20041429
+                                                                                                           ],
+                                                                                                           [
+                                                                                                               24275
+                                                                                                           ],
+                                                                                                           [
+                                                                                                               11179
+                                                                                                           ],
+                                                                                                           [
+                                                                                                               13688
+                                                                                                           ],
+                                                                                                           [
+                                                                                                               70979
+                                                                                                           ],
+                                                                                                           [
+                                                                                                               7237032
+                                                                                                           ],
+                                                                                                           [
+                                                                                                               7235632
+                                                                                                           ],
+                                                                                                           [
+                                                                                                               23268293091145
+                                                                                                           ]
+                                                                                                       ]
+                                                                                        },
+                                                                               "schema":  {
+                                                                                              "fields":  [
+                                                                                                             {
+                                                                                                                 "name":  "raw_rows",
+                                                                                                                 "type":  "number",
+                                                                                                                 "typeInfo":  {
+                                                                                                                                  "frame":  "uint64"
+                                                                                                                              }
+                                                                                                             },
+                                                                                                             {
+                                                                                                                 "name":  "users_including_blank",
+                                                                                                                 "type":  "number",
+                                                                                                                 "typeInfo":  {
+                                                                                                                                  "frame":  "uint64"
+                                                                                                                              }
+                                                                                                             },
+                                                                                                             {
+                                                                                                                 "name":  "unique_devices_approx",
+                                                                                                                 "type":  "number",
+                                                                                                                 "typeInfo":  {
+                                                                                                                                  "frame":  "uint64"
+                                                                                                                              }
+                                                                                                             },
+                                                                                                             {
+                                                                                                                 "name":  "session_ids_approx",
+                                                                                                                 "type":  "number",
+                                                                                                                 "typeInfo":  {
+                                                                                                                                  "frame":  "uint64"
+                                                                                                                              }
+                                                                                                             },
+                                                                                                             {
+                                                                                                                 "name":  "ip_ua_approx",
+                                                                                                                 "type":  "number",
+                                                                                                                 "typeInfo":  {
+                                                                                                                                  "frame":  "uint64"
+                                                                                                                              }
+                                                                                                             },
+                                                                                                             {
+                                                                                                                 "name":  "ts_all_status",
+                                                                                                                 "type":  "number",
+                                                                                                                 "typeInfo":  {
+                                                                                                                                  "frame":  "uint64"
+                                                                                                                              }
+                                                                                                             },
+                                                                                                             {
+                                                                                                                 "name":  "ts_eligible",
+                                                                                                                 "type":  "number",
+                                                                                                                 "typeInfo":  {
+                                                                                                                                  "frame":  "uint64"
+                                                                                                                              }
+                                                                                                             },
+                                                                                                             {
+                                                                                                                 "name":  "video_bytes",
+                                                                                                                 "type":  "number",
+                                                                                                                 "typeInfo":  {
+                                                                                                                                  "frame":  "uint64",
+                                                                                                                                  "nullable":  true
+                                                                                                                              }
+                                                                                                             }
+                                                                                                         ],
+                                                                                              "meta":  {
+                                                                                                           "executedQueryString":  "SELECT count() AS raw_rows,uniqExact(cliIP) AS users_including_blank,uniq(device_id) AS unique_devices_approx,uniq(session_id) AS session_ids_approx,uniq(cliIP,UA) AS ip_ua_approx,countIf(reqPath LIKE \u0027%.ts\u0027) AS ts_all_status,countIf(reqPath LIKE \u0027%.ts\u0027 AND statusCode IN (200,206) AND extract(reqPath,\u0027[-_](\\d+)\\.ts$\u0027) != \u0027\u0027) AS ts_eligible,sumIf(bytes,reqPath LIKE \u0027%.ts\u0027 AND statusCode IN (200,206)) AS video_bytes FROM Veto_Streamin.logs WHERE reqTimeSec \u003e= toDateTime(1794767400, \u0027UTC\u0027) AND reqTimeSec \u003c toDateTime(1794853800, \u0027UTC\u0027) SETTINGS hdx_query_max_execution_time=60",
+                                                                                                           "preferredVisualisationType":  "table",
+                                                                                                           "typeVersion":  [
+                                                                                                                               0,
+                                                                                                                               0
+                                                                                                                           ]
+                                                                                                       },
+                                                                                              "name":  "A",
+                                                                                              "refId":  "A"
+                                                                                          }
+                                                                           }
+                                                                       ],
+                                                            "status":  200
+                                                        }
+                                              }
+                              },
+                     "ok":  true
+                 }
+}

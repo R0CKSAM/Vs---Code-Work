@@ -1,0 +1,21 @@
+FINAL STATUS - FULL 16 NOVEMBER IST COMPARISON COMPLETE
+
+Both UTC folders parsed: 857,088 gzip files / 36,640,268 raw records.
+No gzip errors or rejected JSON rows.
+After selecting the IST day: 19,375,867 local records.
+
+Local vs Grafana:
+Users (exact distinct IP): 23,383 vs 24,275 (+3.815%).
+Eligible TS: 7,133,748 vs 7,235,632 (+1.428%).
+Estimated hours at 0.6s: 1,188.958 vs 1,205.939 (+1.428%).
+Successful TS bandwidth: Grafana +0.703%.
+
+These are observed gaps, not a parity pass. The underlying downloaded-file
+inventory and Hydrolix ingestion/transformation differences still need review.
+6,608 extra repeated raw lines were detected inside the IST day and retained.
+IP+UA identifiers have a much larger difference (+129.72%); do not report this
+as matching sessions. The raw and ingested UA formats/populations need inspection.
+Local exact device/session counts and Grafana approximate counts are diagnostic.
+
+Open comparison.html for the readable report or comparison.csv for Excel.
+The original raw downloads and shared lake were unchanged.

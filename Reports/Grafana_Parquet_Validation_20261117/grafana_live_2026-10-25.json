@@ -1,0 +1,35 @@
+﻿{
+    "schema":  "smart-export-validation-snapshot/v1",
+    "mode":  "live",
+    "capturedAt":  "2026-11-17T06:35:02.674Z",
+    "source":  {
+                   "url":  "https://grafana-apj.trafficpeak.live/d/db7ce6f6-d689-4976-89e5-ddf0b5401f97/6ea3fc9?orgId=743\u0026from=now-7d\u0026to=now\u0026timezone=Asia%2FKolkata\u0026var-filter=",
+                   "datasetKey":  "https://grafana-apj.trafficpeak.live|db7ce6f6-d689-4976-89e5-ddf0b5401f97|org=743|filters=none",
+                   "filters":  [
+
+                               ],
+                   "orgId":  "743",
+                   "timezone":  "Asia/Kolkata"
+               },
+    "from":  "2026-10-25",
+    "to":  "2026-10-25",
+    "queries":  {
+                    "viewership_stats":  "SELECT toDate(toTimeZone(reqTimeSec, \u0027Asia/Kolkata\u0027)) AS report_date,\n round(countIf(reqPath LIKE \u0027%.ts\u0027 AND reqPath NOT LIKE \u0027%.m3u8\u0027 AND statusCode IN (200, 206) AND extract(reqPath, \u0027[-_](\\\\d+)\\\\.ts$\u0027) != \u0027\u0027)*6.0/3600.0,2) AS viewership_hours,\n if(uniqIf(cliIP, (reqPath LIKE \u0027%.ts\u0027 AND reqPath NOT LIKE \u0027%.m3u8\u0027 AND statusCode IN (200, 206) AND extract(reqPath, \u0027[-_](\\\\d+)\\\\.ts$\u0027) != \u0027\u0027) AND channel_name != \u0027\u0027)=0,0,\n round(countIf((reqPath LIKE \u0027%.ts\u0027 AND reqPath NOT LIKE \u0027%.m3u8\u0027 AND statusCode IN (200, 206) AND extract(reqPath, \u0027[-_](\\\\d+)\\\\.ts$\u0027) != \u0027\u0027) AND channel_name != \u0027\u0027)*6.0/60.0/\n nullIf(uniqIf(cliIP, (reqPath LIKE \u0027%.ts\u0027 AND reqPath NOT LIKE \u0027%.m3u8\u0027 AND statusCode IN (200, 206) AND extract(reqPath, \u0027[-_](\\\\d+)\\\\.ts$\u0027) != \u0027\u0027) AND channel_name != \u0027\u0027),0),2)) AS avg_watch_minutes,\n countIf(reqPath LIKE \u0027%.ts\u0027 AND statusCode IN (200,206) AND extract(reqPath,\u0027[-_](\\d+)\\.ts$\u0027) != \u0027\u0027) AS total_segments,\n sumIf(bytes, reqPath LIKE \u0027%.ts\u0027 AND statusCode IN (200, 206)) AS bandwidth_bytes\n FROM Veto_Streamin.logs WHERE reqTimeSec \u003e= toDateTime(1792866600, \u0027UTC\u0027) AND reqTimeSec \u003c toDateTime(1792953000, \u0027UTC\u0027) GROUP BY report_date ORDER BY report_date SETTINGS hdx_query_max_execution_time=60"
+                },
+    "diagnostics":  {
+                        "duplicatesSkipped":  0,
+                        "frameCount":  1,
+                        "missingValues":  0
+                    },
+    "datasets":  {
+                     "viewership_stats":  [
+                                              {
+                                                  "date":  "2026-10-25",
+                                                  "viewership_hours":  380732.14,
+                                                  "avg_watch_minutes":  36.63,
+                                                  "total_segments":  228439282,
+                                                  "bandwidth_bytes":  559419429205139
+                                              }
+                                          ]
+                 }
+}

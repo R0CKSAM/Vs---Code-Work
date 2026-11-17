@@ -1,0 +1,451 @@
+{
+  "createdAt": "2026-11-17T09:38:56.705970+00:00",
+  "dateIST": "2026-11-16",
+  "definitions": {
+    "hours": "Eligible TS requests * seconds / 3600; 0.6s and 6s both reported.",
+    "eligible_ts": "reqPath ends .ts, status 200/206, regex [-_](digits).ts at end; raw path is not URL-decoded.",
+    "identifiers": "Device/session query parameters decoded once; counts with and without blanks provided. Grafana uniq() is approximate; these local counts are exact.",
+    "duplicates": "Exact repeated NDJSON lines are detected but NOT removed.",
+    "master": "Request path contains one of the master-manifest names in the existing exporter."
+  },
+  "windows": {
+    "target_full_ist_day": {
+      "fromUtc": "2026-11-15T18:30:00+00:00",
+      "toUtcExclusive": "2026-11-16T18:30:00+00:00",
+      "metrics": {
+        "raw_rows": 1255912,
+        "distinct_raw_lines": 1255684,
+        "users_including_blank": 1406,
+        "users_nonblank": 1406,
+        "users_all_ts": 819,
+        "users_eligible_ts": 819,
+        "device_ids_including_blank": 444,
+        "device_ids_nonblank": 443,
+        "session_ids_including_blank": 457,
+        "session_ids_nonblank": 456,
+        "ip_ua_pairs": 1579,
+        "master_manifest_requests": 66998,
+        "ts_all_status": 467499,
+        "ts_eligible": 467485,
+        "hours_0_6": 77.91416666666667,
+        "hours_6": 779.1416666666667,
+        "video_bytes": 1296344518322,
+        "min_us": 1794767400005000,
+        "max_us": 1794787192171000
+      }
+    },
+    "covered_ist_day_from_utc_midnight": {
+      "fromUtc": "2026-11-16T00:00:00+00:00",
+      "toUtcExclusive": "2026-11-16T18:30:00+00:00",
+      "metrics": {
+        "raw_rows": 0,
+        "distinct_raw_lines": 0,
+        "users_including_blank": 0,
+        "users_nonblank": 0,
+        "users_all_ts": 0,
+        "users_eligible_ts": 0,
+        "device_ids_including_blank": 0,
+        "device_ids_nonblank": 0,
+        "session_ids_including_blank": 0,
+        "session_ids_nonblank": 0,
+        "ip_ua_pairs": 0,
+        "master_manifest_requests": 0,
+        "ts_all_status": 0,
+        "ts_eligible": 0,
+        "hours_0_6": 0.0,
+        "hours_6": 0.0,
+        "video_bytes": 0,
+        "min_us": null,
+        "max_us": null
+      }
+    },
+    "utc_day": {
+      "fromUtc": "2026-11-16T00:00:00+00:00",
+      "toUtcExclusive": "2026-11-17T00:00:00+00:00",
+      "metrics": {
+        "raw_rows": 0,
+        "distinct_raw_lines": 0,
+        "users_including_blank": 0,
+        "users_nonblank": 0,
+        "users_all_ts": 0,
+        "users_eligible_ts": 0,
+        "device_ids_including_blank": 0,
+        "device_ids_nonblank": 0,
+        "session_ids_including_blank": 0,
+        "session_ids_nonblank": 0,
+        "ip_ua_pairs": 0,
+        "master_manifest_requests": 0,
+        "ts_all_status": 0,
+        "ts_eligible": 0,
+        "hours_0_6": 0.0,
+        "hours_6": 0.0,
+        "video_bytes": 0,
+        "min_us": null,
+        "max_us": null
+      }
+    }
+  },
+  "hourly_utc": [
+    {
+      "hour_utc": "2026-11-15T05:00:00Z",
+      "requests": 311873,
+      "ts_eligible": 48087
+    },
+    {
+      "hour_utc": "2026-11-15T06:00:00Z",
+      "requests": 593076,
+      "ts_eligible": 129405
+    },
+    {
+      "hour_utc": "2026-11-15T07:00:00Z",
+      "requests": 831002,
+      "ts_eligible": 346986
+    },
+    {
+      "hour_utc": "2026-11-15T08:00:00Z",
+      "requests": 964701,
+      "ts_eligible": 396296
+    },
+    {
+      "hour_utc": "2026-11-15T09:00:00Z",
+      "requests": 838566,
+      "ts_eligible": 318461
+    },
+    {
+      "hour_utc": "2026-11-15T10:00:00Z",
+      "requests": 873387,
+      "ts_eligible": 281519
+    },
+    {
+      "hour_utc": "2026-11-15T11:00:00Z",
+      "requests": 631545,
+      "ts_eligible": 270167
+    },
+    {
+      "hour_utc": "2026-11-15T12:00:00Z",
+      "requests": 645569,
+      "ts_eligible": 244002
+    },
+    {
+      "hour_utc": "2026-11-15T13:00:00Z",
+      "requests": 934539,
+      "ts_eligible": 366360
+    },
+    {
+      "hour_utc": "2026-11-15T14:00:00Z",
+      "requests": 913012,
+      "ts_eligible": 383467
+    },
+    {
+      "hour_utc": "2026-11-15T15:00:00Z",
+      "requests": 589828,
+      "ts_eligible": 252168
+    },
+    {
+      "hour_utc": "2026-11-15T16:00:00Z",
+      "requests": 679191,
+      "ts_eligible": 213305
+    },
+    {
+      "hour_utc": "2026-11-15T17:00:00Z",
+      "requests": 747127,
+      "ts_eligible": 240520
+    },
+    {
+      "hour_utc": "2026-11-15T18:00:00Z",
+      "requests": 972044,
+      "ts_eligible": 344352
+    },
+    {
+      "hour_utc": "2026-11-15T19:00:00Z",
+      "requests": 1085027,
+      "ts_eligible": 373452
+    },
+    {
+      "hour_utc": "2026-11-15T20:00:00Z",
+      "requests": 1418660,
+      "ts_eligible": 519403
+    },
+    {
+      "hour_utc": "2026-11-15T21:00:00Z",
+      "requests": 1411980,
+      "ts_eligible": 518092
+    },
+    {
+      "hour_utc": "2026-11-15T22:00:00Z",
+      "requests": 835732,
+      "ts_eligible": 272500
+    },
+    {
+      "hour_utc": "2026-11-15T23:00:00Z",
+      "requests": 621548,
+      "ts_eligible": 173534
+    },
+    {
+      "hour_utc": "2026-11-16T00:00:00Z",
+      "requests": 360041,
+      "ts_eligible": 109499
+    },
+    {
+      "hour_utc": "2026-11-16T01:00:00Z",
+      "requests": 220323,
+      "ts_eligible": 90542
+    },
+    {
+      "hour_utc": "2026-11-16T02:00:00Z",
+      "requests": 200556,
+      "ts_eligible": 79184
+    },
+    {
+      "hour_utc": "2026-11-16T03:00:00Z",
+      "requests": 196025,
+      "ts_eligible": 78872
+    },
+    {
+      "hour_utc": "2026-11-16T04:00:00Z",
+      "requests": 188990,
+      "ts_eligible": 73912
+    },
+    {
+      "hour_utc": "2026-11-16T05:00:00Z",
+      "requests": 89977,
+      "ts_eligible": 35476
+    }
+  ],
+  "hosts": [
+    {
+      "host": "veto.akamaized.net",
+      "requests": 714426,
+      "users": 413,
+      "ts_eligible": 274295
+    },
+    {
+      "host": "mbgthz-veto.akamaized.net",
+      "requests": 104164,
+      "users": 26,
+      "ts_eligible": 4804
+    },
+    {
+      "host": "nn-veto.akamaized.net",
+      "requests": 82654,
+      "users": 107,
+      "ts_eligible": 29060
+    },
+    {
+      "host": "ndtv-veto.akamaized.net",
+      "requests": 68380,
+      "users": 107,
+      "ts_eligible": 27302
+    },
+    {
+      "host": "sanskar-live-indiatvnews.akamaized.net",
+      "requests": 34919,
+      "users": 31,
+      "ts_eligible": 13226
+    },
+    {
+      "host": "b4u-veto-m.akamaized.net",
+      "requests": 31301,
+      "users": 95,
+      "ts_eligible": 16938
+    },
+    {
+      "host": "xind-live-indiatvnews.akamaized.net",
+      "requests": 27470,
+      "users": 50,
+      "ts_eligible": 10707
+    },
+    {
+      "host": "veto-vod.akamaized.net",
+      "requests": 26973,
+      "users": 534,
+      "ts_eligible": 23286
+    },
+    {
+      "host": "b4u-veto-music.akamaized.net",
+      "requests": 23741,
+      "users": 95,
+      "ts_eligible": 13657
+    },
+    {
+      "host": "vetointv.akamaized.net",
+      "requests": 23685,
+      "users": 69,
+      "ts_eligible": 156
+    },
+    {
+      "host": "manorama-veto.akamaized.net",
+      "requests": 17278,
+      "users": 7,
+      "ts_eligible": 10364
+    },
+    {
+      "host": "epic-bharat-veto.akamaized-staging.net",
+      "requests": 16934,
+      "users": 1,
+      "ts_eligible": 10314
+    },
+    {
+      "host": "epic-tv-veto.akamaized-staging.net",
+      "requests": 16925,
+      "users": 1,
+      "ts_eligible": 10317
+    },
+    {
+      "host": "tennis-vod.akamaized.net",
+      "requests": 13352,
+      "users": 167,
+      "ts_eligible": 12239
+    },
+    {
+      "host": "vetostreams.akamaized.net",
+      "requests": 12930,
+      "users": 4,
+      "ts_eligible": 6466
+    },
+    {
+      "host": "yrf-veto.akamaized.net",
+      "requests": 7735,
+      "users": 49,
+      "ts_eligible": 940
+    },
+    {
+      "host": "veto-staging.akamaized.net",
+      "requests": 5969,
+      "users": 28,
+      "ts_eligible": 1279
+    },
+    {
+      "host": "gtc-veto.akamaized.net",
+      "requests": 5163,
+      "users": 31,
+      "ts_eligible": 133
+    },
+    {
+      "host": "b4u-veto-kadak.akamaized.net",
+      "requests": 4766,
+      "users": 98,
+      "ts_eligible": 1197
+    },
+    {
+      "host": "ndtvprofit-veto.akamaized.net",
+      "requests": 4028,
+      "users": 52,
+      "ts_eligible": 155
+    },
+    {
+      "host": "b4u-veto.akamaized.net",
+      "requests": 2248,
+      "users": 12,
+      "ts_eligible": 259
+    },
+    {
+      "host": "bmasala-live.akamaized.net",
+      "requests": 1829,
+      "users": 9,
+      "ts_eligible": 72
+    },
+    {
+      "host": "epic-music-veto.akamaized.net",
+      "requests": 1443,
+      "users": 31,
+      "ts_eligible": 150
+    },
+    {
+      "host": "indiatv-intvcricket.akamaized.net",
+      "requests": 1435,
+      "users": 1,
+      "ts_eligible": 0
+    },
+    {
+      "host": "vetocricket.akamaized.net",
+      "requests": 1432,
+      "users": 2,
+      "ts_eligible": 0
+    },
+    {
+      "host": "epic-veto.akamaized-staging.net",
+      "requests": 1423,
+      "users": 1,
+      "ts_eligible": 0
+    },
+    {
+      "host": "epic-kid-veto.akamaized-staging.net",
+      "requests": 1418,
+      "users": 1,
+      "ts_eligible": 0
+    },
+    {
+      "host": "epic-music-veto.akamaized-staging.net",
+      "requests": 1416,
+      "users": 1,
+      "ts_eligible": 0
+    },
+    {
+      "host": "epic-bharat-veto.akamaized.net",
+      "requests": 240,
+      "users": 24,
+      "ts_eligible": 86
+    },
+    {
+      "host": "epic-veto.akamaized.net",
+      "requests": 142,
+      "users": 11,
+      "ts_eligible": 56
+    },
+    {
+      "host": "epic-kid-veto.akamaized.net",
+      "requests": 48,
+      "users": 13,
+      "ts_eligible": 14
+    },
+    {
+      "host": "epic-tv-veto.akamaized.net",
+      "requests": 45,
+      "users": 6,
+      "ts_eligible": 13
+    }
+  ],
+  "http_status": [
+    {
+      "status": 200,
+      "requests": 16409059
+    },
+    {
+      "status": 206,
+      "requests": 481996
+    },
+    {
+      "status": 302,
+      "requests": 11
+    },
+    {
+      "status": 304,
+      "requests": 6366
+    },
+    {
+      "status": 400,
+      "requests": 2
+    },
+    {
+      "status": 401,
+      "requests": 40
+    },
+    {
+      "status": 403,
+      "requests": 174499
+    },
+    {
+      "status": 404,
+      "requests": 81732
+    },
+    {
+      "status": 503,
+      "requests": 375
+    },
+    {
+      "status": 504,
+      "requests": 239
+    }
+  ]
+}

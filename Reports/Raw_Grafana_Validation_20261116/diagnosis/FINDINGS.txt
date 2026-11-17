@@ -1,0 +1,43 @@
+WHY RAW LOGS SHOW LESS THAN GRAFANA - 16 NOVEMBER 2026 IST
+
+PROVEN PRIMARY CAUSE: SOURCE/HOST COVERAGE MISMATCH
+Grafana contains ott-indiatv.akamaized.net; the downloaded UTC 15 and UTC 16
+files contain ZERO records for this host, including outside the selected IST day.
+
+Missing host in Grafana:
+- cp feed identifier: 1880711 (queried directly from Grafana)
+- 676,820 requests
+- 106,164 eligible TS requests
+- 6,106 distinct IPs on that host (not all additional users; audiences overlap)
+- 175,734,291,204 successful TS video bytes
+
+LIKE-FOR-LIKE SHARED HOSTS
+- Local raw distinct IPs: 23,383
+- Grafana excluding the missing host: 23,378
+- Difference: 5 IPs (approximately 0.0214% of local)
+- Local requests: 19,375,867; Grafana: 19,364,609
+- Local has 11,258 more common-host requests (approximately 0.0581%)
+- Local has 4,280 more common-host eligible TS requests (approximately 0.0600%)
+
+NET GAP EXPLAINED
+676,820 missing-host requests - 11,258 extra local requests = 665,562.
+106,164 missing-host TS - 4,280 extra local TS = 101,884.
+These exactly reconcile to the earlier full-day comparison.
+
+DUPLICATE FINDING
+Local files contain 6,608 extra copies of identical NDJSON lines within the IST
+day; 2,498 of those are eligible TS lines. Duplicates were retained, not deleted.
+This explains part of the common-host excess. The remaining difference needs
+request-level/ingestion-rule inspection; it must not all be called deduplication.
+
+WHAT IS NOT THE MAIN CAUSE
+Both sides use the identical IST day and TS conditions for the count comparison.
+0.6s versus 6s changes hours by 10x, but cannot explain a request-count gap.
+There were no gzip parsing errors or rejected JSON lines in either local batch.
+
+NEXT STEP FOR THE S3 DOWNLOAD
+Locate which S3 bucket, prefix, delivery stream or export contains the India TV
+OTT host. Either add that feed to the local download and rerun the audit, or
+exclude ott-indiatv.akamaized.net from Grafana for the Veto-only comparison.
+The bucket/prefix configuration was not inspected, so its exact location is not
+claimed here. The files are intact and no shared lake data was modified.

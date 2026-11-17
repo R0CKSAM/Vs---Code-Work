@@ -1,0 +1,15 @@
+{
+  "phase": "complete_local",
+  "updatedAt": "2026-11-17T08:19:05.760596+00:00",
+  "pid": 34144,
+  "files_completed": 429107,
+  "files_total": 429107,
+  "rows_parsed": 19485949,
+  "elapsed_seconds": 174.5,
+  "errors": 0,
+  "bad_rows": 0,
+  "percent": 100.0,
+  "missing_hour_bins_for_ist_day": true,
+  "coverage_note": "Hourly presence and min/max are boundary checks only, not proof every source delivery file is present.",
+  "source_files_unchanged": true
+}

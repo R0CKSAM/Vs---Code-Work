@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "date": "2026-11-16",
+  "inventory_sha256": "06db7af6d4a43c397a0771d9a906fea236ee45ce5395a36689e65c37bfb95db9",
+  "files": 427981,
+  "bytes": 1348573390,
+  "roots": [
+    "D:\\Veto Logs Backup\\Veto Stream Logs\\11\\15"
+  ],
+  "chunk_files": 1000
+}

@@ -1,4 +1,4 @@
-import { DEFAULT_CONFIG, FALLBACK_DATASOURCE_UID, PANEL_NAME, parseDashboardUrl, assertDateRange, buildGeoSql, parseGrafanaFrames, summarize, istToday, istHour, addDays, datesForLastCompleteDays } from './core.mjs';
+import { DEFAULT_CONFIG, FALLBACK_DATASOURCE_UID, PANEL_NAME, parseDashboardUrl, assertDateRange, istMidnightMs, buildGeoSql, parseGrafanaFrames, summarize, istToday, istHour, addDays, datesForLastCompleteDays } from './core.mjs';
 import { replaceRange, readDataset, clearDataset } from './database.mjs';
 import {REPORT_ORDER,ALL_REPORT_ORDER,REPORTS,datasetsFor,sqlForReport,parseReportFrames,assertSourcePanels} from './reports.mjs';
 import {putReportsAtomically,allReportRows,clearReportRows} from './report-db.mjs';
@@ -321,6 +321,25 @@ async function automaticCheck(){
 chrome.runtime.onMessage.addListener((msg,_sender,reply)=>{
   (async()=>{
     switch(msg?.type){
+      case 'VALIDATOR_CAPTURE':{
+        if(busy)throw new Error('Another fetch is running. Try again when it finishes.');
+        const allowed=['kpis','viewership_stats','geo'];
+        if(!allowed.includes(msg.report))throw new Error('Choose a supported validator report.');
+        const days=assertDateRange(msg.from,msg.to);
+        if(days>7)throw new Error('Live validation is limited to 7 completed IST dates. Start with one date.');
+        const conf=await config(),spec=parseDashboardUrl(String(msg.dashboardUrl||conf.dashboardUrl));
+        busy=true;
+        try{
+          const tab=await findDashboardTab(spec);
+          if(tab.discarded)throw new Error('Open the Grafana tab once to wake it, then retry.');
+          const sql=sqlForReport(msg.report,msg.from,msg.to,spec.filters);
+          const payload=await fetchV2ViaGrafana(tab.id,spec,msg.report,sql,istMidnightMs(msg.from),istMidnightMs(addDays(msg.to,1)));
+          const diagnostics={},rows=parseReportFrames(payload,msg.report,msg.from,msg.to,diagnostics);
+          if(!rows.length)throw new Error('Grafana returned no rows. This is not a zero-valued match.');
+          const url=new URL(spec.url);url.searchParams.delete('var-hdx_query_errors');
+          return {schema:'smart-export-validation-snapshot/v1',mode:'live',capturedAt:new Date().toISOString(),source:{url:url.toString(),datasetKey:spec.datasetKey,filters:spec.filters,orgId:spec.orgId,timezone:'Asia/Kolkata'},from:msg.from,to:msg.to,queries:{[msg.report]:sql},diagnostics,datasets:{[msg.report]:rows}};
+        }finally{busy=false;}
+      }
       case 'STATE_V2':return await getV2State();
       case 'SAVE_PICKER':return {config:await savePickerSettings(msg)};
       case 'SYNC_PICKED':return await syncV2(msg.from,msg.to,'picked',{typesOverride:validateReports(msg.reports)});

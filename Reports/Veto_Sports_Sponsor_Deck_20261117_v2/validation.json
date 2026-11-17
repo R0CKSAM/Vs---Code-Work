@@ -1,0 +1,13 @@
+{
+  "slides": 16,
+  "rendered_in": "Microsoft PowerPoint",
+  "pdf_text_all_pages": true,
+  "powerpoint_text_fit": "passed for all slides",
+  "formula": "sum(raw_ts_requests) * 0.6 / 3600",
+  "total_users": 3422658,
+  "total_estimated_watch_hours": 200815.31916666665,
+  "user_definition": "Distinct trimmed client IPs on positive raw_ts_requests rows",
+  "aggregation_reconciliation": "events, dates, cohorts, cricket overlap and device categories all reconcile",
+  "raw_identifiers_exported": false,
+  "original_deck_preserved": true
+}

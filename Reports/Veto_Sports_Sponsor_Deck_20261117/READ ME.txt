@@ -1,0 +1,22 @@
+VETO SPORTS SPONSOR PRESENTATION
+
+Open Veto_Sports_Sponsor_Presentation.pptx for the editable deck.
+Open the PDF for sharing. There are 14 slides, with presenter notes in PowerPoint.
+
+Coverage: 18 Sep to 14 Nov 2026, 31 represented dates.
+Headline: 3,422,658 distinct client IPs on positive raw_ts_requests rows.
+Volume: 1,204,891,915 raw TS requests across six property labels.
+These are delivery metrics, not people, paid-media impressions or watch minutes.
+Event counts overlap; do not sum per-event IP counts.
+The source proves a streaming portfolio, not event organisation or commercial rights.
+Sponsorship packages and activations are proposals, not booked inventory.
+
+Aggregate CSV and JSON files provide the calculation trail. No raw IPs/device IDs are exported.
+
+Rebuild with the workspace Python environment:
+1. Run analyze_source.py
+2. Run check_source_quality.py
+3. Run calculate_delivery_metrics.py
+4. Run build_deck.py
+Requires duckdb and python-pptx. PDF and previews were exported using Microsoft PowerPoint.
+The original shared Parquet file was not modified.

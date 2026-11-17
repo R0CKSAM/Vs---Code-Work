@@ -1,0 +1,24 @@
+VETO SPORTS - SPONSOR PRESENTATION V2
+
+Open the PowerPoint for editing and presenter notes. PDF is the sharing version.
+White / orange / dark-blue theme. 16 slides, including two appendices.
+
+WHAT CHANGED
+- User-facing label is now Users; defined as distinct client IPs on positive-TS rows.
+- TS request headline replaced with 200.8K estimated watch hours.
+- Formula: SUM(raw_ts_requests) x 0.6 / 3600; requested 0.6-second assumption.
+- Deeper analysis: cricket anchor, T20 audience growth, SAFF in-file exclusivity, non-cricket-only users, repeat cohort, peak dates and regional differences.
+- Sponsor opportunities are linked to each finding.
+
+IMPORTANT INTERPRETATION
+Users are IP-based reporting identifiers, not independently verified people.
+Hours are a TS-count estimate, not measured player viewing.
+An older ETL tool used 6 seconds: do not mix its totals with this deck.
+Exclusive / returning cohorts describe only this file and reporting window.
+Rights, future inventory, pricing and conversion measurement require separate confirmation.
+
+REBUILD
+Use workspace venv Python to run analyze_deeper.py, then build_bright_deck.py.
+Requires duckdb and python-pptx. PDF/previews exported using Microsoft PowerPoint.
+CSV and JSON files contain aggregate data only; no raw user identifiers.
+The original Parquet and previous presentation are unchanged.

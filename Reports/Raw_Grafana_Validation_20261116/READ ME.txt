@@ -1,0 +1,38 @@
+RAW GZIP / GRAFANA AUDIT - 16 NOVEMBER 2026
+
+UTC-date folder 16 has 429,107 gzip files and 19,485,949 parsed records.
+It does not cover the complete 16 November IST day by itself.
+The adjacent UTC-date folder 15 is processed separately to supply the missing hours.
+
+The final full-day window is 15 Nov 18:30 UTC <= request time < 16 Nov 18:30 UTC.
+Only files from these local inputs are read. No shared lake partitions are modified.
+
+After both local batches complete, finish_comparison.py combines their Parquet
+parts without rereading the GZIP files and creates full_ist_day/comparison.html,
+comparison.csv and comparison.json.
+
+PROGRESS
+utc16/progress.json and utc15/progress.json show checkpoints and errors.
+parts/ contains private identifiers needed for exact distinct calculations.
+Keep these scratch parts locally; they are ignored by Git. Shared results are aggregates.
+
+DEFINITIONS
+Eligible TS = raw path ends .ts, status 200/206, and filename ends -digits.ts or _digits.ts.
+All-TS counts (any status) are reported separately.
+Estimated watch hours are reported with both 0.6-second and 6-second assumptions.
+Counts use the same exclusive end timestamp as Grafana.
+Exact duplicate NDJSON lines are detected and retained, not silently removed.
+Local exact identifier counts are not identical to Grafana approximate uniq counts.
+Device/session parsing may differ from Hydrolix ingestion transformations.
+All client IPs and IP+UA values remain local; no identifiers are returned by live queries.
+
+RESTART / RESUME EXAMPLE (PowerShell)
+& 'D:\Vs - Code Work\venv\Scripts\python.exe' -u `
+  'D:\Vs - Code Work\SPORTS-PDF\validate_raw_grafana.py' `
+  --folder 'D:\Veto Logs Backup\Veto Stream Logs\11\15' `
+  --date 2026-11-16 `
+  --out 'D:\Vs - Code Work\Reports\Raw_Grafana_Validation_20261116\utc15' `
+  --workers 4 --max-minutes 15
+
+The script verifies input inventory and uses completed part receipts on resume.
+If the input inventory changes, use a new output directory; old results remain intact.
