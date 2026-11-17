@@ -30,6 +30,8 @@ AMAGI_CHANNEL_MAP = {
 
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+from payload_shards import write_payload_shards
 SRC_ROOT = HERE.parents[1]
 ETL_ROOT = SRC_ROOT.parent
 DEFAULT_OUTPUT_ROOT = ETL_ROOT / "output"
@@ -1925,10 +1927,11 @@ def main() -> None:
     data = build_data(args)
     chartjs_cache = args.output_root / "cache" / "chartjs" / "chart.umd.min.js"
     chartjs = load_chartjs(chartjs_cache, fallback="window.Chart=null;")
+    payload_tags = '' if args.dry_run else write_payload_shards(data, args.out)
     html = render_template(
         HERE / "template.html",
-        CHARTJS_TAG=chartjs_script(chartjs),
-        DATA_BLOB=json_blob(data),
+        CHARTJS_TAG=chartjs_script(chartjs) + '\n' + payload_tags,
+        DATA_BLOB=json_blob(data) if args.dry_run else 'window.__AUDIENCE_DATA__',
     )
 
     if args.dry_run:
@@ -1936,7 +1939,9 @@ def main() -> None:
         print(f"Would write: {args.out}")
         return
 
-    args.out.write_text(html, encoding="utf-8")
+    staged_html = args.out.with_suffix('.html.new')
+    staged_html.write_text(html, encoding="utf-8")
+    os.replace(staged_html, args.out)
     print(f"Audience operations dashboard written: {args.out.resolve()}")
     print(f"Size: {args.out.stat().st_size / 1024:.1f} KB")
 

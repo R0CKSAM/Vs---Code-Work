@@ -177,6 +177,7 @@ ETL/extras/apps/PRODUCTION.zip
 # Generated audience reports; keep helper scripts visible to Git.
 ETL/output/audience_ops/*.html
 ETL/output/audience_ops/*.csv
+ETL/output/audience_ops/*_data_*/
 
 # Local publishing clones, installed export dependencies, and repair scratch data.
 # Already tracked files remain tracked; new scratch artifacts must not be staged.
