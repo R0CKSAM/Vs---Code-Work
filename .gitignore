@@ -194,3 +194,8 @@ ETL/chatGPT-Bot/New Text Document.txt
 
 # Generated ASRUN publication backups remain local.
 ETL/asrun_demo/backups/
+
+# Sports exports and workstation run state stay local; retain store documentation.
+ETL/SportTodo/sports_batch_process.json
+ETL/SportTodo/sports_store/*
+!ETL/SportTodo/sports_store/README.txt
