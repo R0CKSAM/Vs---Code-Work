@@ -1,0 +1,20 @@
+DEVICE RETURN COUNTS - ALL SPORTS EVENTS COMBINED
+
+daily_device_returns.csv is the requested primary table.
+Returning device = present on this date AND observed on an earlier date in THIS file.
+A device is counted once per date even if seen under multiple IPs or events.
+First-observed is not a lifetime/new-customer claim. The first represented date has
+zero returning IDs because the file contains no earlier baseline.
+
+All rows are used, including zero-TS rows. The supplied aggregate dataset mostly
+stores device identifiers on rows separate from positive TS request counts.
+Filtering to positive TS requests would discard almost all identifiable devices.
+Missing/placeholder IDs are excluded; no IDs are guessed from IP addresses.
+
+Other CSV files describe IP/device relationships only where both values exist.
+One IP may cover many devices (shared networks/NAT), and an ID may use many IPs
+(mobility, dynamic addresses, VPNs or shared/reused IDs). Counts alone cannot
+prove which mechanism caused a relationship.
+
+This file has no raw UA column; Device Type and OS Type are not substitutes.
+No raw identifiers are exported. The input Parquet is unchanged.

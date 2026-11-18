@@ -1,0 +1,693 @@
+{
+  "createdAt": "2026-11-18T10:28:42.582687+00:00",
+  "source": "\\\\192.168.50.11\\analysis team\\Veto Logs Backup\\Chinmoy\\sports_all_dates_12_columns.parquet",
+  "source_bytes": 200254646,
+  "source_mtime_ns": 1794985858880302600,
+  "quality": {
+    "rows_total": 9902904,
+    "rows_without_valid_device_id": 6240327,
+    "valid_distinct_device_ids": 616149,
+    "valid_distinct_ips": 4792168,
+    "valid_device_rows_with_positive_ts": 3,
+    "valid_device_ids_with_positive_ts": 1,
+    "first_date": "2026-09-18",
+    "last_date": "2026-11-17",
+    "represented_dates": 36
+  },
+  "repeat_device_summary": {
+    "unique_devices": 616149,
+    "devices_seen_on_multiple_dates": 363170
+  },
+  "ua_available": false,
+  "definitions": {
+    "total_device_ids": "Distinct trimmed valid device_id per IST date, all events/hosts/rows combined. No positive-TS filter.",
+    "returning_device_ids": "Device IDs present today whose first observed date in this file is earlier than today. Counted once per date regardless of events/IPs.",
+    "first_observed_device_ids": "First appearance inside this file, not proof the device is new in its lifetime.",
+    "returning_devices_with_new_ip": "Previously observed device IDs with at least one client IP not linked to that ID on an earlier date in this file.",
+    "invalid_ids": "Null/empty or case-insensitive unknown,null,none,nan,-,0,na,n/a excluded. Other IDs retained exactly after trimming.",
+    "relationship_scope": "Only records where both device_id and cli_ip are present. One ID does not prove one physical device.",
+    "ua": "Device Type and OS Type are classifications, not a raw UA string. UA cannot be compared from this file.",
+    "date_context": "Match Name and Event Name list the distinct labels represented on that date. Device counts remain deduplicated across all events; these are not event-level counts."
+  },
+  "daily": [
+    {
+      "date_ist": "2026-09-18",
+      "total_device_ids": 3736,
+      "returning_device_ids": 0,
+      "first_observed_device_ids": 3736,
+      "returning_device_pct": 0.0,
+      "Match Name": "Davis Cup",
+      "Event Name": "Davis Cup"
+    },
+    {
+      "date_ist": "2026-09-19",
+      "total_device_ids": 3167,
+      "returning_device_ids": 1686,
+      "first_observed_device_ids": 1481,
+      "returning_device_pct": 53.24,
+      "Match Name": "Davis Cup",
+      "Event Name": "Davis Cup"
+    },
+    {
+      "date_ist": "2026-09-20",
+      "total_device_ids": 836,
+      "returning_device_ids": 482,
+      "first_observed_device_ids": 354,
+      "returning_device_pct": 57.66,
+      "Match Name": "Davis Cup",
+      "Event Name": "Davis Cup"
+    },
+    {
+      "date_ist": "2026-09-21",
+      "total_device_ids": 22,
+      "returning_device_ids": 19,
+      "first_observed_device_ids": 3,
+      "returning_device_pct": 86.36,
+      "Match Name": "Davis Cup",
+      "Event Name": "Davis Cup"
+    },
+    {
+      "date_ist": "2026-09-23",
+      "total_device_ids": 227,
+      "returning_device_ids": 124,
+      "first_observed_device_ids": 103,
+      "returning_device_pct": 54.63,
+      "Match Name": "BJKC 2026",
+      "Event Name": "BJKC 2026"
+    },
+    {
+      "date_ist": "2026-09-24",
+      "total_device_ids": 416,
+      "returning_device_ids": 240,
+      "first_observed_device_ids": 176,
+      "returning_device_pct": 57.69,
+      "Match Name": "BJKC 2026",
+      "Event Name": "BJKC 2026"
+    },
+    {
+      "date_ist": "2026-09-25",
+      "total_device_ids": 239,
+      "returning_device_ids": 121,
+      "first_observed_device_ids": 118,
+      "returning_device_pct": 50.63,
+      "Match Name": "BJKC 2026",
+      "Event Name": "BJKC 2026"
+    },
+    {
+      "date_ist": "2026-09-26",
+      "total_device_ids": 179,
+      "returning_device_ids": 102,
+      "first_observed_device_ids": 77,
+      "returning_device_pct": 56.98,
+      "Match Name": "BJKC 2026",
+      "Event Name": "BJKC 2026"
+    },
+    {
+      "date_ist": "2026-09-27",
+      "total_device_ids": 227,
+      "returning_device_ids": 137,
+      "first_observed_device_ids": 90,
+      "returning_device_pct": 60.35,
+      "Match Name": "BJKC 2026",
+      "Event Name": "BJKC 2026"
+    },
+    {
+      "date_ist": "2026-10-09",
+      "total_device_ids": 45708,
+      "returning_device_ids": 147,
+      "first_observed_device_ids": 45561,
+      "returning_device_pct": 0.32,
+      "Match Name": "Pak-Sl 1st T20",
+      "Event Name": "Pak-Sl T20 Series"
+    },
+    {
+      "date_ist": "2026-10-11",
+      "total_device_ids": 52272,
+      "returning_device_ids": 31523,
+      "first_observed_device_ids": 20749,
+      "returning_device_pct": 60.31,
+      "Match Name": "Pak-Sl 2nd T20",
+      "Event Name": "Pak-Sl T20 Series"
+    },
+    {
+      "date_ist": "2026-10-13",
+      "total_device_ids": 76094,
+      "returning_device_ids": 44523,
+      "first_observed_device_ids": 31571,
+      "returning_device_pct": 58.51,
+      "Match Name": "Pak-Sl 3rd T20",
+      "Event Name": "Pak-Sl T20 Series"
+    },
+    {
+      "date_ist": "2026-10-18",
+      "total_device_ids": 101819,
+      "returning_device_ids": 56544,
+      "first_observed_device_ids": 45275,
+      "returning_device_pct": 55.53,
+      "Match Name": "Pak-Sl",
+      "Event Name": "ODI Tri Series"
+    },
+    {
+      "date_ist": "2026-10-20",
+      "total_device_ids": 126692,
+      "returning_device_ids": 79935,
+      "first_observed_device_ids": 46757,
+      "returning_device_pct": 63.09,
+      "Match Name": "Pak-Eng",
+      "Event Name": "ODI Tri Series"
+    },
+    {
+      "date_ist": "2026-10-22",
+      "total_device_ids": 135366,
+      "returning_device_ids": 92417,
+      "first_observed_device_ids": 42949,
+      "returning_device_pct": 68.27,
+      "Match Name": "Eng-Sl",
+      "Event Name": "ODI Tri Series"
+    },
+    {
+      "date_ist": "2026-10-25",
+      "total_device_ids": 229148,
+      "returning_device_ids": 139452,
+      "first_observed_device_ids": 89696,
+      "returning_device_pct": 60.86,
+      "Match Name": "Eng-Pak",
+      "Event Name": "ODI Tri Series"
+    },
+    {
+      "date_ist": "2026-10-27",
+      "total_device_ids": 112096,
+      "returning_device_ids": 96694,
+      "first_observed_device_ids": 15402,
+      "returning_device_pct": 86.26,
+      "Match Name": "Pak-Sl | Weightlifting",
+      "Event Name": "ODI Tri Series | Weightlifting"
+    },
+    {
+      "date_ist": "2026-10-28",
+      "total_device_ids": 949,
+      "returning_device_ids": 798,
+      "first_observed_device_ids": 151,
+      "returning_device_pct": 84.09,
+      "Match Name": "Weightlifting",
+      "Event Name": "Weightlifting"
+    },
+    {
+      "date_ist": "2026-10-29",
+      "total_device_ids": 183462,
+      "returning_device_ids": 130875,
+      "first_observed_device_ids": 52587,
+      "returning_device_pct": 71.34,
+      "Match Name": "Eng-Sl | Weightlifting",
+      "Event Name": "ODI Tri Series | Weightlifting"
+    },
+    {
+      "date_ist": "2026-10-30",
+      "total_device_ids": 2087,
+      "returning_device_ids": 1639,
+      "first_observed_device_ids": 448,
+      "returning_device_pct": 78.53,
+      "Match Name": "Weightlifting",
+      "Event Name": "Weightlifting"
+    },
+    {
+      "date_ist": "2026-10-31",
+      "total_device_ids": 297468,
+      "returning_device_ids": 215158,
+      "first_observed_device_ids": 82310,
+      "returning_device_pct": 72.33,
+      "Match Name": "Pak-Sl | Weightlifting",
+      "Event Name": "ODI Tri Series | Weightlifting"
+    },
+    {
+      "date_ist": "2026-11-01",
+      "total_device_ids": 2883,
+      "returning_device_ids": 2343,
+      "first_observed_device_ids": 540,
+      "returning_device_pct": 81.27,
+      "Match Name": "Weightlifting",
+      "Event Name": "Weightlifting"
+    },
+    {
+      "date_ist": "2026-11-02",
+      "total_device_ids": 606,
+      "returning_device_ids": 497,
+      "first_observed_device_ids": 109,
+      "returning_device_pct": 82.01,
+      "Match Name": "Weightlifting",
+      "Event Name": "Weightlifting"
+    },
+    {
+      "date_ist": "2026-11-03",
+      "total_device_ids": 927,
+      "returning_device_ids": 779,
+      "first_observed_device_ids": 148,
+      "returning_device_pct": 84.03,
+      "Match Name": "Weightlifting",
+      "Event Name": "Weightlifting"
+    },
+    {
+      "date_ist": "2026-11-04",
+      "total_device_ids": 1251,
+      "returning_device_ids": 888,
+      "first_observed_device_ids": 363,
+      "returning_device_pct": 70.98,
+      "Match Name": "Weightlifting",
+      "Event Name": "Weightlifting"
+    },
+    {
+      "date_ist": "2026-11-05",
+      "total_device_ids": 62701,
+      "returning_device_ids": 25903,
+      "first_observed_device_ids": 36798,
+      "returning_device_pct": 41.31,
+      "Match Name": "SAFF | Weightlifting",
+      "Event Name": "SAFF Championship | Weightlifting"
+    },
+    {
+      "date_ist": "2026-11-06",
+      "total_device_ids": 628,
+      "returning_device_ids": 538,
+      "first_observed_device_ids": 90,
+      "returning_device_pct": 85.67,
+      "Match Name": "Weightlifting",
+      "Event Name": "Weightlifting"
+    },
+    {
+      "date_ist": "2026-11-07",
+      "total_device_ids": 701,
+      "returning_device_ids": 547,
+      "first_observed_device_ids": 154,
+      "returning_device_pct": 78.03,
+      "Match Name": "Weightlifting",
+      "Event Name": "Weightlifting"
+    },
+    {
+      "date_ist": "2026-11-08",
+      "total_device_ids": 15604,
+      "returning_device_ids": 13947,
+      "first_observed_device_ids": 1657,
+      "returning_device_pct": 89.38,
+      "Match Name": "SAFF | Weightlifting",
+      "Event Name": "SAFF Championship | Weightlifting"
+    },
+    {
+      "date_ist": "2026-11-09",
+      "total_device_ids": 70813,
+      "returning_device_ids": 63371,
+      "first_observed_device_ids": 7442,
+      "returning_device_pct": 89.49,
+      "Match Name": "Pak-Sl 1st Test",
+      "Event Name": "Test Series"
+    },
+    {
+      "date_ist": "2026-11-10",
+      "total_device_ids": 58093,
+      "returning_device_ids": 54776,
+      "first_observed_device_ids": 3317,
+      "returning_device_pct": 94.29,
+      "Match Name": "Pak-Sl 1st Test",
+      "Event Name": "Test Series"
+    },
+    {
+      "date_ist": "2026-11-11",
+      "total_device_ids": 77315,
+      "returning_device_ids": 62547,
+      "first_observed_device_ids": 14768,
+      "returning_device_pct": 80.9,
+      "Match Name": "Pak-Sl 1st Test | SAFF",
+      "Event Name": "SAFF Championship | Test Series"
+    },
+    {
+      "date_ist": "2026-11-12",
+      "total_device_ids": 50315,
+      "returning_device_ids": 47949,
+      "first_observed_device_ids": 2366,
+      "returning_device_pct": 95.3,
+      "Match Name": "Pak-Sl 1st Test",
+      "Event Name": "Test Series"
+    },
+    {
+      "date_ist": "2026-11-13",
+      "total_device_ids": 42335,
+      "returning_device_ids": 40678,
+      "first_observed_device_ids": 1657,
+      "returning_device_pct": 96.09,
+      "Match Name": "Pak-Sl 1st Test",
+      "Event Name": "Test Series"
+    },
+    {
+      "date_ist": "2026-11-14",
+      "total_device_ids": 48331,
+      "returning_device_ids": 34036,
+      "first_observed_device_ids": 14295,
+      "returning_device_pct": 70.42,
+      "Match Name": "SAFF",
+      "Event Name": "SAFF Championship"
+    },
+    {
+      "date_ist": "2026-11-17",
+      "total_device_ids": 141202,
+      "returning_device_ids": 88351,
+      "first_observed_device_ids": 52851,
+      "returning_device_pct": 62.57,
+      "Match Name": "Pak-Sl 2nd Test | SAFF",
+      "Event Name": "SAFF Championship | Test Series"
+    }
+  ],
+  "daily_ip_relationship": [
+    {
+      "date_ist": "2026-09-18",
+      "device_ids_with_ip": 3736,
+      "ips_with_device_id": 6149,
+      "device_ip_pairs": 6383,
+      "devices_on_multiple_ips_same_day": 1335,
+      "returning_devices_with_new_ip": 0
+    },
+    {
+      "date_ist": "2026-09-19",
+      "device_ids_with_ip": 3167,
+      "ips_with_device_id": 4528,
+      "device_ip_pairs": 4648,
+      "devices_on_multiple_ips_same_day": 854,
+      "returning_devices_with_new_ip": 1319
+    },
+    {
+      "date_ist": "2026-09-20",
+      "device_ids_with_ip": 836,
+      "ips_with_device_id": 1097,
+      "device_ip_pairs": 1112,
+      "devices_on_multiple_ips_same_day": 188,
+      "returning_devices_with_new_ip": 318
+    },
+    {
+      "date_ist": "2026-09-21",
+      "device_ids_with_ip": 22,
+      "ips_with_device_id": 22,
+      "device_ip_pairs": 22,
+      "devices_on_multiple_ips_same_day": 0,
+      "returning_devices_with_new_ip": 10
+    },
+    {
+      "date_ist": "2026-09-23",
+      "device_ids_with_ip": 227,
+      "ips_with_device_id": 243,
+      "device_ip_pairs": 258,
+      "devices_on_multiple_ips_same_day": 22,
+      "returning_devices_with_new_ip": 106
+    },
+    {
+      "date_ist": "2026-09-24",
+      "device_ids_with_ip": 416,
+      "ips_with_device_id": 533,
+      "device_ip_pairs": 562,
+      "devices_on_multiple_ips_same_day": 83,
+      "returning_devices_with_new_ip": 212
+    },
+    {
+      "date_ist": "2026-09-25",
+      "device_ids_with_ip": 239,
+      "ips_with_device_id": 267,
+      "device_ip_pairs": 290,
+      "devices_on_multiple_ips_same_day": 36,
+      "returning_devices_with_new_ip": 100
+    },
+    {
+      "date_ist": "2026-09-26",
+      "device_ids_with_ip": 179,
+      "ips_with_device_id": 182,
+      "device_ip_pairs": 192,
+      "devices_on_multiple_ips_same_day": 12,
+      "returning_devices_with_new_ip": 89
+    },
+    {
+      "date_ist": "2026-09-27",
+      "device_ids_with_ip": 227,
+      "ips_with_device_id": 253,
+      "device_ip_pairs": 271,
+      "devices_on_multiple_ips_same_day": 34,
+      "returning_devices_with_new_ip": 110
+    },
+    {
+      "date_ist": "2026-10-09",
+      "device_ids_with_ip": 45708,
+      "ips_with_device_id": 70352,
+      "device_ip_pairs": 73824,
+      "devices_on_multiple_ips_same_day": 15574,
+      "returning_devices_with_new_ip": 131
+    },
+    {
+      "date_ist": "2026-10-11",
+      "device_ids_with_ip": 52272,
+      "ips_with_device_id": 77954,
+      "device_ip_pairs": 82918,
+      "devices_on_multiple_ips_same_day": 17083,
+      "returning_devices_with_new_ip": 29547
+    },
+    {
+      "date_ist": "2026-10-13",
+      "device_ids_with_ip": 76094,
+      "ips_with_device_id": 118240,
+      "device_ip_pairs": 126193,
+      "devices_on_multiple_ips_same_day": 27956,
+      "returning_devices_with_new_ip": 42121
+    },
+    {
+      "date_ist": "2026-10-18",
+      "device_ids_with_ip": 101819,
+      "ips_with_device_id": 209421,
+      "device_ip_pairs": 225244,
+      "devices_on_multiple_ips_same_day": 52552,
+      "returning_devices_with_new_ip": 55124
+    },
+    {
+      "date_ist": "2026-10-20",
+      "device_ids_with_ip": 126692,
+      "ips_with_device_id": 245448,
+      "device_ip_pairs": 265163,
+      "devices_on_multiple_ips_same_day": 62158,
+      "returning_devices_with_new_ip": 75452
+    },
+    {
+      "date_ist": "2026-10-22",
+      "device_ids_with_ip": 135366,
+      "ips_with_device_id": 234482,
+      "device_ip_pairs": 245805,
+      "devices_on_multiple_ips_same_day": 56200,
+      "returning_devices_with_new_ip": 87236
+    },
+    {
+      "date_ist": "2026-10-25",
+      "device_ids_with_ip": 229148,
+      "ips_with_device_id": 460514,
+      "device_ip_pairs": 500751,
+      "devices_on_multiple_ips_same_day": 115243,
+      "returning_devices_with_new_ip": 134214
+    },
+    {
+      "date_ist": "2026-10-27",
+      "device_ids_with_ip": 112096,
+      "ips_with_device_id": 148703,
+      "device_ip_pairs": 159271,
+      "devices_on_multiple_ips_same_day": 29874,
+      "returning_devices_with_new_ip": 89861
+    },
+    {
+      "date_ist": "2026-10-28",
+      "device_ids_with_ip": 949,
+      "ips_with_device_id": 986,
+      "device_ip_pairs": 1012,
+      "devices_on_multiple_ips_same_day": 46,
+      "returning_devices_with_new_ip": 695
+    },
+    {
+      "date_ist": "2026-10-29",
+      "device_ids_with_ip": 183462,
+      "ips_with_device_id": 345994,
+      "device_ip_pairs": 358875,
+      "devices_on_multiple_ips_same_day": 76904,
+      "returning_devices_with_new_ip": 124465
+    },
+    {
+      "date_ist": "2026-10-30",
+      "device_ids_with_ip": 2087,
+      "ips_with_device_id": 2143,
+      "device_ip_pairs": 2159,
+      "devices_on_multiple_ips_same_day": 57,
+      "returning_devices_with_new_ip": 1423
+    },
+    {
+      "date_ist": "2026-10-31",
+      "device_ids_with_ip": 297468,
+      "ips_with_device_id": 604485,
+      "device_ip_pairs": 680225,
+      "devices_on_multiple_ips_same_day": 154282,
+      "returning_devices_with_new_ip": 206193
+    },
+    {
+      "date_ist": "2026-11-01",
+      "device_ids_with_ip": 2883,
+      "ips_with_device_id": 2948,
+      "device_ip_pairs": 2970,
+      "devices_on_multiple_ips_same_day": 80,
+      "returning_devices_with_new_ip": 1952
+    },
+    {
+      "date_ist": "2026-11-02",
+      "device_ids_with_ip": 606,
+      "ips_with_device_id": 629,
+      "device_ip_pairs": 644,
+      "devices_on_multiple_ips_same_day": 23,
+      "returning_devices_with_new_ip": 444
+    },
+    {
+      "date_ist": "2026-11-03",
+      "device_ids_with_ip": 927,
+      "ips_with_device_id": 955,
+      "device_ip_pairs": 968,
+      "devices_on_multiple_ips_same_day": 33,
+      "returning_devices_with_new_ip": 724
+    },
+    {
+      "date_ist": "2026-11-04",
+      "device_ids_with_ip": 1251,
+      "ips_with_device_id": 1279,
+      "device_ip_pairs": 1287,
+      "devices_on_multiple_ips_same_day": 27,
+      "returning_devices_with_new_ip": 828
+    },
+    {
+      "date_ist": "2026-11-05",
+      "device_ids_with_ip": 62701,
+      "ips_with_device_id": 79880,
+      "device_ip_pairs": 81763,
+      "devices_on_multiple_ips_same_day": 12447,
+      "returning_devices_with_new_ip": 25005
+    },
+    {
+      "date_ist": "2026-11-06",
+      "device_ids_with_ip": 628,
+      "ips_with_device_id": 653,
+      "device_ip_pairs": 660,
+      "devices_on_multiple_ips_same_day": 19,
+      "returning_devices_with_new_ip": 465
+    },
+    {
+      "date_ist": "2026-11-07",
+      "device_ids_with_ip": 701,
+      "ips_with_device_id": 728,
+      "device_ip_pairs": 731,
+      "devices_on_multiple_ips_same_day": 21,
+      "returning_devices_with_new_ip": 515
+    },
+    {
+      "date_ist": "2026-11-08",
+      "device_ids_with_ip": 15604,
+      "ips_with_device_id": 17739,
+      "device_ip_pairs": 18136,
+      "devices_on_multiple_ips_same_day": 1664,
+      "returning_devices_with_new_ip": 13371
+    },
+    {
+      "date_ist": "2026-11-09",
+      "device_ids_with_ip": 70813,
+      "ips_with_device_id": 98308,
+      "device_ip_pairs": 103046,
+      "devices_on_multiple_ips_same_day": 19141,
+      "returning_devices_with_new_ip": 61018
+    },
+    {
+      "date_ist": "2026-11-10",
+      "device_ids_with_ip": 58093,
+      "ips_with_device_id": 81339,
+      "device_ip_pairs": 84618,
+      "devices_on_multiple_ips_same_day": 15597,
+      "returning_devices_with_new_ip": 49544
+    },
+    {
+      "date_ist": "2026-11-11",
+      "device_ids_with_ip": 77315,
+      "ips_with_device_id": 109202,
+      "device_ip_pairs": 111983,
+      "devices_on_multiple_ips_same_day": 20995,
+      "returning_devices_with_new_ip": 56687
+    },
+    {
+      "date_ist": "2026-11-12",
+      "device_ids_with_ip": 50315,
+      "ips_with_device_id": 65076,
+      "device_ip_pairs": 67818,
+      "devices_on_multiple_ips_same_day": 11481,
+      "returning_devices_with_new_ip": 42881
+    },
+    {
+      "date_ist": "2026-11-13",
+      "device_ids_with_ip": 42335,
+      "ips_with_device_id": 56611,
+      "device_ip_pairs": 59158,
+      "devices_on_multiple_ips_same_day": 10447,
+      "returning_devices_with_new_ip": 36621
+    },
+    {
+      "date_ist": "2026-11-14",
+      "device_ids_with_ip": 48331,
+      "ips_with_device_id": 69801,
+      "device_ip_pairs": 71436,
+      "devices_on_multiple_ips_same_day": 13302,
+      "returning_devices_with_new_ip": 31861
+    },
+    {
+      "date_ist": "2026-11-17",
+      "device_ids_with_ip": 141202,
+      "ips_with_device_id": 206059,
+      "device_ip_pairs": 213414,
+      "devices_on_multiple_ips_same_day": 42021,
+      "returning_devices_with_new_ip": 84013
+    }
+  ],
+  "devices_per_ip": [
+    {
+      "device_ids_per_ip": "1 device ID",
+      "distinct_ips": 2878545
+    },
+    {
+      "device_ids_per_ip": "2 device IDs",
+      "distinct_ips": 68562
+    },
+    {
+      "device_ids_per_ip": "3-5 device IDs",
+      "distinct_ips": 26406
+    },
+    {
+      "device_ids_per_ip": "6-10 device IDs",
+      "distinct_ips": 3516
+    },
+    {
+      "device_ids_per_ip": "11+ device IDs",
+      "distinct_ips": 12614
+    }
+  ],
+  "ips_per_device": [
+    {
+      "ips_per_device_id": "1 client IP",
+      "distinct_device_ids": 188535
+    },
+    {
+      "ips_per_device_id": "2 client IPs",
+      "distinct_device_ids": 94569
+    },
+    {
+      "ips_per_device_id": "3-5 client IPs",
+      "distinct_device_ids": 142123
+    },
+    {
+      "ips_per_device_id": "6-10 client IPs",
+      "distinct_device_ids": 98740
+    },
+    {
+      "ips_per_device_id": "11+ client IPs",
+      "distinct_device_ids": 92182
+    }
+  ],
+  "source_unchanged": true
+}

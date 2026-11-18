@@ -69,3 +69,6 @@ Raj/P3-chrome report/output/
 /chrome extension/Smart-Export-v2.7.2-Exact-Grafana-Sections/validation-reference.json
 /Reports/Raw_Grafana_Validation_*/**/parts/
 /Reports/Raw_Grafana_Validation_*/**/scratch/
+/Reports/Sports_Identity_Explorer_*/identity*.duckdb*
+/Reports/Sports_Identity_Explorer_*/*.log
+/SPORTS-PDF/identity-explorer/__pycache__/

@@ -1,0 +1,50 @@
+VETO IDENTITY EXPLORER
+
+Open the Identity Explorer shortcut in this folder, or run:
+& 'D:\Vs - Code Work\venv\Scripts\python.exe' -u `
+  'D:\Vs - Code Work\SPORTS-PDF\identity-explorer\server.py'
+Then open http://127.0.0.1:8768 in Chrome or Edge.
+
+The first launch builds a local DuckDB snapshot from:
+Y:\Veto Logs Backup\Chinmoy\sports_all_dates_12_columns.parquet
+The existing snapshot is reused if source size and modification time match.
+Snapshot timestamps are UTC; reporting dates are the supplied IST dates.
+The source file and shared lake remain unchanged. The local database contains
+private IP/device relationships and is ignored by Git. Keep it on this PC.
+
+VIEWS
+Overview: distinct IDs/IPs, identity coverage, daily observed returns, IPs per
+device, shared IP examples and IDs appearing across many IPs.
+Explorer: paste a complete IP or device ID, or click an example. Inspect direct
+links, daily observations, events/matches, geography and device/OS/ISP details.
+Click a neighbor to inspect its direct associations. At most 20 links per page
+and 100 detail rows are shown. Identifiers are masked until you reveal them.
+Cohorts: first-observed calendar-week cohorts and observed activity by week.
+Measurement rules: identity hierarchy, definitions, limitations and future fields.
+
+MEASUREMENT LIMITS
+An IP is not a person; a device ID is not verified physical-device identity.
+IDs sharing an IP are not merged. UA is context, not a reliable person ID.
+Returning means an ID appeared on an earlier date in this file; earlier history
+is unknown. Missing dates cannot certify churn or complete retention.
+There are no raw UA strings, session IDs, signed-in User-IDs or event timestamps.
+Exact sessions, within-day sequence and concurrent usage cannot be reconstructed.
+Device-level watch time is not attributed: almost all source device IDs sit on
+rows with zero TS counts.
+
+FUTURE MEASUREMENT CONTRACT
+Collect first-party installation ID; opaque signed-in User-ID when applicable;
+UTC event timestamp; session/playback ID; content/event ID; event type; measured
+playback heartbeat; identity reset/create and consent state. Keep IP and UA as
+context. Deduplicate at a declared scope; never sum daily distinct counts.
+
+REFERENCES
+https://support.google.com/analytics/answer/10976610?hl=en
+https://support.google.com/analytics/answer/9283607?hl=en
+https://www.rfc-editor.org/rfc/rfc6269.html
+
+This is a local snapshot application, not a background user-tracking service.
+It binds only to 127.0.0.1. API requests require the local Host and Origin.
+Stop a foreground server with Ctrl+C. Restart after a source update to rebuild.
+The launcher reuses an already running snapshot. It does not automatically
+refresh a running server; the snapshot time stays visible.
