@@ -80,6 +80,17 @@ def main():
         partition = Path(r'Z:\Veto Logs Backup\DO NOT DELETE\source=stream') / ('year='+day[:4]) / ('month='+day[5:7]) / ('day='+day[8:])
         files = [str(p) for p in sorted(partition.glob('*.parquet'))]
         if not files:
+            local = ETL / 'data/lake/source=stream' / ('year='+day[:4]) / ('month='+day[5:7]) / ('day='+day[8:])
+            validation = ETL / 'output/validation/daily_delivery/daily_delivery_validation_latest.json'
+            report = json.loads(validation.read_text(encoding='utf-8-sig')) if validation.exists() else {}
+            validated = report.get('date') == day and any(
+                r.get('source') == 'stream' and r.get('status') == 'PASS'
+                and r.get('selected', {}).get('full_day') is True
+                and Path(r['selected']['day_dir']).resolve() == local.resolve()
+                for r in report.get('source_results', []))
+            if validated:
+                files = [str(p) for p in sorted(local.glob('*.parquet'))]
+        if not files:
             state['issues'].append(dict(mapping=entry,reason='Lake partition missing'))
             status()
             continue
