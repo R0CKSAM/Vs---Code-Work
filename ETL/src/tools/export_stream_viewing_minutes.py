@@ -17,9 +17,7 @@ from vglive_deep_profile import channel_candidate_sql, register_maps, url_decode
 IST = ZoneInfo('Asia/Kolkata')
 ARCHIVE = Path(r'Z:\Veto Logs Backup\DO NOT DELETE')
 
-METRIC_COLS = '''http_requests, http_200_requests, http_2xx_requests, unknown_status_requests,
-    ts_requests, distinct_ts_paths_all_http, successful_distinct_ts_segments,
-    estimated_watch_seconds, estimated_http_200_watch_seconds'''
+METRIC_COLS = 'http_requests, estimated_watch_seconds'
 
 
 def main():
@@ -33,7 +31,7 @@ def main():
         raise FileNotFoundError(f'No archived STREAM input for {day}')
     out = ARCHIVE / 'source=Try'
     out.mkdir(exist_ok=True)
-    final = out / f'stream_viewing_minutes_{day}_all_http.parquet'
+    final = out / f'stream_viewing_minutes_{day}_all_http_analysis.parquet'
     if final.exists():
         raise FileExistsError(final)
     staged = out / f'.{final.stem}_{uuid4().hex}.partial'
@@ -55,7 +53,6 @@ def main():
                 split_part(reqPath, '?', 1) AS path,
                 TIMESTAMP '{day} 00:00:00' + floor((_ts - ?)/60)::BIGINT * INTERVAL '1 minute' AS minute_ist,
                 {geography}, regexp_replace(upper(trim(asn)), '^AS', '') AS asn,
-                try_cast(statusCode AS INTEGER) AS http_status,
                 CASE WHEN queryStr ILIKE '%content_title=%'
                      THEN nullif(regexp_extract(queryStr, '(?i)(?:^|[?&])content_title=([^&]+)', 1), '') END AS raw_title
             FROM (SELECT *, try_cast(reqTimeSec AS DOUBLE) AS _ts
@@ -87,14 +84,7 @@ def main():
         # 3. Aggregate with a narrower key: channel and ISP are joined afterwards, since they are
         #    fully determined by (req_host, candidate_id) and asn, which are already in the key.
         metrics = '''count(*) AS http_requests,
-            count(*) FILTER (WHERE s.http_status=200) AS http_200_requests,
-            count(*) FILTER (WHERE s.http_status BETWEEN 200 AND 299) AS http_2xx_requests,
-            count(*) FILTER (WHERE s.http_status IS NULL) AS unknown_status_requests,
-            count(*) FILTER (WHERE lower(s.path) LIKE '%.ts') AS ts_requests,
-            count(DISTINCT s.path) FILTER (WHERE lower(s.path) LIKE '%.ts') AS distinct_ts_paths_all_http,
-            count(DISTINCT s.path) FILTER (WHERE lower(s.path) LIKE '%.ts' AND s.http_status=200) AS successful_distinct_ts_segments,
-            distinct_ts_paths_all_http * 6 AS estimated_watch_seconds,
-            successful_distinct_ts_segments * 6 AS estimated_http_200_watch_seconds'''
+            6 * (count(DISTINCT s.path) FILTER (WHERE lower(s.path) LIKE '%.ts')) AS estimated_watch_seconds'''
         con.execute(f'''
             CREATE TEMP TABLE agg AS
             SELECT s.minute_ist, s.cli_ip, s.req_host, s.content_key, s.candidate_id,
@@ -110,8 +100,9 @@ def main():
         # 4. Join channel and ISP labels on the aggregated rows.
         con.execute(f'''
           COPY (
-            SELECT a.minute_ist, time_bucket(INTERVAL '15 minutes', a.minute_ist) AS bucket_start_ist,
-                bucket_start_ist + INTERVAL '15 minutes' AS bucket_end_ist,
+            SELECT strftime(a.minute_ist, '%d-%m-%y') AS date_ist, a.minute_ist::TIME AS time_ist,
+                time_bucket(INTERVAL '15 minutes', a.minute_ist)::TIME AS bucket_start_ist,
+                (time_bucket(INTERVAL '15 minutes', a.minute_ist) + INTERVAL '15 minutes')::TIME AS bucket_end_ist,
                 a.cli_ip, a.req_host, a.content_key, a.candidate_id,
                 coalesce(hc.host_candidate_channel_name, h.host_channel_name, p.path_channel_name, 'Unmapped') AS channel,
                 a.content_title, a.country, a.state, a.city, a.asn,
@@ -126,16 +117,21 @@ def main():
           ) TO '{str(staged).replace(chr(39), chr(39)*2)}' (FORMAT PARQUET, COMPRESSION ZSTD)
         ''')
 
-        stats = con.execute('''SELECT count(*), count(DISTINCT cli_ip), sum(estimated_watch_seconds),
+        stats = con.execute('''WITH checked AS (
+                    SELECT *, strptime(date_ist, '%d-%m-%y')::DATE + time_ist AS minute_ist,
+                           time_bucket(INTERVAL '15 minutes', minute_ist) AS expected_bucket
+                    FROM read_parquet(?, hive_partitioning=false))
+                    SELECT count(*), count(DISTINCT cli_ip), sum(estimated_watch_seconds),
                     min(minute_ist), max(minute_ist), count(*) FILTER(WHERE content_title IS NOT NULL),
-                    count(*) FILTER(WHERE minute_ist<bucket_start_ist OR minute_ist>=bucket_end_ist)
-                    FROM read_parquet(?)''', [str(staged)]).fetchone()
+                    count(*) FILTER(WHERE bucket_start_ist IS DISTINCT FROM expected_bucket::TIME
+                        OR bucket_end_ist IS DISTINCT FROM (expected_bucket + INTERVAL '15 minutes')::TIME)
+                    FROM checked''', [str(staged)]).fetchone()
         if not stats[0] or stats[-1]:
             raise RuntimeError(f'Invalid export: {stats}')
-        request_totals = con.execute('SELECT sum(http_requests), sum(ts_requests), sum(http_200_requests), sum(estimated_http_200_watch_seconds) FROM read_parquet(?)', [str(staged)]).fetchone()
-        if request_totals[0] != input_count:
-            raise RuntimeError(f'HTTP request count mismatch: {request_totals[0]} vs {input_count}')
-        print(f'HTTP requests, TS requests, HTTP 200 requests, estimated HTTP 200 watch seconds: {request_totals}', flush=True)
+        (request_total,) = con.execute('SELECT sum(http_requests) FROM read_parquet(?)', [str(staged)]).fetchone()
+        if request_total != input_count:
+            raise RuntimeError(f'HTTP request count mismatch: {request_total} vs {input_count}')
+        print(f'HTTP requests across all statuses: {request_total:,}', flush=True)
     staged.rename(final)
     print(f'rows, IPs, estimated seconds, first/last minute, titled rows, invalid buckets: {stats}', flush=True)
     print(final, flush=True)

@@ -1,4 +1,4 @@
-"""Compare the original and revised all-HTTP STREAM exporters over seven IST days."""
+"""Compare the original and revised all-HTTP STREAM exporters over selected IST days."""
 import argparse
 from contextlib import redirect_stdout
 from datetime import date, timedelta
@@ -35,8 +35,9 @@ def original_query(source):
                 FROM keyed WHERE content_key IS NOT NULL AND request_title IS NOT NULL
                 GROUP BY ALL HAVING count(DISTINCT request_title)=1
             )
-            SELECT s.minute_ist, time_bucket(INTERVAL '15 minutes',s.minute_ist) AS bucket_start_ist,
-                bucket_start_ist + INTERVAL '15 minutes' AS bucket_end_ist,
+            SELECT strftime(s.minute_ist, '%d-%m-%y') AS date_ist, s.minute_ist::TIME AS time_ist,
+                time_bucket(INTERVAL '15 minutes', s.minute_ist)::TIME AS bucket_start_ist,
+                (time_bucket(INTERVAL '15 minutes', s.minute_ist) + INTERVAL '15 minutes')::TIME AS bucket_end_ist,
                 s.cli_ip, s.req_host, s.content_key, s.candidate_id,
                 coalesce(hc.host_candidate_channel_name,h.host_channel_name,p.path_channel_name,'Unmapped') AS channel,
                 coalesce(s.request_title,t.title) AS content_title,
@@ -48,7 +49,7 @@ def original_query(source):
             LEFT JOIN path_map p ON p.candidate_id=s.candidate_id
             LEFT JOIN titles t USING(req_host,content_key)
             LEFT JOIN asn_lookup a ON a.asn=s.asn
-            GROUP BY ALL ORDER BY minute_ist,cli_ip
+            GROUP BY ALL ORDER BY date_ist,time_ist,cli_ip
         ) TO '{str(staged).replace(chr(39), chr(39)*2)}' (FORMAT PARQUET, COMPRESSION ZSTD)\''')
 '''
     result = source[:start] + metric_definition + '\n' + query + source[end:]
@@ -60,6 +61,7 @@ def original_query(source):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--start', required=True, type=date.fromisoformat)
+    parser.add_argument('--days', type=int, default=7, choices=range(1, 8), help='Number of IST days to compare.')
     args = parser.parse_args()
     current = EXPORTER.read_text(encoding='utf-8')
     namespace = {'__name__': 'bench_exporter', '__file__': str(EXPORTER)}
@@ -77,7 +79,7 @@ def main():
         source = source.replace("cache = json.loads((ETL/'data/asn/ip2location_asn_cache.json').read_text(encoding='utf-8-sig'))", 'cache = benchmark_cache')
         source_by_variant[name] = compile(source, str(EXPORTER), 'exec')
     results = []
-    for offset in range(7):
+    for offset in range(args.days):
         day = args.start + timedelta(days=offset)
         row = {'date': str(day), 'seconds': {}, 'errors': {}}
         variants = list(source_by_variant)
@@ -97,7 +99,7 @@ def main():
             row['seconds'][name] = round(perf_counter() - t, 2)
             print(day, name, row['seconds'][name], row['errors'].get(name, 'finished'), flush=True)
         if not row['errors']:
-            files = [out / name / f'stream_viewing_minutes_{day}_all_http.parquet' for name in source_by_variant]
+            files = [out / name / f'stream_viewing_minutes_{day}_all_http_analysis.parquet' for name in source_by_variant]
             with duckdb.connect() as con:
                 con.execute('SET threads=4')
                 row['row_count'], row['requests'] = con.execute('SELECT count(*),sum(http_requests) FROM read_parquet(?)',[str(files[0])]).fetchone()

@@ -145,12 +145,12 @@ available_cols = metadata['columns']
 selected_cols = st.sidebar.multiselect(
     "Select Columns",
     options=available_cols,
-    default=available_cols[:min(8, len(available_cols))],
+    default=available_cols,
     help="⚡ Selecting fewer columns = much faster"
 )
 
 if not selected_cols:
-    selected_cols = available_cols[:min(8, len(available_cols))]
+    selected_cols = available_cols
 
 # ============================================================================
 # VIEW MODES
@@ -185,7 +185,7 @@ if view_mode == "Quick Preview":
         with col2:
             st.metric("Load Time", f"{elapsed:.2f}s")
         with col3:
-            st.metric("Columns", len(selected_cols))
+            st.metric("Columns shown", len(selected_cols))
         
         st.dataframe(df.to_pandas(), use_container_width=True, height=500)
         
