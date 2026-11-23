@@ -1,4 +1,4 @@
-"""Export estimated STREAM viewing by client IP and IST minute to network Parquet."""
+"""Export STREAM requests and dashboard-style TS request seconds by IP and IST minute."""
 import argparse
 from datetime import date, datetime, time, timedelta
 import json
@@ -31,7 +31,7 @@ def main():
         raise FileNotFoundError(f'No archived STREAM input for {day}')
     out = ARCHIVE / 'source=Try'
     out.mkdir(exist_ok=True)
-    final = out / f'stream_viewing_minutes_{day}_all_http_analysis.parquet'
+    final = out / f'stream_viewing_minutes_{day}_all_http_request_hours.parquet'
     if final.exists():
         raise FileExistsError(final)
     staged = out / f'.{final.stem}_{uuid4().hex}.partial'
@@ -45,12 +45,13 @@ def main():
         candidate = channel_candidate_sql('path')
         geography = ', '.join(f'{url_decode_text_sql(c)} AS {c}' for c in ('country', 'state', 'city'))
 
-        # 1. Raw scan. Timestamp cast once; title regex only runs when the query string has a title;
-        #    decode geography before grouping to preserve the original grouping keys.
+        # Prepare the title and path keys during the lake scan. Both later queries reuse keyed.
         con.execute(f'''
-            CREATE TEMP TABLE media AS
+            CREATE TEMP TABLE keyed AS
+            WITH media AS (
             SELECT trim(cliIP) AS cli_ip, lower(trim(reqHost)) AS req_host,
                 split_part(reqPath, '?', 1) AS path,
+                reqPath LIKE '%.ts' AS is_ts_request,
                 TIMESTAMP '{day} 00:00:00' + floor((_ts - ?)/60)::BIGINT * INTERVAL '1 minute' AS minute_ist,
                 {geography}, regexp_replace(upper(trim(asn)), '^AS', '') AS asn,
                 CASE WHEN queryStr ILIKE '%content_title=%'
@@ -58,21 +59,17 @@ def main():
             FROM (SELECT *, try_cast(reqTimeSec AS DOUBLE) AS _ts
                   FROM read_parquet(?, hive_partitioning=false))
             WHERE _ts >= ? AND _ts < ?
-        ''', [start, list(map(str, inputs)), start, start + 86400])
-
-        print('Resolving titles and channels, then aggregating segments', flush=True)
-
-        # 2. Materialise keyed once (it is used by both the title lookup and the aggregation).
-        con.execute(f'''
-            CREATE TEMP TABLE keyed AS
-            SELECT *, {candidate} AS candidate_id,
+            )
+            SELECT * EXCLUDE (raw_title), {candidate} AS candidate_id,
                 CASE WHEN req_host LIKE '%vod%' OR lower(path) LIKE '%/vod/%'
                      THEN nullif(lower(split_part(ltrim(path,'/'),'/',4)), '') END AS content_key,
                 replace(coalesce(try(url_decode(raw_title)), raw_title), '+', ' ') AS request_title
             FROM media
-        ''')
-        con.execute('DROP TABLE media')
-        input_count = con.execute('SELECT count(*) FROM keyed').fetchone()[0]
+        ''', [start, list(map(str, inputs)), start, start + 86400])
+        print('Resolving titles and channels, then aggregating segments', flush=True)
+        input_count, input_ts_count = con.execute(
+            'SELECT count(*), count(*) FILTER (WHERE is_ts_request) FROM keyed'
+        ).fetchone()
 
         con.execute('''
             CREATE TEMP TABLE titles AS
@@ -83,8 +80,9 @@ def main():
 
         # 3. Aggregate with a narrower key: channel and ISP are joined afterwards, since they are
         #    fully determined by (req_host, candidate_id) and asn, which are already in the key.
+        # Match the dashboard: credit every raw .ts request, including repeated paths.
         metrics = '''count(*) AS http_requests,
-            6 * (count(DISTINCT s.path) FILTER (WHERE lower(s.path) LIKE '%.ts')) AS estimated_watch_seconds'''
+            6 * (count(*) FILTER (WHERE s.is_ts_request)) AS estimated_watch_seconds'''
         con.execute(f'''
             CREATE TEMP TABLE agg AS
             SELECT s.minute_ist, s.cli_ip, s.req_host, s.content_key, s.candidate_id,
@@ -131,7 +129,10 @@ def main():
         (request_total,) = con.execute('SELECT sum(http_requests) FROM read_parquet(?)', [str(staged)]).fetchone()
         if request_total != input_count:
             raise RuntimeError(f'HTTP request count mismatch: {request_total} vs {input_count}')
+        if stats[2] != 6 * input_ts_count:
+            raise RuntimeError(f'TS request seconds mismatch: {stats[2]} vs {6 * input_ts_count}')
         print(f'HTTP requests across all statuses: {request_total:,}', flush=True)
+        print(f'TS requests including repeated paths: {input_ts_count:,}', flush=True)
     staged.rename(final)
     print(f'rows, IPs, estimated seconds, first/last minute, titled rows, invalid buckets: {stats}', flush=True)
     print(final, flush=True)

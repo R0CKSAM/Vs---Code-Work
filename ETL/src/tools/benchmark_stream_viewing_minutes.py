@@ -16,13 +16,25 @@ EXPORTER = Path(__file__).with_name('export_stream_viewing_minutes.py').resolve(
 
 def original_query(source):
     """Restore the original scan and join-before-grouping plan for comparison."""
+    # The current exporter prepares keys during the scan. The original plan
+    # materialised the raw projection as a separate table first.
+    prep_start = source.index('        # Prepare the title and path keys')
+    raw_start = source.index('            SELECT trim(cliIP)', prep_start)
+    raw_end = source.index('\n            )\n            SELECT * EXCLUDE (raw_title)', raw_start)
+    prep_end = source.index("        print('Resolving titles", raw_end)
+    raw_table = ("        con.execute(f'''\n            CREATE TEMP TABLE media AS\n"
+                 + source[raw_start:raw_end]
+                 + "\n        ''', [start, list(map(str, inputs)), start, start + 86400])\n")
+    source = source[:prep_start] + raw_table + source[prep_end:]
     start = source.index("        print('Resolving titles")
     end = source.index('        stats =', start)
     metrics_start = source.index("        metrics = '''", start)
     metrics_end = source.index("'''", metrics_start + len("        metrics = '''")) + 3
     metric_definition = source[metrics_start:metrics_end]
     query = '''
-        input_count = con.execute('SELECT count(*) FROM media').fetchone()[0]
+        input_count, input_ts_count = con.execute(
+            'SELECT count(*), count(*) FILTER (WHERE is_ts_request) FROM media'
+        ).fetchone()
         con.execute(f\'''COPY (
             WITH keyed AS (
                 SELECT *, {candidate} AS candidate_id,
@@ -99,7 +111,7 @@ def main():
             row['seconds'][name] = round(perf_counter() - t, 2)
             print(day, name, row['seconds'][name], row['errors'].get(name, 'finished'), flush=True)
         if not row['errors']:
-            files = [out / name / f'stream_viewing_minutes_{day}_all_http_analysis.parquet' for name in source_by_variant]
+            files = [out / name / f'stream_viewing_minutes_{day}_all_http_request_hours.parquet' for name in source_by_variant]
             with duckdb.connect() as con:
                 con.execute('SET threads=4')
                 row['row_count'], row['requests'] = con.execute('SELECT count(*),sum(http_requests) FROM read_parquet(?)',[str(files[0])]).fetchone()
