@@ -24,7 +24,7 @@ def original_query(source):
     prep_end = source.index("        print('Resolving titles", raw_end)
     raw_table = ("        con.execute(f'''\n            CREATE TEMP TABLE media AS\n"
                  + source[raw_start:raw_end]
-                 + "\n        ''', [start, list(map(str, inputs)), start, start + 86400])\n")
+                 + "\n        ''', [start, files, start, start + 86400])\n")
     source = source[:prep_start] + raw_table + source[prep_end:]
     start = source.index("        print('Resolving titles")
     end = source.index('        stats =', start)
@@ -40,7 +40,7 @@ def original_query(source):
                 SELECT *, {candidate} AS candidate_id,
                     CASE WHEN req_host LIKE '%vod%' OR lower(path) LIKE '%/vod/%'
                          THEN nullif(lower(split_part(ltrim(path,'/'),'/',4)), '') END AS content_key,
-                    replace(coalesce(try(url_decode(raw_title)),raw_title), '+', ' ') AS request_title
+                    {REQUEST_TITLE_SQL} AS request_title
                 FROM media
             ), titles AS (
                 SELECT req_host, content_key, min(request_title) AS title

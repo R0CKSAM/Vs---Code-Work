@@ -1,9 +1,11 @@
 """Export STREAM requests and dashboard-style TS request seconds by IP and IST minute."""
 import argparse
+from contextlib import ExitStack
 from datetime import date, datetime, time, timedelta
 import json
 from pathlib import Path
 import sys
+from tempfile import TemporaryDirectory
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -18,6 +20,7 @@ IST = ZoneInfo('Asia/Kolkata')
 ARCHIVE = Path(r'Z:\Veto Logs Backup\DO NOT DELETE')
 
 METRIC_COLS = 'http_requests, estimated_watch_seconds'
+REQUEST_TITLE_SQL = url_decode_text_sql("replace(raw_title, '+', ' ')")
 
 
 def main():
@@ -29,6 +32,7 @@ def main():
     inputs = sorted((ARCHIVE / 'source=stream' / f'year={day:%Y}' / f'month={day:%m}' / f'day={day:%d}').glob('part_*.parquet'))
     if not inputs:
         raise FileNotFoundError(f'No archived STREAM input for {day}')
+    files = list(map(str, inputs))
     out = ARCHIVE / 'source=Try'
     out.mkdir(exist_ok=True)
     final = out / f'stream_viewing_minutes_{day}_all_http_request_hours.parquet'
@@ -38,7 +42,10 @@ def main():
     start = datetime.combine(day, time.min, IST).timestamp()
     cache = json.loads((ETL/'data/asn/ip2location_asn_cache.json').read_text(encoding='utf-8-sig'))
     asns = pd.DataFrame([(str(k), v.get('as_name')) for k, v in cache.items() if v.get('status') == 'ok'], columns=['asn', 'isp'])
-    with duckdb.connect(config={'threads': 6, 'memory_limit': '8GB', 'temp_directory': str(out/'.duckdb_scratch')}) as con:
+    with ExitStack() as cleanup, TemporaryDirectory(prefix='.duckdb_scratch_', dir=out) as scratch, duckdb.connect(
+        config={'threads': 6, 'memory_limit': '8GB', 'temp_directory': scratch}
+    ) as con:
+        cleanup.callback(staged.unlink, missing_ok=True)
         register_maps(con)
         con.register('asn_lookup', asns)
         print(f'Scanning {len(inputs)} archived STREAM files for {day}', flush=True)
@@ -63,9 +70,9 @@ def main():
             SELECT * EXCLUDE (raw_title), {candidate} AS candidate_id,
                 CASE WHEN req_host LIKE '%vod%' OR lower(path) LIKE '%/vod/%'
                      THEN nullif(lower(split_part(ltrim(path,'/'),'/',4)), '') END AS content_key,
-                replace(coalesce(try(url_decode(raw_title)), raw_title), '+', ' ') AS request_title
+                {REQUEST_TITLE_SQL} AS request_title
             FROM media
-        ''', [start, list(map(str, inputs)), start, start + 86400])
+        ''', [start, files, start, start + 86400])
         print('Resolving titles and channels, then aggregating segments', flush=True)
         input_count, input_ts_count = con.execute(
             'SELECT count(*), count(*) FILTER (WHERE is_ts_request) FROM keyed'
@@ -119,22 +126,42 @@ def main():
                     SELECT *, strptime(date_ist, '%d-%m-%y')::DATE + time_ist AS minute_ist,
                            time_bucket(INTERVAL '15 minutes', minute_ist) AS expected_bucket
                     FROM read_parquet(?, hive_partitioning=false))
-                    SELECT count(*), count(DISTINCT cli_ip), sum(estimated_watch_seconds),
+                    SELECT count(*), count(DISTINCT cli_ip), sum(http_requests), sum(estimated_watch_seconds),
                     min(minute_ist), max(minute_ist), count(*) FILTER(WHERE content_title IS NOT NULL),
+                    count(*) FILTER(WHERE isp = 'Unknown'),
+                    count(*) FILTER(WHERE estimated_watch_seconds > 60), max(estimated_watch_seconds),
                     count(*) FILTER(WHERE bucket_start_ist IS DISTINCT FROM expected_bucket::TIME
                         OR bucket_end_ist IS DISTINCT FROM (expected_bucket + INTERVAL '15 minutes')::TIME)
                     FROM checked''', [str(staged)]).fetchone()
-        if not stats[0] or stats[-1]:
-            raise RuntimeError(f'Invalid export: {stats}')
-        (request_total,) = con.execute('SELECT sum(http_requests) FROM read_parquet(?)', [str(staged)]).fetchone()
+        rows, ips, request_total, seconds, first, last, titled, unknown_isp, over_minute, max_seconds, bad_buckets = stats
+        if not rows or bad_buckets:
+            raise RuntimeError(f'Invalid export: {rows} rows, {bad_buckets} invalid buckets')
         if request_total != input_count:
             raise RuntimeError(f'HTTP request count mismatch: {request_total} vs {input_count}')
-        if stats[2] != 6 * input_ts_count:
-            raise RuntimeError(f'TS request seconds mismatch: {stats[2]} vs {6 * input_ts_count}')
+        if seconds != 6 * input_ts_count:
+            raise RuntimeError(f'TS request seconds mismatch: {seconds} vs {6 * input_ts_count}')
+
+        # Count from the Parquet footers and scan timestamps only when rows were excluded.
+        (raw_total,) = con.execute('SELECT sum(num_rows) FROM parquet_file_metadata(?)', [files]).fetchone()
+        skipped = raw_total - input_count
+        if skipped:
+            invalid_time, outside_day = con.execute('''
+                SELECT count(*) FILTER (WHERE ts IS NULL OR NOT isfinite(ts)),
+                       count(*) FILTER (WHERE isfinite(ts) AND (ts < ? OR ts >= ?))
+                FROM (SELECT try_cast(reqTimeSec AS DOUBLE) AS ts
+                      FROM read_parquet(?, hive_partitioning=false))
+            ''', [start, start + 86400, files]).fetchone()
+            if skipped != invalid_time + outside_day:
+                raise RuntimeError(f'STREAM input row accounting mismatch: {raw_total:,} raw, {input_count:,} kept')
+            print(f'Skipped {skipped:,} rows ({invalid_time:,} invalid timestamps, {outside_day:,} outside IST date)', flush=True)
+        print(f'Raw requests: {raw_total:,}; kept: {input_count:,}', flush=True)
         print(f'HTTP requests across all statuses: {request_total:,}', flush=True)
         print(f'TS requests including repeated paths: {input_ts_count:,}', flush=True)
-    staged.rename(final)
-    print(f'rows, IPs, estimated seconds, first/last minute, titled rows, invalid buckets: {stats}', flush=True)
+        print(f'Unknown ISP: {unknown_isp:,}/{rows:,} rows; rows above 60 request seconds: {over_minute:,} (max {max_seconds:,})', flush=True)
+        if unknown_isp == rows:
+            print('Warning: no exported rows have a decoded ISP', flush=True)
+        staged.rename(final)
+    print(f'{rows:,} rows, {ips:,} client IPs, {seconds:,} estimated seconds, {titled:,} titled rows; {first} to {last} IST', flush=True)
     print(final, flush=True)
 
 
