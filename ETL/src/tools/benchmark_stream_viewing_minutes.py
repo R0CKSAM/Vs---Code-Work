@@ -35,6 +35,7 @@ def original_query(source):
         input_count, input_ts_count = con.execute(
             'SELECT count(*), count(*) FILTER (WHERE is_ts_request) FROM media'
         ).fetchone()
+        register_device_labels(con, 'media')
         con.execute(f\'''COPY (
             WITH keyed AS (
                 SELECT *, {candidate} AS candidate_id,
@@ -54,13 +55,14 @@ def original_query(source):
                 coalesce(hc.host_candidate_channel_name,h.host_channel_name,p.path_channel_name,'Unmapped') AS channel,
                 coalesce(s.request_title,t.title) AS content_title,
                 s.country,s.state,s.city,s.asn,coalesce(a.isp,'Unknown') AS isp,
-                {metrics}
+                {metrics}, d.OS, d.Platform
             FROM keyed s
             LEFT JOIN host_candidate_map hc ON hc.reqHost=s.req_host AND hc.candidate_id=s.candidate_id
             LEFT JOIN host_map h ON h.reqHost=s.req_host
             LEFT JOIN path_map p ON p.candidate_id=s.candidate_id
             LEFT JOIN titles t USING(req_host,content_key)
             LEFT JOIN asn_lookup a ON a.asn=s.asn
+            LEFT JOIN device_labels d ON s.raw_ua IS NOT DISTINCT FROM d.raw_ua
             GROUP BY ALL ORDER BY date_ist,time_ist,cli_ip
         ) TO '{str(staged).replace(chr(39), chr(39)*2)}' (FORMAT PARQUET, COMPRESSION ZSTD)\''')
 '''

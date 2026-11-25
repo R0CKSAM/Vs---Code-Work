@@ -13,14 +13,64 @@ import duckdb
 import pandas as pd
 
 ETL = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ETL / 'src'))
 sys.path.insert(0, str(ETL / 'src/profile'))
 from vglive_deep_profile import channel_candidate_sql, register_maps, url_decode_text_sql
+from dashboards.audienceOpsDashboard.generate_audience_ops import (
+    UA_OS_RULES, UA_PLATFORM_RULES, classify_ua_series, normalize_ua,
+)
 
 IST = ZoneInfo('Asia/Kolkata')
 ARCHIVE = Path(r'Z:\Veto Logs Backup\DO NOT DELETE')
+UA_LOOKUP = ETL / 'output/device_decode/ua_decode_lookup_both_all.parquet'
 
 METRIC_COLS = 'http_requests, estimated_watch_seconds'
 REQUEST_TITLE_SQL = url_decode_text_sql("replace(raw_title, '+', ' ')")
+OS_RULES = [
+    (r'\baft[a-z0-9]*\b|fire\s*(?:tv|os)', 'FireOS'),
+    (r'appletv|apple tv|tvos', 'Apple TV'),
+    (r'webos|web0s', 'webOS'),
+    (r'tizen', 'Tizen'),
+    (r'\bios\b|iphone|ipad|cpu os', 'iOS'),
+    (r'mac\s*os', 'macOS'),
+    *[(pattern, label) for pattern, label in UA_OS_RULES
+      if label in {'Android', 'Windows', 'Linux'}],
+]
+PLATFORM_RULES = [
+    (r'\baft[a-z0-9]*\b|fire\s*(?:tv|os)', 'Amazon Fire TV'),
+    (r'appletv|apple tv|tvos', 'Apple TV'),
+    (r'tizen|stvplus|samsung.*(?:smart tv|tizen)', 'Samsung Smart TV'),
+    (r'bravia|sony.*\btv\b', 'Sony BRAVIA'),
+    (r'xiaomi.*\btv\b|mitv|mi tv', 'Xiaomi Mi TV'),
+    (r'webos|web0s|\blg\b.*\btv\b', 'LG Smart TV'),
+    *[(pattern, label) for pattern, label in UA_PLATFORM_RULES if label in {
+        'Sharp TV', 'Hisense Smart TV', 'Haier MatrixTV', 'VU TV', 'AI PONT TV',
+        'iPhone/iPad', 'Smart TV / Other', 'macOS', 'Windows',
+    }],
+    (r'exoplayer', 'ExoPlayer-Android'),
+]
+
+
+def register_device_labels(con, input_table):
+    """Classify each distinct UA once, preserving a single label pair per raw value."""
+    keys = con.execute(f'SELECT DISTINCT raw_ua FROM {input_table}').df()
+    keys['ua_norm'] = keys['raw_ua'].fillna('').map(normalize_ua)
+    lookup = con.execute('''SELECT ua_norm, os_name, api_os_name, brand, api_brand,
+                              model, api_model, form_factor, app_player
+        FROM read_parquet(?) WHERE ua_norm IS NOT NULL AND ua_norm <> ''
+        QUALIFY row_number() OVER (PARTITION BY ua_norm ORDER BY decoded_at_utc DESC NULLS LAST) = 1
+    ''', [str(UA_LOOKUP)]).df()
+    labels = keys.merge(lookup.fillna(''), on='ua_norm', how='left', validate='many_to_one')
+    for field in lookup.columns.drop('ua_norm'):
+        labels[field] = labels[field].fillna('')
+    os_evidence = labels['ua_norm'] + ' ' + labels['os_name'] + ' ' + labels['api_os_name']
+    # Manufacturer names alone are useful TV evidence only for decoded CTVs.
+    tv = labels['form_factor'].str.lower().eq('ctv')
+    tv_evidence = (labels['brand'] + ' ' + labels['api_brand'] + ' ' + labels['model'] + ' ' + labels['api_model'] + ' Smart TV').where(tv, '')
+    platform_evidence = os_evidence + ' ' + labels['app_player'] + ' ' + tv_evidence
+    labels['OS'] = classify_ua_series(os_evidence, OS_RULES, 'Others')
+    labels['Platform'] = classify_ua_series(platform_evidence, PLATFORM_RULES, 'Others')
+    con.register('device_labels', labels[['raw_ua', 'OS', 'Platform']])
 
 
 def main():
@@ -57,6 +107,7 @@ def main():
             CREATE TEMP TABLE keyed AS
             WITH media AS (
             SELECT trim(cliIP) AS cli_ip, lower(trim(reqHost)) AS req_host,
+                UA AS raw_ua,
                 split_part(reqPath, '?', 1) AS path,
                 reqPath LIKE '%.ts' AS is_ts_request,
                 TIMESTAMP '{day} 00:00:00' + floor((_ts - ?)/60)::BIGINT * INTERVAL '1 minute' AS minute_ist,
@@ -77,6 +128,7 @@ def main():
         input_count, input_ts_count = con.execute(
             'SELECT count(*), count(*) FILTER (WHERE is_ts_request) FROM keyed'
         ).fetchone()
+        register_device_labels(con, 'keyed')
 
         con.execute('''
             CREATE TEMP TABLE titles AS
@@ -94,10 +146,11 @@ def main():
             CREATE TEMP TABLE agg AS
             SELECT s.minute_ist, s.cli_ip, s.req_host, s.content_key, s.candidate_id,
                 coalesce(s.request_title, t.title) AS content_title,
-                s.country, s.state, s.city, s.asn,
+                s.country, s.state, s.city, s.asn, d.OS, d.Platform,
                 {metrics}
             FROM keyed s
             LEFT JOIN titles t USING(req_host, content_key)
+            LEFT JOIN device_labels d ON s.raw_ua IS NOT DISTINCT FROM d.raw_ua
             GROUP BY ALL
         ''')
         con.execute('DROP TABLE keyed')
@@ -112,7 +165,7 @@ def main():
                 coalesce(hc.host_candidate_channel_name, h.host_channel_name, p.path_channel_name, 'Unmapped') AS channel,
                 a.content_title, a.country, a.state, a.city, a.asn,
                 coalesce(i.isp, 'Unknown') AS isp,
-                {METRIC_COLS}
+                {METRIC_COLS}, a.OS, a.Platform
             FROM agg a
             LEFT JOIN host_candidate_map hc ON hc.reqHost=a.req_host AND hc.candidate_id=a.candidate_id
             LEFT JOIN host_map h ON h.reqHost=a.req_host
