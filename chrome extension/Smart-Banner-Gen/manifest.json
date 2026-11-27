@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Smart Banner Gen",
+  "version": "1.1.2",
+  "description": "Reference-led thumbnail redesign queue with exact-size local PNG outputs.",
+  "permissions": ["storage", "tabs", "unlimitedStorage", "power", "scripting"],
+  "host_permissions": ["https://chatgpt.com/*", "https://chat.openai.com/*", "https://*.oaiusercontent.com/*", "https://*.oaistatic.com/*", "https://*.blob.core.windows.net/*"],
+  "background": {"service_worker": "background.js"},
+  "action": {"default_title": "Open Smart Banner Gen"},
+  "content_scripts": [{"matches": ["https://chatgpt.com/*", "https://chat.openai.com/*"], "js": ["content.js"], "run_at": "document_idle"}]
+}

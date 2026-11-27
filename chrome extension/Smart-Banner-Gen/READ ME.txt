@@ -1,0 +1,127 @@
+SMART BANNER GEN 1.1.2
+
+INSTALL
+1. Open chrome://extensions and enable Developer mode.
+2. Choose Load unpacked and select:
+   D:\Vs - Code Work\chrome extension\Smart-Banner-Gen
+3. Open a dedicated ChatGPT conversation and reload its tab after installation.
+   Sign in yourself. Disable Smart Flow automation in that conversation.
+4. Click Smart Banner Gen's toolbar icon to open the workspace.
+5. Choose D:\helper\Book52_images\Aakash Chopra (one category), or choose
+   D:\helper\Book52_images (all immediate category folders).
+6. Select formats, optionally enter creative direction, and Scan.
+7. Select the dedicated ChatGPT tab, then Start / Resume.
+   Start with one or two sources in a separate test folder to assess artwork.
+
+OUTPUTS
+category\1920 × 1080 px\vod_key.png
+category\400 × 711 px\vod_key.png
+category\bin\vod_key_size_generated_timestamp.ext
+
+The selected folder is the category when source images are directly inside it.
+Choosing Book52_images also scans its immediate category folders. It does not
+recurse into output folders, bin, or arbitrary deeply nested folders.
+Source images remain unchanged. Sources already at the exact target dimensions
+are copied as PNG without an AI request. Valid existing target images are skipped.
+Distinct source files sharing the same video key in a category are rejected.
+
+EXACT DIMENSIONS VS ARTWORK
+The prompt requests a content-preserving remake: correct words, faces and logos,
+readable text, safe margins and composition appropriate to the target ratio.
+New assistant images and downloadable image links are inspected. Exact-size
+assets are accepted. Wrong-size outputs are archived in bin. The extension then
+sends a follow-up in the same ChatGPT conversation asking for a real downloadable
+PNG at the exact requested dimensions, preserving content and avoiding cropping,
+stretching and padding. It measures the returned file again. Up to two automatic
+follow-ups are allowed per format, then the queue pauses. There is no local
+resizing or padding. A wrong-size file never becomes an accepted final output.
+Follow-ups do not reupload the reference or move to the next thumbnail.
+All final files are PNG and measured again after saving. An incorrect existing
+vod_key.png is copied into bin before replacement. Other files are left untouched.
+Correct dimensions do not prove correct text, identity or aesthetic quality.
+Review generated artwork before publishing: the extension has no semantic QA model.
+
+RUNNING AND RECOVERY
+Folder permission must be granted by a user gesture; no silent D: drive access.
+Directory handles and queue checkpoints are kept locally in this extension's
+IndexedDB. Chrome can request renewed access after restart. No API key is needed.
+Source thumbnails and prompts are uploaded to your selected ChatGPT conversation.
+No independent server receives these files. ChatGPT generation limits apply.
+The extension does not bypass login, CAPTCHA, usage limits or upload errors.
+
+Keep Chrome, the Smart Banner Gen workspace and its selected conversation open.
+Other tabs may be used. Background Chrome timers may run more slowly. The
+extension requests system keep-awake while running; it cannot work through a
+locked network, manual sleep, shutdown, tab discard or browser closure.
+Do not type or run another queue in the selected conversation during generation.
+Pause stops further submissions. An ongoing generation or local save may finish.
+Resume checks the same checkpoint; uncertain prompts are never blindly resent.
+If a job was never sent, inspect/clear the unsent composer, then choose Retry an
+unsent job. Submitted jobs cannot be retried through that button.
+After a workspace/browser restart, explicitly Resume; it never auto-starts.
+Keep enough free disk space; inspect browser errors if saving fails. Keep backups
+of source files. Save history writes a full JSON report to the selected folder.
+
+KNOWN BOUNDARIES
+ChatGPT DOM selectors are not a stable API. A site change may require updates.
+Native Download file cards and ChatGPT /api/library/files/.../download links
+are supported. A short-lived, filename-specific page bridge captures the image
+Blob before ChatGPT revokes its URL. Only the matching image download is handled;
+unrelated links retain their normal behavior. Hooks are restored after completion
+or timeout. Source bytes go only to your chosen ChatGPT conversation.
+Non-image sandbox links, ZIP files, inaccessible assets or text-only clarification
+responses pause for review. The extension does not guess unreadable source text.
+The 400 x 711 output is exactly 400 x 711, rather than rounding to a perfect 9:16.
+
+VERIFICATION (27 November 2026)
+Four core tests cover exact-file follow-up instructions, retry bounds, initial
+prompt contract, and names/formats. Real headless Chrome tests with mocked ChatGPT and filesystem
+handles pass: queue scan, wrong-size rejection, original archiving, ChatGPT download-file
+follow-up, exact-size PNG acceptance, bounded failure after repeated wrong outputs (with
+no accepted file), existing output skip, mobile width, content-script
+file upload/send, duplicate protection, response association, no-upload download
+follow-ups, and changed-chat pause.
+No paid generation or live signed-in ChatGPT session was used for these tests.
+Tests do not certify future ChatGPT website compatibility or artwork quality.
+
+Run tests with Node 22+:
+node --test tests/core.test.mjs
+node tests/browser-check.mjs
+The browser test uses installed Windows Chrome in a separate temporary profile.
+
+LIVE CHECK (27 November 2026)
+Found and fixed trailing-newline draft matching and the newer ChatGPT
+data-chatgpt-search-unit-key message markup. Added exact prepared-draft recovery
+and Download file button handling. The selected live conversation then reported:
+A temporary limit is preventing this chat from loading. Try again later.
+One built-in retry remained blocked. No end-to-end live generation was completed.
+Do not treat fixture tests as proof that this account can currently generate.
+
+LIVE TEST PASSED (27 November 2026)
+Smart_Banner_Live_Test/400 ? 711 px/0nz0osny.png was generated in the signed-in
+ChatGPT conversation, retrieved after exact-file follow-ups, saved and independently
+verified using Pillow: PNG, exactly 400 ? 711 pixels, 452122 bytes. No local resizing
+or padding. Visually reviewed the portrait. Landscape has not been live tested.
+Added recovery for an exact unsent draft whose attachment was lost on reload.
+
+WHOLE-FOLDER CONTINUATION
+Source image limit: 0 means all sources; 10 builds a ten-source pilot.
+Add all remaining images appends missing source/format pairs while preserving the
+current pending job and saved/existing entries. Repeated expansion is idempotent.
+Every job checks existing output dimensions again before requesting generation.
+Existing matching vod_key files at the exact dimensions are skipped; the checker
+validates file readability and size, not artistic quality.
+Live expansion verified from 20 to 198 formats (99 sources), keeping 13 saved
+outputs and the current pending job. Repeating expansion added 0 duplicate jobs.
+
+CREATIVE PROMPT REVISION (27 November 2026)
+The initial pixel-preservation prompt produced undesirable source-crop collages.
+Those 14 outputs were archived under category/bin/previous_prompt_20261127_142241.
+The revised prompt explicitly requests image-generation artwork, full-canvas
+composition, the same approved people/headlines/logos, native high quality, and
+lossless exact-size export. File tools must not replace the artwork with Python
+text or pasted source panels. Highest quality is a request, not a verifiable
+model setting or guarantee of facial/logo fidelity.
+A revised landscape sample was visually reviewed and verified: 1920 x 1080 PNG,
+4162059 bytes. It is a newly generated complete thumbnail, rather than source
+photo cards. Whole-folder queue restarted; the revised sample is skipped.
